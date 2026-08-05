@@ -3,6 +3,7 @@ if(ONE_ENTERPRISE)
     PRIVATE_HEADERS error.h
     SOURCES
       path.cc
+      claims.cc
       "${PROJECT_SOURCE_DIR}/enterprise/authentication/authentication.cc"
       "${PROJECT_SOURCE_DIR}/enterprise/authentication/authentication_save.cc"
       "${PROJECT_SOURCE_DIR}/enterprise/authentication/session.cc")
@@ -13,7 +14,7 @@ if(ONE_ENTERPRISE)
 else()
   sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME authentication
     PRIVATE_HEADERS error.h
-    SOURCES authentication.cc path.cc)
+    SOURCES authentication.cc path.cc claims.cc)
 endif()
 
 # Paths are the key the policy trie is built from and looked up by, so

@@ -1579,6 +1579,34 @@ TEST(combining_two_answers_keeps_an_address_with_its_own_assertion) {
   EXPECT_EQ(
       sourcemeta::one::Authentication::combine_claims(unverified, vouching),
       keeping_its_own);
+
+  // An assertion arriving on its own from the second answer is dropped for
+  // the same reason as one left behind by the first
+  const auto nothing_to_vouch_for{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "email_verified": true
+  })JSON")};
+  const auto neither_half{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2"
+  })JSON")};
+
+  EXPECT_EQ(sourcemeta::one::Authentication::combine_claims(
+                neither_half, nothing_to_vouch_for),
+            neither_half);
+
+  // An address without an assertion still arrives, since it claims nothing
+  const auto address_alone{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "email": "jane@acme.test"
+  })JSON")};
+  const auto carried_over{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "email": "jane@acme.test"
+  })JSON")};
+
+  EXPECT_EQ(sourcemeta::one::Authentication::combine_claims(neither_half,
+                                                            address_alone),
+            carried_over);
 }
 
 TEST(admitting_reads_two_answers_only_once_they_are_combined) {
