@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1785941167352,
+  "lastUpdate": 1785953360778,
   "repoUrl": "https://github.com/sourcemeta/one",
   "entries": {
     "Benchmark Index (enterprise)": [
@@ -51410,6 +51410,115 @@ window.BENCHMARK_DATA = {
           {
             "name": "Index 10000 schemas ($ref fan-out)",
             "value": 16691,
+            "unit": "ms"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jv@jviotti.com",
+            "name": "Juan Cruz Viotti",
+            "username": "jviotti"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "66bbc1a06afa4182658a3b604a3a477080977509",
+          "message": "Require the instance URL to name a bare origin (#1196)\n\nThe instance URL was allowed to carry a path, which put every\norigin-scoped discovery mechanism out of reach. RFC 8615 Section 3\nstates that well-known URIs \"are rooted in the top of the path's\nhierarchy\", giving `/foo/.well-known/example` as its own example of a\npath that is not a well-known URI, which is exactly where an instance\nunder a base path was publishing. RFC 9728 Section 3.1 makes the same\nchoice explicit for OAuth protected resource metadata, inserting the\nwell-known segment between the host component and the path. A registry\nmounted under a path can therefore only publish at an origin root it\ndoes not own, or somewhere no client is obliged to look.\n\nSigned-off-by: Juan Cruz Viotti <jv@jviotti.com>",
+          "timestamp": "2026-08-05T14:50:51-03:00",
+          "tree_id": "6f9f5b3d3fcad8406e9676a12785edb7a4ed3d8a",
+          "url": "https://github.com/sourcemeta/one/commit/66bbc1a06afa4182658a3b604a3a477080977509"
+        },
+        "date": 1785953358616,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Add one schema (0 existing)",
+            "value": 228,
+            "unit": "ms"
+          },
+          {
+            "name": "Add one schema (100 existing)",
+            "value": 70,
+            "unit": "ms"
+          },
+          {
+            "name": "Add one schema (1000 existing)",
+            "value": 125,
+            "unit": "ms"
+          },
+          {
+            "name": "Add one schema (10000 existing)",
+            "value": 750,
+            "unit": "ms"
+          },
+          {
+            "name": "Update one schema (1 existing)",
+            "value": 65,
+            "unit": "ms"
+          },
+          {
+            "name": "Update one schema (101 existing)",
+            "value": 72,
+            "unit": "ms"
+          },
+          {
+            "name": "Update one schema (1001 existing)",
+            "value": 137,
+            "unit": "ms"
+          },
+          {
+            "name": "Update one schema (10001 existing)",
+            "value": 810,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (1 existing)",
+            "value": 7,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (101 existing)",
+            "value": 9,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (1001 existing)",
+            "value": 30,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (10001 existing)",
+            "value": 254,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 100 schemas",
+            "value": 405,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 1000 schemas",
+            "value": 921,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 10000 schemas",
+            "value": 9542,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 10000 schemas (custom meta-schema)",
+            "value": 11615,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 10000 schemas ($ref fan-out)",
+            "value": 12612,
             "unit": "ms"
           }
         ]
