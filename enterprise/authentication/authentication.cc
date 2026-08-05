@@ -1207,6 +1207,14 @@ struct Authentication::Impl {
       }
 
       for (const auto &rule : rules.as_object()) {
+        // A scope is read as one space-delimited string rather than compared
+        // member by member, so one arriving as anything else is refused rather
+        // than compared on an identifier, and saying otherwise would send an
+        // operator looking for the wrong mistake
+        if (rule.first == "scope") {
+          continue;
+        }
+
         const auto *value{claims.try_at(rule.first)};
         if (value != nullptr && carries_objects(*value)) {
           result.push_back(rule.first);

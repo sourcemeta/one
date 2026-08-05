@@ -1704,6 +1704,35 @@ TEST(oidc_identity_names_a_claim_the_provider_answers_with_objects) {
             (std::vector<std::string_view>{}));
 }
 
+TEST(oidc_identity_says_nothing_about_the_shape_of_a_scope) {
+  setenv("ONE_TEST_OIDC_SHAPE_SCOPE", "confidential", 1);
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://acme.test",
+        .claims = CLAIMS_SCOPE,
+        .client_id = "dashboard",
+        .client_secret_variable = "ONE_TEST_OIDC_SHAPE_SCOPE",
+        .name = "okta",
+        .session_secrets = SESSION_SECRETS_UNUSED}}};
+  const auto path{test_path("oidc_shape_scope.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  const auto objects{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "scope": [ { "value": "registry:read" } ]
+  })JSON")};
+
+  // A scope is read whole rather than member by member, so one arriving as
+  // anything else is refused outright, and naming an identifier here would
+  // point an operator at a mistake they did not make
+  EXPECT_EQ(authentication.object_shaped_claims("okta", objects),
+            (std::vector<std::string_view>{}));
+}
+
 TEST(oidc_identity_under_an_unknown_policy_is_refused) {
   setenv("ONE_TEST_OIDC_ADMIT_UNKNOWN", "confidential", 1);
   const std::array<std::string_view, 1> paths{{"/portal"}};

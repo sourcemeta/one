@@ -329,7 +329,12 @@ public:
   //
   // A denial cannot show this, and the token it concerns is sealed inside a
   // cookie, so an operator has no way to see it for themselves. Empty where
-  // every named claim arrived in a shape the rules compare directly
+  // every named claim arrived in a shape the rules compare directly.
+  //
+  // A rule on `scope` is never named here. That claim is read as one
+  // space-delimited string rather than compared member by member, so one
+  // arriving as anything else is refused outright, and calling it an
+  // identifier mismatch would describe a mistake nobody made
   [[nodiscard]] auto
   object_shaped_claims(std::string_view policy,
                        const sourcemeta::core::JSON &claims) const

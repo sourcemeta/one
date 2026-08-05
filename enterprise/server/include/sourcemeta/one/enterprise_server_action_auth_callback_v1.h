@@ -252,6 +252,7 @@ public:
     // session only ever exists for somebody the policy admits. Answering it
     // afterwards would leave a valid session denied on every request, and a
     // denial asks the provider again, which is a loop rather than an answer
+    std::optional<sourcemeta::core::JSON> combined;
     auto admission{
         authentication.admits_identity(policy_name, token.value().payload())};
 
@@ -266,19 +267,26 @@ public:
                                       grant.value().access_token,
                                       identity.value().subject)};
       if (extra.has_value()) {
-        admission = authentication.admits_identity(
-            policy_name, sourcemeta::one::Authentication::combine_claims(
-                             token.value().payload(), extra.value()));
+        combined = sourcemeta::one::Authentication::combine_claims(
+            token.value().payload(), extra.value());
+        admission =
+            authentication.admits_identity(policy_name, combined.value());
       }
     }
+
+    // Whatever the decision was actually made against, which is the pair taken
+    // together once a second answer arrived. Explaining a refusal against the
+    // token alone would miss a claim the UserInfo endpoint supplied, and that
+    // is where a scope's claims arrive by default under this flow
+    const auto &asserted{combined.has_value() ? combined.value()
+                                              : token.value().payload()};
 
     if (admission != sourcemeta::one::Authentication::Admission::Admitted) {
       sourcemeta::one::HTTP_LOG(
           "The provider authenticated somebody the policy does not admit, "
           "for the policy",
           policy_name);
-      this->report_object_shaped_claims(authentication, policy_name,
-                                        token.value().payload());
+      this->report_object_shaped_claims(authentication, policy_name, asserted);
       this->not_admitted(silent, transaction.value(), request, response);
       return;
     }
