@@ -201,9 +201,7 @@ public:
       : path_{std::move(path)}, url_{std::move(url)} {}
 
   [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "The instance URL must name an origin and nothing more. Serve the "
-           "instance on a domain of its own, and name a collection to give "
-           "its schemas a prefix";
+    return "The instance URL must contain no path";
   }
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {

@@ -482,10 +482,7 @@ TEST(instance_url_below_the_origin_is_refused) {
                                           configuration_path.parent_path());
     FAIL();
   } catch (const sourcemeta::one::ConfigurationInstancePathError &error) {
-    EXPECT_STREQ(error.what(),
-                 "The instance URL must name an origin and nothing more. "
-                 "Serve the instance on a domain of its own, and name a "
-                 "collection to give its schemas a prefix");
+    EXPECT_STREQ(error.what(), "The instance URL must contain no path");
     EXPECT_EQ(error.url(), "http://localhost:8000/v1/catalog");
     EXPECT_EQ(error.path(), configuration_path);
   }

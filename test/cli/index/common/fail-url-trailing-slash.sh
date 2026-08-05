@@ -31,7 +31,7 @@ EOF
 test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"
-error: The instance URL must name an origin and nothing more. Serve the instance on a domain of its own, and name a collection to give its schemas a prefix
+error: The instance URL must contain no path
   at url http://localhost:8000/
   at path $(realpath "$TMP")/one.json
 EOF
