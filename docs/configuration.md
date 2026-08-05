@@ -61,7 +61,7 @@ structuring your instance.
 
 | Property        | Type | Required | Default | Description |
 |-----------------|------|----------|---------|-------------|
-| `/url`          | String  | :red_circle: **Yes** | N/A | The absolute URL on which the instance will be served, which must name an origin and nothing more: a scheme, a host, and optionally a port, with no path and no trailing slash. Sourcemeta One will automatically add URI identifiers relative to this URL for every ingested schema. Inside the instance's URL namespace (schema URIs the catalog owns), path lookups are case-insensitive, even though [RFC 3986 §6.2.2.1](https://datatracker.ietf.org/doc/html/rfc3986#section-6.2.2.1) makes the path component of a URI case-sensitive in general |
+| `/url`          | String  | :red_circle: **Yes** | N/A | The absolute URL on which the instance will be served, which must name an origin and nothing more: a scheme, a host, and optionally a port, with no path, no trailing slash, no credentials, no query and no fragment. Sourcemeta One will automatically add URI identifiers relative to this URL for every ingested schema. Inside the instance's URL namespace (schema URIs the catalog owns), path lookups are case-insensitive, even though [RFC 3986 §6.2.2.1](https://datatracker.ietf.org/doc/html/rfc3986#section-6.2.2.1) makes the path component of a URI case-sensitive in general |
 | `/extends`      | Array   | No  | None | One or more configuration files to extend from. See the [Extends](#extends) section for more information |
 | `/contents`     | Object  | No  | None | The top-level [Collections](#collections) and [Pages](#pages) that compose the instance |
 | `/html`        | Object or Boolean  | No  | `{}` | Settings for the HTML explorer. If set to `false`, the instance runs in headless mode. Enabling the HTML explorer implies the API must also be enabled. See the [HTML](#html) section for more details |
@@ -70,9 +70,10 @@ structuring your instance.
 
 !!! note "Why the instance URL cannot have a path"
 
-    An instance owns a whole origin, so `https://schemas.example.com` is
-    accepted while `https://example.com/schemas` and even
-    `https://example.com/` are refused at indexing time.
+    An instance owns a whole origin, so `https://schemas.example.com` and
+    `http://localhost:8000` are accepted while `https://example.com/schemas`
+    and even `https://example.com/` are refused at indexing time. A port is
+    part of an origin, so it is always welcome.
 
     This is not a limitation we chose so much as one the web's discovery
     mechanisms impose. Standards publish what a client needs to learn about
