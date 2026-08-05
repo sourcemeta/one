@@ -19,7 +19,10 @@
 #include <array>       // std::array
 #include <chrono>      // std::chrono::seconds, std::chrono::system_clock
 #include <filesystem>  // std::filesystem::path
+#include <functional>  // std::less
+#include <mutex>       // std::mutex, std::scoped_lock
 #include <optional>    // std::optional, std::nullopt
+#include <set>         // std::set
 #include <span>        // std::span
 #include <sstream>     // std::ostringstream
 #include <string>      // std::string
@@ -249,6 +252,7 @@ public:
     // session only ever exists for somebody the policy admits. Answering it
     // afterwards would leave a valid session denied on every request, and a
     // denial asks the provider again, which is a loop rather than an answer
+    std::optional<sourcemeta::core::JSON> combined;
     auto admission{
         authentication.admits_identity(policy_name, token.value().payload())};
 
@@ -263,17 +267,26 @@ public:
                                       grant.value().access_token,
                                       identity.value().subject)};
       if (extra.has_value()) {
-        admission = authentication.admits_identity(
-            policy_name, sourcemeta::one::Authentication::combine_claims(
-                             token.value().payload(), extra.value()));
+        combined = sourcemeta::one::Authentication::combine_claims(
+            token.value().payload(), extra.value());
+        admission =
+            authentication.admits_identity(policy_name, combined.value());
       }
     }
+
+    // Whatever the decision was actually made against, which is the pair taken
+    // together once a second answer arrived. Explaining a refusal against the
+    // token alone would miss a claim the UserInfo endpoint supplied, and that
+    // is where a scope's claims arrive by default under this flow
+    const auto &asserted{combined.has_value() ? combined.value()
+                                              : token.value().payload()};
 
     if (admission != sourcemeta::one::Authentication::Admission::Admitted) {
       sourcemeta::one::HTTP_LOG(
           "The provider authenticated somebody the policy does not admit, "
           "for the policy",
           policy_name);
+      this->report_object_shaped_claims(authentication, policy_name, asserted);
       this->not_admitted(silent, transaction.value(), request, response);
       return;
     }
@@ -638,6 +651,38 @@ private:
       return grant;
     } catch (...) {
       return std::nullopt;
+    }
+  }
+
+  // A rule compared against a claim carrying objects is compared on the
+  // `value` sub-attribute alone, so a rule naming what a person sees rather
+  // than what identifies them matches nothing. A denial cannot show that, and
+  // the token it concerns is sealed inside a cookie where an operator cannot
+  // look, so it is said here.
+  //
+  // Only a refusal reaches this, so a working policy stays quiet, and each
+  // claim is named once however often somebody signs in
+  static auto report_object_shaped_claims(
+      const sourcemeta::one::Authentication &authentication,
+      const std::string_view policy_name, const sourcemeta::core::JSON &claims)
+      -> void {
+    static std::mutex mutex;
+    static std::set<std::string, std::less<>> reported;
+    for (const auto claim :
+         authentication.object_shaped_claims(policy_name, claims)) {
+      std::string subject{claim};
+      subject += " of the policy ";
+      subject += policy_name;
+      const std::scoped_lock guard{mutex};
+      if (!reported.insert(subject).second) {
+        continue;
+      }
+
+      sourcemeta::one::HTTP_LOG(
+          "A rule names a claim the provider answers with objects, which are "
+          "compared on their identifier rather than on any name shown to a "
+          "person. The claim is",
+          subject);
     }
   }
 
