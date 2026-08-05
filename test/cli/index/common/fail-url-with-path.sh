@@ -9,9 +9,9 @@ trap clean EXIT
 
 cat << EOF > "$TMP/one.json"
 {
-  "url": "https://example.com/schemas",
+  "url": "http://localhost:8000/registry",
   "contents": {
-    "test": {
+    "example": {
       "path": "./schemas"
     }
   }
@@ -20,23 +20,20 @@ EOF
 
 mkdir "$TMP/schemas"
 
-cat << 'EOF' > "$TMP/schemas/foo.json"
+cat << 'EOF' > "$TMP/schemas/example.json"
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.com/other/foo",
   "type": "string"
 }
 EOF
-
 
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" > "$TMP/output.txt" && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"
-error: The schema identifier is not relative to the corresponding base
-  at path $(realpath "$TMP")/schemas/foo.json
-  at identifier https://example.com/other/foo
-  with base https://example.com/schemas
+error: The instance URL must contain no path
+  at url http://localhost:8000/registry
+  at path $(realpath "$TMP")/one.json
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"

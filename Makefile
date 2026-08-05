@@ -79,13 +79,10 @@ test-e2e: check
 	./contrib/e2e-native.sh test/e2e/meta $(EDITION) $(SANDBOX_PORT)
 	./contrib/e2e-native.sh test/e2e/no-api $(EDITION) $(SANDBOX_PORT)
 	./contrib/e2e-native.sh test/e2e/chaos $(EDITION) $(SANDBOX_PORT)
-	./contrib/e2e-native.sh test/e2e/path $(EDITION) $(SANDBOX_PORT)
 ifeq ($(ENTERPRISE),ON)
 	./contrib/e2e-native.sh enterprise/e2e/empty $(EDITION) $(SANDBOX_PORT)
 	./contrib/e2e-native.sh enterprise/e2e/html $(EDITION) $(SANDBOX_PORT)
-	./contrib/e2e-native.sh enterprise/e2e/path $(EDITION) $(SANDBOX_PORT)
 	./contrib/e2e-native.sh enterprise/e2e/public $(EDITION) $(SANDBOX_PORT)
-	./contrib/e2e-native.sh enterprise/e2e/auth-mcp-path $(EDITION) $(SANDBOX_PORT)
 	# The authentication sandboxes stand up an identity provider alongside the
 	# registry, so they only run under Docker Compose, never the native path
 endif
@@ -98,19 +95,13 @@ docker: docker-build
 	$(MAKE) -C test/e2e/meta EDITION=$(EDITION)
 	$(MAKE) -C test/e2e/no-api EDITION=$(EDITION)
 	$(MAKE) -C test/e2e/chaos EDITION=$(EDITION)
-	$(MAKE) -C test/e2e/path EDITION=$(EDITION)
 ifeq ($(ENTERPRISE),ON)
 	$(MAKE) -C enterprise/e2e/empty EDITION=$(EDITION)
 	$(MAKE) -C enterprise/e2e/html EDITION=$(EDITION)
-	$(MAKE) -C enterprise/e2e/path EDITION=$(EDITION)
 	$(MAKE) -C enterprise/e2e/public EDITION=$(EDITION)
-	# Discovery metadata needs a policy but never contacts its issuer, so this
-	# one needs no identity provider alongside it
-	$(MAKE) -C enterprise/e2e/auth-mcp-path EDITION=$(EDITION)
 	# The authentication sandboxes each stand up an identity provider alongside
 	# the registry, exercising both JWT and apiKey policies
 	$(MAKE) -C enterprise/e2e/auth EDITION=$(EDITION)
-	$(MAKE) -C enterprise/e2e/auth-path EDITION=$(EDITION)
 	$(MAKE) -C enterprise/e2e/auth-closed EDITION=$(EDITION)
 	$(MAKE) -C enterprise/e2e/auth-sso EDITION=$(EDITION)
 endif

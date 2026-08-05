@@ -34,8 +34,7 @@ namespace sourcemeta::one {
 
 auto RouterAction::canonical_path(const std::string_view input) const
     -> std::optional<Authentication::Path> {
-  return Authentication::Path::parse(input, this->server_uri_,
-                                     this->server_uri_base_path_);
+  return Authentication::Path::parse(input, this->server_uri_);
 }
 
 auto RouterAction::artifact_locate(const Authentication::Path &path,

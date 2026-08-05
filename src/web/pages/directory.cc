@@ -34,11 +34,9 @@ auto GENERATE_WEB_DIRECTORY::handler(
   sourcemeta::core::HTMLWriter writer;
   html::make_page(writer, configuration, canonical, title, description,
                   [&](sourcemeta::core::HTMLWriter &w) -> void {
-                    html::make_breadcrumb(w, directory.at("breadcrumb"),
-                                          configuration.base_path);
+                    html::make_breadcrumb(w, directory.at("breadcrumb"));
                     html::make_directory_header(w, directory);
-                    html::make_file_manager(w, directory,
-                                            configuration.base_path);
+                    html::make_file_manager(w, directory);
                   });
 
   const auto timestamp_end{std::chrono::steady_clock::now()};

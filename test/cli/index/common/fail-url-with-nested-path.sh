@@ -9,15 +9,10 @@ trap clean EXIT
 
 cat << EOF > "$TMP/one.json"
 {
-  "url": "https://sourcemeta.com",
+  "url": "http://localhost:8000/v1/catalog",
   "contents": {
     "example": {
-      "contents": {
-        "schemas": {
-          "baseUri": "https://example.com/",
-          "path": "./schemas"
-        }
-      }
+      "path": "./schemas"
     }
   }
 }
@@ -25,20 +20,20 @@ EOF
 
 mkdir "$TMP/schemas"
 
-cat << 'EOF' > "$TMP/schemas/test.json"
+cat << 'EOF' > "$TMP/schemas/example.json"
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://example.com/test.json"
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string"
 }
 EOF
 
-echo "foobar" > "$TMP/output"
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" > "$TMP/output.txt" && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"
-error: File already exists and is not a directory
-  at path $(realpath "$TMP")/output
+error: The instance URL must contain no path
+  at url http://localhost:8000/v1/catalog
+  at path $(realpath "$TMP")/one.json
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"

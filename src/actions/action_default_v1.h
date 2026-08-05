@@ -33,8 +33,7 @@ public:
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
       sourcemeta::one::Router &dispatcher)
-      : sourcemeta::one::RouterAction{base, router.base_path(),
-                                      router.base_url(), dispatcher} {
+      : sourcemeta::one::RouterAction{base, router.base_url(), dispatcher} {
     router.arguments(
         identifier, [this](const auto &key, const auto &value) -> void {
           if (key == "errorSchema") {
@@ -80,8 +79,8 @@ public:
             .frame_ancestors = "'none'",
             .x_frame_options = "DENY",
         };
-    const auto stripped{sourcemeta::core::URI::strip_path_prefix(
-        request.path(), this->server_uri_base_path())};
+    const auto stripped{
+        sourcemeta::core::URI::strip_path_prefix(request.path(), "")};
     if (!stripped.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,

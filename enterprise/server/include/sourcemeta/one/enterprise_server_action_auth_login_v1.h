@@ -47,8 +47,7 @@ public:
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
       sourcemeta::one::Router &dispatcher)
-      : sourcemeta::one::RouterAction{base, router.base_path(),
-                                      router.base_url(), dispatcher} {
+      : sourcemeta::one::RouterAction{base, router.base_url(), dispatcher} {
     router.arguments(
         identifier, [this](const auto &key, const auto &value) -> void {
           if (key == "errorSchema") {
@@ -157,14 +156,14 @@ public:
       target = std::string{destination};
     } else if (const auto referer{request.header("referer")};
                referer.starts_with(this->server_uri())) {
-      std::string candidate{this->server_uri_base_path()};
+      std::string candidate{""};
       candidate += referer.substr(this->server_uri().size());
       if (sourcemeta::one::is_local_path(candidate)) {
         target = std::move(candidate);
       }
     }
     if (!target.has_value() && !policy->default_path.empty()) {
-      std::string fallback{this->server_uri_base_path()};
+      std::string fallback{""};
       fallback += policy->default_path;
       target = std::move(fallback);
     }
@@ -251,12 +250,10 @@ public:
       return;
     }
 
-    const auto base{this->server_uri_base_path()};
-    const auto scope{base.empty() ? std::string_view{"/"} : base};
     const auto cookie{sourcemeta::core::http_serialize_cookie(
         {.name = sourcemeta::one::Authentication::TRANSACTION_COOKIE,
          .value = sealed.value(),
-         .path = scope,
+         .path = sourcemeta::one::Authentication::COOKIE_PATH,
          .max_age = TRANSACTION_LIFETIME,
          .http_only = true,
          .secure = sourcemeta::core::URI{this->server_uri()}.is_https(),

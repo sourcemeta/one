@@ -40,8 +40,7 @@ public:
                const sourcemeta::core::URITemplateRouterView &router,
                const sourcemeta::core::URITemplateRouter::Identifier identifier,
                sourcemeta::one::Router &dispatcher)
-      : sourcemeta::one::RouterAction{base, router.base_path(),
-                                      router.base_url(), dispatcher},
+      : sourcemeta::one::RouterAction{base, router.base_url(), dispatcher},
         search_view_{base / "explorer" / "%" / "search.metapack"} {
     router.arguments(
         identifier, [this](const auto &key, const auto &value) -> void {
@@ -74,9 +73,8 @@ public:
         this->mcp_metadata_.at("resourceIdentifier").to_string();
 
     // RFC 9728 Section 5.1. A client derives this location from the resource
-    // identifier anyway, but only after being refused once, and a deployment
-    // under a base path serves it somewhere that derivation cannot reach. It
-    // is named here only when there is a document to find
+    // identifier anyway, but only after being refused once. It is named here
+    // only when there is a document to find
     if (this->mcp_metadata_.defines("protectedResourceMetadata")) {
       this->challenge_.append("resource_metadata=\"");
       this->challenge_.append(this->server_uri());

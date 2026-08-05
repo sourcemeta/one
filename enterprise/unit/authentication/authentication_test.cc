@@ -26,17 +26,8 @@
 // one the same way a request would
 static auto at(const std::string_view input)
     -> sourcemeta::one::Authentication::Path {
-  return sourcemeta::one::Authentication::Path::parse(
-             input, "http://localhost:8000", "")
-      .value();
-}
-
-// The same location named through an instance that is served under a base path
-static auto at_base(const std::string_view input, const std::string_view base)
-    -> sourcemeta::one::Authentication::Path {
-  const std::string instance{std::string{"http://localhost:8000"} +
-                             std::string{base}};
-  return sourcemeta::one::Authentication::Path::parse(input, instance, base)
+  return sourcemeta::one::Authentication::Path::parse(input,
+                                                      "http://localhost:8000")
       .value();
 }
 
@@ -595,59 +586,35 @@ TEST(extension_handling_is_confined_to_the_terminal_segment) {
       authentication.admits(at("/v1.0/secret"), {.bearer = ""}).allowed);
 }
 
-TEST(base_path_is_stripped_before_matching) {
-  setenv("ONE_TEST_KEY_BASE", "base-secret", 1);
+TEST(an_explicit_route_is_gated_on_the_target_as_it_arrived) {
+  setenv("ONE_TEST_KEY_ROUTE", "route-secret", 1);
   const std::array<std::string_view, 1> apikey_paths{{"/private"}};
-  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_BASE"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_ROUTE"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{apikey_paths, keys}}};
-  const auto path{test_path("base_path.bin")};
+  const auto path{test_path("explicit_route.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
       path, stub_fetcher({}, nullptr)};
-  // With the base path stripped, the registry path under it is matched. The
-  // uncovered public path is admitted, the covered one is gated
-  EXPECT_TRUE(authentication
-                  .admits(at_base("/registry/public/string", "/registry"),
-                          {.bearer = "", .cookies = {}})
-                  .allowed);
-  EXPECT_FALSE(authentication
-                   .admits(at_base("/registry/private/secret", "/registry"),
-                           {.bearer = "", .cookies = {}})
-                   .allowed);
-  EXPECT_TRUE(authentication
-                  .admits(at_base("/registry/private/secret", "/registry"),
-                          {.bearer = "base-secret", .cookies = {}})
-                  .allowed);
-
-  // An empty base path strips nothing
-  EXPECT_TRUE(
-      authentication.admits(at("/public/string"), {.bearer = "", .cookies = {}})
+  EXPECT_FALSE(
+      authentication
+          .admits_route("/private/secret", {.bearer = "", .cookies = {}})
           .allowed);
-  EXPECT_FALSE(authentication
-                   .admits(at("/private/secret"), {.bearer = "", .cookies = {}})
-                   .allowed);
-
-  // A base that is not a whole-segment prefix of the target is left in place,
-  // where it is covered by no policy. An explicit route is matched on the
-  // target as it arrived, so this is asked the way the surface gate asks it
   EXPECT_TRUE(authentication
-                  .admits_route("/registryextra/private/secret", "/registry",
-                                {.bearer = "", .cookies = {}})
+                  .admits_route("/private/secret",
+                                {.bearer = "route-secret", .cookies = {}})
                   .allowed);
 
-  // A target outside the base path is likewise covered by no policy
+  // A target covered by no policy is admitted, including one whose spelling
+  // only resembles a governed prefix
   EXPECT_TRUE(authentication
-                  .admits_route("/elsewhere/private/secret", "/registry",
-                                {.bearer = "", .cookies = {}})
+                  .admits_route("/public/string", {.bearer = "", .cookies = {}})
                   .allowed);
-
-  // While one that does carry the base path is governed by the policy under it
-  EXPECT_FALSE(authentication
-                   .admits_route("/registry/private/secret", "/registry",
-                                 {.bearer = "", .cookies = {}})
-                   .allowed);
+  EXPECT_TRUE(
+      authentication
+          .admits_route("/privateextra/secret", {.bearer = "", .cookies = {}})
+          .allowed);
 }
 
 TEST(apikey_admits_matching_credential) {

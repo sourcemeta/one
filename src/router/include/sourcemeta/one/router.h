@@ -115,10 +115,8 @@ struct ArtifactResolution {
 class RouterAction {
 public:
   RouterAction(const std::filesystem::path &index_directory,
-               const std::string_view server_uri_base_path,
                const std::string_view server_uri, Router &dispatcher)
-      : index_directory_{index_directory},
-        server_uri_base_path_{server_uri_base_path}, server_uri_{server_uri},
+      : index_directory_{index_directory}, server_uri_{server_uri},
         dispatcher_{dispatcher} {}
   virtual ~RouterAction() = default;
 
@@ -181,10 +179,6 @@ public:
   // whether that sign-in still stands, rather than asking the person again
   [[nodiscard]] auto serve_renewal(HTTPRequest &request,
                                    HTTPResponse &response) const -> bool;
-
-  [[nodiscard]] auto server_uri_base_path() const noexcept -> std::string_view {
-    return this->server_uri_base_path_;
-  }
 
   [[nodiscard]] auto server_uri() const noexcept -> std::string_view {
     return this->server_uri_;
@@ -321,7 +315,6 @@ private:
 
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
   const std::filesystem::path &index_directory_;
-  std::string_view server_uri_base_path_;
   std::string_view server_uri_;
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
   Router &dispatcher_;

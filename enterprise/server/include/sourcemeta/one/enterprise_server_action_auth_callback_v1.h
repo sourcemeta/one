@@ -62,8 +62,7 @@ public:
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
       sourcemeta::one::Router &dispatcher)
-      : sourcemeta::one::RouterAction{base, router.base_path(),
-                                      router.base_url(), dispatcher} {
+      : sourcemeta::one::RouterAction{base, router.base_url(), dispatcher} {
     router.arguments(
         identifier, [this](const auto &key, const auto &value) -> void {
           if (key == "errorSchema") {
@@ -294,8 +293,6 @@ public:
     const auto expiry{std::chrono::time_point_cast<std::chrono::seconds>(
                           std::chrono::system_clock::now()) +
                       SESSION_LIFETIME};
-    const auto base{this->server_uri_base_path()};
-    const auto scope{base.empty() ? std::string_view{"/"} : base};
     const auto secure{sourcemeta::core::URI{this->server_uri()}.is_https()};
 
     // The identity token is kept so that logging out can prove whose session
@@ -305,14 +302,14 @@ public:
     // without saying so, which would look like signing in and then not being
     // signed in. So the whole cookie is measured, and the token is left out
     // when it does not fit, which costs the confirmation page and nothing else
-    auto session_cookie{this->session_cookie(
-        authentication, policy_name, identity.value().subject, id_token.value(),
-        expiry, scope, secure)};
+    auto session_cookie{this->session_cookie(authentication, policy_name,
+                                             identity.value().subject,
+                                             id_token.value(), expiry, secure)};
     if (session_cookie.has_value() &&
         session_cookie.value().size() > MAXIMUM_COOKIE_LENGTH) {
-      session_cookie = this->session_cookie(authentication, policy_name,
-                                            identity.value().subject, "",
-                                            expiry, scope, secure);
+      session_cookie =
+          this->session_cookie(authentication, policy_name,
+                               identity.value().subject, "", expiry, secure);
     }
 
     // Without the token there is very little left, so exceeding the limit here
@@ -338,7 +335,7 @@ public:
     // instance's own signature, yet it is re-checked as a same-origin local
     // path before being trusted as a redirect target, defaulting to the
     // instance root
-    std::string destination{scope};
+    std::string destination{"/"};
     const auto *sealed_destination{transaction.value().try_at("to")};
     if (sealed_destination != nullptr && sealed_destination->is_string()) {
       const auto &candidate{sealed_destination->to_string()};
@@ -352,11 +349,11 @@ public:
     // Signing in is what earns a browser a silent renewal later, and the
     // marker outlives the session it accompanies because it is only of use
     // once that session has expired
-    this->remember_renewal(response, policy_name, scope, secure);
+    this->remember_renewal(response, policy_name, secure);
     // The single-use transaction has served its purpose, so it is expired
     // alongside minting the session
     this->expire(response, sourcemeta::one::Authentication::TRANSACTION_COOKIE,
-                 scope, secure);
+                 secure);
     response.write_header("Location", destination);
     response.write_header("Cache-Control", "no-store");
     sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_SEE_OTHER,
@@ -460,8 +457,7 @@ private:
       const sourcemeta::one::Authentication &authentication,
       const std::string_view policy_name, const std::string_view subject,
       const std::string_view id_token, const std::chrono::sys_seconds expiry,
-      const std::string_view scope, const bool secure) const
-      -> std::optional<std::string> {
+      const bool secure) const -> std::optional<std::string> {
     auto payload{sourcemeta::core::JSON::make_object()};
     payload.assign_assume_new("policy",
                               sourcemeta::core::JSON{std::string{policy_name}});
@@ -486,7 +482,7 @@ private:
     auto cookie{sourcemeta::core::http_serialize_cookie(
         {.name = sourcemeta::one::Authentication::SESSION_COOKIE,
          .value = sealed.value(),
-         .path = scope,
+         .path = sourcemeta::one::Authentication::COOKIE_PATH,
          .max_age = SESSION_LIFETIME,
          .http_only = true,
          .secure = secure,
@@ -524,12 +520,11 @@ private:
 
   auto remember_renewal(sourcemeta::one::HTTPResponse &response,
                         const std::string_view policy_name,
-                        const std::string_view scope, const bool secure) const
-      -> void {
+                        const bool secure) const -> void {
     const auto cookie{sourcemeta::core::http_serialize_cookie(
         {.name = sourcemeta::one::Authentication::RENEWAL_COOKIE,
          .value = policy_name,
-         .path = scope,
+         .path = sourcemeta::one::Authentication::COOKIE_PATH,
          .max_age = RENEWAL_LIFETIME,
          .http_only = true,
          .secure = secure,
@@ -546,10 +541,8 @@ private:
       const sourcemeta::core::JSON &transaction,
       sourcemeta::one::HTTPRequest &request,
       sourcemeta::one::HTTPResponse &response) const -> void {
-    const auto base{this->server_uri_base_path()};
-    const auto scope{base.empty() ? std::string_view{"/"} : base};
     const auto secure{sourcemeta::core::URI{this->server_uri()}.is_https()};
-    std::string destination{scope};
+    std::string destination{"/"};
     const auto *sealed_destination{transaction.try_at("to")};
     if (sealed_destination != nullptr && sealed_destination->is_string() &&
         sourcemeta::one::is_local_path(sealed_destination->to_string())) {
@@ -558,9 +551,9 @@ private:
 
     response.write_status(sourcemeta::core::HTTP_STATUS_SEE_OTHER);
     this->expire(response, sourcemeta::one::Authentication::RENEWAL_COOKIE,
-                 scope, secure);
+                 secure);
     this->expire(response, sourcemeta::one::Authentication::TRANSACTION_COOKIE,
-                 scope, secure);
+                 secure);
     response.write_header("Location", destination);
     response.write_header("Cache-Control", "no-store");
     sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_SEE_OTHER,
@@ -568,12 +561,11 @@ private:
   }
 
   auto expire(sourcemeta::one::HTTPResponse &response,
-              const std::string_view name, const std::string_view scope,
-              const bool secure) const -> void {
+              const std::string_view name, const bool secure) const -> void {
     const auto cookie{sourcemeta::core::http_serialize_cookie(
         {.name = name,
          .value = "",
-         .path = scope,
+         .path = sourcemeta::one::Authentication::COOKIE_PATH,
          .max_age = std::chrono::seconds{0},
          .http_only = true,
          .secure = secure,

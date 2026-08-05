@@ -35,7 +35,6 @@ struct Configuration {
       -> Configuration;
 
   sourcemeta::core::JSON::String url;
-  sourcemeta::core::JSON::String base_path;
   sourcemeta::core::JSON::String origin;
   // The path of the configuration file this was parsed from
   std::filesystem::path path;

@@ -190,6 +190,60 @@ private:
   std::string url_;
 };
 
+// Raised when the instance URL names anything below the origin. A well-known
+// URI is rooted at the top of a path hierarchy and is not well-known anywhere
+// else (RFC 8615 Section 3), so an instance mounted under a path cannot serve
+// the locations standards derive from its own identifiers, and cannot take
+// part in any mechanism built on them
+class ConfigurationInstancePathError : public std::exception {
+public:
+  ConfigurationInstancePathError(std::filesystem::path path, std::string url)
+      : path_{std::move(path)}, url_{std::move(url)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "The instance URL must contain no path";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto url() const noexcept -> const std::string & {
+    return this->url_;
+  }
+
+private:
+  std::filesystem::path path_;
+  std::string url_;
+};
+
+// Raised when the instance URL carries a component that identifies something
+// other than where the instance is served. Every schema identifier is composed
+// against this URL, so a query or a fragment would travel into identifiers
+// that name no resource, and credentials would travel into every identifier
+// the instance publishes
+class ConfigurationInstanceOriginError : public std::exception {
+public:
+  ConfigurationInstanceOriginError(std::filesystem::path path, std::string url)
+      : path_{std::move(path)}, url_{std::move(url)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "The instance URL must contain no credentials, query, or fragment";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto url() const noexcept -> const std::string & {
+    return this->url_;
+  }
+
+private:
+  std::filesystem::path path_;
+  std::string url_;
+};
+
 // Raised when an authentication policy names an issuer that this instance
 // could never complete a discovery exchange against
 class ConfigurationInvalidAuthenticationIssuerError : public std::exception {

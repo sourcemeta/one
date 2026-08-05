@@ -314,9 +314,9 @@ The `.json` extension is optional unless the HTML UI is enabled and the
 `Accept` header is set to prefer an HTML response. The extension and the
 `{path}` segment are matched case-insensitively within the catalog's URL
 namespace, so `foo.json`, `foo.JSON`, and `FOO.json` all resolve to the same
-schema. The instance's configured base path (see
-[`url`](configuration.md#onejson)) remains case-sensitive per
-[RFC 3986 §6.2.2.1](https://datatracker.ietf.org/doc/html/rfc3986#section-6.2.2.1).
+schema, even though
+[RFC 3986 §6.2.2.1](https://datatracker.ietf.org/doc/html/rfc3986#section-6.2.2.1)
+makes the path component of a URI case-sensitive in general.
 If the `bundle` query parameter is set, the schema references are embedded
 using the standard [JSON Schema
 Bundling](https://json-schema.org/blog/posts/bundling-json-schema-compound-documents)

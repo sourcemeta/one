@@ -20,7 +20,6 @@ auto is_interactive(const sourcemeta::core::JSON &policy) -> bool {
 }
 
 auto write_providers(sourcemeta::core::HTMLWriter &body,
-                     const sourcemeta::one::Configuration &configuration,
                      const sourcemeta::core::JSON &policies) -> void {
   body.p().attribute("class", "text-secondary text-center small mb-4");
   body.text("Choose how you want to sign in");
@@ -37,8 +36,7 @@ auto write_providers(sourcemeta::core::HTMLWriter &body,
     // The whole page stays at the site-wide no-referrer default, so only this
     // navigation opts in to a same-origin referrer, handing the endpoint the
     // denied path while every other request from the page still leaks nothing
-    std::string href{configuration.base_path};
-    href += "/self/v1/auth/login/";
+    std::string href{"/self/v1/auth/login/"};
     href += policy.at("name").to_string();
     body.a()
         .attribute("class", "btn btn-primary d-flex align-items-center "
@@ -105,7 +103,7 @@ auto GENERATE_WEB_LOGIN::handler(
 
   writer.div().attribute("class", "text-center mb-4");
   writer.img()
-      .attribute("src", configuration.base_path + "/self/v1/static/icon.svg")
+      .attribute("src", "/self/v1/static/icon.svg")
       .attribute("alt", "")
       .attribute("width", "48")
       .attribute("height", "48")
@@ -115,18 +113,17 @@ auto GENERATE_WEB_LOGIN::handler(
   writer.close();
   writer.close();
 
-  write_providers(writer, configuration, policies);
+  write_providers(writer, policies);
 
   writer.close();
   writer.close();
   writer.close();
 
-  html::make_footer(writer, configuration);
+  html::make_footer(writer);
   writer.script()
       .attribute("async", "")
       .attribute("defer", "")
-      .attribute("src", configuration.base_path +
-                            "/self/v1/static/main.min.js?v=" +
+      .attribute("src", "/self/v1/static/main.min.js?v=" +
                             std::string{SOURCEMETA_ONE_JS_CHECKSUM});
   writer.close();
   writer.close();

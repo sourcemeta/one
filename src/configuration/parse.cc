@@ -158,9 +158,25 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
   sourcemeta::core::URI server_url{data.at("url").to_string()};
   server_url.canonicalize();
   result.url = server_url.recompose();
-  result.base_path = server_url.path().value_or("");
-  while (result.base_path.ends_with('/')) {
-    result.base_path.pop_back();
+
+  // A well-known URI is rooted at the top of a path hierarchy and is not
+  // well-known anywhere else (RFC 8615 Section 3), so an instance below the
+  // origin cannot serve the locations standards derive from its own
+  // identifiers. One spelling is admitted rather than several normalised into
+  // one, since there is then nothing to normalise and nothing left untested
+  const auto server_path{server_url.path()};
+  if (server_path.has_value() && !server_path.value().empty()) {
+    throw ConfigurationInstancePathError(configuration_path,
+                                         data.at("url").to_string());
+  }
+
+  // Every schema identifier is composed against this URL, so anything here
+  // that does not say where the instance is served travels into identifiers
+  // that name no resource, credentials included
+  if (server_url.userinfo().has_value() || server_url.query().has_value() ||
+      server_url.fragment().has_value()) {
+    throw ConfigurationInstanceOriginError(configuration_path,
+                                           data.at("url").to_string());
   }
 
   server_url.path("");

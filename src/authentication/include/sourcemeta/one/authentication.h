@@ -39,9 +39,9 @@ public:
   static constexpr std::size_t MAXIMUM_POLICIES{64};
 
   /// Where a resource lives within an instance, in the single spelling every
-  /// part of the system agrees on: no base path, no leading or trailing
-  /// separator, no empty or relative segments, and lowercase throughout. The
-  /// instance root is the empty value.
+  /// part of the system agrees on: no leading or trailing separator, no empty
+  /// or relative segments, and lowercase throughout. The instance root is the
+  /// empty value.
   ///
   /// An extension is kept, because it names a representation of a resource
   /// rather than a different resource, and a policy may gate one
@@ -58,14 +58,13 @@ public:
     /// Canonicalise a request path or a URL against an instance, returning
     /// nothing when the input names somewhere outside it
     [[nodiscard]] static auto parse(const std::string_view input,
-                                    const std::string_view instance_url,
-                                    const std::string_view base_path)
+                                    const std::string_view instance_url)
         -> std::optional<Path>;
 
     /// Canonicalise input that is already relative to the instance root, such
-    /// as a configured policy path or a path the indexer composed. It carries
-    /// no base path to remove and names nowhere outside the instance, so
-    /// unlike `parse` it always yields a value
+    /// as a configured policy path or a path the indexer composed. It names
+    /// nowhere outside the instance, so unlike `parse` it always yields a
+    /// value
     [[nodiscard]] static auto relative(const std::string_view input) -> Path;
 
     [[nodiscard]] auto value() const noexcept -> std::string_view {
@@ -114,6 +113,10 @@ public:
   // expired, and it carries no credential: whoever holds it can start a login
   // they were free to start anyway
   static constexpr std::string_view RENEWAL_COOKIE{"sourcemeta_one_renewal"};
+
+  // An instance names an origin and nothing more, so every location it serves
+  // is below the root, and a cookie scoped there travels to all of them
+  static constexpr std::string_view COOKIE_PATH{"/"};
 
   // A policy gates a set of path prefixes. A path covered by no policy is
   // public
@@ -196,15 +199,13 @@ public:
   // Whether what a request presented admits it to an explicit route, which the
   // router matched on the request target literally rather than on the location
   // that target resolves to. The spelling is taken as matched, so a target
-  // reaching past a governed prefix is still governed by it, and a non-empty
-  // base path is removed first
+  // reaching past a governed prefix is still governed by it
   // A route may additionally require that a presented token names the route
   // itself, rather than only whatever wider audience the policy admitting the
   // caller was configured with. An empty requirement asks for nothing extra,
   // and a credential that is not a token is unaffected, since only a token
   // carries an audience to check
   [[nodiscard]] auto admits_route(std::string_view target,
-                                  std::string_view base_path,
                                   const Credentials &credentials,
                                   std::string_view required_audience = {}) const
       -> Verdict;

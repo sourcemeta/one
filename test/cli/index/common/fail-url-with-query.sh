@@ -9,9 +9,9 @@ trap clean EXIT
 
 cat << EOF > "$TMP/one.json"
 {
-  "url": "https://example.com/schemas",
+  "url": "http://localhost:8000?foo=bar",
   "contents": {
-    "test": {
+    "example": {
       "path": "./schemas"
     }
   }
@@ -20,24 +20,20 @@ EOF
 
 mkdir "$TMP/schemas"
 
-cat << 'EOF' > "$TMP/schemas/foo.json"
+cat << 'EOF' > "$TMP/schemas/example.json"
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.com/schemas/foo",
-  "allOf": [ { "$ref": "https://other.example.com/external" } ]
+  "type": "string"
 }
 EOF
-
 
 "$1" --skip-banner "$TMP/one.json" "$TMP/output" > "$TMP/output.txt" && CODE="$?" || CODE="$?"
 test "$CODE" = "1" || exit 1
 
 cat << EOF > "$TMP/expected.txt"
-error: Could not resolve the reference to an external schema
-  at identifier https://other.example.com/external
-  at path $(realpath "$TMP")/schemas/foo.json
-
-Did you forget to register a schema with such URI?
+error: The instance URL must contain no credentials, query, or fragment
+  at url http://localhost:8000?foo=bar
+  at path $(realpath "$TMP")/one.json
 EOF
 
 diff "$TMP/output.txt" "$TMP/expected.txt"

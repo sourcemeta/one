@@ -9,7 +9,7 @@ trap clean EXIT
 
 cat << EOF > "$TMP/one.json"
 {
-  "url": "https://sourcemeta.com/",
+  "url": "https://sourcemeta.com",
   "contents": {
     "example": {
       "contents": {
@@ -49,7 +49,7 @@ cat << EOF > "$TMP/expected.txt"
               "path": "$ONE_PREFIX/share/sourcemeta/one/self/v1/schemas",
               "x-sourcemeta-one:path": "$ONE_PREFIX/share/sourcemeta/one/self/v1/one.json",
               "x-sourcemeta-one:priority": 0,
-              "baseUri": "https://sourcemeta.com/"
+              "baseUri": "https://sourcemeta.com"
             }
           }
         }
@@ -65,7 +65,7 @@ cat << EOF > "$TMP/expected.txt"
       }
     }
   },
-  "url": "https://sourcemeta.com/",
+  "url": "https://sourcemeta.com",
   "html": {
     "name": "Sourcemeta",
     "description": "The next-generation JSON Schema platform"

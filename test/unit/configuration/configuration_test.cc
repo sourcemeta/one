@@ -455,69 +455,90 @@ TEST(valid_008) {
   EXPECT_PRIORITY(configuration, "example", 50);
 }
 
-TEST(base_path_none) {
+TEST(instance_url_at_the_origin_is_accepted) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
-                                "base_path_none.json"};
+                                "instance_url_origin.json"};
   const auto raw_configuration{
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.path, configuration_path);
-  EXPECT_EQ(configuration.base_path, "");
   EXPECT_EQ(configuration.origin, "http://localhost:8000");
+  EXPECT_EQ(configuration.url, "http://localhost:8000");
 }
 
-TEST(base_path_slash) {
+TEST(instance_url_below_the_origin_is_refused) {
+  // A well-known URI is rooted at the top of a path hierarchy and is not
+  // well-known anywhere else, so an instance below the origin cannot serve
+  // what a client derives from its own identifiers
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
-                                "base_path_slash.json"};
+                                "instance_url_path.json"};
   const auto raw_configuration{
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
-  const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, configuration_path, configuration_path.parent_path())};
 
-  EXPECT_EQ(configuration.path, configuration_path);
-  EXPECT_EQ(configuration.base_path, "");
-  EXPECT_EQ(configuration.origin, "http://localhost:8000");
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, configuration_path,
+                                          configuration_path.parent_path());
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationInstancePathError &error) {
+    EXPECT_STREQ(error.what(), "The instance URL must contain no path");
+    EXPECT_EQ(error.url(), "http://localhost:8000/v1/catalog");
+    EXPECT_EQ(error.path(), configuration_path);
+  }
 }
 
-TEST(base_path_simple) {
+TEST(instance_url_with_a_bare_trailing_slash_is_refused) {
+  // One spelling is admitted rather than several normalised into one, so
+  // there is nothing to normalise and nothing left untested
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
-                                "base_path_simple.json"};
+                                "instance_url_trailing_slash.json"};
   const auto raw_configuration{
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
-  const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, configuration_path, configuration_path.parent_path())};
 
-  EXPECT_EQ(configuration.path, configuration_path);
-  EXPECT_EQ(configuration.base_path, "/v1/catalog");
-  EXPECT_EQ(configuration.origin, "http://localhost:8000");
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, configuration_path,
+                                          configuration_path.parent_path());
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationInstancePathError &error) {
+    EXPECT_STREQ(error.what(), "The instance URL must contain no path");
+    EXPECT_EQ(error.url(), "http://localhost:8000/");
+    EXPECT_EQ(error.path(), configuration_path);
+  }
 }
 
-TEST(base_path_trailing_slash) {
+TEST(instance_url_with_a_deep_path_is_refused) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
-                                "base_path_trailing_slash.json"};
+                                "instance_url_deep_path.json"};
   const auto raw_configuration{
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
-  const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, configuration_path, configuration_path.parent_path())};
 
-  EXPECT_EQ(configuration.path, configuration_path);
-  EXPECT_EQ(configuration.base_path, "/v1/catalog");
-  EXPECT_EQ(configuration.origin, "http://localhost:8000");
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, configuration_path,
+                                          configuration_path.parent_path());
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationInstancePathError &error) {
+    EXPECT_STREQ(error.what(), "The instance URL must contain no path");
+    EXPECT_EQ(error.url(), "http://localhost:8000/api/v2/schemas");
+    EXPECT_EQ(error.path(), configuration_path);
+  }
 }
 
-TEST(base_path_deep) {
+TEST(instance_url_with_a_path_and_trailing_slash_is_refused) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
-                                "base_path_deep.json"};
+                                "instance_url_path_trailing_slash.json"};
   const auto raw_configuration{
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
-  const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, configuration_path, configuration_path.parent_path())};
 
-  EXPECT_EQ(configuration.path, configuration_path);
-  EXPECT_EQ(configuration.base_path, "/api/v2/schemas");
-  EXPECT_EQ(configuration.origin, "http://localhost:8000");
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, configuration_path,
+                                          configuration_path.parent_path());
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationInstancePathError &error) {
+    EXPECT_STREQ(error.what(), "The instance URL must contain no path");
+    EXPECT_EQ(error.url(), "http://localhost:8000/v1/catalog/");
+    EXPECT_EQ(error.path(), configuration_path);
+  }
 }
 
 TEST(origin_https_default_port) {
@@ -529,9 +550,23 @@ TEST(origin_https_default_port) {
       raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.path, configuration_path);
-  EXPECT_EQ(configuration.url, "https://example.com/schemas");
-  EXPECT_EQ(configuration.base_path, "/schemas");
+  EXPECT_EQ(configuration.url, "https://example.com");
   EXPECT_EQ(configuration.origin, "https://example.com");
+}
+
+TEST(instance_url_with_a_port_is_accepted) {
+  // A port says where the instance is served, so it is part of the origin
+  // rather than something named below it
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "instance_url_port.json"};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.path, configuration_path);
+  EXPECT_EQ(configuration.url, "http://localhost:8000");
+  EXPECT_EQ(configuration.origin, "http://localhost:8000");
 }
 
 TEST(origin_custom_port) {
@@ -543,58 +578,85 @@ TEST(origin_custom_port) {
       raw_configuration, configuration_path, configuration_path.parent_path())};
 
   EXPECT_EQ(configuration.path, configuration_path);
-  EXPECT_EQ(configuration.url, "https://example.com:9443/api");
-  EXPECT_EQ(configuration.base_path, "/api");
+  EXPECT_EQ(configuration.url, "https://example.com:9443");
   EXPECT_EQ(configuration.origin, "https://example.com:9443");
 }
 
-TEST(origin_with_userinfo) {
+TEST(instance_url_with_credentials_is_refused) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "origin_with_userinfo.json"};
   const auto raw_configuration{
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
-  const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, configuration_path, configuration_path.parent_path())};
 
-  EXPECT_EQ(configuration.path, configuration_path);
-  EXPECT_EQ(configuration.origin, "http://example.com");
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, configuration_path,
+                                          configuration_path.parent_path());
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationInstanceOriginError &error) {
+    EXPECT_STREQ(
+        error.what(),
+        "The instance URL must contain no credentials, query, or fragment");
+    EXPECT_EQ(error.url(), "http://user:pass@example.com");
+    EXPECT_EQ(error.path(), configuration_path);
+  }
 }
 
-TEST(origin_with_query) {
+TEST(instance_url_with_a_query_is_refused) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "origin_with_query.json"};
   const auto raw_configuration{
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
-  const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, configuration_path, configuration_path.parent_path())};
 
-  EXPECT_EQ(configuration.path, configuration_path);
-  EXPECT_EQ(configuration.origin, "http://example.com");
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, configuration_path,
+                                          configuration_path.parent_path());
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationInstanceOriginError &error) {
+    EXPECT_STREQ(
+        error.what(),
+        "The instance URL must contain no credentials, query, or fragment");
+    EXPECT_EQ(error.url(), "http://example.com?foo=bar");
+    EXPECT_EQ(error.path(), configuration_path);
+  }
 }
 
-TEST(origin_with_fragment) {
+TEST(instance_url_with_a_fragment_is_refused) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "origin_with_fragment.json"};
   const auto raw_configuration{
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
-  const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, configuration_path, configuration_path.parent_path())};
 
-  EXPECT_EQ(configuration.path, configuration_path);
-  EXPECT_EQ(configuration.origin, "http://example.com");
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, configuration_path,
+                                          configuration_path.parent_path());
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationInstanceOriginError &error) {
+    EXPECT_STREQ(
+        error.what(),
+        "The instance URL must contain no credentials, query, or fragment");
+    EXPECT_EQ(error.url(), "http://example.com#section");
+    EXPECT_EQ(error.path(), configuration_path);
+  }
 }
 
-TEST(origin_with_userinfo_query_fragment_port) {
+TEST(instance_url_with_credentials_a_query_and_a_fragment_is_refused) {
   const auto configuration_path{
       std::filesystem::path{STUB_DIRECTORY} /
       "origin_with_userinfo_query_fragment_port.json"};
   const auto raw_configuration{
       sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
-  const auto configuration{sourcemeta::one::Configuration::parse(
-      raw_configuration, configuration_path, configuration_path.parent_path())};
 
-  EXPECT_EQ(configuration.path, configuration_path);
-  EXPECT_EQ(configuration.origin, "http://example.com:8000");
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, configuration_path,
+                                          configuration_path.parent_path());
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationInstanceOriginError &error) {
+    EXPECT_STREQ(
+        error.what(),
+        "The instance URL must contain no credentials, query, or fragment");
+    EXPECT_EQ(error.url(), "http://user:pass@example.com:8000?foo=bar#section");
+    EXPECT_EQ(error.path(), configuration_path);
+  }
 }
 
 TEST(is_collection_base_true) {
@@ -646,7 +708,6 @@ TEST(valid_009_api_enabled) {
   EXPECT_EQ(configuration.path, configuration_path);
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
-  EXPECT_EQ(configuration.base_path, "");
   EXPECT_TRUE(configuration.api);
 
   EXPECT_TRUE(configuration.html.has_value());
@@ -686,7 +747,6 @@ TEST(valid_010_api_disabled) {
   EXPECT_EQ(configuration.path, configuration_path);
 
   EXPECT_EQ(configuration.url, "http://localhost:8000");
-  EXPECT_EQ(configuration.base_path, "");
   EXPECT_FALSE(configuration.api);
 
   EXPECT_FALSE(configuration.html.has_value());

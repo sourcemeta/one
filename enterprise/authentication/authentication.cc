@@ -35,24 +35,6 @@ namespace {
 
 constexpr std::uint32_t NO_CHILD{std::numeric_limits<std::uint32_t>::max()};
 
-// A base that is not a whole-segment prefix is left in place, where it matches
-// no policy. The spelling is otherwise untouched, since a route is matched on
-// the target as it arrived
-auto strip_base_path(const std::string_view path,
-                     const std::string_view base) noexcept -> std::string_view {
-  if (base.empty() || !path.starts_with(base)) {
-    return path;
-  }
-
-  auto remainder{path};
-  remainder.remove_prefix(base.size());
-  if (remainder.empty() || base.back() == '/' || remainder.front() == '/') {
-    return remainder;
-  }
-
-  return path;
-}
-
 auto find_child(const sourcemeta::one::AuthenticationNode &node,
                 const sourcemeta::one::AuthenticationEdge *edges,
                 const char *strings, const std::string_view segment) noexcept
@@ -1799,11 +1781,9 @@ auto Authentication::open(const std::string_view policy, const Purpose purpose,
 }
 
 auto Authentication::admits_route(
-    const std::string_view target, const std::string_view base_path,
-    const Credentials &credentials,
+    const std::string_view target, const Credentials &credentials,
     const std::string_view required_audience) const -> Authentication::Verdict {
-  return this->impl_->admits(strip_base_path(target, base_path),
-                             credentials.bearer, credentials.cookies,
+  return this->impl_->admits(target, credentials.bearer, credentials.cookies,
                              required_audience);
 }
 

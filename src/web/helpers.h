@@ -14,8 +14,7 @@
 namespace sourcemeta::one::html {
 
 inline auto make_breadcrumb(sourcemeta::core::HTMLWriter &writer,
-                            const sourcemeta::core::JSON &breadcrumb,
-                            const std::string &base_path) -> void {
+                            const sourcemeta::core::JSON &breadcrumb) -> void {
   assert(breadcrumb.is_array());
   assert(!breadcrumb.empty());
 
@@ -28,7 +27,7 @@ inline auto make_breadcrumb(sourcemeta::core::HTMLWriter &writer,
 
   // First item: back arrow
   writer.li().attribute("class", "breadcrumb-item");
-  writer.a().attribute("href", base_path + "/");
+  writer.a().attribute("href", "/");
   writer.i().attribute("class", "bi bi-arrow-left").close();
   writer.close();
   writer.close();
@@ -335,8 +334,7 @@ inline auto make_file_manager_table_header(sourcemeta::core::HTMLWriter &writer)
 }
 
 inline auto make_file_manager(sourcemeta::core::HTMLWriter &writer,
-                              const sourcemeta::core::JSON &directory,
-                              const std::string &base_path) -> void {
+                              const sourcemeta::core::JSON &directory) -> void {
   if (directory.at("entries").empty()) {
     writer.div().attribute("class", "container-fluid p-4 flex-grow-1");
     writer.p(
@@ -346,8 +344,8 @@ inline auto make_file_manager(sourcemeta::core::HTMLWriter &writer,
     return;
   }
 
-  const auto self_path{base_path + "/self"};
-  const auto self_path_slash{base_path + "/self/"};
+  constexpr std::string_view self_path{"/self"};
+  constexpr std::string_view self_path_slash{"/self/"};
   const auto &policies{directory.at("policies")};
 
   writer.div().attribute("class", "container-fluid p-4 flex-grow-1");
