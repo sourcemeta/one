@@ -15,7 +15,7 @@ trap clean EXIT
 
 cat << 'EOF' > "$TMP/one.json"
 {
-  "url": "https://example.com/",
+  "url": "https://example.com",
   "contents": {
     "schemas": { "baseUri": "https://example.com/", "path": "./schemas" }
   }

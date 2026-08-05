@@ -39,7 +39,7 @@ EOF
 write_one_policy() {
   cat << 'EOF' > "$TMP/one.json"
 {
-  "url": "https://example.com/",
+  "url": "https://example.com",
   "authentication": [
     {
       "type": "apiKey",
@@ -61,7 +61,7 @@ EOF
 write_two_policies() {
   cat << 'EOF' > "$TMP/one.json"
 {
-  "url": "https://example.com/",
+  "url": "https://example.com",
   "authentication": [
     {
       "type": "apiKey",

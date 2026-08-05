@@ -11,7 +11,7 @@ clean() { rm -rf "$TMP"; }
 trap clean EXIT
 
 assert_invalid() {
-  printf '{ "extends": %s, "url": "https://sourcemeta.com/" }\n' "$2" \
+  printf '{ "extends": %s, "url": "https://sourcemeta.com" }\n' "$2" \
     > "$TMP/one.json"
   "$1" --skip-banner "$TMP/one.json" "$TMP/output" > "$TMP/output.txt" \
     && CODE="$?" || CODE="$?"

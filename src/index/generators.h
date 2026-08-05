@@ -321,9 +321,9 @@ struct GENERATE_DEPENDENCIES {
         const auto &referrer_uri{edge.at("from").to_string()};
         const auto &referent_uri{edge.at("to").to_string()};
         const auto referrer{sourcemeta::one::Authentication::Path::parse(
-            referrer_uri, configuration.url, configuration.base_path)};
+            referrer_uri, configuration.url)};
         const auto referent{sourcemeta::one::Authentication::Path::parse(
-            referent_uri, configuration.url, configuration.base_path)};
+            referent_uri, configuration.url)};
         if (referrer.has_value() && referent.has_value() &&
             !authentication.reference_permitted(referrer.value(),
                                                 referent.value())) {
@@ -723,128 +723,93 @@ struct GENERATE_URITEMPLATE_ROUTES {
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &configuration,
                       const sourcemeta::core::JSON &) -> void {
-    sourcemeta::core::URITemplateRouter router{configuration.base_path,
-                                               configuration.url};
+    sourcemeta::core::URITemplateRouter router{{}, configuration.url};
 
-    const auto list_schema{configuration.base_path +
-                           "/self/v1/schemas/api/list/response"};
-    const auto dependencies_schema{
-        configuration.base_path +
+    constexpr std::string_view list_schema{
+        "/self/v1/schemas/api/list/response"};
+    constexpr std::string_view dependencies_schema{
         "/self/v1/schemas/api/schemas/dependencies/response"};
-    const auto dependents_schema{
-        configuration.base_path +
+    constexpr std::string_view dependents_schema{
         "/self/v1/schemas/api/schemas/dependents/response"};
-    const auto health_schema{configuration.base_path +
-                             "/self/v1/schemas/api/schemas/health/response"};
-    const auto locations_schema{
-        configuration.base_path +
+    constexpr std::string_view health_schema{
+        "/self/v1/schemas/api/schemas/health/response"};
+    constexpr std::string_view locations_schema{
         "/self/v1/schemas/api/schemas/locations/response"};
-    const auto positions_schema{
-        configuration.base_path +
+    constexpr std::string_view positions_schema{
         "/self/v1/schemas/api/schemas/positions/response"};
-    const auto stats_schema{configuration.base_path +
-                            "/self/v1/schemas/api/schemas/stats/response"};
-    const auto metadata_schema{
-        configuration.base_path +
+    constexpr std::string_view stats_schema{
+        "/self/v1/schemas/api/schemas/stats/response"};
+    constexpr std::string_view metadata_schema{
         "/self/v1/schemas/api/schemas/metadata/response"};
-    const auto evaluate_request_schema{
-        configuration.base_path +
+    constexpr std::string_view evaluate_request_schema{
         "/self/v1/schemas/api/schemas/evaluate/request"};
-    const auto evaluate_response_schema{
-        configuration.base_path +
+    constexpr std::string_view evaluate_response_schema{
         "/self/v1/schemas/api/schemas/evaluate/response"};
-    const auto rdf_request_schema{configuration.base_path +
-                                  "/self/v1/schemas/api/schemas/rdf/request"};
-    const auto rdf_response_schema{configuration.base_path +
-                                   "/self/v1/schemas/api/schemas/rdf/response"};
-    const auto trace_request_schema{
-        configuration.base_path + "/self/v1/schemas/api/schemas/trace/request"};
-    const auto trace_response_schema{
-        configuration.base_path +
+    constexpr std::string_view rdf_request_schema{
+        "/self/v1/schemas/api/schemas/rdf/request"};
+    constexpr std::string_view rdf_response_schema{
+        "/self/v1/schemas/api/schemas/rdf/response"};
+    constexpr std::string_view trace_request_schema{
+        "/self/v1/schemas/api/schemas/trace/request"};
+    constexpr std::string_view trace_response_schema{
         "/self/v1/schemas/api/schemas/trace/response"};
-    const auto search_response_schema{
-        configuration.base_path +
+    constexpr std::string_view search_response_schema{
         "/self/v1/schemas/api/schemas/search/response"};
-    const auto list_directory_request_schema{
-        configuration.base_path +
+    constexpr std::string_view list_directory_request_schema{
         "/self/v1/schemas/mcp/tools/call/list-directory/request"};
-    const auto list_directory_response_schema{
-        configuration.base_path +
+    constexpr std::string_view list_directory_response_schema{
         "/self/v1/schemas/mcp/tools/call/list-directory/response"};
-    const auto get_schema_dependencies_request_schema{
-        configuration.base_path +
+    constexpr std::string_view get_schema_dependencies_request_schema{
         "/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request"};
-    const auto get_schema_dependencies_response_schema{
-        configuration.base_path +
+    constexpr std::string_view get_schema_dependencies_response_schema{
         "/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response"};
-    const auto get_schema_dependents_request_schema{
-        configuration.base_path +
+    constexpr std::string_view get_schema_dependents_request_schema{
         "/self/v1/schemas/mcp/tools/call/get-schema-dependents/request"};
-    const auto get_schema_dependents_response_schema{
-        configuration.base_path +
+    constexpr std::string_view get_schema_dependents_response_schema{
         "/self/v1/schemas/mcp/tools/call/get-schema-dependents/response"};
-    const auto get_schema_health_request_schema{
-        configuration.base_path +
+    constexpr std::string_view get_schema_health_request_schema{
         "/self/v1/schemas/mcp/tools/call/get-schema-health/request"};
-    const auto get_schema_health_response_schema{
-        configuration.base_path +
+    constexpr std::string_view get_schema_health_response_schema{
         "/self/v1/schemas/mcp/tools/call/get-schema-health/response"};
-    const auto get_schema_locations_request_schema{
-        configuration.base_path +
+    constexpr std::string_view get_schema_locations_request_schema{
         "/self/v1/schemas/mcp/tools/call/get-schema-locations/request"};
-    const auto get_schema_locations_response_schema{
-        configuration.base_path +
+    constexpr std::string_view get_schema_locations_response_schema{
         "/self/v1/schemas/mcp/tools/call/get-schema-locations/response"};
-    const auto get_schema_positions_request_schema{
-        configuration.base_path +
+    constexpr std::string_view get_schema_positions_request_schema{
         "/self/v1/schemas/mcp/tools/call/get-schema-positions/request"};
-    const auto get_schema_positions_response_schema{
-        configuration.base_path +
+    constexpr std::string_view get_schema_positions_response_schema{
         "/self/v1/schemas/mcp/tools/call/get-schema-positions/response"};
-    const auto get_schema_stats_request_schema{
-        configuration.base_path +
+    constexpr std::string_view get_schema_stats_request_schema{
         "/self/v1/schemas/mcp/tools/call/get-schema-stats/request"};
-    const auto get_schema_stats_response_schema{
-        configuration.base_path +
+    constexpr std::string_view get_schema_stats_response_schema{
         "/self/v1/schemas/mcp/tools/call/get-schema-stats/response"};
-    const auto get_schema_metadata_request_schema{
-        configuration.base_path +
+    constexpr std::string_view get_schema_metadata_request_schema{
         "/self/v1/schemas/mcp/tools/call/get-schema-metadata/request"};
-    const auto get_schema_metadata_response_schema{
-        configuration.base_path +
+    constexpr std::string_view get_schema_metadata_response_schema{
         "/self/v1/schemas/mcp/tools/call/get-schema-metadata/response"};
-    const auto evaluate_schema_request_schema{
-        configuration.base_path +
+    constexpr std::string_view evaluate_schema_request_schema{
         "/self/v1/schemas/mcp/tools/call/evaluate-schema/request"};
-    const auto evaluate_schema_response_schema{
-        configuration.base_path +
+    constexpr std::string_view evaluate_schema_response_schema{
         "/self/v1/schemas/mcp/tools/call/evaluate-schema/response"};
-    const auto instance_to_rdf_request_schema{
-        configuration.base_path +
+    constexpr std::string_view instance_to_rdf_request_schema{
         "/self/v1/schemas/mcp/tools/call/instance-to-rdf/request"};
-    const auto instance_to_rdf_response_schema{
-        configuration.base_path +
+    constexpr std::string_view instance_to_rdf_response_schema{
         "/self/v1/schemas/mcp/tools/call/instance-to-rdf/response"};
-    const auto trace_schema_evaluation_request_schema{
-        configuration.base_path +
+    constexpr std::string_view trace_schema_evaluation_request_schema{
         "/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request"};
-    const auto trace_schema_evaluation_response_schema{
-        configuration.base_path +
+    constexpr std::string_view trace_schema_evaluation_response_schema{
         "/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response"};
-    const auto search_schemas_request_schema{
-        configuration.base_path +
+    constexpr std::string_view search_schemas_request_schema{
         "/self/v1/schemas/mcp/tools/call/search-schemas/request"};
-    const auto search_schemas_response_schema{
-        configuration.base_path +
+    constexpr std::string_view search_schemas_response_schema{
         "/self/v1/schemas/mcp/tools/call/search-schemas/response"};
-    const auto error_schema{configuration.base_path +
-                            "/self/v1/schemas/api/error"};
-    const auto mcp_request_schema{configuration.base_path +
-                                  "/self/v1/schemas/mcp/request"};
-    const auto mcp_response_schema{configuration.base_path +
-                                   "/self/v1/schemas/mcp/response"};
-    const auto mcp_protected_resource_metadata_response_schema{
-        configuration.base_path + "/self/v1/schemas/mcp/prm/response"};
+    constexpr std::string_view error_schema{"/self/v1/schemas/api/error"};
+    constexpr std::string_view mcp_request_schema{
+        "/self/v1/schemas/mcp/request"};
+    constexpr std::string_view mcp_response_schema{
+        "/self/v1/schemas/mcp/response"};
+    constexpr std::string_view mcp_protected_resource_metadata_response_schema{
+        "/self/v1/schemas/mcp/prm/response"};
 
     sourcemeta::core::URITemplateRouter::Identifier next_id{1};
 
@@ -1210,8 +1175,7 @@ struct GENERATE_AUTHENTICATION {
     sourcemeta::one::Authentication::save(
         policies, configuration.path, action.destination,
         [&routes, &configuration](const std::string_view path) {
-          return routes.describes(path, configuration.base_path) ||
-                 configuration.covers_entry(path);
+          return routes.describes(path) || configuration.covers_entry(path);
         });
   }
 };

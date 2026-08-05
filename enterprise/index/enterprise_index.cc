@@ -71,7 +71,6 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
                         sourcemeta::core::JSON &tools,
                         sourcemeta::core::JSON &tool_routes) -> void {
   const auto base_url{router.base_url()};
-  const auto base_path{router.base_path()};
   for (std::size_t index{0}; index < router.size(); index++) {
     const auto identifier{router.at(index)};
     const auto context{router.context(identifier)};
@@ -103,8 +102,8 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
     const auto description{sourcemeta::one::action_description(context)};
     assert(!description.empty());
 
-    auto input_schema_url{sourcemeta::core::URI::rebase_path(
-        rpc_request_schema, base_path, base_url)};
+    auto input_schema_url{
+        sourcemeta::core::URI::rebase_path(rpc_request_schema, {}, base_url)};
     assert(input_schema_url.has_value());
 
     auto input_schema_ref{sourcemeta::core::JSON::make_object()};
@@ -125,7 +124,7 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
     std::optional<sourcemeta::core::JSON> output_schema_ref;
     if (!rpc_response_schema.empty()) {
       auto output_schema_url{sourcemeta::core::URI::rebase_path(
-          rpc_response_schema, base_path, base_url)};
+          rpc_response_schema, {}, base_url)};
       assert(output_schema_url.has_value());
 
       auto ref{sourcemeta::core::JSON::make_object()};

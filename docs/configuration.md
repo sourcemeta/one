@@ -61,12 +61,42 @@ structuring your instance.
 
 | Property        | Type | Required | Default | Description |
 |-----------------|------|----------|---------|-------------|
-| `/url`          | String  | :red_circle: **Yes** | N/A | The absolute URL on which the instance will be served. Sourcemeta One will automatically add URI identifiers relative to this URL for every ingested schema. The absolute URL _may_ have a path component. The path component of this URL is case-sensitive per [RFC 3986 §6.2.2.1](https://datatracker.ietf.org/doc/html/rfc3986#section-6.2.2.1). Inside the instance's URL namespace (schema URIs the catalog owns), path lookups are case-insensitive |
+| `/url`          | String  | :red_circle: **Yes** | N/A | The absolute URL on which the instance will be served, which must name an origin and nothing more: a scheme, a host, and optionally a port, with no path and no trailing slash. Sourcemeta One will automatically add URI identifiers relative to this URL for every ingested schema. Inside the instance's URL namespace (schema URIs the catalog owns), path lookups are case-insensitive, even though [RFC 3986 §6.2.2.1](https://datatracker.ietf.org/doc/html/rfc3986#section-6.2.2.1) makes the path component of a URI case-sensitive in general |
 | `/extends`      | Array   | No  | None | One or more configuration files to extend from. See the [Extends](#extends) section for more information |
 | `/contents`     | Object  | No  | None | The top-level [Collections](#collections) and [Pages](#pages) that compose the instance |
 | `/html`        | Object or Boolean  | No  | `{}` | Settings for the HTML explorer. If set to `false`, the instance runs in headless mode. Enabling the HTML explorer implies the API must also be enabled. See the [HTML](#html) section for more details |
 | `/api`         | Object or Boolean  | No  | `{}` | Controls whether the HTTP API is accessible. If set to `false`, the JSON API is disabled. Can only be set to `false` when `/html` is also set to `false` |
 | `/authentication` (**Enterprise**) | Array  | No  | None | A list of authentication policies that govern this instance. Anything not covered by a policy remains public. See the [Authentication](#authentication) section for more details |
+
+!!! note "Why the instance URL cannot have a path"
+
+    An instance owns a whole origin, so `https://schemas.example.com` is
+    accepted while `https://example.com/schemas` and even
+    `https://example.com/` are refused at indexing time.
+
+    This is not a limitation we chose so much as one the web's discovery
+    mechanisms impose. Standards publish what a client needs to learn about
+    a server under `/.well-known/`, and
+    [RFC 8615 §3](https://www.rfc-editor.org/rfc/rfc8615.html#section-3)
+    states that well-known URIs "are rooted in the top of the path's
+    hierarchy", giving `/foo/.well-known/example` as an example of a path
+    that is _not_ a well-known URI.
+    [RFC 9728 §3.1](https://www.rfc-editor.org/rfc/rfc9728.html#section-3.1),
+    which OAuth clients follow to discover how to authenticate against this
+    instance, makes the same choice explicitly: even when the resource
+    identifier carries a path, the metadata is inserted _between the host and
+    the path_, and so is served from the top of the origin. An instance
+    served under a path would have to publish these documents at an origin
+    root it does not own, and a client is under no obligation to look
+    anywhere else.
+
+    If your schema URIs need a directory prefix, do not put it in the
+    instance URL. Declare a [Collection](#collections) or a
+    [Page](#pages) in `one.json` and put the schemas inside it. A collection
+    named `my-first-collection` gives every schema below it a
+    `https://schemas.example.com/my-first-collection/` prefix while the
+    instance stays at its origin, which is exactly what the example below
+    does.
 
 For example, a minimal configuration that mounts a single schema collection
 (`./schemas`) at URL `https://schemas.example.com/my-first-collection` may look

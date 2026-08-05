@@ -1,5 +1,0 @@
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "A schema with only a description and no title",
-  "type": "string"
-}

@@ -9,7 +9,7 @@ trap clean EXIT
 
 cat << EOF > "$TMP/one.json"
 {
-  "url": "https://sourcemeta.com/",
+  "url": "https://sourcemeta.com",
   "contents": {
     "example": {
       "contents": {
@@ -119,7 +119,7 @@ diff "$TMP/output.txt" "$TMP/expected.txt"
 # Run 3: change the server URL in the configuration
 cat << EOF > "$TMP/one.json"
 {
-  "url": "https://other.example.com/",
+  "url": "https://other.example.com",
   "contents": {
     "example": {
       "contents": {

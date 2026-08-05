@@ -48,8 +48,7 @@ auto GENERATE_WEB_INDEX::handler(
   html::make_page(writer, configuration, canonical, title, description,
                   [&](sourcemeta::core::HTMLWriter &w) -> void {
                     make_hero(w, configuration);
-                    html::make_file_manager(w, directory,
-                                            configuration.base_path);
+                    html::make_file_manager(w, directory);
                   });
 
   const auto timestamp_end{std::chrono::steady_clock::now()};

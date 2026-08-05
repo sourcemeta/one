@@ -35,8 +35,7 @@ public:
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
       sourcemeta::one::Router &dispatcher)
-      : sourcemeta::one::RouterAction{base, router.base_path(),
-                                      router.base_url(), dispatcher} {
+      : sourcemeta::one::RouterAction{base, router.base_url(), dispatcher} {
     router.arguments(
         identifier, [this](const auto &key, const auto &value) -> void {
           if (key == "errorSchema") {
@@ -78,8 +77,6 @@ public:
     response.write_status(sourcemeta::core::HTTP_STATUS_SEE_OTHER);
 
     const auto secure{sourcemeta::core::URI{this->server_uri()}.is_https()};
-    const auto base{this->server_uri_base_path()};
-    const auto scope{base.empty() ? std::string_view{"/"} : base};
 
     // Both cookies are expired whether or not the request carried them. A
     // cookie is withheld on plenty of navigations while the browser still
@@ -87,14 +84,14 @@ public:
     // tells the person they are signed out. This runs before anything that
     // could fail, so no outcome below can end with the session surviving
     this->expire(response, sourcemeta::one::Authentication::SESSION_COOKIE,
-                 scope, secure);
+                 secure);
     this->expire(response, sourcemeta::one::Authentication::TRANSACTION_COOKIE,
-                 scope, secure);
+                 secure);
     // Somebody who has signed out is asking not to be signed in, so the marker
     // that would have renewed them silently goes too. Leaving it would undo
     // this at the very next denial, without them doing anything
     this->expire(response, sourcemeta::one::Authentication::RENEWAL_COOKIE,
-                 scope, secure);
+                 secure);
 
     // Ending the session here leaves the provider's own untouched, so signing
     // in again would not ask who you are. Where the session names a policy
@@ -102,7 +99,7 @@ public:
     // job, carrying the identity token as the proof of whose session it is
     const auto &authentication{this->dispatcher().authentication()};
     const auto elsewhere{this->provider_logout(request, authentication)};
-    response.write_header("Location", elsewhere.value_or(std::string{scope}));
+    response.write_header("Location", elsewhere.value_or(std::string{"/"}));
     response.write_header("Cache-Control", "no-store");
     sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_SEE_OTHER,
                                    request, response);
@@ -117,15 +114,14 @@ public:
 
 private:
   auto expire(sourcemeta::one::HTTPResponse &response,
-              const std::string_view name, const std::string_view scope,
-              const bool secure) const -> void {
-    // The attributes mirror the ones the cookie is minted under, scoped to the
-    // instance rather than the whole host, so the browser replaces the cookie
-    // rather than keeping it alongside a second one of the same name
+              const std::string_view name, const bool secure) const -> void {
+    // The attributes mirror the ones the cookie is minted under, so the
+    // browser replaces the cookie rather than keeping it alongside a second
+    // one of the same name
     const auto cookie{sourcemeta::core::http_serialize_cookie(
         {.name = name,
          .value = "",
-         .path = scope,
+         .path = sourcemeta::one::Authentication::COOKIE_PATH,
          .max_age = std::chrono::seconds{0},
          .http_only = true,
          .secure = secure,
@@ -177,8 +173,7 @@ private:
         logout.id_token_hint = token->to_string();
       }
 
-      // The instance URL already carries whatever base path it is served
-      // under, so this is where the provider sends the browser back to
+      // Where the provider sends the browser back to once it is done
       logout.post_logout_redirect_uri = this->server_uri();
       std::string url;
       sourcemeta::core::oidc_build_logout_url(endpoints.value().end_session,

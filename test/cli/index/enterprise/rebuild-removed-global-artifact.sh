@@ -24,7 +24,7 @@ trap clean EXIT
 
 cat << 'EOF' > "$TMP/one.json"
 {
-  "url": "https://example.com/",
+  "url": "https://example.com",
   "authentication": [
     {
       "type": "apiKey",

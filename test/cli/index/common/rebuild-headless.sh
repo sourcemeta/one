@@ -9,7 +9,7 @@ trap clean EXIT
 
 cat << EOF > "$TMP/one.json"
 {
-  "url": "https://sourcemeta.com/",
+  "url": "https://sourcemeta.com",
   "html": false,
   "contents": {
     "example": {

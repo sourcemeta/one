@@ -6,22 +6,18 @@
 #include <string_view> // std::string_view
 
 static constexpr std::string_view INSTANCE{"http://localhost:8000"};
-static constexpr std::string_view BASED{"http://localhost:8000/registry"};
 
 static auto parse(const std::string_view input,
-                  const std::string_view instance = INSTANCE,
-                  const std::string_view base_path = "")
+                  const std::string_view instance = INSTANCE)
     -> std::optional<sourcemeta::one::Authentication::Path> {
-  return sourcemeta::one::Authentication::Path::parse(input, instance,
-                                                      base_path);
+  return sourcemeta::one::Authentication::Path::parse(input, instance);
 }
 
 // Returned by value: a view would dangle into the parsed path, which lives
 // only for this call
 static auto value(const std::string_view input,
-                  const std::string_view instance = INSTANCE,
-                  const std::string_view base_path = "") -> std::string {
-  const auto result{parse(input, instance, base_path)};
+                  const std::string_view instance = INSTANCE) -> std::string {
+  const auto result{parse(input, instance)};
   return result.has_value() ? std::string{result.value().value()}
                             : std::string{"<none>"};
 }
@@ -138,43 +134,6 @@ TEST(a_url_on_another_origin_names_nowhere_here) {
   EXPECT_FALSE(parse("http://localhost:9999/private/secret").has_value());
 }
 
-TEST(a_base_path_is_removed) {
-  EXPECT_EQ(value("/registry/private/secret", BASED, "/registry"),
-            "private/secret");
-  EXPECT_EQ(value("/registry/private/secret.json", BASED, "/registry"),
-            "private/secret.json");
-  EXPECT_EQ(value("/registry", BASED, "/registry"), "");
-  EXPECT_EQ(value("/registry/", BASED, "/registry"), "");
-}
-
-TEST(a_url_under_a_base_path_reduces_the_same_way) {
-  EXPECT_EQ(value("http://localhost:8000/registry/private/secret", BASED,
-                  "/registry"),
-            "private/secret");
-}
-
-TEST(a_path_outside_the_base_path_names_nowhere_here) {
-  EXPECT_FALSE(parse("/private/secret", BASED, "/registry").has_value());
-  EXPECT_FALSE(parse("/elsewhere/private", BASED, "/registry").has_value());
-}
-
-TEST(a_base_path_is_matched_as_configured_rather_than_case_insensitively) {
-  // The base path is how the instance is deployed rather than a location
-  // inside it, so it is removed before anything is lowercased. A target that
-  // spells it differently names nowhere here, which fails closed
-  EXPECT_FALSE(
-      parse("/REGISTRY/private/secret", BASED, "/registry").has_value());
-  EXPECT_FALSE(
-      parse("/Registry/private/secret", BASED, "/registry").has_value());
-  // While the segments below it are canonicalised as anywhere else
-  EXPECT_EQ(value("/registry/PRIVATE/SECRET", BASED, "/registry"),
-            "private/secret");
-}
-
-TEST(a_base_path_is_matched_on_whole_segments) {
-  EXPECT_FALSE(parse("/registrynot/private", BASED, "/registry").has_value());
-}
-
 // Each of the spellings below was a gate bypass attempt. Every one has to name
 // the governed location rather than something a policy would miss
 
@@ -218,8 +177,8 @@ TEST(two_paths_compare_by_their_canonical_spelling) {
 }
 
 TEST(input_already_relative_to_the_root_is_canonicalised_as_is) {
-  // What the indexer composes carries no base path and names nowhere outside
-  // the instance, so it always yields a value
+  // What the indexer composes names nowhere outside the instance, so it
+  // always yields a value
   EXPECT_EQ(sourcemeta::one::Authentication::Path::relative("/private/secret")
                 .value(),
             "private/secret");
@@ -253,9 +212,4 @@ TEST(a_relative_path_that_climbs_reads_as_the_request_form_does) {
                 "/public/../private/secret")
                 .value(),
             "private/secret");
-}
-
-TEST(a_url_on_this_instance_but_outside_the_base_path_names_nowhere_here) {
-  EXPECT_FALSE(parse("http://localhost:8000/private/secret", BASED, "/registry")
-                   .has_value());
 }

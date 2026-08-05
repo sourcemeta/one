@@ -110,8 +110,7 @@ auto Authentication::Path::relative(const std::string_view input) -> Path {
 }
 
 auto Authentication::Path::parse(const std::string_view input,
-                                 const std::string_view instance_url,
-                                 const std::string_view base_path)
+                                 const std::string_view instance_url)
     -> std::optional<Authentication::Path> {
   std::string_view target{input};
 
@@ -142,26 +141,11 @@ auto Authentication::Path::parse(const std::string_view input,
       return std::nullopt;
     }
 
-    // Reducing against the instance answers whether the origin matches, but
-    // not whether the URL sits under the base path, since a sibling of that
-    // base reduces to a relative path just as a child of it does. So the URL
-    // continues as the target it names, which the base path is then removed
-    // from exactly as it is for a request
+    // Reducing against the instance answers whether the origin matches, and
+    // an instance sits at its origin, so the URL continues as the target it
+    // names
     reduced = absolute.empty() ? std::string{"/"} : std::move(absolute);
     target = reduced;
-  }
-
-  // A target addressed from the instance root only means something once the
-  // base path comes off, and one that does not carry that base path names
-  // somewhere outside this instance
-  if (target.starts_with('/')) {
-    const auto stripped{
-        sourcemeta::core::URI::strip_path_prefix(target, base_path)};
-    if (!stripped.has_value()) {
-      return std::nullopt;
-    }
-
-    return Path{canonicalize(stripped.value())};
   }
 
   return Path{canonicalize(target)};

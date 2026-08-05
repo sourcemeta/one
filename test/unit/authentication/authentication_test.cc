@@ -11,8 +11,8 @@
 // one the same way a request would
 static auto at(const std::string_view input)
     -> sourcemeta::one::Authentication::Path {
-  return sourcemeta::one::Authentication::Path::parse(
-             input, "http://localhost:8000", "")
+  return sourcemeta::one::Authentication::Path::parse(input,
+                                                      "http://localhost:8000")
       .value();
 }
 

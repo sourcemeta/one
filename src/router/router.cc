@@ -131,7 +131,7 @@ auto Router::dispatch(
   if (identifier != 0 && request.method() != "options" &&
       !instance->is_authentication_exempt() &&
       !this->authentication_
-           .admits_route(request.path(), instance->server_uri_base_path(),
+           .admits_route(request.path(),
                          {.bearer = credential, .cookies = cookies},
                          instance->required_audience())
            .allowed) {
@@ -172,8 +172,8 @@ auto RouterAction::serve_renewal(sourcemeta::one::HTTPRequest &request,
     return false;
   }
 
-  const auto path{Authentication::Path::parse(
-      request.path(), this->server_uri(), this->server_uri_base_path())};
+  const auto path{
+      Authentication::Path::parse(request.path(), this->server_uri())};
   if (!path.has_value()) {
     return false;
   }
@@ -187,7 +187,7 @@ auto RouterAction::serve_renewal(sourcemeta::one::HTTPRequest &request,
     // The denied page is named outright rather than left to a referrer, which
     // a redirect carries from wherever the browser came from rather than from
     // the page it is being sent away from
-    std::string location{this->server_uri_base_path()};
+    std::string location{""};
     location += "/self/v1/auth/login/";
     location += candidate;
     location += "?silent=1&to=";
@@ -230,8 +230,8 @@ auto RouterAction::serve_login(sourcemeta::one::HTTPRequest &request,
   // path is answered by the nearest directory above it that offers a login.
   // Because every login page under the same policies is byte-identical, this
   // never betrays whether a deeper path exists
-  const auto stripped{sourcemeta::core::URI::strip_path_prefix(
-      request.path(), this->server_uri_base_path())};
+  const auto stripped{
+      sourcemeta::core::URI::strip_path_prefix(request.path(), "")};
   const auto page{this->artifact_resolve_ancestor(
       stripped.has_value() ? std::string_view{stripped.value()}
                            : request.path(),
