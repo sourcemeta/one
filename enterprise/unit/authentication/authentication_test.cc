@@ -1338,6 +1338,345 @@ TEST(mixed_apikey_and_jwt_policies_admit_either_credential) {
       authentication.admits(at("/both/x"), {.bearer = "wrong"}).allowed);
 }
 
+TEST(oidc_identity_without_rules_admits_whoever_signs_in) {
+  setenv("ONE_TEST_OIDC_ADMIT_OPEN", "confidential", 1);
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://acme.test",
+        .client_id = "dashboard",
+        .client_secret_variable = "ONE_TEST_OIDC_ADMIT_OPEN",
+        .name = "okta",
+        .session_secrets = SESSION_SECRETS_UNUSED}}};
+  const auto path{test_path("oidc_admit_open.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  const auto anybody{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2"
+  })JSON")};
+
+  EXPECT_EQ(authentication.admits_identity("okta", anybody),
+            sourcemeta::one::Authentication::Admission::Admitted);
+}
+
+TEST(oidc_identity_missing_a_claim_is_incomplete_rather_than_refused) {
+  setenv("ONE_TEST_OIDC_ADMIT_PARTIAL", "confidential", 1);
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://acme.test",
+        .claims = CLAIMS_ONE_GROUP,
+        .client_id = "dashboard",
+        .client_secret_variable = "ONE_TEST_OIDC_ADMIT_PARTIAL",
+        .name = "okta",
+        .session_secrets = SESSION_SECRETS_UNUSED}}};
+  const auto path{test_path("oidc_admit_partial.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  using Admission = sourcemeta::one::Authentication::Admission;
+  const auto no_group{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2"
+  })JSON")};
+  const auto another_group{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "groups": [ "support" ]
+  })JSON")};
+  const auto the_group{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "groups": [ "platform" ]
+  })JSON")};
+
+  // A claim that never arrived is a question the provider may still answer at
+  // its UserInfo endpoint, which is where a scope's claims land by default
+  EXPECT_EQ(authentication.admits_identity("okta", no_group),
+            Admission::Incomplete);
+  // A claim that arrived and fell short is an answer already given, so asking
+  // anywhere else would only repeat it
+  EXPECT_EQ(authentication.admits_identity("okta", another_group),
+            Admission::Refused);
+  EXPECT_EQ(authentication.admits_identity("okta", the_group),
+            Admission::Admitted);
+}
+
+TEST(oidc_identity_refused_by_one_rule_is_refused_whatever_another_wants) {
+  setenv("ONE_TEST_OIDC_ADMIT_BOTH", "confidential", 1);
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<std::string_view, 1> domains{{"acme.test"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://acme.test",
+        .claims = CLAIMS_ONE_GROUP,
+        .email_domains = domains,
+        .client_id = "dashboard",
+        .client_secret_variable = "ONE_TEST_OIDC_ADMIT_BOTH",
+        .name = "okta",
+        .session_secrets = SESSION_SECRETS_UNUSED}}};
+  const auto path{test_path("oidc_admit_both.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  using Admission = sourcemeta::one::Authentication::Admission;
+  const auto foreign_address{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "email": "jane@other.test",
+    "email_verified": true
+  })JSON")};
+  const auto unvouched_address{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "email": "jane@acme.test",
+    "email_verified": false,
+    "groups": [ "platform" ]
+  })JSON")};
+  const auto neither_half{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2"
+  })JSON")};
+  const auto both_halves{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "email": "jane@acme.test",
+    "email_verified": true,
+    "groups": [ "platform" ]
+  })JSON")};
+
+  // The address settles it, so the absent group changes nothing
+  EXPECT_EQ(authentication.admits_identity("okta", foreign_address),
+            Admission::Refused);
+  // An address the provider will not vouch for is an answer, not a gap
+  EXPECT_EQ(authentication.admits_identity("okta", unvouched_address),
+            Admission::Refused);
+  // Neither half having arrived leaves both worth asking about
+  EXPECT_EQ(authentication.admits_identity("okta", neither_half),
+            Admission::Incomplete);
+  EXPECT_EQ(authentication.admits_identity("okta", both_halves),
+            Admission::Admitted);
+}
+
+TEST(oidc_identity_refuses_an_unvouched_address_whose_companion_is_absent) {
+  setenv("ONE_TEST_OIDC_ADMIT_UNVOUCHED", "confidential", 1);
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<std::string_view, 1> domains{{"acme.test"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://acme.test",
+        .email_domains = domains,
+        .client_id = "dashboard",
+        .client_secret_variable = "ONE_TEST_OIDC_ADMIT_UNVOUCHED",
+        .name = "okta",
+        .session_secrets = SESSION_SECRETS_UNUSED}}};
+  const auto path{test_path("oidc_admit_unvouched.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  using Admission = sourcemeta::one::Authentication::Admission;
+  const auto declined_to_vouch{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "email_verified": false
+  })JSON")};
+  const auto not_an_address{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "email": 42
+  })JSON")};
+  const auto nothing_at_all{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2"
+  })JSON")};
+
+  // The provider saying it will not vouch is an answer, so the address that
+  // never arrived cannot turn it into a question worth asking again
+  EXPECT_EQ(authentication.admits_identity("okta", declined_to_vouch),
+            Admission::Refused);
+  // An address that is not one settles it the same way
+  EXPECT_EQ(authentication.admits_identity("okta", not_an_address),
+            Admission::Refused);
+  // Absence alone is what leaves the question open
+  EXPECT_EQ(authentication.admits_identity("okta", nothing_at_all),
+            Admission::Incomplete);
+}
+
+TEST(combining_two_answers_fills_gaps_without_overruling_the_token) {
+  const auto token{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "groups": [ "platform" ],
+    "department": "engineering"
+  })JSON")};
+  const auto extra{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "department": "sales",
+    "cost_centre": "R&D"
+  })JSON")};
+
+  const auto expected{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "groups": [ "platform" ],
+    "department": "engineering",
+    "cost_centre": "R&D"
+  })JSON")};
+
+  // What only the second answer carried is added, and what the signed one
+  // already said stands
+  EXPECT_EQ(sourcemeta::one::Authentication::combine_claims(token, extra),
+            expected);
+}
+
+TEST(combining_two_answers_keeps_an_address_with_its_own_assertion) {
+  // A token vouching for an address it never carried says nothing about the
+  // one a second answer supplies
+  const auto orphan{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "email_verified": true
+  })JSON")};
+  const auto supplied{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "email": "jane@acme.test"
+  })JSON")};
+  const auto without_the_assertion{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "email": "jane@acme.test"
+  })JSON")};
+
+  EXPECT_EQ(sourcemeta::one::Authentication::combine_claims(orphan, supplied),
+            without_the_assertion);
+
+  // The pair arrives whole from the answer that carried the address
+  const auto pair{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "email": "jane@acme.test",
+    "email_verified": true
+  })JSON")};
+  const auto with_the_pair{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "email": "jane@acme.test",
+    "email_verified": true
+  })JSON")};
+
+  EXPECT_EQ(sourcemeta::one::Authentication::combine_claims(orphan, pair),
+            with_the_pair);
+
+  // A token carrying the address keeps its own assertion, so a second answer
+  // cannot vouch for it either
+  const auto unverified{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "email": "jane@acme.test"
+  })JSON")};
+  const auto vouching{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "email": "someone@acme.test",
+    "email_verified": true
+  })JSON")};
+  const auto keeping_its_own{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "email": "jane@acme.test"
+  })JSON")};
+
+  EXPECT_EQ(
+      sourcemeta::one::Authentication::combine_claims(unverified, vouching),
+      keeping_its_own);
+
+  // An assertion arriving on its own from the second answer is dropped for
+  // the same reason as one left behind by the first
+  const auto nothing_to_vouch_for{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "email_verified": true
+  })JSON")};
+  const auto neither_half{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2"
+  })JSON")};
+
+  EXPECT_EQ(sourcemeta::one::Authentication::combine_claims(
+                neither_half, nothing_to_vouch_for),
+            neither_half);
+
+  // An address without an assertion still arrives, since it claims nothing
+  const auto address_alone{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "email": "jane@acme.test"
+  })JSON")};
+  const auto carried_over{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "email": "jane@acme.test"
+  })JSON")};
+
+  EXPECT_EQ(sourcemeta::one::Authentication::combine_claims(neither_half,
+                                                            address_alone),
+            carried_over);
+}
+
+TEST(admitting_reads_two_answers_only_once_they_are_combined) {
+  setenv("ONE_TEST_OIDC_ADMIT_SPLIT", "confidential", 1);
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<std::string_view, 1> domains{{"acme.test"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://acme.test",
+        .claims = CLAIMS_ONE_GROUP,
+        .email_domains = domains,
+        .client_id = "dashboard",
+        .client_secret_variable = "ONE_TEST_OIDC_ADMIT_SPLIT",
+        .name = "okta",
+        .session_secrets = SESSION_SECRETS_UNUSED}}};
+  const auto path{test_path("oidc_admit_split.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  using Admission = sourcemeta::one::Authentication::Admission;
+  const auto token{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "groups": [ "platform" ]
+  })JSON")};
+  const auto extra{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2",
+    "email": "jane@acme.test",
+    "email_verified": true
+  })JSON")};
+
+  // Either answer alone leaves a rule unanswered
+  EXPECT_EQ(authentication.admits_identity("okta", token),
+            Admission::Incomplete);
+  EXPECT_EQ(authentication.admits_identity("okta", extra),
+            Admission::Incomplete);
+  // Only what combining them produces admits, so a combine dropping either
+  // side is caught here rather than passing on a payload the test built
+  EXPECT_EQ(authentication.admits_identity(
+                "okta",
+                sourcemeta::one::Authentication::combine_claims(token, extra)),
+            Admission::Admitted);
+}
+
+TEST(oidc_identity_under_an_unknown_policy_is_refused) {
+  setenv("ONE_TEST_OIDC_ADMIT_UNKNOWN", "confidential", 1);
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "https://acme.test",
+        .client_id = "dashboard",
+        .client_secret_variable = "ONE_TEST_OIDC_ADMIT_UNKNOWN",
+        .name = "okta",
+        .session_secrets = SESSION_SECRETS_UNUSED}}};
+  const auto path{test_path("oidc_admit_unknown.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  // A name no interactive policy answers to could never have minted a session
+  const auto somebody{sourcemeta::core::parse_json(R"JSON({
+    "sub": "a1b2"
+  })JSON")};
+
+  EXPECT_EQ(authentication.admits_identity("nowhere", somebody),
+            sourcemeta::one::Authentication::Admission::Refused);
+}
+
 TEST(oidc_policy_admits_no_presented_credential) {
   setenv("ONE_TEST_OIDC_DENY", "confidential", 1);
   const std::array<std::string_view, 1> paths{{"/portal"}};

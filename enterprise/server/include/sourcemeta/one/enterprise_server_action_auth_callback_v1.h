@@ -207,10 +207,13 @@ public:
     redirect_uri += "/self/v1/auth/callback/";
     redirect_uri += policy_name;
 
-    const auto id_token{this->exchange(
+    const auto grant{this->exchange(
         endpoints.value().token, policy->client_id, client_secret.value(),
         redirect_uri, code, verifier->to_string(),
         endpoints.value().token_endpoint_basic_auth)};
+    const auto id_token{grant.has_value()
+                            ? std::optional<std::string>{grant.value().id_token}
+                            : std::nullopt};
     if (!id_token.has_value()) {
       sourcemeta::one::HTTP_LOG(
           "The authorization code could not be redeemed for the policy",
@@ -246,7 +249,27 @@ public:
     // session only ever exists for somebody the policy admits. Answering it
     // afterwards would leave a valid session denied on every request, and a
     // denial asks the provider again, which is a loop rather than an answer
-    if (!authentication.admits_identity(policy_name, token.value().payload())) {
+    auto admission{
+        authentication.admits_identity(policy_name, token.value().payload())};
+
+    // OpenID Connect Core Section 5.4 has a provider answer for the claims a
+    // scope requested at its UserInfo endpoint rather than in the token, by
+    // default, under the flow this is completing. So a rule naming a claim the
+    // token does not carry is asked there before it is refused, and only then,
+    // since a token carrying everything needed spares the round trip
+    if (admission == sourcemeta::one::Authentication::Admission::Incomplete &&
+        !endpoints.value().userinfo.empty()) {
+      const auto extra{this->userinfo(endpoints.value().userinfo,
+                                      grant.value().access_token,
+                                      identity.value().subject)};
+      if (extra.has_value()) {
+        admission = authentication.admits_identity(
+            policy_name, sourcemeta::one::Authentication::combine_claims(
+                             token.value().payload(), extra.value()));
+      }
+    }
+
+    if (admission != sourcemeta::one::Authentication::Admission::Admitted) {
       sourcemeta::one::HTTP_LOG(
           "The provider authenticated somebody the policy does not admit, "
           "for the policy",
@@ -547,6 +570,14 @@ private:
     }
   }
 
+  // What redeeming an authorization code yields, of which only the identity
+  // token decides anything. The access token comes along solely so that a
+  // claim missing from that token can be asked for at the UserInfo endpoint
+  struct Grant {
+    std::string id_token;
+    std::string access_token;
+  };
+
   // RFC 6749 Section 2.3.1 has every server accept the client secret in an
   // authorization header, and asks that carrying it in the request body be
   // limited to clients that cannot send one. A body is the part of a request
@@ -557,7 +588,7 @@ private:
       const std::string_view token_endpoint, const std::string_view client_id,
       const std::string_view client_secret, const std::string_view redirect_uri,
       const std::string_view code, const std::string_view code_verifier,
-      const bool basic_auth) const -> std::optional<std::string> {
+      const bool basic_auth) const -> std::optional<Grant> {
     try {
       sourcemeta::core::HTTPSystemRequest fetch{
           std::string{token_endpoint}, sourcemeta::core::HTTPMethod::POST};
@@ -589,7 +620,78 @@ private:
         return std::nullopt;
       }
 
-      return sourcemeta::core::oidc_parse_id_token(document.value());
+      auto identity{sourcemeta::core::oidc_parse_id_token(document.value())};
+      if (!identity.has_value()) {
+        return std::nullopt;
+      }
+
+      // The access token is kept only so that the UserInfo endpoint can be
+      // asked for a claim the identity token did not carry. It is never
+      // stored, never logged, and never leaves this exchange
+      Grant grant;
+      grant.id_token = std::move(identity).value();
+      const sourcemeta::core::OAuthTokenResponse response{document.value()};
+      if (response.access_token().has_value()) {
+        grant.access_token = response.access_token().value();
+      }
+
+      return grant;
+    } catch (...) {
+      return std::nullopt;
+    }
+  }
+
+  // What a provider answers at its UserInfo endpoint, which under the
+  // authorization code flow is where the claims a scope requested arrive by
+  // default (OpenID Connect Core Section 5.4).
+  //
+  // OpenID Connect Core Section 5.3.2 requires the subject it returns to match
+  // the one the identity token asserted, and to be checked before anything it
+  // says is used. Without that a response about somebody else would be read as
+  // being about this person, which is the whole of what this is for.
+  //
+  // A signed or encrypted response is refused rather than half-checked, since
+  // reading one without verifying it would defeat the signature it carries
+  [[nodiscard]] auto userinfo(const std::string_view endpoint,
+                              const std::string_view access_token,
+                              const std::string_view subject) const
+      -> std::optional<sourcemeta::core::JSON> {
+    if (access_token.empty()) {
+      return std::nullopt;
+    }
+
+    try {
+      sourcemeta::core::HTTPSystemRequest fetch{std::string{endpoint}};
+      fetch.connect_timeout(std::chrono::seconds{2});
+      fetch.timeout(std::chrono::seconds{5});
+      fetch.maximum_response_size(1024UL * 1024UL);
+      fetch.follow_redirects(false);
+      std::string authorization;
+      if (!sourcemeta::core::oauth_bearer_header(access_token, authorization)) {
+        return std::nullopt;
+      }
+
+      fetch.header("authorization", std::move(authorization));
+      const auto result{fetch.send()};
+      if (result.status.code < 200 || result.status.code >= 300) {
+        return std::nullopt;
+      }
+
+      const auto document{sourcemeta::core::try_parse_json(result.body)};
+      if (!document.has_value() || !document.value().is_object()) {
+        return std::nullopt;
+      }
+
+      const auto *asserted{document.value().try_at("sub")};
+      if (asserted == nullptr || !asserted->is_string() ||
+          asserted->to_string() != subject) {
+        sourcemeta::one::HTTP_LOG(
+            "The UserInfo endpoint answered about a different subject than "
+            "the identity token did");
+        return std::nullopt;
+      }
+
+      return document;
     } catch (...) {
       return std::nullopt;
     }

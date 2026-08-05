@@ -67,6 +67,53 @@
     },
     {
       "type": "oidc",
+      "name": "desk",
+      "paths": [
+        "/desk"
+      ],
+      "issuer": "https://keycloak:8443/realms/main",
+      "clientId": "registry",
+      "clientSecret": {
+        "environmentVariable": "ONE_E2E_OIDC_CLIENT_SECRET"
+      },
+      "sessionSecrets": [
+        {
+          "environmentVariable": "ONE_E2E_OIDC_SESSION_SECRET"
+        }
+      ],
+      "claims": {
+        "department": [
+          "platform"
+        ]
+      }
+    },
+    {
+      "type": "oidc",
+      "name": "split",
+      "paths": [
+        "/split"
+      ],
+      "issuer": "https://keycloak:8443/realms/main",
+      "clientId": "registry",
+      "clientSecret": {
+        "environmentVariable": "ONE_E2E_OIDC_CLIENT_SECRET"
+      },
+      "sessionSecrets": [
+        {
+          "environmentVariable": "ONE_E2E_OIDC_SESSION_SECRET"
+        }
+      ],
+      "claims": {
+        "groups": [
+          "platform"
+        ],
+        "department": [
+          "platform"
+        ]
+      }
+    },
+    {
+      "type": "oidc",
       "name": "cleartext",
       "paths": [
         "/discovery"
@@ -178,6 +225,12 @@
     },
     "corp": {
       "path": "./schemas/corp"
+    },
+    "desk": {
+      "path": "./schemas/desk"
+    },
+    "split": {
+      "path": "./schemas/split"
     }
   }
 }

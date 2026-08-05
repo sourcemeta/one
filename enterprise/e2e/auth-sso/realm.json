@@ -69,6 +69,30 @@
           }
         }
       ]
+    },
+    {
+      "name": "department",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "false",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "department",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "department",
+            "claim.name": "department",
+            "jsonType.label": "String",
+            "access.token.claim": "false",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
     }
   ],
   "clients": [
@@ -86,12 +110,15 @@
       "redirectUris": [
         "http://localhost:8000/self/v1/auth/callback/keycloak",
         "http://localhost:8000/self/v1/auth/callback/team",
-        "http://localhost:8000/self/v1/auth/callback/corp"
+        "http://localhost:8000/self/v1/auth/callback/corp",
+        "http://localhost:8000/self/v1/auth/callback/desk",
+        "http://localhost:8000/self/v1/auth/callback/split"
       ],
       "fullScopeAllowed": false,
       "defaultClientScopes": [
         "basic",
-        "groups"
+        "groups",
+        "department"
       ],
       "optionalClientScopes": [
         "email"
@@ -120,7 +147,12 @@
       ],
       "groups": [
         "/platform"
-      ]
+      ],
+      "attributes": {
+        "department": [
+          "platform"
+        ]
+      }
     },
     {
       "username": "bob",
@@ -135,7 +167,12 @@
           "value": "bob-password",
           "temporary": false
         }
-      ]
+      ],
+      "attributes": {
+        "department": [
+          "sales"
+        ]
+      }
     }
   ]
 }

@@ -250,6 +250,10 @@ public:
     std::string jwks_uri{};
     // Absent from a provider that does not offer to end its own session
     std::string end_session{};
+    // Where a provider answers for the claims a scope requested, which under
+    // the authorization code flow is where they arrive by default rather than
+    // in the token itself
+    std::string userinfo{};
     // Whether the provider takes the client secret in an authorization header
     // rather than in the request body
     bool token_endpoint_basic_auth{true};
@@ -285,18 +289,50 @@ public:
   [[nodiscard]] auto open_session(std::string_view value) const
       -> std::optional<std::string>;
 
-  // Whether the claims a provider asserted about a person satisfy what the
-  // named interactive policy requires of them. The claims are the payload of
-  // an identity token this instance has already validated, so this decides
-  // admission rather than authenticity, and a policy naming no rule admits
-  // whoever its provider vouched for.
+  // Two answers from one provider about one person, read together. A rule may
+  // name a claim the identity token carried and another only the UserInfo
+  // endpoint answers for, and either answer alone would refuse somebody both
+  // together admit.
+  //
+  // The token wins wherever both speak, since it arrives signed and verified
+  // while a UserInfo response is protected only by the transport that carried
+  // it, so the second fills gaps rather than overruling a signature.
+  //
+  // An address and the assertion that it was verified are the exception: they
+  // travel as a pair, from whichever answer carried the address. OpenID
+  // Connect Core Section 5.1 has `email_verified` speak for the `email`
+  // delivered alongside it and no other, so letting one answer's assertion
+  // vouch for the other answer's address would admit an address the provider
+  // never verified
+  [[nodiscard]] static auto combine_claims(const sourcemeta::core::JSON &token,
+                                           const sourcemeta::core::JSON &extra)
+      -> sourcemeta::core::JSON;
+
+  // What a policy's rules make of the claims a provider asserted
+  enum class Admission : std::uint8_t {
+    // Every rule holds
+    Admitted,
+    // A rule names values that what arrived does not carry
+    Refused,
+    // A rule names a claim absent altogether. A provider answering the
+    // authorization code flow returns a scope's claims from its UserInfo
+    // endpoint rather than in the token by default, so this is the one
+    // outcome worth asking a second question about
+    Incomplete
+  };
+
+  // What the claims a provider asserted about a person make of what the named
+  // interactive policy requires. The claims are the payload of an identity
+  // token this instance has already validated, so this decides admission
+  // rather than authenticity, and a policy naming no rule admits whoever its
+  // provider vouched for.
   //
   // A login asks this before a session is minted rather than the gate asking
   // it afterwards, so that somebody a policy will never admit is told once,
   // rather than being sent back to their provider on every request
   [[nodiscard]] auto admits_identity(std::string_view policy,
                                      const sourcemeta::core::JSON &claims) const
-      -> bool;
+      -> Admission;
 
   // Sealing is an edition-dependent capability. Where an instance does not
   // offer it, nothing seals and no value opens, so a caller that treats an
