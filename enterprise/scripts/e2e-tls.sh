@@ -58,7 +58,5 @@ install_into() {
 # Only the sandboxes that publish protected resource metadata serve the
 # registry itself over TLS. The rest need the provider's name alone
 install_into auth keycloak
-install_into auth-path keycloak
 install_into auth-sso keycloak
 install_into auth-closed keycloak registry
-install_into auth-mcp-path registry
