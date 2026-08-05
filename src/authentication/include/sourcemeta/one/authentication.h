@@ -289,6 +289,25 @@ public:
   [[nodiscard]] auto open_session(std::string_view value) const
       -> std::optional<std::string>;
 
+  // Two answers from one provider about one person, read together. A rule may
+  // name a claim the identity token carried and another only the UserInfo
+  // endpoint answers for, and either answer alone would refuse somebody both
+  // together admit.
+  //
+  // The token wins wherever both speak, since it arrives signed and verified
+  // while a UserInfo response is protected only by the transport that carried
+  // it, so the second fills gaps rather than overruling a signature.
+  //
+  // An address and the assertion that it was verified are the exception: they
+  // travel as a pair, from whichever answer carried the address. OpenID
+  // Connect Core Section 5.1 has `email_verified` speak for the `email`
+  // delivered alongside it and no other, so letting one answer's assertion
+  // vouch for the other answer's address would admit an address the provider
+  // never verified
+  [[nodiscard]] static auto combine_claims(const sourcemeta::core::JSON &token,
+                                           const sourcemeta::core::JSON &extra)
+      -> sourcemeta::core::JSON;
+
   // What a policy's rules make of the claims a provider asserted
   enum class Admission : std::uint8_t {
     // Every rule holds

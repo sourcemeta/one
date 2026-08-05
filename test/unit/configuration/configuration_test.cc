@@ -897,18 +897,19 @@ TEST(authentication_jwt_claims_become_individual_claim_requests) {
   // A rule is stored as the individual claim request it denotes, with names
   // and values sorted, since the bytes decide whether two policies count as
   // one audience
+  const auto expected{sourcemeta::core::parse_json(R"JSON({
+    "department": {
+      "essential": true,
+      "values": [ "engineering" ]
+    },
+    "groups": {
+      "essential": true,
+      "values": [ "oncall", "platform" ]
+    }
+  })JSON")};
+
   EXPECT_EQ(configuration.authentication.size(), 1);
-  EXPECT_EQ(configuration.authentication.at(0).claims,
-            sourcemeta::core::parse_json(R"JSON({
-              "department": {
-                "essential": true,
-                "values": [ "engineering" ]
-              },
-              "groups": {
-                "essential": true,
-                "values": [ "oncall", "platform" ]
-              }
-            })JSON"));
+  EXPECT_EQ(configuration.authentication.at(0).claims, expected);
 }
 
 TEST(authentication_oidc_claims_and_email_domains_are_canonical) {
@@ -935,14 +936,15 @@ TEST(authentication_oidc_claims_and_email_domains_are_canonical) {
   const auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, "/tmp/one.json", ".")};
 
+  const auto expected{sourcemeta::core::parse_json(R"JSON({
+    "groups": {
+      "essential": true,
+      "values": [ "oncall", "platform" ]
+    }
+  })JSON")};
+
   EXPECT_EQ(configuration.authentication.size(), 1);
-  EXPECT_EQ(configuration.authentication.at(0).claims,
-            sourcemeta::core::parse_json(R"JSON({
-              "groups": {
-                "essential": true,
-                "values": [ "oncall", "platform" ]
-              }
-            })JSON"));
+  EXPECT_EQ(configuration.authentication.at(0).claims, expected);
   // A domain names a host, so it is compared without regard to case
   EXPECT_EQ(configuration.authentication.at(0).email_domains,
             (std::vector<sourcemeta::core::JSON::String>{"acme.example.com",

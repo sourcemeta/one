@@ -1664,6 +1664,45 @@ auto Authentication::open_session(const std::string_view value) const
   return this->impl_->open_session(value);
 }
 
+// A provider answering twice about one person is two halves of one account,
+// but only one of them is signed. The address pair is carved out because
+// `email_verified` speaks for the address delivered with it, so the pair is
+// taken whole from whichever answer carried the address
+auto Authentication::combine_claims(const sourcemeta::core::JSON &token,
+                                    const sourcemeta::core::JSON &extra)
+    -> sourcemeta::core::JSON {
+  if (!token.is_object()) {
+    return extra.is_object() ? extra : token;
+  }
+
+  auto result{token};
+  if (!extra.is_object()) {
+    return result;
+  }
+
+  // Whichever answer carried the address carries the assertion about it, so an
+  // assertion left behind by the other is dropped rather than allowed to vouch
+  // for an address it never saw
+  const auto token_has_address{token.defines("email")};
+  if (!token_has_address) {
+    result.erase("email_verified");
+  }
+
+  for (const auto &claim : extra.as_object()) {
+    if (claim.first == "email" || claim.first == "email_verified") {
+      if (token_has_address) {
+        continue;
+      }
+    }
+
+    if (!result.defines(claim.first)) {
+      result.assign(claim.first, claim.second);
+    }
+  }
+
+  return result;
+}
+
 auto Authentication::admits_identity(const std::string_view policy,
                                      const sourcemeta::core::JSON &claims) const
     -> Authentication::Admission {
