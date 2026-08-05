@@ -99,8 +99,6 @@ ifeq ($(ENTERPRISE),ON)
 	$(MAKE) -C enterprise/e2e/empty EDITION=$(EDITION)
 	$(MAKE) -C enterprise/e2e/html EDITION=$(EDITION)
 	$(MAKE) -C enterprise/e2e/public EDITION=$(EDITION)
-	# Discovery metadata needs a policy but never contacts its issuer, so this
-	# one needs no identity provider alongside it
 	# The authentication sandboxes each stand up an identity provider alongside
 	# the registry, exercising both JWT and apiKey policies
 	$(MAKE) -C enterprise/e2e/auth EDITION=$(EDITION)

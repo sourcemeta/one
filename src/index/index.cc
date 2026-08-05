@@ -763,6 +763,10 @@ auto main(int argc, char *argv[]) noexcept -> int {
     std::print(stdout, "error: {}\n  at url {}\n  at path {}\n", error.what(),
                error.url(), error.path().string());
     return EXIT_FAILURE;
+  } catch (const sourcemeta::one::ConfigurationInstanceOriginError &error) {
+    std::print(stdout, "error: {}\n  at url {}\n  at path {}\n", error.what(),
+               error.url(), error.path().string());
+    return EXIT_FAILURE;
   } catch (const sourcemeta::one::ConfigurationInsecureAuthenticationURLError
                &error) {
     std::print(stdout, "error: {}\n  at url {}\n  at name {}\n  at path {}\n",

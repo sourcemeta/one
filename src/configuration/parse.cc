@@ -170,6 +170,15 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
                                          data.at("url").to_string());
   }
 
+  // Every schema identifier is composed against this URL, so anything here
+  // that does not say where the instance is served travels into identifiers
+  // that name no resource, credentials included
+  if (server_url.userinfo().has_value() || server_url.query().has_value() ||
+      server_url.fragment().has_value()) {
+    throw ConfigurationInstanceOriginError(configuration_path,
+                                           data.at("url").to_string());
+  }
+
   server_url.path("");
   server_url.userinfo("");
   server_url.query("");
