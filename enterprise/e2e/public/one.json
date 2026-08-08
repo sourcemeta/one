@@ -187,6 +187,10 @@
           "title": "Open Source Vulnerability schema",
           "github": "ossf/osv-schema",
           "contents": {
+            "v1.9.0": {
+              "baseUri": "https://raw.githubusercontent.com/ossf/osv-schema/main/validation",
+              "path": "../../../vendor/public/osv-schema-1-9-0"
+            },
             "v1.8.0": {
               "baseUri": "https://raw.githubusercontent.com/ossf/osv-schema/main/validation",
               "path": "../../../vendor/public/osv-schema-1-8-0"
