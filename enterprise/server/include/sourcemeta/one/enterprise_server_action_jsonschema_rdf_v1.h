@@ -467,9 +467,15 @@ private:
         return "container";
       case sourcemeta::blaze::JSONLDFacet::Self:
         return "self";
-      default:
-        std::unreachable();
+      case sourcemeta::blaze::JSONLDFacet::Override:
+        return "override";
+      case sourcemeta::blaze::JSONLDFacet::ValuePredicate:
+        return "valuePredicate";
+      case sourcemeta::blaze::JSONLDFacet::Constants:
+        return "constants";
     }
+
+    std::unreachable();
   }
 
   auto send_problem(sourcemeta::one::HTTPRequest &request,

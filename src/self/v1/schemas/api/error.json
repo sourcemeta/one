@@ -271,7 +271,10 @@
             "graph",
             "json",
             "container",
-            "self"
+            "self",
+            "override",
+            "valuePredicate",
+            "constants"
           ]
         },
         "instanceLocation": {
