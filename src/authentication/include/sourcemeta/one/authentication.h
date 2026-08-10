@@ -210,13 +210,13 @@ public:
   [[nodiscard]] static auto views(std::span<const Policy> policies)
       -> std::vector<View>;
 
-  // How many policies may name one issuer. Some bound is unavoidable, because
-  // the combinations double with each policy added to a group and the shift
-  // that enumerates them stops being defined once a group reaches the ceiling
-  // on policies. Exactly where to draw it is a choice rather than a discovery:
-  // this sits far above anything a configuration has reason to declare and far
-  // below the point where enumerating becomes impractical. It is not a
-  // judgement about what a build can afford, which is made where views are
+  // How many policies may name one issuer. The combinations over a group double
+  // with every policy added to it, so where to stop is a choice rather than a
+  // discovery: this sits far above anything a configuration has reason to
+  // declare and far below where enumerating them becomes a burden. Raising it
+  // is a decision about what a build should attempt, bounded only in that it
+  // can never reach the ceiling on policies, where the enumeration stops being
+  // expressible at all. What a number of views costs is decided where they are
   // built rather than where they are named
   static constexpr std::size_t MAXIMUM_COMBINABLE_POLICIES{16};
 
