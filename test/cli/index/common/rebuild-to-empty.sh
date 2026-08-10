@@ -80,6 +80,7 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/api/%/login-html.metapack
 ./explorer/self/v1/schemas/api/error
 ./explorer/self/v1/schemas/api/error/%
+./explorer/self/v1/schemas/api/error/%/dependents.metapack
 ./explorer/self/v1/schemas/api/error/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/error/%/schema.metapack
 ./explorer/self/v1/schemas/api/list
@@ -89,6 +90,7 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/api/list/%/login-html.metapack
 ./explorer/self/v1/schemas/api/list/response
 ./explorer/self/v1/schemas/api/list/response/%
+./explorer/self/v1/schemas/api/list/response/%/dependents.metapack
 ./explorer/self/v1/schemas/api/list/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/list/response/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas
@@ -103,6 +105,7 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/api/schemas/dependencies/%/login-html.metapack
 ./explorer/self/v1/schemas/api/schemas/dependencies/response
 ./explorer/self/v1/schemas/api/schemas/dependencies/response/%
+./explorer/self/v1/schemas/api/schemas/dependencies/response/%/dependents.metapack
 ./explorer/self/v1/schemas/api/schemas/dependencies/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/dependencies/response/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/dependents
@@ -112,6 +115,7 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/api/schemas/dependents/%/login-html.metapack
 ./explorer/self/v1/schemas/api/schemas/dependents/response
 ./explorer/self/v1/schemas/api/schemas/dependents/response/%
+./explorer/self/v1/schemas/api/schemas/dependents/response/%/dependents.metapack
 ./explorer/self/v1/schemas/api/schemas/dependents/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/dependents/response/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/evaluate
@@ -121,10 +125,12 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/api/schemas/evaluate/%/login-html.metapack
 ./explorer/self/v1/schemas/api/schemas/evaluate/request
 ./explorer/self/v1/schemas/api/schemas/evaluate/request/%
+./explorer/self/v1/schemas/api/schemas/evaluate/request/%/dependents.metapack
 ./explorer/self/v1/schemas/api/schemas/evaluate/request/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/evaluate/request/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/evaluate/response
 ./explorer/self/v1/schemas/api/schemas/evaluate/response/%
+./explorer/self/v1/schemas/api/schemas/evaluate/response/%/dependents.metapack
 ./explorer/self/v1/schemas/api/schemas/evaluate/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/evaluate/response/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/health
@@ -134,6 +140,7 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/api/schemas/health/%/login-html.metapack
 ./explorer/self/v1/schemas/api/schemas/health/response
 ./explorer/self/v1/schemas/api/schemas/health/response/%
+./explorer/self/v1/schemas/api/schemas/health/response/%/dependents.metapack
 ./explorer/self/v1/schemas/api/schemas/health/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/health/response/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/locations
@@ -143,6 +150,7 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/api/schemas/locations/%/login-html.metapack
 ./explorer/self/v1/schemas/api/schemas/locations/response
 ./explorer/self/v1/schemas/api/schemas/locations/response/%
+./explorer/self/v1/schemas/api/schemas/locations/response/%/dependents.metapack
 ./explorer/self/v1/schemas/api/schemas/locations/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/locations/response/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/metadata
@@ -152,14 +160,17 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/api/schemas/metadata/%/login-html.metapack
 ./explorer/self/v1/schemas/api/schemas/metadata/response
 ./explorer/self/v1/schemas/api/schemas/metadata/response/%
+./explorer/self/v1/schemas/api/schemas/metadata/response/%/dependents.metapack
 ./explorer/self/v1/schemas/api/schemas/metadata/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/metadata/response/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/output-error
 ./explorer/self/v1/schemas/api/schemas/output-error/%
+./explorer/self/v1/schemas/api/schemas/output-error/%/dependents.metapack
 ./explorer/self/v1/schemas/api/schemas/output-error/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/output-error/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/position
 ./explorer/self/v1/schemas/api/schemas/position/%
+./explorer/self/v1/schemas/api/schemas/position/%/dependents.metapack
 ./explorer/self/v1/schemas/api/schemas/position/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/position/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/positions
@@ -169,6 +180,7 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/api/schemas/positions/%/login-html.metapack
 ./explorer/self/v1/schemas/api/schemas/positions/response
 ./explorer/self/v1/schemas/api/schemas/positions/response/%
+./explorer/self/v1/schemas/api/schemas/positions/response/%/dependents.metapack
 ./explorer/self/v1/schemas/api/schemas/positions/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/positions/response/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/rdf
@@ -178,10 +190,12 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/api/schemas/rdf/%/login-html.metapack
 ./explorer/self/v1/schemas/api/schemas/rdf/request
 ./explorer/self/v1/schemas/api/schemas/rdf/request/%
+./explorer/self/v1/schemas/api/schemas/rdf/request/%/dependents.metapack
 ./explorer/self/v1/schemas/api/schemas/rdf/request/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/rdf/request/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/rdf/response
 ./explorer/self/v1/schemas/api/schemas/rdf/response/%
+./explorer/self/v1/schemas/api/schemas/rdf/response/%/dependents.metapack
 ./explorer/self/v1/schemas/api/schemas/rdf/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/rdf/response/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/search
@@ -191,6 +205,7 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/api/schemas/search/%/login-html.metapack
 ./explorer/self/v1/schemas/api/schemas/search/response
 ./explorer/self/v1/schemas/api/schemas/search/response/%
+./explorer/self/v1/schemas/api/schemas/search/response/%/dependents.metapack
 ./explorer/self/v1/schemas/api/schemas/search/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/search/response/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/stats
@@ -200,6 +215,7 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/api/schemas/stats/%/login-html.metapack
 ./explorer/self/v1/schemas/api/schemas/stats/response
 ./explorer/self/v1/schemas/api/schemas/stats/response/%
+./explorer/self/v1/schemas/api/schemas/stats/response/%/dependents.metapack
 ./explorer/self/v1/schemas/api/schemas/stats/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/stats/response/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/trace
@@ -209,10 +225,12 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/api/schemas/trace/%/login-html.metapack
 ./explorer/self/v1/schemas/api/schemas/trace/request
 ./explorer/self/v1/schemas/api/schemas/trace/request/%
+./explorer/self/v1/schemas/api/schemas/trace/request/%/dependents.metapack
 ./explorer/self/v1/schemas/api/schemas/trace/request/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/trace/request/%/schema.metapack
 ./explorer/self/v1/schemas/api/schemas/trace/response
 ./explorer/self/v1/schemas/api/schemas/trace/response/%
+./explorer/self/v1/schemas/api/schemas/trace/response/%/dependents.metapack
 ./explorer/self/v1/schemas/api/schemas/trace/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/api/schemas/trace/response/%/schema.metapack
 ./explorer/self/v1/schemas/mcp
@@ -222,6 +240,7 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/mcp/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/error
 ./explorer/self/v1/schemas/mcp/error/%
+./explorer/self/v1/schemas/mcp/error/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/error/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/error/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/initialize
@@ -231,10 +250,12 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/mcp/initialize/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/initialize/request
 ./explorer/self/v1/schemas/mcp/initialize/request/%
+./explorer/self/v1/schemas/mcp/initialize/request/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/initialize/request/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/initialize/request/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/initialize/response
 ./explorer/self/v1/schemas/mcp/initialize/response/%
+./explorer/self/v1/schemas/mcp/initialize/response/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/initialize/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/initialize/response/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/notifications
@@ -244,10 +265,12 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/mcp/notifications/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/notifications/cancelled
 ./explorer/self/v1/schemas/mcp/notifications/cancelled/%
+./explorer/self/v1/schemas/mcp/notifications/cancelled/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/notifications/cancelled/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/notifications/cancelled/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/notifications/initialized
 ./explorer/self/v1/schemas/mcp/notifications/initialized/%
+./explorer/self/v1/schemas/mcp/notifications/initialized/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/notifications/initialized/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/notifications/initialized/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/ping
@@ -257,10 +280,12 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/mcp/ping/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/ping/request
 ./explorer/self/v1/schemas/mcp/ping/request/%
+./explorer/self/v1/schemas/mcp/ping/request/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/ping/request/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/ping/request/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/ping/response
 ./explorer/self/v1/schemas/mcp/ping/response/%
+./explorer/self/v1/schemas/mcp/ping/response/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/ping/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/ping/response/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/prm
@@ -270,10 +295,12 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/mcp/prm/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/prm/response
 ./explorer/self/v1/schemas/mcp/prm/response/%
+./explorer/self/v1/schemas/mcp/prm/response/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/prm/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/prm/response/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/request
 ./explorer/self/v1/schemas/mcp/request/%
+./explorer/self/v1/schemas/mcp/request/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/request/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/request/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/resources
@@ -288,10 +315,12 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/mcp/resources/list/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/resources/list/request
 ./explorer/self/v1/schemas/mcp/resources/list/request/%
+./explorer/self/v1/schemas/mcp/resources/list/request/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/resources/list/request/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/resources/list/request/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/resources/list/response
 ./explorer/self/v1/schemas/mcp/resources/list/response/%
+./explorer/self/v1/schemas/mcp/resources/list/response/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/resources/list/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/resources/list/response/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/resources/read
@@ -301,10 +330,12 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/mcp/resources/read/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/resources/read/request
 ./explorer/self/v1/schemas/mcp/resources/read/request/%
+./explorer/self/v1/schemas/mcp/resources/read/request/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/resources/read/request/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/resources/read/request/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/resources/read/response
 ./explorer/self/v1/schemas/mcp/resources/read/response/%
+./explorer/self/v1/schemas/mcp/resources/read/response/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/resources/read/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/resources/read/response/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/resources/templates
@@ -319,14 +350,17 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/mcp/resources/templates/list/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/resources/templates/list/request
 ./explorer/self/v1/schemas/mcp/resources/templates/list/request/%
+./explorer/self/v1/schemas/mcp/resources/templates/list/request/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/resources/templates/list/request/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/resources/templates/list/request/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/resources/templates/list/response
 ./explorer/self/v1/schemas/mcp/resources/templates/list/response/%
+./explorer/self/v1/schemas/mcp/resources/templates/list/response/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/resources/templates/list/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/resources/templates/list/response/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/response
 ./explorer/self/v1/schemas/mcp/response/%
+./explorer/self/v1/schemas/mcp/response/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/response/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools
@@ -346,10 +380,12 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/mcp/tools/call/evaluate-schema/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/evaluate-schema/request
 ./explorer/self/v1/schemas/mcp/tools/call/evaluate-schema/request/%
+./explorer/self/v1/schemas/mcp/tools/call/evaluate-schema/request/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/evaluate-schema/request/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/evaluate-schema/request/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/evaluate-schema/response
 ./explorer/self/v1/schemas/mcp/tools/call/evaluate-schema/response/%
+./explorer/self/v1/schemas/mcp/tools/call/evaluate-schema/response/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/evaluate-schema/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/evaluate-schema/response/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependencies
@@ -359,10 +395,12 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependencies/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request/%
+./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response/%
+./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependents
@@ -372,10 +410,12 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependents/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependents/request
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependents/request/%
+./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependents/request/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependents/request/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependents/request/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependents/response
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependents/response/%
+./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependents/response/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependents/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-dependents/response/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-health
@@ -385,10 +425,12 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-health/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-health/request
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-health/request/%
+./explorer/self/v1/schemas/mcp/tools/call/get-schema-health/request/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-health/request/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-health/request/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-health/response
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-health/response/%
+./explorer/self/v1/schemas/mcp/tools/call/get-schema-health/response/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-health/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-health/response/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-locations
@@ -398,10 +440,12 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-locations/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-locations/request
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-locations/request/%
+./explorer/self/v1/schemas/mcp/tools/call/get-schema-locations/request/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-locations/request/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-locations/request/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-locations/response
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-locations/response/%
+./explorer/self/v1/schemas/mcp/tools/call/get-schema-locations/response/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-locations/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-locations/response/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-metadata
@@ -411,10 +455,12 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-metadata/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-metadata/request
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-metadata/request/%
+./explorer/self/v1/schemas/mcp/tools/call/get-schema-metadata/request/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-metadata/request/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-metadata/request/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-metadata/response
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-metadata/response/%
+./explorer/self/v1/schemas/mcp/tools/call/get-schema-metadata/response/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-metadata/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-metadata/response/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-positions
@@ -424,10 +470,12 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-positions/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-positions/request
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-positions/request/%
+./explorer/self/v1/schemas/mcp/tools/call/get-schema-positions/request/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-positions/request/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-positions/request/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-positions/response
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-positions/response/%
+./explorer/self/v1/schemas/mcp/tools/call/get-schema-positions/response/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-positions/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-positions/response/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-stats
@@ -437,10 +485,12 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-stats/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-stats/request
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-stats/request/%
+./explorer/self/v1/schemas/mcp/tools/call/get-schema-stats/request/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-stats/request/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-stats/request/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-stats/response
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-stats/response/%
+./explorer/self/v1/schemas/mcp/tools/call/get-schema-stats/response/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-stats/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/get-schema-stats/response/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/instance-to-rdf
@@ -450,10 +500,12 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/mcp/tools/call/instance-to-rdf/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/instance-to-rdf/request
 ./explorer/self/v1/schemas/mcp/tools/call/instance-to-rdf/request/%
+./explorer/self/v1/schemas/mcp/tools/call/instance-to-rdf/request/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/instance-to-rdf/request/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/instance-to-rdf/request/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/instance-to-rdf/response
 ./explorer/self/v1/schemas/mcp/tools/call/instance-to-rdf/response/%
+./explorer/self/v1/schemas/mcp/tools/call/instance-to-rdf/response/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/instance-to-rdf/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/instance-to-rdf/response/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/list-directory
@@ -463,18 +515,22 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/mcp/tools/call/list-directory/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/list-directory/request
 ./explorer/self/v1/schemas/mcp/tools/call/list-directory/request/%
+./explorer/self/v1/schemas/mcp/tools/call/list-directory/request/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/list-directory/request/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/list-directory/request/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/list-directory/response
 ./explorer/self/v1/schemas/mcp/tools/call/list-directory/response/%
+./explorer/self/v1/schemas/mcp/tools/call/list-directory/response/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/list-directory/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/list-directory/response/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/request
 ./explorer/self/v1/schemas/mcp/tools/call/request/%
+./explorer/self/v1/schemas/mcp/tools/call/request/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/request/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/request/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/response
 ./explorer/self/v1/schemas/mcp/tools/call/response/%
+./explorer/self/v1/schemas/mcp/tools/call/response/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/response/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/search-schemas
@@ -484,10 +540,12 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/mcp/tools/call/search-schemas/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/search-schemas/request
 ./explorer/self/v1/schemas/mcp/tools/call/search-schemas/request/%
+./explorer/self/v1/schemas/mcp/tools/call/search-schemas/request/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/search-schemas/request/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/search-schemas/request/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/search-schemas/response
 ./explorer/self/v1/schemas/mcp/tools/call/search-schemas/response/%
+./explorer/self/v1/schemas/mcp/tools/call/search-schemas/response/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/search-schemas/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/search-schemas/response/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/trace-schema-evaluation
@@ -497,10 +555,12 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request
 ./explorer/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request/%
+./explorer/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response
 ./explorer/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response/%
+./explorer/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/list
@@ -510,10 +570,12 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer/self/v1/schemas/mcp/tools/list/%/login-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/list/request
 ./explorer/self/v1/schemas/mcp/tools/list/request/%
+./explorer/self/v1/schemas/mcp/tools/list/request/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/list/request/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/list/request/%/schema.metapack
 ./explorer/self/v1/schemas/mcp/tools/list/response
 ./explorer/self/v1/schemas/mcp/tools/list/response/%
+./explorer/self/v1/schemas/mcp/tools/list/response/%/dependents.metapack
 ./explorer/self/v1/schemas/mcp/tools/list/response/%/schema-html.metapack
 ./explorer/self/v1/schemas/mcp/tools/list/response/%/schema.metapack
 ./routes.bin
@@ -528,7 +590,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/api/error/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/error/%/bundle.metapack
 ./schemas/self/v1/schemas/api/error/%/dependencies.metapack
-./schemas/self/v1/schemas/api/error/%/dependents.metapack
 ./schemas/self/v1/schemas/api/error/%/editor.metapack
 ./schemas/self/v1/schemas/api/error/%/health.metapack
 ./schemas/self/v1/schemas/api/error/%/locations.metapack
@@ -542,7 +603,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/api/list/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/list/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/list/response/%/dependencies.metapack
-./schemas/self/v1/schemas/api/list/response/%/dependents.metapack
 ./schemas/self/v1/schemas/api/list/response/%/editor.metapack
 ./schemas/self/v1/schemas/api/list/response/%/health.metapack
 ./schemas/self/v1/schemas/api/list/response/%/locations.metapack
@@ -557,7 +617,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/dependencies.metapack
-./schemas/self/v1/schemas/api/schemas/dependencies/response/%/dependents.metapack
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/editor.metapack
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/health.metapack
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/locations.metapack
@@ -571,7 +630,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/api/schemas/dependents/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/dependents/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/dependents/response/%/dependencies.metapack
-./schemas/self/v1/schemas/api/schemas/dependents/response/%/dependents.metapack
 ./schemas/self/v1/schemas/api/schemas/dependents/response/%/editor.metapack
 ./schemas/self/v1/schemas/api/schemas/dependents/response/%/health.metapack
 ./schemas/self/v1/schemas/api/schemas/dependents/response/%/locations.metapack
@@ -585,7 +643,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/api/schemas/evaluate/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/request/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/request/%/dependencies.metapack
-./schemas/self/v1/schemas/api/schemas/evaluate/request/%/dependents.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/request/%/editor.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/request/%/health.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/request/%/locations.metapack
@@ -598,7 +655,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/dependencies.metapack
-./schemas/self/v1/schemas/api/schemas/evaluate/response/%/dependents.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/editor.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/health.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/locations.metapack
@@ -612,7 +668,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/api/schemas/health/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/health/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/health/response/%/dependencies.metapack
-./schemas/self/v1/schemas/api/schemas/health/response/%/dependents.metapack
 ./schemas/self/v1/schemas/api/schemas/health/response/%/editor.metapack
 ./schemas/self/v1/schemas/api/schemas/health/response/%/health.metapack
 ./schemas/self/v1/schemas/api/schemas/health/response/%/locations.metapack
@@ -626,7 +681,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/api/schemas/locations/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/locations/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/locations/response/%/dependencies.metapack
-./schemas/self/v1/schemas/api/schemas/locations/response/%/dependents.metapack
 ./schemas/self/v1/schemas/api/schemas/locations/response/%/editor.metapack
 ./schemas/self/v1/schemas/api/schemas/locations/response/%/health.metapack
 ./schemas/self/v1/schemas/api/schemas/locations/response/%/locations.metapack
@@ -640,7 +694,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%/dependencies.metapack
-./schemas/self/v1/schemas/api/schemas/metadata/response/%/dependents.metapack
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%/editor.metapack
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%/health.metapack
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%/locations.metapack
@@ -653,7 +706,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/api/schemas/output-error/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/output-error/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/output-error/%/dependencies.metapack
-./schemas/self/v1/schemas/api/schemas/output-error/%/dependents.metapack
 ./schemas/self/v1/schemas/api/schemas/output-error/%/editor.metapack
 ./schemas/self/v1/schemas/api/schemas/output-error/%/health.metapack
 ./schemas/self/v1/schemas/api/schemas/output-error/%/locations.metapack
@@ -666,7 +718,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/api/schemas/position/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/position/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/position/%/dependencies.metapack
-./schemas/self/v1/schemas/api/schemas/position/%/dependents.metapack
 ./schemas/self/v1/schemas/api/schemas/position/%/editor.metapack
 ./schemas/self/v1/schemas/api/schemas/position/%/health.metapack
 ./schemas/self/v1/schemas/api/schemas/position/%/locations.metapack
@@ -680,7 +731,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/api/schemas/positions/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/positions/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/positions/response/%/dependencies.metapack
-./schemas/self/v1/schemas/api/schemas/positions/response/%/dependents.metapack
 ./schemas/self/v1/schemas/api/schemas/positions/response/%/editor.metapack
 ./schemas/self/v1/schemas/api/schemas/positions/response/%/health.metapack
 ./schemas/self/v1/schemas/api/schemas/positions/response/%/locations.metapack
@@ -694,7 +744,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/api/schemas/rdf/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/rdf/request/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/rdf/request/%/dependencies.metapack
-./schemas/self/v1/schemas/api/schemas/rdf/request/%/dependents.metapack
 ./schemas/self/v1/schemas/api/schemas/rdf/request/%/editor.metapack
 ./schemas/self/v1/schemas/api/schemas/rdf/request/%/health.metapack
 ./schemas/self/v1/schemas/api/schemas/rdf/request/%/locations.metapack
@@ -707,7 +756,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/api/schemas/rdf/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/rdf/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/rdf/response/%/dependencies.metapack
-./schemas/self/v1/schemas/api/schemas/rdf/response/%/dependents.metapack
 ./schemas/self/v1/schemas/api/schemas/rdf/response/%/editor.metapack
 ./schemas/self/v1/schemas/api/schemas/rdf/response/%/health.metapack
 ./schemas/self/v1/schemas/api/schemas/rdf/response/%/locations.metapack
@@ -721,7 +769,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/api/schemas/search/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/search/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/search/response/%/dependencies.metapack
-./schemas/self/v1/schemas/api/schemas/search/response/%/dependents.metapack
 ./schemas/self/v1/schemas/api/schemas/search/response/%/editor.metapack
 ./schemas/self/v1/schemas/api/schemas/search/response/%/health.metapack
 ./schemas/self/v1/schemas/api/schemas/search/response/%/locations.metapack
@@ -735,7 +782,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/dependencies.metapack
-./schemas/self/v1/schemas/api/schemas/stats/response/%/dependents.metapack
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/editor.metapack
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/health.metapack
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/locations.metapack
@@ -749,7 +795,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/api/schemas/trace/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/request/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/request/%/dependencies.metapack
-./schemas/self/v1/schemas/api/schemas/trace/request/%/dependents.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/request/%/editor.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/request/%/health.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/request/%/locations.metapack
@@ -762,7 +807,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/dependencies.metapack
-./schemas/self/v1/schemas/api/schemas/trace/response/%/dependents.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/editor.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/health.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/locations.metapack
@@ -776,7 +820,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/error/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/error/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/error/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/error/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/error/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/error/%/health.metapack
 ./schemas/self/v1/schemas/mcp/error/%/locations.metapack
@@ -790,7 +833,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/initialize/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/initialize/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/initialize/request/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/initialize/request/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/initialize/request/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/initialize/request/%/health.metapack
 ./schemas/self/v1/schemas/mcp/initialize/request/%/locations.metapack
@@ -803,7 +845,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/initialize/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/initialize/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/initialize/response/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/initialize/response/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/initialize/response/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/initialize/response/%/health.metapack
 ./schemas/self/v1/schemas/mcp/initialize/response/%/locations.metapack
@@ -817,7 +858,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/notifications/cancelled/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/notifications/cancelled/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/notifications/cancelled/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/notifications/cancelled/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/notifications/cancelled/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/notifications/cancelled/%/health.metapack
 ./schemas/self/v1/schemas/mcp/notifications/cancelled/%/locations.metapack
@@ -830,7 +870,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/notifications/initialized/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/notifications/initialized/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/notifications/initialized/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/notifications/initialized/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/notifications/initialized/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/notifications/initialized/%/health.metapack
 ./schemas/self/v1/schemas/mcp/notifications/initialized/%/locations.metapack
@@ -844,7 +883,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/ping/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/ping/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/ping/request/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/ping/request/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/ping/request/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/ping/request/%/health.metapack
 ./schemas/self/v1/schemas/mcp/ping/request/%/locations.metapack
@@ -857,7 +895,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/ping/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/ping/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/ping/response/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/ping/response/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/ping/response/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/ping/response/%/health.metapack
 ./schemas/self/v1/schemas/mcp/ping/response/%/locations.metapack
@@ -871,7 +908,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/prm/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/prm/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/prm/response/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/prm/response/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/prm/response/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/prm/response/%/health.metapack
 ./schemas/self/v1/schemas/mcp/prm/response/%/locations.metapack
@@ -884,7 +920,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/request/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/request/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/request/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/request/%/health.metapack
 ./schemas/self/v1/schemas/mcp/request/%/locations.metapack
@@ -899,7 +934,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/resources/list/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/resources/list/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/resources/list/request/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/resources/list/request/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/resources/list/request/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/resources/list/request/%/health.metapack
 ./schemas/self/v1/schemas/mcp/resources/list/request/%/locations.metapack
@@ -912,7 +946,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/resources/list/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/resources/list/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/resources/list/response/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/resources/list/response/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/resources/list/response/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/resources/list/response/%/health.metapack
 ./schemas/self/v1/schemas/mcp/resources/list/response/%/locations.metapack
@@ -926,7 +959,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/resources/read/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/resources/read/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/resources/read/request/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/resources/read/request/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/resources/read/request/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/resources/read/request/%/health.metapack
 ./schemas/self/v1/schemas/mcp/resources/read/request/%/locations.metapack
@@ -939,7 +971,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/resources/read/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/resources/read/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/resources/read/response/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/resources/read/response/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/resources/read/response/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/resources/read/response/%/health.metapack
 ./schemas/self/v1/schemas/mcp/resources/read/response/%/locations.metapack
@@ -954,7 +985,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/resources/templates/list/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/resources/templates/list/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/resources/templates/list/request/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/resources/templates/list/request/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/resources/templates/list/request/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/resources/templates/list/request/%/health.metapack
 ./schemas/self/v1/schemas/mcp/resources/templates/list/request/%/locations.metapack
@@ -967,7 +997,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/resources/templates/list/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/resources/templates/list/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/resources/templates/list/response/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/resources/templates/list/response/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/resources/templates/list/response/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/resources/templates/list/response/%/health.metapack
 ./schemas/self/v1/schemas/mcp/resources/templates/list/response/%/locations.metapack
@@ -980,7 +1009,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/response/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/response/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/response/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/response/%/health.metapack
 ./schemas/self/v1/schemas/mcp/response/%/locations.metapack
@@ -996,7 +1024,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/request/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/request/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/request/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/request/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/request/%/locations.metapack
@@ -1009,7 +1036,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/response/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/response/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/response/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/response/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/response/%/locations.metapack
@@ -1023,7 +1049,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request/%/locations.metapack
@@ -1036,7 +1061,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response/%/locations.metapack
@@ -1050,7 +1074,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/request/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/request/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/request/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/request/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/request/%/locations.metapack
@@ -1063,7 +1086,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/response/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/response/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/response/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/response/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/response/%/locations.metapack
@@ -1077,7 +1099,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/request/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/request/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/request/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/request/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/request/%/locations.metapack
@@ -1090,7 +1111,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/response/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/response/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/response/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/response/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/response/%/locations.metapack
@@ -1104,7 +1124,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/request/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/request/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/request/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/request/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/request/%/locations.metapack
@@ -1117,7 +1136,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/response/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/response/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/response/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/response/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/response/%/locations.metapack
@@ -1131,7 +1149,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/request/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/request/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/request/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/request/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/request/%/locations.metapack
@@ -1144,7 +1161,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/response/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/response/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/response/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/response/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/response/%/locations.metapack
@@ -1158,7 +1174,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/request/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/request/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/request/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/request/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/request/%/locations.metapack
@@ -1171,7 +1186,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/response/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/response/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/response/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/response/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/response/%/locations.metapack
@@ -1185,7 +1199,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/request/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/request/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/request/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/request/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/request/%/locations.metapack
@@ -1198,7 +1211,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/response/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/response/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/response/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/response/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/response/%/locations.metapack
@@ -1212,7 +1224,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/request/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/request/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/request/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/request/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/request/%/locations.metapack
@@ -1225,7 +1236,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/response/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/response/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/response/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/response/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/response/%/locations.metapack
@@ -1239,7 +1249,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/list-directory/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/list-directory/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/list-directory/request/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/call/list-directory/request/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/list-directory/request/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/list-directory/request/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/list-directory/request/%/locations.metapack
@@ -1252,7 +1261,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/list-directory/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/list-directory/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/list-directory/response/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/call/list-directory/response/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/list-directory/response/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/list-directory/response/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/list-directory/response/%/locations.metapack
@@ -1265,7 +1273,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/request/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/call/request/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/request/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/request/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/request/%/locations.metapack
@@ -1278,7 +1285,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/response/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/call/response/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/response/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/response/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/response/%/locations.metapack
@@ -1292,7 +1298,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/search-schemas/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/search-schemas/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/search-schemas/request/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/call/search-schemas/request/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/search-schemas/request/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/search-schemas/request/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/search-schemas/request/%/locations.metapack
@@ -1305,7 +1310,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/search-schemas/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/search-schemas/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/search-schemas/response/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/call/search-schemas/response/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/search-schemas/response/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/search-schemas/response/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/search-schemas/response/%/locations.metapack
@@ -1319,7 +1323,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request/%/locations.metapack
@@ -1332,7 +1335,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response/%/locations.metapack
@@ -1346,7 +1348,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/list/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/list/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/list/request/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/list/request/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/list/request/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/list/request/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/list/request/%/locations.metapack
@@ -1359,7 +1360,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./schemas/self/v1/schemas/mcp/tools/list/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/list/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/list/response/%/dependencies.metapack
-./schemas/self/v1/schemas/mcp/tools/list/response/%/dependents.metapack
 ./schemas/self/v1/schemas/mcp/tools/list/response/%/editor.metapack
 ./schemas/self/v1/schemas/mcp/tools/list/response/%/health.metapack
 ./schemas/self/v1/schemas/mcp/tools/list/response/%/locations.metapack

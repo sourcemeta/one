@@ -73,6 +73,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/example/schemas/%/login-html.metapack
 ./explorer/example/schemas/foo
 ./explorer/example/schemas/foo/%
+./explorer/example/schemas/foo/%/dependents.metapack
 ./explorer/example/schemas/foo/%/directory-html.metapack
 ./explorer/example/schemas/foo/%/directory.metapack
 ./explorer/example/schemas/foo/%/login-html.metapack
@@ -80,6 +81,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/example/schemas/foo/%/schema.metapack
 ./explorer/example/schemas/foo/bar
 ./explorer/example/schemas/foo/bar/%
+./explorer/example/schemas/foo/bar/%/dependents.metapack
 ./explorer/example/schemas/foo/bar/%/schema-html.metapack
 ./explorer/example/schemas/foo/bar/%/schema.metapack
 ./routes.bin
@@ -92,7 +94,6 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./schemas/example/schemas/foo/%/blaze-fast.metapack
 ./schemas/example/schemas/foo/%/bundle.metapack
 ./schemas/example/schemas/foo/%/dependencies.metapack
-./schemas/example/schemas/foo/%/dependents.metapack
 ./schemas/example/schemas/foo/%/editor.metapack
 ./schemas/example/schemas/foo/%/health.metapack
 ./schemas/example/schemas/foo/%/locations.metapack
@@ -105,7 +106,6 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./schemas/example/schemas/foo/bar/%/blaze-fast.metapack
 ./schemas/example/schemas/foo/bar/%/bundle.metapack
 ./schemas/example/schemas/foo/bar/%/dependencies.metapack
-./schemas/example/schemas/foo/bar/%/dependents.metapack
 ./schemas/example/schemas/foo/bar/%/editor.metapack
 ./schemas/example/schemas/foo/bar/%/health.metapack
 ./schemas/example/schemas/foo/bar/%/locations.metapack

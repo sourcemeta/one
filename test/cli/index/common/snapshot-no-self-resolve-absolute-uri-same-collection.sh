@@ -64,9 +64,11 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/example/%/directory.metapack
 ./explorer/example/custom
 ./explorer/example/custom/%
+./explorer/example/custom/%/dependents.metapack
 ./explorer/example/custom/%/schema.metapack
 ./explorer/example/sample
 ./explorer/example/sample/%
+./explorer/example/sample/%/dependents.metapack
 ./explorer/example/sample/%/schema.metapack
 ./routes.bin
 ./schemas
@@ -77,7 +79,6 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./schemas/example/custom/%/blaze-fast.metapack
 ./schemas/example/custom/%/bundle.metapack
 ./schemas/example/custom/%/dependencies.metapack
-./schemas/example/custom/%/dependents.metapack
 ./schemas/example/custom/%/editor.metapack
 ./schemas/example/custom/%/health.metapack
 ./schemas/example/custom/%/locations.metapack
@@ -90,7 +91,6 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./schemas/example/sample/%/blaze-fast.metapack
 ./schemas/example/sample/%/bundle.metapack
 ./schemas/example/sample/%/dependencies.metapack
-./schemas/example/sample/%/dependents.metapack
 ./schemas/example/sample/%/editor.metapack
 ./schemas/example/sample/%/health.metapack
 ./schemas/example/sample/%/locations.metapack

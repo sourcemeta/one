@@ -21,8 +21,8 @@ public:
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
       sourcemeta::one::Router &dispatcher)
-      : ActionDependencyTree_v1{base, router, identifier, "dependents",
-                                dispatcher} {}
+      : ActionDependencyTree_v1{base,         router,         identifier,
+                                "dependents", Tree::Explorer, dispatcher} {}
 };
 
 #endif

@@ -798,6 +798,192 @@ TEST(limits_within_threshold_succeeds) {
   EXPECT_EQ(plan.size, 11u);
 }
 
+TEST(combine_leaf_without_previous_references_rebuilds_its_own_reverse) {
+  const auto output{delta_path("combine_new_leaf")};
+  std::filesystem::remove_all(output);
+  std::filesystem::create_directories(output);
+  sourcemeta::one::BuildState entries;
+  const TestLeaves schemas{
+      {"https://example.com/foo", "/src/foo.json", "foo", MTIME(100)}};
+  entries.emplace(output / "primary" / "foo" / "%" / "references.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+
+  entries.configure(
+      test_rules::COMBINE_RULES.leaves,
+      sourcemeta::one::rules_fingerprint<test_rules::COMBINE_RULES>(), INPUTS,
+      test_rules::COMBINE_RULES.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::COMBINE_RULES>(
+      sourcemeta::one::BuildPhase::Combine, test_rules::MODE_FULL, entries,
+      output, schemas, "1.0.0", true, "", "Full", {})};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 1, 1);
+
+  EXPECT_ACTION(plan, 0, 0, 1, test_rules::ACTION_REVERSE,
+                output / "primary" / "foo" / "%" / "reverse.bin",
+                "https://example.com/foo");
+
+  EXPECT_TOTAL_FILES(plan, entries,
+                     output / "primary" / "foo" / "%" / "references.bin",
+                     output / "primary" / "foo" / "%" / "reverse.bin");
+}
+
+TEST(combine_new_reference_rebuilds_the_reverse_of_what_it_points_at) {
+  const auto output{delta_path("combine_added_reference")};
+  std::filesystem::remove_all(output);
+  std::filesystem::create_directories(output);
+  const auto state{output / "state.bin"};
+  const TestLeaves schemas{
+      {"https://example.com/foo", "/src/foo.json", "foo", MTIME(100)},
+      {"https://example.com/bar", "/src/bar.json", "bar", MTIME(100)}};
+
+  sourcemeta::one::BuildState previous;
+  previous.emplace(output / "primary" / "foo" / "%" / "references.bin",
+                   {.file_mark = MTIME(150), .dependencies = {}});
+  previous.emplace(output / "primary" / "bar" / "%" / "references.bin",
+                   {.file_mark = MTIME(150), .dependencies = {}});
+  previous.configure(
+      test_rules::COMBINE_RULES.leaves,
+      sourcemeta::one::rules_fingerprint<test_rules::COMBINE_RULES>(), INPUTS,
+      test_rules::COMBINE_RULES.sentinel);
+  previous.save(state);
+
+  sourcemeta::one::BuildState entries;
+  entries.load(state, test_rules::COMBINE_RULES.leaves,
+               sourcemeta::one::rules_fingerprint<test_rules::COMBINE_RULES>(),
+               INPUTS, test_rules::COMBINE_RULES.sentinel);
+  entries.commit(output / "primary" / "bar" / "%" / "references.bin",
+                 {output / "primary" / "foo" / "%" / "primary.bin"});
+
+  const auto plan{sourcemeta::one::delta<test_rules::COMBINE_RULES>(
+      sourcemeta::one::BuildPhase::Combine, test_rules::MODE_FULL, entries,
+      output, schemas, "1.0.0", true, "", "Full", {})};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 1, 1);
+
+  EXPECT_ACTION(plan, 0, 0, 1, test_rules::ACTION_REVERSE,
+                output / "primary" / "foo" / "%" / "reverse.bin",
+                "https://example.com/foo",
+                output / "primary" / "bar" / "%" / "references.bin");
+
+  EXPECT_TOTAL_FILES(plan, entries,
+                     output / "primary" / "foo" / "%" / "references.bin",
+                     output / "primary" / "bar" / "%" / "references.bin",
+                     output / "primary" / "foo" / "%" / "reverse.bin");
+}
+
+TEST(combine_unchanged_references_rebuild_nothing) {
+  const auto output{delta_path("combine_unchanged_reference")};
+  std::filesystem::remove_all(output);
+  std::filesystem::create_directories(output);
+  const auto state{output / "state.bin"};
+  const TestLeaves schemas{
+      {"https://example.com/foo", "/src/foo.json", "foo", MTIME(100)},
+      {"https://example.com/bar", "/src/bar.json", "bar", MTIME(100)}};
+
+  sourcemeta::one::BuildState previous;
+  previous.emplace(output / "primary" / "foo" / "%" / "references.bin",
+                   {.file_mark = MTIME(150), .dependencies = {}});
+  previous.emplace(
+      output / "primary" / "bar" / "%" / "references.bin",
+      {.file_mark = MTIME(150),
+       .dependencies = {output / "primary" / "foo" / "%" / "primary.bin"}});
+  previous.configure(
+      test_rules::COMBINE_RULES.leaves,
+      sourcemeta::one::rules_fingerprint<test_rules::COMBINE_RULES>(), INPUTS,
+      test_rules::COMBINE_RULES.sentinel);
+  previous.save(state);
+
+  sourcemeta::one::BuildState entries;
+  entries.load(state, test_rules::COMBINE_RULES.leaves,
+               sourcemeta::one::rules_fingerprint<test_rules::COMBINE_RULES>(),
+               INPUTS, test_rules::COMBINE_RULES.sentinel);
+  entries.commit(output / "primary" / "bar" / "%" / "references.bin",
+                 {output / "primary" / "foo" / "%" / "primary.bin"});
+
+  const auto plan{sourcemeta::one::delta<test_rules::COMBINE_RULES>(
+      sourcemeta::one::BuildPhase::Combine, test_rules::MODE_FULL, entries,
+      output, schemas, "1.0.0", true, "", "Full", {})};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 0, 0);
+
+  EXPECT_TOTAL_FILES(plan, entries,
+                     output / "primary" / "foo" / "%" / "references.bin",
+                     output / "primary" / "bar" / "%" / "references.bin");
+}
+
+TEST(combine_dropped_reference_rebuilds_the_reverse_of_what_it_left) {
+  const auto output{delta_path("combine_dropped_reference")};
+  std::filesystem::remove_all(output);
+  std::filesystem::create_directories(output);
+  const auto state{output / "state.bin"};
+  const TestLeaves schemas{
+      {"https://example.com/foo", "/src/foo.json", "foo", MTIME(100)},
+      {"https://example.com/bar", "/src/bar.json", "bar", MTIME(100)}};
+
+  sourcemeta::one::BuildState previous;
+  previous.emplace(output / "primary" / "foo" / "%" / "references.bin",
+                   {.file_mark = MTIME(150), .dependencies = {}});
+  previous.emplace(
+      output / "primary" / "bar" / "%" / "references.bin",
+      {.file_mark = MTIME(150),
+       .dependencies = {output / "primary" / "foo" / "%" / "primary.bin"}});
+  previous.configure(
+      test_rules::COMBINE_RULES.leaves,
+      sourcemeta::one::rules_fingerprint<test_rules::COMBINE_RULES>(), INPUTS,
+      test_rules::COMBINE_RULES.sentinel);
+  previous.save(state);
+
+  sourcemeta::one::BuildState entries;
+  entries.load(state, test_rules::COMBINE_RULES.leaves,
+               sourcemeta::one::rules_fingerprint<test_rules::COMBINE_RULES>(),
+               INPUTS, test_rules::COMBINE_RULES.sentinel);
+  entries.commit(output / "primary" / "bar" / "%" / "references.bin", {});
+
+  const auto plan{sourcemeta::one::delta<test_rules::COMBINE_RULES>(
+      sourcemeta::one::BuildPhase::Combine, test_rules::MODE_FULL, entries,
+      output, schemas, "1.0.0", true, "", "Full", {})};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 1, 1);
+
+  EXPECT_ACTION(plan, 0, 0, 1, test_rules::ACTION_REVERSE,
+                output / "primary" / "foo" / "%" / "reverse.bin",
+                "https://example.com/foo");
+
+  EXPECT_TOTAL_FILES(plan, entries,
+                     output / "primary" / "foo" / "%" / "references.bin",
+                     output / "primary" / "bar" / "%" / "references.bin",
+                     output / "primary" / "foo" / "%" / "reverse.bin");
+}
+
+TEST(combine_destination_follows_the_tree_the_rule_names) {
+  const auto output{delta_path("combine_secondary_destination")};
+  std::filesystem::remove_all(output);
+  std::filesystem::create_directories(output);
+  sourcemeta::one::BuildState entries;
+  const TestLeaves schemas{
+      {"https://example.com/foo", "/src/foo.json", "foo", MTIME(100)}};
+  entries.emplace(output / "primary" / "foo" / "%" / "references.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+
+  entries.configure(
+      test_rules::COMBINE_RULES_SECONDARY.leaves,
+      sourcemeta::one::rules_fingerprint<test_rules::COMBINE_RULES_SECONDARY>(),
+      INPUTS, test_rules::COMBINE_RULES_SECONDARY.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::COMBINE_RULES_SECONDARY>(
+      sourcemeta::one::BuildPhase::Combine, test_rules::MODE_FULL, entries,
+      output, schemas, "1.0.0", true, "", "Full", {})};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 1, 1);
+
+  EXPECT_ACTION(plan, 0, 0, 1, test_rules::ACTION_REVERSE,
+                output / "secondary" / "foo" / "%" / "reverse.bin",
+                "https://example.com/foo");
+
+  EXPECT_TOTAL_FILES(plan, entries,
+                     output / "primary" / "foo" / "%" / "references.bin",
+                     output / "secondary" / "foo" / "%" / "reverse.bin");
+}
+
 TEST(limits_exceeded_throws) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
