@@ -24,6 +24,12 @@
 
 namespace sourcemeta::one {
 
+// The view a caller holding nothing is served. Named for the same reason a
+// policy may not take that name, since an empty policy array on a listing
+// already means public. Spelled once so that what a build writes and what a
+// server reads cannot disagree
+inline constexpr std::string_view VIEW_PUBLIC{"public"};
+
 // Everything a request presented for authentication: the bearer value from
 // the authorization header and every cookie field it carried, either of which
 // may admit the caller under a covering policy. The cookie fields are kept as

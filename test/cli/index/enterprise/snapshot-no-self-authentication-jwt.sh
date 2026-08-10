@@ -47,7 +47,7 @@ EOF
 
 cd "$TMP/output"
 find . -mindepth 1 \
-  \( -path './schemas/self' -o -path './explorer/self' \) -prune \
+  \( -path './schemas/self' -o -path './explorer/public/self' \) -prune \
   -o -print \
   | LC_ALL=C sort > "$TMP/manifest.txt"
 cd - > /dev/null
@@ -56,29 +56,30 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./authentication.bin
 ./configuration.json
 ./explorer
-./explorer/%
-./explorer/%/401.metapack
-./explorer/%/404.metapack
-./explorer/%/directory-html.metapack
-./explorer/%/directory.metapack
-./explorer/%/login-html.metapack
-./explorer/%/mcp.metapack
-./explorer/%/search.metapack
-./explorer/test
-./explorer/test/%
-./explorer/test/%/directory-html.metapack
-./explorer/test/%/directory.metapack
-./explorer/test/%/login-html.metapack
-./explorer/test/schemas
-./explorer/test/schemas/%
-./explorer/test/schemas/%/directory-html.metapack
-./explorer/test/schemas/%/directory.metapack
-./explorer/test/schemas/%/login-html.metapack
-./explorer/test/schemas/test-1
-./explorer/test/schemas/test-1/%
-./explorer/test/schemas/test-1/%/dependents.metapack
-./explorer/test/schemas/test-1/%/schema-html.metapack
-./explorer/test/schemas/test-1/%/schema.metapack
+./explorer/public
+./explorer/public/%
+./explorer/public/%/401.metapack
+./explorer/public/%/404.metapack
+./explorer/public/%/directory-html.metapack
+./explorer/public/%/directory.metapack
+./explorer/public/%/login-html.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/test
+./explorer/public/test/%
+./explorer/public/test/%/directory-html.metapack
+./explorer/public/test/%/directory.metapack
+./explorer/public/test/%/login-html.metapack
+./explorer/public/test/schemas
+./explorer/public/test/schemas/%
+./explorer/public/test/schemas/%/directory-html.metapack
+./explorer/public/test/schemas/%/directory.metapack
+./explorer/public/test/schemas/%/login-html.metapack
+./explorer/public/test/schemas/test-1
+./explorer/public/test/schemas/test-1/%
+./explorer/public/test/schemas/test-1/%/dependents.metapack
+./explorer/public/test/schemas/test-1/%/schema-html.metapack
+./explorer/public/test/schemas/test-1/%/schema.metapack
 ./routes.bin
 ./schemas
 ./schemas/test

@@ -33,6 +33,10 @@ struct BuildPlan {
     std::filesystem::path destination;
     Dependencies dependencies;
     std::string_view data;
+    // Which view this was built for, as a position in the list the build was
+    // given. Zero wherever the tree written into is not namespaced, so a
+    // handler that does not care never has to ask
+    std::uint8_t view{0};
   };
 
   std::filesystem::path output;
@@ -124,6 +128,16 @@ struct GlobalRule {
   std::uint8_t dependency_count;
 };
 
+// One output tree. A namespaced tree holds a segment naming the view an
+// artifact was built for between the tree and the path it describes, so that
+// one location can hold an answer per kind of caller. A tree that is not
+// namespaced holds one answer, which is why the segment is a property of the
+// tree rather than of each rule that writes into it
+struct DirectoryRule {
+  std::string_view name;
+  bool namespaced;
+};
+
 class SOURCEMETA_ONE_BUILD_EXPORT BuildState {
 public:
   // A fingerprint of everything a build was asked to apply. Not a
@@ -162,11 +176,13 @@ public:
   [[nodiscard]] auto take_lock() const -> std::unique_lock<std::mutex>;
 
   auto configure(std::span<const LeafRule> leaf_rules,
+                 std::span<const DirectoryRule> directories,
                  std::uint32_t rules_fingerprint,
                  const InputsFingerprint &inputs_fingerprint,
                  std::string_view sentinel) -> void;
   auto load(const std::filesystem::path &path,
             std::span<const LeafRule> leaf_rules,
+            std::span<const DirectoryRule> directories,
             std::uint32_t rules_fingerprint,
             const InputsFingerprint &inputs_fingerprint,
             std::string_view sentinel) -> void;
@@ -242,8 +258,8 @@ private:
   auto flag_cross_leaf_dependencies(
       std::string_view owner_relative,
       const std::vector<std::filesystem::path> &dependencies,
-      std::string_view primary_prefix, std::string_view secondary_prefix) const
-      -> void;
+      std::string_view primary_prefix, std::string_view secondary_prefix,
+      bool secondary_namespaced) const -> void;
   auto build_leaf_index(const std::string &output) const -> void;
   auto probe_slot(std::string_view key, std::uint8_t kind) const
       -> const std::uint8_t *;
@@ -288,6 +304,9 @@ private:
   std::uint32_t persisted_leaf_count{0};
 
   std::span<const LeafRule> leaf_rules{};
+  // Where the trees live and which of them carry a view, so that a leaf is
+  // identified the same way whichever tree an artifact of it sits in
+  std::span<const DirectoryRule> directories{};
   std::uint32_t rules_fingerprint{0};
   // The configuration and version the outputs beside this state were built
   // from. The state is written once a build has finished, so it is the only

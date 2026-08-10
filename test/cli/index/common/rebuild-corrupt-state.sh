@@ -46,7 +46,7 @@ reindex_survives() {
 }
 
 assert_rebuilt() {
-  strings "$TMP/output/explorer/%/search.metapack" \
+  strings "$TMP/output/explorer/public/%/search.metapack" \
     | grep -oE '/example/[^[:space:]"]*' \
     | sed 's|https*://.*$||' \
     | LC_ALL=C sort -u > "$TMP/actual.txt"

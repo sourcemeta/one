@@ -106,23 +106,23 @@ cat << 'EOF' > "$TMP/expected.txt"
 ( 21%) Producing: schemas/left/left-a/s5/%/stats.metapack
 ( 26%) Producing: schemas/left/left-a/s5/%/bundle.metapack
 ( 30%) Producing: schemas/left/left-a/s5/%/health.metapack
-( 34%) Producing: explorer/left/left-a/s5/%/schema.metapack
+( 34%) Producing: explorer/public/left/left-a/s5/%/schema.metapack
 ( 39%) Producing: schemas/left/left-a/s5/%/blaze-exhaustive.metapack
 ( 43%) Producing: schemas/left/left-a/s5/%/blaze-fast.metapack
 ( 47%) Producing: schemas/left/left-a/s5/%/editor.metapack
-( 52%) Producing: explorer/left/left-a/%/directory.metapack
-( 56%) Producing: explorer/left/left-a/s5/%/schema-html.metapack
-( 60%) Producing: explorer/left/%/directory.metapack
-( 65%) Producing: explorer/left/left-a/%/directory-html.metapack
-( 69%) Producing: explorer/left/left-a/%/login-html.metapack
-( 73%) Producing: explorer/%/directory.metapack
-( 78%) Producing: explorer/left/%/directory-html.metapack
-( 82%) Producing: explorer/left/%/login-html.metapack
-( 86%) Producing: explorer/%/directory-html.metapack
-( 91%) Producing: explorer/%/login-html.metapack
-( 95%) Producing: explorer/%/search.metapack
-(100%) Producing: explorer/%/mcp.metapack
-(100%) Combining: explorer/left/left-a/s5/%/dependents.metapack
+( 52%) Producing: explorer/public/left/left-a/%/directory.metapack
+( 56%) Producing: explorer/public/left/left-a/s5/%/schema-html.metapack
+( 60%) Producing: explorer/public/left/%/directory.metapack
+( 65%) Producing: explorer/public/left/left-a/%/directory-html.metapack
+( 69%) Producing: explorer/public/left/left-a/%/login-html.metapack
+( 73%) Producing: explorer/public/%/directory.metapack
+( 78%) Producing: explorer/public/left/%/directory-html.metapack
+( 82%) Producing: explorer/public/left/%/login-html.metapack
+( 86%) Producing: explorer/public/%/directory-html.metapack
+( 91%) Producing: explorer/public/%/login-html.metapack
+( 95%) Producing: explorer/public/%/search.metapack
+(100%) Producing: explorer/public/%/mcp.metapack
+(100%) Combining: explorer/public/left/left-a/s5/%/dependents.metapack
 EOF
 
 diff "$TMP/output_producing.txt" "$TMP/expected.txt"

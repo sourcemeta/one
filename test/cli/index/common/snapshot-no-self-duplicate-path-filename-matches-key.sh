@@ -31,7 +31,7 @@ EOF
 
 cd "$TMP/output"
 find . -mindepth 1 \
-  \( -path './schemas/self' -o -path './explorer/self' \) -prune \
+  \( -path './schemas/self' -o -path './explorer/public/self' \) -prune \
   -o -print \
   | LC_ALL=C sort > "$TMP/manifest.txt"
 cd - > /dev/null
@@ -40,24 +40,25 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./authentication.bin
 ./configuration.json
 ./explorer
-./explorer/%
-./explorer/%/401.metapack
-./explorer/%/404.metapack
-./explorer/%/directory-html.metapack
-./explorer/%/directory.metapack
-./explorer/%/login-html.metapack
-./explorer/%/mcp.metapack
-./explorer/%/search.metapack
-./explorer/foo
-./explorer/foo/%
-./explorer/foo/%/directory-html.metapack
-./explorer/foo/%/directory.metapack
-./explorer/foo/%/login-html.metapack
-./explorer/foo/foo
-./explorer/foo/foo/%
-./explorer/foo/foo/%/dependents.metapack
-./explorer/foo/foo/%/schema-html.metapack
-./explorer/foo/foo/%/schema.metapack
+./explorer/public
+./explorer/public/%
+./explorer/public/%/401.metapack
+./explorer/public/%/404.metapack
+./explorer/public/%/directory-html.metapack
+./explorer/public/%/directory.metapack
+./explorer/public/%/login-html.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/foo
+./explorer/public/foo/%
+./explorer/public/foo/%/directory-html.metapack
+./explorer/public/foo/%/directory.metapack
+./explorer/public/foo/%/login-html.metapack
+./explorer/public/foo/foo
+./explorer/public/foo/foo/%
+./explorer/public/foo/foo/%/dependents.metapack
+./explorer/public/foo/foo/%/schema-html.metapack
+./explorer/public/foo/foo/%/schema.metapack
 ./routes.bin
 ./schemas
 ./schemas/foo

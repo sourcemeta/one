@@ -182,7 +182,8 @@ ADD_LEAF_ENTRIES(sourcemeta::one::BuildState &entries,
                  const std::filesystem::path &relative_output, const bool web,
                  const std::filesystem::file_time_type mark) -> void {
   const auto primary_base{output / "primary" / relative_output / "%"};
-  const auto secondary_base{output / "secondary" / relative_output / "%"};
+  const auto secondary_base{output / "secondary" / "public" / relative_output /
+                            "%"};
   entries.emplace(primary_base / "primary.bin",
                   {.file_mark = mark, .dependencies = {}});
   entries.emplace(secondary_base / "metadata.bin",

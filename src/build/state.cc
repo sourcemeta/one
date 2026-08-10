@@ -100,18 +100,33 @@ auto is_key_or_descendant(std::string_view candidate, std::string_view key,
 
 auto split_leaf_base(std::string_view key, std::string_view primary_prefix,
                      std::string_view secondary_prefix,
+                     const bool secondary_namespaced,
                      std::string_view sentinel_separator)
     -> std::pair<std::string_view, std::string_view> {
   std::string_view prefix;
+  bool namespaced{false};
   if (key.starts_with(primary_prefix)) {
     prefix = primary_prefix;
   } else if (key.starts_with(secondary_prefix)) {
     prefix = secondary_prefix;
+    namespaced = secondary_namespaced;
   } else {
     return {{}, {}};
   }
 
-  const auto after_prefix{key.substr(prefix.size())};
+  auto after_prefix{key.substr(prefix.size())};
+  // A leaf is the same leaf whichever tree describes it, so the segment naming
+  // the view has to come off before the rest is read as a path. Which segment
+  // it is never has to be known, only that a namespaced tree has one
+  if (namespaced) {
+    const auto view_end{after_prefix.find('/')};
+    if (view_end == std::string_view::npos) {
+      return {{}, {}};
+    }
+
+    after_prefix = after_prefix.substr(view_end + 1);
+  }
+
   const auto sentinel_position{after_prefix.find(sentinel_separator)};
   if (sentinel_position == std::string_view::npos) {
     return {{}, {}};
@@ -137,10 +152,13 @@ auto BuildState::take_lock() const -> std::unique_lock<std::mutex> {
 }
 
 auto BuildState::configure(std::span<const LeafRule> rules,
+                           std::span<const DirectoryRule> trees,
                            std::uint32_t fingerprint,
                            const BuildState::InputsFingerprint &inputs,
                            std::string_view sentinel) -> void {
+  assert(trees.size() >= 2);
   this->leaf_rules = rules;
+  this->directories = trees;
   this->rules_fingerprint = fingerprint;
   this->inputs_fingerprint = inputs;
   this->inputs_match = false;
@@ -159,10 +177,11 @@ auto BuildState::reset_loaded_state() -> void {
 
 auto BuildState::load(const std::filesystem::path &path,
                       std::span<const LeafRule> rules,
+                      std::span<const DirectoryRule> trees,
                       std::uint32_t fingerprint,
                       const BuildState::InputsFingerprint &inputs,
                       std::string_view sentinel) -> void {
-  this->configure(rules, fingerprint, inputs, sentinel);
+  this->configure(rules, trees, fingerprint, inputs, sentinel);
 
   if (!std::filesystem::exists(path)) {
     return;
@@ -584,12 +603,12 @@ auto BuildState::index_leaf_target(std::filesystem::file_time_type mtime,
 auto BuildState::flag_cross_leaf_dependencies(
     std::string_view owner_relative,
     const std::vector<std::filesystem::path> &dependencies,
-    std::string_view primary_prefix, std::string_view secondary_prefix) const
-    -> void {
+    std::string_view primary_prefix, std::string_view secondary_prefix,
+    const bool secondary_namespaced) const -> void {
   for (const auto &dependency : dependencies) {
     const auto [dep_relative, dep_filename] =
         split_leaf_base(dependency.native(), primary_prefix, secondary_prefix,
-                        this->sentinel_separator);
+                        secondary_namespaced, this->sentinel_separator);
     if (!dep_relative.empty() && dep_relative != owner_relative) {
       this->leaf_index_cache[std::string{owner_relative}].has_cross_leaf_deps =
           true;
@@ -625,8 +644,11 @@ auto BuildState::build_leaf_index(const std::string &output) const -> void {
     return;
   }
 
-  const auto primary_prefix{output + "/schemas/"};
-  const auto secondary_prefix{output + "/explorer/"};
+  const auto primary_prefix{output + "/" +
+                            std::string{this->directories[0].name} + "/"};
+  const auto secondary_prefix{output + "/" +
+                              std::string{this->directories[1].name} + "/"};
+  const auto secondary_namespaced{this->directories[1].namespaced};
 
   for (std::uint32_t slot_index = 0; slot_index < this->table_capacity;
        ++slot_index) {
@@ -640,8 +662,9 @@ auto BuildState::build_leaf_index(const std::string &output) const -> void {
       continue;
     }
 
-    const auto [relative_path, filename] = split_leaf_base(
-        key, primary_prefix, secondary_prefix, this->sentinel_separator);
+    const auto [relative_path, filename] =
+        split_leaf_base(key, primary_prefix, secondary_prefix,
+                        secondary_namespaced, this->sentinel_separator);
     if (relative_path.empty()) {
       continue;
     }
@@ -663,7 +686,7 @@ auto BuildState::build_leaf_index(const std::string &output) const -> void {
         const auto dependency_path{read_pool_string(this->string_pool, offset)};
         const auto [dep_relative, dep_filename] =
             split_leaf_base(dependency_path, primary_prefix, secondary_prefix,
-                            this->sentinel_separator);
+                            secondary_namespaced, this->sentinel_separator);
         if (!dep_relative.empty() && dep_relative != relative_path) {
           this->leaf_index_cache[std::string{relative_path}]
               .has_cross_leaf_deps = true;
@@ -674,8 +697,9 @@ auto BuildState::build_leaf_index(const std::string &output) const -> void {
   }
 
   for (const auto &[entry_path, entry_value] : this->overlay) {
-    const auto [relative_path, filename] = split_leaf_base(
-        entry_path, primary_prefix, secondary_prefix, this->sentinel_separator);
+    const auto [relative_path, filename] =
+        split_leaf_base(entry_path, primary_prefix, secondary_prefix,
+                        secondary_namespaced, this->sentinel_separator);
     if (relative_path.empty()) {
       continue;
     }
@@ -685,7 +709,8 @@ auto BuildState::build_leaf_index(const std::string &output) const -> void {
     this->index_leaf_target(entry_value.file_mark, is_explorer, relative_path,
                             filename);
     this->flag_cross_leaf_dependencies(relative_path, entry_value.dependencies,
-                                       primary_prefix, secondary_prefix);
+                                       primary_prefix, secondary_prefix,
+                                       secondary_namespaced);
   }
 
   this->leaf_index_stale = false;
@@ -1009,8 +1034,11 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
     }};
 
     const auto output_dir{path.parent_path().string()};
-    const auto primary_prefix{output_dir + "/schemas/"};
-    const auto secondary_prefix{output_dir + "/explorer/"};
+    const auto primary_prefix{output_dir + "/" +
+                              std::string{this->directories[0].name} + "/"};
+    const auto secondary_prefix{output_dir + "/" +
+                                std::string{this->directories[1].name} + "/"};
+    const auto secondary_namespaced{this->directories[1].namespaced};
 
     std::unordered_map<std::string, LeafStateEntry, TransparentHash,
                        TransparentEqual>
@@ -1036,46 +1064,27 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
       }
 
       for (const auto &deleted_key : this->deleted) {
-        std::string_view key_prefix;
-        if (std::string_view{deleted_key}.starts_with(primary_prefix)) {
-          key_prefix = primary_prefix;
-        } else if (std::string_view{deleted_key}.starts_with(
-                       secondary_prefix)) {
-          key_prefix = secondary_prefix;
-        } else {
+        const auto [relative_path, filename] =
+            split_leaf_base(deleted_key, primary_prefix, secondary_prefix,
+                            secondary_namespaced, this->sentinel_separator);
+        if (relative_path.empty()) {
           continue;
         }
 
-        const auto after{
-            std::string_view{deleted_key}.substr(key_prefix.size())};
-        const auto sentinel_position{after.find(this->sentinel_separator)};
-        if (sentinel_position == std::string_view::npos) {
-          continue;
-        }
-
-        save_leaf_index.erase(std::string{after.substr(0, sentinel_position)});
+        save_leaf_index.erase(std::string{relative_path});
       }
 
       std::unordered_set<std::string, TransparentHash, TransparentEqual>
           affected_leaves;
       for (const auto &[overlay_key, overlay_entry] : this->overlay) {
-        std::string_view key_view{overlay_key};
-        std::string_view key_prefix;
-        if (key_view.starts_with(primary_prefix)) {
-          key_prefix = primary_prefix;
-        } else if (key_view.starts_with(secondary_prefix)) {
-          key_prefix = secondary_prefix;
-        } else {
+        const auto [relative_path, filename] =
+            split_leaf_base(overlay_key, primary_prefix, secondary_prefix,
+                            secondary_namespaced, this->sentinel_separator);
+        if (relative_path.empty()) {
           continue;
         }
 
-        const auto after{key_view.substr(key_prefix.size())};
-        const auto sentinel_position{after.find(this->sentinel_separator)};
-        if (sentinel_position == std::string_view::npos) {
-          continue;
-        }
-
-        affected_leaves.insert(std::string{after.substr(0, sentinel_position)});
+        affected_leaves.insert(std::string{relative_path});
       }
 
       for (const auto &affected_relative : affected_leaves) {
@@ -1090,29 +1099,14 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
           }
 
           const auto key{read_slot_key(slot)};
-          std::string_view key_prefix;
-          bool is_explorer{false};
-          if (key.starts_with(primary_prefix)) {
-            key_prefix = primary_prefix;
-          } else if (key.starts_with(secondary_prefix)) {
-            key_prefix = secondary_prefix;
-            is_explorer = true;
-          } else {
+          const auto [relative_path, filename] =
+              split_leaf_base(key, primary_prefix, secondary_prefix,
+                              secondary_namespaced, this->sentinel_separator);
+          if (relative_path.empty() || relative_path != affected_relative) {
             continue;
           }
 
-          const auto after{key.substr(key_prefix.size())};
-          const auto sentinel_position{after.find(this->sentinel_separator)};
-          if (sentinel_position == std::string_view::npos) {
-            continue;
-          }
-
-          if (after.substr(0, sentinel_position) != affected_relative) {
-            continue;
-          }
-
-          const auto filename{after.substr(sentinel_position +
-                                           this->sentinel_separator.size())};
+          const bool is_explorer{key.starts_with(secondary_prefix)};
           for (std::size_t rule_index{0}; rule_index < this->leaf_rules.size();
                rule_index++) {
             const auto &rule{this->leaf_rules[rule_index]};
@@ -1140,19 +1134,10 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
             for (std::uint16_t dep_index = 0; dep_index < data_count;
                  ++dep_index) {
               const auto dependency_path{read_slot_pool_string(offset)};
-              std::string_view dep_prefix;
-              if (dependency_path.starts_with(primary_prefix)) {
-                dep_prefix = primary_prefix;
-              } else if (dependency_path.starts_with(secondary_prefix)) {
-                dep_prefix = secondary_prefix;
-              } else {
-                continue;
-              }
-
-              const auto dep_after{dependency_path.substr(dep_prefix.size())};
-              const auto dep_sentinel{dep_after.find(this->sentinel_separator)};
-              if (dep_sentinel != std::string_view::npos &&
-                  dep_after.substr(0, dep_sentinel) != affected_relative) {
+              const auto [dep_relative, dep_filename] = split_leaf_base(
+                  dependency_path, primary_prefix, secondary_prefix,
+                  secondary_namespaced, this->sentinel_separator);
+              if (!dep_relative.empty() && dep_relative != affected_relative) {
                 leaf_entry.has_cross_leaf_deps = true;
                 break;
               }
@@ -1169,26 +1154,14 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
         }
 
         const auto key{read_slot_key(slot)};
-        std::string_view key_prefix;
-        bool is_explorer{false};
-        if (key.starts_with(primary_prefix)) {
-          key_prefix = primary_prefix;
-        } else if (key.starts_with(secondary_prefix)) {
-          key_prefix = secondary_prefix;
-          is_explorer = true;
-        } else {
+        const auto [relative_path, filename] =
+            split_leaf_base(key, primary_prefix, secondary_prefix,
+                            secondary_namespaced, this->sentinel_separator);
+        if (relative_path.empty()) {
           continue;
         }
 
-        const auto after{key.substr(key_prefix.size())};
-        const auto sentinel_position{after.find(this->sentinel_separator)};
-        if (sentinel_position == std::string_view::npos) {
-          continue;
-        }
-
-        const auto relative_path{after.substr(0, sentinel_position)};
-        const auto filename{
-            after.substr(sentinel_position + this->sentinel_separator.size())};
+        const bool is_explorer{key.starts_with(secondary_prefix)};
         auto &leaf_entry{save_leaf_index[std::string{relative_path}]};
 
         for (std::size_t rule_index{0}; rule_index < this->leaf_rules.size();
@@ -1216,19 +1189,10 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
           for (std::uint16_t dep_index = 0; dep_index < data_count;
                ++dep_index) {
             const auto dependency_path{read_slot_pool_string(offset)};
-            std::string_view dep_prefix;
-            if (dependency_path.starts_with(primary_prefix)) {
-              dep_prefix = primary_prefix;
-            } else if (dependency_path.starts_with(secondary_prefix)) {
-              dep_prefix = secondary_prefix;
-            } else {
-              continue;
-            }
-
-            const auto dep_after{dependency_path.substr(dep_prefix.size())};
-            const auto dep_sentinel{dep_after.find(this->sentinel_separator)};
-            if (dep_sentinel != std::string_view::npos &&
-                dep_after.substr(0, dep_sentinel) != relative_path) {
+            const auto [dep_relative, dep_filename] = split_leaf_base(
+                dependency_path, primary_prefix, secondary_prefix,
+                secondary_namespaced, this->sentinel_separator);
+            if (!dep_relative.empty() && dep_relative != relative_path) {
               leaf_entry.has_cross_leaf_deps = true;
               break;
             }

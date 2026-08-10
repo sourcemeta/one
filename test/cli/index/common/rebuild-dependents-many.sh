@@ -54,7 +54,7 @@ EOF
 done
 
 extract_search_paths() {
-  strings "$1/explorer/%/search.metapack" \
+  strings "$1/explorer/public/%/search.metapack" \
     | grep -oE '/example/[^[:space:]"]*' \
     | sed 's|https*://.*$||' \
     | LC_ALL=C sort -u

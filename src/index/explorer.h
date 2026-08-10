@@ -863,8 +863,10 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
     const auto directory_path{action.destination.parent_path().parent_path()};
     std::filesystem::path relative_path;
     auto current{directory_path};
+    // The view tree names the view before the path it describes, so what this
+    // listing is a listing of starts one segment below the tree itself
     while (current.has_filename()) {
-      if (current.filename() == "explorer") {
+      if (current.parent_path().filename() == "explorer") {
         relative_path = std::filesystem::relative(directory_path, current);
         break;
       }

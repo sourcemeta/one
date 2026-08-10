@@ -53,24 +53,25 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./authentication.bin
 ./configuration.json
 ./explorer
-./explorer/%
-./explorer/%/401.metapack
-./explorer/%/404.metapack
-./explorer/%/directory-html.metapack
-./explorer/%/directory.metapack
-./explorer/%/login-html.metapack
-./explorer/%/mcp.metapack
-./explorer/%/search.metapack
-./explorer/schemas
-./explorer/schemas/%
-./explorer/schemas/%/directory-html.metapack
-./explorer/schemas/%/directory.metapack
-./explorer/schemas/%/login-html.metapack
-./explorer/schemas/a
-./explorer/schemas/a/%
-./explorer/schemas/a/%/dependents.metapack
-./explorer/schemas/a/%/schema-html.metapack
-./explorer/schemas/a/%/schema.metapack
+./explorer/public
+./explorer/public/%
+./explorer/public/%/401.metapack
+./explorer/public/%/404.metapack
+./explorer/public/%/directory-html.metapack
+./explorer/public/%/directory.metapack
+./explorer/public/%/login-html.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/schemas
+./explorer/public/schemas/%
+./explorer/public/schemas/%/directory-html.metapack
+./explorer/public/schemas/%/directory.metapack
+./explorer/public/schemas/%/login-html.metapack
+./explorer/public/schemas/a
+./explorer/public/schemas/a/%
+./explorer/public/schemas/a/%/dependents.metapack
+./explorer/public/schemas/a/%/schema-html.metapack
+./explorer/public/schemas/a/%/schema.metapack
 ./routes.bin
 ./schemas
 ./schemas/schemas
@@ -97,7 +98,7 @@ rm "$TMP/output/authentication.bin"
 
 cd "$TMP/output"
 find . -mindepth 1 \
-  \( -path './schemas/self' -o -path './explorer/self' \) -prune \
+  \( -path './schemas/self' -o -path './explorer/public/self' \) -prune \
   -o -print \
   | LC_ALL=C sort > "$TMP/manifest.txt"
 cd - > /dev/null
@@ -109,7 +110,7 @@ rm "$TMP/output/routes.bin"
 
 cd "$TMP/output"
 find . -mindepth 1 \
-  \( -path './schemas/self' -o -path './explorer/self' \) -prune \
+  \( -path './schemas/self' -o -path './explorer/public/self' \) -prune \
   -o -print \
   | LC_ALL=C sort > "$TMP/manifest.txt"
 cd - > /dev/null

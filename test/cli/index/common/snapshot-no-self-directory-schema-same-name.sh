@@ -44,7 +44,7 @@ EOF
 
 cd "$TMP/output"
 find . -mindepth 1 \
-  \( -path './schemas/self' -o -path './explorer/self' \) -prune \
+  \( -path './schemas/self' -o -path './explorer/public/self' \) -prune \
   -o -print \
   | LC_ALL=C sort > "$TMP/manifest.txt"
 cd - > /dev/null
@@ -53,37 +53,38 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./authentication.bin
 ./configuration.json
 ./explorer
-./explorer/%
-./explorer/%/401.metapack
-./explorer/%/404.metapack
-./explorer/%/directory-html.metapack
-./explorer/%/directory.metapack
-./explorer/%/login-html.metapack
-./explorer/%/mcp.metapack
-./explorer/%/search.metapack
-./explorer/example
-./explorer/example/%
-./explorer/example/%/directory-html.metapack
-./explorer/example/%/directory.metapack
-./explorer/example/%/login-html.metapack
-./explorer/example/schemas
-./explorer/example/schemas/%
-./explorer/example/schemas/%/directory-html.metapack
-./explorer/example/schemas/%/directory.metapack
-./explorer/example/schemas/%/login-html.metapack
-./explorer/example/schemas/foo
-./explorer/example/schemas/foo/%
-./explorer/example/schemas/foo/%/dependents.metapack
-./explorer/example/schemas/foo/%/directory-html.metapack
-./explorer/example/schemas/foo/%/directory.metapack
-./explorer/example/schemas/foo/%/login-html.metapack
-./explorer/example/schemas/foo/%/schema-html.metapack
-./explorer/example/schemas/foo/%/schema.metapack
-./explorer/example/schemas/foo/bar
-./explorer/example/schemas/foo/bar/%
-./explorer/example/schemas/foo/bar/%/dependents.metapack
-./explorer/example/schemas/foo/bar/%/schema-html.metapack
-./explorer/example/schemas/foo/bar/%/schema.metapack
+./explorer/public
+./explorer/public/%
+./explorer/public/%/401.metapack
+./explorer/public/%/404.metapack
+./explorer/public/%/directory-html.metapack
+./explorer/public/%/directory.metapack
+./explorer/public/%/login-html.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/example
+./explorer/public/example/%
+./explorer/public/example/%/directory-html.metapack
+./explorer/public/example/%/directory.metapack
+./explorer/public/example/%/login-html.metapack
+./explorer/public/example/schemas
+./explorer/public/example/schemas/%
+./explorer/public/example/schemas/%/directory-html.metapack
+./explorer/public/example/schemas/%/directory.metapack
+./explorer/public/example/schemas/%/login-html.metapack
+./explorer/public/example/schemas/foo
+./explorer/public/example/schemas/foo/%
+./explorer/public/example/schemas/foo/%/dependents.metapack
+./explorer/public/example/schemas/foo/%/directory-html.metapack
+./explorer/public/example/schemas/foo/%/directory.metapack
+./explorer/public/example/schemas/foo/%/login-html.metapack
+./explorer/public/example/schemas/foo/%/schema-html.metapack
+./explorer/public/example/schemas/foo/%/schema.metapack
+./explorer/public/example/schemas/foo/bar
+./explorer/public/example/schemas/foo/bar/%
+./explorer/public/example/schemas/foo/bar/%/dependents.metapack
+./explorer/public/example/schemas/foo/bar/%/schema-html.metapack
+./explorer/public/example/schemas/foo/bar/%/schema.metapack
 ./routes.bin
 ./schemas
 ./schemas/example
