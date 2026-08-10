@@ -16,14 +16,19 @@ namespace sourcemeta::one {
 
 static auto make_base_string(const std::string &output,
                              const std::string_view directory,
+                             const std::string_view view,
                              const std::string &relative_path,
                              const std::string_view sentinel) -> std::string {
   std::string result;
-  result.reserve(output.size() + directory.size() + relative_path.size() +
-                 sentinel.size() + 16);
+  result.reserve(output.size() + directory.size() + view.size() +
+                 relative_path.size() + sentinel.size() + 16);
   result += output;
   result += '/';
   result += directory;
+  if (!view.empty()) {
+    result += '/';
+    result += view;
+  }
   result += '/';
   result += relative_path;
   result += '/';
@@ -297,7 +302,8 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
                   std::span<const LeafRule> leaf_rules,
                   std::span<const ContainerRule> container_rules,
                   std::span<const GlobalRule> global_rules,
-                  std::span<const std::string_view> directories,
+                  std::span<const DirectoryRule> directories,
+                  const std::span<const std::string_view> views,
                   const std::string_view sentinel,
                   const BuildPlan::Action::Type remove_action,
                   const BuildPlan::Type full_mode,
@@ -309,8 +315,15 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
   }));
   assert(!version.empty());
   assert(directories.size() >= 2);
-  const auto primary_directory{directories[0]};
-  const auto secondary_directory{directories[1]};
+  const auto primary_directory{directories[0].name};
+  const auto secondary_directory{directories[1].name};
+  // Emitting one action per view is what turns a namespaced tree into several,
+  // and it is deliberately not done yet. Until then a build names exactly one
+  // view, so a namespaced tree holds a single answer like any other and the
+  // output is a function of the catalog alone
+  assert(views.size() == 1);
+  const auto secondary_view{directories[1].namespaced ? views[0]
+                                                      : std::string_view{}};
   const std::string sentinel_separator{std::string{"/"} +
                                        std::string{sentinel} + "/"};
   const std::string dependencies_suffix{
@@ -470,6 +483,8 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
       const auto &dependents_rule{leaf_rules[indices.dependents]};
       const auto destination_directory{
           dependents_rule.base == 0 ? primary_directory : secondary_directory};
+      const auto destination_view{dependents_rule.base == 0 ? std::string_view{}
+                                                            : secondary_view};
 
       std::vector<BuildPlan::Action> dependents_wave;
       for (const auto &[uri, info] : leaves) {
@@ -478,8 +493,9 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
           continue;
         }
 
-        auto destination_base{make_base_string(
-            output_string, destination_directory, relative_string, sentinel)};
+        auto destination_base{
+            make_base_string(output_string, destination_directory,
+                             destination_view, relative_string, sentinel)};
         auto destination{std::filesystem::path{
             append_filename(destination_base, dependents_rule.filename)}};
 
@@ -518,7 +534,9 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
   const auto comment_path{output / global_rules[indices.comment].filename};
   const auto is_full{!incremental};
   const auto primary_path{output / primary_directory};
-  const auto secondary_path{output / secondary_directory};
+  const auto secondary_path{
+      secondary_view.empty() ? output / secondary_directory
+                             : output / secondary_directory / secondary_view};
   const auto comment_string{comment_path.string()};
 
   // The state records that a build produced each of these, not that the file
@@ -718,10 +736,11 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
     const auto &relative_string{info.relative_path->native()};
     all_relative_paths.emplace_back(*info.relative_path);
 
-    auto primary_base{make_base_string(output_string, primary_directory,
+    auto primary_base{make_base_string(output_string, primary_directory, {},
                                        relative_string, sentinel)};
     auto secondary_base{make_base_string(output_string, secondary_directory,
-                                         relative_string, sentinel)};
+                                         secondary_view, relative_string,
+                                         sentinel)};
     auto root_path{
         append_filename(primary_base, leaf_rules[indices.root].filename)};
 
@@ -794,10 +813,11 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
     const auto state_leaves{entries.leaf_relative_paths(output_string)};
     for (const auto &state_relative : state_leaves) {
       const auto primary_base{make_base_string(output_string, primary_directory,
-                                               state_relative, sentinel)};
+                                               {}, state_relative, sentinel)};
       if (!current_primary_bases.contains(primary_base)) {
-        const auto secondary_base{make_base_string(
-            output_string, secondary_directory, state_relative, sentinel)};
+        const auto secondary_base{
+            make_base_string(output_string, secondary_directory, secondary_view,
+                             state_relative, sentinel)};
         for (const auto &rule : leaf_rules) {
           const auto &base{rule.base == 0 ? primary_base : secondary_base};
           removed_entries.insert(append_filename(base, rule.filename));
@@ -832,8 +852,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
 
     const auto primary_prefix_string{output_string + "/" +
                                      std::string{primary_directory} + "/"};
-    const auto secondary_prefix_string{output_string + "/" +
-                                       std::string{secondary_directory} + "/"};
+    const auto secondary_prefix_string{secondary_path.string() + "/"};
     std::unordered_map<std::string_view, std::vector<std::string_view>>
         reverse_adjacency;
     std::unordered_map<std::string, std::vector<std::string>>
@@ -1136,7 +1155,8 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
                     (is_root_directory && !leaf_relative.has_parent_path())) {
                   rule_dependencies.push_back(append_filename(
                       make_base_string(output_string, secondary_directory,
-                                       leaf_relative.native(), sentinel),
+                                       secondary_view, leaf_relative.native(),
+                                       sentinel),
                       leaf_rules[indices.metadata].filename));
                 }
               }

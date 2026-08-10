@@ -26,13 +26,14 @@ TEST(round_trip_empty) {
 
   sourcemeta::one::BuildState original_entries;
   original_entries.configure(
-      test_rules::RULES.leaves,
+      test_rules::RULES.leaves, test_rules::RULES.directories,
       sourcemeta::one::rules_fingerprint<test_rules::RULES>(), INPUTS,
       test_rules::RULES.sentinel);
   original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
   loaded_entries.load(path, test_rules::RULES.leaves,
+                      test_rules::RULES.directories,
                       sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
                       INPUTS, test_rules::RULES.sentinel);
   EXPECT_TRUE(loaded_entries.empty());
@@ -46,13 +47,14 @@ TEST(a_state_is_built_from_the_inputs_it_was_saved_under) {
 
   sourcemeta::one::BuildState original_entries;
   original_entries.configure(
-      test_rules::RULES.leaves,
+      test_rules::RULES.leaves, test_rules::RULES.directories,
       sourcemeta::one::rules_fingerprint<test_rules::RULES>(), INPUTS,
       test_rules::RULES.sentinel);
   original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
   loaded_entries.load(path, test_rules::RULES.leaves,
+                      test_rules::RULES.directories,
                       sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
                       INPUTS, test_rules::RULES.sentinel);
   EXPECT_TRUE(loaded_entries.built_from_these_inputs());
@@ -67,7 +69,7 @@ TEST(a_state_is_not_built_from_inputs_it_never_saw) {
   original_entries.emplace("/output/schemas/foo/%/schema.metapack",
                            {.file_mark = now, .dependencies = {}});
   original_entries.configure(
-      test_rules::RULES.leaves,
+      test_rules::RULES.leaves, test_rules::RULES.directories,
       sourcemeta::one::rules_fingerprint<test_rules::RULES>(), INPUTS,
       test_rules::RULES.sentinel);
   original_entries.save(path);
@@ -78,6 +80,7 @@ TEST(a_state_is_not_built_from_inputs_it_never_saw) {
   // leaves a policy declared and ungated
   sourcemeta::one::BuildState loaded_entries;
   loaded_entries.load(path, test_rules::RULES.leaves,
+                      test_rules::RULES.directories,
                       sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
                       OTHER_INPUTS, test_rules::RULES.sentinel);
   EXPECT_FALSE(loaded_entries.built_from_these_inputs());
@@ -96,7 +99,7 @@ TEST(a_state_that_was_never_written_is_built_from_nothing) {
   std::filesystem::remove(path);
 
   sourcemeta::one::BuildState entries;
-  entries.load(path, test_rules::RULES.leaves,
+  entries.load(path, test_rules::RULES.leaves, test_rules::RULES.directories,
                sourcemeta::one::rules_fingerprint<test_rules::RULES>(), INPUTS,
                test_rules::RULES.sentinel);
   EXPECT_FALSE(entries.built_from_these_inputs());
@@ -112,13 +115,14 @@ TEST(round_trip_single_entry_no_deps) {
                            {.file_mark = now, .dependencies = {}});
 
   original_entries.configure(
-      test_rules::RULES.leaves,
+      test_rules::RULES.leaves, test_rules::RULES.directories,
       sourcemeta::one::rules_fingerprint<test_rules::RULES>(), INPUTS,
       test_rules::RULES.sentinel);
   original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
   loaded_entries.load(path, test_rules::RULES.leaves,
+                      test_rules::RULES.directories,
                       sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
                       INPUTS, test_rules::RULES.sentinel);
   EXPECT_EQ(loaded_entries.size(), 1);
@@ -140,13 +144,14 @@ TEST(round_trip_with_file_mark) {
                            {.file_mark = now, .dependencies = {}});
 
   original_entries.configure(
-      test_rules::RULES.leaves,
+      test_rules::RULES.leaves, test_rules::RULES.directories,
       sourcemeta::one::rules_fingerprint<test_rules::RULES>(), INPUTS,
       test_rules::RULES.sentinel);
   original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
   loaded_entries.load(path, test_rules::RULES.leaves,
+                      test_rules::RULES.directories,
                       sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
                       INPUTS, test_rules::RULES.sentinel);
   EXPECT_EQ(loaded_entries.size(), 1);
@@ -178,13 +183,14 @@ TEST(round_trip_with_dependencies) {
                         "/output/schemas/qux/%/schema.metapack"}});
 
   original_entries.configure(
-      test_rules::RULES.leaves,
+      test_rules::RULES.leaves, test_rules::RULES.directories,
       sourcemeta::one::rules_fingerprint<test_rules::RULES>(), INPUTS,
       test_rules::RULES.sentinel);
   original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
   loaded_entries.load(path, test_rules::RULES.leaves,
+                      test_rules::RULES.directories,
                       sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
                       INPUTS, test_rules::RULES.sentinel);
   EXPECT_EQ(loaded_entries.size(), 1);
@@ -214,13 +220,14 @@ TEST(round_trip_multiple_entries) {
                            {.file_mark = now, .dependencies = {}});
 
   original_entries.configure(
-      test_rules::RULES.leaves,
+      test_rules::RULES.leaves, test_rules::RULES.directories,
       sourcemeta::one::rules_fingerprint<test_rules::RULES>(), INPUTS,
       test_rules::RULES.sentinel);
   original_entries.save(path);
 
   sourcemeta::one::BuildState loaded_entries;
   loaded_entries.load(path, test_rules::RULES.leaves,
+                      test_rules::RULES.directories,
                       sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
                       INPUTS, test_rules::RULES.sentinel);
   EXPECT_EQ(loaded_entries.size(), 3);

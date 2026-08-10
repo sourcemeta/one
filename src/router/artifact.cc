@@ -41,9 +41,9 @@ auto RouterAction::artifact_locate(const Authentication::Path &path,
                                    const Tree tree,
                                    const std::string_view artifact_name) const
     -> std::optional<std::filesystem::path> {
-  const std::string_view tree_segment{tree == Tree::Schemas ? "schemas"
-                                                            : "explorer"};
-  const auto tree_root{this->index_directory_ / tree_segment};
+  const auto tree_root{tree == Tree::Schemas
+                           ? this->index_directory_ / "schemas"
+                           : this->index_directory_ / "explorer" / VIEW_PUBLIC};
   auto directory{tree_root};
   // The tree stores a resource once, whatever representation was asked for
   const auto location{

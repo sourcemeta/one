@@ -73,16 +73,16 @@ cat << 'EOF' > "$TMP/expected.txt"
 ( 31%) Producing: schemas/example/schemas/c/%/stats.metapack
 ( 37%) Producing: schemas/example/schemas/c/%/bundle.metapack
 ( 43%) Producing: schemas/example/schemas/c/%/health.metapack
-( 50%) Producing: explorer/example/schemas/c/%/schema.metapack
+( 50%) Producing: explorer/public/example/schemas/c/%/schema.metapack
 ( 56%) Producing: schemas/example/schemas/c/%/blaze-exhaustive.metapack
 ( 62%) Producing: schemas/example/schemas/c/%/blaze-fast.metapack
 ( 68%) Producing: schemas/example/schemas/c/%/editor.metapack
-( 75%) Producing: explorer/example/schemas/%/directory.metapack
-( 81%) Producing: explorer/example/%/directory.metapack
-( 87%) Producing: explorer/%/directory.metapack
-( 93%) Producing: explorer/%/search.metapack
-(100%) Producing: explorer/%/mcp.metapack
-(100%) Combining: explorer/example/schemas/c/%/dependents.metapack
+( 75%) Producing: explorer/public/example/schemas/%/directory.metapack
+( 81%) Producing: explorer/public/example/%/directory.metapack
+( 87%) Producing: explorer/public/%/directory.metapack
+( 93%) Producing: explorer/public/%/search.metapack
+(100%) Producing: explorer/public/%/mcp.metapack
+(100%) Combining: explorer/public/example/schemas/c/%/dependents.metapack
 EOF
 
 diff "$TMP/output_producing.txt" "$TMP/expected.txt"

@@ -74,24 +74,24 @@ cat << 'EOF' > "$TMP/expected.txt"
 ( 21%) Producing: schemas/example/schemas/c/%/stats.metapack
 ( 26%) Producing: schemas/example/schemas/c/%/bundle.metapack
 ( 30%) Producing: schemas/example/schemas/c/%/health.metapack
-( 34%) Producing: explorer/example/schemas/c/%/schema.metapack
+( 34%) Producing: explorer/public/example/schemas/c/%/schema.metapack
 ( 39%) Producing: schemas/example/schemas/c/%/blaze-exhaustive.metapack
 ( 43%) Producing: schemas/example/schemas/c/%/blaze-fast.metapack
 ( 47%) Producing: schemas/example/schemas/c/%/editor.metapack
-( 52%) Producing: explorer/example/schemas/%/directory.metapack
-( 56%) Producing: explorer/example/schemas/c/%/schema-html.metapack
-( 60%) Producing: explorer/example/%/directory.metapack
-( 65%) Producing: explorer/example/schemas/%/directory-html.metapack
-( 69%) Producing: explorer/example/schemas/%/login-html.metapack
-( 73%) Producing: explorer/%/directory.metapack
-( 78%) Producing: explorer/example/%/directory-html.metapack
-( 82%) Producing: explorer/example/%/login-html.metapack
-( 86%) Producing: explorer/%/directory-html.metapack
-( 91%) Producing: explorer/%/login-html.metapack
-( 95%) Producing: explorer/%/search.metapack
-(100%) Producing: explorer/%/mcp.metapack
-( 50%) Combining: explorer/example/schemas/a/%/dependents.metapack
-(100%) Combining: explorer/example/schemas/c/%/dependents.metapack
+( 52%) Producing: explorer/public/example/schemas/%/directory.metapack
+( 56%) Producing: explorer/public/example/schemas/c/%/schema-html.metapack
+( 60%) Producing: explorer/public/example/%/directory.metapack
+( 65%) Producing: explorer/public/example/schemas/%/directory-html.metapack
+( 69%) Producing: explorer/public/example/schemas/%/login-html.metapack
+( 73%) Producing: explorer/public/%/directory.metapack
+( 78%) Producing: explorer/public/example/%/directory-html.metapack
+( 82%) Producing: explorer/public/example/%/login-html.metapack
+( 86%) Producing: explorer/public/%/directory-html.metapack
+( 91%) Producing: explorer/public/%/login-html.metapack
+( 95%) Producing: explorer/public/%/search.metapack
+(100%) Producing: explorer/public/%/mcp.metapack
+( 50%) Combining: explorer/public/example/schemas/a/%/dependents.metapack
+(100%) Combining: explorer/public/example/schemas/c/%/dependents.metapack
 EOF
 
 diff "$TMP/output_producing.txt" "$TMP/expected.txt"

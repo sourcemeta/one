@@ -31,7 +31,7 @@ EOF
 
 cd "$TMP/output"
 find . -mindepth 1 \
-  \( -path './schemas/self' -o -path './explorer/self' \) -prune \
+  \( -path './schemas/self' -o -path './explorer/public/self' \) -prune \
   -o -print \
   | LC_ALL=C sort > "$TMP/manifest.txt"
 cd - > /dev/null
@@ -40,29 +40,30 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./authentication.bin
 ./configuration.json
 ./explorer
-./explorer/%
-./explorer/%/401.metapack
-./explorer/%/404.metapack
-./explorer/%/directory-html.metapack
-./explorer/%/directory.metapack
-./explorer/%/login-html.metapack
-./explorer/%/mcp.metapack
-./explorer/%/search.metapack
-./explorer/baz
-./explorer/baz/%
-./explorer/baz/%/directory-html.metapack
-./explorer/baz/%/directory.metapack
-./explorer/baz/%/login-html.metapack
-./explorer/baz/baz
-./explorer/baz/baz/%
-./explorer/baz/baz/%/directory-html.metapack
-./explorer/baz/baz/%/directory.metapack
-./explorer/baz/baz/%/login-html.metapack
-./explorer/baz/baz/test
-./explorer/baz/baz/test/%
-./explorer/baz/baz/test/%/dependents.metapack
-./explorer/baz/baz/test/%/schema-html.metapack
-./explorer/baz/baz/test/%/schema.metapack
+./explorer/public
+./explorer/public/%
+./explorer/public/%/401.metapack
+./explorer/public/%/404.metapack
+./explorer/public/%/directory-html.metapack
+./explorer/public/%/directory.metapack
+./explorer/public/%/login-html.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/baz
+./explorer/public/baz/%
+./explorer/public/baz/%/directory-html.metapack
+./explorer/public/baz/%/directory.metapack
+./explorer/public/baz/%/login-html.metapack
+./explorer/public/baz/baz
+./explorer/public/baz/baz/%
+./explorer/public/baz/baz/%/directory-html.metapack
+./explorer/public/baz/baz/%/directory.metapack
+./explorer/public/baz/baz/%/login-html.metapack
+./explorer/public/baz/baz/test
+./explorer/public/baz/baz/test/%
+./explorer/public/baz/baz/test/%/dependents.metapack
+./explorer/public/baz/baz/test/%/schema-html.metapack
+./explorer/public/baz/baz/test/%/schema.metapack
 ./routes.bin
 ./schemas
 ./schemas/baz

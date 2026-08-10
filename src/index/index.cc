@@ -370,6 +370,7 @@ static auto index_main(const std::string_view &program,
 
   entries.load(
       state_path, sourcemeta::one::INDEX_RULES.leaves,
+      sourcemeta::one::INDEX_RULES.directories,
       sourcemeta::one::rules_fingerprint<sourcemeta::one::INDEX_RULES>(),
       inputs_fingerprint, sourcemeta::one::INDEX_RULES.sentinel);
 
@@ -608,10 +609,16 @@ static auto index_main(const std::string_view &program,
   }
   const sourcemeta::one::LeafSet leaves{leaves_storage};
 
+  // The views this build writes for. Fixed at the one every caller shares until
+  // they are enumerated from the configuration, which is the only part of this
+  // that has to change for a build to hold an answer per kind of caller
+  constexpr std::array<std::string_view, 1> views{
+      {sourcemeta::one::VIEW_PUBLIC}};
+
   auto produce_plan{sourcemeta::one::delta<sourcemeta::one::INDEX_RULES>(
       sourcemeta::one::BuildPhase::Produce, build_type, entries,
       canonical_output, leaves, this_version, incremental, comment, mode_label,
-      limits)};
+      limits, views)};
   PROFILE_END(profiling, "Producing (Delta)");
   execute_plan(entries, canonical_output, resolver, configuration,
                raw_configuration, concurrency, produce_plan, "Producing");
@@ -620,7 +627,7 @@ static auto index_main(const std::string_view &program,
   auto combine_plan{sourcemeta::one::delta<sourcemeta::one::INDEX_RULES>(
       sourcemeta::one::BuildPhase::Combine, build_type, entries,
       canonical_output, leaves, this_version, incremental, comment, mode_label,
-      limits)};
+      limits, views)};
   PROFILE_END(profiling, "Combining (Delta)");
   execute_plan(entries, canonical_output, resolver, configuration,
                raw_configuration, concurrency, combine_plan, "Combining");

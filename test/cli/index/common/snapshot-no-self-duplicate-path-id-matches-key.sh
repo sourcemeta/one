@@ -32,7 +32,7 @@ EOF
 
 cd "$TMP/output"
 find . -mindepth 1 \
-  \( -path './schemas/self' -o -path './explorer/self' \) -prune \
+  \( -path './schemas/self' -o -path './explorer/public/self' \) -prune \
   -o -print \
   | LC_ALL=C sort > "$TMP/manifest.txt"
 cd - > /dev/null
@@ -41,29 +41,30 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./authentication.bin
 ./configuration.json
 ./explorer
-./explorer/%
-./explorer/%/401.metapack
-./explorer/%/404.metapack
-./explorer/%/directory-html.metapack
-./explorer/%/directory.metapack
-./explorer/%/login-html.metapack
-./explorer/%/mcp.metapack
-./explorer/%/search.metapack
-./explorer/bar
-./explorer/bar/%
-./explorer/bar/%/directory-html.metapack
-./explorer/bar/%/directory.metapack
-./explorer/bar/%/login-html.metapack
-./explorer/bar/bar
-./explorer/bar/bar/%
-./explorer/bar/bar/%/directory-html.metapack
-./explorer/bar/bar/%/directory.metapack
-./explorer/bar/bar/%/login-html.metapack
-./explorer/bar/bar/test
-./explorer/bar/bar/test/%
-./explorer/bar/bar/test/%/dependents.metapack
-./explorer/bar/bar/test/%/schema-html.metapack
-./explorer/bar/bar/test/%/schema.metapack
+./explorer/public
+./explorer/public/%
+./explorer/public/%/401.metapack
+./explorer/public/%/404.metapack
+./explorer/public/%/directory-html.metapack
+./explorer/public/%/directory.metapack
+./explorer/public/%/login-html.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/bar
+./explorer/public/bar/%
+./explorer/public/bar/%/directory-html.metapack
+./explorer/public/bar/%/directory.metapack
+./explorer/public/bar/%/login-html.metapack
+./explorer/public/bar/bar
+./explorer/public/bar/bar/%
+./explorer/public/bar/bar/%/directory-html.metapack
+./explorer/public/bar/bar/%/directory.metapack
+./explorer/public/bar/bar/%/login-html.metapack
+./explorer/public/bar/bar/test
+./explorer/public/bar/bar/test/%
+./explorer/public/bar/bar/test/%/dependents.metapack
+./explorer/public/bar/bar/test/%/schema-html.metapack
+./explorer/public/bar/bar/test/%/schema.metapack
 ./routes.bin
 ./schemas
 ./schemas/bar

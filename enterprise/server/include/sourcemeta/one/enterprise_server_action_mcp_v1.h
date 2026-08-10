@@ -41,7 +41,8 @@ public:
                const sourcemeta::core::URITemplateRouter::Identifier identifier,
                sourcemeta::one::Router &dispatcher)
       : sourcemeta::one::RouterAction{base, router.base_url(), dispatcher},
-        search_view_{base / "explorer" / "%" / "search.metapack"} {
+        search_view_{base / "explorer" / sourcemeta::one::VIEW_PUBLIC / "%" /
+                     "search.metapack"} {
     router.arguments(
         identifier, [this](const auto &key, const auto &value) -> void {
           if (key == "responseSchema") {

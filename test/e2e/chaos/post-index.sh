@@ -24,13 +24,13 @@ printf '\x00\x00\x00\x7f' | \
   dd of="$OUTPUT/routes.bin" bs=1 seek=40 conv=notrunc 2>/dev/null
 
 echo "  Replacing directory.metapack metadata with wrong types..." 1>&2
-test -f "$OUTPUT/explorer/%/directory.metapack"
+test -f "$OUTPUT/explorer/public/%/directory.metapack"
 printf '{"version":1,"checksum":99999,"lastModified":0,"mime":false,"bytes":1,"duration":1,"encoding":"identity"}' \
-  > "$OUTPUT/explorer/%/directory.metapack"
+  > "$OUTPUT/explorer/public/%/directory.metapack"
 
 echo "  Deleting search.metapack to trigger missing file assert..." 1>&2
-test -f "$OUTPUT/explorer/%/search.metapack"
-rm -f "$OUTPUT/explorer/%/search.metapack"
+test -f "$OUTPUT/explorer/public/%/search.metapack"
+rm -f "$OUTPUT/explorer/public/%/search.metapack"
 
 echo "  Replacing locations.metapack with empty object for test/schemas/string..." 1>&2
 test -f "$OUTPUT/schemas/test/schemas/string/%/locations.metapack"

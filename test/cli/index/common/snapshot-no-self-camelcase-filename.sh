@@ -33,7 +33,7 @@ EOF
 
 cd "$TMP/output"
 find . -mindepth 1 \
-  \( -path './schemas/self' -o -path './explorer/self' \) -prune \
+  \( -path './schemas/self' -o -path './explorer/public/self' \) -prune \
   -o -print \
   | LC_ALL=C sort > "$TMP/manifest.txt"
 cd - > /dev/null
@@ -42,17 +42,18 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./authentication.bin
 ./configuration.json
 ./explorer
-./explorer/%
-./explorer/%/directory.metapack
-./explorer/%/mcp.metapack
-./explorer/%/search.metapack
-./explorer/example
-./explorer/example/%
-./explorer/example/%/directory.metapack
-./explorer/example/camelcase
-./explorer/example/camelcase/%
-./explorer/example/camelcase/%/dependents.metapack
-./explorer/example/camelcase/%/schema.metapack
+./explorer/public
+./explorer/public/%
+./explorer/public/%/directory.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/example
+./explorer/public/example/%
+./explorer/public/example/%/directory.metapack
+./explorer/public/example/camelcase
+./explorer/public/example/camelcase/%
+./explorer/public/example/camelcase/%/dependents.metapack
+./explorer/public/example/camelcase/%/schema.metapack
 ./routes.bin
 ./schemas
 ./schemas/example

@@ -51,7 +51,7 @@ cat << 'EOF' > "$TMP/schemas-right/b.json"
 }
 EOF
 
-SEARCH="$TMP/output/explorer/%/search.metapack"
+SEARCH="$TMP/output/explorer/public/%/search.metapack"
 
 extract_search_paths() {
   strings "$1" | grep -oE '/(left|right)/[^[:space:]]*' \

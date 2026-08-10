@@ -48,7 +48,7 @@ struct DeltaRuleSet {
   std::array<LeafRule, S> leaves;
   std::array<ContainerRule, D> containers;
   std::array<GlobalRule, G> globals;
-  std::array<std::string_view, B> directories;
+  std::array<DirectoryRule, B> directories;
   std::string_view sentinel;
   BuildPlan::Action::Type remove_action;
   BuildPlan::Type full_mode;
@@ -177,7 +177,8 @@ auto delta_engine(
     std::span<const LeafRule> leaf_rules,
     std::span<const ContainerRule> container_rules,
     std::span<const GlobalRule> global_rules,
-    std::span<const std::string_view> directories, std::string_view sentinel,
+    std::span<const DirectoryRule> directories,
+    std::span<const std::string_view> views, std::string_view sentinel,
     BuildPlan::Action::Type remove_action, BuildPlan::Type full_mode,
     const DeltaRuleIndices &indices) -> BuildPlan;
 
@@ -186,8 +187,8 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
            const BuildState &entries, const std::filesystem::path &output,
            const LeafSet &leaves, const std::string_view version,
            const bool incremental, const std::string_view comment,
-           const std::string_view mode_label, const BuildLimits &limits)
-    -> BuildPlan {
+           const std::string_view mode_label, const BuildLimits &limits,
+           const std::span<const std::string_view> views) -> BuildPlan {
   constexpr DeltaRuleIndices INDICES{
       .root = find_root_leaf_index<RuleSet>(),
       .metadata = find_container_target_leaf_index<RuleSet>(),
@@ -206,7 +207,7 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
   return delta_engine(phase, build_type, entries, output, leaves, version,
                       incremental, comment, mode_label, limits, RuleSet.leaves,
                       RuleSet.containers, RuleSet.globals, RuleSet.directories,
-                      RuleSet.sentinel, RuleSet.remove_action,
+                      views, RuleSet.sentinel, RuleSet.remove_action,
                       RuleSet.full_mode, INDICES);
 }
 
