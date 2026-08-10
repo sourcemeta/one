@@ -178,6 +178,31 @@ public:
   // knows what this instance serves
   using PathGuard = std::function<bool(std::string_view)>;
 
+  // One way the registry looks to somebody: the name its artifacts live under
+  // and the policies a caller of it satisfies. The anonymous view comprises
+  // none, which is what makes it the base every other view adds to
+  struct View {
+    std::string name;
+    std::vector<std::size_t> policies;
+  };
+
+  // How many token policies may name one issuer. Each such group contributes a
+  // view per non-empty combination of its members, so the count doubles with
+  // every policy added to it, and past this a build refuses rather than
+  // producing an output nobody asked for
+  static constexpr std::size_t MAXIMUM_POLICIES_PER_ISSUER{6};
+
+  /// Every view over a registry declaring these policies, which is what
+  /// segments its output. A pure function of what was declared: the anonymous
+  /// view first, then the rest ordered by name.
+  ///
+  /// A credential carries one issuer and is checked against it before any
+  /// rule, so only token policies declared against the same issuer can be
+  /// satisfied together, and only those combine. Every other policy stands
+  /// alone, since a caller presents one key or holds one session.
+  [[nodiscard]] static auto views(std::span<const Policy> policies)
+      -> std::vector<View>;
+
   // Write the policies to the artifact the gate reads, refusing any policy
   // scoped to a path the guard does not recognise
   static auto save(std::span<const Policy> policies,

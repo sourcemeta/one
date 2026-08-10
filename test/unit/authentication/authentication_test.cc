@@ -6,6 +6,7 @@
 #include <span>        // std::span
 #include <string>      // std::string
 #include <string_view> // std::string_view
+#include <vector>      // std::vector
 
 // Every gate question is asked about a canonical location, so the tests name
 // one the same way a request would
@@ -86,4 +87,87 @@ TEST(permits_every_reference) {
                                                  at("/private/two")));
   EXPECT_TRUE(
       authentication.reference_permitted(at("/internal/a"), at("/internal/a")));
+}
+
+// This edition serves every path publicly, so however a configuration is
+// written there is one way to see the registry. These pin that the answer does
+// not depend on the question, since the enterprise edition's answer does, and a
+// build reads whichever edition it was compiled against.
+
+TEST(views_of_nothing_are_the_public_one_alone) {
+  const auto views{sourcemeta::one::Authentication::views({})};
+  EXPECT_EQ(views.size(), 1);
+  EXPECT_EQ(views.at(0).name, "public");
+  EXPECT_TRUE(views.at(0).policies.empty());
+}
+
+TEST(views_of_a_static_key_policy_are_the_public_one_alone) {
+  const std::array<std::string_view, 1> paths{{"/private"}};
+  const std::array<std::string_view, 1> keys{{"secret"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .keys = keys,
+        .type = sourcemeta::one::Authentication::Type::ApiKey,
+        .name = "vault"}}};
+  const auto views{sourcemeta::one::Authentication::views(policies)};
+  EXPECT_EQ(views.size(), 1);
+  EXPECT_EQ(views.at(0).name, "public");
+  EXPECT_TRUE(views.at(0).policies.empty());
+}
+
+TEST(views_of_several_policies_are_the_public_one_alone) {
+  const std::array<std::string_view, 1> first_paths{{"/legal"}};
+  const std::array<std::string_view, 1> second_paths{{"/tech"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = first_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "https://idp.example.com/realms/staff",
+        .name = "legal"},
+       {.paths = second_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "https://idp.example.com/realms/staff",
+        .name = "tech"}}};
+  const auto views{sourcemeta::one::Authentication::views(policies)};
+  EXPECT_EQ(views.size(), 1);
+  EXPECT_EQ(views.at(0).name, "public");
+  EXPECT_TRUE(views.at(0).policies.empty());
+}
+
+TEST(views_never_refuse_a_configuration_this_edition_cannot_hold) {
+  // The count that would trip the bound elsewhere. This edition rejects such a
+  // configuration when it is written rather than when its views are asked for,
+  // so asking is answerable whatever it names
+  const std::array<std::string_view, 1> paths{{"/one"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 7> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "https://idp.example.com/realms/staff",
+        .name = "a"},
+       {.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "https://idp.example.com/realms/staff",
+        .name = "b"},
+       {.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "https://idp.example.com/realms/staff",
+        .name = "c"},
+       {.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "https://idp.example.com/realms/staff",
+        .name = "d"},
+       {.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "https://idp.example.com/realms/staff",
+        .name = "e"},
+       {.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "https://idp.example.com/realms/staff",
+        .name = "f"},
+       {.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "https://idp.example.com/realms/staff",
+        .name = "g"}}};
+  const auto views{sourcemeta::one::Authentication::views(policies)};
+  EXPECT_EQ(views.size(), 1);
+  EXPECT_EQ(views.at(0).name, "public");
 }

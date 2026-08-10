@@ -5,6 +5,7 @@
 #include <sourcemeta/one/authentication_export.h>
 #endif
 
+#include <cstddef>    // std::size_t
 #include <exception>  // std::exception
 #include <filesystem> // std::filesystem::path
 #include <string>     // std::string
@@ -56,6 +57,31 @@ public:
 private:
   std::filesystem::path path_;
   std::string scope_;
+};
+
+// Raised when more token policies name one issuer than the views over them can
+// be enumerated for, since each such policy doubles the number of views
+class SOURCEMETA_ONE_AUTHENTICATION_EXPORT AuthenticationTooManyViewsError
+    : public std::exception {
+public:
+  AuthenticationTooManyViewsError(std::string issuer, const std::size_t count)
+      : issuer_{std::move(issuer)}, count_{count} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "Too many authentication policies share an issuer";
+  }
+
+  [[nodiscard]] auto issuer() const noexcept -> const std::string & {
+    return this->issuer_;
+  }
+
+  [[nodiscard]] auto count() const noexcept -> std::size_t {
+    return this->count_;
+  }
+
+private:
+  std::string issuer_;
+  std::size_t count_;
 };
 
 } // namespace sourcemeta::one
