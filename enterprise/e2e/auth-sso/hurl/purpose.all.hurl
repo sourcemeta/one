@@ -210,7 +210,12 @@ header "ETag" exists
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "{{base}}/private/secret",
-  "type": "object"
+  "type": "object",
+  "properties": {
+    "label": {
+      "$ref": "../public/string"
+    }
+  }
 }
 
 # But presented as a transaction it opens nothing, so the callback refuses it
