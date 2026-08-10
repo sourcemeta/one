@@ -142,7 +142,12 @@ header "ETag" exists
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "{{base}}/private/secret",
-  "type": "object"
+  "type": "object",
+  "properties": {
+    "label": {
+      "$ref": "../public/string"
+    }
+  }
 }
 
 # The one session opens every collection the policy governs, not only the one
@@ -159,7 +164,10 @@ header "ETag" exists
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "{{base}}/archive/record",
-  "type": "array"
+  "type": "array",
+  "items": {
+    "$ref": "../private/secret"
+  }
 }
 
 # Logging out clears the session and sends the browser on to the provider so

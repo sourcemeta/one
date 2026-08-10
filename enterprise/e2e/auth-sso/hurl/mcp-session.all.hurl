@@ -307,11 +307,11 @@ jsonpath "$.result.nextCursor" == "50"
 jsonpath "$.result.resources[0].uri" == "{{base}}/archive/record"
 jsonpath "$.result.resources[0].name" == "/archive/record"
 jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[0].size" == 131
+jsonpath "$.result.resources[0].size" == 181
 jsonpath "$.result.resources[0].annotations.priority" == 0.5
 jsonpath "$.result.resources[1].uri" == "{{base}}/private/secret"
 jsonpath "$.result.resources[1].name" == "/private/secret"
-jsonpath "$.result.resources[1].size" == 132
+jsonpath "$.result.resources[1].size" == 209
 jsonpath "$.result.resources[2].uri" == "{{base}}/public/string"
 jsonpath "$.result.resources[*].uri" not includes "{{base}}/discovery/thing"
 jsonpath "$.result.resources[*].uri" not includes "{{base}}/unavailable/thing"
