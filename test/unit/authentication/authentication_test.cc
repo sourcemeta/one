@@ -127,3 +127,16 @@ TEST(views_of_several_policies_are_the_public_one_alone) {
   EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
                        {.name = "public", .policies = {}}}));
 }
+
+TEST(satisfied_is_nothing_whatever_is_presented) {
+  const sourcemeta::one::Authentication authentication{
+      std::filesystem::path{"/no/such/authentication.bin"}, {}};
+  const std::array<std::string_view, 1> cookies{
+      {"sourcemeta_one_session=whatever"}};
+  EXPECT_EQ(authentication.satisfied({.bearer = ""}),
+            (std::vector<std::size_t>{}));
+  EXPECT_EQ(authentication.satisfied({.bearer = "a-key"}),
+            (std::vector<std::size_t>{}));
+  EXPECT_EQ(authentication.satisfied({.bearer = "a-key", .cookies = cookies}),
+            (std::vector<std::size_t>{}));
+}
