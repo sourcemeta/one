@@ -68,6 +68,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/schemas/%/login-html.metapack
 ./explorer/schemas/a
 ./explorer/schemas/a/%
+./explorer/schemas/a/%/dependents.metapack
 ./explorer/schemas/a/%/schema-html.metapack
 ./explorer/schemas/a/%/schema.metapack
 ./routes.bin
@@ -79,7 +80,6 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./schemas/schemas/a/%/blaze-fast.metapack
 ./schemas/schemas/a/%/bundle.metapack
 ./schemas/schemas/a/%/dependencies.metapack
-./schemas/schemas/a/%/dependents.metapack
 ./schemas/schemas/a/%/editor.metapack
 ./schemas/schemas/a/%/health.metapack
 ./schemas/schemas/a/%/locations.metapack

@@ -58,10 +58,12 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/example/%/directory.metapack
 ./explorer/example/string
 ./explorer/example/string/%
+./explorer/example/string/%/dependents.metapack
 ./explorer/example/string/%/directory.metapack
 ./explorer/example/string/%/schema.metapack
 ./explorer/example/string/overlap
 ./explorer/example/string/overlap/%
+./explorer/example/string/overlap/%/dependents.metapack
 ./explorer/example/string/overlap/%/schema.metapack
 ./routes.bin
 ./schemas
@@ -72,7 +74,6 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./schemas/example/string/%/blaze-fast.metapack
 ./schemas/example/string/%/bundle.metapack
 ./schemas/example/string/%/dependencies.metapack
-./schemas/example/string/%/dependents.metapack
 ./schemas/example/string/%/editor.metapack
 ./schemas/example/string/%/health.metapack
 ./schemas/example/string/%/locations.metapack
@@ -85,7 +86,6 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./schemas/example/string/overlap/%/blaze-fast.metapack
 ./schemas/example/string/overlap/%/bundle.metapack
 ./schemas/example/string/overlap/%/dependencies.metapack
-./schemas/example/string/overlap/%/dependents.metapack
 ./schemas/example/string/overlap/%/editor.metapack
 ./schemas/example/string/overlap/%/health.metapack
 ./schemas/example/string/overlap/%/locations.metapack

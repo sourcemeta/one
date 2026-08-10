@@ -22,20 +22,25 @@
 #include <sourcemeta/one/enterprise_index.h>
 #endif
 
-#include <algorithm>   // std::ranges::sort
-#include <cassert>     // assert
-#include <chrono>      // std::chrono
-#include <cmath>       // std::lround
-#include <cstring>     // std::memcpy
-#include <filesystem>  // std::filesystem
-#include <limits>      // std::numeric_limits
-#include <numeric>     // std::accumulate
-#include <optional>    // std::optional
-#include <sstream>     // std::ostringstream
-#include <string>      // std::string
-#include <string_view> // std::string_view
-#include <utility>     // std::move, std::unreachable
-#include <vector>      // std::vector
+#include <algorithm>     // std::ranges::sort
+#include <cassert>       // assert
+#include <chrono>        // std::chrono
+#include <cmath>         // std::lround
+#include <cstring>       // std::memcpy
+#include <filesystem>    // std::filesystem
+#include <limits>        // std::numeric_limits
+#include <numeric>       // std::accumulate
+#include <optional>      // std::optional
+#include <queue>         // std::queue
+#include <set>           // std::set
+#include <sstream>       // std::ostringstream
+#include <string>        // std::string
+#include <string_view>   // std::string_view
+#include <tuple>         // std::tuple
+#include <unordered_map> // std::unordered_map
+#include <unordered_set> // std::unordered_set
+#include <utility>       // std::move, std::pair, std::unreachable
+#include <vector>        // std::vector
 
 static auto make_breadcrumb(const std::filesystem::path &relative_path,
                             const bool is_directory) -> sourcemeta::core::JSON {
@@ -550,6 +555,81 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
         action.destination, result, "application/json",
         sourcemeta::one::MetapackEncoding::GZIP,
         std::span<const std::uint8_t>{extension_bytes},
+        std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
+                                                              timestamp_start));
+  }
+};
+
+// The relevant input dependencies files are determined by delta. The handler
+// reads only those few files to build the reverse dependency graph
+struct GENERATE_DEPENDENTS {
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
+                      const sourcemeta::one::BuildDynamicCallback &,
+                      sourcemeta::one::Resolver &,
+                      const sourcemeta::one::Configuration &,
+                      const sourcemeta::core::JSON &) -> void {
+    const auto timestamp_start{std::chrono::steady_clock::now()};
+
+    using DirectMap =
+        std::unordered_map<sourcemeta::core::JSON::String,
+                           std::set<std::pair<sourcemeta::core::JSON::String,
+                                              sourcemeta::core::JSON::String>>>;
+    DirectMap direct;
+    for (const auto &dependency : action.dependencies) {
+      const auto contents_option{
+          sourcemeta::one::metapack_read_json(dependency)};
+      assert(contents_option.has_value());
+      const auto &contents{contents_option.value()};
+      assert(contents.is_array());
+      for (const auto &entry : contents.as_array()) {
+        direct[entry.at("to").to_string()].emplace(entry.at("from").to_string(),
+                                                   entry.at("at").to_string());
+      }
+    }
+
+    // Only this leaf's transitive dependents are needed, so traverse the
+    // reverse graph from it alone rather than computing the closure for every
+    // node and discarding all but one
+    std::set<std::tuple<sourcemeta::core::JSON::String,
+                        sourcemeta::core::JSON::String,
+                        sourcemeta::core::JSON::String>>
+        edges;
+    const sourcemeta::core::JSON::String origin{action.data};
+    std::unordered_set<sourcemeta::core::JSON::StringView> visited;
+    visited.emplace(origin);
+    std::queue<sourcemeta::core::JSON::String> queue;
+    queue.emplace(origin);
+    while (!queue.empty()) {
+      const auto current{std::move(queue.front())};
+      queue.pop();
+      const auto match{direct.find(current)};
+      if (match == direct.cend()) {
+        continue;
+      }
+
+      for (const auto &[dependent, at] : match->second) {
+        edges.emplace(dependent, current, at);
+        if (visited.emplace(dependent).second) {
+          queue.emplace(dependent);
+        }
+      }
+    }
+
+    auto result{sourcemeta::core::JSON::make_array()};
+    for (const auto &[from, to, at] : edges) {
+      auto object{sourcemeta::core::JSON::make_object()};
+      object.assign("from", sourcemeta::core::JSON{from});
+      object.assign("to", sourcemeta::core::JSON{to});
+      object.assign("at", sourcemeta::core::JSON{at});
+      result.push_back(std::move(object));
+    }
+
+    const auto timestamp_end{std::chrono::steady_clock::now()};
+
+    sourcemeta::one::metapack_write_pretty_json(
+        action.destination, result, "application/json",
+        sourcemeta::one::MetapackEncoding::GZIP, {},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
   }

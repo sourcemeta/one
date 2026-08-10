@@ -122,7 +122,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ( 91%) Producing: explorer/%/login-html.metapack
 ( 95%) Producing: explorer/%/search.metapack
 (100%) Producing: explorer/%/mcp.metapack
-(100%) Combining: schemas/left/left-a/s5/%/dependents.metapack
+(100%) Combining: explorer/left/left-a/s5/%/dependents.metapack
 EOF
 
 diff "$TMP/output_producing.txt" "$TMP/expected.txt"

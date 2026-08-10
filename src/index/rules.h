@@ -216,7 +216,7 @@ inline constexpr DeltaRuleSet<13, 8, 5, 2> INDEX_RULES{
          .dependency_count = 4},
 
         {.action = ACTION_DEPENDENTS,
-         .base = 0,
+         .base = 1,
          .filename = "dependents.metapack",
          .gate = TargetGate::Always,
          .dirty = DirtyOverride::ForceOnGraphChange,

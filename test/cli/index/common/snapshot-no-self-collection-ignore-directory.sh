@@ -67,6 +67,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/example/keep/%/directory.metapack
 ./explorer/example/keep/foo
 ./explorer/example/keep/foo/%
+./explorer/example/keep/foo/%/dependents.metapack
 ./explorer/example/keep/foo/%/schema.metapack
 ./routes.bin
 ./schemas
@@ -78,7 +79,6 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./schemas/example/keep/foo/%/blaze-fast.metapack
 ./schemas/example/keep/foo/%/bundle.metapack
 ./schemas/example/keep/foo/%/dependencies.metapack
-./schemas/example/keep/foo/%/dependents.metapack
 ./schemas/example/keep/foo/%/editor.metapack
 ./schemas/example/keep/foo/%/health.metapack
 ./schemas/example/keep/foo/%/locations.metapack

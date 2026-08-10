@@ -467,6 +467,10 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
         dependency_keys.erase(first, last);
       }
 
+      const auto &dependents_rule{leaf_rules[indices.dependents]};
+      const auto destination_directory{
+          dependents_rule.base == 0 ? primary_directory : secondary_directory};
+
       std::vector<BuildPlan::Action> dependents_wave;
       for (const auto &[uri, info] : leaves) {
         const auto &relative_string{info.relative_path->native()};
@@ -474,10 +478,10 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
           continue;
         }
 
-        auto primary_base{make_base_string(output_string, primary_directory,
-                                           relative_string, sentinel)};
-        auto destination{std::filesystem::path{append_filename(
-            primary_base, leaf_rules[indices.dependents].filename)}};
+        auto destination_base{make_base_string(
+            output_string, destination_directory, relative_string, sentinel)};
+        auto destination{std::filesystem::path{
+            append_filename(destination_base, dependents_rule.filename)}};
 
         BuildPlan::Action::Dependencies action_dependencies;
         const auto reverse_iterator{
@@ -490,7 +494,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
         }
 
         dependents_wave.push_back(
-            {.type = leaf_rules[indices.dependents].action,
+            {.type = dependents_rule.action,
              .destination = std::move(destination),
              .dependencies = std::move(action_dependencies),
              .data = uri});

@@ -37,9 +37,9 @@ public:
     router.arguments(
         identifier, [this](const auto &key, const auto &value) -> void {
           if (key == "direction") {
-            this->metapack_ = std::get<std::string_view>(value) == "in"
-                                  ? "dependents"
-                                  : "dependencies";
+            const auto incoming{std::get<std::string_view>(value) == "in"};
+            this->metapack_ = incoming ? "dependents" : "dependencies";
+            this->tree_ = incoming ? Tree::Explorer : Tree::Schemas;
           } else if (key == "responseSchema") {
             this->response_schema_ = std::get<std::string_view>(value);
           } else if (key == "mcpRequestSchema") {
@@ -83,7 +83,7 @@ public:
     const sourcemeta::one::RequestCookies cookies{request};
     const auto resolution{this->artifact_resolve_path(
         {.bearer = credential, .cookies = cookies}, matches.front(),
-        Tree::Schemas, this->metapack_)};
+        this->tree_, this->metapack_)};
     if (resolution.outcome ==
         sourcemeta::one::ArtifactResolution::Outcome::Denied) {
       sourcemeta::one::json_error_unauthorized(request, response,
@@ -119,7 +119,7 @@ public:
     }
 
     const auto resolution{this->artifact_resolve_path(
-        credentials, arguments.at("schema").to_string(), Tree::Schemas,
+        credentials, arguments.at("schema").to_string(), this->tree_,
         this->metapack_)};
     if (resolution.outcome ==
         sourcemeta::one::ArtifactResolution::Outcome::Denied) {
@@ -172,9 +172,11 @@ protected:
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
-      const std::string_view metapack, sourcemeta::one::Router &dispatcher)
+      const std::string_view metapack, const Tree tree,
+      sourcemeta::one::Router &dispatcher)
       : sourcemeta::one::RouterAction{base, router.base_url(), dispatcher} {
     this->metapack_ = metapack;
+    this->tree_ = tree;
     router.arguments(
         identifier, [this](const auto &key, const auto &value) -> void {
           if (key == "responseSchema") {
@@ -191,6 +193,7 @@ protected:
 
 private:
   std::string_view metapack_;
+  Tree tree_;
   std::string_view response_schema_;
   std::string_view rpc_request_schema_;
   std::string_view rpc_response_schema_;
