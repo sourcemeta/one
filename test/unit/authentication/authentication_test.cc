@@ -89,11 +89,6 @@ TEST(permits_every_reference) {
       authentication.reference_permitted(at("/internal/a"), at("/internal/a")));
 }
 
-// This edition serves every path publicly, so however a configuration is
-// written there is one way to see the registry. These pin that the answer does
-// not depend on the question, since the enterprise edition's answer does, and a
-// build reads whichever edition it was compiled against.
-
 TEST(views_of_nothing_are_the_public_one_alone) {
   const auto views{sourcemeta::one::Authentication::views({})};
   EXPECT_EQ(views.size(), 1);
@@ -134,9 +129,7 @@ TEST(views_of_several_policies_are_the_public_one_alone) {
 }
 
 TEST(views_never_refuse_a_configuration_this_edition_cannot_hold) {
-  // The count that would trip the bound elsewhere. This edition rejects such a
-  // configuration when it is written rather than when its views are asked for,
-  // so asking is answerable whatever it names
+  // The count that would trip the bound elsewhere
   const std::array<std::string_view, 1> paths{{"/one"}};
   const std::array<sourcemeta::one::Authentication::Policy, 7> policies{
       {{.paths = paths,

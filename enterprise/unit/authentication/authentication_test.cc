@@ -4393,16 +4393,6 @@ TEST(a_policy_path_carrying_a_repeated_separator_gates_its_location) {
       authentication.admits(at("/public/string"), {.bearer = ""}).allowed);
 }
 
-// The view table: what segments a registry's output, as a pure function of what
-// a configuration declared. No filesystem, no request, no runtime knowledge,
-// since the issuer partition is declared rather than discovered.
-//
-// The rule in one sentence: one view per policy, plus every combination of the
-// token policies that name one issuer, plus the anonymous one. What follows
-// drives each half of that, and each reason a combination does or does not
-// arise, because getting it wrong changes what an instance builds rather than
-// what it answers, and nothing downstream would object.
-
 static auto
 view_names(const std::vector<sourcemeta::one::Authentication::View> &views)
     -> std::vector<std::string> {
@@ -4475,8 +4465,8 @@ TEST(views_combine_token_policies_that_name_one_issuer) {
         .issuer = "https://idp.example.com/realms/staff",
         .name = "tech"}}};
 
-  // One token can satisfy both, since a claim is a list and a rule is met by
-  // any of its values, so the pair is a way the registry can look to somebody
+  // A claim is a list and a rule is met by any of its values, so one token can
+  // satisfy both
   const auto views{sourcemeta::one::Authentication::views(policies)};
   EXPECT_EQ(view_names(views), (std::vector<std::string>{
                                    "public", "legal", "legal+tech", "tech"}));
@@ -4499,8 +4489,7 @@ TEST(views_never_combine_token_policies_across_issuers) {
         .name = "partner"}}};
 
   // A token carries one issuer and is verified against it before any rule is
-  // read, so nobody can ever hold both. This is the contrast to the pair above,
-  // differing in the issuer alone
+  // read, so nobody can ever hold both
   const auto views{sourcemeta::one::Authentication::views(policies)};
   EXPECT_EQ(view_names(views),
             (std::vector<std::string>{"public", "partner", "staff"}));
@@ -4523,8 +4512,8 @@ TEST(views_combine_token_policies_that_share_a_claim_across_issuers_never) {
         .claims = R"({"department":{"values":["legal"]}})",
         .name = "partner-legal"}}};
 
-  // Testing the same claim for the same value means nothing across issuers,
-  // because the issuer is decisive and is read first
+  // The issuer is decisive and is read first, so testing the same claim for the
+  // same value means nothing across them
   const auto views{sourcemeta::one::Authentication::views(policies)};
   EXPECT_EQ(view_names(views),
             (std::vector<std::string>{"public", "legal", "partner-legal"}));
@@ -4543,9 +4532,8 @@ TEST(views_never_combine_interactive_policies_under_one_issuer) {
         .issuer = "https://idp.example.com/realms/staff",
         .name = "second"}}};
 
-  // A browser holds one session naming one policy, so sharing an issuer buys
-  // an interactive caller nothing. The contrast is the token pair above, which
-  // differs only in the credential type
+  // A browser holds one session naming one policy, so sharing an issuer buys an
+  // interactive caller nothing
   const auto views{sourcemeta::one::Authentication::views(policies)};
   EXPECT_EQ(view_names(views),
             (std::vector<std::string>{"public", "first", "second"}));
@@ -4585,8 +4573,6 @@ TEST(views_spell_a_combination_the_same_however_it_was_declared) {
         .issuer = "https://idp.example.com/realms/staff",
         .name = "legal"}}};
 
-  // Declared the other way round from the pair above, and named the same, so
-  // reordering a configuration cannot move where an artifact lives
   const auto views{sourcemeta::one::Authentication::views(policies)};
   EXPECT_EQ(view_names(views), (std::vector<std::string>{
                                    "public", "legal", "legal+tech", "tech"}));
@@ -4732,8 +4718,6 @@ TEST(views_count_a_group_by_its_own_issuer_rather_than_the_whole_declaration) {
     policies.at(index).name = names.at(index);
   }
 
-  // Eight policies is past the bound, but no issuer holds more than four, and
-  // it is the group that doubles the views rather than the declaration
   const auto views{sourcemeta::one::Authentication::views(policies)};
   EXPECT_EQ(views.size(), 1 + 15 + 15);
 }
@@ -4747,9 +4731,6 @@ TEST(views_hold_the_public_one_even_when_every_path_is_governed) {
         .type = sourcemeta::one::Authentication::Type::ApiKey,
         .name = "everything"}}};
 
-  // Nothing is public here, and the anonymous view is still one of the answers.
-  // It is what a caller holding nothing is shown, which on such a registry is
-  // the refusal and the way in, and it is what a lookup falls back to
   const auto views{sourcemeta::one::Authentication::views(policies)};
   EXPECT_EQ(view_names(views),
             (std::vector<std::string>{"public", "everything"}));
