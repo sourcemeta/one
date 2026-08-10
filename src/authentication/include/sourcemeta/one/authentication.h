@@ -202,18 +202,22 @@ public:
   ///
   /// Whether that many views is affordable is not decided here, since what they
   /// cost is known where they are built rather than where they are named. What
-  /// is decided here is only whether the answer can be produced at all, which
-  /// the ceiling below draws a line under.
+  /// is decided here is only that an enumeration doubling with every policy has
+  /// to stop somewhere, which the ceiling below picks a point for.
   ///
   /// Every policy name must be distinct, which is what keeps one view from
   /// taking another's name.
   [[nodiscard]] static auto views(std::span<const Policy> policies)
       -> std::vector<View>;
 
-  // How many policies may name one issuer. Each one doubles the combinations
-  // over that group, so past a point the answer cannot be held in memory at all
-  // and the largest a policy ceiling allows would not even be representable.
-  // This is where that becomes true, not a judgement about what is affordable
+  // How many policies may name one issuer. Some bound is unavoidable, because
+  // the combinations double with each policy added to a group and the shift
+  // that enumerates them stops being defined once a group reaches the ceiling
+  // on policies. Exactly where to draw it is a choice rather than a discovery:
+  // this sits far above anything a configuration has reason to declare and far
+  // below the point where enumerating becomes impractical. It is not a
+  // judgement about what a build can afford, which is made where views are
+  // built rather than where they are named
   static constexpr std::size_t MAXIMUM_COMBINABLE_POLICIES{16};
 
   // Write the policies to the artifact the gate reads, refusing any policy

@@ -1750,7 +1750,8 @@ auto Authentication::views(
 
   for (std::size_t group{0}; group < groups.size(); group++) {
     const auto &members{groups[group]};
-    // Past this the shift below is not even defined, let alone allocatable
+    // A doubling enumeration has to stop somewhere, and the shift below stops
+    // being defined once a group reaches the ceiling on policies
     if (members.size() > Authentication::MAXIMUM_COMBINABLE_POLICIES) {
       throw AuthenticationTooManyViewsError(std::string{issuers[group]},
                                             members.size());
