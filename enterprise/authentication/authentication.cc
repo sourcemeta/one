@@ -1720,6 +1720,13 @@ auto Authentication::views(
   // is read, so only token policies declared against the same issuer can ever
   // be satisfied together. Every other policy stands alone, since a caller
   // presents one key or holds one session
+  // One view takes another's name if two policies share one, which the
+  // configuration refuses long before this is reached
+  assert(std::ranges::all_of(policies, [&policies](const auto &policy) -> bool {
+    return std::ranges::count(policies, policy.name,
+                              &Authentication::Policy::name) == 1;
+  }));
+
   std::vector<std::string_view> issuers;
   std::vector<std::vector<std::size_t>> groups;
   std::vector<Authentication::View> named;
@@ -1741,7 +1748,14 @@ auto Authentication::views(
     }
   }
 
-  for (const auto &members : groups) {
+  for (std::size_t group{0}; group < groups.size(); group++) {
+    const auto &members{groups[group]};
+    // Past this the shift below is not even defined, let alone allocatable
+    if (members.size() > Authentication::MAXIMUM_COMBINABLE_POLICIES) {
+      throw AuthenticationTooManyViewsError(std::string{issuers[group]},
+                                            members.size());
+    }
+
     // Every non-empty combination of the group, since a credential satisfying
     // several of them is shown what all of them admit
     const auto total{std::uint64_t{1} << members.size()};

@@ -198,11 +198,23 @@ public:
   /// alone, since a caller presents one key or holds one session.
   ///
   /// The count is one, plus one per policy that stands alone, plus two to the
-  /// power of each issuer group's size less one. Nothing is refused here, since
-  /// what a number of views costs is known where they are built rather than
-  /// where they are named.
+  /// power of each issuer group's size less one.
+  ///
+  /// Whether that many views is affordable is not decided here, since what they
+  /// cost is known where they are built rather than where they are named. What
+  /// is decided here is only whether the answer can be produced at all, which
+  /// the ceiling below draws a line under.
+  ///
+  /// Every policy name must be distinct, which is what keeps one view from
+  /// taking another's name.
   [[nodiscard]] static auto views(std::span<const Policy> policies)
       -> std::vector<View>;
+
+  // How many policies may name one issuer. Each one doubles the combinations
+  // over that group, so past a point the answer cannot be held in memory at all
+  // and the largest a policy ceiling allows would not even be representable.
+  // This is where that becomes true, not a judgement about what is affordable
+  static constexpr std::size_t MAXIMUM_COMBINABLE_POLICIES{16};
 
   // Write the policies to the artifact the gate reads, refusing any policy
   // scoped to a path the guard does not recognise

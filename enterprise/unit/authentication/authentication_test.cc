@@ -4681,3 +4681,81 @@ TEST(views_of_two_issuer_groups_are_a_sum_rather_than_a_product) {
   const auto views{sourcemeta::one::Authentication::views(policies)};
   EXPECT_EQ(views.size(), 1 + 15 + 15);
 }
+
+TEST(views_of_the_largest_combinable_group_are_every_combination) {
+  const std::array<std::string_view, 1> paths{{"/one"}};
+  std::array<sourcemeta::one::Authentication::Policy,
+             sourcemeta::one::Authentication::MAXIMUM_COMBINABLE_POLICIES>
+      policies{};
+  std::vector<std::string> names;
+  names.reserve(policies.size());
+  for (std::size_t index{0}; index < policies.size(); index++) {
+    names.push_back("p" + std::to_string(index));
+  }
+
+  for (std::size_t index{0}; index < policies.size(); index++) {
+    policies.at(index).paths = paths;
+    policies.at(index).type = sourcemeta::one::Authentication::Type::JWT;
+    policies.at(index).issuer = "https://idp.example.com/realms/staff";
+    policies.at(index).name = names.at(index);
+  }
+
+  const auto views{sourcemeta::one::Authentication::views(policies)};
+  EXPECT_EQ(views.size(),
+            (std::size_t{1}
+             << sourcemeta::one::Authentication::MAXIMUM_COMBINABLE_POLICIES));
+  EXPECT_EQ(views.at(0).name, "public");
+}
+
+TEST(views_refuse_a_group_whose_combinations_cannot_be_produced) {
+  const std::array<std::string_view, 1> paths{{"/one"}};
+  std::array<sourcemeta::one::Authentication::Policy,
+             sourcemeta::one::Authentication::MAXIMUM_COMBINABLE_POLICIES + 1>
+      policies{};
+  std::vector<std::string> names;
+  names.reserve(policies.size());
+  for (std::size_t index{0}; index < policies.size(); index++) {
+    names.push_back("p" + std::to_string(index));
+  }
+
+  for (std::size_t index{0}; index < policies.size(); index++) {
+    policies.at(index).paths = paths;
+    policies.at(index).type = sourcemeta::one::Authentication::Type::JWT;
+    policies.at(index).issuer = "https://idp.example.com/realms/staff";
+    policies.at(index).name = names.at(index);
+  }
+
+  try {
+    const auto views{sourcemeta::one::Authentication::views(policies)};
+    EXPECT_EQ(views.size(), 0);
+    FAIL();
+  } catch (const sourcemeta::one::AuthenticationTooManyViewsError &error) {
+    EXPECT_STREQ(error.what(),
+                 "Too many authentication policies share an issuer");
+    EXPECT_EQ(error.issuer(), "https://idp.example.com/realms/staff");
+    EXPECT_EQ(error.count(),
+              sourcemeta::one::Authentication::MAXIMUM_COMBINABLE_POLICIES + 1);
+  }
+}
+
+TEST(views_of_many_policies_across_issuers_are_never_refused) {
+  const std::array<std::string_view, 1> paths{{"/one"}};
+  std::array<sourcemeta::one::Authentication::Policy, 40> policies{};
+  std::vector<std::string> names;
+  names.reserve(policies.size());
+  for (std::size_t index{0}; index < policies.size(); index++) {
+    names.push_back("p" + std::to_string(index));
+  }
+
+  // Well past the ceiling in total, and no group approaches it, so nothing is
+  // refused. What a build makes of forty views is not decided here
+  for (std::size_t index{0}; index < policies.size(); index++) {
+    policies.at(index).paths = paths;
+    policies.at(index).type = sourcemeta::one::Authentication::Type::JWT;
+    policies.at(index).issuer = names.at(index);
+    policies.at(index).name = names.at(index);
+  }
+
+  const auto views{sourcemeta::one::Authentication::views(policies)};
+  EXPECT_EQ(views.size(), 41);
+}
