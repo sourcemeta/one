@@ -106,7 +106,7 @@ Access-Control-Allow-Origin: *
   "$id": "{{base}}/reports/quarterly",
   "type": "array",
   "items": {
-    "type": "number"
+    "$ref": "../public/string"
   }
 }
 
