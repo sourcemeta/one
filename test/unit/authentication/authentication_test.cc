@@ -127,21 +127,3 @@ TEST(views_of_several_policies_are_the_public_one_alone) {
   EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
                        {.name = "public", .policies = {}}}));
 }
-
-TEST(views_never_refuse_a_configuration_this_edition_cannot_hold) {
-  // The count that would trip the bound elsewhere
-  const std::array<std::string_view, 1> paths{{"/one"}};
-  std::array<sourcemeta::one::Authentication::Policy, 7> policies{};
-  const std::array<std::string_view, 7> names{
-      {"a", "b", "c", "d", "e", "f", "g"}};
-  for (std::size_t index{0}; index < policies.size(); index++) {
-    policies.at(index).paths = paths;
-    policies.at(index).type = sourcemeta::one::Authentication::Type::JWT;
-    policies.at(index).issuer = "https://idp.example.com/realms/staff";
-    policies.at(index).name = names.at(index);
-  }
-
-  const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
-                       {.name = "public", .policies = {}}}));
-}

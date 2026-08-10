@@ -4646,7 +4646,7 @@ TEST(views_hold_the_public_one_even_when_every_path_is_governed) {
                        {.name = "everything", .policies = {0}}}));
 }
 
-TEST(views_of_the_largest_group_a_configuration_may_declare_are_enumerated) {
+TEST(views_of_six_token_policies_under_one_issuer_are_every_combination) {
   const std::array<std::string_view, 1> paths{{"/one"}};
   std::array<sourcemeta::one::Authentication::Policy, 6> policies{};
   const std::array<std::string_view, 6> names{{"a", "b", "c", "d", "e", "f"}};
@@ -4657,36 +4657,12 @@ TEST(views_of_the_largest_group_a_configuration_may_declare_are_enumerated) {
     policies.at(index).name = names.at(index);
   }
 
-  // Every non-empty combination of six, and the anonymous one
+  // Two to the sixth, being every non-empty combination plus the anonymous one
   const auto views{sourcemeta::one::Authentication::views(policies)};
   EXPECT_EQ(views.size(), 64);
 }
 
-TEST(views_refuse_more_token_policies_under_one_issuer_than_the_bound) {
-  const std::array<std::string_view, 1> paths{{"/one"}};
-  std::array<sourcemeta::one::Authentication::Policy, 7> policies{};
-  const std::array<std::string_view, 7> names{
-      {"a", "b", "c", "d", "e", "f", "g"}};
-  for (std::size_t index{0}; index < policies.size(); index++) {
-    policies.at(index).paths = paths;
-    policies.at(index).type = sourcemeta::one::Authentication::Type::JWT;
-    policies.at(index).issuer = "https://idp.example.com/realms/staff";
-    policies.at(index).name = names.at(index);
-  }
-
-  try {
-    const auto views{sourcemeta::one::Authentication::views(policies)};
-    EXPECT_EQ(views.size(), 0);
-    FAIL();
-  } catch (const sourcemeta::one::AuthenticationTooManyViewsError &error) {
-    EXPECT_STREQ(error.what(),
-                 "Too many authentication policies share an issuer");
-    EXPECT_EQ(error.issuer(), "https://idp.example.com/realms/staff");
-    EXPECT_EQ(error.count(), 7);
-  }
-}
-
-TEST(views_count_a_group_by_its_own_issuer_rather_than_the_whole_declaration) {
+TEST(views_of_two_issuer_groups_are_a_sum_rather_than_a_product) {
   const std::array<std::string_view, 1> paths{{"/one"}};
   std::array<sourcemeta::one::Authentication::Policy, 8> policies{};
   const std::array<std::string_view, 8> names{
@@ -4700,7 +4676,8 @@ TEST(views_count_a_group_by_its_own_issuer_rather_than_the_whole_declaration) {
     policies.at(index).name = names.at(index);
   }
 
-  // Past the bound in total, but no issuer holds more than four
+  // Each group contributes its own combinations and nothing crosses between
+  // them, so the total adds rather than multiplies
   const auto views{sourcemeta::one::Authentication::views(policies)};
   EXPECT_EQ(views.size(), 1 + 15 + 15);
 }

@@ -188,12 +188,6 @@ public:
     [[nodiscard]] auto operator==(const View &other) const -> bool = default;
   };
 
-  // How many token policies may name one issuer. Each such group contributes a
-  // view per non-empty combination of its members, so the count doubles with
-  // every policy added to it, and past this a build refuses rather than
-  // producing an output nobody asked for
-  static constexpr std::size_t MAXIMUM_POLICIES_PER_ISSUER{6};
-
   /// Every view over a registry declaring these policies, which is what
   /// segments its output. A pure function of what was declared: the anonymous
   /// view first, then the rest ordered by name.
@@ -202,6 +196,11 @@ public:
   /// rule, so only token policies declared against the same issuer can be
   /// satisfied together, and only those combine. Every other policy stands
   /// alone, since a caller presents one key or holds one session.
+  ///
+  /// The count is one, plus one per policy that stands alone, plus two to the
+  /// power of each issuer group's size less one. Nothing is refused here, since
+  /// what a number of views costs is known where they are built rather than
+  /// where they are named.
   [[nodiscard]] static auto views(std::span<const Policy> policies)
       -> std::vector<View>;
 

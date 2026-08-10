@@ -1741,13 +1741,7 @@ auto Authentication::views(
     }
   }
 
-  for (std::size_t group{0}; group < groups.size(); group++) {
-    const auto &members{groups[group]};
-    if (members.size() > Authentication::MAXIMUM_POLICIES_PER_ISSUER) {
-      throw AuthenticationTooManyViewsError(std::string{issuers[group]},
-                                            members.size());
-    }
-
+  for (const auto &members : groups) {
     // Every non-empty combination of the group, since a credential satisfying
     // several of them is shown what all of them admit
     const auto total{std::uint64_t{1} << members.size()};
