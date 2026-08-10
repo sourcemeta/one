@@ -193,7 +193,9 @@ protected:
 
 private:
   std::string_view metapack_;
-  Tree tree_;
+  // A caller that never names a direction resolves nothing, which the tree it
+  // resolves against must not decide
+  Tree tree_{Tree::Schemas};
   std::string_view response_schema_;
   std::string_view rpc_request_schema_;
   std::string_view rpc_response_schema_;
