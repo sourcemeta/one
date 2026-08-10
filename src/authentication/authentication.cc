@@ -19,6 +19,16 @@ namespace sourcemeta::one {
 // emitted, empty, to keep the build output identical in shape across editions
 struct Authentication::Impl {};
 
+// This edition serves every path publicly, so the registry looks the same to
+// everybody and there is exactly one way to see it. The view is still named
+// rather than implied, which keeps the output one shape across editions
+auto Authentication::views(const std::span<const Authentication::Policy>)
+    -> std::vector<Authentication::View> {
+  std::vector<Authentication::View> result;
+  result.push_back({.name = std::string{VIEW_PUBLIC}, .policies = {}});
+  return result;
+}
+
 auto Authentication::save(
     const std::span<const Authentication::Policy> policies,
     const std::filesystem::path &configuration,

@@ -1680,6 +1680,105 @@ Authentication::Authentication(const std::filesystem::path &path,
 
 Authentication::~Authentication() = default;
 
+namespace {
+
+// A view is spelled as the names of the policies it comprises, ordered so that
+// one combination has one spelling whatever order they were declared in
+auto view_name(const std::span<const Authentication::Policy> policies,
+               const std::span<const std::size_t> members) -> std::string {
+  std::vector<std::string_view> names;
+  names.reserve(members.size());
+  for (const auto member : members) {
+    names.emplace_back(policies[member].name);
+  }
+
+  std::ranges::sort(names);
+  std::string result;
+  for (const auto name : names) {
+    if (!result.empty()) {
+      result += '+';
+    }
+
+    result += name;
+  }
+
+  return result;
+}
+
+} // namespace
+
+auto Authentication::views(
+    const std::span<const Authentication::Policy> policies)
+    -> std::vector<Authentication::View> {
+  std::vector<Authentication::View> result;
+  // Always present, and the only entry when nothing is declared. A registry
+  // whose every path is governed still has one, since it is what a caller
+  // holding nothing is shown and what a lookup falls back to
+  result.push_back({.name = std::string{VIEW_PUBLIC}, .policies = {}});
+
+  // A credential carries one issuer and is checked against it before any rule
+  // is read, so only token policies declared against the same issuer can ever
+  // be satisfied together. Every other policy stands alone, since a caller
+  // presents one key or holds one session
+  // One view takes another's name if two policies share one, which the
+  // configuration refuses long before this is reached
+  assert(std::ranges::all_of(policies, [&policies](const auto &policy) -> bool {
+    return std::ranges::count(policies, policy.name,
+                              &Authentication::Policy::name) == 1;
+  }));
+
+  std::vector<std::string_view> issuers;
+  std::vector<std::vector<std::size_t>> groups;
+  std::vector<Authentication::View> named;
+
+  for (std::size_t index{0}; index < policies.size(); index++) {
+    const auto &policy{policies[index]};
+    if (policy.type != Authentication::Type::JWT) {
+      named.push_back({.name = std::string{policy.name}, .policies = {index}});
+      continue;
+    }
+
+    const auto match{std::ranges::find(issuers, policy.issuer)};
+    if (match == issuers.cend()) {
+      issuers.emplace_back(policy.issuer);
+      groups.push_back({index});
+    } else {
+      groups[static_cast<std::size_t>(match - issuers.begin())].push_back(
+          index);
+    }
+  }
+
+  for (std::size_t group{0}; group < groups.size(); group++) {
+    const auto &members{groups[group]};
+    if (members.size() > Authentication::MAXIMUM_COMBINABLE_POLICIES) {
+      throw AuthenticationTooManyViewsError(std::string{issuers[group]},
+                                            members.size());
+    }
+
+    // Every non-empty combination of the group, since a credential satisfying
+    // several of them is shown what all of them admit
+    const auto total{std::uint64_t{1} << members.size()};
+    for (std::uint64_t mask{1}; mask < total; mask++) {
+      std::vector<std::size_t> combination;
+      for (std::size_t offset{0}; offset < members.size(); offset++) {
+        if ((mask & (std::uint64_t{1} << offset)) != 0) {
+          combination.push_back(members[offset]);
+        }
+      }
+
+      named.push_back({.name = view_name(policies, combination),
+                       .policies = std::move(combination)});
+    }
+  }
+
+  std::ranges::sort(named, [](const auto &left, const auto &right) -> bool {
+    return left.name < right.name;
+  });
+  result.insert(result.cend(), std::make_move_iterator(named.begin()),
+                std::make_move_iterator(named.end()));
+  return result;
+}
+
 auto Authentication::admits(const Authentication::Path &path,
                             const Credentials &credentials) const
     -> Authentication::Verdict {
