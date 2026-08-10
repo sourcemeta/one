@@ -2,6 +2,7 @@
 #include <sourcemeta/one/authentication.h>
 
 #include <array>       // std::array
+#include <cstddef>     // std::size_t
 #include <filesystem>  // std::filesystem::path
 #include <span>        // std::span
 #include <string>      // std::string
@@ -91,9 +92,8 @@ TEST(permits_every_reference) {
 
 TEST(views_of_nothing_are_the_public_one_alone) {
   const auto views{sourcemeta::one::Authentication::views({})};
-  EXPECT_EQ(views.size(), 1);
-  EXPECT_EQ(views.at(0).name, "public");
-  EXPECT_TRUE(views.at(0).policies.empty());
+  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
+                       {.name = "public", .policies = {}}}));
 }
 
 TEST(views_of_a_static_key_policy_are_the_public_one_alone) {
@@ -104,10 +104,10 @@ TEST(views_of_a_static_key_policy_are_the_public_one_alone) {
         .keys = keys,
         .type = sourcemeta::one::Authentication::Type::ApiKey,
         .name = "vault"}}};
+
   const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(views.size(), 1);
-  EXPECT_EQ(views.at(0).name, "public");
-  EXPECT_TRUE(views.at(0).policies.empty());
+  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
+                       {.name = "public", .policies = {}}}));
 }
 
 TEST(views_of_several_policies_are_the_public_one_alone) {
@@ -122,45 +122,26 @@ TEST(views_of_several_policies_are_the_public_one_alone) {
         .type = sourcemeta::one::Authentication::Type::JWT,
         .issuer = "https://idp.example.com/realms/staff",
         .name = "tech"}}};
+
   const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(views.size(), 1);
-  EXPECT_EQ(views.at(0).name, "public");
-  EXPECT_TRUE(views.at(0).policies.empty());
+  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
+                       {.name = "public", .policies = {}}}));
 }
 
 TEST(views_never_refuse_a_configuration_this_edition_cannot_hold) {
   // The count that would trip the bound elsewhere
   const std::array<std::string_view, 1> paths{{"/one"}};
-  const std::array<sourcemeta::one::Authentication::Policy, 7> policies{
-      {{.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::JWT,
-        .issuer = "https://idp.example.com/realms/staff",
-        .name = "a"},
-       {.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::JWT,
-        .issuer = "https://idp.example.com/realms/staff",
-        .name = "b"},
-       {.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::JWT,
-        .issuer = "https://idp.example.com/realms/staff",
-        .name = "c"},
-       {.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::JWT,
-        .issuer = "https://idp.example.com/realms/staff",
-        .name = "d"},
-       {.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::JWT,
-        .issuer = "https://idp.example.com/realms/staff",
-        .name = "e"},
-       {.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::JWT,
-        .issuer = "https://idp.example.com/realms/staff",
-        .name = "f"},
-       {.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::JWT,
-        .issuer = "https://idp.example.com/realms/staff",
-        .name = "g"}}};
+  std::array<sourcemeta::one::Authentication::Policy, 7> policies{};
+  const std::array<std::string_view, 7> names{
+      {"a", "b", "c", "d", "e", "f", "g"}};
+  for (std::size_t index{0}; index < policies.size(); index++) {
+    policies.at(index).paths = paths;
+    policies.at(index).type = sourcemeta::one::Authentication::Type::JWT;
+    policies.at(index).issuer = "https://idp.example.com/realms/staff";
+    policies.at(index).name = names.at(index);
+  }
+
   const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(views.size(), 1);
-  EXPECT_EQ(views.at(0).name, "public");
+  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
+                       {.name = "public", .policies = {}}}));
 }

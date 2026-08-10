@@ -184,6 +184,8 @@ public:
   struct View {
     std::string name;
     std::vector<std::size_t> policies;
+
+    [[nodiscard]] auto operator==(const View &other) const -> bool = default;
   };
 
   // How many token policies may name one issuer. Each such group contributes a

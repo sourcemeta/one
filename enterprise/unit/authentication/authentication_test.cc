@@ -4393,22 +4393,10 @@ TEST(a_policy_path_carrying_a_repeated_separator_gates_its_location) {
       authentication.admits(at("/public/string"), {.bearer = ""}).allowed);
 }
 
-static auto
-view_names(const std::vector<sourcemeta::one::Authentication::View> &views)
-    -> std::vector<std::string> {
-  std::vector<std::string> result;
-  result.reserve(views.size());
-  for (const auto &view : views) {
-    result.push_back(view.name);
-  }
-
-  return result;
-}
-
 TEST(views_of_nothing_are_the_public_one_alone) {
   const auto views{sourcemeta::one::Authentication::views({})};
-  EXPECT_EQ(view_names(views), (std::vector<std::string>{"public"}));
-  EXPECT_TRUE(views.at(0).policies.empty());
+  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
+                       {.name = "public", .policies = {}}}));
 }
 
 TEST(views_name_a_static_key_policy_on_its_own) {
@@ -4421,9 +4409,9 @@ TEST(views_name_a_static_key_policy_on_its_own) {
         .name = "vault"}}};
 
   const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(view_names(views), (std::vector<std::string>{"public", "vault"}));
-  EXPECT_TRUE(views.at(0).policies.empty());
-  EXPECT_EQ(views.at(1).policies, (std::vector<std::size_t>{0}));
+  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
+                       {.name = "public", .policies = {}},
+                       {.name = "vault", .policies = {0}}}));
 }
 
 TEST(views_name_an_interactive_policy_on_its_own) {
@@ -4435,8 +4423,9 @@ TEST(views_name_an_interactive_policy_on_its_own) {
         .name = "desk"}}};
 
   const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(view_names(views), (std::vector<std::string>{"public", "desk"}));
-  EXPECT_EQ(views.at(1).policies, (std::vector<std::size_t>{0}));
+  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
+                       {.name = "public", .policies = {}},
+                       {.name = "desk", .policies = {0}}}));
 }
 
 TEST(views_name_a_token_policy_on_its_own) {
@@ -4448,8 +4437,9 @@ TEST(views_name_a_token_policy_on_its_own) {
         .name = "machine"}}};
 
   const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(view_names(views), (std::vector<std::string>{"public", "machine"}));
-  EXPECT_EQ(views.at(1).policies, (std::vector<std::size_t>{0}));
+  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
+                       {.name = "public", .policies = {}},
+                       {.name = "machine", .policies = {0}}}));
 }
 
 TEST(views_combine_token_policies_that_name_one_issuer) {
@@ -4468,11 +4458,11 @@ TEST(views_combine_token_policies_that_name_one_issuer) {
   // A claim is a list and a rule is met by any of its values, so one token can
   // satisfy both
   const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(view_names(views), (std::vector<std::string>{
-                                   "public", "legal", "legal+tech", "tech"}));
-  EXPECT_EQ(views.at(1).policies, (std::vector<std::size_t>{0}));
-  EXPECT_EQ(views.at(2).policies, (std::vector<std::size_t>{0, 1}));
-  EXPECT_EQ(views.at(3).policies, (std::vector<std::size_t>{1}));
+  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
+                       {.name = "public", .policies = {}},
+                       {.name = "legal", .policies = {0}},
+                       {.name = "legal+tech", .policies = {0, 1}},
+                       {.name = "tech", .policies = {1}}}));
 }
 
 TEST(views_never_combine_token_policies_across_issuers) {
@@ -4491,13 +4481,13 @@ TEST(views_never_combine_token_policies_across_issuers) {
   // A token carries one issuer and is verified against it before any rule is
   // read, so nobody can ever hold both
   const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(view_names(views),
-            (std::vector<std::string>{"public", "partner", "staff"}));
-  EXPECT_EQ(views.at(1).policies, (std::vector<std::size_t>{1}));
-  EXPECT_EQ(views.at(2).policies, (std::vector<std::size_t>{0}));
+  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
+                       {.name = "public", .policies = {}},
+                       {.name = "partner", .policies = {1}},
+                       {.name = "staff", .policies = {0}}}));
 }
 
-TEST(views_combine_token_policies_that_share_a_claim_across_issuers_never) {
+TEST(views_never_combine_token_policies_testing_one_claim_across_issuers) {
   const std::array<std::string_view, 1> legal_paths{{"/legal"}};
   const std::array<std::string_view, 1> partner_paths{{"/partners"}};
   const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
@@ -4515,8 +4505,10 @@ TEST(views_combine_token_policies_that_share_a_claim_across_issuers_never) {
   // The issuer is decisive and is read first, so testing the same claim for the
   // same value means nothing across them
   const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(view_names(views),
-            (std::vector<std::string>{"public", "legal", "partner-legal"}));
+  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
+                       {.name = "public", .policies = {}},
+                       {.name = "legal", .policies = {0}},
+                       {.name = "partner-legal", .policies = {1}}}));
 }
 
 TEST(views_never_combine_interactive_policies_under_one_issuer) {
@@ -4535,8 +4527,10 @@ TEST(views_never_combine_interactive_policies_under_one_issuer) {
   // A browser holds one session naming one policy, so sharing an issuer buys an
   // interactive caller nothing
   const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(view_names(views),
-            (std::vector<std::string>{"public", "first", "second"}));
+  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
+                       {.name = "public", .policies = {}},
+                       {.name = "first", .policies = {0}},
+                       {.name = "second", .policies = {1}}}));
 }
 
 TEST(views_never_combine_static_key_policies) {
@@ -4556,8 +4550,10 @@ TEST(views_never_combine_static_key_policies) {
 
   // A caller presents one key, so it satisfies one of these whatever it holds
   const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(view_names(views),
-            (std::vector<std::string>{"public", "first", "second"}));
+  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
+                       {.name = "public", .policies = {}},
+                       {.name = "first", .policies = {0}},
+                       {.name = "second", .policies = {1}}}));
 }
 
 TEST(views_spell_a_combination_the_same_however_it_was_declared) {
@@ -4574,9 +4570,11 @@ TEST(views_spell_a_combination_the_same_however_it_was_declared) {
         .name = "legal"}}};
 
   const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(view_names(views), (std::vector<std::string>{
-                                   "public", "legal", "legal+tech", "tech"}));
-  EXPECT_EQ(views.at(2).policies, (std::vector<std::size_t>{0, 1}));
+  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
+                       {.name = "public", .policies = {}},
+                       {.name = "legal", .policies = {1}},
+                       {.name = "legal+tech", .policies = {0, 1}},
+                       {.name = "tech", .policies = {0}}}));
 }
 
 TEST(views_of_three_token_policies_under_one_issuer_are_every_combination) {
@@ -4596,9 +4594,15 @@ TEST(views_of_three_token_policies_under_one_issuer_are_every_combination) {
         .name = "c"}}};
 
   const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(view_names(views),
-            (std::vector<std::string>{"public", "a", "a+b", "a+b+c", "a+c", "b",
-                                      "b+c", "c"}));
+  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
+                       {.name = "public", .policies = {}},
+                       {.name = "a", .policies = {0}},
+                       {.name = "a+b", .policies = {0, 1}},
+                       {.name = "a+b+c", .policies = {0, 1, 2}},
+                       {.name = "a+c", .policies = {0, 2}},
+                       {.name = "b", .policies = {1}},
+                       {.name = "b+c", .policies = {1, 2}},
+                       {.name = "c", .policies = {2}}}));
 }
 
 TEST(views_mix_a_combining_group_with_policies_that_stand_alone) {
@@ -4619,78 +4623,56 @@ TEST(views_mix_a_combining_group_with_policies_that_stand_alone) {
         .name = "tech"}}};
 
   const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(view_names(views),
-            (std::vector<std::string>{"public", "legal", "legal+tech", "tech",
-                                      "vault"}));
-  EXPECT_EQ(views.at(4).policies, (std::vector<std::size_t>{0}));
-  EXPECT_EQ(views.at(2).policies, (std::vector<std::size_t>{1, 2}));
+  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
+                       {.name = "public", .policies = {}},
+                       {.name = "legal", .policies = {1}},
+                       {.name = "legal+tech", .policies = {1, 2}},
+                       {.name = "tech", .policies = {2}},
+                       {.name = "vault", .policies = {0}}}));
+}
+
+TEST(views_hold_the_public_one_even_when_every_path_is_governed) {
+  const std::array<std::string_view, 1> paths{{"/"}};
+  const std::array<std::string_view, 1> keys{{"secret"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .keys = keys,
+        .type = sourcemeta::one::Authentication::Type::ApiKey,
+        .name = "everything"}}};
+
+  const auto views{sourcemeta::one::Authentication::views(policies)};
+  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
+                       {.name = "public", .policies = {}},
+                       {.name = "everything", .policies = {0}}}));
 }
 
 TEST(views_of_the_largest_group_a_configuration_may_declare_are_enumerated) {
   const std::array<std::string_view, 1> paths{{"/one"}};
-  const std::array<sourcemeta::one::Authentication::Policy, 6> policies{
-      {{.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::JWT,
-        .issuer = "https://idp.example.com/realms/staff",
-        .name = "a"},
-       {.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::JWT,
-        .issuer = "https://idp.example.com/realms/staff",
-        .name = "b"},
-       {.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::JWT,
-        .issuer = "https://idp.example.com/realms/staff",
-        .name = "c"},
-       {.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::JWT,
-        .issuer = "https://idp.example.com/realms/staff",
-        .name = "d"},
-       {.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::JWT,
-        .issuer = "https://idp.example.com/realms/staff",
-        .name = "e"},
-       {.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::JWT,
-        .issuer = "https://idp.example.com/realms/staff",
-        .name = "f"}}};
+  std::array<sourcemeta::one::Authentication::Policy, 6> policies{};
+  const std::array<std::string_view, 6> names{{"a", "b", "c", "d", "e", "f"}};
+  for (std::size_t index{0}; index < policies.size(); index++) {
+    policies.at(index).paths = paths;
+    policies.at(index).type = sourcemeta::one::Authentication::Type::JWT;
+    policies.at(index).issuer = "https://idp.example.com/realms/staff";
+    policies.at(index).name = names.at(index);
+  }
 
   // Every non-empty combination of six, and the anonymous one
   const auto views{sourcemeta::one::Authentication::views(policies)};
   EXPECT_EQ(views.size(), 64);
-  EXPECT_EQ(views.at(0).name, "public");
 }
 
 TEST(views_refuse_more_token_policies_under_one_issuer_than_the_bound) {
   const std::array<std::string_view, 1> paths{{"/one"}};
-  const std::array<sourcemeta::one::Authentication::Policy, 7> policies{
-      {{.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::JWT,
-        .issuer = "https://idp.example.com/realms/staff",
-        .name = "a"},
-       {.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::JWT,
-        .issuer = "https://idp.example.com/realms/staff",
-        .name = "b"},
-       {.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::JWT,
-        .issuer = "https://idp.example.com/realms/staff",
-        .name = "c"},
-       {.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::JWT,
-        .issuer = "https://idp.example.com/realms/staff",
-        .name = "d"},
-       {.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::JWT,
-        .issuer = "https://idp.example.com/realms/staff",
-        .name = "e"},
-       {.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::JWT,
-        .issuer = "https://idp.example.com/realms/staff",
-        .name = "f"},
-       {.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::JWT,
-        .issuer = "https://idp.example.com/realms/staff",
-        .name = "g"}}};
+  std::array<sourcemeta::one::Authentication::Policy, 7> policies{};
+  const std::array<std::string_view, 7> names{
+      {"a", "b", "c", "d", "e", "f", "g"}};
+  for (std::size_t index{0}; index < policies.size(); index++) {
+    policies.at(index).paths = paths;
+    policies.at(index).type = sourcemeta::one::Authentication::Type::JWT;
+    policies.at(index).issuer = "https://idp.example.com/realms/staff";
+    policies.at(index).name = names.at(index);
+  }
 
   try {
     const auto views{sourcemeta::one::Authentication::views(policies)};
@@ -4718,21 +4700,7 @@ TEST(views_count_a_group_by_its_own_issuer_rather_than_the_whole_declaration) {
     policies.at(index).name = names.at(index);
   }
 
+  // Past the bound in total, but no issuer holds more than four
   const auto views{sourcemeta::one::Authentication::views(policies)};
   EXPECT_EQ(views.size(), 1 + 15 + 15);
-}
-
-TEST(views_hold_the_public_one_even_when_every_path_is_governed) {
-  const std::array<std::string_view, 1> paths{{"/"}};
-  const std::array<std::string_view, 1> keys{{"secret"}};
-  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{.paths = paths,
-        .keys = keys,
-        .type = sourcemeta::one::Authentication::Type::ApiKey,
-        .name = "everything"}}};
-
-  const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(view_names(views),
-            (std::vector<std::string>{"public", "everything"}));
-  EXPECT_TRUE(views.at(0).policies.empty());
 }
