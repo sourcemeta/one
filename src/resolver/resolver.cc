@@ -42,19 +42,29 @@ static auto rebase(const sourcemeta::one::Configuration::Collection &collection,
                    const sourcemeta::core::URI &new_base,
                    const sourcemeta::core::JSON::String &new_prefix)
     -> sourcemeta::core::JSON::String {
-  sourcemeta::core::URI maybe_relative{uri};
-  maybe_relative.relative_to(collection.base_uri);
-  if (maybe_relative.is_relative()) {
-    auto suffix{maybe_relative.path().value_or("")};
-    assert(!suffix.empty());
-    return sourcemeta::core::URI{new_base}
-        .append_path(new_prefix)
-        .append_path(suffix)
-        .canonicalize()
-        .recompose();
-  } else {
-    return maybe_relative.recompose();
+  // A collection owns a whole path prefix of its base URI, so what an absolute
+  // identifier is measured against is containment on component boundaries, and
+  // not the relative reference that resolution would take back to it
+  const sourcemeta::core::URI current{uri};
+  std::optional<std::string> suffix;
+  if (current.is_relative()) {
+    suffix = current.path().value_or("");
+  } else if (current.scheme() == collection.base_uri.scheme() &&
+             current.has_same_authority(collection.base_uri)) {
+    suffix = sourcemeta::core::URI::strip_path_prefix(
+        current.path().value_or(""), collection.base_uri.path().value_or(""));
   }
+
+  if (!suffix.has_value()) {
+    return current.recompose();
+  }
+
+  assert(!suffix.value().empty());
+  return sourcemeta::core::URI{new_base}
+      .append_path(new_prefix)
+      .append_path(suffix.value())
+      .canonicalize()
+      .recompose();
 }
 
 static auto normalise_identifier(const std::string_view identifier)

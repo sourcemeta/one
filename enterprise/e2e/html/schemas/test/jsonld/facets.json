@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Unresolvable Facets",
+  "description": "A schema whose JSON-LD annotations fail on a distinct facet per property",
+  "type": "object",
+  "properties": {
+    "override": {
+      "x-jsonld-override": "not-a-boolean"
+    },
+    "value": {
+      "x-jsonld-value": "not-an-iri"
+    },
+    "constants": {
+      "type": "string",
+      "x-jsonld-constants": {
+        "https://schema.org/name": "Example"
+      }
+    }
+  }
+}

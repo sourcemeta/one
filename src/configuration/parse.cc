@@ -105,16 +105,14 @@ auto entries_from_json(T &result, const std::filesystem::path &location,
   } else {
     assert(!result.contains(location));
     if (input.defines("path")) {
-      auto collection_input{input};
       const auto base_path{
-          collection_input.defines("x-sourcemeta-one:path")
-              ? std::filesystem::path{collection_input
-                                          .at("x-sourcemeta-one:path")
+          input.defines("x-sourcemeta-one:path")
+              ? std::filesystem::path{input.at("x-sourcemeta-one:path")
                                           .to_string()}
                     .parent_path()
               : default_base_path};
-      auto collection{sourcemeta::blaze::Configuration::from_json(
-          collection_input, base_path)};
+      auto collection{
+          sourcemeta::blaze::Configuration::from_json(input, base_path)};
       // Filesystems behave differently with regards to casing. To unify
       // them, assume they are case-insensitive and just go for lowercase
       sourcemeta::core::to_lowercase(collection.base);
