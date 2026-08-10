@@ -460,6 +460,13 @@ private:
   }
 };
 
+// Inlining happens with no containment check here, so nothing in this handler
+// stops a reference reaching content the schema's own path does not admit. What
+// stops it is that such a reference fails the build one step earlier, when the
+// outgoing edges are recorded. That is what keeps every artifact beside this
+// one exactly as visible as the schema it belongs to, and therefore gated
+// wholesale on that schema's path, so relaxing the earlier rule to permit the
+// reference and merely omit it here would be a leak rather than a narrowing
 struct GENERATE_BUNDLE {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,

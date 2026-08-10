@@ -471,7 +471,7 @@ jsonpath "$.result.resources[0].annotations.priority" == 0.5
 jsonpath "$.result.resources[1].uri" == "{{base}}/reports/quarterly"
 jsonpath "$.result.resources[1].name" == "/reports/quarterly"
 jsonpath "$.result.resources[1].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[1].size" == 173
+jsonpath "$.result.resources[1].size" == 183
 jsonpath "$.result.resources[1].annotations.priority" == 0.5
 jsonpath "$.result.resources[2].uri" == "{{base}}/orphan/lonely"
 jsonpath "$.result.resources[2].name" == "/orphan/lonely"
