@@ -33,9 +33,10 @@ test.describe('Schema page panels under a session', () => {
     const panel = page.locator('[data-sourcemeta-ui-tab-id="dependencies"]');
     await expect(panel).not.toHaveClass(/d-none/);
 
-    // The panel reports rather than fails, so the request behind it was
-    // admitted rather than refused
-    await expect(panel).not.toContainText('Failed to load dependencies.');
+    // Waiting for the count is what proves the request was admitted. The panel
+    // arrives holding a placeholder and is overwritten wholesale, either by the
+    // answer or by a notice that it could not be loaded, so a refusal cannot
+    // reach this text and waiting for it cannot pass early
     await expect(panel).toContainText('1 direct dependency');
     await expect(panel).toContainText('0 indirect dependencies');
 
@@ -58,7 +59,6 @@ test.describe('Schema page panels under a session', () => {
     const panel = page.locator('[data-sourcemeta-ui-tab-id="dependents"]');
     await expect(panel).not.toHaveClass(/d-none/);
 
-    await expect(panel).not.toContainText('Failed to load dependents.');
     await expect(panel).toContainText('1 direct dependent');
 
     // The schema pointing at this one is governed too, so naming it is
