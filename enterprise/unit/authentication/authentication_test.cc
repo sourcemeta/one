@@ -114,6 +114,13 @@ static constexpr std::string_view CLAIMS_ONE_GROUP{
         "values": [ "platform" ]
       }
     })JSON"};
+static constexpr std::string_view CLAIMS_ONCALL_GROUP{
+    R"JSON({
+      "groups": {
+        "essential": true,
+        "values": [ "oncall" ]
+      }
+    })JSON"};
 static constexpr std::string_view CLAIMS_TWO_GROUPS{
     R"JSON({
       "groups": {
@@ -4855,4 +4862,198 @@ TEST(a_presented_key_that_opens_nothing_sets_a_session_aside) {
       authentication
           .admits(at("/portal/x"), {.bearer = "", .cookies = fields(cookies)})
           .allowed);
+}
+
+TEST(a_caller_presenting_nothing_belongs_to_no_policy) {
+  setenv("ONE_TEST_CLASSIFY_ANONYMOUS_KEY", "machine-secret", 1);
+  const std::array<std::string_view, 1> paths{{"/machine"}};
+  const std::array<std::string_view, 1> keys{
+      {"ONE_TEST_CLASSIFY_ANONYMOUS_KEY"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths, .keys = keys, .name = "machine"}}};
+  const auto path{test_path("classify_anonymous.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_EQ(authentication.classify({.bearer = ""}),
+            sourcemeta::one::Authentication::PolicySet{0});
+}
+
+TEST(a_credential_opening_nothing_belongs_to_no_policy) {
+  setenv("ONE_TEST_CLASSIFY_UNKNOWN_KEY", "machine-secret", 1);
+  const std::array<std::string_view, 1> paths{{"/machine"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_CLASSIFY_UNKNOWN_KEY"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths, .keys = keys, .name = "machine"}}};
+  const auto path{test_path("classify_unknown.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_EQ(authentication.classify({.bearer = "retired-secret"}),
+            sourcemeta::one::Authentication::PolicySet{0});
+}
+
+TEST(a_key_places_its_caller_in_the_policy_it_opens) {
+  setenv("ONE_TEST_CLASSIFY_FIRST_KEY", "first-secret", 1);
+  setenv("ONE_TEST_CLASSIFY_SECOND_KEY", "second-secret", 1);
+  const std::array<std::string_view, 1> first_paths{{"/first"}};
+  const std::array<std::string_view, 1> second_paths{{"/second"}};
+  const std::array<std::string_view, 1> first_keys{
+      {"ONE_TEST_CLASSIFY_FIRST_KEY"}};
+  const std::array<std::string_view, 1> second_keys{
+      {"ONE_TEST_CLASSIFY_SECOND_KEY"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = first_paths, .keys = first_keys, .name = "first"},
+       {.paths = second_paths, .keys = second_keys, .name = "second"}}};
+  const auto path{test_path("classify_key.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_EQ(authentication.classify({.bearer = "first-secret"}),
+            sourcemeta::one::Authentication::PolicySet{0b01});
+  EXPECT_EQ(authentication.classify({.bearer = "second-secret"}),
+            sourcemeta::one::Authentication::PolicySet{0b10});
+}
+
+TEST(a_key_is_placed_without_reference_to_any_path) {
+  setenv("ONE_TEST_CLASSIFY_DEEP_KEY", "deep-secret", 1);
+  const std::array<std::string_view, 1> paths{{"/deep/inside/somewhere"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_CLASSIFY_DEEP_KEY"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths, .keys = keys, .name = "deep"}}};
+  const auto path{test_path("classify_deep.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  // The gate answers differently for two locations, and the placement answers
+  // once for the caller, which is what makes it describe the whole registry
+  EXPECT_TRUE(
+      authentication
+          .admits(at("/deep/inside/somewhere/x"), {.bearer = "deep-secret"})
+          .allowed);
+  EXPECT_TRUE(authentication.admits(at("/elsewhere"), {.bearer = "deep-secret"})
+                  .allowed);
+  EXPECT_EQ(authentication.classify({.bearer = "deep-secret"}),
+            sourcemeta::one::Authentication::PolicySet{0b1});
+}
+
+TEST(a_key_opening_two_policies_is_read_as_the_first_declared) {
+  setenv("ONE_TEST_CLASSIFY_SHARED_EARLY", "shared-secret", 1);
+  setenv("ONE_TEST_CLASSIFY_SHARED_LATE", "shared-secret", 1);
+  const std::array<std::string_view, 1> early_paths{{"/early"}};
+  const std::array<std::string_view, 1> late_paths{{"/late"}};
+  const std::array<std::string_view, 1> early_keys{
+      {"ONE_TEST_CLASSIFY_SHARED_EARLY"}};
+  const std::array<std::string_view, 1> late_keys{
+      {"ONE_TEST_CLASSIFY_SHARED_LATE"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = early_paths, .keys = early_keys, .name = "early"},
+       {.paths = late_paths, .keys = late_keys, .name = "late"}}};
+  const auto path{test_path("classify_shared.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  // Two variables holding one value is the form the configuration cannot see,
+  // so the gate opens both and the placement still names one
+  EXPECT_TRUE(authentication.admits(at("/early/x"), {.bearer = "shared-secret"})
+                  .allowed);
+  EXPECT_TRUE(authentication.admits(at("/late/x"), {.bearer = "shared-secret"})
+                  .allowed);
+  EXPECT_EQ(authentication.classify({.bearer = "shared-secret"}),
+            sourcemeta::one::Authentication::PolicySet{0b01});
+}
+
+TEST(a_token_belongs_to_every_policy_of_its_issuer_that_it_satisfies) {
+  const std::array<std::string_view, 1> platform_paths{{"/platform"}};
+  const std::array<std::string_view, 1> oncall_paths{{"/oncall"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::ES256}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = platform_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms,
+        .claims = CLAIMS_ONE_GROUP,
+        .name = "platform"},
+       {.paths = oncall_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms,
+        .claims = CLAIMS_ONCALL_GROUP,
+        .name = "oncall"}}};
+  const auto path{test_path("classify_token_groups.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                         nullptr)};
+  EXPECT_EQ(
+      authentication.classify(
+          {.bearer = token_with(R"JSON({ "groups": [ "platform" ] })JSON")}),
+      sourcemeta::one::Authentication::PolicySet{0b01});
+  EXPECT_EQ(
+      authentication.classify(
+          {.bearer = token_with(R"JSON({ "groups": [ "oncall" ] })JSON")}),
+      sourcemeta::one::Authentication::PolicySet{0b10});
+  // One token carrying both reaches both areas, so a placement naming either
+  // alone would hide one of them
+  EXPECT_EQ(authentication.classify(
+                {.bearer = token_with(
+                     R"JSON({ "groups": [ "oncall", "platform" ] })JSON")}),
+            sourcemeta::one::Authentication::PolicySet{0b11});
+  EXPECT_EQ(
+      authentication.classify(
+          {.bearer = token_with(R"JSON({ "groups": [ "support" ] })JSON")}),
+      sourcemeta::one::Authentication::PolicySet{0});
+}
+
+TEST(a_session_places_its_caller_in_the_policy_that_established_it) {
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
+  setenv("ONE_TEST_CLASSIFY_SESSION_SECRET", "confidential", 1);
+  setenv("ONE_TEST_CLASSIFY_SESSION_KEY", "machine-secret", 1);
+  const std::array<std::string_view, 1> portal_paths{{"/portal"}};
+  const std::array<std::string_view, 1> machine_paths{{"/machine"}};
+  const std::array<std::string_view, 1> machine_keys{
+      {"ONE_TEST_CLASSIFY_SESSION_KEY"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = portal_paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "acme",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_CLASSIFY_SESSION_SECRET",
+        .name = "okta",
+        .session_secrets = SESSION_SECRETS},
+       {.paths = machine_paths, .keys = machine_keys, .name = "machine"}}};
+  const auto path{test_path("classify_session.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  const auto sealed{sourcemeta::one::Authentication::seal_value(
+      R"JSON({ "policy": "okta", "subject": "jane@acme.test" })JSON",
+      sourcemeta::one::Authentication::Purpose::Session, SESSION_SECRET,
+      minted_now(), session_expiry())};
+  const std::string cookies{"sourcemeta_one_session=" + sealed};
+
+  EXPECT_EQ(authentication.classify({.bearer = "", .cookies = fields(cookies)}),
+            sourcemeta::one::Authentication::PolicySet{0b01});
+  EXPECT_EQ(authentication.classify({.bearer = "machine-secret"}),
+            sourcemeta::one::Authentication::PolicySet{0b10});
+  // A request carrying a key is read as that key, so the session it also
+  // carried places nobody, exactly as it admits nobody
+  EXPECT_EQ(authentication.classify(
+                {.bearer = "machine-secret", .cookies = fields(cookies)}),
+            sourcemeta::one::Authentication::PolicySet{0b10});
+  EXPECT_EQ(authentication.classify(
+                {.bearer = "retired-secret", .cookies = fields(cookies)}),
+            sourcemeta::one::Authentication::PolicySet{0});
 }

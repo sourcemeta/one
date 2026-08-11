@@ -11,7 +11,7 @@
 
 #include <chrono>      // std::chrono::sys_seconds
 #include <cstddef>     // std::size_t
-#include <cstdint>     // std::uint8_t
+#include <cstdint>     // std::uint8_t, std::uint64_t
 #include <filesystem>  // std::filesystem::path
 #include <functional>  // std::function
 #include <memory>      // std::unique_ptr
@@ -43,6 +43,10 @@ struct Credentials {
 class SOURCEMETA_ONE_AUTHENTICATION_EXPORT Authentication {
 public:
   static constexpr std::size_t MAXIMUM_POLICIES{64};
+
+  // A set of policies, one bit per declaration index, which is why there can
+  // only ever be as many policies as this has bits
+  using PolicySet = std::uint64_t;
 
   /// Where a resource lives within an instance, in the single spelling every
   /// part of the system agrees on: no leading or trailing separator, no empty
@@ -257,6 +261,20 @@ public:
                                   const Credentials &credentials,
                                   std::string_view required_audience = {}) const
       -> Verdict;
+
+  /// Which policies a caller satisfies, asked of the caller alone rather than
+  /// of a path, so that one answer describes the whole registry. The gate
+  /// answers whether a door opens, and this answers who is knocking.
+  ///
+  /// A caller presenting nothing satisfies nothing, which is the anonymous
+  /// answer and costs nothing to reach.
+  ///
+  /// Token policies naming one issuer are reported together, since a token
+  /// carrying several claims satisfies several of them at once and each is an
+  /// area its holder reaches. Every other policy is reported alone, and where a
+  /// credential satisfies more than one, the first declared is the one read.
+  [[nodiscard]] auto classify(const Credentials &credentials) const
+      -> PolicySet;
 
   // The configuration declaration indices of the policies that govern a path,
   // sorted ascending
