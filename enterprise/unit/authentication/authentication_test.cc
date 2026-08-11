@@ -4856,33 +4856,3 @@ TEST(a_presented_key_that_opens_nothing_sets_a_session_aside) {
           .admits(at("/portal/x"), {.bearer = "", .cookies = fields(cookies)})
           .allowed);
 }
-
-TEST(a_header_naming_only_the_scheme_presents_nothing) {
-  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
-  setenv("ONE_TEST_EMPTY_BEARER_SECRET", "confidential", 1);
-  const std::array<std::string_view, 1> paths{{"/portal"}};
-  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::OIDC,
-        .issuer = "acme",
-        .client_id = "client",
-        .client_secret_variable = "ONE_TEST_EMPTY_BEARER_SECRET",
-        .name = "okta",
-        .session_secrets = SESSION_SECRETS}}};
-  const auto path{test_path("precedence_empty.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
-
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-  const auto sealed{sourcemeta::one::Authentication::seal_value(
-      R"JSON({ "policy": "okta", "subject": "jane@acme.test" })JSON",
-      sourcemeta::one::Authentication::Purpose::Session, SESSION_SECRET,
-      minted_now(), session_expiry())};
-  const std::string cookies{"sourcemeta_one_session=" + sealed};
-
-  // What the router hands the gate when a header names the scheme and no value
-  EXPECT_TRUE(
-      authentication
-          .admits(at("/portal/x"), {.bearer = "", .cookies = fields(cookies)})
-          .allowed);
-}
