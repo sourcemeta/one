@@ -208,6 +208,24 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
     }
   }
 
+  // A view is spelled from the names of the policies it comprises, so a policy
+  // without one, or sharing one, or taking the name every caller holding
+  // nothing is served under, yields a view that names somewhere else or
+  // nowhere. The configuration refuses all three long before this is reached,
+  // and this is what makes that a guarantee rather than a convention
+  for (std::size_t index{0}; index < policies.size(); index += 1) {
+    const auto name{policies[index].name};
+    if (name.empty() || name == VIEW_PUBLIC) {
+      throw AuthenticationPolicyNameError(configuration, std::string{name});
+    }
+
+    for (std::size_t other{0}; other < index; other += 1) {
+      if (policies[other].name == name) {
+        throw AuthenticationPolicyNameError(configuration, std::string{name});
+      }
+    }
+  }
+
   std::vector<BuildNode> nodes;
   nodes.emplace_back();
 
@@ -238,6 +256,27 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
                       &std::pair<std::string, std::uint32_t>::first);
   }
 
+  // The table is computed once here, so that the naming rule is applied where
+  // the policies are read rather than by every server that later serves them
+  const auto table{Authentication::views(policies)};
+
+  // Distinct policy names do not by themselves make distinct view names, since
+  // a view naming several is spelled by joining theirs, which a single policy
+  // could be named to match. Two views sharing a name are two sets of policies
+  // served from one directory, so what was actually spelled is checked rather
+  // than what it was spelled from.
+  //
+  // The table arrives with the anonymous view first and every other in order of
+  // name, so a repeated name can only sit beside the one it repeats. Comparing
+  // every pair instead would square a table that a handful of issuer groups
+  // already leaves with hundreds of thousands of entries
+  for (std::size_t index{1}; index < table.size(); index += 1) {
+    if (table[index - 1].name == table[index].name) {
+      throw AuthenticationViewNameCollisionError(configuration,
+                                                 table[index].name);
+    }
+  }
+
   std::string strings;
   std::vector<AuthenticationEdge> edges;
   std::vector<AuthenticationNode> serialized;
@@ -261,12 +300,37 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
     serialized.push_back(entry);
   }
 
+  // A policy is named in the same blob its path segments live in, and a view
+  // after it, so that every name is one range into one section
+  std::vector<AuthenticationViewEntry> view_table;
+  view_table.reserve(table.size());
+  std::vector<std::pair<std::uint32_t, std::uint32_t>> policy_names;
+  policy_names.reserve(policies.size());
+  for (const auto &policy : policies) {
+    policy_names.emplace_back(static_cast<std::uint32_t>(strings.size()),
+                              static_cast<std::uint32_t>(policy.name.size()));
+    strings += policy.name;
+  }
+
+  for (const auto &view : table) {
+    AuthenticationViewEntry entry{};
+    for (const auto member : view.policies) {
+      entry.policies |= std::uint64_t{1} << member;
+    }
+
+    entry.name_offset = static_cast<std::uint32_t>(strings.size());
+    entry.name_length = static_cast<std::uint32_t>(view.name.size());
+    strings += view.name;
+    view_table.push_back(entry);
+  }
+
   AuthenticationHeader header{};
   header.magic = AUTHENTICATION_MAGIC;
   header.version = AUTHENTICATION_VERSION;
   header.policy_count = static_cast<std::uint32_t>(policies.size());
   header.node_count = static_cast<std::uint32_t>(serialized.size());
   header.edge_count = static_cast<std::uint32_t>(edges.size());
+  header.view_count = static_cast<std::uint32_t>(view_table.size());
   header.policies_offset =
       static_cast<std::uint32_t>(sizeof(AuthenticationHeader));
   // The node array begins the word-aligned region the matcher addresses
@@ -275,9 +339,16 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
       header.policies_offset +
       header.policy_count *
           static_cast<std::uint32_t>(sizeof(AuthenticationPolicyEntry)));
-  header.edges_offset =
+  // Both the node and the view arrays hold eight-byte-aligned entries of the
+  // same width, so placing the views between the nodes and the byte-packed
+  // edges keeps every section aligned without padding between them
+  header.views_offset =
       header.nodes_offset + header.node_count * static_cast<std::uint32_t>(
                                                     sizeof(AuthenticationNode));
+  header.edges_offset =
+      header.views_offset +
+      header.view_count *
+          static_cast<std::uint32_t>(sizeof(AuthenticationViewEntry));
   header.strings_offset =
       header.edges_offset + header.edge_count * static_cast<std::uint32_t>(
                                                     sizeof(AuthenticationEdge));
@@ -289,21 +360,17 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
   std::vector<AuthenticationPolicyEntry> policy_table;
   policy_table.reserve(policies.size());
   std::vector<std::byte> metadata;
-  for (const auto &policy : policies) {
+  for (std::size_t index{0}; index < policies.size(); index += 1) {
+    const auto &policy{policies[index]};
     std::vector<std::byte> policy_metadata;
     if (policy.type == Authentication::Type::JWT) {
       policy_metadata = encode_jwt_metadata(policy.issuer, policy.audience,
                                             policy.jwks_uri, policy.algorithms,
                                             policy.token_type, policy.claims);
     } else if (policy.type == Authentication::Type::OIDC) {
-      // A nameless interactive policy could never match a session cookie, and
-      // one without a session secret could never mint or verify one, so both
-      // fail loudly here rather than silently denying every login at runtime
-      if (policy.name.empty()) {
-        throw std::runtime_error(
-            "Interactive authentication policies require a name");
-      }
-
+      // An interactive policy without a session secret could never mint or
+      // verify one, so it fails loudly here rather than silently denying every
+      // login at runtime
       if (policy.session_secrets.empty()) {
         throw std::runtime_error(
             "Interactive authentication policies require a session secret");
@@ -321,6 +388,8 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
     entry.metadata_offset =
         metadata_start + static_cast<std::uint32_t>(metadata.size());
     entry.metadata_length = static_cast<std::uint32_t>(policy_metadata.size());
+    entry.name_offset = policy_names[index].first;
+    entry.name_length = policy_names[index].second;
     entry.algorithm = static_cast<std::uint8_t>(policy.algorithm);
     entry.type = static_cast<std::uint8_t>(policy.type);
     policy_table.push_back(entry);
@@ -340,6 +409,11 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
 
   std::memcpy(buffer.data() + header.nodes_offset, serialized.data(),
               serialized.size() * sizeof(AuthenticationNode));
+  if (!view_table.empty()) {
+    std::memcpy(buffer.data() + header.views_offset, view_table.data(),
+                view_table.size() * sizeof(AuthenticationViewEntry));
+  }
+
   if (!edges.empty()) {
     std::memcpy(buffer.data() + header.edges_offset, edges.data(),
                 edges.size() * sizeof(AuthenticationEdge));

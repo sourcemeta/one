@@ -1027,7 +1027,8 @@ struct GENERATE_AUTHENTICATION {
                              : std::string_view{},
              .algorithms = entry.algorithms,
              .token_type = entry.token_type,
-             .claims = policy_claims.back()});
+             .claims = policy_claims.back(),
+             .name = entry.name});
       } else if (entry.type == Entry::Type::OIDC) {
         std::vector<std::string_view> session_secrets;
         session_secrets.reserve(entry.session_secret_variables.size());
@@ -1075,7 +1076,8 @@ struct GENERATE_AUTHENTICATION {
                 : sourcemeta::one::Authentication::Algorithm::Identity};
         policies.push_back({.paths = policy_paths.back(),
                             .keys = policy_keys.back(),
-                            .algorithm = algorithm});
+                            .algorithm = algorithm,
+                            .name = entry.name});
       }
     }
 

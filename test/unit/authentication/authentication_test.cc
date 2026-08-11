@@ -90,6 +90,16 @@ TEST(permits_every_reference) {
       authentication.reference_permitted(at("/internal/a"), at("/internal/a")));
 }
 
+TEST(serves_every_caller_the_anonymous_view) {
+  const std::array<std::string_view, 1> cookies{
+      {"sourcemeta_one_session=whatever"}};
+  const sourcemeta::one::Authentication authentication{
+      std::filesystem::path{"/no/such/authentication.bin"}, {}};
+  EXPECT_EQ(authentication.view({.bearer = ""}), "public");
+  EXPECT_EQ(authentication.view({.bearer = "anything"}), "public");
+  EXPECT_EQ(authentication.view({.bearer = "", .cookies = cookies}), "public");
+}
+
 TEST(classifies_a_caller_presenting_nothing_as_anonymous) {
   const sourcemeta::one::Authentication authentication{
       std::filesystem::path{"/no/such/authentication.bin"}, {}};

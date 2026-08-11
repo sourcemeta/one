@@ -93,16 +93,53 @@ auto structurally_valid(const sourcemeta::core::FileView &view) noexcept
                           ~static_cast<std::size_t>(7U)};
   const auto nodes_bytes{static_cast<std::size_t>(header->node_count) *
                          sizeof(AuthenticationNode)};
-  const auto edges_offset{nodes_offset + nodes_bytes};
+  const auto views_offset{nodes_offset + nodes_bytes};
+  const auto views_bytes{static_cast<std::size_t>(header->view_count) *
+                         sizeof(AuthenticationViewEntry)};
+  const auto edges_offset{views_offset + views_bytes};
   const auto edges_bytes{static_cast<std::size_t>(header->edge_count) *
                          sizeof(AuthenticationEdge)};
   const auto strings_offset{edges_offset + edges_bytes};
   const auto strings_length{static_cast<std::size_t>(header->strings_length)};
   if (header->policies_offset != policies_offset ||
       header->nodes_offset != nodes_offset ||
+      header->views_offset != views_offset ||
       header->edges_offset != edges_offset ||
       header->strings_offset != strings_offset ||
       strings_offset + strings_length > size) {
+    return false;
+  }
+
+  // A caller satisfying nothing is placed somewhere, so a table that could not
+  // name that is one no request could be resolved against. Every table names at
+  // least that view, so a table with nothing to name it from is one whose names
+  // would be read against no bytes at all
+  if (header->view_count == 0 || strings_length == 0) {
+    return false;
+  }
+
+  const auto *views{view.as<AuthenticationViewEntry>(header->views_offset)};
+  bool names_the_anonymous{false};
+  for (std::uint32_t index{0}; index < header->view_count; index += 1) {
+    const auto &entry{views[index]};
+    // A name is read as a range into the string section, so an empty one would
+    // be served as a directory that is not there
+    if (entry.name_length == 0 || entry.name_offset > strings_length ||
+        entry.name_length > strings_length - entry.name_offset) {
+      return false;
+    }
+
+    // A view naming a policy the artifact does not carry could never be
+    // resolved to, and on a full mask would shift past the width of a set
+    if (header->policy_count < Authentication::MAXIMUM_POLICIES &&
+        (entry.policies >> header->policy_count) != 0) {
+      return false;
+    }
+
+    names_the_anonymous = names_the_anonymous || entry.policies == 0;
+  }
+
+  if (!names_the_anonymous) {
     return false;
   }
 
@@ -123,6 +160,8 @@ auto structurally_valid(const sourcemeta::core::FileView &view) noexcept
       const auto &entry{policies[index]};
       if (entry.metadata_offset != metadata_cursor ||
           entry.metadata_length > size - metadata_cursor ||
+          entry.name_offset > strings_length ||
+          entry.name_length > strings_length - entry.name_offset ||
           entry.algorithm >
               static_cast<std::uint8_t>(Authentication::Algorithm::Sha256) ||
           entry.type > static_cast<std::uint8_t>(Authentication::Type::OIDC)) {
@@ -833,13 +872,20 @@ struct Authentication::Impl {
     }
 
     this->nodes_ = view->as<AuthenticationNode>(header->nodes_offset);
-    // The edge and string sections are empty when no policy declares a nested
-    // prefix, in which case they sit at the end of the buffer and must not be
-    // addressed
+    // The edge section is empty when no policy declares a nested prefix, in
+    // which case it sits at the end of the buffer and must not be addressed
     if (header->edge_count > 0) {
       this->edges_ = view->as<AuthenticationEdge>(header->edges_offset);
+    }
+
+    // Every name is a range into the string section, so it is addressed
+    // whenever anything was named rather than only when a prefix was nested
+    if (header->strings_length > 0) {
       this->strings_ = view->as<char>(header->strings_offset);
     }
+
+    this->views_ = view->as<AuthenticationViewEntry>(header->views_offset);
+    this->view_count_ = header->view_count;
 
     if (header->policy_count > 0) {
       this->policies_ =
@@ -1021,6 +1067,26 @@ struct Authentication::Impl {
     }
 
     return result;
+  }
+
+  // The name a set of policies is served under, read from the recorded table
+  // rather than spelled again here
+  [[nodiscard]] auto view_name(const Authentication::PolicySet policies) const
+      -> std::string_view {
+    const auto *views{
+        static_cast<const AuthenticationViewEntry *>(this->views_)};
+    for (std::uint32_t index{0}; index < this->view_count_; index += 1) {
+      if (views[index].policies == policies) {
+        return {this->strings_ + views[index].name_offset,
+                views[index].name_length};
+      }
+    }
+
+    // Every set a caller can be placed in is named, since the table holds one
+    // entry per policy and one per combination that can be satisfied at once.
+    // An unconfigured instance has no table at all, and serves the one view
+    // everything is served under
+    return VIEW_PUBLIC;
   }
 
   [[nodiscard]] auto admits_jwt(const std::span<const std::byte> metadata,
@@ -1702,6 +1768,11 @@ struct Authentication::Impl {
   const void *policies_{nullptr};
   std::uint32_t policy_count_{0};
 
+  // The view table, computed where the policies were read and only looked up
+  // here, so that what a build wrote and what this serves cannot disagree
+  const void *views_{nullptr};
+  std::uint32_t view_count_{0};
+
   // The parsed claim rules of each policy, in the same order as the table
   // above, null where a policy declares none
   std::vector<sourcemeta::core::JSON> claims_;
@@ -1841,6 +1912,12 @@ auto Authentication::admits(const Authentication::Path &path,
 auto Authentication::classify(const Credentials &credentials) const
     -> Authentication::PolicySet {
   return this->impl_->classify(credentials.bearer, credentials.cookies);
+}
+
+auto Authentication::view(const Credentials &credentials) const
+    -> std::string_view {
+  return this->impl_->view_name(
+      this->impl_->classify(credentials.bearer, credentials.cookies));
 }
 
 auto Authentication::interactive(const std::string_view name) const

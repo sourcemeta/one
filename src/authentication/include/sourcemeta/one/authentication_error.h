@@ -85,6 +85,60 @@ private:
   std::size_t count_;
 };
 
+// Raised when an authentication policy carries no name, shares one with
+// another, or takes the name every caller holding nothing is served under. A
+// view is named after the policies it comprises, so any of the three leaves a
+// view naming somewhere else or nowhere
+class SOURCEMETA_ONE_AUTHENTICATION_EXPORT AuthenticationPolicyNameError
+    : public std::exception {
+public:
+  AuthenticationPolicyNameError(std::filesystem::path path, std::string name)
+      : path_{std::move(path)}, name_{std::move(name)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "An authentication policy requires a name of its own";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto name() const noexcept -> const std::string & {
+    return this->name_;
+  }
+
+private:
+  std::filesystem::path path_;
+  std::string name_;
+};
+
+// Raised when a policy is named exactly as the view over some combination of
+// others is spelled, which would serve two sets of policies from one directory
+class SOURCEMETA_ONE_AUTHENTICATION_EXPORT AuthenticationViewNameCollisionError
+    : public std::exception {
+public:
+  AuthenticationViewNameCollisionError(std::filesystem::path path,
+                                       std::string name)
+      : path_{std::move(path)}, name_{std::move(name)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "An authentication policy name collides with a combination of "
+           "others";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto name() const noexcept -> const std::string & {
+    return this->name_;
+  }
+
+private:
+  std::filesystem::path path_;
+  std::string name_;
+};
+
 } // namespace sourcemeta::one
 
 #endif
