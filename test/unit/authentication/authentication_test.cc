@@ -90,6 +90,26 @@ TEST(permits_every_reference) {
       authentication.reference_permitted(at("/internal/a"), at("/internal/a")));
 }
 
+TEST(classifies_a_caller_presenting_nothing_as_anonymous) {
+  const sourcemeta::one::Authentication authentication{
+      std::filesystem::path{"/no/such/authentication.bin"}, {}};
+  EXPECT_EQ(authentication.classify({.bearer = ""}),
+            sourcemeta::one::Authentication::PolicySet{0});
+}
+
+TEST(classifies_a_caller_presenting_a_credential_as_anonymous) {
+  const std::array<std::string_view, 1> cookies{
+      {"sourcemeta_one_session=whatever"}};
+  const sourcemeta::one::Authentication authentication{
+      std::filesystem::path{"/no/such/authentication.bin"}, {}};
+  EXPECT_EQ(authentication.classify({.bearer = "anything"}),
+            sourcemeta::one::Authentication::PolicySet{0});
+  EXPECT_EQ(authentication.classify({.bearer = "", .cookies = cookies}),
+            sourcemeta::one::Authentication::PolicySet{0});
+  EXPECT_EQ(authentication.classify({.bearer = "another", .cookies = cookies}),
+            sourcemeta::one::Authentication::PolicySet{0});
+}
+
 TEST(views_of_nothing_are_the_public_one_alone) {
   const auto views{sourcemeta::one::Authentication::views({})};
   EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{

@@ -935,43 +935,92 @@ struct Authentication::Impl {
         continue;
       }
 
-      const auto &entry{policies[index]};
-      std::span<const std::byte> metadata;
-      if (entry.metadata_length > 0) {
-        metadata = {this->view_->as<std::byte>(entry.metadata_offset),
-                    entry.metadata_length};
-      }
-
-      const auto type{static_cast<Authentication::Type>(entry.type)};
-      if (type == Authentication::Type::JWT) {
-        if (token.has_value() &&
-            this->admits_jwt(metadata, token.value(), required_audience,
-                             this->claims_[index])) {
-          return {.allowed = true,
-                  .principal = Authentication::Principal{
-                      .type = type, .policy = static_cast<std::size_t>(index)}};
-        }
-      } else if (type == Authentication::Type::OIDC) {
-        // An interactive policy authenticates a person through the session its
-        // browser login established, never a presented credential. A request
-        // that presented one is asking to be read as that credential, so its
-        // session is not consulted at all rather than quietly widening what it
-        // reaches
-        if (credential.empty() && this->admits_session(metadata, cookies)) {
-          return {.allowed = true,
-                  .principal = Authentication::Principal{
-                      .type = type, .policy = static_cast<std::size_t>(index)}};
-        }
-      } else if (admits_apikey(
-                     metadata, credential,
-                     static_cast<Authentication::Algorithm>(entry.algorithm))) {
-        return {.allowed = true,
-                .principal = Authentication::Principal{
-                    .type = type, .policy = static_cast<std::size_t>(index)}};
+      if (this->admits_policy(index, credential, cookies, token,
+                              required_audience)) {
+        return {
+            .allowed = true,
+            .principal = Authentication::Principal{
+                .type = static_cast<Authentication::Type>(policies[index].type),
+                .policy = static_cast<std::size_t>(index)}};
       }
     }
 
     return {.allowed = false, .principal = std::nullopt};
+  }
+
+  // Whether one policy accepts what a request presented, which is the whole of
+  // reading a credential and is asked both of a policy governing a path and of
+  // every policy when placing a caller. Two answers to this could disagree,
+  // so there is one
+  [[nodiscard]] auto
+  admits_policy(const std::uint32_t index, const std::string_view credential,
+                const std::span<const std::string_view> cookies,
+                const std::optional<sourcemeta::core::JWT> &token,
+                const std::string_view required_audience) const -> bool {
+    const auto &entry{
+        static_cast<const AuthenticationPolicyEntry *>(this->policies_)[index]};
+    std::span<const std::byte> metadata;
+    if (entry.metadata_length > 0) {
+      metadata = {this->view_->as<std::byte>(entry.metadata_offset),
+                  entry.metadata_length};
+    }
+
+    const auto type{static_cast<Authentication::Type>(entry.type)};
+    if (type == Authentication::Type::JWT) {
+      return token.has_value() &&
+             this->admits_jwt(metadata, token.value(), required_audience,
+                              this->claims_[index]);
+    }
+
+    // An interactive policy authenticates a person through the session its
+    // browser login established, never a presented credential. A request that
+    // presented one is asking to be read as that credential, so its session is
+    // not consulted at all rather than quietly widening what it reaches
+    if (type == Authentication::Type::OIDC) {
+      return credential.empty() && this->admits_session(metadata, cookies);
+    }
+
+    return admits_apikey(
+        metadata, credential,
+        static_cast<Authentication::Algorithm>(entry.algorithm));
+  }
+
+  // Which policies a caller satisfies, asked of every policy rather than of
+  // those governing one path, since a view describes the whole registry
+  [[nodiscard]] auto
+  classify(const std::string_view credential,
+           const std::span<const std::string_view> cookies) const
+      -> Authentication::PolicySet {
+    // Presenting nothing satisfies nothing, and this is the common request, so
+    // it answers without reading a policy at all
+    if (this->nodes_ == nullptr || (credential.empty() && cookies.empty())) {
+      return 0;
+    }
+
+    const auto token{sourcemeta::core::JWT::from(credential)};
+    const auto *policies{
+        static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
+    Authentication::PolicySet result{0};
+    for (std::uint32_t index{0}; index < this->policy_count_; index += 1) {
+      if (!this->admits_policy(index, credential, cookies, token, {})) {
+        continue;
+      }
+
+      // Only token policies combine, so anything else stands for the caller on
+      // its own and the first one reached is the one read
+      if (static_cast<Authentication::Type>(policies[index].type) !=
+          Authentication::Type::JWT) {
+        if (result == 0) {
+          return Authentication::PolicySet{1} << index;
+        }
+
+        continue;
+      }
+
+      result |= Authentication::PolicySet{1} << index;
+    }
+
+    return result;
   }
 
   [[nodiscard]] auto admits_jwt(const std::span<const std::byte> metadata,
@@ -1787,6 +1836,11 @@ auto Authentication::admits(const Authentication::Path &path,
     -> Authentication::Verdict {
   return this->impl_->admits(path.value(), credentials.bearer,
                              credentials.cookies);
+}
+
+auto Authentication::classify(const Credentials &credentials) const
+    -> Authentication::PolicySet {
+  return this->impl_->classify(credentials.bearer, credentials.cookies);
 }
 
 auto Authentication::interactive(const std::string_view name) const

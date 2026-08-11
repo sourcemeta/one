@@ -62,6 +62,13 @@ auto Authentication::admits_route(const std::string_view, const Credentials &,
   return {.allowed = true, .principal = std::nullopt};
 }
 
+// This edition declares no policies, so there is nobody to be other than
+// anonymous and every caller is classified the same way
+auto Authentication::classify(const Credentials &) const
+    -> Authentication::PolicySet {
+  return 0;
+}
+
 auto Authentication::governing(const Authentication::Path &) const
     -> std::vector<std::size_t> {
   return {};
