@@ -760,6 +760,12 @@ auto main(int argc, char *argv[]) noexcept -> int {
     std::print(stdout, "error: {}\n  at name {}\n  at path {}\n", error.what(),
                error.name(), error.path().string());
     return EXIT_FAILURE;
+  } catch (
+      const sourcemeta::one::ConfigurationSharedAuthenticationKeyError &error) {
+    std::print(
+        stdout, "error: {}\n  at variable {}\n  at name {}\n  at path {}\n",
+        error.what(), error.variable(), error.name(), error.path().string());
+    return EXIT_FAILURE;
   } catch (const sourcemeta::one::ConfigurationInvalidAuthenticationIssuerError
                &error) {
     std::print(

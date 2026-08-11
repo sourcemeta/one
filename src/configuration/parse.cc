@@ -327,6 +327,7 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
   // Policy names are unique, and "public" is reserved because an empty policy
   // array on a listing already means public
   std::set<std::string_view> authentication_names;
+  std::set<std::string_view> authentication_keys;
   for (const auto &entry : result.authentication) {
     if (entry.name == "public") {
       throw ConfigurationReservedAuthenticationNameError(configuration_path,
@@ -336,6 +337,15 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
     if (!authentication_names.emplace(entry.name).second) {
       throw ConfigurationDuplicateAuthenticationNameError(configuration_path,
                                                           entry.name);
+    }
+
+    // A key opening more than one policy makes a caller belong to several at
+    // once, which no single view names
+    for (const auto &key : entry.keys) {
+      if (!authentication_keys.emplace(key).second) {
+        throw ConfigurationSharedAuthenticationKeyError(configuration_path,
+                                                        entry.name, key);
+      }
     }
   }
 

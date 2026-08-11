@@ -104,6 +104,36 @@ private:
   std::string name_;
 };
 
+class ConfigurationSharedAuthenticationKeyError : public std::exception {
+public:
+  ConfigurationSharedAuthenticationKeyError(std::filesystem::path path,
+                                            std::string name,
+                                            std::string variable)
+      : path_{std::move(path)}, name_{std::move(name)},
+        variable_{std::move(variable)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "An authentication policy key is used more than once";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto name() const noexcept -> const std::string & {
+    return this->name_;
+  }
+
+  [[nodiscard]] auto variable() const noexcept -> const std::string & {
+    return this->variable_;
+  }
+
+private:
+  std::filesystem::path path_;
+  std::string name_;
+  std::string variable_;
+};
+
 class ConfigurationReservedAuthenticationNameError : public std::exception {
 public:
   ConfigurationReservedAuthenticationNameError(std::filesystem::path path,
