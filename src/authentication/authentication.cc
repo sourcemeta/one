@@ -86,11 +86,11 @@ auto Authentication::view_at([[maybe_unused]] const std::size_t index) const
   return {.name = VIEW_PUBLIC, .policies = 0};
 }
 
+// One view, so every location is part of what it shows, and any other index
+// names no view and is refused rather than shown
 auto Authentication::visible(const Authentication::Path &,
-                             [[maybe_unused]] const std::size_t view) const
-    -> bool {
-  assert(view == 0);
-  return true;
+                             const std::size_t view) const -> bool {
+  return view == 0;
 }
 
 auto Authentication::governing(const Authentication::Path &) const

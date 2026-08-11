@@ -2044,6 +2044,15 @@ auto Authentication::view_at(const std::size_t index) const
 
 auto Authentication::visible(const Authentication::Path &path,
                              const std::size_t view) const -> bool {
+  // An index naming no view is one nothing can be shown under, and an instance
+  // that could not read its artifact names none at all. Both answer here rather
+  // than below, since what nobody governs would otherwise be shown by an
+  // instance that knows nothing about who governs what, which is the one way
+  // this could disclose more than the gate admits
+  if (view >= this->impl_->view_count()) {
+    return false;
+  }
+
   const auto governing{this->impl_->match(path.value())};
   return governing == 0 ||
          (governing & this->impl_->view_at(view).policies) != 0;
