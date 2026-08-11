@@ -367,6 +367,13 @@ never what to expose. When a path is governed by more than one policy, the
 policies are unioned, so a single collection can admit both a machine presenting a
 credential and a user carrying a session.
 
+A request can carry both an `Authorization` header and a session cookie, and when
+it does, **what it presented decides**. A request carrying a bearer value is read
+as that credential alone, and its session is not consulted. A request carrying no
+bearer value is read as its session. The reason is that attaching a header is
+something a caller does deliberately for that request, while a browser sends a
+session cookie whether or not anybody meant it to count.
+
 None of it is stored. Every credential is checked as it arrives, against the
 environment or against the issuer's published key set, and a session is a sealed
 value the instance keeps no record of, so any replica verifies any of them on

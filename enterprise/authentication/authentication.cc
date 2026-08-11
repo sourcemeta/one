@@ -952,9 +952,12 @@ struct Authentication::Impl {
                       .type = type, .policy = static_cast<std::size_t>(index)}};
         }
       } else if (type == Authentication::Type::OIDC) {
-        // An interactive policy authenticates a person through the session
-        // its browser login established, never a presented credential
-        if (this->admits_session(metadata, cookies)) {
+        // An interactive policy authenticates a person through the session its
+        // browser login established, never a presented credential. A request
+        // that presented one is asking to be read as that credential, so its
+        // session is not consulted at all rather than quietly widening what it
+        // reaches
+        if (credential.empty() && this->admits_session(metadata, cookies)) {
           return {.allowed = true,
                   .principal = Authentication::Principal{
                       .type = type, .policy = static_cast<std::size_t>(index)}};

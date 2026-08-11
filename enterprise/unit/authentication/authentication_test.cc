@@ -4759,3 +4759,100 @@ TEST(views_of_many_policies_across_issuers_are_never_refused) {
   const auto views{sourcemeta::one::Authentication::views(policies)};
   EXPECT_EQ(views.size(), 41);
 }
+
+TEST(a_presented_key_decides_over_a_session) {
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
+  setenv("ONE_TEST_PRECEDENCE_SECRET", "confidential", 1);
+  setenv("ONE_TEST_PRECEDENCE_KEY", "machine-secret", 1);
+  const std::array<std::string_view, 1> portal_paths{{"/portal"}};
+  const std::array<std::string_view, 1> machine_paths{{"/machine"}};
+  const std::array<std::string_view, 1> machine_keys{
+      {"ONE_TEST_PRECEDENCE_KEY"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = portal_paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "acme",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_PRECEDENCE_SECRET",
+        .name = "okta",
+        .session_secrets = SESSION_SECRETS},
+       {.paths = machine_paths, .keys = machine_keys, .name = "machine"}}};
+  const auto path{test_path("precedence.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  const auto sealed{sourcemeta::one::Authentication::seal_value(
+      R"JSON({ "policy": "okta", "subject": "jane@acme.test" })JSON",
+      sourcemeta::one::Authentication::Purpose::Session, SESSION_SECRET,
+      minted_now(), session_expiry())};
+  const std::string cookies{"sourcemeta_one_session=" + sealed};
+
+  // Each alone opens what it governs, which is what makes the pair below a
+  // choice between two live credentials rather than one working answer
+  EXPECT_TRUE(
+      authentication
+          .admits(at("/portal/x"), {.bearer = "", .cookies = fields(cookies)})
+          .allowed);
+  EXPECT_TRUE(
+      authentication.admits(at("/machine/x"), {.bearer = "machine-secret"})
+          .allowed);
+
+  // Presented together, the request is read as the key it carried, so the
+  // portal the session would have opened is refused
+  EXPECT_FALSE(authentication
+                   .admits(at("/portal/x"), {.bearer = "machine-secret",
+                                             .cookies = fields(cookies)})
+                   .allowed);
+  const auto verdict{
+      authentication.admits(at("/machine/x"), {.bearer = "machine-secret",
+                                               .cookies = fields(cookies)})};
+  EXPECT_TRUE(verdict.allowed);
+  EXPECT_TRUE(verdict.principal.has_value());
+  EXPECT_EQ(verdict.principal.value().type,
+            sourcemeta::one::Authentication::Type::ApiKey);
+  EXPECT_EQ(verdict.principal.value().policy, std::size_t{1});
+}
+
+TEST(a_presented_key_that_opens_nothing_sets_a_session_aside) {
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
+  setenv("ONE_TEST_FALLBACK_SECRET", "confidential", 1);
+  setenv("ONE_TEST_FALLBACK_KEY", "machine-secret", 1);
+  const std::array<std::string_view, 1> portal_paths{{"/portal"}};
+  const std::array<std::string_view, 1> machine_paths{{"/machine"}};
+  const std::array<std::string_view, 1> machine_keys{{"ONE_TEST_FALLBACK_KEY"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = portal_paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "acme",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_FALLBACK_SECRET",
+        .name = "okta",
+        .session_secrets = SESSION_SECRETS},
+       {.paths = machine_paths, .keys = machine_keys, .name = "machine"}}};
+  const auto path{test_path("precedence_stale.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  const auto sealed{sourcemeta::one::Authentication::seal_value(
+      R"JSON({ "policy": "okta", "subject": "jane@acme.test" })JSON",
+      sourcemeta::one::Authentication::Purpose::Session, SESSION_SECRET,
+      minted_now(), session_expiry())};
+  const std::string cookies{"sourcemeta_one_session=" + sealed};
+
+  // A key that opens nothing is still a key that was presented, so the session
+  // is set aside and nothing admits. The cost of the rule, and the reason it is
+  // worth stating rather than leaving to be discovered
+  EXPECT_FALSE(authentication
+                   .admits(at("/portal/x"), {.bearer = "retired-secret",
+                                             .cookies = fields(cookies)})
+                   .allowed);
+
+  // The same session presented on its own still opens it, so what changed is
+  // what the request carried rather than whether the session is any good
+  EXPECT_TRUE(
+      authentication
+          .admits(at("/portal/x"), {.bearer = "", .cookies = fields(cookies)})
+          .allowed);
+}
