@@ -2671,14 +2671,25 @@ TEST(save_writes_the_largest_table_a_configuration_can_declare) {
   std::vector<std::string> path_storage;
   std::vector<std::string> name_storage;
   std::vector<std::string> issuer_storage;
+  std::vector<std::string> claims_storage;
   path_storage.reserve(total);
   name_storage.reserve(total);
   issuer_storage.reserve(total);
+  claims_storage.reserve(total);
   for (std::size_t index{0}; index < total; index += 1) {
     path_storage.push_back("/p" + std::to_string(index));
     name_storage.push_back("p" + std::to_string(index));
-    issuer_storage.push_back("https://idp.test/" +
-                             std::to_string(index / per_group));
+    // The first group answers to the tokens these tests mint, so that a caller
+    // reaches into the table rather than only past it. The rest name issuers of
+    // their own, which is what keeps the groups apart and the table at its
+    // largest
+    issuer_storage.push_back(index < per_group
+                                 ? "acme"
+                                 : "https://idp.test/" +
+                                       std::to_string(index / per_group));
+    claims_storage.push_back(
+        R"JSON({ "groups": { "essential": true, "values": [ "g)JSON" +
+        std::to_string(index) + R"JSON(" ] } })JSON");
   }
 
   std::vector<std::string_view> path_views;
@@ -2699,6 +2710,7 @@ TEST(save_writes_the_largest_table_a_configuration_can_declare) {
          .audience = "client",
          .jwks_uri = "https://idp.test/jwks",
          .algorithms = algorithms,
+         .claims = claims_storage[index],
          .name = name_storage[index]});
   }
 
@@ -2708,8 +2720,32 @@ TEST(save_writes_the_largest_table_a_configuration_can_declare) {
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                         nullptr)};
   EXPECT_EQ(authentication.view({.bearer = ""}), "public");
+  // A name read back out of a table this size, rather than the entry that sits
+  // first in it whatever was written after
+  EXPECT_EQ(authentication.view(
+                {.bearer = token_with(R"JSON({ "groups": [ "g0" ] })JSON")}),
+            "p0");
+  EXPECT_EQ(authentication.view(
+                {.bearer = token_with(R"JSON({ "groups": [ "g15" ] })JSON")}),
+            "p15");
+  // And a combination, spelled from its members sorted rather than from the
+  // order the token happened to carry them in
+  EXPECT_EQ(
+      authentication.view(
+          {.bearer = token_with(R"JSON({ "groups": [ "g1", "g0" ] })JSON")}),
+      "p0+p1");
+  EXPECT_EQ(
+      authentication.view(
+          {.bearer = token_with(R"JSON({ "groups": [ "g2", "g15" ] })JSON")}),
+      "p15+p2");
+  // A token no policy answers to is placed nowhere, which is the anonymous
+  // view rather than a name the table happens to carry
+  EXPECT_EQ(authentication.view(
+                {.bearer = token_with(R"JSON({ "groups": [ "gx" ] })JSON")}),
+            "public");
 }
 
 TEST(save_rejects_a_policy_named_as_a_combination_of_others) {
