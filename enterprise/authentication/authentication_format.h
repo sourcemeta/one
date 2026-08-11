@@ -8,7 +8,7 @@
 namespace sourcemeta::one {
 
 constexpr std::uint32_t AUTHENTICATION_MAGIC{0x48545541};
-constexpr std::uint32_t AUTHENTICATION_VERSION{13};
+constexpr std::uint32_t AUTHENTICATION_VERSION{14};
 
 // The artifact begins with this header. Every variable-length section is
 // located through an absolute byte offset so the matcher can address it
@@ -19,8 +19,10 @@ struct AuthenticationHeader {
   std::uint32_t policy_count;
   std::uint32_t node_count;
   std::uint32_t edge_count;
+  std::uint32_t view_count;
   std::uint32_t policies_offset;
   std::uint32_t nodes_offset;
+  std::uint32_t views_offset;
   std::uint32_t edges_offset;
   std::uint32_t strings_offset;
   std::uint32_t strings_length;
@@ -46,22 +48,38 @@ struct AuthenticationEdge {
 // One entry per policy, in declaration order, mirroring the bit assigned to
 // it in the node masks. The metadata range locates the policy's parameters by
 // absolute file offset, the type selects how the metadata is interpreted, and
-// the algorithm selects how an apiKey credential is compared against its keys
+// the algorithm selects how an apiKey credential is compared against its keys.
+// The name is held here rather than inside the metadata so that naming a view
+// after the policies it comprises reads one field per policy, whatever their
+// types
 struct AuthenticationPolicyEntry {
   std::uint32_t metadata_offset;
   std::uint32_t metadata_length;
+  std::uint32_t name_offset;
+  std::uint32_t name_length;
   std::uint8_t algorithm;
   std::uint8_t type;
 };
 
+// One entry per view, ordered as the table is built. The set names the
+// policies a caller must satisfy to be placed here, so resolving a view is a
+// comparison against what classification returned rather than a search
+struct alignas(8) AuthenticationViewEntry {
+  std::uint64_t policies;
+  std::uint32_t name_offset;
+  std::uint32_t name_length;
+};
+
 // The structures are cast directly out of the memory-mapped buffer, so their
 // layout must stay fixed across edits and compilers
-static_assert(sizeof(AuthenticationHeader) == 40);
+static_assert(sizeof(AuthenticationHeader) == 48);
 static_assert(sizeof(AuthenticationNode) == 16);
 static_assert(alignof(AuthenticationNode) == 8);
 static_assert(sizeof(AuthenticationEdge) == 12);
-static_assert(sizeof(AuthenticationPolicyEntry) == 12);
+static_assert(sizeof(AuthenticationPolicyEntry) == 20);
 static_assert(alignof(AuthenticationPolicyEntry) == 4);
+static_assert(sizeof(AuthenticationViewEntry) == 16);
+static_assert(alignof(AuthenticationViewEntry) == 8);
 
 // Advance the cursor to the next non-empty path segment and return it. The
 // returned view is empty once the path is exhausted. Leading, trailing, and

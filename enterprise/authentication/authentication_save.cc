@@ -238,6 +238,10 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
                       &std::pair<std::string, std::uint32_t>::first);
   }
 
+  // The table is computed once here, so that the naming rule is applied where
+  // the policies are read rather than by every server that later serves them
+  const auto table{Authentication::views(policies)};
+
   std::string strings;
   std::vector<AuthenticationEdge> edges;
   std::vector<AuthenticationNode> serialized;
@@ -261,12 +265,37 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
     serialized.push_back(entry);
   }
 
+  // A policy is named in the same blob its path segments live in, and a view
+  // after it, so that every name is one range into one section
+  std::vector<AuthenticationViewEntry> view_table;
+  view_table.reserve(table.size());
+  std::vector<std::pair<std::uint32_t, std::uint32_t>> policy_names;
+  policy_names.reserve(policies.size());
+  for (const auto &policy : policies) {
+    policy_names.emplace_back(static_cast<std::uint32_t>(strings.size()),
+                              static_cast<std::uint32_t>(policy.name.size()));
+    strings += policy.name;
+  }
+
+  for (const auto &view : table) {
+    AuthenticationViewEntry entry{};
+    for (const auto member : view.policies) {
+      entry.policies |= std::uint64_t{1} << member;
+    }
+
+    entry.name_offset = static_cast<std::uint32_t>(strings.size());
+    entry.name_length = static_cast<std::uint32_t>(view.name.size());
+    strings += view.name;
+    view_table.push_back(entry);
+  }
+
   AuthenticationHeader header{};
   header.magic = AUTHENTICATION_MAGIC;
   header.version = AUTHENTICATION_VERSION;
   header.policy_count = static_cast<std::uint32_t>(policies.size());
   header.node_count = static_cast<std::uint32_t>(serialized.size());
   header.edge_count = static_cast<std::uint32_t>(edges.size());
+  header.view_count = static_cast<std::uint32_t>(view_table.size());
   header.policies_offset =
       static_cast<std::uint32_t>(sizeof(AuthenticationHeader));
   // The node array begins the word-aligned region the matcher addresses
@@ -275,9 +304,16 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
       header.policies_offset +
       header.policy_count *
           static_cast<std::uint32_t>(sizeof(AuthenticationPolicyEntry)));
-  header.edges_offset =
+  // Both the node and the view arrays hold eight-byte-aligned entries of the
+  // same width, so placing the views between the nodes and the byte-packed
+  // edges keeps every section aligned without padding between them
+  header.views_offset =
       header.nodes_offset + header.node_count * static_cast<std::uint32_t>(
                                                     sizeof(AuthenticationNode));
+  header.edges_offset =
+      header.views_offset +
+      header.view_count *
+          static_cast<std::uint32_t>(sizeof(AuthenticationViewEntry));
   header.strings_offset =
       header.edges_offset + header.edge_count * static_cast<std::uint32_t>(
                                                     sizeof(AuthenticationEdge));
@@ -289,7 +325,8 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
   std::vector<AuthenticationPolicyEntry> policy_table;
   policy_table.reserve(policies.size());
   std::vector<std::byte> metadata;
-  for (const auto &policy : policies) {
+  for (std::size_t index{0}; index < policies.size(); index += 1) {
+    const auto &policy{policies[index]};
     std::vector<std::byte> policy_metadata;
     if (policy.type == Authentication::Type::JWT) {
       policy_metadata = encode_jwt_metadata(policy.issuer, policy.audience,
@@ -321,6 +358,8 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
     entry.metadata_offset =
         metadata_start + static_cast<std::uint32_t>(metadata.size());
     entry.metadata_length = static_cast<std::uint32_t>(policy_metadata.size());
+    entry.name_offset = policy_names[index].first;
+    entry.name_length = policy_names[index].second;
     entry.algorithm = static_cast<std::uint8_t>(policy.algorithm);
     entry.type = static_cast<std::uint8_t>(policy.type);
     policy_table.push_back(entry);
@@ -340,6 +379,11 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
 
   std::memcpy(buffer.data() + header.nodes_offset, serialized.data(),
               serialized.size() * sizeof(AuthenticationNode));
+  if (!view_table.empty()) {
+    std::memcpy(buffer.data() + header.views_offset, view_table.data(),
+                view_table.size() * sizeof(AuthenticationViewEntry));
+  }
+
   if (!edges.empty()) {
     std::memcpy(buffer.data() + header.edges_offset, edges.data(),
                 edges.size() * sizeof(AuthenticationEdge));

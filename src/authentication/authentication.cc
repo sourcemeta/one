@@ -69,6 +69,12 @@ auto Authentication::classify(const Credentials &) const
   return 0;
 }
 
+// One way to see the registry means one view, which is still named rather than
+// implied so that the output is one shape across editions
+auto Authentication::view(const Credentials &) const -> std::string_view {
+  return VIEW_PUBLIC;
+}
+
 auto Authentication::governing(const Authentication::Path &) const
     -> std::vector<std::size_t> {
   return {};

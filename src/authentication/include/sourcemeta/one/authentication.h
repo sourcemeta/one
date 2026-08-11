@@ -276,6 +276,17 @@ public:
   [[nodiscard]] auto classify(const Credentials &credentials) const
       -> PolicySet;
 
+  /// The name of the view a caller is served, which is the directory their
+  /// artifacts were written under. A caller presenting nothing is served the
+  /// anonymous view.
+  ///
+  /// The name comes from the table the build recorded rather than from a rule
+  /// applied again here, so what a build wrote and what a server serves cannot
+  /// disagree. The value points into the artifact and stays valid for the
+  /// lifetime of this instance.
+  [[nodiscard]] auto view(const Credentials &credentials) const
+      -> std::string_view;
+
   // The configuration declaration indices of the policies that govern a path,
   // sorted ascending
   [[nodiscard]] auto governing(const Path &path) const
