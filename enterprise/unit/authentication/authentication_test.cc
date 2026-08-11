@@ -2591,9 +2591,9 @@ TEST(save_rejects_a_nameless_policy) {
   try {
     sourcemeta::one::Authentication::save(policies, path, path, anywhere);
     FAIL();
-  } catch (const std::runtime_error &error) {
+  } catch (const sourcemeta::one::AuthenticationPolicyNameError &error) {
     EXPECT_STREQ(error.what(),
-                 "Authentication policies require a distinct name");
+                 "An authentication policy requires a name of its own");
   }
 }
 
@@ -2639,9 +2639,9 @@ TEST(save_rejects_a_nameless_key_policy) {
   try {
     sourcemeta::one::Authentication::save(policies, path, path, anywhere);
     FAIL();
-  } catch (const std::runtime_error &error) {
+  } catch (const sourcemeta::one::AuthenticationPolicyNameError &error) {
     EXPECT_STREQ(error.what(),
-                 "Authentication policies require a distinct name");
+                 "An authentication policy requires a name of its own");
   }
 }
 
@@ -2657,10 +2657,64 @@ TEST(save_rejects_two_policies_sharing_a_name) {
   try {
     sourcemeta::one::Authentication::save(policies, path, path, anywhere);
     FAIL();
-  } catch (const std::runtime_error &error) {
+  } catch (const sourcemeta::one::AuthenticationPolicyNameError &error) {
     EXPECT_STREQ(error.what(),
-                 "Authentication policies require a distinct name");
+                 "An authentication policy requires a name of its own");
   }
+}
+
+TEST(save_rejects_a_policy_named_as_a_combination_of_others) {
+  setenv("ONE_TEST_KEY_COMBINATION", "combination-secret", 1);
+  const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
+  const std::array<std::string_view, 1> beta_paths{{"/beta"}};
+  const std::array<std::string_view, 1> machine_paths{{"/machine"}};
+  const std::array<std::string_view, 1> machine_keys{
+      {"ONE_TEST_KEY_COMBINATION"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::ES256}};
+  // The two token policies name one issuer, so they combine into a view spelled
+  // by joining them, which is the name the third policy also carries
+  const std::array<sourcemeta::one::Authentication::Policy, 3> policies{
+      {{.paths = alpha_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms,
+        .name = "alpha"},
+       {.paths = beta_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms,
+        .name = "beta"},
+       {.paths = machine_paths, .keys = machine_keys, .name = "alpha+beta"}}};
+  const auto path{test_path("name_combination.bin")};
+  try {
+    sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+    FAIL();
+  } catch (const sourcemeta::one::AuthenticationViewNameCollisionError &error) {
+    EXPECT_STREQ(
+        error.what(),
+        "An authentication policy name collides with a combination of others");
+  }
+}
+
+TEST(save_accepts_a_separator_that_spells_no_other_combination) {
+  setenv("ONE_TEST_KEY_LONE_SEPARATOR", "separator-secret", 1);
+  const std::array<std::string_view, 1> machine_paths{{"/machine"}};
+  const std::array<std::string_view, 1> machine_keys{
+      {"ONE_TEST_KEY_LONE_SEPARATOR"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = machine_paths, .keys = machine_keys, .name = "alpha+beta"}}};
+  const auto path{test_path("name_separator.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_EQ(authentication.view({.bearer = "separator-secret"}), "alpha+beta");
+  EXPECT_EQ(authentication.view({.bearer = ""}), "public");
 }
 
 TEST(save_rejects_a_policy_taking_the_anonymous_name) {
@@ -2672,9 +2726,9 @@ TEST(save_rejects_a_policy_taking_the_anonymous_name) {
   try {
     sourcemeta::one::Authentication::save(policies, path, path, anywhere);
     FAIL();
-  } catch (const std::runtime_error &error) {
+  } catch (const sourcemeta::one::AuthenticationPolicyNameError &error) {
     EXPECT_STREQ(error.what(),
-                 "Authentication policies require a distinct name");
+                 "An authentication policy requires a name of its own");
   }
 }
 

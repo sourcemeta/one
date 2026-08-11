@@ -216,14 +216,12 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
   for (std::size_t index{0}; index < policies.size(); index += 1) {
     const auto name{policies[index].name};
     if (name.empty() || name == VIEW_PUBLIC) {
-      throw std::runtime_error(
-          "Authentication policies require a distinct name");
+      throw AuthenticationPolicyNameError(configuration, std::string{name});
     }
 
     for (std::size_t other{0}; other < index; other += 1) {
       if (policies[other].name == name) {
-        throw std::runtime_error(
-            "Authentication policies require a distinct name");
+        throw AuthenticationPolicyNameError(configuration, std::string{name});
       }
     }
   }
@@ -261,6 +259,20 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
   // The table is computed once here, so that the naming rule is applied where
   // the policies are read rather than by every server that later serves them
   const auto table{Authentication::views(policies)};
+
+  // Distinct policy names do not by themselves make distinct view names, since
+  // a view naming several is spelled by joining theirs, which a single policy
+  // could be named to match. Two views sharing a name are two sets of policies
+  // served from one directory, so what was actually spelled is checked rather
+  // than what it was spelled from
+  for (std::size_t index{0}; index < table.size(); index += 1) {
+    for (std::size_t other{0}; other < index; other += 1) {
+      if (table[other].name == table[index].name) {
+        throw AuthenticationViewNameCollisionError(configuration,
+                                                   table[index].name);
+      }
+    }
+  }
 
   std::string strings;
   std::vector<AuthenticationEdge> edges;
