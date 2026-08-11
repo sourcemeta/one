@@ -80,17 +80,16 @@ auto Authentication::view(const Credentials &) const -> std::string_view {
 // every location is part of what that view shows
 auto Authentication::view_count() const -> std::size_t { return 1; }
 
-auto Authentication::view_at(const std::size_t index) const
+auto Authentication::view_at([[maybe_unused]] const std::size_t index) const
     -> Authentication::RecordedView {
   assert(index == 0);
-  static_cast<void>(index);
   return {.name = VIEW_PUBLIC, .policies = 0};
 }
 
 auto Authentication::visible(const Authentication::Path &,
-                             const std::size_t view) const -> bool {
+                             [[maybe_unused]] const std::size_t view) const
+    -> bool {
   assert(view == 0);
-  static_cast<void>(view);
   return true;
 }
 
