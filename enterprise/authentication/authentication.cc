@@ -909,51 +909,6 @@ struct Authentication::Impl {
     return result;
   }
 
-  // Every policy is asked, rather than only those governing one path, because
-  // what a view is chosen by is what a caller can reach anywhere
-  [[nodiscard]] auto
-  satisfied(const std::string_view credential,
-            const std::span<const std::string_view> cookies) const
-      -> std::vector<std::size_t> {
-    std::vector<std::size_t> presented;
-    std::vector<std::size_t> held;
-    if (this->nodes_ == nullptr) {
-      return presented;
-    }
-
-    const auto token{sourcemeta::core::JWT::from(credential)};
-    const auto *policies{
-        static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
-    for (std::uint32_t index{0}; index < this->policy_count_; index += 1) {
-      const auto &entry{policies[index]};
-      std::span<const std::byte> metadata;
-      if (entry.metadata_length > 0) {
-        metadata = {this->view_->as<std::byte>(entry.metadata_offset),
-                    entry.metadata_length};
-      }
-
-      const auto type{static_cast<Authentication::Type>(entry.type)};
-      if (type == Authentication::Type::JWT) {
-        if (token.has_value() && this->admits_jwt(metadata, token.value(), {},
-                                                  this->claims_[index])) {
-          presented.push_back(index);
-        }
-      } else if (type == Authentication::Type::OIDC) {
-        if (credential.empty() && this->admits_session(metadata, cookies)) {
-          held.push_back(index);
-        }
-      } else if (admits_apikey(
-                     metadata, credential,
-                     static_cast<Authentication::Algorithm>(entry.algorithm))) {
-        presented.push_back(index);
-      }
-    }
-
-    // What was attached to this request deliberately decides, and a session is
-    // read only by a request that presented nothing else
-    return credential.empty() ? held : presented;
-  }
-
   [[nodiscard]] auto admits(const std::string_view registry_path,
                             const std::string_view credential,
                             const std::span<const std::string_view> cookies,
@@ -1825,11 +1780,6 @@ auto Authentication::views(
   result.insert(result.cend(), std::make_move_iterator(named.begin()),
                 std::make_move_iterator(named.end()));
   return result;
-}
-
-auto Authentication::satisfied(const Credentials &credentials) const
-    -> std::vector<std::size_t> {
-  return this->impl_->satisfied(credentials.bearer, credentials.cookies);
 }
 
 auto Authentication::admits(const Authentication::Path &path,

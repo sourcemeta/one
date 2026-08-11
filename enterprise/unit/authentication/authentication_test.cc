@@ -4760,75 +4760,7 @@ TEST(views_of_many_policies_across_issuers_are_never_refused) {
   EXPECT_EQ(views.size(), 41);
 }
 
-TEST(satisfied_by_nothing_when_nothing_is_presented) {
-  const std::array<std::string_view, 1> paths{{"/private"}};
-  const std::array<std::string_view, 1> keys{{"ONE_TEST_SATISFIED_KEY"}};
-  setenv("ONE_TEST_SATISFIED_KEY", "vault-secret", 1);
-  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{.paths = paths, .keys = keys, .name = "vault"}}};
-  const auto path{test_path("satisfied_none.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
-
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-  EXPECT_EQ(authentication.satisfied({.bearer = ""}),
-            (std::vector<std::size_t>{}));
-  EXPECT_EQ(authentication.satisfied({.bearer = "wrong"}),
-            (std::vector<std::size_t>{}));
-}
-
-TEST(satisfied_names_every_policy_a_key_opens_wherever_it_is) {
-  setenv("ONE_TEST_SHARED_KEY", "shared-secret", 1);
-  const std::array<std::string_view, 1> first_paths{{"/one"}};
-  const std::array<std::string_view, 1> second_paths{{"/two"}};
-  const std::array<std::string_view, 1> third_paths{{"/three"}};
-  const std::array<std::string_view, 1> shared{{"ONE_TEST_SHARED_KEY"}};
-  const std::array<std::string_view, 1> other{{"ONE_TEST_SATISFIED_KEY"}};
-  const std::array<sourcemeta::one::Authentication::Policy, 3> policies{
-      {{.paths = first_paths, .keys = shared, .name = "first"},
-       {.paths = second_paths, .keys = other, .name = "second"},
-       {.paths = third_paths, .keys = shared, .name = "third"}}};
-  const auto path{test_path("satisfied_shared.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
-
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-
-  // The question is what this credential opens anywhere, not at one path, so
-  // both policies listing the key are named and the one that does not is absent
-  EXPECT_EQ(authentication.satisfied({.bearer = "shared-secret"}),
-            (std::vector<std::size_t>{0, 2}));
-}
-
-TEST(satisfied_by_a_session_names_the_policy_that_minted_it) {
-  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
-  setenv("ONE_TEST_SATISFIED_SESSION", "confidential", 1);
-  const std::array<std::string_view, 1> paths{{"/portal"}};
-  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{.paths = paths,
-        .type = sourcemeta::one::Authentication::Type::OIDC,
-        .issuer = "acme",
-        .client_id = "client",
-        .client_secret_variable = "ONE_TEST_SATISFIED_SESSION",
-        .name = "okta",
-        .session_secrets = SESSION_SECRETS}}};
-  const auto path{test_path("satisfied_session.bin")};
-  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
-
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-  const auto sealed{sourcemeta::one::Authentication::seal_value(
-      R"JSON({ "policy": "okta", "subject": "jane@acme.test" })JSON",
-      sourcemeta::one::Authentication::Purpose::Session, SESSION_SECRET,
-      minted_now(), session_expiry())};
-  const std::string cookies{"sourcemeta_one_session=" + sealed};
-
-  EXPECT_EQ(
-      authentication.satisfied({.bearer = "", .cookies = fields(cookies)}),
-      (std::vector<std::size_t>{0}));
-}
-
-TEST(satisfied_lets_a_presented_key_decide_over_a_session) {
+TEST(a_presented_key_decides_over_a_session) {
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   setenv("ONE_TEST_PRECEDENCE_SECRET", "confidential", 1);
   setenv("ONE_TEST_PRECEDENCE_KEY", "machine-secret", 1);
@@ -4845,7 +4777,7 @@ TEST(satisfied_lets_a_presented_key_decide_over_a_session) {
         .name = "okta",
         .session_secrets = SESSION_SECRETS},
        {.paths = machine_paths, .keys = machine_keys, .name = "machine"}}};
-  const auto path{test_path("satisfied_precedence.bin")};
+  const auto path{test_path("precedence.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
@@ -4856,29 +4788,30 @@ TEST(satisfied_lets_a_presented_key_decide_over_a_session) {
       minted_now(), session_expiry())};
   const std::string cookies{"sourcemeta_one_session=" + sealed};
 
-  // Each alone names its own policy, which is what makes the pair below a
+  // Each alone opens what it governs, which is what makes the pair below a
   // choice between two live credentials rather than one working answer
-  EXPECT_EQ(
-      authentication.satisfied({.bearer = "", .cookies = fields(cookies)}),
-      (std::vector<std::size_t>{0}));
-  EXPECT_EQ(authentication.satisfied({.bearer = "machine-secret"}),
-            (std::vector<std::size_t>{1}));
+  EXPECT_TRUE(
+      authentication
+          .admits(at("/portal/x"), {.bearer = "", .cookies = fields(cookies)})
+          .allowed);
+  EXPECT_TRUE(
+      authentication.admits(at("/machine/x"), {.bearer = "machine-secret"})
+          .allowed);
 
-  // Presented together, what was attached deliberately decides and the session
-  // is not consulted, so the portal it would have opened is refused. The gate
-  // answers the same way, which is what keeps what a caller reaches and what
-  // they are told exists from disagreeing
-  EXPECT_EQ(authentication.satisfied(
-                {.bearer = "machine-secret", .cookies = fields(cookies)}),
-            (std::vector<std::size_t>{1}));
+  // Presented together, the request is read as the key it carried, so the
+  // portal the session would have opened is refused
   EXPECT_FALSE(authentication
                    .admits(at("/portal/x"), {.bearer = "machine-secret",
                                              .cookies = fields(cookies)})
                    .allowed);
-  EXPECT_TRUE(authentication
-                  .admits(at("/machine/x"), {.bearer = "machine-secret",
-                                             .cookies = fields(cookies)})
-                  .allowed);
+  const auto verdict{
+      authentication.admits(at("/machine/x"), {.bearer = "machine-secret",
+                                               .cookies = fields(cookies)})};
+  EXPECT_TRUE(verdict.allowed);
+  EXPECT_TRUE(verdict.principal.has_value());
+  EXPECT_EQ(verdict.principal.value().type,
+            sourcemeta::one::Authentication::Type::ApiKey);
+  EXPECT_EQ(verdict.principal.value().policy, std::size_t{1});
 }
 
 TEST(a_presented_key_that_opens_nothing_sets_a_session_aside) {
@@ -4897,7 +4830,7 @@ TEST(a_presented_key_that_opens_nothing_sets_a_session_aside) {
         .name = "okta",
         .session_secrets = SESSION_SECRETS},
        {.paths = machine_paths, .keys = machine_keys, .name = "machine"}}};
-  const auto path{test_path("satisfied_fallback.bin")};
+  const auto path{test_path("precedence_stale.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
@@ -4908,12 +4841,9 @@ TEST(a_presented_key_that_opens_nothing_sets_a_session_aside) {
       minted_now(), session_expiry())};
   const std::string cookies{"sourcemeta_one_session=" + sealed};
 
-  // A stale key alongside a good session is read as the stale key, which opens
-  // nothing, so the session is not fallen back on. This is the cost of the rule
-  // and the reason it is worth stating rather than leaving to be discovered
-  EXPECT_EQ(authentication.satisfied(
-                {.bearer = "retired-secret", .cookies = fields(cookies)}),
-            (std::vector<std::size_t>{}));
+  // A key that opens nothing is still a key that was presented, so the session
+  // is set aside and nothing admits. The cost of the rule, and the reason it is
+  // worth stating rather than leaving to be discovered
   EXPECT_FALSE(authentication
                    .admits(at("/portal/x"), {.bearer = "retired-secret",
                                              .cookies = fields(cookies)})
@@ -4921,6 +4851,36 @@ TEST(a_presented_key_that_opens_nothing_sets_a_session_aside) {
 
   // The same session presented on its own still opens it, so what changed is
   // what the request carried rather than whether the session is any good
+  EXPECT_TRUE(
+      authentication
+          .admits(at("/portal/x"), {.bearer = "", .cookies = fields(cookies)})
+          .allowed);
+}
+
+TEST(a_header_naming_only_the_scheme_presents_nothing) {
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
+  setenv("ONE_TEST_EMPTY_BEARER_SECRET", "confidential", 1);
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .type = sourcemeta::one::Authentication::Type::OIDC,
+        .issuer = "acme",
+        .client_id = "client",
+        .client_secret_variable = "ONE_TEST_EMPTY_BEARER_SECRET",
+        .name = "okta",
+        .session_secrets = SESSION_SECRETS}}};
+  const auto path{test_path("precedence_empty.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  const auto sealed{sourcemeta::one::Authentication::seal_value(
+      R"JSON({ "policy": "okta", "subject": "jane@acme.test" })JSON",
+      sourcemeta::one::Authentication::Purpose::Session, SESSION_SECRET,
+      minted_now(), session_expiry())};
+  const std::string cookies{"sourcemeta_one_session=" + sealed};
+
+  // What the router hands the gate when a header names the scheme and no value
   EXPECT_TRUE(
       authentication
           .admits(at("/portal/x"), {.bearer = "", .cookies = fields(cookies)})

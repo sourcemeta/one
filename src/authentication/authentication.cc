@@ -29,13 +29,6 @@ auto Authentication::views(const std::span<const Authentication::Policy>)
   return result;
 }
 
-// This edition declares no policy, so there is nothing for a credential to
-// satisfy however much of one is presented
-auto Authentication::satisfied(const Credentials &) const
-    -> std::vector<std::size_t> {
-  return {};
-}
-
 auto Authentication::save(
     const std::span<const Authentication::Policy> policies,
     const std::filesystem::path &configuration,

@@ -238,24 +238,6 @@ public:
   auto operator=(const Authentication &) -> Authentication & = delete;
   auto operator=(Authentication &&) -> Authentication & = delete;
 
-  /// Which policies what a request presented satisfies anywhere in the
-  /// instance, as declaration indices sorted ascending. A different question
-  /// from whether a caller may have one path, and the one a view is chosen by,
-  /// since on a public path the gate admits without reading a credential at
-  /// all.
-  ///
-  /// A request may present a bearer value and a session at once, and each can
-  /// satisfy policies the other does not. What was presented decides: a request
-  /// carrying a bearer value is read as that credential and its session is not
-  /// consulted, because attaching one is deliberate while a session is sent
-  /// whether or not anybody meant it. A request carrying no bearer value is
-  /// read as its session.
-  ///
-  /// The gate answers the same way, so what a caller is admitted to and what
-  /// they are told exists cannot disagree.
-  [[nodiscard]] auto satisfied(const Credentials &credentials) const
-      -> std::vector<std::size_t>;
-
   // Whether what a request presented admits it to a path. The path arrives
   // canonical, so every caller asks about the same location rather than about
   // whichever spelling it happened to receive
