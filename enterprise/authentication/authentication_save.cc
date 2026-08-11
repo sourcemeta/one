@@ -264,13 +264,16 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
   // a view naming several is spelled by joining theirs, which a single policy
   // could be named to match. Two views sharing a name are two sets of policies
   // served from one directory, so what was actually spelled is checked rather
-  // than what it was spelled from
-  for (std::size_t index{0}; index < table.size(); index += 1) {
-    for (std::size_t other{0}; other < index; other += 1) {
-      if (table[other].name == table[index].name) {
-        throw AuthenticationViewNameCollisionError(configuration,
-                                                   table[index].name);
-      }
+  // than what it was spelled from.
+  //
+  // The table arrives with the anonymous view first and every other in order of
+  // name, so a repeated name can only sit beside the one it repeats. Comparing
+  // every pair instead would square a table that a handful of issuer groups
+  // already leaves with hundreds of thousands of entries
+  for (std::size_t index{1}; index < table.size(); index += 1) {
+    if (table[index - 1].name == table[index].name) {
+      throw AuthenticationViewNameCollisionError(configuration,
+                                                 table[index].name);
     }
   }
 

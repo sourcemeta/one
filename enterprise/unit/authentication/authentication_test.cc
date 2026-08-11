@@ -2663,6 +2663,55 @@ TEST(save_rejects_two_policies_sharing_a_name) {
   }
 }
 
+TEST(save_writes_the_largest_table_a_configuration_can_declare) {
+  constexpr std::size_t groups{4};
+  constexpr auto per_group{
+      sourcemeta::one::Authentication::MAXIMUM_COMBINABLE_POLICIES};
+  constexpr auto total{groups * per_group};
+  std::vector<std::string> path_storage;
+  std::vector<std::string> name_storage;
+  std::vector<std::string> issuer_storage;
+  path_storage.reserve(total);
+  name_storage.reserve(total);
+  issuer_storage.reserve(total);
+  for (std::size_t index{0}; index < total; index += 1) {
+    path_storage.push_back("/p" + std::to_string(index));
+    name_storage.push_back("p" + std::to_string(index));
+    issuer_storage.push_back("https://idp.test/" +
+                             std::to_string(index / per_group));
+  }
+
+  std::vector<std::string_view> path_views;
+  path_views.reserve(total);
+  for (const auto &value : path_storage) {
+    path_views.push_back(value);
+  }
+
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::ES256}};
+  std::vector<sourcemeta::one::Authentication::Policy> policies;
+  policies.reserve(total);
+  for (std::size_t index{0}; index < total; index += 1) {
+    policies.push_back(
+        {.paths = std::span<const std::string_view>{&path_views[index], 1},
+         .type = sourcemeta::one::Authentication::Type::JWT,
+         .issuer = issuer_storage[index],
+         .audience = "client",
+         .jwks_uri = "https://idp.test/jwks",
+         .algorithms = algorithms,
+         .name = name_storage[index]});
+  }
+
+  // Each group contributes every combination over it, which is the most views a
+  // configuration can ask for at the maximum number of policies
+  const auto path{test_path("largest_table.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_EQ(authentication.view({.bearer = ""}), "public");
+}
+
 TEST(save_rejects_a_policy_named_as_a_combination_of_others) {
   setenv("ONE_TEST_KEY_COMBINATION", "combination-secret", 1);
   const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
