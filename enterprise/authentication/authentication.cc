@@ -111,15 +111,20 @@ auto structurally_valid(const sourcemeta::core::FileView &view) noexcept
   }
 
   // A caller satisfying nothing is placed somewhere, so a table that could not
-  // name that is one no request could be resolved against
-  if (header->view_count == 0) {
+  // name that is one no request could be resolved against. Every table names at
+  // least that view, so a table with nothing to name it from is one whose names
+  // would be read against no bytes at all
+  if (header->view_count == 0 || strings_length == 0) {
     return false;
   }
 
   const auto *views{view.as<AuthenticationViewEntry>(header->views_offset)};
+  bool names_the_anonymous{false};
   for (std::uint32_t index{0}; index < header->view_count; index += 1) {
     const auto &entry{views[index]};
-    if (entry.name_offset > strings_length ||
+    // A name is read as a range into the string section, so an empty one would
+    // be served as a directory that is not there
+    if (entry.name_length == 0 || entry.name_offset > strings_length ||
         entry.name_length > strings_length - entry.name_offset) {
       return false;
     }
@@ -130,6 +135,12 @@ auto structurally_valid(const sourcemeta::core::FileView &view) noexcept
         (entry.policies >> header->policy_count) != 0) {
       return false;
     }
+
+    names_the_anonymous = names_the_anonymous || entry.policies == 0;
+  }
+
+  if (!names_the_anonymous) {
+    return false;
   }
 
   // A nested prefix is stored as at least one edge labelled by a non-empty

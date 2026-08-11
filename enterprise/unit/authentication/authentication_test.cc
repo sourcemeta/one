@@ -8,7 +8,9 @@
 #include <array>       // std::array
 #include <chrono>      // std::chrono::sys_seconds, std::chrono::seconds
 #include <cstddef>     // std::byte, std::size_t
+#include <cstdint>     // std::uint32_t
 #include <cstdlib>     // setenv
+#include <cstring>     // std::memcpy
 #include <filesystem>  // std::filesystem::path
 #include <fstream>     // std::ofstream, std::fstream, std::ifstream
 #include <iterator>    // std::istreambuf_iterator
@@ -325,7 +327,7 @@ TEST(corrupted_section_offset_denies_everything) {
   const std::array<std::string_view, 1> paths{{"/internal"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_OFFSET"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{paths, keys}}};
+      {{.paths = paths, .keys = keys, .name = "policy"}}};
   const auto path{test_path("corrupted_offset.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -364,7 +366,7 @@ TEST(uncovered_paths_are_public_around_a_gated_scope) {
   const std::array<std::string_view, 1> paths{{"/internal"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_SCOPE"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{paths, keys}}};
+      {{.paths = paths, .keys = keys, .name = "policy"}}};
   const auto path{test_path("uncovered_public.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -389,7 +391,7 @@ TEST(scope_matches_whole_segments_only) {
   const std::array<std::string_view, 1> paths{{"/internal"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_SEGMENT"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{paths, keys}}};
+      {{.paths = paths, .keys = keys, .name = "policy"}}};
   const auto path{test_path("segment_boundary.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -490,7 +492,7 @@ TEST(single_policy_with_multiple_prefixes) {
   const std::array<std::string_view, 2> paths{{"/internal", "/vendor"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_MP"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{paths, keys}}};
+      {{.paths = paths, .keys = keys, .name = "policy"}}};
   const auto path{test_path("multiple_prefixes.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -508,7 +510,7 @@ TEST(extensionless_policy_gates_every_representation) {
   const std::array<std::string_view, 1> paths{{"/secret/data"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_REPRESENTATION"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{paths, keys}}};
+      {{.paths = paths, .keys = keys, .name = "policy"}}};
   const auto path{test_path("representation_agnostic.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -551,7 +553,7 @@ TEST(extension_specific_policy_gates_only_that_representation) {
   const std::array<std::string_view, 1> paths{{"/secret/data.json"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_SPECIFIC"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{paths, keys}}};
+      {{.paths = paths, .keys = keys, .name = "policy"}}};
   const auto path{test_path("representation_specific.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -579,7 +581,7 @@ TEST(extension_handling_is_confined_to_the_terminal_segment) {
   const std::array<std::string_view, 1> paths{{"/v1"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_V1"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{paths, keys}}};
+      {{.paths = paths, .keys = keys, .name = "policy"}}};
   const auto path{test_path("intermediate_dot.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -602,7 +604,7 @@ TEST(an_explicit_route_is_gated_on_the_target_as_it_arrived) {
   const std::array<std::string_view, 1> apikey_paths{{"/private"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_ROUTE"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{apikey_paths, keys}}};
+      {{.paths = apikey_paths, .keys = keys, .name = "policy"}}};
   const auto path{test_path("explicit_route.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -633,7 +635,7 @@ TEST(apikey_admits_matching_credential) {
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_MATCH"}};
   const std::array<std::string_view, 1> paths{{"/internal"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{paths, keys}}};
+      {{.paths = paths, .keys = keys, .name = "policy"}}};
   const auto path{test_path("apikey_match.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -655,7 +657,7 @@ TEST(apikey_with_multiple_keys_admits_any) {
       {"ONE_TEST_KEY_MULTI_A", "ONE_TEST_KEY_MULTI_B"}};
   const std::array<std::string_view, 1> paths{{"/internal"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{paths, keys}}};
+      {{.paths = paths, .keys = keys, .name = "policy"}}};
   const auto path{test_path("apikey_multi.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -673,7 +675,7 @@ TEST(apikey_with_unset_variable_denies) {
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_UNSET"}};
   const std::array<std::string_view, 1> paths{{"/internal"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{paths, keys}}};
+      {{.paths = paths, .keys = keys, .name = "policy"}}};
   const auto path{test_path("apikey_unset.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -691,7 +693,7 @@ TEST(apikey_with_an_empty_variable_denies) {
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_EMPTY"}};
   const std::array<std::string_view, 1> paths{{"/internal"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{paths, keys}}};
+      {{.paths = paths, .keys = keys, .name = "policy"}}};
   const auto path{test_path("apikey_empty.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -713,7 +715,7 @@ TEST(apikey_ignores_an_empty_variable_beside_a_real_one) {
       {"ONE_TEST_KEY_PAIR_BLANK", "ONE_TEST_KEY_PAIR_REAL"}};
   const std::array<std::string_view, 1> paths{{"/internal"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{paths, keys}}};
+      {{.paths = paths, .keys = keys, .name = "policy"}}};
   const auto path{test_path("apikey_pair.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -737,7 +739,8 @@ TEST(sha256_policy_with_an_empty_variable_denies) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
         .keys = keys,
-        .algorithm = sourcemeta::one::Authentication::Algorithm::Sha256}}};
+        .algorithm = sourcemeta::one::Authentication::Algorithm::Sha256,
+        .name = "policy"}}};
   const auto path{test_path("sha256_empty.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -762,7 +765,8 @@ TEST(sha256_policy_admits_the_matching_credential) {
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
         .keys = keys,
-        .algorithm = sourcemeta::one::Authentication::Algorithm::Sha256}}};
+        .algorithm = sourcemeta::one::Authentication::Algorithm::Sha256,
+        .name = "policy"}}};
   const auto path{test_path("sha256_match.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -906,7 +910,7 @@ TEST(governing_of_an_ungoverned_path_is_empty) {
   const std::array<std::string_view, 1> internal_paths{{"/internal"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_GE"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{internal_paths, keys}}};
+      {{.paths = internal_paths, .keys = keys, .name = "policy"}}};
   const auto path{test_path("governing_empty.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -934,7 +938,7 @@ TEST(reference_to_a_public_schema_is_permitted) {
   const std::array<std::string_view, 1> secret_paths{{"/secret"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_REF_PUBLIC"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{secret_paths, keys}}};
+      {{.paths = secret_paths, .keys = keys, .name = "policy"}}};
   const auto path{test_path("ref_to_public.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -950,7 +954,7 @@ TEST(public_schema_referencing_an_apikey_schema_is_rejected) {
   const std::array<std::string_view, 1> secret_paths{{"/secret"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_REF_LEAK"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{secret_paths, keys}}};
+      {{.paths = secret_paths, .keys = keys, .name = "policy"}}};
   const auto path{test_path("ref_public_to_apikey.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -964,7 +968,7 @@ TEST(reference_within_the_same_policy_is_permitted) {
   const std::array<std::string_view, 1> paths{{"/internal"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_REF_SAME"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{paths, keys}}};
+      {{.paths = paths, .keys = keys, .name = "policy"}}};
   const auto path{test_path("ref_same_policy.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -1024,7 +1028,8 @@ TEST(jwt_admits_a_valid_token_and_caches_the_key_set) {
         .issuer = "acme",
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
-        .algorithms = algorithms}}};
+        .algorithms = algorithms,
+        .name = "policy"}}};
   const auto path{test_path("jwt_valid.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -1054,7 +1059,8 @@ TEST(jwt_admits_a_token_whose_type_the_policy_requires) {
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
         .algorithms = algorithms,
-        .token_type = "at+jwt"}}};
+        .token_type = "at+jwt",
+        .name = "policy"}}};
   const auto path{test_path("jwt_type_match.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -1079,7 +1085,8 @@ TEST(jwt_denies_a_token_whose_type_is_not_the_required_one) {
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
         .algorithms = algorithms,
-        .token_type = "JWT"}}};
+        .token_type = "JWT",
+        .name = "policy"}}};
   const auto path{test_path("jwt_type_mismatch.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -1102,7 +1109,8 @@ TEST(jwt_without_a_required_type_admits_any_type) {
         .issuer = "acme",
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
-        .algorithms = algorithms}}};
+        .algorithms = algorithms,
+        .name = "policy"}}};
   const auto path{test_path("jwt_type_absent.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -1123,7 +1131,8 @@ TEST(jwt_denies_a_token_for_the_wrong_audience) {
         .issuer = "acme",
         .audience = "different",
         .jwks_uri = "https://idp.test/jwks",
-        .algorithms = algorithms}}};
+        .algorithms = algorithms,
+        .name = "policy"}}};
   const auto path{test_path("jwt_audience.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -1144,7 +1153,8 @@ TEST(jwt_denies_a_token_from_the_wrong_issuer) {
         .issuer = "different",
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
-        .algorithms = algorithms}}};
+        .algorithms = algorithms,
+        .name = "policy"}}};
   const auto path{test_path("jwt_issuer.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -1165,7 +1175,8 @@ TEST(jwt_denies_a_disallowed_algorithm) {
         .issuer = "acme",
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
-        .algorithms = algorithms}}};
+        .algorithms = algorithms,
+        .name = "policy"}}};
   const auto path{test_path("jwt_algorithm.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -1186,7 +1197,8 @@ TEST(jwt_denies_when_the_signing_key_is_absent) {
         .issuer = "acme",
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
-        .algorithms = algorithms}}};
+        .algorithms = algorithms,
+        .name = "policy"}}};
   const auto path{test_path("jwt_unknown_key.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -1208,7 +1220,8 @@ TEST(jwt_denies_when_the_key_set_cannot_be_fetched) {
         .issuer = "acme",
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
-        .algorithms = algorithms}}};
+        .algorithms = algorithms,
+        .name = "policy"}}};
   const auto path{test_path("jwt_fetch_fails.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -1228,7 +1241,8 @@ TEST(an_apikey_credential_never_triggers_a_jwt_fetch) {
         .issuer = "acme",
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
-        .algorithms = algorithms}}};
+        .algorithms = algorithms,
+        .name = "policy"}}};
   const auto path{test_path("jwt_no_fetch.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -1253,7 +1267,8 @@ TEST(jwt_resolves_the_key_set_through_discovery) {
         .type = sourcemeta::one::Authentication::Type::JWT,
         .issuer = "https://acme.test",
         .audience = "client",
-        .algorithms = algorithms}}};
+        .algorithms = algorithms,
+        .name = "policy"}}};
   const auto path{test_path("jwt_discovery.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -1288,7 +1303,8 @@ TEST(jwt_without_a_discoverable_issuer_fails_closed) {
         .type = sourcemeta::one::Authentication::Type::JWT,
         .issuer = "acme",
         .audience = "client",
-        .algorithms = algorithms}}};
+        .algorithms = algorithms,
+        .name = "policy"}}};
   const auto path{test_path("jwt_discovery_issuer.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
   const auto calls{std::make_shared<int>(0)};
@@ -2550,7 +2566,7 @@ TEST(save_creates_the_directory_it_writes_into) {
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_NESTED"}};
   const std::array<std::string_view, 1> paths{{"/internal"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{paths, keys}}};
+      {{.paths = paths, .keys = keys, .name = "policy"}}};
   const auto path{test_path("nested") / "deeper" / "authentication.bin"};
   std::filesystem::remove_all(test_path("nested"));
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
@@ -2563,7 +2579,7 @@ TEST(save_creates_the_directory_it_writes_into) {
           .allowed);
 }
 
-TEST(save_rejects_a_nameless_interactive_policy) {
+TEST(save_rejects_a_nameless_policy) {
   const std::array<std::string_view, 1> paths{{"/portal"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
@@ -2577,7 +2593,88 @@ TEST(save_rejects_a_nameless_interactive_policy) {
     FAIL();
   } catch (const std::runtime_error &error) {
     EXPECT_STREQ(error.what(),
-                 "Interactive authentication policies require a name");
+                 "Authentication policies require a distinct name");
+  }
+}
+
+TEST(an_artifact_whose_table_omits_the_anonymous_view_is_refused) {
+  setenv("ONE_TEST_KEY_TABLE_ANONYMOUS", "table-secret", 1);
+  const std::array<std::string_view, 1> paths{{"/machine"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_TABLE_ANONYMOUS"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths, .keys = keys, .name = "machine"}}};
+  const auto path{test_path("table_anonymous.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  // The anonymous view is the entry naming no policy, so giving the entry that
+  // holds it a policy is what a table naming nobody anonymous looks like. Where
+  // the table sits is read from the header rather than recomputed here
+  std::fstream stream{path, std::ios::binary | std::ios::in | std::ios::out};
+  stream.seekg(static_cast<std::streamoff>(sizeof(std::uint32_t) * 8));
+  std::uint32_t views_offset{0};
+  std::array<char, sizeof(views_offset)> located{};
+  stream.read(located.data(), located.size());
+  std::memcpy(&views_offset, located.data(), sizeof(views_offset));
+
+  stream.seekp(static_cast<std::streamoff>(views_offset));
+  const std::array<char, 8> occupied{{1, 0, 0, 0, 0, 0, 0, 0}};
+  stream.write(occupied.data(), occupied.size());
+  stream.close();
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  // A refused artifact denies rather than serving anybody a tree it guessed at
+  EXPECT_FALSE(
+      authentication.admits(at("/machine/x"), {.bearer = "table-secret"})
+          .allowed);
+  EXPECT_FALSE(authentication.admits(at("/anywhere"), {.bearer = ""}).allowed);
+}
+
+TEST(save_rejects_a_nameless_key_policy) {
+  const std::array<std::string_view, 1> paths{{"/machine"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_NAMELESS"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths, .keys = keys}}};
+  const auto path{test_path("key_nameless.bin")};
+  try {
+    sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+    FAIL();
+  } catch (const std::runtime_error &error) {
+    EXPECT_STREQ(error.what(),
+                 "Authentication policies require a distinct name");
+  }
+}
+
+TEST(save_rejects_two_policies_sharing_a_name) {
+  const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
+  const std::array<std::string_view, 1> beta_paths{{"/beta"}};
+  const std::array<std::string_view, 1> alpha_keys{{"ONE_TEST_KEY_SAME_A"}};
+  const std::array<std::string_view, 1> beta_keys{{"ONE_TEST_KEY_SAME_B"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = alpha_paths, .keys = alpha_keys, .name = "shared"},
+       {.paths = beta_paths, .keys = beta_keys, .name = "shared"}}};
+  const auto path{test_path("name_shared.bin")};
+  try {
+    sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+    FAIL();
+  } catch (const std::runtime_error &error) {
+    EXPECT_STREQ(error.what(),
+                 "Authentication policies require a distinct name");
+  }
+}
+
+TEST(save_rejects_a_policy_taking_the_anonymous_name) {
+  const std::array<std::string_view, 1> paths{{"/machine"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_RESERVED"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths, .keys = keys, .name = "public"}}};
+  const auto path{test_path("name_reserved.bin")};
+  try {
+    sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+    FAIL();
+  } catch (const std::runtime_error &error) {
+    EXPECT_STREQ(error.what(),
+                 "Authentication policies require a distinct name");
   }
 }
 
@@ -2631,7 +2728,7 @@ TEST(session_cookie_does_not_open_an_apikey_path) {
   const std::array<std::string_view, 1> paths{{"/internal"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_NO_SESSION"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{paths, keys}}};
+      {{.paths = paths, .keys = keys, .name = "policy"}}};
   const auto path{test_path("oidc_session_apikey.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -3329,7 +3426,7 @@ TEST(admission_by_an_apikey_policy_identifies_the_principal) {
   const std::array<std::string_view, 1> paths{{"/internal"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_PRINCIPAL"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{paths, keys}}};
+      {{.paths = paths, .keys = keys, .name = "policy"}}};
   const auto path{test_path("principal_apikey.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -3354,7 +3451,8 @@ TEST(admission_by_a_jwt_policy_identifies_the_principal) {
         .issuer = "acme",
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
-        .algorithms = algorithms}}};
+        .algorithms = algorithms,
+        .name = "policy"}}};
   const auto path{test_path("principal_jwt.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -3414,7 +3512,7 @@ TEST(anonymous_and_denied_verdicts_carry_no_principal) {
   const std::array<std::string_view, 1> paths{{"/internal"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_PRINCIPAL_NONE"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{paths, keys}}};
+      {{.paths = paths, .keys = keys, .name = "policy"}}};
   const auto path{test_path("principal_none.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -3453,7 +3551,8 @@ TEST(reference_rules_treat_a_jwt_scope_conservatively) {
         .issuer = "acme",
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
-        .algorithms = algorithms}}};
+        .algorithms = algorithms,
+        .name = "policy"}}};
   const auto path{test_path("jwt_reference.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -3480,7 +3579,8 @@ TEST(jwt_without_a_transport_denies_rather_than_crashes) {
         .issuer = "acme",
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
-        .algorithms = algorithms}}};
+        .algorithms = algorithms,
+        .name = "policy"}}};
   const auto path{test_path("jwt_no_transport.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -3537,7 +3637,8 @@ TEST(jwt_claims_admit_only_a_token_carrying_a_named_value) {
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
         .algorithms = algorithms,
-        .claims = CLAIMS_ONE_GROUP}}};
+        .claims = CLAIMS_ONE_GROUP,
+        .name = "policy"}}};
   const auto path{test_path("jwt_claims_value.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -3571,7 +3672,8 @@ TEST(jwt_claims_admit_any_one_of_the_named_values) {
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
         .algorithms = algorithms,
-        .claims = CLAIMS_TWO_GROUPS}}};
+        .claims = CLAIMS_TWO_GROUPS,
+        .name = "policy"}}};
   const auto path{test_path("jwt_claims_alternatives.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -3613,7 +3715,8 @@ TEST(jwt_claims_require_every_rule_it_declares) {
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
         .algorithms = algorithms,
-        .claims = CLAIMS_GROUP_AND_DEPARTMENT}}};
+        .claims = CLAIMS_GROUP_AND_DEPARTMENT,
+        .name = "policy"}}};
   const auto path{test_path("jwt_claims_cumulative.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -3651,7 +3754,8 @@ TEST(jwt_claims_read_a_scope_as_a_space_delimited_set) {
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
         .algorithms = algorithms,
-        .claims = CLAIMS_SCOPE}}};
+        .claims = CLAIMS_SCOPE,
+        .name = "policy"}}};
   const auto path{test_path("jwt_claims_scope.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -3703,7 +3807,8 @@ TEST(jwt_claims_deny_an_ordinary_rule_that_names_no_value) {
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
         .algorithms = algorithms,
-        .claims = CLAIMS_GROUPS_NO_VALUES}}};
+        .claims = CLAIMS_GROUPS_NO_VALUES,
+        .name = "policy"}}};
   const auto path{test_path("jwt_claims_groups_empty.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -3730,7 +3835,8 @@ TEST(jwt_claims_deny_a_scope_rule_that_names_no_value) {
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
         .algorithms = algorithms,
-        .claims = CLAIMS_SCOPE_NO_VALUES}}};
+        .claims = CLAIMS_SCOPE_NO_VALUES,
+        .name = "policy"}}};
   const auto path{test_path("jwt_claims_scope_empty.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -3757,7 +3863,8 @@ TEST(jwt_claims_deny_a_scope_rule_this_cannot_read) {
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
         .algorithms = algorithms,
-        .claims = CLAIMS_SCOPE_UNREADABLE}}};
+        .claims = CLAIMS_SCOPE_UNREADABLE,
+        .name = "policy"}}};
   const auto path{test_path("jwt_claims_scope_unreadable.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -3784,7 +3891,8 @@ TEST(jwt_claims_scope_without_a_constraint_still_requires_a_scope) {
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
         .algorithms = algorithms,
-        .claims = CLAIMS_SCOPE_UNCONSTRAINED}}};
+        .claims = CLAIMS_SCOPE_UNCONSTRAINED,
+        .name = "policy"}}};
   const auto path{test_path("jwt_claims_scope_open.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -3819,7 +3927,8 @@ TEST(jwt_claims_match_a_group_object_on_its_identifier_alone) {
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
         .algorithms = algorithms,
-        .claims = CLAIMS_ONE_GROUP}}};
+        .claims = CLAIMS_ONE_GROUP,
+        .name = "policy"}}};
   const auto path{test_path("jwt_claims_group_object.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -3856,7 +3965,8 @@ TEST(jwt_claims_never_match_a_value_that_is_not_a_string) {
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
         .algorithms = algorithms,
-        .claims = CLAIMS_VERIFIED}}};
+        .claims = CLAIMS_VERIFIED,
+        .name = "policy"}}};
   const auto path{test_path("jwt_claims_non_string.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -3890,7 +4000,8 @@ TEST(jwt_without_claims_admits_a_token_carrying_none) {
         .issuer = "acme",
         .audience = "client",
         .jwks_uri = "https://idp.test/jwks",
-        .algorithms = algorithms}}};
+        .algorithms = algorithms,
+        .name = "policy"}}};
   const auto path{test_path("jwt_claims_absent.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -4374,7 +4485,7 @@ TEST(a_policy_path_declared_canonically_gates_its_location) {
   const std::array<std::string_view, 1> paths{{"/private"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_CANONICAL"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{paths, keys}}};
+      {{.paths = paths, .keys = keys, .name = "policy"}}};
   const auto path{test_path("policy_declared_canonically.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -4395,7 +4506,7 @@ TEST(a_policy_path_carrying_a_dot_segment_gates_its_location) {
   const std::array<std::string_view, 1> paths{{"/./private"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_DOT"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{paths, keys}}};
+      {{.paths = paths, .keys = keys, .name = "policy"}}};
   const auto path{test_path("policy_carrying_a_dot_segment.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -4416,7 +4527,7 @@ TEST(a_policy_path_that_climbs_back_into_itself_gates_its_location) {
   const std::array<std::string_view, 1> paths{{"/private/../private"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_CLIMB"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{paths, keys}}};
+      {{.paths = paths, .keys = keys, .name = "policy"}}};
   const auto path{test_path("policy_that_climbs_back_into_itself.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 
@@ -4437,7 +4548,7 @@ TEST(a_policy_path_carrying_a_repeated_separator_gates_its_location) {
   const std::array<std::string_view, 1> paths{{"//private"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_SEPARATOR"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{paths, keys}}};
+      {{.paths = paths, .keys = keys, .name = "policy"}}};
   const auto path{test_path("policy_carrying_a_repeated_separator.bin")};
   sourcemeta::one::Authentication::save(policies, path, path, anywhere);
 

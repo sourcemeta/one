@@ -208,6 +208,26 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
     }
   }
 
+  // A view is spelled from the names of the policies it comprises, so a policy
+  // without one, or sharing one, or taking the name every caller holding
+  // nothing is served under, yields a view that names somewhere else or
+  // nowhere. The configuration refuses all three long before this is reached,
+  // and this is what makes that a guarantee rather than a convention
+  for (std::size_t index{0}; index < policies.size(); index += 1) {
+    const auto name{policies[index].name};
+    if (name.empty() || name == VIEW_PUBLIC) {
+      throw std::runtime_error(
+          "Authentication policies require a distinct name");
+    }
+
+    for (std::size_t other{0}; other < index; other += 1) {
+      if (policies[other].name == name) {
+        throw std::runtime_error(
+            "Authentication policies require a distinct name");
+      }
+    }
+  }
+
   std::vector<BuildNode> nodes;
   nodes.emplace_back();
 
@@ -333,14 +353,9 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
                                             policy.jwks_uri, policy.algorithms,
                                             policy.token_type, policy.claims);
     } else if (policy.type == Authentication::Type::OIDC) {
-      // A nameless interactive policy could never match a session cookie, and
-      // one without a session secret could never mint or verify one, so both
-      // fail loudly here rather than silently denying every login at runtime
-      if (policy.name.empty()) {
-        throw std::runtime_error(
-            "Interactive authentication policies require a name");
-      }
-
+      // An interactive policy without a session secret could never mint or
+      // verify one, so it fails loudly here rather than silently denying every
+      // login at runtime
       if (policy.session_secrets.empty()) {
         throw std::runtime_error(
             "Interactive authentication policies require a session secret");

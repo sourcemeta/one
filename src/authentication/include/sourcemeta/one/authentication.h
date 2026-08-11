@@ -282,8 +282,7 @@ public:
   ///
   /// The name comes from the table the build recorded rather than from a rule
   /// applied again here, so what a build wrote and what a server serves cannot
-  /// disagree. The value points into the artifact and stays valid for the
-  /// lifetime of this instance.
+  /// disagree. The value stays valid for the lifetime of this instance.
   [[nodiscard]] auto view(const Credentials &credentials) const
       -> std::string_view;
 
