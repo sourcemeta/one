@@ -2,6 +2,7 @@
 
 #include <sourcemeta/core/io.h>
 
+#include <cassert>     // assert
 #include <chrono>      // std::chrono::sys_seconds
 #include <cstddef>     // std::byte, std::size_t
 #include <filesystem>  // std::filesystem::path
@@ -73,6 +74,24 @@ auto Authentication::classify(const Credentials &) const
 // implied so that the output is one shape across editions
 auto Authentication::view(const Credentials &) const -> std::string_view {
   return VIEW_PUBLIC;
+}
+
+// One way to see the registry means one view, and nothing governs anything, so
+// every location is part of what that view shows
+auto Authentication::view_count() const -> std::size_t { return 1; }
+
+auto Authentication::view_at(const std::size_t index) const
+    -> Authentication::RecordedView {
+  assert(index == 0);
+  static_cast<void>(index);
+  return {.name = VIEW_PUBLIC, .policies = 0};
+}
+
+auto Authentication::visible(const Authentication::Path &,
+                             const std::size_t view) const -> bool {
+  assert(view == 0);
+  static_cast<void>(view);
+  return true;
 }
 
 auto Authentication::governing(const Authentication::Path &) const
