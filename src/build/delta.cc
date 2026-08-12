@@ -551,6 +551,17 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
             }
           }
 
+          // What this reads beyond the graph it is derived from, named by the
+          // rule rather than assumed here, and last so that whatever walks the
+          // graph reaches the same entries it always did
+          for (std::uint8_t index{0}; index < dependents_rule.dependency_count;
+               index++) {
+            const auto &dependency{dependents_rule.dependencies[index]};
+            if (dependency.source == DependencySource::GlobalOutput) {
+              action_dependencies.emplace_back(output / dependency.filename);
+            }
+          }
+
           dependents_wave.push_back(
               {.type = dependents_rule.action,
                .destination = std::move(destination),
