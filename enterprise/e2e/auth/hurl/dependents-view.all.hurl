@@ -8,15 +8,23 @@
 # gates. So the graph narrows rather than empties, and a view that reported
 # nothing at all would fail here as loudly as one that reported everything.
 
+# Anonymous, so the answer holds only the referrer anybody may read.
+#
+# It is marked public because a shared cache keys on the URL alone, and this is
+# the answer every anonymous caller receives, so handing a stored copy to the
+# next of them serves what they would have been given anyway. That is true of
+# this view alone: the same URL answers differently below.
 GET {{base}}/self/v1/api/schemas/dependents/public/string
 HTTP 200
 Content-Type: application/json
-Cache-Control: private, max-age=0, must-revalidate
+Cache-Control: public, max-age=0, must-revalidate
+Vary: Accept-Encoding
 Link: </self/v1/schemas/api/schemas/dependents/response>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Captures]
 anonymous_body: body
+anonymous_etag: header "ETag"
 anonymous_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" matches /^"[0-9a-f]{64}"$/
@@ -39,12 +47,24 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 jsonpath "$.valid" == true
 
 # The key that opens the gated referrer reads both edges. Without this half, a
-# graph emptied for everybody would look exactly like one that was filtered
+# graph emptied for everybody would look exactly like one that was filtered.
+#
+# The same URL, and a different answer, so this one must never be stored for
+# reuse: a shared cache holding it would hand the gated referrer to whoever
+# asked next, which is the disclosure above closed by another route. Marking it
+# private is what says so, and it is the only header here that turns on who
+# asked.
+#
+# The validator differs too, but nothing arranged that. It is a checksum of the
+# artifact, and the artifacts differ, so a conditional request carrying one
+# view's validator misses in another rather than matching something it was
+# never served.
 GET {{base}}/self/v1/api/schemas/dependents/public/string
 Authorization: Bearer primary-secret-key
 HTTP 200
 Content-Type: application/json
 Cache-Control: private, max-age=0, must-revalidate
+Vary: Accept-Encoding
 Link: </self/v1/schemas/api/schemas/dependents/response>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
@@ -53,6 +73,7 @@ reports_body: body
 reports_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" matches /^"[0-9a-f]{64}"$/
+header "ETag" != {{anonymous_etag}}
 [
   {
     "from": "{{base}}/public/wrapper",
@@ -76,16 +97,20 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-# The second key the same policy accepts reads the same graph, since what is
-# served follows the policies a credential satisfies rather than the credential
+# The second key the same policy accepts reads the same graph and carries the
+# same validator, since what is served follows the policies a credential
+# satisfies rather than the credential itself
 GET {{base}}/self/v1/api/schemas/dependents/public/string
 Authorization: Bearer secondary-secret-key
 HTTP 200
 Content-Type: application/json
 Cache-Control: private, max-age=0, must-revalidate
+Vary: Accept-Encoding
 Link: </self/v1/schemas/api/schemas/dependents/response>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+[Asserts]
+header "ETag" != {{anonymous_etag}}
 [
   {
     "from": "{{base}}/public/wrapper",
@@ -99,17 +124,26 @@ Access-Control-Expose-Headers: Link, ETag
   }
 ]
 
-# A key for somewhere else reads what an anonymous caller reads. Holding a
-# credential is not what widens the graph, holding the one that opens what
-# points at it is
+# A key for somewhere else reads what an anonymous caller reads, down to the
+# validator, since it is placed in the view holding whatever it opens and that
+# is nothing here. Holding a credential is not what widens the graph, holding
+# the one that opens what points at it is.
+#
+# It stays private even so. What decides that is the view the answer was built
+# for rather than the bytes that came out of it, so an answer that happens to
+# match the anonymous one is not offered for reuse on the strength of a
+# coincidence
 GET {{base}}/self/v1/api/schemas/dependents/public/string
 Authorization: Bearer internal-secret-key
 HTTP 200
 Content-Type: application/json
 Cache-Control: private, max-age=0, must-revalidate
+Vary: Accept-Encoding
 Link: </self/v1/schemas/api/schemas/dependents/response>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+[Asserts]
+header "ETag" == {{anonymous_etag}}
 [
   {
     "from": "{{base}}/public/wrapper",

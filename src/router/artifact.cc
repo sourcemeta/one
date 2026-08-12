@@ -107,15 +107,18 @@ auto RouterAction::artifact_resolve_path(
   // public for shared caches
   //
   // Reaching a location anonymously is not the same as every caller being
-  // served the same thing there. An artifact in the view tree answers per view
-  // wherever more than one exists, so a shared cache holding one caller's copy
+  // served the same thing there. A shared cache keys on the URL, and one URL in
+  // the view tree answers differently per view, so storing one caller's copy
   // would hand it to the next, which is the disclosure this closed by another
-  // route. What varies is therefore never marked public, however open the
-  // location it was reached through
-  const auto varies_by_view{tree != Tree::Schemas &&
-                            authentication.view_count() > 1};
+  // route.
+  //
+  // Only the anonymous answer may be stored for reuse, since what it holds is
+  // what anybody may read by construction, and it is the answer any other
+  // anonymous caller would have been given anyway. The unit tree holds one
+  // answer whoever asks, so nothing there turns on this
+  const auto shareable{tree == Tree::Schemas || view == VIEW_PUBLIC};
   const auto is_public{
-      !varies_by_view &&
+      shareable &&
       ((credentials.bearer.empty() && credentials.cookies.empty()) ||
        authentication.admits(path.value(), {}).allowed)};
   return {.outcome = ArtifactResolution::Outcome::Found,
