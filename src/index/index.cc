@@ -609,11 +609,26 @@ static auto index_main(const std::string_view &program,
   }
   const sourcemeta::one::LeafSet leaves{leaves_storage};
 
-  // The views this build writes for. Fixed at the one every caller shares until
-  // they are enumerated from the configuration, which is the only part of this
-  // that has to change for a build to hold an answer per kind of caller
-  constexpr std::array<std::string_view, 1> views{
-      {sourcemeta::one::VIEW_PUBLIC}};
+  // The views this build writes for, enumerated from what the configuration
+  // declares. The artifact records the same table for the server to read, so
+  // this is the naming rule applied a second time at index time rather than a
+  // second rule, and the two are the same function of the same policies
+  std::vector<std::vector<std::string_view>> view_policy_paths;
+  std::vector<std::vector<std::string_view>> view_policy_keys;
+  std::vector<std::vector<std::string_view>> view_policy_session_secrets;
+  std::vector<std::string> view_policy_claims;
+  std::vector<std::vector<std::string_view>> view_policy_email_domains;
+  const auto view_policies{
+      sourcemeta::one::GENERATE_AUTHENTICATION::make_policies(
+          configuration, view_policy_paths, view_policy_keys,
+          view_policy_session_secrets, view_policy_claims,
+          view_policy_email_domains)};
+  const auto view_table{sourcemeta::one::Authentication::views(view_policies)};
+  std::vector<std::string_view> views;
+  views.reserve(view_table.size());
+  for (const auto &view : view_table) {
+    views.push_back(view.name);
+  }
 
   auto produce_plan{sourcemeta::one::delta<sourcemeta::one::INDEX_RULES>(
       sourcemeta::one::BuildPhase::Produce, build_type, entries,
@@ -806,6 +821,10 @@ auto main(int argc, char *argv[]) noexcept -> int {
   } catch (const sourcemeta::one::AuthenticationUnknownPathError &error) {
     std::print(stdout, "error: {}\n  at scope {}\n  at path {}\n", error.what(),
                error.scope(), error.path().string());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::one::AuthenticationTooManyViewsError &error) {
+    std::print(stdout, "error: {}\n  at issuer {}\n  at count {}\n",
+               error.what(), error.issuer(), error.count());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::AuthenticationPolicyNameError &error) {
     std::print(stdout, "error: {}\n  at name {}\n  at path {}\n", error.what(),

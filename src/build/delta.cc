@@ -451,6 +451,34 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
     plan.output = output;
     plan.type = build_type;
 
+    {
+      // A view that appeared since the last build holds no artifact for any
+      // leaf, and the graph it would be derived from did not move, so nothing
+      // above notices it. Only the views after the first are asked, since the
+      // first is the tree that was already there and what it does when one of
+      // its own artifacts goes missing is decided above rather than here
+      const auto &missing_rule{leaf_rules[indices.dependents]};
+      if (missing_rule.base != 0) {
+        for (const auto &[uri, info] : leaves) {
+          const auto &relative_string{info.relative_path->native()};
+          if (affected_leaves.contains(relative_string)) {
+            continue;
+          }
+
+          for (std::size_t view{1}; view < secondary_views.size(); view++) {
+            if (!entries.contains(append_filename(
+                    make_base_string(output.native(), secondary_directory,
+                                     secondary_views[view], relative_string,
+                                     sentinel),
+                    missing_rule.filename))) {
+              affected_leaves.insert(relative_string);
+              break;
+            }
+          }
+        }
+      }
+    }
+
     if (!affected_leaves.empty()) {
       std::unordered_map<std::string, std::vector<std::string>>
           reverse_dependency_index;
