@@ -20,6 +20,14 @@ cat << 'EOF' > "$TMP/schemas/a.json"
 }
 EOF
 
+cat << 'EOF' > "$TMP/schemas/b.json"
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/b",
+  "$ref": "./a"
+}
+EOF
+
 cat << 'EOF' > "$TMP/one.json"
 {
   "url": "https://example.com",
@@ -34,6 +42,42 @@ EOF
 
 "$1" --skip-banner --deterministic --concurrency 1 "$TMP/one.json" "$TMP/output" \
   > /dev/null 2>&1
+
+cd "$TMP/output"
+find ./explorer -mindepth 1 \
+  \( -path './explorer/public/self' \) -prune \
+  -o -print \
+  | LC_ALL=C sort > "$TMP/before.txt"
+cd - > /dev/null
+
+cat << 'EOF' > "$TMP/expected-before.txt"
+./explorer/public
+./explorer/public/%
+./explorer/public/%/401.metapack
+./explorer/public/%/404.metapack
+./explorer/public/%/directory-html.metapack
+./explorer/public/%/directory.metapack
+./explorer/public/%/login-html.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/schemas
+./explorer/public/schemas/%
+./explorer/public/schemas/%/directory-html.metapack
+./explorer/public/schemas/%/directory.metapack
+./explorer/public/schemas/%/login-html.metapack
+./explorer/public/schemas/a
+./explorer/public/schemas/a/%
+./explorer/public/schemas/a/%/dependents.metapack
+./explorer/public/schemas/a/%/schema-html.metapack
+./explorer/public/schemas/a/%/schema.metapack
+./explorer/public/schemas/b
+./explorer/public/schemas/b/%
+./explorer/public/schemas/b/%/dependents.metapack
+./explorer/public/schemas/b/%/schema-html.metapack
+./explorer/public/schemas/b/%/schema.metapack
+EOF
+
+diff "$TMP/before.txt" "$TMP/expected-before.txt"
 
 cat << 'EOF' > "$TMP/one.json"
 {
@@ -59,18 +103,62 @@ EOF
 "$1" --skip-banner --deterministic --concurrency 1 "$TMP/one.json" "$TMP/output" \
   > /dev/null 2>&1
 
-(cd "$TMP/output" && find ./explorer -maxdepth 1 | sort) > "$TMP/views.txt"
+cd "$TMP/output"
+find ./explorer -mindepth 1 \
+  \( -path './explorer/public/self' -o -path './explorer/alpha/self' \) -prune \
+  -o -print \
+  | LC_ALL=C sort > "$TMP/after.txt"
+cd - > /dev/null
 
-cat << 'EOF' > "$TMP/expected.txt"
-./explorer
+cat << 'EOF' > "$TMP/expected-after.txt"
 ./explorer/alpha
+./explorer/alpha/%
+./explorer/alpha/%/401.metapack
+./explorer/alpha/%/404.metapack
+./explorer/alpha/%/directory-html.metapack
+./explorer/alpha/%/directory.metapack
+./explorer/alpha/%/login-html.metapack
+./explorer/alpha/%/mcp.metapack
+./explorer/alpha/%/search.metapack
+./explorer/alpha/schemas
+./explorer/alpha/schemas/%
+./explorer/alpha/schemas/%/directory-html.metapack
+./explorer/alpha/schemas/%/directory.metapack
+./explorer/alpha/schemas/%/login-html.metapack
+./explorer/alpha/schemas/a
+./explorer/alpha/schemas/a/%
+./explorer/alpha/schemas/a/%/dependents.metapack
+./explorer/alpha/schemas/a/%/schema-html.metapack
+./explorer/alpha/schemas/a/%/schema.metapack
+./explorer/alpha/schemas/b
+./explorer/alpha/schemas/b/%
+./explorer/alpha/schemas/b/%/dependents.metapack
+./explorer/alpha/schemas/b/%/schema-html.metapack
+./explorer/alpha/schemas/b/%/schema.metapack
 ./explorer/public
+./explorer/public/%
+./explorer/public/%/401.metapack
+./explorer/public/%/404.metapack
+./explorer/public/%/directory-html.metapack
+./explorer/public/%/directory.metapack
+./explorer/public/%/login-html.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/schemas
+./explorer/public/schemas/%
+./explorer/public/schemas/%/directory-html.metapack
+./explorer/public/schemas/%/directory.metapack
+./explorer/public/schemas/%/login-html.metapack
+./explorer/public/schemas/a
+./explorer/public/schemas/a/%
+./explorer/public/schemas/a/%/dependents.metapack
+./explorer/public/schemas/a/%/schema-html.metapack
+./explorer/public/schemas/a/%/schema.metapack
+./explorer/public/schemas/b
+./explorer/public/schemas/b/%
+./explorer/public/schemas/b/%/dependents.metapack
+./explorer/public/schemas/b/%/schema-html.metapack
+./explorer/public/schemas/b/%/schema.metapack
 EOF
 
-diff "$TMP/views.txt" "$TMP/expected.txt"
-
-# The new tree is complete rather than a shell, so what each view holds is
-# compared entry by entry
-(cd "$TMP/output/explorer/public" && find . | sort) > "$TMP/public.txt"
-(cd "$TMP/output/explorer/alpha" && find . | sort) > "$TMP/alpha.txt"
-diff "$TMP/public.txt" "$TMP/alpha.txt"
+diff "$TMP/after.txt" "$TMP/expected-after.txt"
