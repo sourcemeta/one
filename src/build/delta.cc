@@ -180,9 +180,16 @@ static auto declare_leaf_targets(
     const bool evaluate, const BuildPlan::Type build_type,
     const BuildPlan::Type full_mode, const std::string &configuration_string,
     const std::string_view uri, const BuildPhase phase,
-    std::span<const LeafRule> leaf_rules) -> void {
+    std::span<const LeafRule> leaf_rules, const bool only_secondary) -> void {
   for (std::size_t index{0}; index < leaf_rules.size(); index++) {
     const auto &rule{leaf_rules[index]};
+
+    // A leaf outside the namespaced tree is one artifact however many views
+    // there are, so it is declared with the first of them and passed over for
+    // the rest rather than declared again against the same path
+    if (only_secondary && rule.base == 0) {
+      continue;
+    }
 
     if (rule.gate == TargetGate::IfEvaluate && !evaluate) {
       continue;
@@ -317,13 +324,17 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
   assert(directories.size() >= 2);
   const auto primary_directory{directories[0].name};
   const auto secondary_directory{directories[1].name};
-  // Emitting one action per view is what turns a namespaced tree into several,
-  // and it is deliberately not done yet. Until then a build names exactly one
-  // view, so a namespaced tree holds a single answer like any other and the
-  // output is a function of the catalog alone
-  assert(views.size() == 1);
-  const auto secondary_view{directories[1].namespaced ? views[0]
-                                                      : std::string_view{}};
+  // Emitting one action per view is what turns a namespaced tree into several.
+  // A tree that is not namespaced holds one answer whoever asks, which is the
+  // same thing as holding one view whose name is nothing, so the rest of this
+  // iterates a list either way rather than asking which kind of tree it has
+  assert(!views.empty());
+  static constexpr std::array<std::string_view, 1> UNNAMESPACED{
+      {std::string_view{}}};
+  const std::span<const std::string_view> secondary_views{
+      directories[1].namespaced
+          ? views
+          : std::span<const std::string_view>{UNNAMESPACED}};
   const std::string sentinel_separator{std::string{"/"} +
                                        std::string{sentinel} + "/"};
   const std::string dependencies_suffix{
@@ -481,10 +492,12 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
       }
 
       const auto &dependents_rule{leaf_rules[indices.dependents]};
-      const auto destination_directory{
-          dependents_rule.base == 0 ? primary_directory : secondary_directory};
-      const auto destination_view{dependents_rule.base == 0 ? std::string_view{}
-                                                            : secondary_view};
+      const auto in_secondary{dependents_rule.base != 0};
+      const auto destination_directory{in_secondary ? secondary_directory
+                                                    : primary_directory};
+      const std::span<const std::string_view> destination_views{
+          in_secondary ? secondary_views
+                       : std::span<const std::string_view>{UNNAMESPACED}};
 
       std::vector<BuildPlan::Action> dependents_wave;
       for (const auto &[uri, info] : leaves) {
@@ -493,27 +506,30 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
           continue;
         }
 
-        auto destination_base{
-            make_base_string(output_string, destination_directory,
-                             destination_view, relative_string, sentinel)};
-        auto destination{std::filesystem::path{
-            append_filename(destination_base, dependents_rule.filename)}};
+        for (std::size_t view{0}; view < destination_views.size(); view++) {
+          auto destination_base{make_base_string(
+              output_string, destination_directory, destination_views[view],
+              relative_string, sentinel)};
+          auto destination{std::filesystem::path{
+              append_filename(destination_base, dependents_rule.filename)}};
 
-        BuildPlan::Action::Dependencies action_dependencies;
-        const auto reverse_iterator{
-            reverse_dependency_index.find(relative_string)};
-        if (reverse_iterator != reverse_dependency_index.end()) {
-          action_dependencies.reserve(reverse_iterator->second.size());
-          for (const auto &dependency_key : reverse_iterator->second) {
-            action_dependencies.emplace_back(dependency_key);
+          BuildPlan::Action::Dependencies action_dependencies;
+          const auto reverse_iterator{
+              reverse_dependency_index.find(relative_string)};
+          if (reverse_iterator != reverse_dependency_index.end()) {
+            action_dependencies.reserve(reverse_iterator->second.size());
+            for (const auto &dependency_key : reverse_iterator->second) {
+              action_dependencies.emplace_back(dependency_key);
+            }
           }
-        }
 
-        dependents_wave.push_back(
-            {.type = dependents_rule.action,
-             .destination = std::move(destination),
-             .dependencies = std::move(action_dependencies),
-             .data = uri});
+          dependents_wave.push_back(
+              {.type = dependents_rule.action,
+               .destination = std::move(destination),
+               .dependencies = std::move(action_dependencies),
+               .data = uri,
+               .view = static_cast<std::uint8_t>(in_secondary ? view : 0)});
+        }
       }
 
       std::ranges::sort(dependents_wave,
@@ -534,9 +550,20 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
   const auto comment_path{output / global_rules[indices.comment].filename};
   const auto is_full{!incremental};
   const auto primary_path{output / primary_directory};
-  const auto secondary_path{
-      secondary_view.empty() ? output / secondary_directory
-                             : output / secondary_directory / secondary_view};
+  // One root per view, which is what every namespaced destination is composed
+  // against. A tree that is not namespaced has exactly one and no view segment
+  std::vector<std::filesystem::path> secondary_paths;
+  secondary_paths.reserve(secondary_views.size());
+  for (const auto view : secondary_views) {
+    secondary_paths.push_back(view.empty()
+                                  ? output / secondary_directory
+                                  : output / secondary_directory / view);
+  }
+
+  // Every view sits under the tree, so a question about the tree as a whole is
+  // asked of the one prefix they share rather than of each of them in turn
+  const auto secondary_tree_prefix{(output / secondary_directory).string() +
+                                   "/"};
   const auto comment_string{comment_path.string()};
 
   // The state records that a build produced each of these, not that the file
@@ -716,13 +743,19 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
   targets.reserve(leaves.size() * leaf_rules.size());
   const auto &output_string{output.native()};
   const auto configuration_string{configuration_path.string()};
-  const auto secondary_string{secondary_path.string()};
+  std::vector<std::string> secondary_strings;
+  secondary_strings.reserve(secondary_paths.size());
+  for (const auto &path : secondary_paths) {
+    secondary_strings.push_back(path.string());
+  }
 
   struct ActiveLeaf {
     std::string_view uri;
     const LeafView *info;
     std::string primary_base;
-    std::string secondary_base;
+    // One per view, positionally, since a leaf occupies the same place in every
+    // view's tree and only the segment naming the view differs
+    std::vector<std::string> secondary_bases;
     std::string root_path;
   };
 
@@ -738,9 +771,13 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
 
     auto primary_base{make_base_string(output_string, primary_directory, {},
                                        relative_string, sentinel)};
-    auto secondary_base{make_base_string(output_string, secondary_directory,
-                                         secondary_view, relative_string,
-                                         sentinel)};
+    std::vector<std::string> secondary_bases;
+    secondary_bases.reserve(secondary_views.size());
+    for (const auto view : secondary_views) {
+      secondary_bases.push_back(make_base_string(
+          output_string, secondary_directory, view, relative_string, sentinel));
+    }
+
     auto root_path{
         append_filename(primary_base, leaf_rules[indices.root].filename)};
 
@@ -782,16 +819,20 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
     }
 
     if (needs_targets) {
-      const std::array<std::string, 2> bases{{primary_base, secondary_base}};
-      declare_leaf_targets(targets, bases, output_string, info.path->native(),
-                           info.evaluate, build_type, full_mode,
-                           configuration_string, uri, phase, leaf_rules);
+      for (std::size_t view{0}; view < secondary_bases.size(); view++) {
+        const std::array<std::string, 2> bases{
+            {primary_base, secondary_bases[view]}};
+        declare_leaf_targets(targets, bases, output_string, info.path->native(),
+                             info.evaluate, build_type, full_mode,
+                             configuration_string, uri, phase, leaf_rules,
+                             view > 0);
+      }
     }
 
     active_leaves.push_back({.uri = uri,
                              .info = &info,
                              .primary_base = std::move(primary_base),
-                             .secondary_base = std::move(secondary_base),
+                             .secondary_bases = std::move(secondary_bases),
                              .root_path = std::move(root_path)});
   }
 
@@ -815,12 +856,16 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
       const auto primary_base{make_base_string(output_string, primary_directory,
                                                {}, state_relative, sentinel)};
       if (!current_primary_bases.contains(primary_base)) {
-        const auto secondary_base{
-            make_base_string(output_string, secondary_directory, secondary_view,
-                             state_relative, sentinel)};
-        for (const auto &rule : leaf_rules) {
-          const auto &base{rule.base == 0 ? primary_base : secondary_base};
-          removed_entries.insert(append_filename(base, rule.filename));
+        // A leaf that left the catalog took its artifacts in every view with
+        // it, so each view's copy is named here rather than only the first
+        for (const auto view : secondary_views) {
+          const auto secondary_base{make_base_string(output_string,
+                                                     secondary_directory, view,
+                                                     state_relative, sentinel)};
+          for (const auto &rule : leaf_rules) {
+            const auto &base{rule.base == 0 ? primary_base : secondary_base};
+            removed_entries.insert(append_filename(base, rule.filename));
+          }
         }
       }
     }
@@ -844,15 +889,20 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
           continue;
         }
 
-        const auto &base{rule.base == 0 ? leaf.primary_base
-                                        : leaf.secondary_base};
-        dirty_set.insert(append_filename(base, rule.filename));
+        if (rule.base == 0) {
+          dirty_set.insert(append_filename(leaf.primary_base, rule.filename));
+          continue;
+        }
+
+        for (const auto &secondary_base : leaf.secondary_bases) {
+          dirty_set.insert(append_filename(secondary_base, rule.filename));
+        }
       }
     }
 
     const auto primary_prefix_string{output_string + "/" +
                                      std::string{primary_directory} + "/"};
-    const auto secondary_prefix_string{secondary_path.string() + "/"};
+    const auto &secondary_prefix_string{secondary_tree_prefix};
     std::unordered_map<std::string_view, std::vector<std::string_view>>
         reverse_adjacency;
     std::unordered_map<std::string, std::vector<std::string>>
@@ -868,10 +918,23 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
 
       const std::string_view target_view{target_path};
       std::string_view after_prefix;
+      bool in_secondary{false};
       if (target_view.starts_with(primary_prefix_string)) {
         after_prefix = target_view.substr(primary_prefix_string.size());
       } else if (target_view.starts_with(secondary_prefix_string)) {
+        in_secondary = true;
         after_prefix = target_view.substr(secondary_prefix_string.size());
+        // The segment naming the view sits between the tree and the leaf, so
+        // stepping over it is what leaves the relative path a leaf occupies in
+        // every view rather than one prefixed by the view it was found in
+        if (directories[1].namespaced) {
+          const auto separator{after_prefix.find('/')};
+          if (separator == std::string_view::npos) {
+            continue;
+          }
+
+          after_prefix = after_prefix.substr(separator + 1);
+        }
       }
 
       if (!after_prefix.empty()) {
@@ -887,10 +950,8 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
             for (std::size_t rule_index{0}; rule_index < leaf_rules.size();
                  rule_index++) {
               const auto &rule{leaf_rules[rule_index]};
-              const bool is_explorer{
-                  target_view.starts_with(secondary_prefix_string)};
               if (target_filename == rule.filename &&
-                  ((rule.base == 1) == is_explorer)) {
+                  ((rule.base == 1) == in_secondary)) {
                 target_known =
                     (leaf_entry->target_bitmap & (1 << rule_index)) != 0;
                 break;
@@ -970,10 +1031,26 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
           continue;
         }
 
-        const auto &base{rule.base == 0 ? leaf.primary_base
-                                        : leaf.secondary_base};
-        if (!entries.contains(append_filename(base, rule.filename))) {
-          has_missing_mode_outputs = true;
+        if (rule.base == 0) {
+          if (!entries.contains(
+                  append_filename(leaf.primary_base, rule.filename))) {
+            has_missing_mode_outputs = true;
+            break;
+          }
+
+          continue;
+        }
+
+        // Missing in any view is missing, since each holds its own copy
+        for (const auto &secondary_base : leaf.secondary_bases) {
+          if (!entries.contains(
+                  append_filename(secondary_base, rule.filename))) {
+            has_missing_mode_outputs = true;
+            break;
+          }
+        }
+
+        if (has_missing_mode_outputs) {
           break;
         }
       }
@@ -986,7 +1063,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
 
   bool has_stale_mode_outputs{false};
   if (build_type != full_mode && dirty_set.empty() && !is_full) {
-    const auto secondary_prefix{secondary_path.string() + "/"};
+    const auto &secondary_prefix{secondary_tree_prefix};
     for (const auto entry_path : entries.keys()) {
       if (!entry_path.starts_with(secondary_prefix)) {
         continue;
@@ -1094,20 +1171,26 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
           continue;
         }
 
-        const auto &base{rule.base == 0 ? leaf.primary_base
-                                        : leaf.secondary_base};
-        auto target_path_string{append_filename(base, rule.filename)};
-        auto should_force{is_full || leaf_is_dirty ||
-                          !entries.contains(target_path_string)};
+        // Each view holds its own copy, so each is asked about separately and
+        // one being absent does not speak for the rest
+        const std::span<const std::string> rule_bases{
+            rule.base == 0
+                ? std::span<const std::string>{&leaf.primary_base, 1}
+                : std::span<const std::string>{leaf.secondary_bases}};
+        for (const auto &base : rule_bases) {
+          auto target_path_string{append_filename(base, rule.filename)};
+          auto should_force{is_full || leaf_is_dirty ||
+                            !entries.contains(target_path_string)};
 
-        if (!should_force && has_graph_change &&
-            (rule.dirty == DirtyOverride::ForceOnGraphChange ||
-             rule.dirty == DirtyOverride::ForceIfAffected)) {
-          should_force = true;
-        }
+          if (!should_force && has_graph_change &&
+              (rule.dirty == DirtyOverride::ForceOnGraphChange ||
+               rule.dirty == DirtyOverride::ForceIfAffected)) {
+            should_force = true;
+          }
 
-        if (should_force) {
-          dirty_set.insert(std::move(target_path_string));
+          if (should_force) {
+            dirty_set.insert(std::move(target_path_string));
+          }
         }
       }
     }
@@ -1138,98 +1221,108 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
           continue;
         }
 
-        auto destination{(secondary_path / relative / sentinel / rule.filename)
-                             .lexically_normal()
-                             .string()};
+        // One container artifact per view, each naming only its own view's
+        // children, since a listing in one view is built from that view's
+        // children rather than from another's
+        for (std::size_t view{0}; view < secondary_paths.size(); view++) {
+          const auto &secondary_path{secondary_paths[view]};
+          auto destination{
+              (secondary_path / relative / sentinel / rule.filename)
+                  .lexically_normal()
+                  .string()};
 
-        std::vector<std::string> rule_dependencies;
-        std::size_t global_dependency_count{0};
+          std::vector<std::string> rule_dependencies;
+          std::size_t global_dependency_count{0};
 
-        for (std::uint8_t dependency_index{0};
-             dependency_index < rule.dependency_count; dependency_index++) {
-          const auto &dependency{rule.dependencies[dependency_index]};
-          switch (dependency.kind) {
-            case ContainerDependencyKind::LeafMetadata:
-              for (const auto &leaf_relative : all_relative_paths) {
-                if (leaf_relative.parent_path() == relative ||
-                    (is_root_directory && !leaf_relative.has_parent_path())) {
-                  rule_dependencies.push_back(append_filename(
-                      make_base_string(output_string, secondary_directory,
-                                       secondary_view, leaf_relative.native(),
-                                       sentinel),
-                      leaf_rules[indices.metadata].filename));
+          for (std::uint8_t dependency_index{0};
+               dependency_index < rule.dependency_count; dependency_index++) {
+            const auto &dependency{rule.dependencies[dependency_index]};
+            switch (dependency.kind) {
+              case ContainerDependencyKind::LeafMetadata:
+                for (const auto &leaf_relative : all_relative_paths) {
+                  if (leaf_relative.parent_path() == relative ||
+                      (is_root_directory && !leaf_relative.has_parent_path())) {
+                    rule_dependencies.push_back(append_filename(
+                        make_base_string(output_string, secondary_directory,
+                                         secondary_views[view],
+                                         leaf_relative.native(), sentinel),
+                        leaf_rules[indices.metadata].filename));
+                  }
                 }
-              }
-              break;
-            case ContainerDependencyKind::ChildContainers:
-              for (const auto &other_directory : affected_directories) {
-                auto other_relative{
-                    other_directory.lexically_relative(primary_path)};
-                if (other_relative == relative) {
-                  continue;
-                }
+                break;
+              case ContainerDependencyKind::ChildContainers:
+                for (const auto &other_directory : affected_directories) {
+                  auto other_relative{
+                      other_directory.lexically_relative(primary_path)};
+                  if (other_relative == relative) {
+                    continue;
+                  }
 
-                auto other_parent{other_relative.parent_path()};
-                if (other_parent.empty()) {
-                  other_parent = ".";
-                }
+                  auto other_parent{other_relative.parent_path()};
+                  if (other_parent.empty()) {
+                    other_parent = ".";
+                  }
 
-                if (other_parent == relative) {
+                  if (other_parent == relative) {
+                    rule_dependencies.push_back(
+                        (secondary_path / other_relative / sentinel /
+                         container_rules[indices.container_list].filename)
+                            .lexically_normal()
+                            .string());
+                  }
+                }
+                break;
+              case ContainerDependencyKind::AllContainerListings:
+                for (const auto &any_directory : all_directories) {
+                  const auto directory_relative{
+                      any_directory.lexically_relative(primary_path)};
                   rule_dependencies.push_back(
-                      (secondary_path / other_relative / sentinel /
-                       container_rules[indices.container_list].filename)
+                      (directory_relative == "."
+                           ? secondary_path / sentinel /
+                                 container_rules[indices.container_list]
+                                     .filename
+                           : secondary_path / directory_relative / sentinel /
+                                 container_rules[indices.container_list]
+                                     .filename)
                           .lexically_normal()
                           .string());
                 }
-              }
-              break;
-            case ContainerDependencyKind::AllContainerListings:
-              for (const auto &any_directory : all_directories) {
-                const auto directory_relative{
-                    any_directory.lexically_relative(primary_path)};
+                break;
+              case ContainerDependencyKind::SameContainerTarget:
                 rule_dependencies.push_back(
-                    (directory_relative == "."
-                         ? secondary_path / sentinel /
-                               container_rules[indices.container_list].filename
-                         : secondary_path / directory_relative / sentinel /
-                               container_rules[indices.container_list].filename)
+                    (secondary_path / relative / sentinel / dependency.filename)
                         .lexically_normal()
                         .string());
-              }
-              break;
-            case ContainerDependencyKind::SameContainerTarget:
-              rule_dependencies.push_back(
-                  (secondary_path / relative / sentinel / dependency.filename)
-                      .lexically_normal()
-                      .string());
-              break;
-            case ContainerDependencyKind::ExternalConfig:
-              rule_dependencies.push_back(configuration_string);
-              break;
-            case ContainerDependencyKind::Global:
-              rule_dependencies.push_back(
-                  (output / (dependency.filename != nullptr
-                                 ? dependency.filename
-                                 : global_rules[indices.mode_global].filename))
-                      .lexically_normal()
-                      .string());
-              global_dependency_count += 1;
-              break;
+                break;
+              case ContainerDependencyKind::ExternalConfig:
+                rule_dependencies.push_back(configuration_string);
+                break;
+              case ContainerDependencyKind::Global:
+                rule_dependencies.push_back(
+                    (output /
+                     (dependency.filename != nullptr
+                          ? dependency.filename
+                          : global_rules[indices.mode_global].filename))
+                        .lexically_normal()
+                        .string());
+                global_dependency_count += 1;
+                break;
+            }
           }
-        }
 
-        const auto directory_entry_count{rule_dependencies.size() -
-                                         global_dependency_count};
-        if (rule.action == container_rules[indices.container_list].action &&
-            limits.maximum_direct_directory_entries > 0 &&
-            directory_entry_count > limits.maximum_direct_directory_entries) {
-          throw BuildTooManyDirectoryEntriesError(directory,
-                                                  directory_entry_count);
-        }
+          const auto directory_entry_count{rule_dependencies.size() -
+                                           global_dependency_count};
+          if (rule.action == container_rules[indices.container_list].action &&
+              limits.maximum_direct_directory_entries > 0 &&
+              directory_entry_count > limits.maximum_direct_directory_entries) {
+            throw BuildTooManyDirectoryEntriesError(directory,
+                                                    directory_entry_count);
+          }
 
-        declare_target(targets, rule.action, destination,
-                       std::move(rule_dependencies));
-        dirty_set.insert(std::move(destination));
+          declare_target(targets, rule.action, destination,
+                         std::move(rule_dependencies));
+          dirty_set.insert(std::move(destination));
+        }
       }
     }
   }
@@ -1289,15 +1382,19 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
           continue;
         }
 
-        const auto &target_base{rule.base == 0 ? leaf.primary_base
-                                               : leaf.secondary_base};
-        auto target_path{append_filename(target_base, rule.filename)};
-        if (entries.contains(target_path)) {
-          remove_wave.push_back(
-              {.type = remove_action,
-               .destination = std::filesystem::path{std::move(target_path)},
-               .dependencies = {},
-               .data = {}});
+        const std::span<const std::string> target_bases{
+            rule.base == 0
+                ? std::span<const std::string>{&leaf.primary_base, 1}
+                : std::span<const std::string>{leaf.secondary_bases}};
+        for (const auto &target_base : target_bases) {
+          auto target_path{append_filename(target_base, rule.filename)};
+          if (entries.contains(target_path)) {
+            remove_wave.push_back(
+                {.type = remove_action,
+                 .destination = std::filesystem::path{std::move(target_path)},
+                 .dependencies = {},
+                 .data = {}});
+          }
         }
       }
     }
@@ -1308,15 +1405,25 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
     known_bases.reserve(active_leaves.size() * 2 + 1);
     for (const auto &leaf : active_leaves) {
       known_bases.insert(leaf.primary_base);
-      known_bases.insert(leaf.secondary_base);
+      // Every view holds this leaf, so every view's copy is known and only a
+      // tree belonging to a view that no longer exists is left unaccounted for
+      for (const auto &secondary_base : leaf.secondary_bases) {
+        known_bases.insert(secondary_base);
+      }
+
       auto current{*leaf.info->relative_path};
       while (current.has_parent_path() && current.parent_path() != current) {
         current = current.parent_path();
-        known_bases.insert(secondary_string + '/' + current.string() + '/' +
-                           std::string{sentinel});
+        for (const auto &secondary_string : secondary_strings) {
+          known_bases.insert(secondary_string + '/' + current.string() + '/' +
+                             std::string{sentinel});
+        }
       }
     }
-    known_bases.insert(secondary_string + '/' + std::string{sentinel});
+
+    for (const auto &secondary_string : secondary_strings) {
+      known_bases.insert(secondary_string + '/' + std::string{sentinel});
+    }
 
     std::unordered_set<std::string> known_ancestors;
     known_ancestors.reserve(known_bases.size() * 3);
@@ -1403,7 +1510,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
 
   bool mode_removed{false};
   if (build_type != full_mode) {
-    const auto secondary_prefix{secondary_path.string() + "/"};
+    const auto &secondary_prefix{secondary_tree_prefix};
     for (const auto entry_path : entries.keys()) {
       if (!entry_path.starts_with(secondary_prefix)) {
         continue;
@@ -1428,7 +1535,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
 
   bool mode_added{false};
   if (build_type == full_mode && !is_full) {
-    const auto secondary_prefix{secondary_path.string() + "/"};
+    const auto &secondary_prefix{secondary_tree_prefix};
     bool had_mode_entries{false};
     for (const auto entry_path : entries.keys()) {
       if (!entry_path.starts_with(secondary_prefix)) {
