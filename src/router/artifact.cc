@@ -105,9 +105,19 @@ auto RouterAction::artifact_resolve_path(
   // to anonymous callers, otherwise its public reach is checked with nothing
   // presented, so a response admitted through a session is never marked
   // public for shared caches
+  //
+  // Reaching a location anonymously is not the same as every caller being
+  // served the same thing there. An artifact in the view tree answers per view
+  // wherever more than one exists, so a shared cache holding one caller's copy
+  // would hand it to the next, which is the disclosure this closed by another
+  // route. What varies is therefore never marked public, however open the
+  // location it was reached through
+  const auto varies_by_view{tree != Tree::Schemas &&
+                            authentication.view_count() > 1};
   const auto is_public{
-      (credentials.bearer.empty() && credentials.cookies.empty()) ||
-      authentication.admits(path.value(), {}).allowed};
+      !varies_by_view &&
+      ((credentials.bearer.empty() && credentials.cookies.empty()) ||
+       authentication.admits(path.value(), {}).allowed)};
   return {.outcome = ArtifactResolution::Outcome::Found,
           .path = ResolvedArtifact{std::move(located).value()},
           .is_public = is_public};
