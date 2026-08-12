@@ -5230,6 +5230,143 @@ TEST(a_token_satisfying_two_policies_is_served_their_combined_view) {
       "public");
 }
 
+TEST(the_recorded_table_names_a_view_at_every_index) {
+  const std::array<std::string_view, 1> platform_paths{{"/platform"}};
+  const std::array<std::string_view, 1> oncall_paths{{"/oncall"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::ES256}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = platform_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms,
+        .name = "platform"},
+       {.paths = oncall_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms,
+        .name = "oncall"}}};
+  const auto path{test_path("recorded_table.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  // The anonymous view first, then the rest by name, which is the order a build
+  // fans its actions out in
+  EXPECT_EQ(authentication.view_count(), std::size_t{4});
+  EXPECT_EQ(authentication.view_at(0).name, "public");
+  EXPECT_EQ(authentication.view_at(0).policies,
+            sourcemeta::one::Authentication::PolicySet{0});
+  EXPECT_EQ(authentication.view_at(1).name, "oncall");
+  EXPECT_EQ(authentication.view_at(1).policies,
+            sourcemeta::one::Authentication::PolicySet{0b10});
+  EXPECT_EQ(authentication.view_at(2).name, "oncall+platform");
+  EXPECT_EQ(authentication.view_at(2).policies,
+            sourcemeta::one::Authentication::PolicySet{0b11});
+  EXPECT_EQ(authentication.view_at(3).name, "platform");
+  EXPECT_EQ(authentication.view_at(3).policies,
+            sourcemeta::one::Authentication::PolicySet{0b01});
+}
+
+TEST(a_view_shows_what_it_governs_and_whatever_nobody_governs) {
+  const std::array<std::string_view, 1> platform_paths{{"/platform"}};
+  const std::array<std::string_view, 1> oncall_paths{{"/oncall"}};
+  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
+      {sourcemeta::core::JWSAlgorithm::ES256}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = platform_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms,
+        .name = "platform"},
+       {.paths = oncall_paths,
+        .type = sourcemeta::one::Authentication::Type::JWT,
+        .issuer = "acme",
+        .audience = "client",
+        .jwks_uri = "https://idp.test/jwks",
+        .algorithms = algorithms,
+        .name = "oncall"}}};
+  const auto path{test_path("view_visibility.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  // Indices as the table records them: anonymous, then oncall, their
+  // combination, and platform
+  EXPECT_EQ(authentication.view_at(0).name, "public");
+  EXPECT_EQ(authentication.view_at(1).name, "oncall");
+  EXPECT_EQ(authentication.view_at(2).name, "oncall+platform");
+  EXPECT_EQ(authentication.view_at(3).name, "platform");
+
+  // What nobody governs is shown to everybody, the anonymous view included
+  EXPECT_TRUE(authentication.visible(at("/open/x"), 0));
+  EXPECT_TRUE(authentication.visible(at("/open/x"), 1));
+  EXPECT_TRUE(authentication.visible(at("/open/x"), 2));
+  EXPECT_TRUE(authentication.visible(at("/open/x"), 3));
+
+  // And a governed location only to a view satisfying something governing it
+  EXPECT_FALSE(authentication.visible(at("/platform/x"), 0));
+  EXPECT_FALSE(authentication.visible(at("/platform/x"), 1));
+  EXPECT_TRUE(authentication.visible(at("/platform/x"), 2));
+  EXPECT_TRUE(authentication.visible(at("/platform/x"), 3));
+  EXPECT_FALSE(authentication.visible(at("/oncall/x"), 0));
+  EXPECT_TRUE(authentication.visible(at("/oncall/x"), 1));
+  EXPECT_TRUE(authentication.visible(at("/oncall/x"), 2));
+  EXPECT_FALSE(authentication.visible(at("/oncall/x"), 3));
+}
+
+TEST(an_instance_that_read_no_artifact_shows_nothing) {
+  const sourcemeta::one::Authentication authentication{
+      std::filesystem::path{"/no/such/authentication.bin"},
+      stub_fetcher({}, nullptr)};
+  // It admits nobody, so it must not answer that everything is public either,
+  // which is what knowing nothing about who governs what would otherwise mean
+  EXPECT_FALSE(authentication.admits(at("/anywhere"), {.bearer = ""}).allowed);
+  EXPECT_EQ(authentication.view_count(), std::size_t{0});
+  EXPECT_FALSE(authentication.visible(at("/anywhere"), 0));
+  EXPECT_FALSE(authentication.visible(at("/"), 0));
+}
+
+TEST(a_corrupt_artifact_shows_nothing) {
+  const auto path{test_path("visible_corrupt.bin")};
+  std::ofstream stream{path, std::ios::binary};
+  const std::array<char, 4> garbage{{'N', 'O', 'P', 'E'}};
+  stream.write(garbage.data(), garbage.size());
+  stream.close();
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_FALSE(authentication.admits(at("/anywhere"), {.bearer = ""}).allowed);
+  EXPECT_EQ(authentication.view_count(), std::size_t{0});
+  EXPECT_FALSE(authentication.visible(at("/anywhere"), 0));
+}
+
+TEST(an_index_naming_no_view_shows_nothing) {
+  setenv("ONE_TEST_KEY_VIEW_INDEX", "index-secret", 1);
+  const std::array<std::string_view, 1> paths{{"/machine"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_VIEW_INDEX"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths, .keys = keys, .name = "machine"}}};
+  const auto path{test_path("visible_index.bin")};
+  sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+
+  const sourcemeta::one::Authentication authentication{
+      path, stub_fetcher({}, nullptr)};
+  EXPECT_EQ(authentication.view_count(), std::size_t{2});
+  // A location nobody governs is shown under either view this declares
+  EXPECT_TRUE(authentication.visible(at("/open/x"), 0));
+  EXPECT_TRUE(authentication.visible(at("/open/x"), 1));
+  // And under no index beyond them, which a stale action would carry
+  EXPECT_FALSE(authentication.visible(at("/open/x"), 2));
+  EXPECT_FALSE(authentication.visible(at("/machine/x"), 2));
+}
+
 TEST(a_caller_presenting_nothing_belongs_to_no_policy) {
   setenv("ONE_TEST_CLASSIFY_ANONYMOUS_KEY", "machine-secret", 1);
   const std::array<std::string_view, 1> paths{{"/machine"}};

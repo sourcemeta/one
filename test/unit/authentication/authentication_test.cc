@@ -90,6 +90,31 @@ TEST(permits_every_reference) {
       authentication.reference_permitted(at("/internal/a"), at("/internal/a")));
 }
 
+TEST(records_the_anonymous_view_alone) {
+  const sourcemeta::one::Authentication authentication{
+      std::filesystem::path{"/no/such/authentication.bin"}, {}};
+  EXPECT_EQ(authentication.view_count(), std::size_t{1});
+  EXPECT_EQ(authentication.view_at(0).name, "public");
+  EXPECT_EQ(authentication.view_at(0).policies,
+            sourcemeta::one::Authentication::PolicySet{0});
+}
+
+TEST(shows_every_path_in_its_only_view) {
+  const sourcemeta::one::Authentication authentication{
+      std::filesystem::path{"/no/such/authentication.bin"}, {}};
+  EXPECT_TRUE(authentication.visible(at("/"), 0));
+  EXPECT_TRUE(authentication.visible(at(""), 0));
+  EXPECT_TRUE(authentication.visible(at("/internal/foo"), 0));
+}
+
+TEST(shows_nothing_under_an_index_naming_no_view) {
+  const sourcemeta::one::Authentication authentication{
+      std::filesystem::path{"/no/such/authentication.bin"}, {}};
+  EXPECT_EQ(authentication.view_count(), std::size_t{1});
+  EXPECT_FALSE(authentication.visible(at("/"), 1));
+  EXPECT_FALSE(authentication.visible(at("/internal/foo"), 1));
+}
+
 TEST(serves_every_caller_the_anonymous_view) {
   const std::array<std::string_view, 1> cookies{
       {"sourcemeta_one_session=whatever"}};

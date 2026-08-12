@@ -286,6 +286,35 @@ public:
   [[nodiscard]] auto view(const Credentials &credentials) const
       -> std::string_view;
 
+  // One view as the artifact records it: the directory its artifacts live
+  // under, and the policies a caller satisfies to be served from it
+  struct RecordedView {
+    std::string_view name;
+    PolicySet policies;
+  };
+
+  /// How many views this instance serves, which is how many copies of the view
+  /// tree a build of it produced.
+  [[nodiscard]] auto view_count() const -> std::size_t;
+
+  /// The view an index names, ordered as the artifact records them, so that an
+  /// index here is the one a build stamped on the actions it fanned out. The
+  /// name points into the artifact and stays valid for the lifetime of this
+  /// instance.
+  [[nodiscard]] auto view_at(std::size_t index) const -> RecordedView;
+
+  /// Whether a view shows a path, which is the rule a build filters by and the
+  /// only place it is stated. A path nobody governs is shown to everybody, and
+  /// a governed one is shown to a view satisfying any policy governing it,
+  /// exactly as the gate admits a caller under any policy covering the path
+  /// they asked for.
+  ///
+  /// The view is named by its index rather than by the policies it comprises,
+  /// since that is what a build carries on the action it is filtering for, and
+  /// since a set and an index are both numbers that would otherwise be told
+  /// apart by nothing.
+  [[nodiscard]] auto visible(const Path &path, std::size_t view) const -> bool;
+
   // The configuration declaration indices of the policies that govern a path,
   // sorted ascending
   [[nodiscard]] auto governing(const Path &path) const

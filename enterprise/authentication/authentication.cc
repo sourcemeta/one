@@ -1069,6 +1069,19 @@ struct Authentication::Impl {
     return result;
   }
 
+  [[nodiscard]] auto view_count() const noexcept -> std::size_t {
+    return this->view_count_;
+  }
+
+  [[nodiscard]] auto view_at(const std::size_t index) const
+      -> Authentication::RecordedView {
+    assert(index < this->view_count_);
+    const auto &entry{
+        static_cast<const AuthenticationViewEntry *>(this->views_)[index]};
+    return {.name = {this->strings_ + entry.name_offset, entry.name_length},
+            .policies = entry.policies};
+  }
+
   // The name a set of policies is served under, read from the recorded table
   // rather than spelled again here
   [[nodiscard]] auto view_name(const Authentication::PolicySet policies) const
@@ -2018,6 +2031,31 @@ auto Authentication::admits_route(
     const std::string_view required_audience) const -> Authentication::Verdict {
   return this->impl_->admits(target, credentials.bearer, credentials.cookies,
                              required_audience);
+}
+
+auto Authentication::view_count() const -> std::size_t {
+  return this->impl_->view_count();
+}
+
+auto Authentication::view_at(const std::size_t index) const
+    -> Authentication::RecordedView {
+  return this->impl_->view_at(index);
+}
+
+auto Authentication::visible(const Authentication::Path &path,
+                             const std::size_t view) const -> bool {
+  // An index naming no view is one nothing can be shown under, and an instance
+  // that could not read its artifact names none at all. Both answer here rather
+  // than below, since what nobody governs would otherwise be shown by an
+  // instance that knows nothing about who governs what, which is the one way
+  // this could disclose more than the gate admits
+  if (view >= this->impl_->view_count()) {
+    return false;
+  }
+
+  const auto governing{this->impl_->match(path.value())};
+  return governing == 0 ||
+         (governing & this->impl_->view_at(view).policies) != 0;
 }
 
 auto Authentication::governing(const Authentication::Path &path) const
