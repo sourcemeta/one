@@ -38,7 +38,7 @@ public:
   }
 
   auto rest(const std::span<std::string_view>, std::string_view,
-            sourcemeta::one::HTTPRequest &request,
+            std::string_view, sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     sourcemeta::one::json_error(
         request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,

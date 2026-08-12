@@ -126,9 +126,13 @@ public:
   auto operator=(const RouterAction &) -> RouterAction & = delete;
   auto operator=(RouterAction &&) -> RouterAction & = delete;
 
+  // The view a caller is served arrives alongside what they presented, because
+  // it follows from the same reading and a request resolves several artifacts.
+  // Working it out where a path is built would place the same caller once per
+  // artifact rather than once per request
   virtual auto rest(const std::span<std::string_view> matches,
-                    std::string_view credential, HTTPRequest &request,
-                    HTTPResponse &response) -> void = 0;
+                    std::string_view credential, std::string_view view,
+                    HTTPRequest &request, HTTPResponse &response) -> void = 0;
 
   // The whole credential rather than the bearer alone, since a browser reaching
   // a tool is admitted by its session cookie and would otherwise pass the gate
@@ -205,7 +209,8 @@ public:
     std::string_view x_frame_options{};
   };
 
-  [[nodiscard]] auto artifact_resolve_path(Credentials credentials,
+  [[nodiscard]] auto artifact_resolve_path(std::string_view view,
+                                           Credentials credentials,
                                            std::string_view input, Tree tree,
                                            std::string_view artifact_name) const
       -> ArtifactResolution;
@@ -289,7 +294,7 @@ protected:
 
 private:
   [[nodiscard]] auto artifact_locate(const Authentication::Path &path,
-                                     Tree tree,
+                                     Tree tree, std::string_view view,
                                      std::string_view artifact_name) const
       -> std::optional<std::filesystem::path>;
 

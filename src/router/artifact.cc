@@ -38,12 +38,14 @@ auto RouterAction::canonical_path(const std::string_view input) const
 }
 
 auto RouterAction::artifact_locate(const Authentication::Path &path,
-                                   const Tree tree,
+                                   const Tree tree, const std::string_view view,
                                    const std::string_view artifact_name) const
     -> std::optional<std::filesystem::path> {
+  // The unit tree holds one answer whoever asks, so only the view tree carries
+  // the segment naming who is being served
   const auto tree_root{tree == Tree::Schemas
                            ? this->index_directory_ / "schemas"
-                           : this->index_directory_ / "explorer" / VIEW_PUBLIC};
+                           : this->index_directory_ / "explorer" / view};
   auto directory{tree_root};
   // The tree stores a resource once, whatever representation was asked for
   const auto location{
@@ -64,9 +66,9 @@ auto RouterAction::artifact_locate(const Authentication::Path &path,
 }
 
 auto RouterAction::artifact_resolve_path(
-    const Credentials credentials, const std::string_view input,
-    const Tree tree, const std::string_view artifact_name) const
-    -> ArtifactResolution {
+    const std::string_view view, const Credentials credentials,
+    const std::string_view input, const Tree tree,
+    const std::string_view artifact_name) const -> ArtifactResolution {
   // The gate and the locator have to agree on where a request points, so both
   // read the one canonical path rather than each deriving its own. A path that
   // names nowhere in this instance is refused without consulting the gate,
@@ -92,7 +94,7 @@ auto RouterAction::artifact_resolve_path(
             .is_public = false};
   }
 
-  auto located{this->artifact_locate(path.value(), tree, artifact_name)};
+  auto located{this->artifact_locate(path.value(), tree, view, artifact_name)};
   if (!located.has_value()) {
     return {.outcome = ArtifactResolution::Outcome::NotFound,
             .path = std::nullopt,
@@ -120,7 +122,8 @@ auto RouterAction::artifact_resolve_path_unauthenticated(
     return std::nullopt;
   }
 
-  auto located{this->artifact_locate(path.value(), tree, artifact_name)};
+  auto located{
+      this->artifact_locate(path.value(), tree, VIEW_PUBLIC, artifact_name)};
   if (!located.has_value()) {
     return std::nullopt;
   }

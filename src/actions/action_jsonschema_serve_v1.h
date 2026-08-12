@@ -60,6 +60,7 @@ public:
                                         : std::string_view{"schema"}};
     const sourcemeta::one::RequestCookies cookies{request};
     const auto resolution{self.artifact_resolve_path(
+        sourcemeta::one::VIEW_PUBLIC,
         {.bearer = credential, .cookies = cookies}, schema_path,
         sourcemeta::one::RouterAction::Tree::Schemas, artifact)};
     if (resolution.outcome ==
@@ -91,7 +92,8 @@ public:
   }
 
   auto rest(const std::span<std::string_view> matches,
-            std::string_view credential, sourcemeta::one::HTTPRequest &request,
+            std::string_view credential, std::string_view,
+            sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
       sourcemeta::one::cors_preflight(request, response, "GET, HEAD, OPTIONS",

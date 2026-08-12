@@ -59,7 +59,7 @@ public:
   }
 
   auto rest(const std::span<std::string_view> matches,
-            const std::string_view credential,
+            const std::string_view credential, const std::string_view,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     const auto &path{matches.front()};
@@ -106,9 +106,11 @@ public:
     schema_uri.append(path);
     const sourcemeta::one::RequestCookies cookies{request};
     const auto schema_present{
-        this->artifact_resolve_path({.bearer = credential, .cookies = cookies},
+        this->artifact_resolve_path(sourcemeta::one::VIEW_PUBLIC,
+                                    {.bearer = credential, .cookies = cookies},
                                     schema_uri, Tree::Schemas, "schema")};
     const auto evaluation_enabled{this->artifact_resolve_path(
+        sourcemeta::one::VIEW_PUBLIC,
         {.bearer = credential, .cookies = cookies}, schema_uri, Tree::Schemas,
         "blaze-exhaustive")};
     if (schema_present.outcome ==
@@ -349,10 +351,12 @@ public:
     }
 
     const auto &schema_uri{arguments.at("schema").to_string()};
-    const auto schema_present{this->artifact_resolve_path(
-        credentials, schema_uri, Tree::Schemas, "schema")};
+    const auto schema_present{
+        this->artifact_resolve_path(sourcemeta::one::VIEW_PUBLIC, credentials,
+                                    schema_uri, Tree::Schemas, "schema")};
     const auto evaluation_enabled{this->artifact_resolve_path(
-        credentials, schema_uri, Tree::Schemas, "blaze-exhaustive")};
+        sourcemeta::one::VIEW_PUBLIC, credentials, schema_uri, Tree::Schemas,
+        "blaze-exhaustive")};
     if (schema_present.outcome ==
             sourcemeta::one::ArtifactResolution::Outcome::Denied ||
         evaluation_enabled.outcome ==

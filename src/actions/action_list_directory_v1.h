@@ -49,7 +49,8 @@ public:
   }
 
   auto rest(const std::span<std::string_view> matches,
-            std::string_view credential, sourcemeta::one::HTTPRequest &request,
+            std::string_view credential, std::string_view view,
+            sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
       sourcemeta::one::cors_preflight(request, response, "GET, HEAD, OPTIONS",
@@ -60,9 +61,9 @@ public:
     const std::string_view path_match{matches.empty() ? std::string_view{}
                                                       : matches.front()};
     const sourcemeta::one::RequestCookies cookies{request};
-    const auto resolution{
-        this->artifact_resolve_path({.bearer = credential, .cookies = cookies},
-                                    path_match, Tree::Explorer, "directory")};
+    const auto resolution{this->artifact_resolve_path(
+        view, {.bearer = credential, .cookies = cookies}, path_match,
+        Tree::Explorer, "directory")};
     if (resolution.outcome ==
         sourcemeta::one::ArtifactResolution::Outcome::Denied) {
       sourcemeta::one::json_error_unauthorized(request, response,
@@ -99,8 +100,11 @@ public:
 
     static const sourcemeta::core::JSON EMPTY_STRING{""};
     const auto &path_arg{arguments.at_or("path", EMPTY_STRING).to_string()};
+    // A tool call reaches one artifact, so placing the caller here is still
+    // once for the request that carried them
+    const auto view{this->dispatcher().authentication().view(credentials)};
     const auto resolution{this->artifact_resolve_path(
-        credentials, path_arg, Tree::Explorer, "directory")};
+        view, credentials, path_arg, Tree::Explorer, "directory")};
     if (resolution.outcome ==
         sourcemeta::one::ArtifactResolution::Outcome::Denied) {
       return sourcemeta::core::mcp_make_tool_error(request_id,

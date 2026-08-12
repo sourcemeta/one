@@ -145,7 +145,12 @@ auto Router::dispatch(
     return;
   }
 
-  instance->rest(matches, credential, request, response);
+  // Resolved once here, since the same caller is served every artifact this
+  // request reaches and placing them again for each of them would repeat the
+  // reading rather than the lookup
+  const auto view{
+      this->authentication_.view({.bearer = credential, .cookies = cookies})};
+  instance->rest(matches, credential, view, request, response);
 }
 
 // A denial only becomes a silent renewal when the browser carries the marker a

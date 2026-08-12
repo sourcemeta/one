@@ -64,8 +64,11 @@ auto RouterAction::blaze_template(const Credentials credentials,
                                   const std::string_view schema_uri,
                                   const sourcemeta::blaze::Mode mode) const
     -> std::shared_ptr<const sourcemeta::blaze::Template> {
+  // A compiled schema lives in the unit tree, which holds one answer whoever
+  // asks and carries no segment naming a view, so what is named here reaches
+  // no path and the anonymous one stands for every caller
   const auto resolution{this->artifact_resolve_path(
-      credentials, schema_uri, Tree::Schemas,
+      sourcemeta::one::VIEW_PUBLIC, credentials, schema_uri, Tree::Schemas,
       mode == sourcemeta::blaze::Mode::FastValidation ? "blaze-fast"
                                                       : "blaze-exhaustive")};
   assert(resolution.outcome == ArtifactResolution::Outcome::Found);
