@@ -567,7 +567,7 @@ struct GENERATE_DEPENDENTS {
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
-                      const sourcemeta::one::Configuration &configuration,
+                      const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
 
@@ -575,14 +575,11 @@ struct GENERATE_DEPENDENTS {
         std::unordered_map<sourcemeta::core::JSON::String,
                            std::set<std::pair<sourcemeta::core::JSON::String,
                                               sourcemeta::core::JSON::String>>>;
+    // What this reads is chosen for it, so a referrer a view is without never
+    // reaches here and there is nothing to leave out
     DirectMap direct;
-    std::filesystem::path authentication_path;
     for (const auto &dependency : action.dependencies) {
-      // Named rather than inferred from what it is not, so that another
-      // dependency arriving here is passed over instead of being read as this
-      // one
       if (dependency.filename() == "authentication.bin") {
-        authentication_path = dependency;
         continue;
       }
 
@@ -596,10 +593,6 @@ struct GENERATE_DEPENDENTS {
                                                    entry.at("at").to_string());
       }
     }
-
-    assert(!authentication_path.empty());
-    const sourcemeta::one::Authentication authentication{authentication_path,
-                                                         {}};
 
     // Only this leaf's transitive dependents are needed, so traverse the
     // reverse graph from it alone rather than computing the closure for every
@@ -622,18 +615,6 @@ struct GENERATE_DEPENDENTS {
       }
 
       for (const auto &[dependent, at] : match->second) {
-        // A view is told who points at something only where it could reach the
-        // pointer itself, so the graph is walked through what it can see rather
-        // than walked whole and reported in part. What lies beyond something it
-        // cannot see is left unreported too, since a path through a schema it
-        // was never shown is a fact about that schema
-        const auto referrer{sourcemeta::one::Authentication::Path::parse(
-            dependent, configuration.url)};
-        if (!referrer.has_value() ||
-            !authentication.visible(referrer.value(), action.view)) {
-          continue;
-        }
-
         edges.emplace(dependent, current, at);
         if (visited.emplace(dependent).second) {
           queue.emplace(dependent);

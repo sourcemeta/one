@@ -36,7 +36,8 @@ TEST(full_empty_registry) {
                     INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
-      output, schemas, "1.0.0", false, "", "Full", {}, VIEWS)};
+      output, schemas, "1.0.0", false, "", "Full", {}, VIEWS,
+      sourcemeta::one::view_filter_everything())};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 4, 5);
 
@@ -71,7 +72,8 @@ TEST(full_single_leaf) {
                     INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
-      output, schemas, "1.0.0", false, "", "Full", {}, VIEWS)};
+      output, schemas, "1.0.0", false, "", "Full", {}, VIEWS,
+      sourcemeta::one::view_filter_everything())};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 6, 8);
 
@@ -116,6 +118,72 @@ TEST(full_single_leaf) {
       output / "secondary" / "public" / "%" / "listing.bin");
 }
 
+TEST(a_leaf_no_view_holds_is_written_outside_the_namespaced_tree_alone) {
+  const std::filesystem::path output{"/output"};
+  sourcemeta::one::BuildState entries;
+  const TestLeaves schemas{
+      {"https://example.com/foo", "/src/foo.json", "foo", MTIME(100)}};
+
+  entries.configure(test_rules::RULES.leaves, test_rules::RULES.directories,
+                    sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
+                    INPUTS, test_rules::RULES.sentinel);
+  // The second view cannot see this leaf, so it holds nothing describing it
+  const auto plan{sourcemeta::one::delta<test_rules::RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, schemas, "1.0.0", false, "", "Full", {}, TWO_VIEWS,
+      [](const std::size_t view, const std::string_view) -> bool {
+        return view == 0;
+      })};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 6, 9);
+
+  EXPECT_ACTION(plan, 0, 0, 2, test_rules::ACTION_CONFIGURATION,
+                output / "configuration.json", "");
+  EXPECT_ACTION(plan, 0, 1, 2, test_rules::ACTION_VERSION,
+                output / "version.json", "1.0.0");
+
+  EXPECT_ACTION(plan, 1, 0, 1, test_rules::ACTION_ROUTES, output / "routes.bin",
+                "Full", output / "configuration.json");
+
+  EXPECT_ACTION(plan, 2, 0, 1, test_rules::ACTION_GATE, output / "gate.bin", "",
+                output / "routes.bin");
+
+  // The listing of a view holding nothing here waits on nothing, so it is ready
+  // as soon as anything is
+  EXPECT_ACTION_UNORDERED(plan, 3, 0, 2, test_rules::ACTION_PRIMARY,
+                          output / "primary" / "foo" / "%" / "primary.bin",
+                          "https://example.com/foo",
+                          std::filesystem::path{"/"} / "src" / "foo.json",
+                          output / "configuration.json");
+  EXPECT_ACTION_UNORDERED(
+      plan, 3, 1, 2, test_rules::ACTION_LISTING,
+      output / "secondary" / "private" / "%" / "listing.bin", "");
+
+  EXPECT_ACTION(plan, 4, 0, 1, test_rules::ACTION_METADATA,
+                output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+                "https://example.com/foo",
+                output / "primary" / "foo" / "%" / "primary.bin");
+
+  EXPECT_ACTION_UNORDERED(
+      plan, 5, 0, 2, test_rules::ACTION_LISTING,
+      output / "secondary" / "public" / "%" / "listing.bin", "",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin");
+  EXPECT_ACTION_UNORDERED(
+      plan, 5, 1, 2, test_rules::ACTION_WEB,
+      output / "secondary" / "public" / "foo" / "%" / "web.bin",
+      "https://example.com/foo",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin");
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      output / "routes.bin", output / "gate.bin",
+      output / "primary" / "foo" / "%" / "primary.bin",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "foo" / "%" / "web.bin",
+      output / "secondary" / "public" / "%" / "listing.bin",
+      output / "secondary" / "private" / "%" / "listing.bin");
+}
+
 TEST(full_single_leaf_across_two_views) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
@@ -127,7 +195,8 @@ TEST(full_single_leaf_across_two_views) {
                     INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
-      output, schemas, "1.0.0", false, "", "Full", {}, TWO_VIEWS)};
+      output, schemas, "1.0.0", false, "", "Full", {}, TWO_VIEWS,
+      sourcemeta::one::view_filter_everything())};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 6, 11);
 
@@ -204,7 +273,8 @@ TEST(full_single_leaf_headless_skips_full_only) {
                     INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_HEADLESS, entries,
-      output, schemas, "1.0.0", false, "", "Headless", {}, VIEWS)};
+      output, schemas, "1.0.0", false, "", "Headless", {}, VIEWS,
+      sourcemeta::one::view_filter_everything())};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_HEADLESS, 6,
                          7);
@@ -254,7 +324,8 @@ TEST(full_nested_leaf_path) {
                     INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
-      output, schemas, "1.0.0", false, "", "Full", {}, VIEWS)};
+      output, schemas, "1.0.0", false, "", "Full", {}, VIEWS,
+      sourcemeta::one::view_filter_everything())};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 8, 10);
 
@@ -321,7 +392,8 @@ TEST(full_with_comment_emits_comment_global) {
                     INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
-      output, schemas, "1.0.0", false, "hello world", "Full", {}, VIEWS)};
+      output, schemas, "1.0.0", false, "hello world", "Full", {}, VIEWS,
+      sourcemeta::one::view_filter_everything())};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 4, 6);
 
@@ -359,7 +431,8 @@ TEST(full_without_comment_removes_stale_comment) {
                     INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
-      output, schemas, "1.0.0", false, "", "Full", {}, VIEWS)};
+      output, schemas, "1.0.0", false, "", "Full", {}, VIEWS,
+      sourcemeta::one::view_filter_everything())};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 5, 6);
 
@@ -398,7 +471,8 @@ TEST(full_multiple_leaves_emits_per_leaf_actions) {
                     INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
-      output, schemas, "1.0.0", false, "", "Full", {}, VIEWS)};
+      output, schemas, "1.0.0", false, "", "Full", {}, VIEWS,
+      sourcemeta::one::view_filter_everything())};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 6, 11);
 
@@ -477,7 +551,8 @@ TEST(incremental_cached_globals_are_omitted) {
                     INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
-      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS)};
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS,
+      sourcemeta::one::view_filter_everything())};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 3, 4);
 
@@ -520,7 +595,8 @@ TEST(incremental_only_the_new_leaf_is_built_beside_an_unchanged_one) {
                     INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
-      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS)};
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS,
+      sourcemeta::one::view_filter_everything())};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 3, 4);
 
@@ -579,7 +655,8 @@ TEST(incremental_missing_version_global_is_repaired) {
                     INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
-      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS)};
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS,
+      sourcemeta::one::view_filter_everything())};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 1, 1);
 
@@ -612,7 +689,8 @@ TEST(incremental_missing_configuration_anchor_is_repaired) {
                     INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
-      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS)};
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS,
+      sourcemeta::one::view_filter_everything())};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 1, 1);
 
@@ -645,7 +723,8 @@ TEST(incremental_missing_mode_global_is_repaired) {
                     INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
-      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS)};
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS,
+      sourcemeta::one::view_filter_everything())};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 1, 1);
 
@@ -678,7 +757,8 @@ TEST(incremental_missing_dependent_global_is_repaired) {
                     INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
-      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS)};
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS,
+      sourcemeta::one::view_filter_everything())};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 1, 1);
 
@@ -713,7 +793,8 @@ TEST(incremental_missing_globals_repair_in_dependency_order) {
                     INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
-      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS)};
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS,
+      sourcemeta::one::view_filter_everything())};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 3, 3);
 
@@ -759,7 +840,8 @@ TEST(incremental_unrecorded_missing_global_is_not_demanded) {
                     INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
-      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS)};
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS,
+      sourcemeta::one::view_filter_everything())};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 3, 4);
 
@@ -797,14 +879,16 @@ TEST(incremental_missing_global_repairs_alone_when_nothing_else_changed) {
                     INPUTS, test_rules::RULES.sentinel);
   const auto clean_plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
-      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS)};
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS,
+      sourcemeta::one::view_filter_everything())};
   EXPECT_EQ(clean_plan.waves.size(), 0);
   EXPECT_EQ(clean_plan.size, 0);
 
   std::filesystem::remove(output / "version.json");
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
-      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS)};
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS,
+      sourcemeta::one::view_filter_everything())};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 1, 1);
   EXPECT_ACTION(plan, 0, 0, 1, test_rules::ACTION_VERSION,
@@ -826,7 +910,8 @@ TEST(limits_zero_disables_check) {
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
       output, schemas, "1.0.0", false, "", "Full",
-      {.maximum_direct_directory_entries = 0}, VIEWS)};
+      {.maximum_direct_directory_entries = 0}, VIEWS,
+      sourcemeta::one::view_filter_everything())};
   EXPECT_EQ(plan.size, 17u);
 }
 
@@ -843,7 +928,8 @@ TEST(limits_within_threshold_succeeds) {
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
       output, schemas, "1.0.0", false, "", "Full",
-      {.maximum_direct_directory_entries = 5}, VIEWS)};
+      {.maximum_direct_directory_entries = 5}, VIEWS,
+      sourcemeta::one::view_filter_everything())};
   EXPECT_EQ(plan.size, 11u);
 }
 
@@ -859,7 +945,8 @@ TEST(a_named_view_is_a_segment_of_the_namespaced_tree_alone) {
                     INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
-      output, schemas, "1.0.0", false, "", "Full", {}, named)};
+      output, schemas, "1.0.0", false, "", "Full", {}, named,
+      sourcemeta::one::view_filter_everything())};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 6, 8);
 
@@ -922,7 +1009,8 @@ TEST(combine_leaf_without_previous_references_rebuilds_its_own_reverse) {
       test_rules::COMBINE_RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::COMBINE_RULES>(
       sourcemeta::one::BuildPhase::Combine, test_rules::MODE_FULL, entries,
-      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS)};
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS,
+      sourcemeta::one::view_filter_everything())};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 1, 1);
 
@@ -965,7 +1053,8 @@ TEST(combine_new_reference_rebuilds_the_reverse_of_what_it_points_at) {
 
   const auto plan{sourcemeta::one::delta<test_rules::COMBINE_RULES>(
       sourcemeta::one::BuildPhase::Combine, test_rules::MODE_FULL, entries,
-      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS)};
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS,
+      sourcemeta::one::view_filter_everything())};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 1, 1);
 
@@ -1012,7 +1101,8 @@ TEST(combine_unchanged_references_rebuild_nothing) {
 
   const auto plan{sourcemeta::one::delta<test_rules::COMBINE_RULES>(
       sourcemeta::one::BuildPhase::Combine, test_rules::MODE_FULL, entries,
-      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS)};
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS,
+      sourcemeta::one::view_filter_everything())};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 0, 0);
 
@@ -1052,7 +1142,8 @@ TEST(combine_dropped_reference_rebuilds_the_reverse_of_what_it_left) {
 
   const auto plan{sourcemeta::one::delta<test_rules::COMBINE_RULES>(
       sourcemeta::one::BuildPhase::Combine, test_rules::MODE_FULL, entries,
-      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS)};
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS,
+      sourcemeta::one::view_filter_everything())};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 1, 1);
 
@@ -1083,7 +1174,8 @@ TEST(combine_destination_follows_the_tree_the_rule_names) {
       INPUTS, test_rules::COMBINE_RULES_SECONDARY.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::COMBINE_RULES_SECONDARY>(
       sourcemeta::one::BuildPhase::Combine, test_rules::MODE_FULL, entries,
-      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS)};
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS,
+      sourcemeta::one::view_filter_everything())};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 1, 1);
 
@@ -1111,7 +1203,8 @@ TEST(limits_exceeded_throws) {
     sourcemeta::one::delta<test_rules::RULES>(
         sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
         output, schemas, "1.0.0", false, "", "Full",
-        {.maximum_direct_directory_entries = 2}, VIEWS);
+        {.maximum_direct_directory_entries = 2}, VIEWS,
+        sourcemeta::one::view_filter_everything());
     FAIL();
   } catch (const sourcemeta::one::BuildTooManyDirectoryEntriesError &error) {
     EXPECT_STREQ(error.what(), "Too many entries in a single directory");

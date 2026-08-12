@@ -93,16 +93,6 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/public/%/login-html.metapack
 ./explorer/public/%/mcp.metapack
 ./explorer/public/%/search.metapack
-./explorer/public/schemas
-./explorer/public/schemas/%
-./explorer/public/schemas/%/directory-html.metapack
-./explorer/public/schemas/%/directory.metapack
-./explorer/public/schemas/%/login-html.metapack
-./explorer/public/schemas/a
-./explorer/public/schemas/a/%
-./explorer/public/schemas/a/%/dependents.metapack
-./explorer/public/schemas/a/%/schema-html.metapack
-./explorer/public/schemas/a/%/schema.metapack
 ./explorer/staff
 ./explorer/staff/%
 ./explorer/staff/%/401.metapack

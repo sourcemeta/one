@@ -149,16 +149,6 @@ cat << 'EOF' > "$TMP/expected-after.txt"
 ./explorer/public/schemas/%/directory-html.metapack
 ./explorer/public/schemas/%/directory.metapack
 ./explorer/public/schemas/%/login-html.metapack
-./explorer/public/schemas/a
-./explorer/public/schemas/a/%
-./explorer/public/schemas/a/%/dependents.metapack
-./explorer/public/schemas/a/%/schema-html.metapack
-./explorer/public/schemas/a/%/schema.metapack
-./explorer/public/schemas/b
-./explorer/public/schemas/b/%
-./explorer/public/schemas/b/%/dependents.metapack
-./explorer/public/schemas/b/%/schema-html.metapack
-./explorer/public/schemas/b/%/schema.metapack
 EOF
 
 diff "$TMP/after.txt" "$TMP/expected-after.txt"
