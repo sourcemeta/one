@@ -3,8 +3,10 @@
 # Two token policies naming one issuer can both be satisfied by a single token
 # carrying both claims, so the registry is looked at four ways rather than
 # three: anonymously, under each of them, and under the two together. The tree
-# for the pair is named by joining theirs in order, whatever order they were
-# declared in
+# for the pair is named by joining their names sorted rather than in the order
+# they were declared, which is what gives one combination one spelling. These
+# are declared with the later name first, so the sorting is what the expected
+# output below is showing
 
 set -o errexit
 set -o nounset
