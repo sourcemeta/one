@@ -47,7 +47,8 @@ EOF
 
 cd "$TMP/output"
 find . -mindepth 1 \
-  \( -path './schemas/self' -o -path './explorer/public/self' \) -prune \
+  \( -path './schemas/self' -o -path './explorer/public/self' \
+     -o -path './explorer/test/self' \) -prune \
   -o -print \
   | LC_ALL=C sort > "$TMP/manifest.txt"
 cd - > /dev/null
@@ -80,6 +81,30 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/public/test/schemas/test-1/%/dependents.metapack
 ./explorer/public/test/schemas/test-1/%/schema-html.metapack
 ./explorer/public/test/schemas/test-1/%/schema.metapack
+./explorer/test
+./explorer/test/%
+./explorer/test/%/401.metapack
+./explorer/test/%/404.metapack
+./explorer/test/%/directory-html.metapack
+./explorer/test/%/directory.metapack
+./explorer/test/%/login-html.metapack
+./explorer/test/%/mcp.metapack
+./explorer/test/%/search.metapack
+./explorer/test/test
+./explorer/test/test/%
+./explorer/test/test/%/directory-html.metapack
+./explorer/test/test/%/directory.metapack
+./explorer/test/test/%/login-html.metapack
+./explorer/test/test/schemas
+./explorer/test/test/schemas/%
+./explorer/test/test/schemas/%/directory-html.metapack
+./explorer/test/test/schemas/%/directory.metapack
+./explorer/test/test/schemas/%/login-html.metapack
+./explorer/test/test/schemas/test-1
+./explorer/test/test/schemas/test-1/%
+./explorer/test/test/schemas/test-1/%/dependents.metapack
+./explorer/test/test/schemas/test-1/%/schema-html.metapack
+./explorer/test/test/schemas/test-1/%/schema.metapack
 ./routes.bin
 ./schemas
 ./schemas/test

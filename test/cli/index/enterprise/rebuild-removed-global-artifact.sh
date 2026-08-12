@@ -53,6 +53,25 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./authentication.bin
 ./configuration.json
 ./explorer
+./explorer/alpha
+./explorer/alpha/%
+./explorer/alpha/%/401.metapack
+./explorer/alpha/%/404.metapack
+./explorer/alpha/%/directory-html.metapack
+./explorer/alpha/%/directory.metapack
+./explorer/alpha/%/login-html.metapack
+./explorer/alpha/%/mcp.metapack
+./explorer/alpha/%/search.metapack
+./explorer/alpha/schemas
+./explorer/alpha/schemas/%
+./explorer/alpha/schemas/%/directory-html.metapack
+./explorer/alpha/schemas/%/directory.metapack
+./explorer/alpha/schemas/%/login-html.metapack
+./explorer/alpha/schemas/a
+./explorer/alpha/schemas/a/%
+./explorer/alpha/schemas/a/%/dependents.metapack
+./explorer/alpha/schemas/a/%/schema-html.metapack
+./explorer/alpha/schemas/a/%/schema.metapack
 ./explorer/public
 ./explorer/public/%
 ./explorer/public/%/401.metapack
@@ -98,7 +117,8 @@ rm "$TMP/output/authentication.bin"
 
 cd "$TMP/output"
 find . -mindepth 1 \
-  \( -path './schemas/self' -o -path './explorer/public/self' \) -prune \
+  \( -path './schemas/self' -o -path './explorer/public/self' \
+     -o -path './explorer/alpha/self' \) -prune \
   -o -print \
   | LC_ALL=C sort > "$TMP/manifest.txt"
 cd - > /dev/null
@@ -110,7 +130,8 @@ rm "$TMP/output/routes.bin"
 
 cd "$TMP/output"
 find . -mindepth 1 \
-  \( -path './schemas/self' -o -path './explorer/public/self' \) -prune \
+  \( -path './schemas/self' -o -path './explorer/public/self' \
+     -o -path './explorer/alpha/self' \) -prune \
   -o -print \
   | LC_ALL=C sort > "$TMP/manifest.txt"
 cd - > /dev/null

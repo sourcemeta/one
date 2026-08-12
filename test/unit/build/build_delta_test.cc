@@ -17,6 +17,11 @@ static constexpr sourcemeta::one::BuildState::InputsFingerprint INPUTS{
 // namespaced tree always carries a segment
 static constexpr std::array<std::string_view, 1> VIEWS{{"public"}};
 
+// A registry declaring one policy is served two ways, so its namespaced tree is
+// written twice and everything outside it once
+static constexpr std::array<std::string_view, 2> TWO_VIEWS{
+    {"public", "private"}};
+
 static auto delta_path(const std::string &name) -> std::filesystem::path {
   return std::filesystem::path{BINARY_DIRECTORY} / "delta" / name;
 }
@@ -109,6 +114,83 @@ TEST(full_single_leaf) {
       output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
       output / "secondary" / "public" / "foo" / "%" / "web.bin",
       output / "secondary" / "public" / "%" / "listing.bin");
+}
+
+TEST(full_single_leaf_across_two_views) {
+  const std::filesystem::path output{"/output"};
+  sourcemeta::one::BuildState entries;
+  const TestLeaves schemas{
+      {"https://example.com/foo", "/src/foo.json", "foo", MTIME(100)}};
+
+  entries.configure(test_rules::RULES.leaves, test_rules::RULES.directories,
+                    sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
+                    INPUTS, test_rules::RULES.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, schemas, "1.0.0", false, "", "Full", {}, TWO_VIEWS)};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 6, 11);
+
+  EXPECT_ACTION(plan, 0, 0, 2, test_rules::ACTION_CONFIGURATION,
+                output / "configuration.json", "");
+  EXPECT_ACTION(plan, 0, 1, 2, test_rules::ACTION_VERSION,
+                output / "version.json", "1.0.0");
+
+  EXPECT_ACTION(plan, 1, 0, 1, test_rules::ACTION_ROUTES, output / "routes.bin",
+                "Full", output / "configuration.json");
+
+  EXPECT_ACTION(plan, 2, 0, 1, test_rules::ACTION_GATE, output / "gate.bin", "",
+                output / "routes.bin");
+
+  // The unit tree is written once whatever the view count, since nothing in it
+  // depends on who is asking
+  EXPECT_ACTION(plan, 3, 0, 1, test_rules::ACTION_PRIMARY,
+                output / "primary" / "foo" / "%" / "primary.bin",
+                "https://example.com/foo",
+                std::filesystem::path{"/"} / "src" / "foo.json",
+                output / "configuration.json");
+
+  EXPECT_ACTION_UNORDERED(plan, 4, 0, 2, test_rules::ACTION_METADATA,
+                          output / "secondary" / "private" / "foo" / "%" /
+                              "metadata.bin",
+                          "https://example.com/foo",
+                          output / "primary" / "foo" / "%" / "primary.bin");
+  EXPECT_ACTION_UNORDERED(plan, 4, 1, 2, test_rules::ACTION_METADATA,
+                          output / "secondary" / "public" / "foo" / "%" /
+                              "metadata.bin",
+                          "https://example.com/foo",
+                          output / "primary" / "foo" / "%" / "primary.bin");
+
+  // Each view's listing reads its own view's children rather than another's
+  EXPECT_ACTION_UNORDERED(
+      plan, 5, 0, 4, test_rules::ACTION_LISTING,
+      output / "secondary" / "private" / "%" / "listing.bin", "",
+      output / "secondary" / "private" / "foo" / "%" / "metadata.bin");
+  EXPECT_ACTION_UNORDERED(
+      plan, 5, 1, 4, test_rules::ACTION_WEB,
+      output / "secondary" / "private" / "foo" / "%" / "web.bin",
+      "https://example.com/foo",
+      output / "secondary" / "private" / "foo" / "%" / "metadata.bin");
+  EXPECT_ACTION_UNORDERED(
+      plan, 5, 2, 4, test_rules::ACTION_LISTING,
+      output / "secondary" / "public" / "%" / "listing.bin", "",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin");
+  EXPECT_ACTION_UNORDERED(
+      plan, 5, 3, 4, test_rules::ACTION_WEB,
+      output / "secondary" / "public" / "foo" / "%" / "web.bin",
+      "https://example.com/foo",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin");
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      output / "routes.bin", output / "gate.bin",
+      output / "primary" / "foo" / "%" / "primary.bin",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "foo" / "%" / "web.bin",
+      output / "secondary" / "public" / "%" / "listing.bin",
+      output / "secondary" / "private" / "foo" / "%" / "metadata.bin",
+      output / "secondary" / "private" / "foo" / "%" / "web.bin",
+      output / "secondary" / "private" / "%" / "listing.bin");
 }
 
 TEST(full_single_leaf_headless_skips_full_only) {
