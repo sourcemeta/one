@@ -578,7 +578,10 @@ struct GENERATE_DEPENDENTS {
     DirectMap direct;
     std::filesystem::path authentication_path;
     for (const auto &dependency : action.dependencies) {
-      if (dependency.filename() != "dependencies.metapack") {
+      // Named rather than inferred from what it is not, so that another
+      // dependency arriving here is passed over instead of being read as this
+      // one
+      if (dependency.filename() == "authentication.bin") {
         authentication_path = dependency;
         continue;
       }

@@ -3,7 +3,7 @@
 # disclosure this precomputes away: the answer is built per view at index time
 # rather than filtered when the question arrives.
 #
-# Two schemas point at /public/string, which anybody may read: /public/wrapper,
+# Two schemas point at /public/string, which anybody may read: /orphan/lonely,
 # which anybody may read too, and /reports/quarterly, which the reports policy
 # gates. So the graph narrows rather than empties, and a view that reported
 # nothing at all would fail here as loudly as one that reported everything.
@@ -30,7 +30,7 @@ anonymous_schema: header "Link" regex "<([^>]+)>"
 header "ETag" matches /^"[0-9a-f]{64}"$/
 [
   {
-    "from": "{{base}}/public/wrapper",
+    "from": "{{base}}/orphan/lonely",
     "to": "{{base}}/public/string",
     "at": "/properties/label/$ref"
   }
@@ -70,13 +70,14 @@ Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Captures]
 reports_body: body
+reports_etag: header "ETag"
 reports_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" matches /^"[0-9a-f]{64}"$/
 header "ETag" != {{anonymous_etag}}
 [
   {
-    "from": "{{base}}/public/wrapper",
+    "from": "{{base}}/orphan/lonely",
     "to": "{{base}}/public/string",
     "at": "/properties/label/$ref"
   },
@@ -111,9 +112,10 @@ Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "ETag" != {{anonymous_etag}}
+header "ETag" == {{reports_etag}}
 [
   {
-    "from": "{{base}}/public/wrapper",
+    "from": "{{base}}/orphan/lonely",
     "to": "{{base}}/public/string",
     "at": "/properties/label/$ref"
   },
@@ -146,7 +148,7 @@ Access-Control-Expose-Headers: Link, ETag
 header "ETag" == {{anonymous_etag}}
 [
   {
-    "from": "{{base}}/public/wrapper",
+    "from": "{{base}}/orphan/lonely",
     "to": "{{base}}/public/string",
     "at": "/properties/label/$ref"
   }

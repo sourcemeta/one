@@ -134,22 +134,79 @@ template <const auto &RuleSet>
   return 0;
 }
 
+constexpr auto fingerprint_mix(std::uint32_t &hash, const std::uint8_t byte)
+    -> void {
+  hash ^= byte;
+  hash *= 0x01000193U;
+}
+
+constexpr auto fingerprint_text(std::uint32_t &hash, const char *text) -> void {
+  if (text == nullptr) {
+    fingerprint_mix(hash, 0);
+    return;
+  }
+
+  for (const char *cursor{text}; *cursor != '\0'; cursor++) {
+    fingerprint_mix(hash, static_cast<std::uint8_t>(*cursor));
+  }
+}
+
+// What a rule produces follows from more than the action naming it, so
+// everything deciding that is read here. A recorded state whose rules differ
+// from these was built by a different set of them, and reusing what it holds
+// would keep whatever those produced. What a rule depends on is the case that
+// brought this about: a rule that grew one produces something else from the
+// same action, and a build noticing only the action would serve the old answer
+// until something unrelated forced it to look again
 template <const auto &RuleSet>
 [[nodiscard]] consteval auto rules_fingerprint() -> std::uint32_t {
   std::uint32_t hash{0x811c9dc5U};
-  const auto mix = [&hash](const std::uint8_t byte) -> void {
-    hash ^= byte;
-    hash *= 0x01000193U;
-  };
-
   for (const auto &rule : RuleSet.leaves) {
-    mix(rule.action);
+    fingerprint_mix(hash, rule.action);
+    fingerprint_mix(hash, rule.base);
+    fingerprint_text(hash, rule.filename);
+    fingerprint_mix(hash, static_cast<std::uint8_t>(rule.gate));
+    fingerprint_mix(hash, static_cast<std::uint8_t>(rule.dirty));
+    fingerprint_mix(hash, static_cast<std::uint8_t>(rule.is_root));
+    fingerprint_mix(hash, static_cast<std::uint8_t>(rule.combine_only));
+    fingerprint_mix(hash, static_cast<std::uint8_t>(rule.container_target));
+    fingerprint_mix(hash, static_cast<std::uint8_t>(rule.tracks_dependencies));
+    fingerprint_mix(hash, rule.dependency_count);
+    for (std::uint8_t index{0}; index < rule.dependency_count; index++) {
+      const auto &dependency{rule.dependencies[index]};
+      fingerprint_mix(hash, static_cast<std::uint8_t>(dependency.source));
+      fingerprint_mix(hash, dependency.base);
+      fingerprint_text(hash, dependency.filename);
+    }
   }
   for (const auto &rule : RuleSet.containers) {
-    mix(rule.action);
+    fingerprint_mix(hash, rule.action);
+    fingerprint_mix(hash, rule.base);
+    fingerprint_text(hash, rule.filename);
+    fingerprint_mix(hash, static_cast<std::uint8_t>(rule.gate));
+    fingerprint_mix(hash, static_cast<std::uint8_t>(rule.scope));
+    fingerprint_mix(hash, static_cast<std::uint8_t>(rule.only_full_rebuild));
+    fingerprint_mix(hash, static_cast<std::uint8_t>(rule.is_listing));
+    fingerprint_mix(hash, rule.dependency_count);
+    for (std::uint8_t index{0}; index < rule.dependency_count; index++) {
+      const auto &dependency{rule.dependencies[index]};
+      fingerprint_mix(hash, static_cast<std::uint8_t>(dependency.kind));
+      fingerprint_text(hash, dependency.filename);
+    }
   }
   for (const auto &rule : RuleSet.globals) {
-    mix(rule.action);
+    fingerprint_mix(hash, rule.action);
+    fingerprint_text(hash, rule.filename);
+    fingerprint_mix(hash, static_cast<std::uint8_t>(rule.trigger));
+    fingerprint_mix(hash,
+                    static_cast<std::uint8_t>(rule.external_config_anchor));
+    fingerprint_mix(hash, rule.dependency_count);
+    for (std::uint8_t index{0}; index < rule.dependency_count; index++) {
+      const auto &dependency{rule.dependencies[index]};
+      fingerprint_mix(hash, static_cast<std::uint8_t>(dependency.source));
+      fingerprint_mix(hash, dependency.base);
+      fingerprint_text(hash, dependency.filename);
+    }
   }
 
   return hash;

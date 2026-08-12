@@ -183,7 +183,12 @@ header "ETag" exists
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "{{base}}/orphan/lonely",
-  "type": "null"
+  "type": "object",
+  "properties": {
+    "label": {
+      "$ref": "../public/string"
+    }
+  }
 }
 
 # A credential changes nothing for un-policied content: it stays public and
@@ -196,4 +201,4 @@ Content-Type: application/schema+json
 Access-Control-Allow-Origin: *
 [Asserts]
 jsonpath "$['$id']" == "{{base}}/orphan/lonely"
-jsonpath "$.type" == "null"
+jsonpath "$.type" == "object"
