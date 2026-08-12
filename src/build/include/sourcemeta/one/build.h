@@ -232,12 +232,6 @@ struct DeltaRuleIndices {
 // where the policies are read and nowhere else
 using ViewFilter = std::function<bool(std::size_t, std::string_view)>;
 
-// Every view holds every leaf, which is what a build with nothing to hide asks
-// for
-[[nodiscard]] inline auto view_filter_everything() -> ViewFilter {
-  return [](const std::size_t, const std::string_view) -> bool { return true; };
-}
-
 SOURCEMETA_ONE_BUILD_EXPORT
 auto delta_engine(
     BuildPhase phase, BuildPlan::Type build_type, const BuildState &entries,
