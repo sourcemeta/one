@@ -48,7 +48,8 @@ public:
   }
 
   auto rest(const std::span<std::string_view> matches,
-            std::string_view credential, sourcemeta::one::HTTPRequest &request,
+            std::string_view credential, std::string_view view,
+            sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
       sourcemeta::one::cors_preflight(request, response, "GET, HEAD, OPTIONS",
@@ -71,8 +72,8 @@ public:
                                                       : matches.front()};
     const sourcemeta::one::RequestCookies cookies{request};
     const auto resolution{this->artifact_resolve_path(
-        {.bearer = credential, .cookies = cookies}, path_match, Tree::Explorer,
-        this->artifact_)};
+        view, {.bearer = credential, .cookies = cookies}, path_match,
+        Tree::Explorer, this->artifact_)};
     if (resolution.outcome ==
         sourcemeta::one::ArtifactResolution::Outcome::Denied) {
       sourcemeta::one::json_error_unauthorized(request, response,
@@ -107,8 +108,11 @@ public:
           std::move(request_output));
     }
 
+    // A tool call reaches one artifact, so placing the caller here is still
+    // once for the request that carried them
+    const auto view{this->dispatcher().authentication().view(credentials)};
     const auto resolution{this->artifact_resolve_path(
-        credentials, arguments.at("schema").to_string(), Tree::Explorer,
+        view, credentials, arguments.at("schema").to_string(), Tree::Explorer,
         this->artifact_)};
     if (resolution.outcome ==
         sourcemeta::one::ArtifactResolution::Outcome::Denied) {

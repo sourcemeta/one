@@ -43,7 +43,7 @@ public:
   }
 
   auto rest(const std::span<std::string_view>, std::string_view credential,
-            sourcemeta::one::HTTPRequest &request,
+            std::string_view view, sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
       sourcemeta::one::cors_preflight(request, response, "GET, HEAD, OPTIONS",
@@ -104,7 +104,7 @@ public:
       const auto serve_html{
           sourcemeta::one::prefers_html(request.header("accept"))};
       const auto root_html{this->artifact_resolve_path(
-          {.bearer = credential, .cookies = cookies}, "", Tree::Explorer,
+          view, {.bearer = credential, .cookies = cookies}, "", Tree::Explorer,
           "directory-html")};
       if (root_html.outcome ==
           sourcemeta::one::ArtifactResolution::Outcome::Denied) {
@@ -145,11 +145,11 @@ public:
     if (request.method() == "get" || request.method() == "head") {
       if (sourcemeta::one::prefers_html(request.header("accept"))) {
         const auto schema_html{this->artifact_resolve_path(
-            {.bearer = credential, .cookies = cookies}, path, Tree::Explorer,
-            "schema-html")};
+            view, {.bearer = credential, .cookies = cookies}, path,
+            Tree::Explorer, "schema-html")};
         const auto directory_html{this->artifact_resolve_path(
-            {.bearer = credential, .cookies = cookies}, path, Tree::Explorer,
-            "directory-html")};
+            view, {.bearer = credential, .cookies = cookies}, path,
+            Tree::Explorer, "directory-html")};
         if (schema_html.outcome ==
                 sourcemeta::one::ArtifactResolution::Outcome::Denied ||
             directory_html.outcome ==
@@ -199,14 +199,15 @@ public:
       // the response must be 405 with Allow listing what is supported.
       // https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.6
       const auto schema_json{this->artifact_resolve_path(
+          sourcemeta::one::VIEW_PUBLIC,
           {.bearer = credential, .cookies = cookies}, path, Tree::Schemas,
           "schema")};
       const auto schema_html{this->artifact_resolve_path(
-          {.bearer = credential, .cookies = cookies}, path, Tree::Explorer,
-          "schema-html")};
+          view, {.bearer = credential, .cookies = cookies}, path,
+          Tree::Explorer, "schema-html")};
       const auto directory_html{this->artifact_resolve_path(
-          {.bearer = credential, .cookies = cookies}, path, Tree::Explorer,
-          "directory-html")};
+          view, {.bearer = credential, .cookies = cookies}, path,
+          Tree::Explorer, "directory-html")};
       if (schema_json.outcome ==
               sourcemeta::one::ArtifactResolution::Outcome::Denied ||
           schema_html.outcome ==

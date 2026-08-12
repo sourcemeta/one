@@ -97,7 +97,7 @@ public:
   }
 
   auto rest(const std::span<std::string_view>, std::string_view credential,
-            sourcemeta::one::HTTPRequest &request,
+            std::string_view, sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     // MCP Streamable HTTP transport / Security Warning:
     // "Servers MUST validate the Origin header on all incoming connections
@@ -521,7 +521,8 @@ private:
     }
 
     const auto resolution{this->artifact_resolve_path(
-        credentials, uri, Tree::Schemas, bundle ? "bundle" : "schema")};
+        sourcemeta::one::VIEW_PUBLIC, credentials, uri, Tree::Schemas,
+        bundle ? "bundle" : "schema")};
     if (resolution.outcome ==
         sourcemeta::one::ArtifactResolution::Outcome::Denied) {
       return sourcemeta::core::jsonrpc_make_error(&id, -32010,

@@ -62,7 +62,8 @@ public:
   }
 
   auto rest(const std::span<std::string_view> matches,
-            std::string_view credential, sourcemeta::one::HTTPRequest &request,
+            std::string_view credential, std::string_view,
+            sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     const sourcemeta::one::RequestCookies cookies{request};
     ActionJSONSchemaEvaluate_v1::serve_post(
@@ -101,10 +102,12 @@ public:
     }
 
     const auto &schema_uri{arguments.at("schema").to_string()};
-    const auto schema_present{this->artifact_resolve_path(
-        credentials, schema_uri, Tree::Schemas, "schema")};
+    const auto schema_present{
+        this->artifact_resolve_path(sourcemeta::one::VIEW_PUBLIC, credentials,
+                                    schema_uri, Tree::Schemas, "schema")};
     const auto evaluation_enabled{this->artifact_resolve_path(
-        credentials, schema_uri, Tree::Schemas, "blaze-exhaustive")};
+        sourcemeta::one::VIEW_PUBLIC, credentials, schema_uri, Tree::Schemas,
+        "blaze-exhaustive")};
     if (schema_present.outcome ==
             sourcemeta::one::ArtifactResolution::Outcome::Denied ||
         evaluation_enabled.outcome ==
@@ -164,7 +167,8 @@ private:
       auto cached{referenced_locations.find(schema_uri)};
       if (cached == referenced_locations.end()) {
         const auto locations_resolution{this->artifact_resolve_path(
-            credentials, keyword_location_string, Tree::Schemas, "locations")};
+            sourcemeta::one::VIEW_PUBLIC, credentials, keyword_location_string,
+            Tree::Schemas, "locations")};
         if (locations_resolution.outcome ==
             sourcemeta::one::ArtifactResolution::Outcome::Found) {
           auto locations{
@@ -218,8 +222,9 @@ private:
       -> sourcemeta::core::JSON {
     auto steps{sourcemeta::core::JSON::make_array()};
 
-    const auto locations_resolution{this->artifact_resolve_path(
-        credentials, schema_uri, Tree::Schemas, "locations")};
+    const auto locations_resolution{
+        this->artifact_resolve_path(sourcemeta::one::VIEW_PUBLIC, credentials,
+                                    schema_uri, Tree::Schemas, "locations")};
     if (locations_resolution.outcome !=
         sourcemeta::one::ArtifactResolution::Outcome::Found) {
       throw std::runtime_error{"Failed to read schema locations metadata"};

@@ -45,7 +45,7 @@ public:
   }
 
   auto rest(const std::span<std::string_view>, std::string_view,
-            sourcemeta::one::HTTPRequest &request,
+            std::string_view, sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
       response.write_status(sourcemeta::core::HTTP_STATUS_NO_CONTENT);
