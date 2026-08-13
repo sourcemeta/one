@@ -35,8 +35,8 @@ Access-Control-Allow-Origin: *
 }
 
 # The inlined content travels under the referring schema's own gate, so the
-# bundle is refused to a caller the referring schema refuses, whatever the
-# inlined part would have answered on its own
+# bundle is absent for a caller the referring schema is absent for, whatever
+# the inlined part would have answered on its own
 GET {{base}}/reports/quarterly.json?bundle=1
 HTTP 404
 Content-Type: application/problem+json

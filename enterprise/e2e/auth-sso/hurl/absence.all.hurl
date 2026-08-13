@@ -135,23 +135,12 @@ HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
 Link: </self/v1/schemas/api/error>; rel="describedby"
-[Captures]
-browser_json_missing: body
 [Asserts]
 header "Location" not exists
+body == {{machine_missing}}
 {
   "type": "urn:sourcemeta:one:not-found",
   "title": "Not Found",
   "status": 404,
   "detail": "There is nothing at this URL"
 }
-
-POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
-```
-{{browser_json_missing}}
-```
-HTTP 200
-Cache-Control: no-store
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
-[Asserts]
-jsonpath "$.valid" == true

@@ -52,12 +52,21 @@ public:
               base / "explorer" / recorded.name / "%" / "search.metapack"));
     }
 
-    const auto fallback{this->search_views_.emplace(
-        sourcemeta::one::VIEW_PUBLIC,
-        std::make_unique<sourcemeta::one::SearchView>(
-            base / "explorer" / sourcemeta::one::VIEW_PUBLIC / "%" /
-            "search.metapack"))};
-    this->default_search_view_ = fallback.first->second.get();
+    // The anonymous view is among the recorded ones, so this is a lookup
+    // rather than a second index. It stands for a caller whose view this
+    // instance no longer serves, which is a build behind a running server
+    auto fallback{this->search_views_.find(sourcemeta::one::VIEW_PUBLIC)};
+    if (fallback == this->search_views_.cend()) {
+      fallback =
+          this->search_views_
+              .emplace(sourcemeta::one::VIEW_PUBLIC,
+                       std::make_unique<sourcemeta::one::SearchView>(
+                           base / "explorer" / sourcemeta::one::VIEW_PUBLIC /
+                           "%" / "search.metapack"))
+              .first;
+    }
+
+    this->default_search_view_ = fallback->second.get();
 
     router.arguments(
         identifier, [this](const auto &key, const auto &value) -> void {
