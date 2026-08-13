@@ -93,6 +93,24 @@ static constexpr std::array<BuildHandlerFunction, 27> HANDLERS{{
     nullptr,
 }};
 
+// Which views hold which leaves, answered by the same gate the server reads
+// rather than by a second reading of the policies. The artifact is written here
+// before anything is planned, because what a build emits depends on it, and the
+// build writes it again with the path validation this skips: an invalid scope
+// still refuses the build, one step later than it would have
+static auto view_filter_from(const sourcemeta::one::Authentication &gate)
+    -> sourcemeta::one::ViewFilter {
+  return
+      [&gate](const std::size_t view, const std::string_view relative) -> bool {
+        std::string path;
+        path.reserve(relative.size() + 1);
+        path.push_back('/');
+        path.append(relative);
+        return gate.visible(
+            sourcemeta::one::Authentication::Path::relative(path), view);
+      };
+}
+
 static auto parse_numeric_option(const sourcemeta::core::Options &app,
                                  const std::string_view option)
     -> unsigned long long {
@@ -630,10 +648,17 @@ static auto index_main(const std::string_view &program,
     views.push_back(view.name);
   }
 
+  const auto authentication_path{canonical_output / "authentication.bin"};
+  sourcemeta::one::Authentication::save(
+      view_policies, configuration.path, authentication_path,
+      [](const std::string_view) { return true; });
+  const sourcemeta::one::Authentication gate{authentication_path, {}};
+  const auto visible{view_filter_from(gate)};
+
   auto produce_plan{sourcemeta::one::delta<sourcemeta::one::INDEX_RULES>(
       sourcemeta::one::BuildPhase::Produce, build_type, entries,
       canonical_output, leaves, this_version, incremental, comment, mode_label,
-      limits, views)};
+      limits, views, visible)};
   PROFILE_END(profiling, "Producing (Delta)");
   execute_plan(entries, canonical_output, resolver, configuration,
                raw_configuration, concurrency, produce_plan, "Producing");
@@ -642,7 +667,7 @@ static auto index_main(const std::string_view &program,
   auto combine_plan{sourcemeta::one::delta<sourcemeta::one::INDEX_RULES>(
       sourcemeta::one::BuildPhase::Combine, build_type, entries,
       canonical_output, leaves, this_version, incremental, comment, mode_label,
-      limits, views)};
+      limits, views, visible)};
   PROFILE_END(profiling, "Combining (Delta)");
   execute_plan(entries, canonical_output, resolver, configuration,
                raw_configuration, concurrency, combine_plan, "Combining");

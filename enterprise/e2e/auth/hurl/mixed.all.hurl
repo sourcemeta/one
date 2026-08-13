@@ -5,20 +5,19 @@
 # Anonymous access is denied, the canonical problem document round-tripping
 # through the error schema
 GET {{base}}/mixed/thing.json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 [Captures]
 denied_body: body
 denied_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{denied_schema}}
@@ -63,18 +62,17 @@ jsonpath "$.type" == "integer"
 # credential before comparing, so the stored value is not a usable key
 GET {{base}}/mixed/thing.json
 Authorization: Bearer 2508e2ba355946ba6065f01eb183424aaea10ddaf7bbff90e38f3b702e89e23d
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 hash_body: body
 hash_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{hash_schema}}
@@ -88,18 +86,17 @@ jsonpath "$.valid" == true
 # A key that matches neither policy is denied
 GET {{base}}/mixed/thing.json
 Authorization: Bearer not-a-key
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 wrong_body: body
 wrong_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{wrong_schema}}
@@ -113,18 +110,17 @@ jsonpath "$.valid" == true
 # A key from another policy does not cross over into this path
 GET {{base}}/mixed/thing.json
 Authorization: Bearer primary-secret-key
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 crosspolicy_body: body
 crosspolicy_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{crosspolicy_schema}}
@@ -138,18 +134,17 @@ jsonpath "$.valid" == true
 # The machine listing is denied anonymously and enumerates with either key,
 # carrying every governing policy name in declaration order
 GET {{base}}/self/v1/api/list/mixed
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 listing_denied_body: body
 listing_denied_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{listing_denied_schema}}

@@ -52,22 +52,21 @@ Vary: User-Agent, Accept-Encoding
 
 # The machine schema is denied without a credential
 GET {{base}}/machine/config.json
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 denied_body: body
 [Asserts]
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
@@ -141,20 +140,19 @@ bytes count == 0
 # A bearer value that is not a token is denied
 GET {{base}}/machine/config.json
 Authorization: Bearer not-a-token
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 bogus_denied: body
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
@@ -168,20 +166,19 @@ jsonpath "$.valid" == true
 # A credential presented without the bearer scheme is denied
 GET {{base}}/machine/config.json
 Authorization: {{access_token}}
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 no_scheme_denied: body
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
@@ -195,20 +192,19 @@ jsonpath "$.valid" == true
 # A valid token under a non-bearer scheme is denied
 GET {{base}}/machine/config.json
 Authorization: Basic {{access_token}}
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 basic_denied: body
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
@@ -222,20 +218,19 @@ jsonpath "$.valid" == true
 # A tampered signature fails verification and is denied
 GET {{base}}/machine/config.json
 Authorization: Bearer {{access_token}}tampered
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 tampered_denied: body
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
@@ -249,20 +244,19 @@ jsonpath "$.valid" == true
 # An unsigned alg:none token is denied, never admitted on the empty signature
 GET {{base}}/machine/config.json
 Authorization: Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwOi8va2V5Y2xvYWs6ODA4MC9yZWFsbXMvbWFpbiIsImF1ZCI6Imh0dHBzOi8vc2NoZW1hcy5leGFtcGxlLmNvbSIsImV4cCI6OTk5OTk5OTk5OSwiaWF0IjoxMDAwMDAwMDAwfQ.
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 none_denied: body
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
@@ -285,20 +279,19 @@ wrong_audience_token: jsonpath "$.access_token"
 
 GET {{base}}/machine/config.json
 Authorization: Bearer {{wrong_audience_token}}
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 wrong_audience_denied: body
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
@@ -338,20 +331,19 @@ jsonpath "$.valid" == true
 # Without a credential the missing path denies identically, so existence is not
 # probeable
 GET {{base}}/machine/ghost.json
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 ghost_denied: body
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error

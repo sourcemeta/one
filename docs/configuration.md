@@ -385,25 +385,6 @@ works differently for each policy type, described under each below. Sessions
 belong to `oidc` alone: a `jwt` policy has no session and no cookie, whether or
 not it names the same provider.
 
-**The UNIX model**: Visibility and access are kept separate, following the UNIX
-filesystem model. A policy that governs a directory does not erase it from its
-parent's listing.  Just as `ls` reveals a directory you cannot `cd` into, a
-consumer browsing the instance can tell that a governed directory exists, and
-can see the names of the policies that govern it, much like UNIX shows the
-owning group of a file you are not allowed to read. What stays hidden is the
-content: the directory cannot be opened, nor its schemas read, without a valid
-key. The policy names are disclosed on purpose, so that a consumer knows who to
-ask for access. The keys themselves, and the environment variables behind them,
-are never exposed.
-
-!!! tip
-
-    If the descriptive metadata of a governed directory, such as its title and
-    description, is itself sensitive, wrap it: put the policy on a deliberately
-    generic outer container that carries little metadata, and nest the
-    sensitive directories inside it. Outsiders then see only the bland
-    container, while the inner names and descriptions stay behind the gate.
-
 A policy governs a [Collection](#collections) or [Page](#pages), or a namespace
 above them (the instance root governs everything). It cannot gate an individual
 path inside a collection: a collection is either public or private as a whole.

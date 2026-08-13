@@ -1,5 +1,6 @@
 sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME actions
   SOURCES actions.cc
+    action_auth_login_page_v1.h
     action_default_v1.h
     action_dependency_tree_v1.h
     action_health_check_v1.h

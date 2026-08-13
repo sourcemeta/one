@@ -147,9 +147,13 @@ This endpoint is always mounted, but web assets are only served when the
 
 Every endpoint on this page is public unless the [configuration
 file](configuration.md#authentication) declares a policy that governs the path
-it reaches. A request no governing policy admits is answered with `401` and a
-`WWW-Authenticate` header, and directory listings omit whatever the caller
-cannot see rather than disclosing that it exists.
+it reaches. An endpoint no governing policy admits the caller to is answered
+with `401` and a `WWW-Authenticate` header.
+
+A registry path is different. A schema or collection the caller is not admitted
+to is answered exactly as one that does not exist, and directory listings leave
+it out. Where an endpoint below names a registry path among its arguments, that
+path decides the answer, so it reports `404` rather than `401`.
 
 A machine caller presents its credential on every request and needs none of the
 endpoints below:

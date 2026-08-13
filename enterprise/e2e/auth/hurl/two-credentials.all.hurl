@@ -39,23 +39,22 @@ header "Set-Cookie" not exists
 # And a key that opens somewhere else does not open this
 GET {{base}}/console/dashboard.json
 Authorization: Bearer primary-secret-key
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 elsewhere_body: body
 elsewhere_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Set-Cookie" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{elsewhere_schema}}
@@ -163,21 +162,20 @@ header "ETag" matches /^"[0-9a-f]{64}"$/
 # would have opened is refused. This is the whole of the rule, and its cost
 GET {{base}}/console/dashboard.json
 Authorization: Bearer primary-secret-key
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 refused_body: body
 refused_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{refused_schema}}
@@ -194,21 +192,20 @@ jsonpath "$.valid" == true
 # something was presented rather than that it named another policy
 GET {{base}}/console/dashboard.json
 Authorization: Bearer not-a-key-anywhere
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 unknown_body: body
 unknown_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{unknown_schema}}
@@ -302,21 +299,20 @@ header "ETag" matches /^"[0-9a-f]{64}"$/
 # And neither credential reaches what neither governs
 GET {{base}}/internal/config.json
 Authorization: Bearer primary-secret-key
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 ungoverned_body: body
 ungoverned_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{ungoverned_schema}}

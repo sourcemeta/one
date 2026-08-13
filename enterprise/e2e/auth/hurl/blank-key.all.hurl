@@ -11,23 +11,22 @@
 # change. An empty credential is not a credential, however a policy spells the
 # value it compares against
 GET {{base}}/mixed/thing.json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 denied_body: body
 denied_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{denied_schema}}
@@ -42,13 +41,12 @@ jsonpath "$.valid" == true
 # same way, so there is no wording of nothing that the blank variable matches
 GET {{base}}/mixed/thing.json
 Authorization: Bearer
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 empty_body: body
 empty_schema: header "Link" regex "<([^>]+)>"
@@ -56,10 +54,10 @@ empty_schema: header "Link" regex "<([^>]+)>"
 header "ETag" not exists
 body == {{denied_body}}
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{empty_schema}}
@@ -73,13 +71,12 @@ jsonpath "$.valid" == true
 # Nor does any other credential match the blank variable
 GET {{base}}/mixed/thing.json
 Authorization: Bearer not-a-key
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 wrong_body: body
 wrong_schema: header "Link" regex "<([^>]+)>"
@@ -87,10 +84,10 @@ wrong_schema: header "Link" regex "<([^>]+)>"
 header "ETag" not exists
 body == {{denied_body}}
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{wrong_schema}}
@@ -104,13 +101,12 @@ jsonpath "$.valid" == true
 # The gated directory's own listing is not enumerable either, so a blank
 # variable discloses no name behind the boundary it governs
 GET {{base}}/self/v1/api/list/mixed
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 listing_body: body
 listing_schema: header "Link" regex "<([^>]+)>"
@@ -118,10 +114,10 @@ listing_schema: header "Link" regex "<([^>]+)>"
 header "ETag" not exists
 body == {{denied_body}}
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{listing_schema}}
@@ -164,7 +160,7 @@ header "Vary" not exists
     "content": [
       {
         "type": "text",
-        "text": "Authentication required"
+        "text": "Directory not found"
       }
     ],
     "isError": true

@@ -51,34 +51,6 @@ public:
                                       "If-Modified-Since");
       return;
     }
-    // Browser-targeted security headers we apply to every HTML response:
-    //
-    // - Referrer-Policy (W3C Referrer Policy):
-    //   https://www.w3.org/TR/referrer-policy/
-    //   Send full URL on same-origin navigation, only the origin on
-    //   cross-origin navigation. Schema paths within the browser encode the
-    //   user's current view and would otherwise leak via every external link
-    //   click.
-    //
-    // - Content-Security-Policy frame-ancestors (W3C CSP Level 3 §6.4.2):
-    //   https://www.w3.org/TR/CSP3/#directive-frame-ancestors
-    //   Modern clickjacking control: deny embedding the web UI in any
-    //   iframe.
-    //
-    // - X-Frame-Options (RFC 7034):
-    //   https://datatracker.ietf.org/doc/html/rfc7034
-    //   Legacy clickjacking control for browsers that predate CSP3
-    //   frame-ancestors. Belt-and-suspenders for old client coverage at
-    //   near-zero header cost.
-    //
-    // JSON and static-asset responses pass a default-constructed (all-empty)
-    // instance and emit none of these.
-    static constexpr sourcemeta::one::RouterAction::BrowserSecurityHeaders
-        HTML_BROWSER_SECURITY{
-            .referrer_policy = "strict-origin-when-cross-origin",
-            .frame_ancestors = "'none'",
-            .x_frame_options = "DENY",
-        };
     const auto stripped{
         sourcemeta::core::URI::strip_path_prefix(request.path(), "")};
     if (!stripped.has_value()) {
@@ -106,31 +78,20 @@ public:
       const auto root_html{this->artifact_resolve_path(
           view, {.bearer = credential, .cookies = cookies}, "", Tree::Explorer,
           "directory-html")};
-      if (root_html.outcome ==
-          sourcemeta::one::ArtifactResolution::Outcome::Denied) {
-        if (serve_html) {
-          this->serve_unauthorized_html(HTML_BROWSER_SECURITY, request,
-                                        response);
-        } else {
-          sourcemeta::one::json_error_unauthorized(request, response,
-                                                   this->error_schema_, "*");
-        }
-        return;
-      }
-      if (serve_html &&
-          root_html.outcome ==
-              sourcemeta::one::ArtifactResolution::Outcome::Found) {
+      if (serve_html && root_html.path.has_value()) {
         this->artifact_serve(
             root_html.path.value(), sourcemeta::core::HTTP_STATUS_OK, false, {},
             {}, HTML_BROWSER_SECURITY, request, response, this->error_schema_,
             this->content_cache_control(root_html.is_public),
             "Accept, Accept-Encoding");
-        return;
+      } else if (serve_html) {
+        this->serve_missing_html(view, request, response);
+      } else {
+        sourcemeta::one::json_error(
+            request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+            "urn:sourcemeta:one:not-found", "There is nothing at this URL",
+            this->error_schema_, "*");
       }
-      sourcemeta::one::json_error(
-          request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
-          "urn:sourcemeta:one:not-found", "There is nothing at this URL",
-          this->error_schema_, "*");
       return;
     }
 
@@ -150,25 +111,14 @@ public:
         const auto directory_html{this->artifact_resolve_path(
             view, {.bearer = credential, .cookies = cookies}, path,
             Tree::Explorer, "directory-html")};
-        if (schema_html.outcome ==
-                sourcemeta::one::ArtifactResolution::Outcome::Denied ||
-            directory_html.outcome ==
-                sourcemeta::one::ArtifactResolution::Outcome::Denied) {
-          this->serve_unauthorized_html(HTML_BROWSER_SECURITY, request,
-                                        response);
-          return;
-        }
-        if (!path.ends_with("/") &&
-            schema_html.outcome ==
-                sourcemeta::one::ArtifactResolution::Outcome::Found) {
+        if (!path.ends_with("/") && schema_html.path.has_value()) {
           this->artifact_serve(
               schema_html.path.value(), sourcemeta::core::HTTP_STATUS_OK, false,
               {}, {}, HTML_BROWSER_SECURITY, request, response,
               this->error_schema_,
               this->content_cache_control(schema_html.is_public),
               "Accept, Accept-Encoding");
-        } else if (directory_html.outcome ==
-                   sourcemeta::one::ArtifactResolution::Outcome::Found) {
+        } else if (directory_html.path.has_value()) {
           this->artifact_serve(
               directory_html.path.value(), sourcemeta::core::HTTP_STATUS_OK,
               false, {}, {}, HTML_BROWSER_SECURITY, request, response,
@@ -176,19 +126,7 @@ public:
               this->content_cache_control(directory_html.is_public),
               "Accept, Accept-Encoding");
         } else {
-          const auto not_found{this->artifact_resolve_path_unauthenticated(
-              "", Tree::Explorer, "404")};
-          if (not_found.has_value()) {
-            this->artifact_serve(
-                not_found.value(), sourcemeta::core::HTTP_STATUS_NOT_FOUND,
-                false, {}, {}, HTML_BROWSER_SECURITY, request, response,
-                this->error_schema_, "no-store", "Accept, Accept-Encoding");
-          } else {
-            sourcemeta::one::json_error(
-                request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
-                "urn:sourcemeta:one:not-found", "There is nothing at this URL",
-                this->error_schema_, "*");
-          }
+          this->serve_missing_html(view, request, response);
         }
       } else {
         ActionJSONSchemaServe_v1::serve(*this, credential, path, request,
@@ -208,23 +146,9 @@ public:
       const auto directory_html{this->artifact_resolve_path(
           view, {.bearer = credential, .cookies = cookies}, path,
           Tree::Explorer, "directory-html")};
-      if (schema_json.outcome ==
-              sourcemeta::one::ArtifactResolution::Outcome::Denied ||
-          schema_html.outcome ==
-              sourcemeta::one::ArtifactResolution::Outcome::Denied ||
-          directory_html.outcome ==
-              sourcemeta::one::ArtifactResolution::Outcome::Denied) {
-        sourcemeta::one::json_error_unauthorized(request, response,
-                                                 this->error_schema_, "*");
-        return;
-      }
-      if (schema_json.outcome ==
-              sourcemeta::one::ArtifactResolution::Outcome::Found ||
-          (!path.ends_with("/") &&
-           schema_html.outcome ==
-               sourcemeta::one::ArtifactResolution::Outcome::Found) ||
-          directory_html.outcome ==
-              sourcemeta::one::ArtifactResolution::Outcome::Found) {
+      if (schema_json.path.has_value() ||
+          (!path.ends_with("/") && schema_html.path.has_value()) ||
+          directory_html.path.has_value()) {
         sourcemeta::one::json_error(
             request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
             "urn:sourcemeta:one:method-not-allowed",
@@ -247,29 +171,37 @@ public:
   }
 
 private:
-  auto serve_unauthorized_html(
-      const sourcemeta::one::RouterAction::BrowserSecurityHeaders
-          &browser_security,
-      sourcemeta::one::HTTPRequest &request,
-      sourcemeta::one::HTTPResponse &response) -> void {
-    // A browser denied a page under an interactive policy is shown that path's
-    // login page in place, rather than the plain denial
-    if (this->serve_login(request, response)) {
+  // Nothing here for whoever is asking, whether because there is nothing here
+  // at all or because their view does not hold it. Neither one is worth
+  // telling apart, so both are told the same way
+  auto serve_missing_html(const std::string_view view,
+                          sourcemeta::one::HTTPRequest &request,
+                          sourcemeta::one::HTTPResponse &response) -> void {
+    // A browser whose session lapsed is renewed in place first, since what it
+    // asks for may well be something the renewed session holds. A caller
+    // already placed in a view has a session that stands, so there is nothing
+    // to renew and asking again would only send them round in circles
+    if (view == sourcemeta::one::VIEW_PUBLIC &&
+        this->serve_renewal_page(request, response)) {
       return;
     }
 
-    const auto unauthorized{
-        this->artifact_resolve_path_unauthenticated("", Tree::Explorer, "401")};
-    if (unauthorized.has_value()) {
+    // The absence is the caller's own, so it is told in the terms of the view
+    // they resolve to rather than in the anonymous one's
+    const auto not_found{this->artifact_resolve_path_unauthenticated(
+        view, "", Tree::Explorer, "404")};
+    if (not_found.has_value()) {
       this->artifact_serve(
-          unauthorized.value(), sourcemeta::core::HTTP_STATUS_UNAUTHORIZED,
-          false, {}, {}, browser_security, request, response,
-          this->error_schema_, "no-store", "Accept, Accept-Encoding");
+          not_found.value(), sourcemeta::core::HTTP_STATUS_NOT_FOUND, false, {},
+          {}, HTML_BROWSER_SECURITY, request, response, this->error_schema_,
+          "no-store", "Accept, Accept-Encoding");
       return;
     }
 
-    sourcemeta::one::json_error_unauthorized(request, response,
-                                             this->error_schema_, "*");
+    sourcemeta::one::json_error(
+        request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+        "urn:sourcemeta:one:not-found", "There is nothing at this URL",
+        this->error_schema_, "*");
   }
 
   std::string_view error_schema_;

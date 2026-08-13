@@ -43,20 +43,20 @@ cookie "sourcemeta_one_transaction" exists
 
 # The gated collections are closed to anybody carrying nothing
 GET {{base}}/team/roster.json
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 team_denied: body
 team_denied_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{team_denied_schema}}
@@ -68,20 +68,20 @@ HTTP 200
 jsonpath "$.valid" == true
 
 GET {{base}}/corp/policy.json
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 corp_denied: body
 corp_denied_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{corp_denied_schema}}
@@ -96,19 +96,21 @@ jsonpath "$.valid" == true
 # ever read under the policy its payload names
 GET {{base}}/team/roster.json
 Cookie: sourcemeta_one_session=not-a-session
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
 Link: </self/v1/schemas/api/error>; rel="describedby"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
-# Both gated collections appear in the root listing, each naming the policy
-# that governs it, so a rule narrows admission without hiding what exists
+# Neither gated collection appears in the root listing. A rule narrows who a
+# policy admits, and whoever it does not admit is told no more than a stranger
+# is, so the collections it governs are absent here rather than named as doors
+# somebody might go and ask about
 GET {{base}}/self/v1/api/list
 HTTP 200
 Content-Type: application/json
@@ -120,10 +122,24 @@ Access-Control-Expose-Headers: Link, ETag
 root_listing: body
 root_listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
-jsonpath "$.entries[?(@.name == 'team')].policies[0].name" == "team"
-jsonpath "$.entries[?(@.name == 'team')].policies[0].type" == "oidc"
-jsonpath "$.entries[?(@.name == 'corp')].policies[0].name" == "corp"
-jsonpath "$.entries[?(@.name == 'corp')].policies[0].type" == "oidc"
+jsonpath "$.path" == "/"
+jsonpath "$.url" == "{{base}}"
+jsonpath "$.breadcrumb" count == 0
+jsonpath "$.schemas" == 63
+jsonpath "$.policies" count == 0
+jsonpath "$.entries" count == 2
+jsonpath "$.entries[0].name" == "public"
+jsonpath "$.entries[0].type" == "directory"
+jsonpath "$.entries[0].path" == "/public/"
+jsonpath "$.entries[0].policies" count == 0
+jsonpath "$.entries[0].schemas" == 1
+jsonpath "$.entries[0].health" == 0
+jsonpath "$.entries[1].name" == "self"
+jsonpath "$.entries[1].type" == "directory"
+jsonpath "$.entries[1].path" == "/self/"
+jsonpath "$.entries[1].policies" count == 0
+jsonpath "$.entries[1].schemas" == 62
+jsonpath "$.entries[1].health" == 100
 
 POST {{base}}/self/v1/api/schemas/evaluate{{root_listing_schema}}
 ```
@@ -136,20 +152,20 @@ jsonpath "$.valid" == true
 # A gated listing is closed to anybody carrying nothing, exactly as its
 # schemas are
 GET {{base}}/self/v1/api/list/team
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 team_listing_denied: body
 team_listing_denied_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{team_listing_denied_schema}}

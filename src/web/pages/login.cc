@@ -7,45 +7,45 @@
 #include <sourcemeta/one/shared.h>
 
 #include <algorithm> // std::ranges::any_of
-#include <cassert>   // assert
 #include <chrono>    // std::chrono
 #include <string>    // std::string
+#include <vector>    // std::vector
 
 namespace sourcemeta::one {
 
 namespace {
 
-auto is_interactive(const sourcemeta::core::JSON &policy) -> bool {
-  return policy.at("type").to_string() == "oidc";
+auto is_interactive(const Configuration::AuthenticationEntry &policy) -> bool {
+  return policy.type == Configuration::AuthenticationEntry::Type::OIDC;
 }
 
-auto write_providers(sourcemeta::core::HTMLWriter &body,
-                     const sourcemeta::core::JSON &policies) -> void {
+auto write_providers(
+    sourcemeta::core::HTMLWriter &body,
+    const std::vector<Configuration::AuthenticationEntry> &policies) -> void {
   body.p().attribute("class", "text-secondary text-center small mb-4");
   body.text("Choose how you want to sign in");
   body.close();
 
   body.div().attribute("class", "d-grid gap-2");
-  for (const auto &policy : policies.as_array()) {
+  for (const auto &policy : policies) {
     if (!is_interactive(policy)) {
       continue;
     }
 
-    // The link carries no return target on purpose. The login endpoint decides
-    // where to land the caller, so nothing here depends on the requested path.
-    // The whole page stays at the site-wide no-referrer default, so only this
-    // navigation opts in to a same-origin referrer, handing the endpoint the
-    // denied path while every other request from the page still leaks nothing
+    // The link names no return target and, staying at the page's own
+    // no-referrer default, carries no referrer either, so the endpoint lands
+    // the caller on what the policy governs. Somebody here arrived rather than
+    // was sent, so there is no earlier page owed to them, and naming this one
+    // would only return them to signing in once they had signed in
     std::string href{"/self/v1/auth/login/"};
-    href += policy.at("name").to_string();
+    href += policy.name;
     body.a()
         .attribute("class", "btn btn-primary d-flex align-items-center "
                             "justify-content-center")
-        .attribute("data-sourcemeta-ui-login", policy.at("name").to_string())
-        .attribute("referrerpolicy", "same-origin")
+        .attribute("data-sourcemeta-ui-login", policy.name)
         .attribute("href", href);
     body.i().attribute("class", "bi bi-box-arrow-in-right me-2").close();
-    body.text(policy.at("title").to_string());
+    body.text(policy.title);
     body.close();
   }
   body.close();
@@ -61,16 +61,11 @@ auto GENERATE_WEB_LOGIN::handler(
     const sourcemeta::core::JSON &) -> void {
   const auto timestamp_start{std::chrono::steady_clock::now()};
 
-  const auto directory_option{metapack_read_json(action.dependencies.front())};
-  assert(directory_option.has_value());
-  const auto &directory{directory_option.value()};
-  const auto &policies{directory.at("policies")};
-
-  // A directory that no interactive policy governs has no login to offer, so it
-  // gets an empty artifact rather than a page. Its presence keeps the build
-  // plan uniform, and the empty body is the signal to fall back to the plain
-  // denial when serving
-  if (!std::ranges::any_of(policies.as_array(), is_interactive)) {
+  // An instance nobody can sign in to interactively has no login to offer, so
+  // it gets an empty artifact rather than a page. Its presence keeps the build
+  // plan uniform, and the empty body is the signal to offer nothing when
+  // serving
+  if (!std::ranges::any_of(configuration.authentication, is_interactive)) {
     const auto timestamp_end{std::chrono::steady_clock::now()};
     metapack_write_text(action.destination, "", "text/html; charset=utf-8",
                         MetapackEncoding::GZIP, {},
@@ -79,12 +74,10 @@ auto GENERATE_WEB_LOGIN::handler(
     return;
   }
 
-  // This page is served for every path an interactive policy governs, including
-  // ones that resolve to no schema at all. Denials must not disclose which
-  // schemas exist, so the page has to be byte-identical for every path under
-  // the same policies: it names only its providers and the instance, its
-  // canonical URL is the instance root, and the return target is deferred to
-  // the login endpoint
+  // Signing in is what somebody without a session does, so the instance holds
+  // one page for all of them rather than one per place it could be reached
+  // from. It names only its providers and the instance, its canonical URL is
+  // the instance root, and the return target is deferred to the login endpoint
   sourcemeta::core::HTMLWriter writer;
   writer.raw("<!DOCTYPE html>");
   writer.html().attribute("class", "h-100").attribute("lang", "en");
@@ -113,7 +106,7 @@ auto GENERATE_WEB_LOGIN::handler(
   writer.close();
   writer.close();
 
-  write_providers(writer, policies);
+  write_providers(writer, configuration.authentication);
 
   writer.close();
   writer.close();

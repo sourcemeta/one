@@ -146,6 +146,39 @@ missing_dependent_global_wave(const std::vector<bool> &missing_globals,
   return wave;
 }
 
+// Whether a view holds anything at all beneath a directory. A listing exists
+// for a directory a view can see into and for no other, so a wholly governed
+// one disappears because it is empty rather than because it is governed, and a
+// mixed one survives holding the part that is visible
+static auto
+holds_visible_leaf(const std::vector<std::filesystem::path> &relative_paths,
+                   const std::filesystem::path &directory,
+                   const std::size_t view, const ViewFilter &visible) -> bool {
+  const auto is_root{directory == "."};
+  for (const auto &leaf : relative_paths) {
+    if (!visible(view, leaf.native())) {
+      continue;
+    }
+
+    if (is_root) {
+      return true;
+    }
+
+    for (auto current{leaf.parent_path()}; !current.empty();
+         current = current.parent_path()) {
+      if (current == directory) {
+        return true;
+      }
+
+      if (current.parent_path() == current) {
+        break;
+      }
+    }
+  }
+
+  return false;
+}
+
 struct Target {
   BuildPlan::Action::Type action;
   std::vector<std::string> dependencies;
@@ -180,7 +213,8 @@ static auto declare_leaf_targets(
     const bool evaluate, const BuildPlan::Type build_type,
     const BuildPlan::Type full_mode, const std::string &configuration_string,
     const std::string_view uri, const BuildPhase phase,
-    std::span<const LeafRule> leaf_rules, const bool only_secondary) -> void {
+    std::span<const LeafRule> leaf_rules, const bool only_secondary,
+    const bool only_primary = false) -> void {
   for (std::size_t index{0}; index < leaf_rules.size(); index++) {
     const auto &rule{leaf_rules[index]};
 
@@ -188,6 +222,11 @@ static auto declare_leaf_targets(
     // there are, so it is declared with the first of them and passed over for
     // the rest rather than declared again against the same path
     if (only_secondary && rule.base == 0) {
+      continue;
+    }
+
+    // And a leaf no view holds has only what sits outside that tree
+    if (only_primary && rule.base != 0) {
       continue;
     }
 
@@ -311,7 +350,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
                   std::span<const GlobalRule> global_rules,
                   std::span<const DirectoryRule> directories,
                   const std::span<const std::string_view> views,
-                  const std::string_view sentinel,
+                  const ViewFilter &visible, const std::string_view sentinel,
                   const BuildPlan::Action::Type remove_action,
                   const BuildPlan::Type full_mode,
                   const DeltaRuleIndices &indices) -> BuildPlan {
@@ -454,9 +493,9 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
     {
       // A view that appeared since the last build holds no artifact for any
       // leaf, and the graph it would be derived from did not move, so nothing
-      // above notices it. Only the views after the first are asked, since the
-      // first is the tree that was already there and what it does when one of
-      // its own artifacts goes missing is decided above rather than here
+      // above notices it. The same is true of a view that keeps its name but
+      // widens, since a leaf it could not reach before arrives with no
+      // artifact behind it either
       const auto &missing_rule{leaf_rules[indices.dependents]};
       if (missing_rule.base != 0) {
         for (const auto &[uri, info] : leaves) {
@@ -465,8 +504,9 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
             continue;
           }
 
-          for (std::size_t view{1}; view < secondary_views.size(); view++) {
-            if (!entries.contains(append_filename(
+          for (std::size_t view{0}; view < secondary_views.size(); view++) {
+            if (visible(view, relative_string) &&
+                !entries.contains(append_filename(
                     make_base_string(output.native(), secondary_directory,
                                      secondary_views[view], relative_string,
                                      sentinel),
@@ -535,6 +575,10 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
         }
 
         for (std::size_t view{0}; view < destination_views.size(); view++) {
+          if (in_secondary && !visible(view, relative_string)) {
+            continue;
+          }
+
           auto destination_base{make_base_string(
               output_string, destination_directory, destination_views[view],
               relative_string, sentinel)};
@@ -547,6 +591,18 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
           if (reverse_iterator != reverse_dependency_index.end()) {
             action_dependencies.reserve(reverse_iterator->second.size());
             for (const auto &dependency_key : reverse_iterator->second) {
+              // A view is told who points at something out of what it holds, so
+              // a referrer it is without contributes nothing here. Choosing the
+              // inputs is what leaves the handler with nothing to decide
+              const auto referrer_sentinel{
+                  dependency_key.find(sentinel_separator, owner_start)};
+              if (in_secondary && referrer_sentinel != std::string::npos &&
+                  !visible(view,
+                           dependency_key.substr(
+                               owner_start, referrer_sentinel - owner_start))) {
+                continue;
+              }
+
               action_dependencies.emplace_back(dependency_key);
             }
           }
@@ -810,11 +866,18 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
 
     auto primary_base{make_base_string(output_string, primary_directory, {},
                                        relative_string, sentinel)};
+    // A leaf has a place only in the views holding it, so what it has bases in
+    // is what the build was told can see it. An entry left empty here is a view
+    // this leaf is absent from, which is what everything downstream reads
     std::vector<std::string> secondary_bases;
     secondary_bases.reserve(secondary_views.size());
-    for (const auto view : secondary_views) {
-      secondary_bases.push_back(make_base_string(
-          output_string, secondary_directory, view, relative_string, sentinel));
+    for (std::size_t view{0}; view < secondary_views.size(); view++) {
+      secondary_bases.push_back(
+          visible(view, relative_string)
+              ? make_base_string(output_string, secondary_directory,
+                                 secondary_views[view], relative_string,
+                                 sentinel)
+              : std::string{});
     }
 
     auto root_path{
@@ -858,13 +921,28 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
     }
 
     if (needs_targets) {
-      for (std::size_t view{0}; view < secondary_bases.size(); view++) {
-        const std::array<std::string, 2> bases{
-            {primary_base, secondary_bases[view]}};
+      bool declared_primary{false};
+      for (const auto &secondary_base : secondary_bases) {
+        if (secondary_base.empty()) {
+          continue;
+        }
+
+        const std::array<std::string, 2> bases{{primary_base, secondary_base}};
         declare_leaf_targets(targets, bases, output_string, info.path->native(),
                              info.evaluate, build_type, full_mode,
                              configuration_string, uri, phase, leaf_rules,
-                             view > 0);
+                             declared_primary);
+        declared_primary = true;
+      }
+
+      // Nothing in the view tree holds this leaf anywhere, so what it has in
+      // the unit tree is declared on its own rather than left undeclared
+      if (!declared_primary) {
+        const std::array<std::string, 2> bases{{primary_base, std::string{}}};
+        declare_leaf_targets(targets, bases, output_string, info.path->native(),
+                             info.evaluate, build_type, full_mode,
+                             configuration_string, uri, phase, leaf_rules,
+                             false, true);
       }
     }
 
@@ -934,7 +1012,9 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
         }
 
         for (const auto &secondary_base : leaf.secondary_bases) {
-          dirty_set.insert(append_filename(secondary_base, rule.filename));
+          if (!secondary_base.empty()) {
+            dirty_set.insert(append_filename(secondary_base, rule.filename));
+          }
         }
       }
     }
@@ -1082,8 +1162,8 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
 
         // Missing in any view is missing, since each holds its own copy
         for (const auto &secondary_base : leaf.secondary_bases) {
-          if (!entries.contains(
-                  append_filename(secondary_base, rule.filename))) {
+          if (!secondary_base.empty() && !entries.contains(append_filename(
+                                             secondary_base, rule.filename))) {
             has_missing_mode_outputs = true;
             break;
           }
@@ -1217,6 +1297,10 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
                 ? std::span<const std::string>{&leaf.primary_base, 1}
                 : std::span<const std::string>{leaf.secondary_bases}};
         for (const auto &base : rule_bases) {
+          if (base.empty()) {
+            continue;
+          }
+
           auto target_path_string{append_filename(base, rule.filename)};
           auto should_force{is_full || leaf_is_dirty ||
                             !entries.contains(target_path_string)};
@@ -1248,7 +1332,9 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
         const auto relative{directory.lexically_relative(primary_path)};
         const auto is_root_directory{relative == "."};
 
-        if (rule.scope == ContainerScope::RootOnly && !is_root_directory) {
+        if ((rule.scope == ContainerScope::RootOnly ||
+             rule.scope == ContainerScope::PrimaryRootOnly) &&
+            !is_root_directory) {
           continue;
         }
 
@@ -1264,6 +1350,18 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
         // children, since a listing in one view is built from that view's
         // children rather than from another's
         for (std::size_t view{0}; view < secondary_paths.size(); view++) {
+          if (rule.scope == ContainerScope::PrimaryRootOnly && view != 0) {
+            continue;
+          }
+
+          // The root answers every view, since a caller shown nothing is still
+          // shown that, beside whatever refuses them
+          if (!is_root_directory &&
+              !holds_visible_leaf(all_relative_paths, relative, view,
+                                  visible)) {
+            continue;
+          }
+
           const auto &secondary_path{secondary_paths[view]};
           auto destination{
               (secondary_path / relative / sentinel / rule.filename)
@@ -1279,6 +1377,13 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
             switch (dependency.kind) {
               case ContainerDependencyKind::LeafMetadata:
                 for (const auto &leaf_relative : all_relative_paths) {
+                  // A listing is built from what its view holds, so a leaf the
+                  // view is without is not read here either. Naming one anyway
+                  // would have this wait on something nothing produces
+                  if (!visible(view, leaf_relative.native())) {
+                    continue;
+                  }
+
                   if (leaf_relative.parent_path() == relative ||
                       (is_root_directory && !leaf_relative.has_parent_path())) {
                     rule_dependencies.push_back(append_filename(
@@ -1302,7 +1407,9 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
                     other_parent = ".";
                   }
 
-                  if (other_parent == relative) {
+                  if (other_parent == relative &&
+                      holds_visible_leaf(all_relative_paths, other_relative,
+                                         view, visible)) {
                     rule_dependencies.push_back(
                         (secondary_path / other_relative / sentinel /
                          container_rules[indices.container_list].filename)
@@ -1315,6 +1422,12 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
                 for (const auto &any_directory : all_directories) {
                   const auto directory_relative{
                       any_directory.lexically_relative(primary_path)};
+                  if (directory_relative != "." &&
+                      !holds_visible_leaf(all_relative_paths,
+                                          directory_relative, view, visible)) {
+                    continue;
+                  }
+
                   rule_dependencies.push_back(
                       (directory_relative == "."
                            ? secondary_path / sentinel /
@@ -1426,6 +1539,10 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
                 ? std::span<const std::string>{&leaf.primary_base, 1}
                 : std::span<const std::string>{leaf.secondary_bases}};
         for (const auto &target_base : target_bases) {
+          if (target_base.empty()) {
+            continue;
+          }
+
           auto target_path{append_filename(target_base, rule.filename)};
           if (entries.contains(target_path)) {
             remove_wave.push_back(
@@ -1444,10 +1561,12 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
     known_bases.reserve(active_leaves.size() * 2 + 1);
     for (const auto &leaf : active_leaves) {
       known_bases.insert(leaf.primary_base);
-      // Every view holds this leaf, so every view's copy is known and only a
-      // tree belonging to a view that no longer exists is left unaccounted for
+      // Only the views holding this leaf know it, so a view without it leaves
+      // nothing here to account for and nothing on disk to keep
       for (const auto &secondary_base : leaf.secondary_bases) {
-        known_bases.insert(secondary_base);
+        if (!secondary_base.empty()) {
+          known_bases.insert(secondary_base);
+        }
       }
 
       auto current{*leaf.info->relative_path};

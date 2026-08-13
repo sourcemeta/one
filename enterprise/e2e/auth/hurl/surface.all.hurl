@@ -321,20 +321,19 @@ Access-Control-Allow-Origin: *
 # an apiKey-scoped schema
 GET {{base}}/private/secret.json
 Authorization: Bearer surface-secret-key
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 [Captures]
 not_master_body: body
 not_master_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
-jsonpath "$.type" == "urn:sourcemeta:one:authentication-required"
-jsonpath "$.title" == "Unauthorized"
-jsonpath "$.status" == 401
-jsonpath "$.detail" == "This resource requires authentication"
+jsonpath "$.type" == "urn:sourcemeta:one:not-found"
+jsonpath "$.title" == "Not Found"
+jsonpath "$.status" == 404
+jsonpath "$.detail" == "There is nothing at this URL"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{not_master_schema}}
 ```

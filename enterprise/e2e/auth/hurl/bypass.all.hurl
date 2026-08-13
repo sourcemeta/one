@@ -4,39 +4,33 @@
 
 # Upper-cased prefix
 GET {{base}}/PRIVATE/secret.json
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 
 # Repeated leading slash
 GET {{base}}//private/secret.json
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 
 # Repeated interior slash
 GET {{base}}/private//secret.json
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 
 # Single-dot segment
 GET {{base}}/private/./secret.json
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 
 # Leading single-dot segment
 GET {{base}}/./private/secret.json
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 
 # Parent traversal from a public prefix into an apiKey prefix
 GET {{base}}/public/../private/secret.json
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 
 # Percent-encoded slash: not a path separator, so this is a single literal
 # segment at the public root that names no resource. It answers a plain 404
@@ -61,12 +55,11 @@ jsonpath "$.type" == "string"
 GET {{base}}//PRIVATE/secret.json
 [Options]
 path-as-is: true
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 upper_slash_body: body
@@ -75,10 +68,10 @@ upper_slash_schema: header "Link" regex "<([^>]+)>"
 header "ETag" not exists
 header "Last-Modified" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{upper_slash_schema}}
@@ -93,12 +86,11 @@ jsonpath "$.valid" == true
 GET {{base}}///PRIVATE/secret.json
 [Options]
 path-as-is: true
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 triple_slash_body: body
@@ -107,10 +99,10 @@ triple_slash_schema: header "Link" regex "<([^>]+)>"
 header "ETag" not exists
 header "Last-Modified" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{triple_slash_schema}}
@@ -125,12 +117,11 @@ jsonpath "$.valid" == true
 GET {{base}}//PRIVATE/./secret.json
 [Options]
 path-as-is: true
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 upper_dot_body: body
@@ -139,10 +130,10 @@ upper_dot_schema: header "Link" regex "<([^>]+)>"
 header "ETag" not exists
 header "Last-Modified" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{upper_dot_schema}}
@@ -157,12 +148,11 @@ jsonpath "$.valid" == true
 GET {{base}}//PRIVATE/SECRET.JSON
 [Options]
 path-as-is: true
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 upper_extension_body: body
@@ -171,10 +161,10 @@ upper_extension_schema: header "Link" regex "<([^>]+)>"
 header "ETag" not exists
 header "Last-Modified" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{upper_extension_schema}}
@@ -189,12 +179,11 @@ jsonpath "$.valid" == true
 GET {{base}}//MACHINE/config.json
 [Options]
 path-as-is: true
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 upper_jwt_body: body
@@ -203,10 +192,10 @@ upper_jwt_schema: header "Link" regex "<([^>]+)>"
 header "ETag" not exists
 header "Last-Modified" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{upper_jwt_schema}}
@@ -248,12 +237,11 @@ header "ETag" exists
 GET {{base}}//PRIVATE/
 [Options]
 path-as-is: true
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 upper_directory_body: body
@@ -262,10 +250,10 @@ upper_directory_schema: header "Link" regex "<([^>]+)>"
 header "ETag" not exists
 header "Last-Modified" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{upper_directory_schema}}

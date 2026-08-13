@@ -55,23 +55,22 @@ header "ETag" exists
 # And the one without it is refused, though it is valid in every other respect
 GET {{base}}/typed/thing.json
 Authorization: Bearer {{untyped_token}}
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 denied_body: body
 denied_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{denied_schema}}
@@ -85,10 +84,9 @@ jsonpath "$.valid" == true
 # Carrying nothing is refused identically, so the untyped token discloses
 # nothing by being refused differently
 GET {{base}}/typed/thing.json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Asserts]
 body == {{denied_body}}
@@ -96,10 +94,9 @@ body == {{denied_body}}
 # The gated listing is not enumerable without the right token either
 GET {{base}}/self/v1/api/list/typed
 Authorization: Bearer {{untyped_token}}
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Asserts]
 body == {{denied_body}}
@@ -150,9 +147,8 @@ jsonpath "$.valid" == true
 # keeps working
 GET {{base}}/machine/config.json
 Authorization: Bearer {{untyped_token}}
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 [Asserts]
 body == {{denied_body}}

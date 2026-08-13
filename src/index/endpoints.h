@@ -35,6 +35,8 @@ inline constexpr std::string_view ENDPOINT_SCHEMA_SEARCH{
     "/self/v1/api/schemas/search"};
 inline constexpr std::string_view ENDPOINT_HEALTH{"/self/v1/health"};
 inline constexpr std::string_view ENDPOINT_AUTH_LOGOUT{"/self/v1/auth/logout"};
+inline constexpr std::string_view ENDPOINT_AUTH_LOGIN_PAGE{
+    "/self/v1/auth/login"};
 inline constexpr std::string_view ENDPOINT_AUTH_LOGIN{
     "/self/v1/auth/login/{policy}"};
 inline constexpr std::string_view ENDPOINT_AUTH_CALLBACK{

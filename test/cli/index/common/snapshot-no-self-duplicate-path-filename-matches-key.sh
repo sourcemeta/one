@@ -53,7 +53,6 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/public/foo/%
 ./explorer/public/foo/%/directory-html.metapack
 ./explorer/public/foo/%/directory.metapack
-./explorer/public/foo/%/login-html.metapack
 ./explorer/public/foo/foo
 ./explorer/public/foo/foo/%
 ./explorer/public/foo/foo/%/dependents.metapack

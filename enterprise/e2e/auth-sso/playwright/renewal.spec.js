@@ -13,6 +13,7 @@ const MARKER = 'sourcemeta_one_renewal';
 const SESSION = 'sourcemeta_one_session';
 
 async function signIn(page) {
+  await page.goto('/self/v1/auth/login');
   await page.locator('a[data-sourcemeta-ui-login="keycloak"]').click();
   await page.locator('#username').fill('jane');
   await page.locator('#password').fill('jane-password');
@@ -36,7 +37,6 @@ test.describe('Silent session renewal', () => {
     page,
     context
   }) => {
-    await page.goto('/private/');
     await signIn(page);
     await expect(page).toHaveURL(/\/private\b/);
 
@@ -53,44 +53,45 @@ test.describe('Silent session renewal', () => {
     page,
     context
   }) => {
-    await page.goto('/private/');
     await signIn(page);
     await expect(page.locator('table tbody tr').first()).toBeVisible();
 
     await expireSession(context);
     expect(await cookieNamed(context, SESSION)).toBeUndefined();
 
-    // The gated page is simply browsed to again. No sign-in card appears, and
-    // the listing renders as though the session had never lapsed
+    // The gated page is simply browsed to again. Nothing is shown along the
+    // way, and the listing renders as though the session had never lapsed
     await page.goto('/private/');
-    await expect(page).not.toHaveTitle('Sign In');
+    await expect(page).not.toHaveTitle('Not Found');
     await expect(page.locator('table tbody tr').first()).toBeVisible();
-    await expect(page.locator('a[data-sourcemeta-ui-login]')).toHaveCount(0);
     expect(await cookieNamed(context, SESSION)).toBeDefined();
   });
 
-  test('renewal lands on the exact page that was denied', async ({
+  test('renewal lands on the exact page it was asked for', async ({
     page,
     context
   }) => {
-    await page.goto('/private/secret');
     await signIn(page);
+    await page.goto('/private/secret');
     await expect(page).toHaveURL(/\/private\/secret$/);
 
+    // The renewal carries the page along, so an expired session is replaced
+    // without the person losing their place
     await expireSession(context);
     await page.goto('/private/secret');
     await expect(page).toHaveURL(/\/private\/secret$/);
-    await expect(page).not.toHaveTitle('Sign In');
+    await expect(page).not.toHaveTitle('Not Found');
   });
 
-  test('a marker without a provider session falls back to the sign-in page', async ({
+  test('a marker without a provider session gives up quietly', async ({
     page,
     context
   }) => {
     // A browser that never signed in at the provider, carrying only the
     // marker. The provider is asked and says it cannot answer without
     // interaction, which is the ordinary end of a silent attempt rather than a
-    // failure, so the person is left where they were and offered the page
+    // failure, so the person is left where they were and told what anybody
+    // else would be told
     await context.addCookies([
       {
         name: MARKER,
@@ -100,12 +101,10 @@ test.describe('Silent session renewal', () => {
     ]);
 
     await page.goto('/private/');
-    await expect(page).toHaveTitle('Sign In');
-    await expect(
-      page.locator('a[data-sourcemeta-ui-login="keycloak"]')
-    ).toBeVisible();
+    await expect(page).toHaveTitle('Not Found');
+    await expect(page.locator('a[data-sourcemeta-ui-login]')).toHaveCount(0);
 
-    // The marker is gone, so the next denial does not go round again. Without
+    // The marker is gone, so the next attempt does not go round again. Without
     // this the browser would be sent to the provider on every navigation, for
     // an answer that is never going to change
     expect(await cookieNamed(context, MARKER)).toBeUndefined();
@@ -121,15 +120,15 @@ test.describe('Silent session renewal', () => {
     ]);
 
     await page.goto('/private/');
-    await expect(page).toHaveTitle('Sign In');
+    await expect(page).toHaveTitle('Not Found');
 
-    // A second navigation reaches the sign-in page directly. If the marker had
-    // survived, this would be another round trip through the provider, and
-    // every navigation after it too
+    // A second navigation is answered directly. If the marker had survived,
+    // this would be another round trip through the provider, and every
+    // navigation after it too
     const responses = [];
     page.on('response', (response) => responses.push(response.url()));
     await page.goto('/private/');
-    await expect(page).toHaveTitle('Sign In');
+    await expect(page).toHaveTitle('Not Found');
     expect(responses.filter((url) => url.includes('keycloak:8443'))).toHaveLength(
       0
     );
@@ -139,7 +138,6 @@ test.describe('Silent session renewal', () => {
     page,
     context
   }) => {
-    await page.goto('/private/');
     await signIn(page);
     await expect(page.locator('table tbody tr').first()).toBeVisible();
     expect(await cookieNamed(context, MARKER)).toBeDefined();
@@ -161,6 +159,6 @@ test.describe('Silent session renewal', () => {
     // navigation without them doing anything
     expect(await cookieNamed(context, MARKER)).toBeUndefined();
     await page.goto('/private/');
-    await expect(page).toHaveTitle('Sign In');
+    await expect(page).toHaveTitle('Not Found');
   });
 });

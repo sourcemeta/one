@@ -53,12 +53,10 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/public/baz/%
 ./explorer/public/baz/%/directory-html.metapack
 ./explorer/public/baz/%/directory.metapack
-./explorer/public/baz/%/login-html.metapack
 ./explorer/public/baz/baz
 ./explorer/public/baz/baz/%
 ./explorer/public/baz/baz/%/directory-html.metapack
 ./explorer/public/baz/baz/%/directory.metapack
-./explorer/public/baz/baz/%/login-html.metapack
 ./explorer/public/baz/baz/test
 ./explorer/public/baz/baz/test/%
 ./explorer/public/baz/baz/test/%/dependents.metapack

@@ -68,14 +68,12 @@ cat << 'EOF' > "$TMP/expected-before.txt"
 ./explorer/alpha/%/404.metapack
 ./explorer/alpha/%/directory-html.metapack
 ./explorer/alpha/%/directory.metapack
-./explorer/alpha/%/login-html.metapack
 ./explorer/alpha/%/mcp.metapack
 ./explorer/alpha/%/search.metapack
 ./explorer/alpha/schemas
 ./explorer/alpha/schemas/%
 ./explorer/alpha/schemas/%/directory-html.metapack
 ./explorer/alpha/schemas/%/directory.metapack
-./explorer/alpha/schemas/%/login-html.metapack
 ./explorer/alpha/schemas/a
 ./explorer/alpha/schemas/a/%
 ./explorer/alpha/schemas/a/%/dependents.metapack
@@ -95,21 +93,6 @@ cat << 'EOF' > "$TMP/expected-before.txt"
 ./explorer/public/%/login-html.metapack
 ./explorer/public/%/mcp.metapack
 ./explorer/public/%/search.metapack
-./explorer/public/schemas
-./explorer/public/schemas/%
-./explorer/public/schemas/%/directory-html.metapack
-./explorer/public/schemas/%/directory.metapack
-./explorer/public/schemas/%/login-html.metapack
-./explorer/public/schemas/a
-./explorer/public/schemas/a/%
-./explorer/public/schemas/a/%/dependents.metapack
-./explorer/public/schemas/a/%/schema-html.metapack
-./explorer/public/schemas/a/%/schema.metapack
-./explorer/public/schemas/b
-./explorer/public/schemas/b/%
-./explorer/public/schemas/b/%/dependents.metapack
-./explorer/public/schemas/b/%/schema-html.metapack
-./explorer/public/schemas/b/%/schema.metapack
 EOF
 
 diff "$TMP/before.txt" "$TMP/expected-before.txt"
@@ -152,7 +135,6 @@ cat << 'EOF' > "$TMP/expected-after.txt"
 ./explorer/public/schemas/%
 ./explorer/public/schemas/%/directory-html.metapack
 ./explorer/public/schemas/%/directory.metapack
-./explorer/public/schemas/%/login-html.metapack
 ./explorer/public/schemas/a
 ./explorer/public/schemas/a/%
 ./explorer/public/schemas/a/%/dependents.metapack

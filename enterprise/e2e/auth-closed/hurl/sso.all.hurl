@@ -6,20 +6,19 @@
 
 # The catalog denies an anonymous browser, like everything else here
 GET {{base}}/catalog/example.json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 anonymous_denied: body
 [Asserts]
 header "Set-Cookie" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
@@ -127,10 +126,9 @@ header "Location" startsWith "https://keycloak:8443/realms/main/protocol/openid-
 # With the session gone the catalog is locked to the browser again, the denial
 # byte-identical to the anonymous one at the top
 GET {{base}}/catalog/example.json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 [Captures]
@@ -138,10 +136,10 @@ locked_again: body
 [Asserts]
 header "Set-Cookie" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error

@@ -1,23 +1,22 @@
 # The console sits behind both a machine apiKey policy and a human OIDC policy,
-# so an anonymous browser is denied until it logs in
+# so it is not there at all for an anonymous caller until they log in
 GET {{base}}/console/dashboard.json
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 anonymous_denied: body
 error_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Set-Cookie" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
@@ -58,17 +57,34 @@ header "ETag" matches /^"[0-9a-f]{64}"$/
   "additionalProperties": false
 }
 
-# A browser navigating to the console page is shown its login in place, a 401
-# whose body is the login page rather than a redirect, while the machine key
-# above keeps working: one path, two audiences
+# A browser navigating to the console it cannot see is told there is nothing
+# there, while the machine key above keeps working: one path, two audiences
 GET {{base}}/console/
 Accept: text/html
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: text/html; charset=utf-8
-WWW-Authenticate: Bearer realm="registry"
 [Asserts]
 header "Location" not exists
+header "Set-Cookie" not exists
+header "WWW-Authenticate" not exists
+xpath "string(//title)" == "Not Found"
+xpath "count(//a[@data-sourcemeta-ui-login])" == 0
+
+# Where to sign in is somewhere the browser goes rather than something the
+# answer above hands it. This instance gates one collection interactively, so
+# its login page offers that one provider and nothing about the machine
+# policies alongside it
+GET {{base}}/self/v1/auth/login
+Accept: text/html
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
+Vary: Accept-Encoding
+[Asserts]
 header "Set-Cookie" not exists
 xpath "string(//title)" == "Sign In"
 xpath "count(//a[@data-sourcemeta-ui-login])" == 1
@@ -160,24 +176,23 @@ cookie "sourcemeta_one_transaction[Max-Age]" == 0
 cookie "sourcemeta_one_renewal[Max-Age]" == 0
 header "Location" startsWith "https://keycloak:8443/realms/main/protocol/openid-connect/logout?"
 
-# The browser is gated again, the denial byte-identical to the anonymous one
+# The browser is gated again, the answer byte-identical to the anonymous one
 GET {{base}}/console/dashboard.json
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 gated_again: body
 [Asserts]
 header "Set-Cookie" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}

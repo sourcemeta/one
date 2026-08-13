@@ -84,18 +84,17 @@ wrong_audience_token: jsonpath "$.access_token"
 
 GET {{base}}/catalog/example.json
 Authorization: Bearer {{wrong_audience_token}}
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 wrong_audience_denied: body
 [Asserts]
-jsonpath "$.type" == "urn:sourcemeta:one:authentication-required"
-jsonpath "$.status" == 401
+jsonpath "$.type" == "urn:sourcemeta:one:not-found"
+jsonpath "$.status" == 404
 
 POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
 Authorization: Bearer {{access_token}}
@@ -109,18 +108,17 @@ jsonpath "$.valid" == true
 # A tampered token fails signature verification
 GET {{base}}/catalog/example.json
 Authorization: Bearer {{access_token}}tampered
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 tampered_denied: body
 [Asserts]
-jsonpath "$.type" == "urn:sourcemeta:one:authentication-required"
-jsonpath "$.status" == 401
+jsonpath "$.type" == "urn:sourcemeta:one:not-found"
+jsonpath "$.status" == 404
 
 POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
 Authorization: Bearer {{access_token}}
