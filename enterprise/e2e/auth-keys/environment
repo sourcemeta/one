@@ -1,1 +1,2 @@
 ONE_E2E_VAULT_KEY=vault-secret-key
+ONE_E2E_LEDGER_KEY=ledger-secret-key

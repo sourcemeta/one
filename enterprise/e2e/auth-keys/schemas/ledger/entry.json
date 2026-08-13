@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/ledger/entry",
+  "title": "A schema gated by a second policy",
+  "type": "object"
+}
