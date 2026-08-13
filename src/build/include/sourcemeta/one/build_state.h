@@ -82,7 +82,14 @@ struct LeafRule {
   std::uint8_t dependency_count;
 };
 
-enum class ContainerScope : std::uint8_t { AllContainers, NonRoot, RootOnly };
+enum class ContainerScope : std::uint8_t {
+  AllContainers,
+  NonRoot,
+  RootOnly,
+  // The root of the anonymous view alone, for an artifact that is the same
+  // answer whoever asks and so is held once rather than copied per view
+  PrimaryRootOnly
+};
 
 enum class ContainerDependencyKind : std::uint8_t {
   LeafMetadata,

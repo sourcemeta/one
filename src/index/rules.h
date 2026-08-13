@@ -344,12 +344,11 @@ inline constexpr DeltaRuleSet<13, 8, 5, 2> INDEX_RULES{
          .base = 1,
          .filename = "login-html.metapack",
          .gate = TargetGate::OnlyInFullMode,
-         .scope = ContainerScope::AllContainers,
-         .only_full_rebuild = false,
+         .scope = ContainerScope::PrimaryRootOnly,
+         .only_full_rebuild = true,
          .is_listing = false,
-         .dependencies = {{{.kind =
-                                ContainerDependencyKind::SameContainerTarget,
-                            .filename = "directory.metapack"}}},
+         .dependencies = {{{.kind = ContainerDependencyKind::ExternalConfig,
+                            .filename = nullptr}}},
          .dependency_count = 1},
     }},
     .globals = {{

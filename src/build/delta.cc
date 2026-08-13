@@ -493,9 +493,9 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
     {
       // A view that appeared since the last build holds no artifact for any
       // leaf, and the graph it would be derived from did not move, so nothing
-      // above notices it. Only the views after the first are asked, since the
-      // first is the tree that was already there and what it does when one of
-      // its own artifacts goes missing is decided above rather than here
+      // above notices it. The same is true of a view that keeps its name but
+      // widens, since a leaf it could not reach before arrives with no
+      // artifact behind it either
       const auto &missing_rule{leaf_rules[indices.dependents]};
       if (missing_rule.base != 0) {
         for (const auto &[uri, info] : leaves) {
@@ -504,8 +504,9 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
             continue;
           }
 
-          for (std::size_t view{1}; view < secondary_views.size(); view++) {
-            if (!entries.contains(append_filename(
+          for (std::size_t view{0}; view < secondary_views.size(); view++) {
+            if (visible(view, relative_string) &&
+                !entries.contains(append_filename(
                     make_base_string(output.native(), secondary_directory,
                                      secondary_views[view], relative_string,
                                      sentinel),
@@ -1331,7 +1332,9 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
         const auto relative{directory.lexically_relative(primary_path)};
         const auto is_root_directory{relative == "."};
 
-        if (rule.scope == ContainerScope::RootOnly && !is_root_directory) {
+        if ((rule.scope == ContainerScope::RootOnly ||
+             rule.scope == ContainerScope::PrimaryRootOnly) &&
+            !is_root_directory) {
           continue;
         }
 
@@ -1347,6 +1350,10 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
         // children, since a listing in one view is built from that view's
         // children rather than from another's
         for (std::size_t view{0}; view < secondary_paths.size(); view++) {
+          if (rule.scope == ContainerScope::PrimaryRootOnly && view != 0) {
+            continue;
+          }
+
           // The root answers every view, since a caller shown nothing is still
           // shown that, beside whatever refuses them
           if (!is_root_directory &&

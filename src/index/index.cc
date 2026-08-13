@@ -102,9 +102,12 @@ static auto view_filter_from(const sourcemeta::one::Authentication &gate)
     -> sourcemeta::one::ViewFilter {
   return
       [&gate](const std::size_t view, const std::string_view relative) -> bool {
-        return gate.visible(sourcemeta::one::Authentication::Path::relative(
-                                std::string{"/"} + std::string{relative}),
-                            view);
+        std::string path;
+        path.reserve(relative.size() + 1);
+        path.push_back('/');
+        path.append(relative);
+        return gate.visible(
+            sourcemeta::one::Authentication::Path::relative(path), view);
       };
 }
 

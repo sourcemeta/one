@@ -18,14 +18,16 @@
 #include <cstddef>   // std::size_t, std::ptrdiff_t
 #include <cstdint>   // std::uint64_t
 #include <exception> // std::exception, std::exception_ptr, std::rethrow_exception
-#include <filesystem>  // std::filesystem
-#include <iterator>    // std::ranges::distance
-#include <optional>    // std::optional, std::nullopt
-#include <span>        // std::span
-#include <sstream>     // std::ostringstream
-#include <string>      // std::string
-#include <string_view> // std::string_view
-#include <utility>     // std::move
+#include <filesystem>    // std::filesystem
+#include <iterator>      // std::ranges::distance
+#include <memory>        // std::make_unique, std::unique_ptr
+#include <optional>      // std::optional, std::nullopt
+#include <span>          // std::span
+#include <sstream>       // std::ostringstream
+#include <string>        // std::string
+#include <string_view>   // std::string_view
+#include <unordered_map> // std::unordered_map
+#include <utility>       // std::move
 
 class ActionMCP_v1 : public sourcemeta::one::RouterAction {
 public:
@@ -40,9 +42,23 @@ public:
                const sourcemeta::core::URITemplateRouterView &router,
                const sourcemeta::core::URITemplateRouter::Identifier identifier,
                sourcemeta::one::Router &dispatcher)
-      : sourcemeta::one::RouterAction{base, router.base_url(), dispatcher},
-        search_view_{base / "explorer" / sourcemeta::one::VIEW_PUBLIC / "%" /
-                     "search.metapack"} {
+      : sourcemeta::one::RouterAction{base, router.base_url(), dispatcher} {
+    const auto &views{dispatcher.authentication()};
+    for (std::size_t index{0}; index < views.view_count(); index++) {
+      const auto recorded{views.view_at(index)};
+      this->search_views_.emplace(
+          recorded.name,
+          std::make_unique<sourcemeta::one::SearchView>(
+              base / "explorer" / recorded.name / "%" / "search.metapack"));
+    }
+
+    const auto fallback{this->search_views_.emplace(
+        sourcemeta::one::VIEW_PUBLIC,
+        std::make_unique<sourcemeta::one::SearchView>(
+            base / "explorer" / sourcemeta::one::VIEW_PUBLIC / "%" /
+            "search.metapack"))};
+    this->default_search_view_ = fallback.first->second.get();
+
     router.arguments(
         identifier, [this](const auto &key, const auto &value) -> void {
           if (key == "responseSchema") {
@@ -368,10 +384,11 @@ private:
     // admitted to, so the list is filtered against its credential at request
     // time, exactly as the search surface does
     const auto &authentication{this->dispatcher().authentication()};
+    auto &search_view{this->search_view_for(authentication.view(credentials))};
     auto resources{sourcemeta::core::JSON::make_array()};
     std::uint64_t admitted{0};
-    this->search_view_.for_each(
-        0, this->search_view_.count(),
+    search_view.for_each(
+        0, search_view.count(),
         [this, &credentials, &authentication, &resources, &admitted,
          offset](const sourcemeta::one::SearchListEntry &entry) -> void {
           const auto location{this->canonical_path(entry.path)};
@@ -736,7 +753,19 @@ private:
   sourcemeta::core::JSON mcp_metadata_{nullptr};
   std::string challenge_;
   std::string resource_identifier_;
-  sourcemeta::one::SearchView search_view_;
+  // A caller is answered out of the index their view holds, so what a listing
+  // can name is what the caller could have reached by looking
+  [[nodiscard]] auto search_view_for(const std::string_view view)
+      -> sourcemeta::one::SearchView & {
+    const auto match{this->search_views_.find(view)};
+    return match == this->search_views_.cend() ? *this->default_search_view_
+                                               : *match->second;
+  }
+
+  std::unordered_map<std::string_view,
+                     std::unique_ptr<sourcemeta::one::SearchView>>
+      search_views_;
+  sourcemeta::one::SearchView *default_search_view_{nullptr};
 };
 
 #endif

@@ -82,35 +82,32 @@ grep -E "Producing|Combining" "$TMP/output.txt" > "$TMP/produced.txt"
 cat << 'EOF' > "$TMP/expected-produced.txt"
 (  3%) Producing: explorer/public/%/directory.metapack
 (  6%) Producing: schemas/schemas/a/%/schema.metapack
-(  9%) Producing: schemas/schemas/b/%/dependencies.metapack
-( 12%) Producing: explorer/public/%/directory-html.metapack
-( 15%) Producing: explorer/public/%/login-html.metapack
-( 18%) Producing: explorer/public/%/search.metapack
-( 21%) Producing: schemas/schemas/a/%/dependencies.metapack
-( 24%) Producing: schemas/schemas/a/%/locations.metapack
-( 27%) Producing: schemas/schemas/a/%/positions.metapack
+( 10%) Producing: schemas/schemas/b/%/dependencies.metapack
+( 13%) Producing: explorer/public/%/directory-html.metapack
+( 16%) Producing: explorer/public/%/search.metapack
+( 20%) Producing: schemas/schemas/a/%/dependencies.metapack
+( 23%) Producing: schemas/schemas/a/%/locations.metapack
+( 26%) Producing: schemas/schemas/a/%/positions.metapack
 ( 30%) Producing: schemas/schemas/a/%/stats.metapack
 ( 33%) Producing: schemas/schemas/b/%/bundle.metapack
 ( 36%) Producing: schemas/schemas/b/%/health.metapack
-( 39%) Producing: explorer/alpha/schemas/b/%/schema.metapack
-( 42%) Producing: explorer/public/%/mcp.metapack
-( 45%) Producing: schemas/schemas/a/%/bundle.metapack
-( 48%) Producing: schemas/schemas/a/%/health.metapack
-( 51%) Producing: schemas/schemas/b/%/blaze-exhaustive.metapack
-( 54%) Producing: schemas/schemas/b/%/blaze-fast.metapack
-( 57%) Producing: schemas/schemas/b/%/editor.metapack
-( 60%) Producing: explorer/alpha/schemas/a/%/schema.metapack
-( 63%) Producing: explorer/alpha/schemas/b/%/schema-html.metapack
-( 66%) Producing: schemas/schemas/a/%/blaze-exhaustive.metapack
-( 69%) Producing: schemas/schemas/a/%/blaze-fast.metapack
-( 72%) Producing: schemas/schemas/a/%/editor.metapack
-( 75%) Producing: explorer/alpha/schemas/%/directory.metapack
-( 78%) Producing: explorer/alpha/schemas/a/%/schema-html.metapack
-( 81%) Producing: explorer/alpha/%/directory.metapack
-( 84%) Producing: explorer/alpha/schemas/%/directory-html.metapack
-( 87%) Producing: explorer/alpha/schemas/%/login-html.metapack
-( 90%) Producing: explorer/alpha/%/directory-html.metapack
-( 93%) Producing: explorer/alpha/%/login-html.metapack
+( 40%) Producing: explorer/alpha/schemas/b/%/schema.metapack
+( 43%) Producing: explorer/public/%/mcp.metapack
+( 46%) Producing: schemas/schemas/a/%/bundle.metapack
+( 50%) Producing: schemas/schemas/a/%/health.metapack
+( 53%) Producing: schemas/schemas/b/%/blaze-exhaustive.metapack
+( 56%) Producing: schemas/schemas/b/%/blaze-fast.metapack
+( 60%) Producing: schemas/schemas/b/%/editor.metapack
+( 63%) Producing: explorer/alpha/schemas/a/%/schema.metapack
+( 66%) Producing: explorer/alpha/schemas/b/%/schema-html.metapack
+( 70%) Producing: schemas/schemas/a/%/blaze-exhaustive.metapack
+( 73%) Producing: schemas/schemas/a/%/blaze-fast.metapack
+( 76%) Producing: schemas/schemas/a/%/editor.metapack
+( 80%) Producing: explorer/alpha/schemas/%/directory.metapack
+( 83%) Producing: explorer/alpha/schemas/a/%/schema-html.metapack
+( 86%) Producing: explorer/alpha/%/directory.metapack
+( 90%) Producing: explorer/alpha/schemas/%/directory-html.metapack
+( 93%) Producing: explorer/alpha/%/directory-html.metapack
 ( 96%) Producing: explorer/alpha/%/search.metapack
 (100%) Producing: explorer/alpha/%/mcp.metapack
 EOF
@@ -131,14 +128,12 @@ cat << 'EOF' > "$TMP/expected-manifest.txt"
 ./explorer/alpha/%/404.metapack
 ./explorer/alpha/%/directory-html.metapack
 ./explorer/alpha/%/directory.metapack
-./explorer/alpha/%/login-html.metapack
 ./explorer/alpha/%/mcp.metapack
 ./explorer/alpha/%/search.metapack
 ./explorer/alpha/schemas
 ./explorer/alpha/schemas/%
 ./explorer/alpha/schemas/%/directory-html.metapack
 ./explorer/alpha/schemas/%/directory.metapack
-./explorer/alpha/schemas/%/login-html.metapack
 ./explorer/alpha/schemas/a
 ./explorer/alpha/schemas/a/%
 ./explorer/alpha/schemas/a/%/dependents.metapack
