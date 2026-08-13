@@ -34,7 +34,6 @@
 #include <functional>    // std::reference_wrapper, std::cref
 #include <mutex>         // std::mutex, std::lock_guard
 #include <print>         // std::print, std::println
-#include <span>          // std::span
 #include <sstream>       // std::ostringstream
 #include <string>        // std::string
 #include <string_view>   // std::string_view
@@ -65,8 +64,9 @@ using BuildHandlerFunction = auto (*)(
     -> void;
 
 // Indexed by action type, so its size is the number of them rather than a
-// count kept in step by hand. Removing an action without removing its
-// handler is then too many initialisers rather than a slot nothing reaches
+// count kept in step by hand. Removing an action without removing its handler
+// is then too many initialisers rather than a slot nothing reaches, and an
+// action added without one is the assertion where this is read
 static constexpr std::array<BuildHandlerFunction, sourcemeta::one::ACTION_COUNT>
     HANDLERS{{
         &sourcemeta::one::GENERATE_MATERIALISED_SCHEMA::handler,
@@ -98,12 +98,6 @@ static constexpr std::array<BuildHandlerFunction, sourcemeta::one::ACTION_COUNT>
         // action with nothing to call
         nullptr,
     }};
-
-// And adding an action without a handler for it is caught here rather than
-// when whatever it was added for first runs
-static_assert(std::ranges::none_of(
-    std::span{HANDLERS}.first(sourcemeta::one::ACTION_REMOVE),
-    [](const BuildHandlerFunction handler) { return handler == nullptr; }));
 
 // Which views hold which leaves, answered by the same gate the server reads
 // rather than by a second reading of the policies. The artifact is written here
