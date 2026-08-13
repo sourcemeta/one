@@ -63,35 +63,41 @@ using BuildHandlerFunction = auto (*)(
     const sourcemeta::one::Configuration &, const sourcemeta::core::JSON &)
     -> void;
 
-static constexpr std::array<BuildHandlerFunction, 27> HANDLERS{{
-    &sourcemeta::one::GENERATE_MATERIALISED_SCHEMA::handler,
-    &sourcemeta::one::GENERATE_POINTER_POSITIONS::handler,
-    &sourcemeta::one::GENERATE_FRAME_LOCATIONS::handler,
-    &sourcemeta::one::GENERATE_DEPENDENCIES::handler,
-    &sourcemeta::one::GENERATE_STATS::handler,
-    &sourcemeta::one::GENERATE_HEALTH::handler,
-    &sourcemeta::one::GENERATE_BUNDLE::handler,
-    &sourcemeta::one::GENERATE_EDITOR::handler,
-    &sourcemeta::one::GENERATE_BLAZE_TEMPLATE_EXHAUSTIVE::handler,
-    &sourcemeta::one::GENERATE_BLAZE_TEMPLATE_FAST::handler,
-    &sourcemeta::one::GENERATE_EXPLORER_SCHEMA_METADATA::handler,
-    &sourcemeta::one::GENERATE_DEPENDENTS::handler,
-    &sourcemeta::one::GENERATE_EXPLORER_SEARCH_INDEX::handler,
-    &sourcemeta::one::GENERATE_MCP::handler,
-    &sourcemeta::one::GENERATE_EXPLORER_DIRECTORY_LIST::handler,
-    &sourcemeta::one::GENERATE_WEB_INDEX::handler,
-    &sourcemeta::one::GENERATE_WEB_NOT_FOUND::handler,
-    &sourcemeta::one::GENERATE_WEB_DIRECTORY::handler,
-    &sourcemeta::one::GENERATE_WEB_SCHEMA::handler,
-    &sourcemeta::one::GENERATE_COMMENT::handler,
-    &sourcemeta::one::GENERATE_CONFIGURATION::handler,
-    &sourcemeta::one::GENERATE_VERSION::handler,
-    &sourcemeta::one::GENERATE_URITEMPLATE_ROUTES::handler,
-    &sourcemeta::one::GENERATE_AUTHENTICATION::handler,
-    &sourcemeta::one::GENERATE_WEB_UNAUTHORIZED::handler,
-    &sourcemeta::one::GENERATE_WEB_LOGIN::handler,
-    nullptr,
-}};
+// Indexed by action type, so its size is the number of them rather than a
+// count kept in step by hand. Removing an action without removing its handler
+// is then too many initialisers rather than a slot nothing reaches, and an
+// action added without one is the assertion where this is read
+static constexpr std::array<BuildHandlerFunction, sourcemeta::one::ACTION_COUNT>
+    HANDLERS{{
+        &sourcemeta::one::GENERATE_MATERIALISED_SCHEMA::handler,
+        &sourcemeta::one::GENERATE_POINTER_POSITIONS::handler,
+        &sourcemeta::one::GENERATE_FRAME_LOCATIONS::handler,
+        &sourcemeta::one::GENERATE_DEPENDENCIES::handler,
+        &sourcemeta::one::GENERATE_STATS::handler,
+        &sourcemeta::one::GENERATE_HEALTH::handler,
+        &sourcemeta::one::GENERATE_BUNDLE::handler,
+        &sourcemeta::one::GENERATE_EDITOR::handler,
+        &sourcemeta::one::GENERATE_BLAZE_TEMPLATE_EXHAUSTIVE::handler,
+        &sourcemeta::one::GENERATE_BLAZE_TEMPLATE_FAST::handler,
+        &sourcemeta::one::GENERATE_EXPLORER_SCHEMA_METADATA::handler,
+        &sourcemeta::one::GENERATE_DEPENDENTS::handler,
+        &sourcemeta::one::GENERATE_EXPLORER_SEARCH_INDEX::handler,
+        &sourcemeta::one::GENERATE_MCP::handler,
+        &sourcemeta::one::GENERATE_EXPLORER_DIRECTORY_LIST::handler,
+        &sourcemeta::one::GENERATE_WEB_INDEX::handler,
+        &sourcemeta::one::GENERATE_WEB_NOT_FOUND::handler,
+        &sourcemeta::one::GENERATE_WEB_DIRECTORY::handler,
+        &sourcemeta::one::GENERATE_WEB_SCHEMA::handler,
+        &sourcemeta::one::GENERATE_COMMENT::handler,
+        &sourcemeta::one::GENERATE_CONFIGURATION::handler,
+        &sourcemeta::one::GENERATE_VERSION::handler,
+        &sourcemeta::one::GENERATE_URITEMPLATE_ROUTES::handler,
+        &sourcemeta::one::GENERATE_AUTHENTICATION::handler,
+        &sourcemeta::one::GENERATE_WEB_LOGIN::handler,
+        // Removal is done before anything is dispatched, so it is the one
+        // action with nothing to call
+        nullptr,
+    }};
 
 // Which views hold which leaves, answered by the same gate the server reads
 // rather than by a second reading of the policies. The artifact is written here

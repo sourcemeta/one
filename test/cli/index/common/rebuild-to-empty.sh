@@ -52,7 +52,6 @@ cat << 'EOF' > "$TMP/new-expected.txt"
 ./explorer
 ./explorer/public
 ./explorer/public/%
-./explorer/public/%/401.metapack
 ./explorer/public/%/404.metapack
 ./explorer/public/%/directory-html.metapack
 ./explorer/public/%/directory.metapack

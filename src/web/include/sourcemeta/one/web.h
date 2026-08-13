@@ -25,15 +25,6 @@ struct GENERATE_WEB_NOT_FOUND {
                       const sourcemeta::core::JSON &) -> void;
 };
 
-struct GENERATE_WEB_UNAUTHORIZED {
-  static auto handler(const sourcemeta::one::BuildState &,
-                      const sourcemeta::one::BuildPlan::Action &action,
-                      const sourcemeta::one::BuildDynamicCallback &,
-                      sourcemeta::one::Resolver &,
-                      const sourcemeta::one::Configuration &configuration,
-                      const sourcemeta::core::JSON &) -> void;
-};
-
 struct GENERATE_WEB_LOGIN {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,

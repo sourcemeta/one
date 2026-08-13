@@ -67,7 +67,6 @@ cd - > /dev/null
 cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/partner
 ./explorer/partner/%
-./explorer/partner/%/401.metapack
 ./explorer/partner/%/404.metapack
 ./explorer/partner/%/directory-html.metapack
 ./explorer/partner/%/directory.metapack
@@ -84,7 +83,6 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/partner/schemas/a/%/schema.metapack
 ./explorer/public
 ./explorer/public/%
-./explorer/public/%/401.metapack
 ./explorer/public/%/404.metapack
 ./explorer/public/%/directory-html.metapack
 ./explorer/public/%/directory.metapack
@@ -93,7 +91,6 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/public/%/search.metapack
 ./explorer/staff
 ./explorer/staff/%
-./explorer/staff/%/401.metapack
 ./explorer/staff/%/404.metapack
 ./explorer/staff/%/directory-html.metapack
 ./explorer/staff/%/directory.metapack
