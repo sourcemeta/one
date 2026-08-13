@@ -152,7 +152,7 @@ jsonpath "$.result.resources[20].uri" == "{{base}}/self/v1/schemas/mcp/error"
 jsonpath "$.result.resources[20].name" == "Sourcemeta One MCP Error Response"
 jsonpath "$.result.resources[20].description" == "The error response Sourcemeta One returns when an MCP request fails"
 jsonpath "$.result.resources[20].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[20].size" == 5991
+jsonpath "$.result.resources[20].size" == 5860
 jsonpath "$.result.resources[20].annotations.priority" == 0
 jsonpath "$.result.resources[21].uri" == "{{base}}/self/v1/schemas/mcp/initialize/request"
 jsonpath "$.result.resources[21].name" == "Sourcemeta One MCP Initialize Request"
@@ -600,7 +600,7 @@ jsonpath "$.result.resources[23].uri" == "{{base}}/self/v1/schemas/mcp/error"
 jsonpath "$.result.resources[23].name" == "Sourcemeta One MCP Error Response"
 jsonpath "$.result.resources[23].description" == "The error response Sourcemeta One returns when an MCP request fails"
 jsonpath "$.result.resources[23].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[23].size" == 5991
+jsonpath "$.result.resources[23].size" == 5860
 jsonpath "$.result.resources[23].annotations.priority" == 0
 jsonpath "$.result.resources[24].uri" == "{{base}}/self/v1/schemas/mcp/initialize/request"
 jsonpath "$.result.resources[24].name" == "Sourcemeta One MCP Initialize Request"
@@ -1031,7 +1031,7 @@ jsonpath "$.result.resources[21].uri" == "{{base}}/self/v1/schemas/mcp/error"
 jsonpath "$.result.resources[21].name" == "Sourcemeta One MCP Error Response"
 jsonpath "$.result.resources[21].description" == "The error response Sourcemeta One returns when an MCP request fails"
 jsonpath "$.result.resources[21].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[21].size" == 5991
+jsonpath "$.result.resources[21].size" == 5860
 jsonpath "$.result.resources[21].annotations.priority" == 0
 jsonpath "$.result.resources[22].uri" == "{{base}}/self/v1/schemas/mcp/initialize/request"
 jsonpath "$.result.resources[22].name" == "Sourcemeta One MCP Initialize Request"

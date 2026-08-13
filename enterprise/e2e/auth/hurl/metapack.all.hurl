@@ -1,6 +1,6 @@
 # Every per-schema API is gated on the schema it describes, not on the public
 # /self URL it is reached through, so wrapping a private schema in a /self API
-# path does not bypass the gate. Each one denies an anonymous caller.
+# path does not bypass the gate. Each one is closed to an anonymous caller.
 GET {{base}}/self/v1/api/schemas/health/private/secret
 HTTP 404
 Content-Type: application/problem+json

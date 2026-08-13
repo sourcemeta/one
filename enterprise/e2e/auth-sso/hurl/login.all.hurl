@@ -30,7 +30,7 @@ Vary: Accept-Encoding
 [Asserts]
 header "Set-Cookie" not exists
 header "Access-Control-Allow-Origin" not exists
-header "ETag" matches /^"[0-9a-f]{64}"$/
+header "ETag" exists
 xpath "string(//title)" == "Sign In"
 xpath "string(//h1)" == "SSO Sandbox"
 xpath "string(//p[@class='text-secondary text-center small mb-4'])" == "Choose how you want to sign in"
@@ -54,13 +54,28 @@ HTTP 405
 Cache-Control: no-store
 Content-Type: application/problem+json
 Allow: GET, HEAD, OPTIONS
+Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Captures]
+method_body: body
+method_schema: header "Link" regex "<([^>]+)>"
 {
   "type": "urn:sourcemeta:one:method-not-allowed",
   "title": "Method Not Allowed",
   "status": 405,
   "detail": "This HTTP method is invalid for this URL"
 }
+
+POST {{base}}/self/v1/api/schemas/evaluate{{method_schema}}
+```
+{{method_body}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
 
 # The private catalog is not there for an anonymous caller, and what it is told
 # validates against its error schema

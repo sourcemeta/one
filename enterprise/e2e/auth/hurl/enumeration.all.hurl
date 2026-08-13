@@ -156,9 +156,10 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Existence is revealed only after authentication: the nested path that denied
-# anonymously now resolves to a genuine 404, so absence is disclosed only to a
-# caller already admitted to the boundary
+# The same answer, byte for byte, and only now does it mean anything. To an
+# anonymous caller it said nothing at all, since every path under the boundary
+# said it. To an admitted caller it says this one path is really absent, which
+# is what makes absence a disclosure reserved for whoever can enumerate
 GET {{base}}/self/v1/api/list/private/ghost
 Authorization: Bearer primary-secret-key
 HTTP 404
@@ -171,6 +172,7 @@ Access-Control-Expose-Headers: Link, ETag
 missing_body: body
 missing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
+body == {{probe_body}}
 jsonpath "$.type" == "urn:sourcemeta:one:not-found"
 jsonpath "$.title" == "Not Found"
 jsonpath "$.status" == 404
