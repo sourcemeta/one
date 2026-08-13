@@ -19,17 +19,16 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 
 # An apiKey schema is denied without a credential
 GET {{base}}/private/secret.json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 # The primary key admits the apiKey schema, and the response is marked private
@@ -70,27 +69,25 @@ jsonpath "$['$id']" == "{{base}}/private/secret"
 # A wrong key is denied
 GET {{base}}/private/secret.json
 Authorization: Bearer not-the-key
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 # Keys are scoped to their policy: the internal key does not admit /private
 GET {{base}}/private/secret.json
 Authorization: Bearer internal-secret-key
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 # The same policy governs a second prefix, so the primary key admits /reports
@@ -112,9 +109,8 @@ Access-Control-Allow-Origin: *
 
 # /reports is denied without a credential
 GET {{base}}/reports/quarterly.json
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 
 # The internal policy uses a separate key
 GET {{base}}/internal/config.json
@@ -133,24 +129,22 @@ Access-Control-Allow-Origin: *
 # A key from another policy does not cross over into /internal
 GET {{base}}/internal/config.json
 Authorization: Bearer primary-secret-key
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 
 # A schema nested under an apiKey prefix inherits the gate, so it is denied
 # without a credential like the rest of the scope
 GET {{base}}/private/open/shared.json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 # The governing key admits it, marked private so shared caches do not store it

@@ -6,27 +6,26 @@
 # regresses, every nested name and description behind it leaks. These cases pin
 # it from every enumeration surface.
 
-# The machine listing of a protected directory denies without a credential, and
-# the denial is the canonical problem document carrying nothing about the
-# children it hides
+# The machine listing of a protected directory is not there without a
+# credential, and what is answered is the canonical problem document, carrying
+# nothing about the children it hides
 GET {{base}}/self/v1/api/list/private
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 denied_body: body
 denied_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{denied_schema}}
@@ -38,24 +37,23 @@ HTTP 200
 jsonpath "$.valid" == true
 
 # Existence under the boundary is not probeable: a nested path that does not
-# exist denies identically to the boundary itself, so nested names cannot be
+# exist answers identically to the boundary itself, so nested names cannot be
 # discovered by guessing. The gate runs ahead of the existence check
 GET {{base}}/self/v1/api/list/private/ghost
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 probe_body: body
 probe_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{probe_schema}}
@@ -67,35 +65,33 @@ HTTP 200
 jsonpath "$.valid" == true
 
 # The human rendering of the same directory is gated identically, serving the
-# 401 page rather than any listing of its contents
+# page for a path that is not there rather than any listing of its contents
 GET {{base}}/private/
 Accept: text/html
-HTTP 401
+HTTP 404
 Content-Type: text/html; charset=utf-8
-WWW-Authenticate: Bearer realm="registry"
 [Asserts]
-xpath "string(//title)" == "Unauthorized"
-xpath "string(//h2[@class='fw-bold'])" == "This page requires authentication"
+xpath "string(//title)" == "Not Found"
+xpath "string(//h2[@class='fw-bold'])" == "Oops! What you are looking for is not here"
 
-# Content negotiation is not a way around the gate: asking the directory page for
-# JSON denies the same way
+# Content negotiation is not a way around the gate: asking the directory page
+# for JSON answers the same way
 GET {{base}}/private/
 Accept: application/json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 negotiated_body: body
 negotiated_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{negotiated_schema}}
@@ -108,14 +104,13 @@ jsonpath "$.valid" == true
 
 # HEAD on the listing is gated exactly like GET, and per RFC 9110 carries no body
 HEAD {{base}}/self/v1/api/list/private
-HTTP 401
-WWW-Authenticate: Bearer realm="registry"
+HTTP 404
 [Asserts]
 bytes count == 0
 
 # With the credential the gate is the only thing that was hiding the interior:
 # the listing enumerates, revealing the nested names and the per-child metadata
-# (identifier, sizes, dialect, health) that the denial withheld. Served private
+# (identifier, sizes, dialect, health) withheld until now. Served private
 GET {{base}}/self/v1/api/list/private
 Authorization: Bearer primary-secret-key
 HTTP 200

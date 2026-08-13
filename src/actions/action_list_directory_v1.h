@@ -64,14 +64,7 @@ public:
     const auto resolution{this->artifact_resolve_path(
         view, {.bearer = credential, .cookies = cookies}, path_match,
         Tree::Explorer, "directory")};
-    if (resolution.outcome ==
-        sourcemeta::one::ArtifactResolution::Outcome::Denied) {
-      sourcemeta::one::json_error_unauthorized(request, response,
-                                               this->error_schema_, "*");
-      return;
-    }
-    if (resolution.outcome !=
-        sourcemeta::one::ArtifactResolution::Outcome::Found) {
+    if (!resolution.path.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
           "urn:sourcemeta:one:not-found", "There is nothing at this URL",
@@ -105,13 +98,7 @@ public:
     const auto view{this->dispatcher().authentication().view(credentials)};
     const auto resolution{this->artifact_resolve_path(
         view, credentials, path_arg, Tree::Explorer, "directory")};
-    if (resolution.outcome ==
-        sourcemeta::one::ArtifactResolution::Outcome::Denied) {
-      return sourcemeta::core::mcp_make_tool_error(request_id,
-                                                   "Authentication required");
-    }
-    if (resolution.outcome !=
-        sourcemeta::one::ArtifactResolution::Outcome::Found) {
+    if (!resolution.path.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(request_id,
                                                    "Directory not found");
     }

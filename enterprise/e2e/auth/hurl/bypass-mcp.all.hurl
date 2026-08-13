@@ -36,7 +36,7 @@ header "Vary" not exists
     "content": [
       {
         "type": "text",
-        "text": "Authentication required"
+        "text": "Directory not found"
       }
     ],
     "isError": true

@@ -67,8 +67,7 @@ public:
 
     const auto resolution{
         this->artifact_resolve_static(this->file_root_, matches.front())};
-    if (resolution.outcome !=
-        sourcemeta::one::ArtifactResolution::Outcome::Found) {
+    if (!resolution.path.has_value()) {
       // A path that escapes the static asset tree behaves exactly like
       // a missing file, including the method check coming first
       if (request.method() != "get" && request.method() != "head") {

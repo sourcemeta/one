@@ -1,9 +1,9 @@
-# The login page names every policy governing the path it fronts, so which
-# policies exist is published rather than secret. How the deployment is doing is
-# not. A caller who has authenticated to nothing must not be able to ask a login
-# endpoint whether an operator left a secret unset, whether the identity
-# provider is answering, or which of the two went wrong, so every reason a login
-# cannot start answers the same way.
+# The login page names every interactive policy this instance declares, so
+# which policies exist is published rather than secret. How the deployment is
+# doing is not. A caller who has authenticated to nothing must not be able to
+# ask a login endpoint whether an operator left a secret unset, whether the
+# identity provider is answering, or which of the two went wrong, so every
+# reason a login cannot start answers the same way.
 #
 # The sandbox gates one collection with two policies that are each missing
 # exactly one secret, and gates another with a provider this instance refuses to
@@ -152,10 +152,9 @@ cookie "sourcemeta_one_transaction" exists
 # cannot start must not leave the path it governs open
 GET {{base}}/unavailable/thing.json
 Accept: application/json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 denied_body: body
@@ -163,10 +162,10 @@ denied_body: body
 header "ETag" not exists
 header "Set-Cookie" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{uniform_schema}}
@@ -179,27 +178,30 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-# A browser reaching that collection is shown the login page naming both broken
-# policies, which is what makes their existence public and the refusal above
-# the only thing being withheld
+# A browser reaching that collection is told there is nothing there, the same
+# as anybody else who cannot see it. That a broken policy gates it is not
+# something the collection says
 GET {{base}}/unavailable/
 Accept: text/html
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: text/html; charset=utf-8
-WWW-Authenticate: Bearer realm="registry"
 [Asserts]
 header "Location" not exists
 header "Set-Cookie" not exists
-xpath "string(//title)" == "Sign In"
-xpath "string(//h1)" == "SSO Sandbox"
-xpath "count(//a[@data-sourcemeta-ui-login])" == 2
-xpath "string((//a[@data-sourcemeta-ui-login])[1]/@data-sourcemeta-ui-login)" == "no-client-secret"
-xpath "string((//a[@data-sourcemeta-ui-login])[1]/@href)" == "/self/v1/auth/login/no-client-secret"
-xpath "normalize-space((//a[@data-sourcemeta-ui-login])[1])" == "no-client-secret"
-xpath "string((//a[@data-sourcemeta-ui-login])[2]/@data-sourcemeta-ui-login)" == "no-session-secret"
-xpath "string((//a[@data-sourcemeta-ui-login])[2]/@href)" == "/self/v1/auth/login/no-session-secret"
-xpath "normalize-space((//a[@data-sourcemeta-ui-login])[2])" == "no-session-secret"
+xpath "string(//title)" == "Not Found"
+xpath "count(//a[@data-sourcemeta-ui-login])" == 0
+
+# Both broken policies are still offered on the login page, which is what makes
+# their existence public and the refusal above the only thing withheld. That a
+# login cannot be completed is something a person finds out by trying it
+GET {{base}}/self/v1/auth/login
+Accept: text/html
+HTTP 200
+Content-Type: text/html; charset=utf-8
+[Asserts]
+xpath "count(//a[@data-sourcemeta-ui-login and @href='/self/v1/auth/login/no-client-secret'])" == 1
+xpath "count(//a[@data-sourcemeta-ui-login and @href='/self/v1/auth/login/no-session-secret'])" == 1
 
 # HEAD and GET agree, so the refusal is not a property of having a body
 HEAD {{base}}/self/v1/auth/login/no-client-secret

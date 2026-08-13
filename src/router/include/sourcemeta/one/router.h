@@ -100,12 +100,12 @@ private:
   std::filesystem::path path_;
 };
 
-// The three-outcome result of artifact resolution. Denial is distinct
-// from absence so surfaces can answer 401 versus 404. Nothing produces
-// Denied until authorisation lands in the resolver
+// What a registry path came to for the caller who asked. There is no refusal
+// here: a path the caller cannot reach resolves to nothing at all, since what
+// a view does not hold and what was never there are one answer. Being refused
+// a credential is a matter for the route gate, which speaks about the
+// credential rather than about what the registry holds
 struct ArtifactResolution {
-  enum class Outcome : std::uint8_t { Found, NotFound, Denied };
-  Outcome outcome{Outcome::NotFound};
   std::optional<ResolvedArtifact> path;
   // Whether the path is served to anonymous callers, as opposed to admitted
   // only because the caller presented a matching credential
@@ -169,15 +169,15 @@ public:
     return {};
   }
 
-  // Serve, in place, the login page for an unauthenticated browser navigating
-  // to a path an interactive policy governs, returning true when it wrote the
-  // response so the caller stops. The page is a per-directory artifact resolved
-  // from the nearest governing directory above the path, so it is identical for
-  // every path under the same policies and a denial never reveals whether a
-  // schema exists. Machines, non-navigations, and paths with no interactive
-  // policy fall through to the plain denial
-  [[nodiscard]] auto serve_login(HTTPRequest &request,
-                                 HTTPResponse &response) const -> bool;
+  // Renew, in place, the lapsed session of a browser that navigated into a
+  // dead end, whether it was refused outright or found nothing there,
+  // returning true when it wrote the response so the caller stops. Nothing
+  // else is offered here, since signing in is somewhere a caller goes rather
+  // than something a dead end hands them. Machines, non-navigations and
+  // callers with nothing to renew fall through to whatever the caller would
+  // have answered
+  [[nodiscard]] auto serve_renewal_page(HTTPRequest &request,
+                                        HTTPResponse &response) const -> bool;
 
   // Send a browser that has signed in before back to its provider, to be asked
   // whether that sign-in still stands, rather than asking the person again
@@ -207,6 +207,34 @@ public:
     // frame-ancestors. Value is one of "DENY", "SAMEORIGIN", or
     // "ALLOW-FROM <uri>".
     std::string_view x_frame_options{};
+  };
+
+  // Browser-targeted security headers we apply to every HTML response:
+  //
+  // - Referrer-Policy (W3C Referrer Policy):
+  //   https://www.w3.org/TR/referrer-policy/
+  //   Send full URL on same-origin navigation, only the origin on
+  //   cross-origin navigation. Schema paths within the browser encode the
+  //   user's current view and would otherwise leak via every external link
+  //   click.
+  //
+  // - Content-Security-Policy frame-ancestors (W3C CSP Level 3 §6.4.2):
+  //   https://www.w3.org/TR/CSP3/#directive-frame-ancestors
+  //   Modern clickjacking control: deny embedding the web UI in any
+  //   iframe.
+  //
+  // - X-Frame-Options (RFC 7034):
+  //   https://datatracker.ietf.org/doc/html/rfc7034
+  //   Legacy clickjacking control for browsers that predate CSP3
+  //   frame-ancestors. Belt-and-suspenders for old client coverage at
+  //   near-zero header cost.
+  //
+  // JSON and static-asset responses pass a default-constructed (all-empty)
+  // instance and emit none of these.
+  static constexpr BrowserSecurityHeaders HTML_BROWSER_SECURITY{
+      .referrer_policy = "strict-origin-when-cross-origin",
+      .frame_ancestors = "'none'",
+      .x_frame_options = "DENY",
   };
 
   [[nodiscard]] auto artifact_resolve_path(std::string_view view,
@@ -284,30 +312,22 @@ protected:
                                              std::string_view relative) const
       -> ArtifactResolution;
 
-  // Escape hatch for indexer-generated infrastructure metadata read at
-  // action construction, where no request and therefore no context
-  // exists. Never use this on a request-driven path
-  [[nodiscard]] auto
-  artifact_resolve_path_unauthenticated(std::string_view input, Tree tree,
-                                        std::string_view artifact_name) const
-      -> std::optional<ResolvedArtifact>;
+  // Locate an artifact without consulting the gate, for the ones that are this
+  // instance speaking about itself rather than registry content: the metadata
+  // read at action construction, where no request and therefore no caller
+  // exists, and the pages that stand in for content nobody is being served. A
+  // view still has to be named, since a page that speaks to a caller speaks in
+  // the terms of the view they resolve to. Never reach for this to serve
+  // anything the registry holds
+  [[nodiscard]] auto artifact_resolve_path_unauthenticated(
+      std::string_view view, std::string_view input, Tree tree,
+      std::string_view artifact_name) const -> std::optional<ResolvedArtifact>;
 
 private:
   [[nodiscard]] auto artifact_locate(const Authentication::Path &path,
                                      Tree tree, std::string_view view,
                                      std::string_view artifact_name) const
       -> std::optional<std::filesystem::path>;
-
-  // Resolve a named artifact by walking up from the input path to the nearest
-  // ancestor directory whose copy has content, skipping the empty placeholders
-  // that mark directories the artifact does not apply to. This lets a
-  // per-directory page answer any path beneath it, including one that resolves
-  // to no resource at all. Like the unauthenticated resolver it bypasses
-  // authorisation, so it is only for denial pages that are public by design
-  [[nodiscard]] auto
-  artifact_resolve_ancestor(std::string_view input, Tree tree,
-                            std::string_view artifact_name) const
-      -> std::optional<ResolvedArtifact>;
 
   [[nodiscard]] auto structural_template(std::string_view schema_uri,
                                          sourcemeta::blaze::Mode mode) const

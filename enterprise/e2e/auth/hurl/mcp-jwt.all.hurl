@@ -140,7 +140,7 @@ jsonpath "$.valid" == true
 
 # `/strict` names the same audience as `/machine` and accepts ES256 alone, so
 # this token is refused there on the signature algorithm. Its schema exists, so
-# the refusal is a denial rather than an empty collection
+# what comes back says so rather than being an empty collection
 POST {{base}}/self/v1/mcp
 Authorization: Bearer {{machine_token}}
 MCP-Protocol-Version: 2025-11-25
@@ -163,8 +163,8 @@ strict_denial: body
   "jsonrpc": "2.0",
   "id": 4,
   "error": {
-    "code": -32010,
-    "message": "Authentication required"
+    "code": -32002,
+    "message": "Resource not found"
   }
 }
 
@@ -315,8 +315,8 @@ malformed_denial: body
   "jsonrpc": "2.0",
   "id": 8,
   "error": {
-    "code": -32010,
-    "message": "Authentication required"
+    "code": -32002,
+    "message": "Resource not found"
   }
 }
 
@@ -354,8 +354,8 @@ forged_denial: body
   "jsonrpc": "2.0",
   "id": 9,
   "error": {
-    "code": -32010,
-    "message": "Authentication required"
+    "code": -32002,
+    "message": "Resource not found"
   }
 }
 

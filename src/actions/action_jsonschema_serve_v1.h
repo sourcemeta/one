@@ -63,14 +63,7 @@ public:
         sourcemeta::one::VIEW_PUBLIC,
         {.bearer = credential, .cookies = cookies}, schema_path,
         sourcemeta::one::RouterAction::Tree::Schemas, artifact)};
-    if (resolution.outcome ==
-        sourcemeta::one::ArtifactResolution::Outcome::Denied) {
-      sourcemeta::one::json_error_unauthorized(request, response, error_schema,
-                                               "*");
-      return;
-    }
-    if (resolution.outcome !=
-        sourcemeta::one::ArtifactResolution::Outcome::Found) {
+    if (!resolution.path.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
           "urn:sourcemeta:one:not-found", "There is nothing at this URL",

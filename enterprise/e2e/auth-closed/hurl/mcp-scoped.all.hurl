@@ -13,20 +13,19 @@
 # of this file meaningful rather than incidental
 GET {{base}}/self/v1/schemas/mcp/request
 Authorization: Bearer mcp-secret-key
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 [Captures]
 denied_body: body
 error_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 # The round-trip runs on the wide key, since the evaluate endpoint is itself
@@ -202,8 +201,8 @@ read_body: body
   "jsonrpc": "2.0",
   "id": 5,
   "error": {
-    "code": -32010,
-    "message": "Authentication required"
+    "code": -32002,
+    "message": "Resource not found"
   }
 }
 
@@ -238,7 +237,7 @@ call_body: body
     "content": [
       {
         "type": "text",
-        "text": "Authentication required"
+        "text": "Directory not found"
       }
     ],
     "isError": true
@@ -331,9 +330,8 @@ jsonpath "$.status" == 401
 
 GET {{base}}/catalog/example.json
 Authorization: Bearer mcp-secret-key
-HTTP 401
+HTTP 404
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 [Asserts]
-jsonpath "$.type" == "urn:sourcemeta:one:authentication-required"
-jsonpath "$.status" == 401
+jsonpath "$.type" == "urn:sourcemeta:one:not-found"
+jsonpath "$.status" == 404

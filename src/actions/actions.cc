@@ -4,6 +4,7 @@
 #include <string_view> // std::string_view
 
 #include "action_auth_callback_v1.h"
+#include "action_auth_login_page_v1.h"
 #include "action_auth_login_v1.h"
 #include "action_auth_logout_v1.h"
 #include "action_default_v1.h"

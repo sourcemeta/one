@@ -15,13 +15,59 @@ header "ETag" exists
   "type": "string"
 }
 
-# The private catalog denies an anonymous caller, and the denial validates
-# against its error schema
-GET {{base}}/private/secret.json
-HTTP 401
+# The instance holds one login page, at a URL of its own, public and identical
+# for everybody. It names every interactive policy declared, whichever path
+# each one governs, since somebody signing in has not reached a path yet
+GET {{base}}/self/v1/auth/login
+Accept: text/html
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
+Vary: Accept-Encoding
+[Asserts]
+header "Set-Cookie" not exists
+header "Access-Control-Allow-Origin" not exists
+header "ETag" matches /^"[0-9a-f]{64}"$/
+xpath "string(//title)" == "Sign In"
+xpath "string(//h1)" == "SSO Sandbox"
+xpath "string(//p[@class='text-secondary text-center small mb-4'])" == "Choose how you want to sign in"
+xpath "count(//a[@data-sourcemeta-ui-login])" == 10
+xpath "string((//a[@data-sourcemeta-ui-login])[1]/@data-sourcemeta-ui-login)" == "keycloak"
+xpath "string((//a[@data-sourcemeta-ui-login])[1]/@href)" == "/self/v1/auth/login/keycloak"
+xpath "normalize-space((//a[@data-sourcemeta-ui-login])[1])" == "keycloak"
+xpath "string((//a[@data-sourcemeta-ui-login])[10]/@data-sourcemeta-ui-login)" == "rotated"
+
+# It is the same page whoever asks for it, so a shared cache may hold it
+GET {{base}}/self/v1/auth/login
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: text/html; charset=utf-8
+[Asserts]
+xpath "count(//a[@data-sourcemeta-ui-login])" == 10
+
+# Nothing else is served there
+POST {{base}}/self/v1/auth/login
+HTTP 405
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
+Allow: GET, HEAD, OPTIONS
+Access-Control-Allow-Origin: *
+{
+  "type": "urn:sourcemeta:one:method-not-allowed",
+  "title": "Method Not Allowed",
+  "status": 405,
+  "detail": "This HTTP method is invalid for this URL"
+}
+
+# The private catalog is not there for an anonymous caller, and what it is told
+# validates against its error schema
+GET {{base}}/private/secret.json
+HTTP 404
+Cache-Control: no-store
+Content-Type: application/problem+json
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 [Captures]
@@ -30,18 +76,17 @@ error_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Set-Cookie" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
-# The archive catalog is governed by that same policy, so it denies identically
+# The archive catalog is governed by that same policy, so it answers alike
 GET {{base}}/archive/record.json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 [Captures]
@@ -49,10 +94,10 @@ archive_denied: body
 [Asserts]
 header "Set-Cookie" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
@@ -182,12 +227,11 @@ cookie "sourcemeta_one_transaction[Max-Age]" == 0
 cookie "sourcemeta_one_renewal[Max-Age]" == 0
 header "Location" startsWith "https://keycloak:8443/realms/main/protocol/openid-connect/logout?"
 
-# And the private catalog is gated again, the denial byte-identical to the first
+# And the private catalog is gone again, byte-identical to the first time
 GET {{base}}/private/secret.json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 [Captures]
@@ -195,10 +239,10 @@ final_denied: body
 [Asserts]
 header "Set-Cookie" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}

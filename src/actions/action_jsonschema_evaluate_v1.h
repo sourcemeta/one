@@ -96,21 +96,12 @@ public:
     const auto evaluation_enabled{this->artifact_resolve_path(
         sourcemeta::one::VIEW_PUBLIC, credentials, schema_uri, Tree::Schemas,
         "blaze-exhaustive")};
-    if (schema_present.outcome ==
-            sourcemeta::one::ArtifactResolution::Outcome::Denied ||
-        evaluation_enabled.outcome ==
-            sourcemeta::one::ArtifactResolution::Outcome::Denied) {
-      return sourcemeta::core::mcp_make_tool_error(request_id,
-                                                   "Authentication required");
-    }
-    if (schema_present.outcome !=
-        sourcemeta::one::ArtifactResolution::Outcome::Found) {
+    if (!schema_present.path.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(request_id,
                                                    "Schema not found");
     }
 
-    if (evaluation_enabled.outcome !=
-        sourcemeta::one::ArtifactResolution::Outcome::Found) {
+    if (!evaluation_enabled.path.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(
           request_id, "This schema was not precompiled for schema evaluation");
     }
@@ -191,16 +182,7 @@ public:
     const auto evaluation_enabled{self.artifact_resolve_path(
         sourcemeta::one::VIEW_PUBLIC, credentials, schema_uri,
         sourcemeta::one::RouterAction::Tree::Schemas, "blaze-exhaustive")};
-    if (schema_present.outcome ==
-            sourcemeta::one::ArtifactResolution::Outcome::Denied ||
-        evaluation_enabled.outcome ==
-            sourcemeta::one::ArtifactResolution::Outcome::Denied) {
-      sourcemeta::one::json_error_unauthorized(request, response, error_schema,
-                                               "*");
-      return;
-    }
-    if (schema_present.outcome !=
-        sourcemeta::one::ArtifactResolution::Outcome::Found) {
+    if (!schema_present.path.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
           "urn:sourcemeta:one:not-found", "There is nothing at this URL",
@@ -208,8 +190,7 @@ public:
       return;
     }
 
-    if (evaluation_enabled.outcome !=
-        sourcemeta::one::ArtifactResolution::Outcome::Found) {
+    if (!evaluation_enabled.path.has_value()) {
       // RFC 9110 §15.5.6: Allow lists the methods this specific target
       // resource currently supports. POST hits this very branch (returns
       // 405) when the schema was not precompiled, so only OPTIONS is

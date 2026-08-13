@@ -82,14 +82,7 @@ public:
         sourcemeta::one::VIEW_PUBLIC,
         {.bearer = credential, .cookies = cookies}, matches.front(),
         Tree::Schemas, this->artifact_)};
-    if (resolution.outcome ==
-        sourcemeta::one::ArtifactResolution::Outcome::Denied) {
-      sourcemeta::one::json_error_unauthorized(request, response,
-                                               this->error_schema_, "*");
-      return;
-    }
-    if (resolution.outcome !=
-        sourcemeta::one::ArtifactResolution::Outcome::Found) {
+    if (!resolution.path.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
           "urn:sourcemeta:one:not-found", "There is nothing at this URL",
@@ -119,13 +112,7 @@ public:
     const auto resolution{this->artifact_resolve_path(
         sourcemeta::one::VIEW_PUBLIC, credentials,
         arguments.at("schema").to_string(), Tree::Schemas, this->artifact_)};
-    if (resolution.outcome ==
-        sourcemeta::one::ArtifactResolution::Outcome::Denied) {
-      return sourcemeta::core::mcp_make_tool_error(request_id,
-                                                   "Authentication required");
-    }
-    if (resolution.outcome !=
-        sourcemeta::one::ArtifactResolution::Outcome::Found) {
+    if (!resolution.path.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(request_id,
                                                    "Schema not found");
     }

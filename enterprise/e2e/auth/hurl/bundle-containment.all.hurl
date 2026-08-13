@@ -38,9 +38,8 @@ Access-Control-Allow-Origin: *
 # bundle is refused to a caller the referring schema refuses, whatever the
 # inlined part would have answered on its own
 GET {{base}}/reports/quarterly.json?bundle=1
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 
 # The containment itself: the public schema is referenced by a governed one, and
 # its own bundle names nothing of the governed schema. The reverse edge is a

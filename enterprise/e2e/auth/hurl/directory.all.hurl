@@ -179,11 +179,10 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Listing an apiKey directory is denied without a credential
+# Listing an apiKey directory finds nothing without a credential
 GET {{base}}/self/v1/api/list/private
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 
 # With a credential the listing is served and validates against its schema. Its
 # nested child inherits the same gate, so it carries the governing policy name
@@ -225,11 +224,10 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# The nested directory inherits the gate, so it is denied anonymously
+# The nested directory inherits the gate, so it is absent anonymously
 GET {{base}}/self/v1/api/list/private/open
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 
 # With the governing key it lists, marked private, and validates against schema
 GET {{base}}/self/v1/api/list/private/open
@@ -265,15 +263,15 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# The HTML rendering of an apiKey directory is gated, rendering the 401 page
+# The HTML rendering of an apiKey directory is gated, rendering the page for a
+# path that is not there
 GET {{base}}/private/
 Accept: text/html
-HTTP 401
+HTTP 404
 Content-Type: text/html; charset=utf-8
-WWW-Authenticate: Bearer realm="registry"
 [Asserts]
-xpath "string(//title)" == "Unauthorized"
-xpath "string(//h2[@class='fw-bold'])" == "This page requires authentication"
+xpath "string(//title)" == "Not Found"
+xpath "string(//h2[@class='fw-bold'])" == "Oops! What you are looking for is not here"
 
 GET {{base}}/private/
 Accept: text/html
@@ -289,12 +287,11 @@ xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 0
 # The HTML rendering of the nested directory is gated identically
 GET {{base}}/private/open/
 Accept: text/html
-HTTP 401
+HTTP 404
 Content-Type: text/html; charset=utf-8
-WWW-Authenticate: Bearer realm="registry"
 [Asserts]
-xpath "string(//title)" == "Unauthorized"
-xpath "string(//h2[@class='fw-bold'])" == "This page requires authentication"
+xpath "string(//title)" == "Not Found"
+xpath "string(//h2[@class='fw-bold'])" == "Oops! What you are looking for is not here"
 
 GET {{base}}/private/open/
 Accept: text/html
@@ -304,7 +301,7 @@ Cache-Control: private, max-age=0, must-revalidate
 [Asserts]
 header "Content-Type" contains "text/html"
 
-# The HTML rendering of the public root lists anonymously, never the 401 page.
+# The HTML rendering of the public root lists anonymously, never that page.
 # It renders the same three children the API names, every one of them a plain
 # folder: a directory the caller cannot enter is not drawn as a locked door,
 # it is not drawn at all
@@ -314,7 +311,7 @@ HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 [Asserts]
 header "Content-Type" contains "text/html"
-xpath "string(//title)" != "Unauthorized"
+xpath "string(//title)" != "Not Found"
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 0
 xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 3
 xpath "count(//tr[.//a[normalize-space(.) = 'orphan']]//i[contains(@class, 'bi-folder-fill')])" == 1
@@ -332,7 +329,7 @@ HTTP 200
 Cache-Control: private, max-age=0, must-revalidate
 [Asserts]
 header "Content-Type" contains "text/html"
-xpath "string(//title)" != "Unauthorized"
+xpath "string(//title)" != "Not Found"
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 2
 xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 3
 xpath "count(//tr[.//a[normalize-space(.) = 'private']]//i[contains(@class, 'bi-lock-fill')])" == 1

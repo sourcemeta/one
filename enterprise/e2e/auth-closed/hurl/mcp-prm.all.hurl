@@ -36,19 +36,18 @@ jsonpath "$.valid" == true
 # The instance is otherwise closed, so the contrast is what proves the
 # exemption rather than a missing policy
 GET {{base}}/catalog/example.json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 denied_body: body
 error_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
@@ -241,21 +240,20 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# A denial anywhere else carries no such pointer, since nothing else on this
-# instance advertises an authorization server
+# Nothing else on this instance carries such a pointer, since nothing else
+# advertises an authorization server
 GET {{base}}/catalog/classified.json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 elsewhere_body: body
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}

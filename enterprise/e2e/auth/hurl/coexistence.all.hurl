@@ -51,20 +51,19 @@ header "ETag" matches /^"[0-9a-f]{64}"$/
 # The same token does not cross to the telemetry policy's audience
 GET {{base}}/telemetry/summary.json
 Authorization: Bearer {{schemas_token}}
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 machine_on_telemetry: body
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
@@ -106,20 +105,19 @@ header "ETag" matches /^"[0-9a-f]{64}"$/
 # The reports token does not cross to the machine policy either
 GET {{base}}/machine/config.json
 Authorization: Bearer {{reports_token}}
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 reports_on_machine: body
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
@@ -134,20 +132,19 @@ jsonpath "$.valid" == true
 # token is denied on the algorithm allow list
 GET {{base}}/strict/rule.json
 Authorization: Bearer {{schemas_token}}
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 strict_denied: body
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
@@ -180,20 +177,19 @@ header "ETag" matches /^"[0-9a-f]{64}"$/
 # A JWT does not satisfy an apiKey policy
 GET {{base}}/internal/config.json
 Authorization: Bearer {{schemas_token}}
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 jwt_on_apikey: body
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
@@ -207,20 +203,19 @@ jsonpath "$.valid" == true
 # And an apiKey does not satisfy a JWT policy
 GET {{base}}/machine/config.json
 Authorization: Bearer internal-secret-key
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 apikey_on_jwt: body
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error

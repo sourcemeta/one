@@ -955,6 +955,13 @@ struct GENERATE_URITEMPLATE_ROUTES {
                  not_found_arguments);
 
       if (action.data == "Full") {
+        const sourcemeta::core::URITemplateRouter::Argument
+            auth_login_page_arguments[] = {
+                {"errorSchema", std::string_view{error_schema}}};
+        router.add(sourcemeta::one::ENDPOINT_AUTH_LOGIN_PAGE, "auth_login_page",
+                   next_id++, sourcemeta::one::ACTION_TYPE_AUTH_LOGIN_PAGE_V1,
+                   auth_login_page_arguments);
+
         const sourcemeta::core::URITemplateRouter::Argument static_arguments[] =
             {{"path", std::string_view{SOURCEMETA_ONE_STATIC}},
              {"errorSchema", std::string_view{error_schema}}};

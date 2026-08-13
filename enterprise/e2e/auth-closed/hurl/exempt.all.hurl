@@ -1,11 +1,12 @@
 # This registry is locked in its entirety at the root, so the root gate covers
-# every path, the interactive authentication endpoints included. Login and
-# callback nonetheless answer for themselves rather than the root's 401: a
-# browser could never present a credential to reach the very login it needs, so
-# those two opt out of the content gate and guard themselves instead. The
-# exemption is exactly that narrow: logout, which is only ever useful to a caller
-# whose session already passes the gate, is not exempt and rides the gate like
-# any other route, as does every non-authentication surface.
+# every path, the interactive authentication endpoints included. The login
+# page, the login itself and the callback nonetheless answer for themselves
+# rather than the root's 401: a browser could never present a credential to
+# reach the very login it needs, so those three opt out of the gate and guard
+# themselves instead. The exemption is exactly that narrow: logout, which is
+# only ever useful to a caller whose session already passes the gate, is not
+# exempt and rides the gate like any other route, as does every
+# non-authentication surface.
 
 # The callback is reachable, and running first, before any login has set a
 # transaction cookie, it has nothing to vouch for the response, so it fails its
@@ -38,6 +39,20 @@ Authorization: Bearer full-secret-key
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
+
+# The login page is reachable on an instance where nothing else is, which is
+# the whole point of exempting it: it is the one thing a caller with no
+# credential has to be able to find
+GET {{base}}/self/v1/auth/login
+Accept: text/html
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: text/html; charset=utf-8
+[Asserts]
+header "WWW-Authenticate" not exists
+xpath "string(//title)" == "Sign In"
+xpath "count(//a[@data-sourcemeta-ui-login])" == 1
+xpath "string((//a[@data-sourcemeta-ui-login])[1]/@href)" == "/self/v1/auth/login/keycloak"
 
 # The login endpoint is reachable through the root gate and initiates the flow,
 # redirecting to the provider with a transaction cookie, rather than denying 401

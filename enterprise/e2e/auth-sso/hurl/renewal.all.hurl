@@ -1,15 +1,16 @@
 # A session lasts an hour, and asking somebody to click their provider again
 # every hour is the cost of that. A browser that has signed in before carries a
-# marker naming the policy it used, so a denial can ask the provider whether
-# that sign-in still stands instead of asking the person. The provider answers
-# without showing anything when it can, so the hour passes unnoticed.
+# marker naming the policy it used, so a navigation that gets nowhere can ask
+# the provider whether that sign-in still stands instead of asking the person.
+# The provider answers without showing anything when it can, so the hour passes
+# unnoticed.
 #
 # The marker is not a credential. It names a policy and nothing else, and
 # whoever holds it can only start a login they were free to start anyway.
 
-# A denied browser navigation carrying the marker is sent to its provider
-# rather than shown the sign-in page. The page it was denied travels along, so
-# the renewal lands where the person already was
+# A browser navigation that gets nowhere while carrying the marker is sent to
+# its provider rather than answered. The page it was asking for travels along,
+# so the renewal lands where the person already was
 GET {{base}}/private/
 Accept: text/html
 Cookie: sourcemeta_one_renewal=keycloak
@@ -20,55 +21,54 @@ header "Location" == "/self/v1/auth/login/keycloak?silent=1&to=%2Fprivate%2F"
 header "Set-Cookie" not exists
 header "WWW-Authenticate" not exists
 
-# The same navigation without the marker is the sign-in page, unchanged. A
-# stranger is never sent to a provider they may have no account with, and the
-# provider never learns they were here
+# The same navigation without the marker is told there is nothing there, which
+# is what anybody who cannot see it is told. A stranger is never sent to a
+# provider they may have no account with, and the provider never learns they
+# were here
 GET {{base}}/private/
 Accept: text/html
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: text/html; charset=utf-8
-WWW-Authenticate: Bearer realm="registry"
 [Asserts]
 header "Location" not exists
-xpath "string(//title)" == "Sign In"
-xpath "count(//a[@data-sourcemeta-ui-login])" == 1
+header "WWW-Authenticate" not exists
+xpath "string(//title)" == "Not Found"
+xpath "count(//a[@data-sourcemeta-ui-login])" == 0
 
 # A marker naming a policy that gates somewhere else is ignored. Honouring it
 # would send somebody to a provider whose answer cannot admit them here, which
-# would deny them again and start the whole thing over
+# would leave them exactly where they started and go round again
 GET {{base}}/private/
 Accept: text/html
 Cookie: sourcemeta_one_renewal=cleartext
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: text/html; charset=utf-8
-WWW-Authenticate: Bearer realm="registry"
 [Asserts]
 header "Location" not exists
-xpath "string(//title)" == "Sign In"
+xpath "string(//title)" == "Not Found"
 
 # A marker naming nothing this instance serves is ignored the same way
 GET {{base}}/private/
 Accept: text/html
 Cookie: sourcemeta_one_renewal=not-a-policy
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: text/html; charset=utf-8
 [Asserts]
 header "Location" not exists
-xpath "string(//title)" == "Sign In"
+xpath "string(//title)" == "Not Found"
 
 # A client asking for JSON is answered plainly whatever it carries. Renewal is
 # a browser navigation, and redirecting a script to an identity provider would
-# turn a denial it can handle into a redirect chain it cannot
+# turn an answer it can handle into a redirect chain it cannot
 GET {{base}}/private/secret.json
 Accept: application/json
 Cookie: sourcemeta_one_renewal=keycloak
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 denied_body: body
@@ -76,10 +76,10 @@ error_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Location" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
@@ -92,7 +92,7 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-# A public page is not a denial, so the marker changes nothing about it
+# A page that is really there is no dead end, so the marker changes nothing
 GET {{base}}/public/
 Accept: text/html
 Cookie: sourcemeta_one_renewal=keycloak
@@ -137,12 +137,13 @@ header "Location" contains "prompt=none"
 cookie "sourcemeta_one_transaction" exists
 
 # The renewal redirect is a navigation, so a method that cannot navigate is
-# answered as one, and the marker does not change which methods a gate accepts
+# answered as one, and the marker changes nothing about what a method reaches
 POST {{base}}/private/
 Accept: text/html
 Cookie: sourcemeta_one_renewal=keycloak
-HTTP 401
+HTTP 404
 Cache-Control: no-store
+Content-Type: application/problem+json
 [Asserts]
 header "Location" not exists
 

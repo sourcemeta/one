@@ -154,24 +154,23 @@ header "ETag" == {{anonymous_etag}}
   }
 ]
 
-# And the gated schema's own graph is still refused outright, so nothing here
-# turned a denial into an empty answer
+# And the gated schema's own graph is still withheld outright, so nothing here
+# turned a path the caller cannot reach into an empty answer
 GET {{base}}/self/v1/api/schemas/dependents/reports/quarterly
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 denied_body: body
 denied_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{denied_schema}}

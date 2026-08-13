@@ -70,8 +70,8 @@ public:
           }
         });
 
-    const auto mcp_metadata_path{
-        this->artifact_resolve_path_unauthenticated("", Tree::Explorer, "mcp")};
+    const auto mcp_metadata_path{this->artifact_resolve_path_unauthenticated(
+        sourcemeta::one::VIEW_PUBLIC, "", Tree::Explorer, "mcp")};
     assert(mcp_metadata_path.has_value());
     auto mcp_metadata_option{
         this->artifact_read_json(mcp_metadata_path.value())};
@@ -540,13 +540,7 @@ private:
     const auto resolution{this->artifact_resolve_path(
         sourcemeta::one::VIEW_PUBLIC, credentials, uri, Tree::Schemas,
         bundle ? "bundle" : "schema")};
-    if (resolution.outcome ==
-        sourcemeta::one::ArtifactResolution::Outcome::Denied) {
-      return sourcemeta::core::jsonrpc_make_error(&id, -32010,
-                                                  "Authentication required");
-    }
-    if (resolution.outcome !=
-        sourcemeta::one::ArtifactResolution::Outcome::Found) {
+    if (!resolution.path.has_value()) {
       return sourcemeta::core::jsonrpc_make_error(
           &id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
           "Resource not found");
