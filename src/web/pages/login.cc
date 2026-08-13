@@ -32,18 +32,17 @@ auto write_providers(
       continue;
     }
 
-    // The link carries no return target on purpose. The login endpoint decides
-    // where to land the caller, so nothing here depends on the requested path.
-    // The whole page stays at the site-wide no-referrer default, so only this
-    // navigation opts in to a same-origin referrer, handing the endpoint the
-    // denied path while every other request from the page still leaks nothing
+    // The link names no return target and, staying at the page's own
+    // no-referrer default, carries no referrer either, so the endpoint lands
+    // the caller on what the policy governs. Somebody here arrived rather than
+    // was sent, so there is no earlier page owed to them, and naming this one
+    // would only return them to signing in once they had signed in
     std::string href{"/self/v1/auth/login/"};
     href += policy.name;
     body.a()
         .attribute("class", "btn btn-primary d-flex align-items-center "
                             "justify-content-center")
         .attribute("data-sourcemeta-ui-login", policy.name)
-        .attribute("referrerpolicy", "same-origin")
         .attribute("href", href);
     body.i().attribute("class", "bi bi-box-arrow-in-right me-2").close();
     body.text(policy.title);

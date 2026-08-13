@@ -67,7 +67,7 @@ test.describe('Session secret rotation', () => {
       request,
       sealSession(FOREIGN_SECRET, { policy: 'rotated', subject: 'jane' })
     );
-    expect(response.status()).toBe(401);
+    expect(response.status()).toBe(404);
   });
 
   test('a session naming another policy is refused under these secrets', async ({
@@ -79,7 +79,7 @@ test.describe('Session secret rotation', () => {
       request,
       sealSession(NEW_SECRET, { policy: 'keycloak', subject: 'jane' })
     );
-    expect(response.status()).toBe(401);
+    expect(response.status()).toBe(404);
   });
 
   test('an expired session is refused whichever secret signed it', async ({
@@ -92,7 +92,7 @@ test.describe('Session secret rotation', () => {
         request,
         sealSession(secret, { policy: 'rotated', subject: 'jane' }, -60)
       );
-      expect(response.status()).toBe(401);
+      expect(response.status()).toBe(404);
     }
   });
 });

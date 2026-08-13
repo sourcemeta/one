@@ -364,7 +364,7 @@ test.describe('Neither sealed value passes for the other', () => {
       await setCookieFrom(response, 'sourcemeta_one_session')
     );
 
-    // A real session opens the gated schema, which is what makes the refusal
+    // A real session opens the gated schema, which is what makes the answer
     // below mean the transaction was read and rejected rather than that
     // nothing was read at all
     const opened = await request.get('/private/secret.json', {
@@ -372,15 +372,15 @@ test.describe('Neither sealed value passes for the other', () => {
     });
     expect(opened.status()).toBe(200);
 
-    const denied = await request.get('/private/secret.json', {
+    const refused = await request.get('/private/secret.json', {
       headers: { Cookie: `sourcemeta_one_session=${transaction}` }
     });
-    expect(denied.status()).toBe(401);
-    expect(await denied.json()).toEqual({
-      type: 'urn:sourcemeta:one:authentication-required',
-      title: 'Unauthorized',
-      status: 401,
-      detail: 'This resource requires authentication'
+    expect(refused.status()).toBe(404);
+    expect(await refused.json()).toEqual({
+      type: 'urn:sourcemeta:one:not-found',
+      title: 'Not Found',
+      status: 404,
+      detail: 'There is nothing at this URL'
     });
   });
 
