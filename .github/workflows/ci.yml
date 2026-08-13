@@ -100,6 +100,12 @@ jobs:
           path: enterprise/e2e/public
           edition: ${{ matrix.edition.name }}
         if: matrix.edition.name == 'enterprise'
+      - name: E2E (enterprise/auth-keys)
+        uses: ./.github/actions/e2e
+        with:
+          path: enterprise/e2e/auth-keys
+          edition: ${{ matrix.edition.name }}
+        if: matrix.edition.name == 'enterprise'
       - name: E2E (enterprise/auth)
         uses: ./.github/actions/e2e
         with:

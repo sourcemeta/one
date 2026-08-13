@@ -126,9 +126,11 @@ Access-Control-Allow-Origin: *
 }
 
 # A browser navigating anywhere in a registry gated whole is told there is
-# nothing there, the root included. Where to sign in is not something this
-# page offers, since it is somewhere a caller goes rather than something a
-# dead end hands them
+# nothing there, the root included. The page names no provider, since choosing
+# one is what the login page is for, but the bar carries the way to it. On an
+# instance where nothing at all is open that link is the only thing a visitor
+# can act on, and it is what makes this answer somewhere to start rather than
+# a dead end
 GET {{base}}/
 Accept: text/html
 HTTP 404
@@ -142,6 +144,10 @@ header "Set-Cookie" not exists
 header "WWW-Authenticate" not exists
 xpath "string(//title)" == "Not Found"
 xpath "count(//a[@data-sourcemeta-ui-login])" == 0
+xpath "count(//nav[contains(@class, 'navbar')])" == 1
+xpath "count(//a[@data-sourcemeta-ui-signin])" == 1
+xpath "string(//a[@data-sourcemeta-ui-signin]/@href)" == "/self/v1/auth/login"
+xpath "count(//button[@data-sourcemeta-ui-signout])" == 0
 
 # A nested directory is answered by the byte-identical page, so the whole gated
 # tree reads the same from one path to the next

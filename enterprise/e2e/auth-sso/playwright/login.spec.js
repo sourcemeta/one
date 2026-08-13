@@ -121,28 +121,46 @@ test.describe('Interactive SSO login on a subpath', () => {
     ).toBeVisible();
   });
 
-  test('logging out puts the collection back out of reach', async ({
+  test('the bar offers the way in, and it goes to the login page', async ({
+    page
+  }) => {
+    await page.goto('/');
+    const control = page.locator('a[data-sourcemeta-ui-signin]');
+    await expect(control).toBeVisible();
+    await expect(control).toHaveText('Sign In');
+
+    await control.click();
+    await expect(page).toHaveURL(/\/self\/v1\/auth\/login$/);
+    await expect(page).toHaveTitle('Sign In');
+    await expect(
+      page.locator('a[data-sourcemeta-ui-login="keycloak"]')
+    ).toBeVisible();
+  });
+
+  test('the bar offers the way out once signed in, and it works', async ({
     page
   }) => {
     await signIn(page);
     await expect(page.locator('table tbody tr').first()).toBeVisible();
 
-    // Signing out is a form submit rather than a navigation, since it ends a
-    // session at the provider. This is the shape the sign-out control will
-    // take once the explorer renders one.
-    // TODO: Replace this with clicking the sign-out control once the explorer
-    // renders one, which is a form submit for the same reason
-    await page.evaluate(() => {
-      const form = document.createElement('form');
-      form.method = 'post';
-      form.action = '/self/v1/auth/logout';
-      document.body.appendChild(form);
-      form.submit();
-    });
+    // The way in is gone and the way out is there, which is the whole of what
+    // the bar has to say about a session
+    await expect(page.locator('a[data-sourcemeta-ui-signin]')).toHaveCount(0);
+    const control = page.locator('button[data-sourcemeta-ui-signout]');
+    await expect(control).toBeVisible();
+    await expect(control).toHaveText('Sign Out');
+
+    // Submitting it ends the session at the provider too, which is why it is
+    // a form rather than a link
+    await control.click();
     await page.waitForURL((url) => !url.pathname.startsWith('/private'));
 
     const response = await page.goto('/private/');
     expect(response.status()).toBe(404);
     await expect(page).toHaveTitle('Not Found');
+    await expect(page.locator('button[data-sourcemeta-ui-signout]')).toHaveCount(
+      0
+    );
+    await expect(page.locator('a[data-sourcemeta-ui-signin]')).toHaveCount(1);
   });
 });

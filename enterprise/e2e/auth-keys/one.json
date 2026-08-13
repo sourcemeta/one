@@ -1,0 +1,26 @@
+{
+  "url": "http://localhost:8000",
+  "html": {
+    "name": "Keys Sandbox",
+    "description": "A registry gated by machine credentials alone, with nobody to sign in interactively"
+  },
+  "authentication": [
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "name": "vault",
+      "paths": [ "/vault" ],
+      "keys": [ { "environmentVariable": "ONE_E2E_VAULT_KEY" } ]
+    }
+  ],
+  "contents": {
+    "open": {
+      "baseUri": "https://example.com/open/",
+      "path": "./schemas/open"
+    },
+    "vault": {
+      "baseUri": "https://example.com/vault/",
+      "path": "./schemas/vault"
+    }
+  }
+}

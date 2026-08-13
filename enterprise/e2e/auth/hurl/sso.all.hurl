@@ -138,6 +138,20 @@ cookie "sourcemeta_one_session[HttpOnly]" exists
 cookie "sourcemeta_one_session[SameSite]" == "Lax"
 cookie "sourcemeta_one_transaction[Max-Age]" == 0
 
+# The bar the session is shown offers the way out rather than the way in, since
+# the view it was written for is one somebody signs into
+GET {{base}}/console/
+Accept: text/html
+HTTP 200
+Content-Type: text/html; charset=utf-8
+[Asserts]
+xpath "count(//nav[contains(@class, 'navbar')])" == 1
+xpath "count(//a[@data-sourcemeta-ui-signin])" == 0
+xpath "count(//button[@data-sourcemeta-ui-signout])" == 1
+xpath "normalize-space(//button[@data-sourcemeta-ui-signout])" == "Sign Out"
+xpath "string(//form[button/@data-sourcemeta-ui-signout]/@method)" == "post"
+xpath "string(//form[button/@data-sourcemeta-ui-signout]/@action)" == "/self/v1/auth/logout"
+
 # The human session now opens the console without any machine key
 GET {{base}}/console/dashboard.json
 HTTP 200
@@ -204,6 +218,16 @@ Cache-Control: no-store
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
+
+# And with the session gone the bar offers the way back in, which is the same
+# bar any other anonymous caller is shown
+GET {{base}}/
+Accept: text/html
+HTTP 200
+Content-Type: text/html; charset=utf-8
+[Asserts]
+xpath "count(//a[@data-sourcemeta-ui-signin])" == 1
+xpath "count(//button[@data-sourcemeta-ui-signout])" == 0
 
 # But the machine key still opens the very same console the human just left
 GET {{base}}/console/dashboard.json

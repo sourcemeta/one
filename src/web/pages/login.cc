@@ -15,10 +15,6 @@ namespace sourcemeta::one {
 
 namespace {
 
-auto is_interactive(const Configuration::AuthenticationEntry &policy) -> bool {
-  return policy.type == Configuration::AuthenticationEntry::Type::OIDC;
-}
-
 auto write_providers(
     sourcemeta::core::HTMLWriter &body,
     const std::vector<Configuration::AuthenticationEntry> &policies) -> void {
@@ -28,7 +24,7 @@ auto write_providers(
 
   body.div().attribute("class", "d-grid gap-2");
   for (const auto &policy : policies) {
-    if (!is_interactive(policy)) {
+    if (!html::is_interactive(policy)) {
       continue;
     }
 
@@ -65,7 +61,8 @@ auto GENERATE_WEB_LOGIN::handler(
   // it gets an empty artifact rather than a page. Its presence keeps the build
   // plan uniform, and the empty body is the signal to offer nothing when
   // serving
-  if (!std::ranges::any_of(configuration.authentication, is_interactive)) {
+  if (!std::ranges::any_of(configuration.authentication,
+                           html::is_interactive)) {
     const auto timestamp_end{std::chrono::steady_clock::now()};
     metapack_write_text(action.destination, "", "text/html; charset=utf-8",
                         MetapackEncoding::GZIP, {},

@@ -33,10 +33,10 @@ struct BuildPlan {
     std::filesystem::path destination;
     Dependencies dependencies;
     std::string_view data;
-    // Which view this was built for, as a position in the list the build was
-    // given. Zero wherever the tree written into is not namespaced, so a
+    // Which view this was built for, named as the tree it lands in names it.
+    // Empty wherever what is written is one artifact whoever asks, so a
     // handler that does not care never has to ask
-    std::uint8_t view{0};
+    std::string_view view{};
   };
 
   std::filesystem::path output;

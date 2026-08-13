@@ -19,7 +19,7 @@ auto GENERATE_WEB_NOT_FOUND::handler(
   const auto timestamp_start{std::chrono::steady_clock::now()};
 
   sourcemeta::core::HTMLWriter writer;
-  html::make_error_page(writer, configuration, "Not Found",
+  html::make_error_page(writer, configuration, action.view, "Not Found",
                         "What you are looking for is not here",
                         "Oops! What you are looking for is not here",
                         "Are you sure the link you got is correct?");

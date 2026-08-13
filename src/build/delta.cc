@@ -183,6 +183,7 @@ struct Target {
   BuildPlan::Action::Type action;
   std::vector<std::string> dependencies;
   std::string_view data;
+  std::string_view view;
 };
 
 using TargetMap = std::unordered_map<std::string, Target>;
@@ -190,20 +191,24 @@ using TargetMap = std::unordered_map<std::string, Target>;
 static auto declare_target(TargetMap &targets, BuildPlan::Action::Type action,
                            std::string destination,
                            std::vector<std::string> dependencies,
-                           const std::string_view data = {}) -> void {
+                           const std::string_view data = {},
+                           const std::string_view view = {}) -> void {
   auto iterator{targets.try_emplace(std::move(destination)).first};
-  iterator->second = Target{
-      .action = action, .dependencies = std::move(dependencies), .data = data};
+  iterator->second = Target{.action = action,
+                            .dependencies = std::move(dependencies),
+                            .data = data,
+                            .view = view};
 }
 
 static auto
 declare_target_direct(TargetMap &targets, BuildPlan::Action::Type action,
-                      std::string destination, const std::string_view data = {})
-    -> Target & {
+                      std::string destination, const std::string_view data = {},
+                      const std::string_view view = {}) -> Target & {
   auto iterator{targets.try_emplace(std::move(destination)).first};
   iterator->second.action = action;
   iterator->second.dependencies.clear();
   iterator->second.data = data;
+  iterator->second.view = view;
   return iterator->second;
 }
 
@@ -213,8 +218,8 @@ static auto declare_leaf_targets(
     const bool evaluate, const BuildPlan::Type build_type,
     const BuildPlan::Type full_mode, const std::string &configuration_string,
     const std::string_view uri, const BuildPhase phase,
-    std::span<const LeafRule> leaf_rules, const bool only_secondary,
-    const bool only_primary = false) -> void {
+    std::span<const LeafRule> leaf_rules, const std::string_view view,
+    const bool only_secondary, const bool only_primary = false) -> void {
   for (std::size_t index{0}; index < leaf_rules.size(); index++) {
     const auto &rule{leaf_rules[index]};
 
@@ -244,7 +249,8 @@ static auto declare_leaf_targets(
 
     const auto &base{bases[rule.base]};
     auto &target{declare_target_direct(
-        targets, rule.action, append_filename(base, rule.filename), uri)};
+        targets, rule.action, append_filename(base, rule.filename), uri,
+        rule.base == 0 ? std::string_view{} : view)};
     target.dependencies.reserve(rule.dependency_count);
     for (std::uint8_t dependency_index{0};
          dependency_index < rule.dependency_count; dependency_index++) {
@@ -623,7 +629,8 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
                .destination = std::move(destination),
                .dependencies = std::move(action_dependencies),
                .data = uri,
-               .view = static_cast<std::uint8_t>(in_secondary ? view : 0)});
+               .view =
+                   in_secondary ? secondary_views[view] : std::string_view{}});
         }
       }
 
@@ -922,16 +929,17 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
 
     if (needs_targets) {
       bool declared_primary{false};
-      for (const auto &secondary_base : secondary_bases) {
-        if (secondary_base.empty()) {
+      for (std::size_t view{0}; view < secondary_bases.size(); view++) {
+        if (secondary_bases[view].empty()) {
           continue;
         }
 
-        const std::array<std::string, 2> bases{{primary_base, secondary_base}};
+        const std::array<std::string, 2> bases{
+            {primary_base, secondary_bases[view]}};
         declare_leaf_targets(targets, bases, output_string, info.path->native(),
                              info.evaluate, build_type, full_mode,
                              configuration_string, uri, phase, leaf_rules,
-                             declared_primary);
+                             secondary_views[view], declared_primary);
         declared_primary = true;
       }
 
@@ -941,7 +949,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
         const std::array<std::string, 2> bases{{primary_base, std::string{}}};
         declare_leaf_targets(targets, bases, output_string, info.path->native(),
                              info.evaluate, build_type, full_mode,
-                             configuration_string, uri, phase, leaf_rules,
+                             configuration_string, uri, phase, leaf_rules, {},
                              false, true);
       }
     }
@@ -1472,7 +1480,8 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
           }
 
           declare_target(targets, rule.action, destination,
-                         std::move(rule_dependencies));
+                         std::move(rule_dependencies), {},
+                         secondary_views[view]);
           dirty_set.insert(std::move(destination));
         }
       }
@@ -1516,7 +1525,8 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
           {.type = target.action,
            .destination = std::filesystem::path{target_path},
            .dependencies = std::move(action_dependencies),
-           .data = target.data});
+           .data = target.data,
+           .view = target.view});
     }
   }
 

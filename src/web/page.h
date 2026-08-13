@@ -2,19 +2,84 @@
 #define SOURCEMETA_ONE_WEB_PAGE_H_
 
 #include <sourcemeta/core/html.h>
+#include <sourcemeta/one/authentication.h>
 #include <sourcemeta/one/configuration.h>
 #include <sourcemeta/one/shared.h>
 
 #include "checksum_css.h"
 #include "checksum_js.h"
 
-#include <string>  // std::string
-#include <utility> // std::forward
+#include <algorithm>   // std::ranges::any_of, std::ranges::find
+#include <string>      // std::string
+#include <string_view> // std::string_view
+#include <utility>     // std::forward
 
 namespace sourcemeta::one::html {
 
+// Whether a policy signs a person in rather than admitting a program, which is
+// what decides everywhere a way in or out could be offered
+[[nodiscard]] inline auto
+is_interactive(const Configuration::AuthenticationEntry &policy) -> bool {
+  return policy.type == Configuration::AuthenticationEntry::Type::OIDC;
+}
+
+// What the bar offers follows from the view it is written for, since a page is
+// written once per view and read by whoever that view is for
+inline auto make_session_control(sourcemeta::core::HTMLWriter &writer,
+                                 const Configuration &configuration,
+                                 const std::string_view view) -> void {
+  // The anonymous view is what somebody without a session is served, so it
+  // offers the way in, and only where there is somewhere to go. An instance
+  // nobody signs into interactively grows no control at all, which is also
+  // what an instance with no policies at all gets
+  if (view == VIEW_PUBLIC) {
+    if (!std::ranges::any_of(configuration.authentication, is_interactive)) {
+      return;
+    }
+
+    writer.a()
+        .attribute("class", "ms-md-3 btn btn-outline-secondary mt-2 mt-md-0 "
+                            "w-100 w-md-auto")
+        .attribute("role", "button")
+        .attribute("data-sourcemeta-ui-signin", "")
+        .attribute("href", "/self/v1/auth/login");
+    writer.i().attribute("class", "me-2 bi bi-box-arrow-in-right").close();
+    writer.text("Sign In");
+    writer.close();
+    return;
+  }
+
+  // Every other view is named after what admits it, so a view somebody signed
+  // into is one a policy of that name signs people into. A view a program
+  // reaches has no session behind it and so nothing to end
+  const auto policy{
+      std::ranges::find(configuration.authentication, view,
+                        &Configuration::AuthenticationEntry::name)};
+  if (policy == configuration.authentication.cend() ||
+      !is_interactive(*policy)) {
+    return;
+  }
+
+  // Signing out ends a session at the provider, which RFC 9110 Section 9.2.1
+  // puts outside what a link may do, so the control is a form rather than an
+  // anchor
+  writer.form()
+      .attribute("class", "ms-md-3 mt-2 mt-md-0 w-100 w-md-auto")
+      .attribute("method", "post")
+      .attribute("action", "/self/v1/auth/logout");
+  writer.button()
+      .attribute("class", "btn btn-outline-secondary w-100")
+      .attribute("type", "submit")
+      .attribute("data-sourcemeta-ui-signout", "");
+  writer.i().attribute("class", "me-2 bi bi-box-arrow-right").close();
+  writer.text("Sign Out");
+  writer.close();
+  writer.close();
+}
+
 inline auto make_navigation(sourcemeta::core::HTMLWriter &writer,
-                            const Configuration &configuration) -> void {
+                            const Configuration &configuration,
+                            const std::string_view view) -> void {
   writer.nav().attribute("class", "navbar navbar-expand border-bottom bg-body");
 
   writer.div().attribute("class",
@@ -69,6 +134,8 @@ inline auto make_navigation(sourcemeta::core::HTMLWriter &writer,
     writer.text(configuration.html->action.value().title);
     writer.close();
   }
+
+  make_session_control(writer, configuration, view);
 
   writer.close();
   writer.close();
@@ -178,14 +245,14 @@ inline auto make_head(sourcemeta::core::HTMLWriter &writer,
 template <typename BodyWriter>
 inline auto make_page(sourcemeta::core::HTMLWriter &writer,
                       const Configuration &configuration,
-                      const std::string &canonical, const std::string &title,
-                      const std::string &description, BodyWriter &&write_body)
-    -> void {
+                      const std::string_view view, const std::string &canonical,
+                      const std::string &title, const std::string &description,
+                      BodyWriter &&write_body) -> void {
   writer.raw("<!DOCTYPE html>");
   writer.html().attribute("class", "h-100").attribute("lang", "en");
   make_head(writer, configuration, canonical, title, description);
   writer.body().attribute("class", "h-100 d-flex flex-column");
-  make_navigation(writer, configuration);
+  make_navigation(writer, configuration, view);
   std::forward<BodyWriter>(write_body)(writer);
   make_footer(writer);
   writer.script()
@@ -201,13 +268,12 @@ inline auto make_page(sourcemeta::core::HTMLWriter &writer,
   writer.close();
 }
 
-inline auto make_error_page(sourcemeta::core::HTMLWriter &writer,
-                            const Configuration &configuration,
-                            const std::string &title,
-                            const std::string &description,
-                            const std::string &heading, const std::string &lead)
-    -> void {
-  make_page(writer, configuration, configuration.url, title, description,
+inline auto
+make_error_page(sourcemeta::core::HTMLWriter &writer,
+                const Configuration &configuration, const std::string_view view,
+                const std::string &title, const std::string &description,
+                const std::string &heading, const std::string &lead) -> void {
+  make_page(writer, configuration, view, configuration.url, title, description,
             [&](sourcemeta::core::HTMLWriter &body) -> void {
               body.div().attribute("class", "container-fluid p-4");
               body.h2().attribute("class", "fw-bold");

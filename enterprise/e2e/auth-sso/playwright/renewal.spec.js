@@ -142,16 +142,9 @@ test.describe('Silent session renewal', () => {
     await expect(page.locator('table tbody tr').first()).toBeVisible();
     expect(await cookieNamed(context, MARKER)).toBeDefined();
 
-    // Signing out is a form submit rather than a navigation, since it ends a
-    // session at the provider. This is the shape the sign-out control will
-    // take once the explorer renders one.
-    await page.evaluate(() => {
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = '/self/v1/auth/logout';
-      document.body.appendChild(form);
-      form.submit();
-    });
+    // Signing out is what the bar offers a caller holding a session, and it
+    // submits rather than navigates, since it ends a session at the provider
+    await page.locator('button[data-sourcemeta-ui-signout]').click();
     await page.waitForURL((url) => !url.pathname.startsWith('/private'));
 
     // The marker goes with the session. Somebody who has signed out is asking
