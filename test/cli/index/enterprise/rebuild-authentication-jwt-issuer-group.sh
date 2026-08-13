@@ -73,7 +73,6 @@ cat << 'EOF' > "$TMP/expected-before.txt"
 ./explorer/oncall
 ./explorer/oncall+platform
 ./explorer/oncall+platform/%
-./explorer/oncall+platform/%/401.metapack
 ./explorer/oncall+platform/%/404.metapack
 ./explorer/oncall+platform/%/directory-html.metapack
 ./explorer/oncall+platform/%/directory.metapack
@@ -89,7 +88,6 @@ cat << 'EOF' > "$TMP/expected-before.txt"
 ./explorer/oncall+platform/schemas/a/%/schema-html.metapack
 ./explorer/oncall+platform/schemas/a/%/schema.metapack
 ./explorer/oncall/%
-./explorer/oncall/%/401.metapack
 ./explorer/oncall/%/404.metapack
 ./explorer/oncall/%/directory-html.metapack
 ./explorer/oncall/%/directory.metapack
@@ -106,7 +104,6 @@ cat << 'EOF' > "$TMP/expected-before.txt"
 ./explorer/oncall/schemas/a/%/schema.metapack
 ./explorer/platform
 ./explorer/platform/%
-./explorer/platform/%/401.metapack
 ./explorer/platform/%/404.metapack
 ./explorer/platform/%/directory-html.metapack
 ./explorer/platform/%/directory.metapack
@@ -123,7 +120,6 @@ cat << 'EOF' > "$TMP/expected-before.txt"
 ./explorer/platform/schemas/a/%/schema.metapack
 ./explorer/public
 ./explorer/public/%
-./explorer/public/%/401.metapack
 ./explorer/public/%/404.metapack
 ./explorer/public/%/directory-html.metapack
 ./explorer/public/%/directory.metapack
@@ -172,7 +168,6 @@ cd - > /dev/null
 cat << 'EOF' > "$TMP/expected-after.txt"
 ./explorer/platform
 ./explorer/platform/%
-./explorer/platform/%/401.metapack
 ./explorer/platform/%/404.metapack
 ./explorer/platform/%/directory-html.metapack
 ./explorer/platform/%/directory.metapack
@@ -189,7 +184,6 @@ cat << 'EOF' > "$TMP/expected-after.txt"
 ./explorer/platform/schemas/a/%/schema.metapack
 ./explorer/public
 ./explorer/public/%
-./explorer/public/%/401.metapack
 ./explorer/public/%/404.metapack
 ./explorer/public/%/directory-html.metapack
 ./explorer/public/%/directory.metapack

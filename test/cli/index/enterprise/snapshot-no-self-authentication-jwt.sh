@@ -59,7 +59,6 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer
 ./explorer/public
 ./explorer/public/%
-./explorer/public/%/401.metapack
 ./explorer/public/%/404.metapack
 ./explorer/public/%/directory-html.metapack
 ./explorer/public/%/directory.metapack
@@ -68,7 +67,6 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/public/%/search.metapack
 ./explorer/test
 ./explorer/test/%
-./explorer/test/%/401.metapack
 ./explorer/test/%/404.metapack
 ./explorer/test/%/directory-html.metapack
 ./explorer/test/%/directory.metapack

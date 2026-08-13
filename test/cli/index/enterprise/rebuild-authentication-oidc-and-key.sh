@@ -68,7 +68,6 @@ cd - > /dev/null
 cat << 'EOF' > "$TMP/expected-before.txt"
 ./explorer/corporate
 ./explorer/corporate/%
-./explorer/corporate/%/401.metapack
 ./explorer/corporate/%/404.metapack
 ./explorer/corporate/%/directory-html.metapack
 ./explorer/corporate/%/directory.metapack
@@ -85,7 +84,6 @@ cat << 'EOF' > "$TMP/expected-before.txt"
 ./explorer/corporate/schemas/a/%/schema.metapack
 ./explorer/public
 ./explorer/public/%
-./explorer/public/%/401.metapack
 ./explorer/public/%/404.metapack
 ./explorer/public/%/directory-html.metapack
 ./explorer/public/%/directory.metapack
@@ -94,7 +92,6 @@ cat << 'EOF' > "$TMP/expected-before.txt"
 ./explorer/public/%/search.metapack
 ./explorer/vault
 ./explorer/vault/%
-./explorer/vault/%/401.metapack
 ./explorer/vault/%/404.metapack
 ./explorer/vault/%/directory-html.metapack
 ./explorer/vault/%/directory.metapack
@@ -149,7 +146,6 @@ cd - > /dev/null
 cat << 'EOF' > "$TMP/expected-after.txt"
 ./explorer/public
 ./explorer/public/%
-./explorer/public/%/401.metapack
 ./explorer/public/%/404.metapack
 ./explorer/public/%/directory-html.metapack
 ./explorer/public/%/directory.metapack
@@ -158,7 +154,6 @@ cat << 'EOF' > "$TMP/expected-after.txt"
 ./explorer/public/%/search.metapack
 ./explorer/vault
 ./explorer/vault/%
-./explorer/vault/%/401.metapack
 ./explorer/vault/%/404.metapack
 ./explorer/vault/%/directory-html.metapack
 ./explorer/vault/%/directory.metapack

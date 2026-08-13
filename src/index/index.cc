@@ -88,7 +88,6 @@ static constexpr std::array<BuildHandlerFunction, 27> HANDLERS{{
     &sourcemeta::one::GENERATE_VERSION::handler,
     &sourcemeta::one::GENERATE_URITEMPLATE_ROUTES::handler,
     &sourcemeta::one::GENERATE_AUTHENTICATION::handler,
-    &sourcemeta::one::GENERATE_WEB_UNAUTHORIZED::handler,
     &sourcemeta::one::GENERATE_WEB_LOGIN::handler,
     nullptr,
 }};

@@ -124,7 +124,6 @@ cd - > /dev/null
 cat << 'EOF' > "$TMP/expected-manifest.txt"
 ./explorer/alpha
 ./explorer/alpha/%
-./explorer/alpha/%/401.metapack
 ./explorer/alpha/%/404.metapack
 ./explorer/alpha/%/directory-html.metapack
 ./explorer/alpha/%/directory.metapack
@@ -146,7 +145,6 @@ cat << 'EOF' > "$TMP/expected-manifest.txt"
 ./explorer/alpha/schemas/b/%/schema.metapack
 ./explorer/public
 ./explorer/public/%
-./explorer/public/%/401.metapack
 ./explorer/public/%/404.metapack
 ./explorer/public/%/directory-html.metapack
 ./explorer/public/%/directory.metapack
