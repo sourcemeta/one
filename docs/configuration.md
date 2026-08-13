@@ -583,9 +583,17 @@ An `oidc` policy grants access to a user who signs in through an OpenID Connect
 provider in the browser. Where an `apiKey` or `jwt` policy admits a machine that
 presents a credential on every request, an `oidc` policy authenticates a user
 once at their provider and then relies on a session the instance establishes and
-signs itself. Until that session exists, a browser that navigates to a governed
-page is sent to begin a login, while a request for the raw schema, or from a
-machine, is denied like any other unauthenticated request.
+signs itself. Until that session exists, a governed page is not there for the
+browser at all, exactly as a page that never existed is not.
+
+Signing in is therefore somewhere a person goes rather than something a page
+they were refused hands them. The web explorer's bar carries a sign-in control
+on every page an anonymous reader is served, pointing at one login page for the
+whole instance that names every `oidc` policy declared. Once a session exists,
+the bar offers signing out in its place. Neither control appears where it would
+lead nowhere: an instance declaring no `oidc` policy has no login page and no
+sign-in control however much of it is gated, and a page served to a machine
+credential offers no way out, since there is no session to end.
 
 The instance registers with the provider as a client, identified by its
 `clientId` and the client secret shared with it. It trusts the `issuer` both as

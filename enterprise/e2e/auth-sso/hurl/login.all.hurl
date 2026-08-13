@@ -15,6 +15,26 @@ header "ETag" exists
   "type": "string"
 }
 
+# An anonymous reader is offered the way in, on an open page and on the page
+# for something this view does not hold alike
+GET {{base}}/public/
+Accept: text/html
+HTTP 200
+Content-Type: text/html; charset=utf-8
+[Asserts]
+xpath "count(//a[@data-sourcemeta-ui-signin])" == 1
+xpath "string(//a[@data-sourcemeta-ui-signin]/@href)" == "/self/v1/auth/login"
+xpath "count(//button[@data-sourcemeta-ui-signout])" == 0
+
+GET {{base}}/private/
+Accept: text/html
+HTTP 404
+Content-Type: text/html; charset=utf-8
+[Asserts]
+xpath "string(/html/head/title)" == "Not Found"
+xpath "count(//a[@data-sourcemeta-ui-signin])" == 1
+xpath "count(//button[@data-sourcemeta-ui-signout])" == 0
+
 # The instance holds one login page, at a URL of its own, public and identical
 # for everybody. It names every interactive policy declared, whichever path
 # each one governs, since somebody signing in has not reached a path yet
@@ -186,6 +206,26 @@ cookie "sourcemeta_one_session[Max-Age]" == 3600
 cookie "sourcemeta_one_session[HttpOnly]" exists
 cookie "sourcemeta_one_session[SameSite]" == "Lax"
 cookie "sourcemeta_one_transaction[Max-Age]" == 0
+
+# The bar in the view the session resolves to offers the way out. Every page
+# written for that view carries it, the listing and a schema page alike
+GET {{base}}/private/
+Accept: text/html
+HTTP 200
+Content-Type: text/html; charset=utf-8
+[Asserts]
+xpath "count(//nav[contains(@class, 'navbar')])" == 1
+xpath "count(//a[@data-sourcemeta-ui-signin])" == 0
+xpath "count(//button[@data-sourcemeta-ui-signout])" == 1
+xpath "string(//form[button/@data-sourcemeta-ui-signout]/@action)" == "/self/v1/auth/logout"
+
+GET {{base}}/private/secret
+Accept: text/html
+HTTP 200
+Content-Type: text/html; charset=utf-8
+[Asserts]
+xpath "count(//a[@data-sourcemeta-ui-signin])" == 0
+xpath "count(//button[@data-sourcemeta-ui-signout])" == 1
 
 # The session now opens the private catalog that was denied before, served
 # private so a shared cache cannot retain it

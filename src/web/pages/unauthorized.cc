@@ -19,7 +19,7 @@ auto GENERATE_WEB_UNAUTHORIZED::handler(
   const auto timestamp_start{std::chrono::steady_clock::now()};
 
   sourcemeta::core::HTMLWriter writer;
-  html::make_error_page(writer, configuration, "Unauthorized",
+  html::make_error_page(writer, configuration, action.view, "Unauthorized",
                         "This page requires authentication",
                         "This page requires authentication",
                         "Present a valid credential to access it");
