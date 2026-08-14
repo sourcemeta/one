@@ -20,8 +20,14 @@ header "ETag" exists
 GET {{base}}/public/
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
 xpath "count(//a[@data-sourcemeta-ui-signin])" == 1
 xpath "string(//a[@data-sourcemeta-ui-signin]/@href)" == "/self/v1/auth/login"
 xpath "count(//button[@data-sourcemeta-ui-signout])" == 0
@@ -29,8 +35,14 @@ xpath "count(//button[@data-sourcemeta-ui-signout])" == 0
 GET {{base}}/private/
 Accept: text/html
 HTTP 404
+Cache-Control: no-store
 Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
 xpath "string(/html/head/title)" == "Not Found"
 xpath "count(//a[@data-sourcemeta-ui-signin])" == 1
 xpath "count(//button[@data-sourcemeta-ui-signout])" == 0
@@ -65,7 +77,12 @@ GET {{base}}/self/v1/auth/login
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
+Vary: Accept-Encoding
 [Asserts]
+header "Access-Control-Allow-Origin" not exists
 xpath "count(//a[@data-sourcemeta-ui-login])" == 10
 
 # Nothing else is served there
@@ -207,13 +224,81 @@ cookie "sourcemeta_one_session[HttpOnly]" exists
 cookie "sourcemeta_one_session[SameSite]" == "Lax"
 cookie "sourcemeta_one_transaction[Max-Age]" == 0
 
+# The root listing under the session marks what the session opens as private.
+# The lock is drawn from a policy governing an entry, whichever kind of
+# credential satisfies it, so an interactive session marks the same entries a
+# key would. The public collection stays a plain folder beside them
+GET {{base}}/
+Accept: text/html
+HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
+Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
+[Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 2
+xpath "count(//tr[.//a[normalize-space(.) = 'private']]//i[contains(@class, 'bi-lock-fill')])" == 1
+xpath "count(//tr[.//a[normalize-space(.) = 'archive']]//i[contains(@class, 'bi-lock-fill')])" == 1
+xpath "count(//tr[.//a[normalize-space(.) = 'public']]//i[contains(@class, 'bi-folder-fill')])" == 1
+xpath "count(//tr[.//a[normalize-space(.) = 'self']]//i[contains(@class, 'bi-folder-fill')])" == 1
+# What this session does not open is absent rather than locked, so the mark
+# never stands for something being withheld
+xpath "count(//tr[.//a[normalize-space(.) = 'team']])" == 0
+xpath "count(//tr[.//a[normalize-space(.) = 'corp']])" == 0
+
+# And the data it is drawn from names the policy on each of them
+GET {{base}}/self/v1/api/list
+HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
+Content-Type: application/json
+Link: </self/v1/schemas/api/list/response>; rel="describedby"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Captures]
+session_listing: body
+session_schema: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "ETag" exists
+jsonpath "$.path" == "/"
+jsonpath "$.policies" count == 0
+jsonpath "$.entries" count == 4
+jsonpath "$.entries[0].name" == "archive"
+jsonpath "$.entries[0].policies" count == 1
+jsonpath "$.entries[0].policies[0].name" == "keycloak"
+jsonpath "$.entries[0].policies[0].type" == "oidc"
+jsonpath "$.entries[1].name" == "private"
+jsonpath "$.entries[1].policies" count == 1
+jsonpath "$.entries[1].policies[0].name" == "keycloak"
+jsonpath "$.entries[2].name" == "public"
+jsonpath "$.entries[2].policies" count == 0
+jsonpath "$.entries[3].name" == "self"
+jsonpath "$.entries[3].policies" count == 0
+
+POST {{base}}/self/v1/api/schemas/evaluate{{session_schema}}
+```
+{{session_listing}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
 # The bar in the view the session resolves to offers the way out. Every page
 # written for that view carries it, the listing and a schema page alike
 GET {{base}}/private/
 Accept: text/html
 HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
 xpath "count(//nav[contains(@class, 'navbar')])" == 1
 xpath "count(//a[@data-sourcemeta-ui-signin])" == 0
 xpath "count(//button[@data-sourcemeta-ui-signout])" == 1
@@ -222,8 +307,14 @@ xpath "string(//form[button/@data-sourcemeta-ui-signout]/@action)" == "/self/v1/
 GET {{base}}/private/secret
 Accept: text/html
 HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
 xpath "count(//a[@data-sourcemeta-ui-signin])" == 0
 xpath "count(//button[@data-sourcemeta-ui-signout])" == 1
 

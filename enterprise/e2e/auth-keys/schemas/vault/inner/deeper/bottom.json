@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/vault/inner/deeper/bottom",
+  "title": "A gated schema two levels under the policy",
+  "type": "array"
+}
