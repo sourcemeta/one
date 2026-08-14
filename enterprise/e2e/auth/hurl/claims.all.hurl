@@ -275,15 +275,12 @@ listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.schemas" == 1
 jsonpath "$.entries" count == 1
-jsonpath "$.policies" count == 1
-jsonpath "$.policies[0].name" == "scoped"
-jsonpath "$.policies[0].type" == "jwt"
+jsonpath "$.private" == true
 jsonpath "$.entries[0].name" == "report"
 jsonpath "$.entries[0].type" == "schema"
 jsonpath "$.entries[0].path" == "/scoped/report"
 jsonpath "$.entries[0].identifier" == "{{base}}/scoped/report"
-jsonpath "$.entries[0].policies" count == 1
-jsonpath "$.entries[0].policies[0].name" == "scoped"
+jsonpath "$.entries[0].private" == true
 
 POST {{base}}/self/v1/api/schemas/evaluate{{listing_schema}}
 ```

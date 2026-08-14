@@ -66,7 +66,7 @@ struct DependencyReference {
   const char *filename;
 };
 
-inline constexpr std::size_t MAX_DEPENDENCIES_PER_RULE = 4;
+inline constexpr std::size_t MAX_DEPENDENCIES_PER_RULE = 5;
 
 struct LeafRule {
   BuildPlan::Action::Type action;

@@ -48,6 +48,11 @@ auto GENERATE_WEB_INDEX::handler(
   html::make_page(writer, configuration, action.view, canonical, title,
                   description, [&](sourcemeta::core::HTMLWriter &w) -> void {
                     make_hero(w, configuration);
+                    if (directory.at("private").to_boolean()) {
+                      w.div().attribute("class", "container-fluid px-4 pt-4");
+                      html::make_private_badge(w);
+                      w.close();
+                    }
                     html::make_file_manager(w, directory);
                   });
 

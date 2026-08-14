@@ -248,7 +248,8 @@ xpath "count(//tr[.//a[normalize-space(.) = 'self']]//i[contains(@class, 'bi-fol
 xpath "count(//tr[.//a[normalize-space(.) = 'team']])" == 0
 xpath "count(//tr[.//a[normalize-space(.) = 'corp']])" == 0
 
-# And the data it is drawn from names the policy on each of them
+# And the data it is drawn from marks the two the session opens and leaves the
+# open pair alone, which is the same split the render above draws
 GET {{base}}/self/v1/api/list
 HTTP 200
 Cache-Control: private, max-age=0, must-revalidate
@@ -262,19 +263,16 @@ session_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" exists
 jsonpath "$.path" == "/"
-jsonpath "$.policies" count == 0
+jsonpath "$.private" == false
 jsonpath "$.entries" count == 4
 jsonpath "$.entries[0].name" == "archive"
-jsonpath "$.entries[0].policies" count == 1
-jsonpath "$.entries[0].policies[0].name" == "keycloak"
-jsonpath "$.entries[0].policies[0].type" == "oidc"
+jsonpath "$.entries[0].private" == true
 jsonpath "$.entries[1].name" == "private"
-jsonpath "$.entries[1].policies" count == 1
-jsonpath "$.entries[1].policies[0].name" == "keycloak"
+jsonpath "$.entries[1].private" == true
 jsonpath "$.entries[2].name" == "public"
-jsonpath "$.entries[2].policies" count == 0
+jsonpath "$.entries[2].private" == false
 jsonpath "$.entries[3].name" == "self"
-jsonpath "$.entries[3].policies" count == 0
+jsonpath "$.entries[3].private" == false
 
 POST {{base}}/self/v1/api/schemas/evaluate{{session_schema}}
 ```

@@ -209,8 +209,8 @@ header "ETag" exists
   "type": "integer"
 }
 
-# And the listing enumerates for a real key, carrying the blank policy's name
-# alongside the working ones, since a policy that admits nobody still governs
+# And the listing enumerates for a real key, marked private, since a policy
+# that admits nobody still governs
 GET {{base}}/self/v1/api/list/mixed
 Authorization: Bearer mixed-plain-key
 HTTP 200
@@ -229,31 +229,13 @@ jsonpath "$.schemas" == 1
 jsonpath "$.breadcrumb" count == 1
 jsonpath "$.breadcrumb[0].name" == "mixed"
 jsonpath "$.breadcrumb[0].path" == "/mixed/"
-jsonpath "$.policies" count == 3
-jsonpath "$.policies[0].name" == "mixed-plain"
-jsonpath "$.policies[0].title" == "mixed-plain"
-jsonpath "$.policies[0].type" == "apiKey"
-jsonpath "$.policies[1].name" == "mixed-hashed"
-jsonpath "$.policies[1].title" == "mixed-hashed"
-jsonpath "$.policies[1].type" == "apiKey"
-jsonpath "$.policies[2].name" == "mixed-blank"
-jsonpath "$.policies[2].title" == "mixed-blank"
-jsonpath "$.policies[2].type" == "apiKey"
+jsonpath "$.private" == true
 jsonpath "$.entries" count == 1
 jsonpath "$.entries[0].name" == "thing"
 jsonpath "$.entries[0].type" == "schema"
 jsonpath "$.entries[0].path" == "/mixed/thing"
 jsonpath "$.entries[0].identifier" == "{{base}}/mixed/thing"
-jsonpath "$.entries[0].policies" count == 3
-jsonpath "$.entries[0].policies[0].name" == "mixed-plain"
-jsonpath "$.entries[0].policies[0].title" == "mixed-plain"
-jsonpath "$.entries[0].policies[0].type" == "apiKey"
-jsonpath "$.entries[0].policies[1].name" == "mixed-hashed"
-jsonpath "$.entries[0].policies[1].title" == "mixed-hashed"
-jsonpath "$.entries[0].policies[1].type" == "apiKey"
-jsonpath "$.entries[0].policies[2].name" == "mixed-blank"
-jsonpath "$.entries[0].policies[2].title" == "mixed-blank"
-jsonpath "$.entries[0].policies[2].type" == "apiKey"
+jsonpath "$.entries[0].private" == true
 
 POST {{base}}/self/v1/api/schemas/evaluate{{enumerated_schema}}
 ```

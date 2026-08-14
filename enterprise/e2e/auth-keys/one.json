@@ -43,6 +43,7 @@
       "path": "./schemas/vault"
     },
     "ledger": {
+      "title": "Ledger",
       "baseUri": "https://example.com/ledger/",
       "path": "./schemas/ledger"
     }
