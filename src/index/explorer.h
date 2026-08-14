@@ -883,6 +883,16 @@ struct GENERATE_MCP {
     // put together on each request. What a page holds follows from the index it
     // is built from, and that index already holds what this view may reach, so
     // the answer depends on neither who asks nor when
+    //
+    // TODO: Keep the pages out of the document that is parsed at startup. What
+    // is wanted is that answering reads an answer rather than builds one, and
+    // that does not require the answer to be a document. As written, every page
+    // of every view is materialised here and the whole of it is held parsed for
+    // as long as the server runs, which grows with the catalog and again with
+    // the number of views, where the search index beside it costs a mapping and
+    // no more. Worth exploring holding them pre-serialised, or in the mapped
+    // shape the search index already uses, so a page is written to the socket
+    // rather than reassembled from a tree
     auto resource_pages{sourcemeta::core::JSON::make_array()};
     {
       sourcemeta::one::SearchView search{action.dependencies.front()};
