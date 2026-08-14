@@ -2,7 +2,8 @@
 
 # A policy names a route where that route begins, and a namespace holding
 # routes stands for all of them. Both are scopes the gate can honour wherever
-# the endpoint is reached from, so both are accepted
+# the endpoint is reached from, so both are accepted, including a namespace
+# that is above routes without being one itself
 
 set -o errexit
 set -o nounset
@@ -29,6 +30,13 @@ cat << EOF > "$TMP/one.json"
       "name": "trace",
       "paths": [ "/self/v1/api/schemas/trace" ],
       "keys": [ { "environmentVariable": "ONE_KEY_TRACE" } ]
+    },
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "name": "catalog",
+      "paths": [ "/self/v1/api/schemas" ],
+      "keys": [ { "environmentVariable": "ONE_KEY_CATALOG" } ]
     }
   ],
   "contents": {
@@ -54,7 +62,8 @@ EOF
 cd "$TMP/output"
 find . -mindepth 1 \
   \( -path './schemas/self' -o -path './explorer/public/self' \
-     -o -path './explorer/api/self' -o -path './explorer/trace/self' \) -prune \
+     -o -path './explorer/api/self' -o -path './explorer/trace/self' \
+     -o -path './explorer/catalog/self' \) -prune \
   -o -print \
   | LC_ALL=C sort > "$TMP/manifest.txt"
 cd - > /dev/null
@@ -79,6 +88,22 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/api/schemas/test-1/%/dependents.metapack
 ./explorer/api/schemas/test-1/%/schema-html.metapack
 ./explorer/api/schemas/test-1/%/schema.metapack
+./explorer/catalog
+./explorer/catalog/%
+./explorer/catalog/%/404.metapack
+./explorer/catalog/%/directory-html.metapack
+./explorer/catalog/%/directory.metapack
+./explorer/catalog/%/mcp.metapack
+./explorer/catalog/%/search.metapack
+./explorer/catalog/schemas
+./explorer/catalog/schemas/%
+./explorer/catalog/schemas/%/directory-html.metapack
+./explorer/catalog/schemas/%/directory.metapack
+./explorer/catalog/schemas/test-1
+./explorer/catalog/schemas/test-1/%
+./explorer/catalog/schemas/test-1/%/dependents.metapack
+./explorer/catalog/schemas/test-1/%/schema-html.metapack
+./explorer/catalog/schemas/test-1/%/schema.metapack
 ./explorer/public
 ./explorer/public/%
 ./explorer/public/%/404.metapack
