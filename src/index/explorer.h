@@ -921,6 +921,14 @@ struct GENERATE_MCP {
     document.assign("origin", sourcemeta::core::JSON{configuration.origin});
     document.assign(std::string{sourcemeta::core::MCP_METHOD_RESOURCES_LIST},
                     std::move(resource_pages));
+    // How many the pages above were cut at, so that whoever reads them maps a
+    // cursor the way they were actually written rather than the way a second
+    // copy of this number happens to say. An artifact outlives the build that
+    // wrote it, and the two are then free to disagree
+    document.assign(
+        "resourcePageSize",
+        sourcemeta::core::JSON{static_cast<sourcemeta::core::JSON::Integer>(
+            MCP_RESOURCES_PAGE_SIZE)});
     document.assign(std::string{sourcemeta::core::MCP_METHOD_INITIALIZE},
                     std::move(initialize_ingredients));
     document.assign(

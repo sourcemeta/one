@@ -322,14 +322,6 @@ public:
 private:
   static constexpr std::string_view MCP_TEMPLATE_MIME_TYPE{
       "application/schema+json"};
-  static constexpr std::size_t MCP_RESOURCES_PAGE_SIZE{50};
-
-  static constexpr std::string_view MCP_KEY_RESOURCES{"resources"};
-  static constexpr std::string_view MCP_KEY_NEXT_CURSOR{"nextCursor"};
-  static inline const auto MCP_HASH_RESOURCES{
-      sourcemeta::core::JSON::Object::hash(MCP_KEY_RESOURCES)};
-  static inline const auto MCP_HASH_NEXT_CURSOR{
-      sourcemeta::core::JSON::Object::hash(MCP_KEY_NEXT_CURSOR)};
 
   auto
   write_envelope(sourcemeta::one::HTTPRequest &request,
@@ -373,8 +365,13 @@ private:
                          const std::string_view view) const
       -> sourcemeta::core::JSON {
     const auto &id{request_json.at("id")};
-    const auto &pages{this->metadata_for(view).at(
-        sourcemeta::core::MCP_METHOD_RESOURCES_LIST)};
+    const auto &metadata{this->metadata_for(view)};
+    const auto &pages{metadata.at(sourcemeta::core::MCP_METHOD_RESOURCES_LIST)};
+    // The pages were cut somewhere, and the artifact says where, so a cursor is
+    // read against how these very pages were written
+    const auto page_size{static_cast<std::uint64_t>(
+        metadata.at("resourcePageSize").to_integer())};
+    assert(page_size > 0);
 
     std::uint64_t offset{0};
     const auto *params{sourcemeta::core::jsonrpc_params(request_json)};
@@ -384,8 +381,7 @@ private:
         const auto parsed{sourcemeta::core::to_uint64_t(cursor_input)};
         // A cursor names a page boundary, so one that parses to anything else
         // names no page at all
-        if (!parsed.has_value() ||
-            parsed.value() % MCP_RESOURCES_PAGE_SIZE != 0) {
+        if (!parsed.has_value() || parsed.value() % page_size != 0) {
           return sourcemeta::core::jsonrpc_make_error(
               &id, -32602, "Invalid resource list cursor",
               sourcemeta::core::JSON{
@@ -399,7 +395,7 @@ private:
     // The pages were written for this view, so answering is finding the one
     // asked for. A catalog holding nothing still has a first page, which is why
     // the beginning is always a page and anything past the end is not
-    const auto index{offset / MCP_RESOURCES_PAGE_SIZE};
+    const auto index{offset / page_size};
     if (index >= pages.size()) {
       return sourcemeta::core::jsonrpc_make_error(
           &id, -32602, "Invalid resource list cursor",
