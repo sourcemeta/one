@@ -54,7 +54,7 @@ auto GENERATE_WEB_SCHEMA::handler(
         // Header div
         w.div();
         if (meta.at("private").to_boolean()) {
-          w.div().attribute("class", "mb-2");
+          w.div().attribute("class", "mb-3");
           html::make_private_badge(w);
           w.close();
         }
