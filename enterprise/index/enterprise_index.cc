@@ -68,28 +68,15 @@ auto load_custom_lint_rules(
 }
 
 auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
-                        const sourcemeta::one::Authentication &authentication,
-                        const std::size_t view, sourcemeta::core::JSON &tools,
+                        const RouteGuard &reachable,
+                        sourcemeta::core::JSON &tools,
                         sourcemeta::core::JSON &tool_routes) -> void {
   const auto base_url{router.base_url()};
   for (std::size_t index{0}; index < router.size(); index++) {
     const auto identifier{router.at(index)};
     const auto context{router.context(identifier)};
 
-    // A policy names the route rather than the template that matches it, so
-    // what is tested here is the literal part a scope could have been written
-    // against
-    auto route{router.path(identifier)};
-    const auto expression{route.find('{')};
-    if (expression != std::string::npos) {
-      route.erase(expression);
-    }
-    if (route.size() > 1 && route.back() == '/') {
-      route.pop_back();
-    }
-
-    if (!authentication.visible(
-            sourcemeta::one::Authentication::Path::relative(route), view)) {
+    if (!reachable(router.path(identifier))) {
       continue;
     }
 

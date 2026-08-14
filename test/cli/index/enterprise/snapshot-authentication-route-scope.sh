@@ -1,0 +1,134 @@
+#!/bin/sh
+
+# A policy names a route where that route begins, and a namespace holding
+# routes stands for all of them. Both are scopes the gate can honour wherever
+# the endpoint is reached from, so both are accepted
+
+set -o errexit
+set -o nounset
+
+TMP="$(mktemp -d)"
+clean() { rm -rf "$TMP"; }
+trap clean EXIT
+
+cat << EOF > "$TMP/one.json"
+{
+  "url": "https://example.com",
+  "html": {},
+  "authentication": [
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "name": "api",
+      "paths": [ "/self/v1/api" ],
+      "keys": [ { "environmentVariable": "ONE_KEY_API" } ]
+    },
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "name": "trace",
+      "paths": [ "/self/v1/api/schemas/trace" ],
+      "keys": [ { "environmentVariable": "ONE_KEY_TRACE" } ]
+    }
+  ],
+  "contents": {
+    "schemas": {
+      "path": "./schemas"
+    }
+  }
+}
+EOF
+
+mkdir "$TMP/schemas"
+
+cat << 'EOF' > "$TMP/schemas/test-1.json"
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/test-1",
+  "type": "string"
+}
+EOF
+
+"$1" "$TMP/one.json" "$TMP/output"
+
+cd "$TMP/output"
+find . -mindepth 1 \
+  \( -path './schemas/self' -o -path './explorer/public/self' \
+     -o -path './explorer/api/self' -o -path './explorer/trace/self' \) -prune \
+  -o -print \
+  | LC_ALL=C sort > "$TMP/manifest.txt"
+cd - > /dev/null
+
+cat << 'EOF' > "$TMP/expected.txt"
+./authentication.bin
+./configuration.json
+./explorer
+./explorer/api
+./explorer/api/%
+./explorer/api/%/404.metapack
+./explorer/api/%/directory-html.metapack
+./explorer/api/%/directory.metapack
+./explorer/api/%/mcp.metapack
+./explorer/api/%/search.metapack
+./explorer/api/schemas
+./explorer/api/schemas/%
+./explorer/api/schemas/%/directory-html.metapack
+./explorer/api/schemas/%/directory.metapack
+./explorer/api/schemas/test-1
+./explorer/api/schemas/test-1/%
+./explorer/api/schemas/test-1/%/dependents.metapack
+./explorer/api/schemas/test-1/%/schema-html.metapack
+./explorer/api/schemas/test-1/%/schema.metapack
+./explorer/public
+./explorer/public/%
+./explorer/public/%/404.metapack
+./explorer/public/%/directory-html.metapack
+./explorer/public/%/directory.metapack
+./explorer/public/%/login-html.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/schemas
+./explorer/public/schemas/%
+./explorer/public/schemas/%/directory-html.metapack
+./explorer/public/schemas/%/directory.metapack
+./explorer/public/schemas/test-1
+./explorer/public/schemas/test-1/%
+./explorer/public/schemas/test-1/%/dependents.metapack
+./explorer/public/schemas/test-1/%/schema-html.metapack
+./explorer/public/schemas/test-1/%/schema.metapack
+./explorer/trace
+./explorer/trace/%
+./explorer/trace/%/404.metapack
+./explorer/trace/%/directory-html.metapack
+./explorer/trace/%/directory.metapack
+./explorer/trace/%/mcp.metapack
+./explorer/trace/%/search.metapack
+./explorer/trace/schemas
+./explorer/trace/schemas/%
+./explorer/trace/schemas/%/directory-html.metapack
+./explorer/trace/schemas/%/directory.metapack
+./explorer/trace/schemas/test-1
+./explorer/trace/schemas/test-1/%
+./explorer/trace/schemas/test-1/%/dependents.metapack
+./explorer/trace/schemas/test-1/%/schema-html.metapack
+./explorer/trace/schemas/test-1/%/schema.metapack
+./routes.bin
+./schemas
+./schemas/schemas
+./schemas/schemas/test-1
+./schemas/schemas/test-1/%
+./schemas/schemas/test-1/%/blaze-exhaustive.metapack
+./schemas/schemas/test-1/%/blaze-fast.metapack
+./schemas/schemas/test-1/%/bundle.metapack
+./schemas/schemas/test-1/%/dependencies.metapack
+./schemas/schemas/test-1/%/editor.metapack
+./schemas/schemas/test-1/%/health.metapack
+./schemas/schemas/test-1/%/locations.metapack
+./schemas/schemas/test-1/%/positions.metapack
+./schemas/schemas/test-1/%/schema.metapack
+./schemas/schemas/test-1/%/stats.metapack
+./state.bin
+./version.json
+EOF
+
+diff "$TMP/manifest.txt" "$TMP/expected.txt"

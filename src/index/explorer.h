@@ -803,8 +803,15 @@ struct GENERATE_MCP {
         }
       }
 
-      sourcemeta::one::generate_mcp_tools(router_view, authentication, view,
-                                          tools, tool_routes);
+      sourcemeta::one::generate_mcp_tools(
+          router_view,
+          [&authentication, view](const std::string_view uri_template) {
+            return authentication.visible(
+                sourcemeta::one::Authentication::Path::relative(
+                    sourcemeta::one::route_scope(uri_template)),
+                view);
+          },
+          tools, tool_routes);
       sourcemeta::one::generate_protected_resource_metadata(
           authentication, configuration, sourcemeta::one::ENDPOINT_MCP,
           protected_resource_metadata);

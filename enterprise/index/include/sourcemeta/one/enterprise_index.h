@@ -13,6 +13,7 @@
 #include <sourcemeta/core/uritemplate.h>
 
 #include <cstddef>       // std::size_t
+#include <functional>    // std::function
 #include <string_view>   // std::string_view
 #include <unordered_set> // std::unordered_set
 
@@ -25,12 +26,17 @@ auto load_custom_lint_rules(
     const sourcemeta::one::Resolver &resolver,
     const sourcemeta::one::BuildDynamicCallback &callback) -> void;
 
+// Whether the endpoint a URI template describes is one the view being written
+// reaches. The template is handed over whole, as which part of it a policy can
+// name is settled where the routing table is
+using RouteGuard = std::function<bool(std::string_view)>;
+
 // The tools one view is offered, which are those whose route it may reach. A
 // tool naming a route a policy keeps from this view could only ever be refused,
 // so offering it would be describing a surface that is not there
 auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
-                        const sourcemeta::one::Authentication &authentication,
-                        std::size_t view, sourcemeta::core::JSON &tools,
+                        const RouteGuard &reachable,
+                        sourcemeta::core::JSON &tools,
                         sourcemeta::core::JSON &tool_routes) -> void;
 
 // What this instance's MCP endpoint is called as an OAuth protected resource.

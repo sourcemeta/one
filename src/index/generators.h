@@ -31,7 +31,6 @@
 #include <sourcemeta/one/enterprise_index.h>
 #endif
 
-#include <algorithm>    // std::ranges::find
 #include <cassert>      // assert
 #include <cstring>      // std::memcpy
 #include <filesystem>   // std::filesystem
@@ -1109,11 +1108,24 @@ struct GENERATE_AUTHENTICATION {
                                       policy_email_domains)};
 
     // A policy gates a route or a declared collection or page (or a namespace
-    // above one), never a path inside a collection
+    // above one), never a path inside a collection. A route is named where it
+    // begins rather than at some expansion of it: a scope reaching into a
+    // template would be honoured where the route is matched literally and
+    // nowhere else, which is a gate that holds on one surface and not the next
     sourcemeta::one::Authentication::save(
         policies, configuration.path, action.destination,
         [&routes, &configuration](const std::string_view path) {
-          return routes.describes(path) || configuration.covers_entry(path);
+          for (std::size_t index{0}; index < routes.size(); index++) {
+            const auto route{routes.path(routes.at(index))};
+            const auto scope{sourcemeta::one::route_scope(route)};
+            if (scope == path ||
+                (scope.size() > path.size() && scope.starts_with(path) &&
+                 scope[path.size()] == '/')) {
+              return true;
+            }
+          }
+
+          return configuration.covers_entry(path);
         });
   }
 };

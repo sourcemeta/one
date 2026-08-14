@@ -53,6 +53,21 @@ inline constexpr std::string_view ENDPOINT_MCP_PRM_TRAILING_SLASH{
 inline constexpr std::string_view ENDPOINT_API_NOT_FOUND{"/self/v1/api/{+any}"};
 inline constexpr std::string_view ENDPOINT_STATIC{"/self/v1/static/{+path}"};
 
+// The path an authentication policy names when it means a route. A template
+// expression matches whatever a caller puts there, so what a policy can be
+// written against is the literal part ahead of it, and a scope reaching into
+// the expression is a scope this instance cannot honour on every surface that
+// reaches the route
+[[nodiscard]] inline auto route_scope(const std::string_view uri_template)
+    -> std::string_view {
+  auto result{uri_template.substr(0, uri_template.find('{'))};
+  if (result.size() > 1 && result.back() == '/') {
+    result.remove_suffix(1);
+  }
+
+  return result;
+}
+
 } // namespace sourcemeta::one
 
 #endif
