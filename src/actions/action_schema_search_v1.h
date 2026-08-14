@@ -79,7 +79,7 @@ public:
         });
   }
 
-  auto rest(const std::span<std::string_view>, std::string_view credential,
+  auto rest(const std::span<std::string_view>, std::string_view,
             std::string_view view, sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
@@ -202,18 +202,7 @@ public:
       }
     }
 
-    const sourcemeta::one::RequestCookies cookies{request};
-    auto result{this->search_view_for(view).search(
-        query, limit, scope,
-        [this, &credential, &cookies](const std::string_view path) -> bool {
-          const auto &authentication{this->dispatcher().authentication()};
-          const auto location{this->canonical_path(path)};
-          return location.has_value() &&
-                 authentication
-                     .admits(location.value(),
-                             {.bearer = credential, .cookies = cookies})
-                     .allowed;
-        })};
+    auto result{this->search_view_for(view).search(query, limit, scope)};
     response.write_status(sourcemeta::core::HTTP_STATUS_OK);
     response.write_header("Access-Control-Allow-Origin", "*");
     response.write_header("Access-Control-Expose-Headers", "Link, ETag");
@@ -221,10 +210,10 @@ public:
     // Search results are query-dependent and the corpus shifts as
     // the catalog grows; 60 seconds is a freshness window that
     // amortises full-text cost across typing-into-a-search-box
-    // bursts without serving stale ranking long-term. A result set
-    // filtered by presented credentials is specific to the caller,
-    // so only the anonymous view may enter shared caches
-    response.write_header("Cache-Control", credential.empty() && cookies.empty()
+    // bursts without serving stale ranking long-term. What comes back
+    // is whatever the caller's view holds, so only the anonymous one
+    // answers the same to everybody and may enter a shared cache
+    response.write_header("Cache-Control", view == sourcemeta::one::VIEW_PUBLIC
                                                ? "public, max-age=60"
                                                : "private, max-age=60");
     // RFC 9110 §12.5.5: the gzip negotiation axis applies, no other
@@ -313,19 +302,9 @@ public:
       }
     }
 
-    auto results{
-        this->search_view_for(
-                this->dispatcher().authentication().view(credentials))
-            .search(arguments.at("q").to_string(), limit, scope,
-                    [this, &credentials](const std::string_view path) -> bool {
-                      const auto &authentication{
-                          this->dispatcher().authentication()};
-                      const auto location{this->canonical_path(path)};
-                      return location.has_value() &&
-                             authentication
-                                 .admits(location.value(), credentials)
-                                 .allowed;
-                    })};
+    auto results{this->search_view_for(
+                         this->dispatcher().authentication().view(credentials))
+                     .search(arguments.at("q").to_string(), limit, scope)};
     auto envelope{sourcemeta::core::JSON::make_object()};
     envelope.assign_assume_new("results", std::move(results));
 
