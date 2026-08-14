@@ -174,6 +174,37 @@ and a renewal marker naming the policy it signed in under, which is what lets an
 expired session be renewed against the provider without asking the person again.
 The marker carries no credential.
 
+### Providers
+
+*This endpoint names the ways of signing in to this instance, as a page for a
+browser and as data for anything else.*
+
+```
+GET /self/v1/auth/login
+```
+
+Only [`oidc`](configuration.md#oidc) policies appear here. A policy that admits
+a program has nowhere to send a person, so naming it would offer a way in that
+does not exist.
+
+=== "200"
+
+    | Property                       | Type                     | Required | Description |
+    |--------------------------------|--------------------------|-----|-------------------------------------|
+    | `/title` | String | No | The name this instance goes by, where it has been given one |
+    | `/providers` | Array | Yes | The identity providers a person may sign in through, in declaration order |
+    | `/providers/*/name` | String | Yes | The policy name |
+    | `/providers/*/title` | String | Yes | The human readable version of the policy name |
+    | `/providers/*/path` | String | Yes | The relative URL that starts a login through this provider |
+
+=== "403"
+
+    The instance is running the Community edition, which signs nobody in.
+
+=== "405"
+
+    The HTTP method is not `GET` or `HEAD`.
+
 ### Login
 
 *This endpoint begins an interactive login against the named policy's identity

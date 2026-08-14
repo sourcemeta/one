@@ -62,29 +62,42 @@ Content-Type: text/html; charset=utf-8
 xpath "count(//a[@data-sourcemeta-ui-signin])" == 0
 xpath "count(//button[@data-sourcemeta-ui-signout])" == 0
 
-# There is no login page either, since no policy signs anybody in. The bar
-# offering nothing and this holding nothing are the same fact
+# The login page holds nothing to offer, since no policy here signs anybody in,
+# and it says so rather than going missing. The bar offering no way in and this
+# page naming none are the same fact told twice
 GET {{base}}/self/v1/auth/login
 Accept: text/html
-HTTP 404
-Cache-Control: no-store
-Content-Type: application/problem+json
-Link: </self/v1/schemas/api/error>; rel="describedby"
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
+[Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+xpath "string(/html/head/title)" == "Sign In"
+xpath "count(//a[@data-sourcemeta-ui-login])" == 0
+xpath "normalize-space(//p)" == "There is no way to sign in to this instance"
+
+# And the data underneath it says the same, which is what the page is drawn from
+GET {{base}}/self/v1/auth/login
+Accept: application/json
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/json
+Link: </self/v1/schemas/api/auth/login/response>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Captures]
-missing_body: body
-missing_schema: header "Link" regex "<([^>]+)>"
-{
-  "type": "urn:sourcemeta:one:not-found",
-  "title": "Not Found",
-  "status": 404,
-  "detail": "There is nothing at this URL"
-}
+signin_body: body
+signin_schema: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+jsonpath "$.providers" count == 0
 
-POST {{base}}/self/v1/api/schemas/evaluate{{missing_schema}}
+POST {{base}}/self/v1/api/schemas/evaluate{{signin_schema}}
 ```
-{{missing_body}}
+{{signin_body}}
 ```
 HTTP 200
 Cache-Control: no-store

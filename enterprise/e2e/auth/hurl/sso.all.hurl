@@ -83,7 +83,7 @@ Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
 X-Frame-Options: DENY
-Vary: Accept-Encoding
+Vary: Accept, Accept-Encoding
 [Asserts]
 header "Set-Cookie" not exists
 xpath "string(//title)" == "Sign In"

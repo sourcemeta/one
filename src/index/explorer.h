@@ -693,6 +693,53 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
   }
 };
 
+// The ways of signing in, written once for the whole instance. The page that
+// offers them renders from this and nothing else, so what a person is shown and
+// what a custom interface reads cannot describe different instances
+struct GENERATE_LOGIN {
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
+                      const sourcemeta::one::BuildDynamicCallback &,
+                      sourcemeta::one::Resolver &,
+                      const sourcemeta::one::Configuration &configuration,
+                      const sourcemeta::core::JSON &) -> void {
+    const auto timestamp_start{std::chrono::steady_clock::now()};
+
+    auto document{sourcemeta::core::JSON::make_object()};
+    if (configuration.html.has_value()) {
+      document.assign("title",
+                      sourcemeta::core::JSON{configuration.html->name});
+    }
+
+    // A policy that admits a program has nowhere to send a person, so naming it
+    // here would offer a way in that does not exist
+    auto providers{sourcemeta::core::JSON::make_array()};
+    for (const auto &policy : configuration.authentication) {
+      if (!sourcemeta::one::is_interactive(policy)) {
+        continue;
+      }
+
+      auto provider{sourcemeta::core::JSON::make_object()};
+      provider.assign("name", sourcemeta::core::JSON{policy.name});
+      provider.assign("title", sourcemeta::core::JSON{policy.title});
+      std::string path{sourcemeta::one::ENDPOINT_AUTH_LOGIN_PAGE};
+      path.push_back('/');
+      path.append(policy.name);
+      provider.assign("path", sourcemeta::core::JSON{std::move(path)});
+      providers.push_back(std::move(provider));
+    }
+
+    document.assign("providers", std::move(providers));
+
+    const auto timestamp_end{std::chrono::steady_clock::now()};
+    sourcemeta::one::metapack_write_pretty_json(
+        action.destination, document, "application/json",
+        sourcemeta::one::MetapackEncoding::GZIP, {},
+        std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
+                                                              timestamp_start));
+  }
+};
+
 struct GENERATE_MCP {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,

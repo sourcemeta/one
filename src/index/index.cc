@@ -93,6 +93,7 @@ static constexpr std::array<BuildHandlerFunction, sourcemeta::one::ACTION_COUNT>
         &sourcemeta::one::GENERATE_VERSION::handler,
         &sourcemeta::one::GENERATE_URITEMPLATE_ROUTES::handler,
         &sourcemeta::one::GENERATE_AUTHENTICATION::handler,
+        &sourcemeta::one::GENERATE_LOGIN::handler,
         &sourcemeta::one::GENERATE_WEB_LOGIN::handler,
         // Removal is done before anything is dispatched, so it is the one
         // action with nothing to call

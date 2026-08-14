@@ -1,22 +1,24 @@
 #ifndef SOURCEMETA_ONE_ACTIONS_AUTH_LOGIN_PAGE_V1_H
 #define SOURCEMETA_ONE_ACTIONS_AUTH_LOGIN_PAGE_V1_H
 
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
+
+#include <sourcemeta/one/enterprise_server.h>
+
+#else
+
 #include <sourcemeta/core/http.h>
-#include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
-#include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
 
 #include <filesystem>  // std::filesystem::path
-#include <optional>    // std::optional
 #include <span>        // std::span
 #include <string_view> // std::string_view
-#include <utility>     // std::move
 
 class ActionAuthLoginPage_v1 : public sourcemeta::one::RouterAction {
 public:
@@ -39,23 +41,6 @@ public:
             this->error_schema_ = std::get<std::string_view>(value);
           }
         });
-
-    // Signing in is what a caller without a session does, so the page that
-    // offers it is the anonymous one for everybody, and it says the same thing
-    // for as long as the instance stands
-    auto located{this->artifact_resolve_path_unauthenticated(
-        sourcemeta::one::VIEW_PUBLIC, "", Tree::Explorer, "login-html")};
-    if (!located.has_value()) {
-      return;
-    }
-
-    const sourcemeta::core::FileView contents{located.value().path()};
-    const auto info{sourcemeta::one::metapack_info(contents)};
-    // An instance that offers nowhere to sign in writes the page with no body
-    // at all, which is a lone newline by the time it is stored
-    if (info.has_value() && info->content_bytes > 1) {
-      this->page_ = std::move(located);
-    }
   }
 
   [[nodiscard]] auto is_authentication_exempt() const noexcept
@@ -84,20 +69,11 @@ public:
       return;
     }
 
-    if (!this->page_.has_value()) {
-      sourcemeta::one::json_error(
-          request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
-          "urn:sourcemeta:one:not-found", "There is nothing at this URL",
-          this->error_schema_, "*");
-      return;
-    }
-
-    // The one page every caller is served, so a shared cache holding it hands
-    // the next caller what they would have been given anyway
-    this->artifact_serve(
-        this->page_.value(), sourcemeta::core::HTTP_STATUS_OK, false, {}, {},
-        HTML_BROWSER_SECURITY, request, response, this->error_schema_,
-        "public, max-age=0, must-revalidate", "Accept-Encoding");
+    sourcemeta::one::json_error(
+        request, response, sourcemeta::core::HTTP_STATUS_FORBIDDEN,
+        "urn:sourcemeta:one:enterprise-required",
+        "This feature is only available in the Enterprise edition",
+        this->error_schema_, "*");
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
@@ -108,8 +84,9 @@ public:
   }
 
 private:
-  std::optional<sourcemeta::one::ResolvedArtifact> page_;
   std::string_view error_schema_;
 };
+
+#endif
 
 #endif

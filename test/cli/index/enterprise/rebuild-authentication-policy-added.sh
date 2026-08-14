@@ -57,6 +57,7 @@ cat << 'EOF' > "$TMP/expected-before.txt"
 ./explorer/public/%/directory-html.metapack
 ./explorer/public/%/directory.metapack
 ./explorer/public/%/login-html.metapack
+./explorer/public/%/login.metapack
 ./explorer/public/%/mcp.metapack
 ./explorer/public/%/search.metapack
 ./explorer/public/schemas
@@ -136,6 +137,7 @@ cat << 'EOF' > "$TMP/expected-after.txt"
 ./explorer/public/%/directory-html.metapack
 ./explorer/public/%/directory.metapack
 ./explorer/public/%/login-html.metapack
+./explorer/public/%/login.metapack
 ./explorer/public/%/mcp.metapack
 ./explorer/public/%/search.metapack
 ./explorer/public/schemas

@@ -47,34 +47,3 @@ xpath "string(/html/head/title)" == "Not Found"
 xpath "count(//nav[contains(@class, 'navbar')])" == 1
 xpath "count(//a[@data-sourcemeta-ui-signin])" == 0
 xpath "count(//button[@data-sourcemeta-ui-signout])" == 0
-
-# There is no login page to reach either. Nothing signs anybody in, so the
-# endpoint holds nothing, exactly as it does on an Enterprise instance that
-# declares no interactive policy
-GET {{base}}/self/v1/auth/login
-Accept: text/html
-HTTP 404
-Cache-Control: no-store
-Content-Type: application/problem+json
-Link: </self/v1/schemas/api/error>; rel="describedby"
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-[Captures]
-missing_body: body
-missing_schema: header "Link" regex "<([^>]+)>"
-{
-  "type": "urn:sourcemeta:one:not-found",
-  "title": "Not Found",
-  "status": 404,
-  "detail": "There is nothing at this URL"
-}
-
-POST {{base}}/self/v1/api/schemas/evaluate{{missing_schema}}
-```
-{{missing_body}}
-```
-HTTP 200
-Cache-Control: no-store
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
-[Asserts]
-jsonpath "$.valid" == true

@@ -87,6 +87,7 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./explorer/public/%/directory-html.metapack
 ./explorer/public/%/directory.metapack
 ./explorer/public/%/login-html.metapack
+./explorer/public/%/login.metapack
 ./explorer/public/%/mcp.metapack
 ./explorer/public/%/search.metapack
 ./explorer/staff
