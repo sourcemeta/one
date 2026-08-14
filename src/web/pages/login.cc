@@ -66,10 +66,6 @@ auto GENERATE_WEB_LOGIN::handler(
   assert(login_option.has_value());
   const auto &login{login_option.value()};
 
-  // Only an instance that renders HTML at all renders this, and such an
-  // instance is always named
-  assert(login.defines("title"));
-
   // Signing in is what somebody without a session does, so the instance holds
   // one page for all of them rather than one per place it could be reached
   // from. It names only its providers and the instance, its canonical URL is
@@ -97,9 +93,11 @@ auto GENERATE_WEB_LOGIN::handler(
       .attribute("width", "48")
       .attribute("height", "48")
       .attribute("class", "mb-3");
-  writer.h1().attribute("class", "h5 fw-bold mb-0");
-  writer.text(login.at("title").to_string());
-  writer.close();
+  if (login.defines("title")) {
+    writer.h1().attribute("class", "h5 fw-bold mb-0");
+    writer.text(login.at("title").to_string());
+    writer.close();
+  }
   writer.close();
 
   write_providers(writer, login.at("providers"));

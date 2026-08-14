@@ -60,6 +60,22 @@ Content-Type: text/html; charset=utf-8
 xpath "count(//a[@data-sourcemeta-ui-signin])" == 0
 xpath "count(//button[@data-sourcemeta-ui-signout])" == 0
 
+# An interface served from elsewhere reads this endpoint, so the preflight has
+# to grant what the request behind it needs. Answering only `Allow` would let
+# the browser refuse a request the endpoint would have served
+OPTIONS {{base}}/self/v1/auth/login
+HTTP 204
+Cache-Control: no-store
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Access-Control-Allow-Methods: GET, HEAD, OPTIONS
+Access-Control-Allow-Headers: Accept-Encoding, If-None-Match, If-Modified-Since
+Access-Control-Max-Age: 3600
+Allow: GET, HEAD, OPTIONS
+[Asserts]
+header "Vary" not exists
+header "Set-Cookie" not exists
+
 # A method the endpoint does not serve is refused before anything is read
 POST {{base}}/self/v1/auth/login
 HTTP 405

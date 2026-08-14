@@ -58,12 +58,13 @@ public:
   auto rest(const std::span<std::string_view>, std::string_view,
             std::string_view, sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
+    // The data representation is cross-origin readable, so the preflight has to
+    // grant what the request that follows it needs. A page is a navigation and
+    // never asks, but an interface fetching the data from elsewhere does
     if (request.method() == "options") {
-      response.write_status(sourcemeta::core::HTTP_STATUS_NO_CONTENT);
-      response.write_header("Cache-Control", "no-store");
-      response.write_header("Allow", "GET, HEAD, OPTIONS");
-      sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_NO_CONTENT,
-                                     request, response);
+      sourcemeta::one::cors_preflight(request, response, "GET, HEAD, OPTIONS",
+                                      "Accept-Encoding, If-None-Match, "
+                                      "If-Modified-Since");
       return;
     }
 

@@ -92,6 +92,7 @@ Access-Control-Expose-Headers: Link, ETag
 signin_body: body
 signin_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
 jsonpath "$.providers" count == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{signin_schema}}

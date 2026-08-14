@@ -934,6 +934,12 @@ jsonpath "$.result.resources[38].description" == "Request from a client to list 
 jsonpath "$.result.resources[38].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[38].size" == 853
 jsonpath "$.result.resources[38].annotations.priority" == 0
+jsonpath "$.result.resources[39].uri" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
+jsonpath "$.result.resources[39].name" == "Sourcemeta One MCP Tools List Response"
+jsonpath "$.result.resources[39].description" == "Sourcemeta One's list of MCP tools"
+jsonpath "$.result.resources[39].mimeType" == "application/schema+json"
+jsonpath "$.result.resources[39].size" == 4495
+jsonpath "$.result.resources[39].annotations.priority" == 0.0
 jsonpath "$.result.nextCursor" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -1217,6 +1223,12 @@ jsonpath "$.result.resources[38].description" == "Request from a client to list 
 jsonpath "$.result.resources[38].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[38].size" == 853
 jsonpath "$.result.resources[38].annotations.priority" == 0
+jsonpath "$.result.resources[39].uri" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
+jsonpath "$.result.resources[39].name" == "Sourcemeta One MCP Tools List Response"
+jsonpath "$.result.resources[39].description" == "Sourcemeta One's list of MCP tools"
+jsonpath "$.result.resources[39].mimeType" == "application/schema+json"
+jsonpath "$.result.resources[39].size" == 4495
+jsonpath "$.result.resources[39].annotations.priority" == 0.0
 jsonpath "$.result.nextCursor" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
