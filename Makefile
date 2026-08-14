@@ -16,7 +16,8 @@ PRESET ?= Debug
 OUTPUT ?= ./build
 PREFIX ?= $(OUTPUT)/dist
 PUBLIC ?= ./enterprise/e2e/public
-PARALLEL ?= 4
+PARALLEL ?= $(shell getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)
+DOCKERFILE_TEST_REPEAT ?= 1
 # Only for local development
 ENTERPRISE ?= ON
 DOCKERFILE = $(if $(filter ON,$(ENTERPRISE)),enterprise/Dockerfile,Dockerfile)
@@ -68,7 +69,8 @@ test: check
 docker-build: $(DOCKERFILE)
 	$(DOCKER) build --tag one . --file $< --progress plain \
 		--build-arg SOURCEMETA_ONE_BUILD_TYPE=$(PRESET) \
-		--build-arg SOURCEMETA_ONE_PARALLEL=$(PARALLEL)
+		--build-arg SOURCEMETA_ONE_PARALLEL=$(PARALLEL) \
+		--build-arg SOURCEMETA_ONE_TEST_REPEAT=$(DOCKERFILE_TEST_REPEAT)
 
 # Useful to run the entire main suite in a single command
 .PHONY: test-e2e
