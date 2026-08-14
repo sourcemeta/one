@@ -48,6 +48,7 @@ Content-Security-Policy: frame-ancestors 'none'
 X-Frame-Options: DENY
 [Asserts]
 header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//tr[.//a[normalize-space(.) = 'vault']]//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 2
@@ -65,7 +66,12 @@ Authorization: Bearer ledger-secret-key
 HTTP 200
 Cache-Control: private, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//tr[.//a[normalize-space(.) = 'ledger']]//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 2
@@ -80,7 +86,12 @@ Authorization: Bearer vault-secret-key
 HTTP 200
 Cache-Control: private, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//tr[.//a[normalize-space(.) = 'inner']]//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 0
@@ -92,7 +103,12 @@ Authorization: Bearer vault-secret-key
 HTTP 200
 Cache-Control: private, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//tr[.//a[normalize-space(.) = 'deeper']]//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 0
@@ -105,7 +121,12 @@ Authorization: Bearer vault-secret-key
 HTTP 200
 Cache-Control: private, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 0
 xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 0
 xpath "count(//tr[.//a[normalize-space(.) = 'bottom']])" == 1
@@ -117,17 +138,32 @@ Accept: text/html
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 0
 xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 1
 xpath "count(//tr[.//a[normalize-space(.) = 'deep']]//i[contains(@class, 'bi-folder-fill')])" == 1
 
+# The same public tree read under a key is still unmarked, but it is no longer
+# shareable. A view holds its own copy of everything it can reach, so this URL
+# answers differently per view, and a shared cache handing this one to the next
+# caller would be the disclosure the per-view split closed
 GET {{base}}/open/
 Accept: text/html
 Authorization: Bearer vault-secret-key
 HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 0
 xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 1
 
@@ -136,7 +172,12 @@ Accept: text/html
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 0
 xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 0
 
@@ -152,6 +193,8 @@ Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
 X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
 header "WWW-Authenticate" not exists
 xpath "string(/html/head/title)" == "Not Found"
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 0

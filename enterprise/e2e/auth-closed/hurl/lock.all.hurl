@@ -21,6 +21,7 @@ Content-Security-Policy: frame-ancestors 'none'
 X-Frame-Options: DENY
 [Asserts]
 header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
 xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 0
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 2
 xpath "count(//tr[.//a[normalize-space(.) = 'catalog']]//i[contains(@class, 'bi-lock-fill')])" == 1
@@ -34,7 +35,12 @@ Authorization: Bearer full-secret-key
 HTTP 200
 Cache-Control: private, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
 xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 0
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//tr[.//a[normalize-space(.) = 'nested']]//i[contains(@class, 'bi-lock-fill')])" == 1
@@ -47,7 +53,12 @@ Authorization: Bearer full-secret-key
 HTTP 200
 Cache-Control: private, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
 xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 0
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 0
 xpath "count(//tr[.//a[normalize-space(.) = 'deep']])" == 1
@@ -59,7 +70,12 @@ Accept: text/html
 HTTP 404
 Cache-Control: no-store
 Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
 header "WWW-Authenticate" not exists
 xpath "string(/html/head/title)" == "Not Found"
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 0

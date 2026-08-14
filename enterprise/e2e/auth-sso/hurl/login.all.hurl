@@ -20,8 +20,14 @@ header "ETag" exists
 GET {{base}}/public/
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
 xpath "count(//a[@data-sourcemeta-ui-signin])" == 1
 xpath "string(//a[@data-sourcemeta-ui-signin]/@href)" == "/self/v1/auth/login"
 xpath "count(//button[@data-sourcemeta-ui-signout])" == 0
@@ -29,8 +35,14 @@ xpath "count(//button[@data-sourcemeta-ui-signout])" == 0
 GET {{base}}/private/
 Accept: text/html
 HTTP 404
+Cache-Control: no-store
 Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
 xpath "string(/html/head/title)" == "Not Found"
 xpath "count(//a[@data-sourcemeta-ui-signin])" == 1
 xpath "count(//button[@data-sourcemeta-ui-signout])" == 0
@@ -65,7 +77,12 @@ GET {{base}}/self/v1/auth/login
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
+Vary: Accept-Encoding
 [Asserts]
+header "Access-Control-Allow-Origin" not exists
 xpath "count(//a[@data-sourcemeta-ui-login])" == 10
 
 # Nothing else is served there
@@ -274,8 +291,14 @@ jsonpath "$.valid" == true
 GET {{base}}/private/
 Accept: text/html
 HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
 xpath "count(//nav[contains(@class, 'navbar')])" == 1
 xpath "count(//a[@data-sourcemeta-ui-signin])" == 0
 xpath "count(//button[@data-sourcemeta-ui-signout])" == 1
@@ -284,8 +307,14 @@ xpath "string(//form[button/@data-sourcemeta-ui-signout]/@action)" == "/self/v1/
 GET {{base}}/private/secret
 Accept: text/html
 HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
 xpath "count(//a[@data-sourcemeta-ui-signin])" == 0
 xpath "count(//button[@data-sourcemeta-ui-signout])" == 1
 

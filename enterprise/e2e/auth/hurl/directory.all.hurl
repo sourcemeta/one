@@ -268,8 +268,15 @@ jsonpath "$.valid" == true
 GET {{base}}/private/
 Accept: text/html
 HTTP 404
+Cache-Control: no-store
 Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
+header "WWW-Authenticate" not exists
 xpath "string(//title)" == "Not Found"
 xpath "string(//h2[@class='fw-bold'])" == "Oops! What you are looking for is not here"
 
@@ -278,8 +285,14 @@ Accept: text/html
 Authorization: Bearer primary-secret-key
 HTTP 200
 Cache-Control: private, max-age=0, must-revalidate
+Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
-header "Content-Type" contains "text/html"
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
+
 # The lock follows the policy rather than marking where it starts. A reader
 # inside the gated collection is still shown that its child is private, which
 # is what somebody deciding whether to pass a link on needs to know
@@ -291,8 +304,15 @@ xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 0
 GET {{base}}/private/open/
 Accept: text/html
 HTTP 404
+Cache-Control: no-store
 Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
+header "WWW-Authenticate" not exists
 xpath "string(//title)" == "Not Found"
 xpath "string(//h2[@class='fw-bold'])" == "Oops! What you are looking for is not here"
 
@@ -303,8 +323,14 @@ Accept: text/html
 Authorization: Bearer primary-secret-key
 HTTP 200
 Cache-Control: private, max-age=0, must-revalidate
+Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
-header "Content-Type" contains "text/html"
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
+
 # Only a schema sits here, and a schema row carries its dialect rather than a
 # folder or a lock
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 0
@@ -318,8 +344,13 @@ GET {{base}}/
 Accept: text/html
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
+Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
-header "Content-Type" contains "text/html"
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
 xpath "string(//title)" != "Not Found"
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 0
 xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 3
@@ -335,8 +366,13 @@ Accept: text/html
 Authorization: Bearer primary-secret-key
 HTTP 200
 Cache-Control: private, max-age=0, must-revalidate
+Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
-header "Content-Type" contains "text/html"
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
 xpath "string(//title)" != "Not Found"
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 2
 xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 3
