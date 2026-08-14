@@ -107,13 +107,14 @@ jsonpath "$.valid" == true
 
 # It is the same page whoever asks for it, so a shared cache may hold it
 GET {{base}}/self/v1/auth/login
+Accept: text/html
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
 X-Frame-Options: DENY
-Vary: Accept-Encoding
+Vary: Accept, Accept-Encoding
 [Asserts]
 header "Access-Control-Allow-Origin" not exists
 xpath "count(//a[@data-sourcemeta-ui-login])" == 10

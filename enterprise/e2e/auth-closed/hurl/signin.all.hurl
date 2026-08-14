@@ -30,6 +30,7 @@ jsonpath "$.providers[*].name" not contains "mcp-tokens"
 jsonpath "$.providers[*].name" not contains "machine"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{signin_schema}}
+Authorization: Bearer full-secret-key
 ```
 {{signin_body}}
 ```
