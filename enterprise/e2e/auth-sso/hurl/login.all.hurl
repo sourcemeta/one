@@ -248,7 +248,8 @@ xpath "count(//tr[.//a[normalize-space(.) = 'self']]//i[contains(@class, 'bi-fol
 xpath "count(//tr[.//a[normalize-space(.) = 'team']])" == 0
 xpath "count(//tr[.//a[normalize-space(.) = 'corp']])" == 0
 
-# And the data it is drawn from names the policy on each of them
+# And the data it is drawn from marks the two the session opens and leaves the
+# open pair alone, which is the same split the render above draws
 GET {{base}}/self/v1/api/list
 HTTP 200
 Cache-Control: private, max-age=0, must-revalidate

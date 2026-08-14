@@ -101,8 +101,8 @@ Link: </self/v1/schemas/api/error>; rel="describedby"
 [Asserts]
 body == {{denied_body}}
 
-# The token that carries the type enumerates it, and the listing names the
-# policy that governs
+# The token that carries the type enumerates it, and the listing marks what
+# the policy governs as private
 GET {{base}}/self/v1/api/list/typed
 Authorization: Bearer {{typed_token}}
 HTTP 200

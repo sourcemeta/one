@@ -209,8 +209,8 @@ header "ETag" exists
   "type": "integer"
 }
 
-# And the listing enumerates for a real key, carrying the blank policy's name
-# alongside the working ones, since a policy that admits nobody still governs
+# And the listing enumerates for a real key, marked private, since a policy
+# that admits nobody still governs
 GET {{base}}/self/v1/api/list/mixed
 Authorization: Bearer mixed-plain-key
 HTTP 200

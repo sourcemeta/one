@@ -131,8 +131,8 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# The machine listing is denied anonymously and enumerates with either key,
-# carrying every governing policy name in declaration order
+# The machine listing is denied anonymously and enumerates under a key, with
+# the directory and the entry inside it both marked private
 GET {{base}}/self/v1/api/list/mixed
 HTTP 404
 Content-Type: application/problem+json

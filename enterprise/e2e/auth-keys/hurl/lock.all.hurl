@@ -235,8 +235,8 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-# Two levels under the policy the entries still name it, which is the property
-# the render reads and the reason it needs no notion of depth
+# Two levels under the policy the entries are still marked, which is the
+# answer the render reads and the reason it needs no notion of depth
 GET {{base}}/self/v1/api/list/vault/inner
 Authorization: Bearer vault-secret-key
 HTTP 200

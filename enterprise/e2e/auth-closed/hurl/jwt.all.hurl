@@ -31,7 +31,7 @@ header "ETag" matches /^"[0-9a-f]{64}"$/
   "type": "string"
 }
 
-# The listing enumerates with a token, reporting both governing policy names
+# The listing enumerates with a token, marked private like everything here
 GET {{base}}/self/v1/api/list/catalog
 Authorization: Bearer {{access_token}}
 HTTP 200

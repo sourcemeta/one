@@ -50,9 +50,9 @@ jsonpath "$.valid" == true
 
 # The same URL under a credential is answered from the view that credential
 # resolves to, which holds the anonymous catalog plus what its policy gates.
-# The gated children appear here and nowhere else, they carry the name of the
-# policy governing them, and the counts move with them, so how much sits behind
-# a gate is told only to a caller that can open it. The answer varies by caller
+# The gated children appear here and nowhere else, they are marked private,
+# and the counts move with them, so how much sits behind a gate is told only to
+# a caller that can open it. The answer varies by caller
 # and cannot be shared, so it is private, and it is a different body under a
 # different validator than the anonymous one
 GET {{base}}/self/v1/api/list
@@ -179,7 +179,7 @@ HTTP 404
 Content-Type: application/problem+json
 
 # With a credential the listing is served and validates against its schema. Its
-# nested child inherits the same gate, so it carries the governing policy name
+# nested child inherits the same gate, so it is marked private too
 GET {{base}}/self/v1/api/list/private
 Authorization: Bearer primary-secret-key
 HTTP 200
