@@ -879,7 +879,7 @@ struct GENERATE_MCP {
     resource_templates_response.assign("resourceTemplates",
                                        std::move(resource_templates));
 
-    // Every page a caller could ask for, written once for the view rather than
+    // Every page a caller might ask for, written once for the view rather than
     // put together on each request. What a page holds follows from the index it
     // is built from, and that index already holds what this view may reach, so
     // the answer depends on neither who asks nor when

@@ -1,11 +1,12 @@
 FROM debian:trixie AS builder
 
 RUN apt-get --yes update && apt-get install --yes --no-install-recommends \
-  build-essential ca-certificates cmake ninja-build sassc esbuild shellcheck nodejs npm \
+  build-essential ca-certificates cmake ninja-build sassc esbuild shellcheck nodejs npm ccache \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY package.json /source/package.json
 COPY package-lock.json /source/package-lock.json
+RUN cd /source && npm ci
 COPY cmake /source/cmake
 COPY src /source/src
 COPY contrib /source/contrib
@@ -18,12 +19,14 @@ COPY test/cli /source/test/cli
 COPY test/unit /source/test/unit
 COPY test/js /source/test/js
 
-RUN cd /source && npm ci
 
 ARG SOURCEMETA_ONE_BUILD_TYPE=Release
 ARG SOURCEMETA_ONE_PARALLEL=2
 
+ENV CCACHE_DIR=/ccache
 RUN	cmake -S /source -B ./build -G Ninja \
+  -DCMAKE_C_COMPILER_LAUNCHER:STRING=ccache \
+  -DCMAKE_CXX_COMPILER_LAUNCHER:STRING=ccache \
   -DCMAKE_BUILD_TYPE:STRING=${SOURCEMETA_ONE_BUILD_TYPE} \
   -DCMAKE_COMPILE_WARNING_AS_ERROR:BOOL=ON \
   -DONE_INDEX:BOOL=ON \
@@ -33,7 +36,7 @@ RUN	cmake -S /source -B ./build -G Ninja \
   -DBUILD_SHARED_LIBS:BOOL=OFF \
   -DONE_DEBUG_SYMBOLS:BOOL=ON
 
-RUN cmake --build /build \
+RUN --mount=type=cache,target=/ccache,sharing=locked cmake --build /build \
   --config ${SOURCEMETA_ONE_BUILD_TYPE} \
   --parallel ${SOURCEMETA_ONE_PARALLEL}
 RUN cmake --install /build --prefix /usr --verbose \
@@ -50,9 +53,10 @@ RUN cmake --build /build --config ${SOURCEMETA_ONE_BUILD_TYPE} \
   --target shellcheck
 
 # Run a few times to rule out any flakiness
+ARG SOURCEMETA_ONE_TEST_REPEAT=1
 RUN ctest --test-dir /build --build-config ${SOURCEMETA_ONE_BUILD_TYPE} \
   --output-on-failure --parallel ${SOURCEMETA_ONE_PARALLEL} \
-  --repeat-until-fail 5
+  --repeat-until-fail ${SOURCEMETA_ONE_TEST_REPEAT}
 
 FROM debian:trixie-slim
 
