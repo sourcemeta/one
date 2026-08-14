@@ -389,29 +389,17 @@ private:
       }
     }
 
-    // The pages are not pre-baked: a caller only sees the schemas it is
-    // admitted to, so the list is filtered against its credential at request
-    // time, exactly as the search surface does
-    const auto &authentication{this->dispatcher().authentication()};
-    auto &search_view{this->search_view_for(authentication.view(credentials))};
+    // What a caller may list was settled when their view was written, so the
+    // index read here holds that and nothing else. Only the page asked for is
+    // walked, rather than the whole of it to find out
+    auto &search_view{this->search_view_for(
+        this->dispatcher().authentication().view(credentials))};
+    const auto total{search_view.count()};
     auto resources{sourcemeta::core::JSON::make_array()};
-    std::uint64_t admitted{0};
     search_view.for_each(
-        0, search_view.count(),
-        [this, &credentials, &authentication, &resources, &admitted,
-         offset](const sourcemeta::one::SearchListEntry &entry) -> void {
-          const auto location{this->canonical_path(entry.path)};
-          if (!location.has_value() ||
-              !authentication.admits(location.value(), credentials).allowed) {
-            return;
-          }
-
-          const auto position{admitted++};
-          if (position < offset ||
-              position >= offset + MCP_RESOURCES_PAGE_SIZE) {
-            return;
-          }
-
+        offset, MCP_RESOURCES_PAGE_SIZE,
+        [this,
+         &resources](const sourcemeta::one::SearchListEntry &entry) -> void {
           std::string uri{this->allowed_origin_};
           uri.append(entry.path);
           resources.push_back(sourcemeta::core::mcp_make_resource(
@@ -422,9 +410,9 @@ private:
         });
 
     // The alignment of a non-zero cursor is already validated above. A cursor
-    // past the end of the filtered catalog is out of range, though zero is
-    // always valid even when the catalog is empty
-    if (offset != 0 && offset >= admitted) {
+    // past the end of the catalog is out of range, though zero is always valid
+    // even when the catalog is empty
+    if (offset != 0 && offset >= total) {
       return sourcemeta::core::jsonrpc_make_error(
           &id, -32602, "Invalid resource list cursor",
           sourcemeta::core::JSON{
@@ -435,7 +423,7 @@ private:
     auto page{sourcemeta::core::JSON::make_object()};
     page.assign_assume_new("resources", std::move(resources),
                            MCP_HASH_RESOURCES);
-    if (offset + MCP_RESOURCES_PAGE_SIZE < admitted) {
+    if (offset + MCP_RESOURCES_PAGE_SIZE < total) {
       page.assign_assume_new("nextCursor",
                              sourcemeta::core::JSON{std::to_string(
                                  offset + MCP_RESOURCES_PAGE_SIZE)},
