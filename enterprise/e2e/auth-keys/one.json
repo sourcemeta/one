@@ -10,7 +10,8 @@
       "algorithm": "identity",
       "name": "vault",
       "paths": [
-        "/vault"
+        "/vault",
+        "/self/v1/api/schemas/trace"
       ],
       "keys": [
         {

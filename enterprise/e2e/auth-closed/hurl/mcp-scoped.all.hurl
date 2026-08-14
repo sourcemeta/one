@@ -106,8 +106,10 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# The tool list is the instance's own description of itself rather than
-# catalog content, so the narrow key sees all of it
+# A tool stands for a route, and this key opens the transport rather than the
+# routes behind it, so there is nothing here it may invoke. Offering the list
+# anyway would describe a surface this caller cannot reach, and an agent
+# reading it would spend its turns finding that out one refusal at a time
 POST {{base}}/self/v1/mcp
 Authorization: Bearer mcp-secret-key
 MCP-Protocol-Version: 2025-11-25
@@ -125,6 +127,37 @@ tools_body: body
 jsonpath "$.error" not exists
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 3
+jsonpath "$.result.tools" count == 0
+
+POST {{base}}/self/v1/api/schemas/evaluate{{mcp_schema}}
+Authorization: Bearer full-secret-key
+```
+{{tools_body}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# The wide key is offered all of them, which is what makes the empty list above
+# a fact about that key rather than about this instance. The two answers come
+# from the same endpoint and differ only in who asked
+POST {{base}}/self/v1/mcp
+Authorization: Bearer full-secret-key
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{ "jsonrpc": "2.0", "id": 31, "method": "tools/list" }
+```
+HTTP 200
+Cache-Control: no-store
+Content-Type: application/json
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+wide_tools_body: body
+[Asserts]
+jsonpath "$.error" not exists
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 31
 jsonpath "$.result.tools" count == 12
 jsonpath "$.result.tools[*].name" includes "list_directory"
 jsonpath "$.result.tools[*].name" includes "search_schemas"
@@ -142,11 +175,27 @@ jsonpath "$.result.tools[*].name" includes "get_schema_stats"
 POST {{base}}/self/v1/api/schemas/evaluate{{mcp_schema}}
 Authorization: Bearer full-secret-key
 ```
-{{tools_body}}
+{{wide_tools_body}}
 ```
 HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
+
+# And what the wide key may name, it may call, so the listing is a promise
+# rather than a description
+POST {{base}}/self/v1/mcp
+Authorization: Bearer full-secret-key
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{ "jsonrpc": "2.0", "id": 32, "method": "tools/call", "params": { "name": "list_directory", "arguments": { "path": "/" } } }
+```
+HTTP 200
+Cache-Control: no-store
+Content-Type: application/json
+[Asserts]
+jsonpath "$.error" not exists
+jsonpath "$.result.isError" == false
 
 # Answering the transport is not the same as opening the catalog. Every schema
 # on this instance sits behind the wide policy, so the narrow key enumerates
@@ -215,8 +264,8 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# A tool that walks the catalog is refused the same way, as a tool result
-# rather than a protocol error
+# Naming one anyway reaches nothing. What the listing leaves out is what the
+# dispatch reads, so the two cannot disagree and a guess buys nothing
 POST {{base}}/self/v1/mcp
 Authorization: Bearer mcp-secret-key
 MCP-Protocol-Version: 2025-11-25
@@ -233,14 +282,10 @@ call_body: body
 {
   "jsonrpc": "2.0",
   "id": 6,
-  "result": {
-    "content": [
-      {
-        "type": "text",
-        "text": "Directory not found"
-      }
-    ],
-    "isError": true
+  "error": {
+    "code": -32602,
+    "message": "Invalid tool name",
+    "data": "Use `tools/list` to discover the available tools"
   }
 }
 

@@ -831,22 +831,24 @@ clients as needed.
 addressable by its canonical absolute URI, served in paginated form. The
 configured [`x-sourcemeta-one:priority`](configuration.md) hint of each
 schema is mapped to the standard MCP `annotations.priority` value, so that
-AI clients can rank schemas by their declared importance.
+AI clients can rank schemas by their declared importance. A resource listing
+names only the schemas the client's credential reaches.
 
-**Tools.** Every action documented in this page is also exposed as an MCP
-tool that performs the same work over JSON-RPC. The server supports the full
-range of advanced MCP tool features applicable to each revision, including
-per-tool
+**Tools.** Every action documented in this page is also exposed as an MCP tool
+that performs the same work over JSON-RPC. The server supports the full range
+of advanced MCP tool features applicable to each revision, including per-tool
 [`outputSchema`](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#output-schema)
 declarations, [structured
 content](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#structured-content)
 responses,
 [`resource_link`](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#resource-links)
 content blocks, [JSON-RPC
-batching](https://www.jsonrpc.org/specification#batch), and the standard
-[tool
+batching](https://www.jsonrpc.org/specification#batch), and the standard [tool
 hints](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#tool)
 (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`).
+`tools/list` offers only the tools whose endpoint the client's credential
+admits it to, and calling one that was not listed is answered as an unknown
+tool.
 
 !!! warning "Tool argument stringification"
 

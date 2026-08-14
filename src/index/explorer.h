@@ -783,9 +783,22 @@ struct GENERATE_MCP {
     {
       const sourcemeta::core::URITemplateRouterView router_view{
           action.dependencies.at(2)};
-      sourcemeta::one::generate_mcp_tools(router_view, tools, tool_routes);
       const sourcemeta::one::Authentication authentication{
           action.dependencies.back(), {}};
+
+      // The artifact is written once per view and names the view it is for, so
+      // what it offers is settled here rather than worked out again per request
+      std::size_t view{0};
+      for (std::size_t candidate{0}; candidate < authentication.view_count();
+           candidate++) {
+        if (authentication.view_at(candidate).name == action.view) {
+          view = candidate;
+          break;
+        }
+      }
+
+      sourcemeta::one::generate_mcp_tools(router_view, authentication, view,
+                                          tools, tool_routes);
       sourcemeta::one::generate_protected_resource_metadata(
           authentication, configuration, sourcemeta::one::ENDPOINT_MCP,
           protected_resource_metadata);
