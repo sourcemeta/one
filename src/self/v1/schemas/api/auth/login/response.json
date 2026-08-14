@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Login API Response",
+  "description": "The ways of signing in to this instance, which a custom interface reads to offer them",
+  "examples": [
+    {
+      "title": "Sourcemeta",
+      "providers": [
+        {
+          "name": "corporate",
+          "title": "Corporate SSO",
+          "path": "/self/v1/auth/login/corporate"
+        }
+      ]
+    },
+    {
+      "title": "Sourcemeta",
+      "providers": []
+    }
+  ],
+  "type": "object",
+  "required": [ "providers" ],
+  "properties": {
+    "title": {
+      "description": "The name this instance goes by, where it has been given one",
+      "type": "string"
+    },
+    "providers": {
+      "description": "The identity providers a person may sign in through, in declaration order. An empty array means nobody can sign in interactively",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": [ "name", "title", "path" ],
+        "properties": {
+          "name": {
+            "description": "The policy name",
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "title": {
+            "description": "The human readable version of the policy name",
+            "type": "string"
+          },
+          "path": {
+            "description": "The relative URL that starts a login through this provider",
+            "x-format-assertion": true,
+            "type": "string",
+            "format": "uri-reference"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

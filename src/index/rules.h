@@ -30,6 +30,7 @@ enum : BuildPlan::Action::Type {
   ACTION_VERSION,
   ACTION_ROUTES,
   ACTION_AUTHENTICATION,
+  ACTION_LOGIN,
   ACTION_WEB_LOGIN,
   ACTION_REMOVE,
   ACTION_COUNT
@@ -37,7 +38,7 @@ enum : BuildPlan::Action::Type {
 
 enum : BuildPlan::Type { MODE_HEADLESS, MODE_FULL };
 
-inline constexpr DeltaRuleSet<13, 7, 5, 2> INDEX_RULES{
+inline constexpr DeltaRuleSet<13, 8, 5, 2> INDEX_RULES{
     .leaves = {{
         {.action = ACTION_MATERIALISE,
          .base = 0,
@@ -331,6 +332,17 @@ inline constexpr DeltaRuleSet<13, 7, 5, 2> INDEX_RULES{
                             .filename = nullptr}}},
          .dependency_count = 1},
 
+        {.action = ACTION_LOGIN,
+         .base = 1,
+         .filename = "login.metapack",
+         .gate = TargetGate::Always,
+         .scope = ContainerScope::PrimaryRootOnly,
+         .only_full_rebuild = true,
+         .is_listing = false,
+         .dependencies = {{{.kind = ContainerDependencyKind::ExternalConfig,
+                            .filename = nullptr}}},
+         .dependency_count = 1},
+
         {.action = ACTION_WEB_LOGIN,
          .base = 1,
          .filename = "login-html.metapack",
@@ -338,8 +350,9 @@ inline constexpr DeltaRuleSet<13, 7, 5, 2> INDEX_RULES{
          .scope = ContainerScope::PrimaryRootOnly,
          .only_full_rebuild = true,
          .is_listing = false,
-         .dependencies = {{{.kind = ContainerDependencyKind::ExternalConfig,
-                            .filename = nullptr}}},
+         .dependencies = {{{.kind =
+                                ContainerDependencyKind::SameContainerTarget,
+                            .filename = "login.metapack"}}},
          .dependency_count = 1},
     }},
     .globals = {{

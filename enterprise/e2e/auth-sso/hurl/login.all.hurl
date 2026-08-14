@@ -58,7 +58,7 @@ Content-Type: text/html; charset=utf-8
 Referrer-Policy: strict-origin-when-cross-origin
 Content-Security-Policy: frame-ancestors 'none'
 X-Frame-Options: DENY
-Vary: Accept-Encoding
+Vary: Accept, Accept-Encoding
 [Asserts]
 header "Set-Cookie" not exists
 header "Access-Control-Allow-Origin" not exists
@@ -71,6 +71,39 @@ xpath "string((//a[@data-sourcemeta-ui-login])[1]/@data-sourcemeta-ui-login)" ==
 xpath "string((//a[@data-sourcemeta-ui-login])[1]/@href)" == "/self/v1/auth/login/keycloak"
 xpath "normalize-space((//a[@data-sourcemeta-ui-login])[1])" == "keycloak"
 xpath "string((//a[@data-sourcemeta-ui-login])[10]/@data-sourcemeta-ui-login)" == "rotated"
+
+# The page is rendered from this and nothing else, so what a person is offered
+# and what a custom interface reads name the same providers in the same order
+GET {{base}}/self/v1/auth/login
+Accept: application/json
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/json
+Link: </self/v1/schemas/api/auth/login/response>; rel="describedby"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Captures]
+login_body: body
+login_schema: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Set-Cookie" not exists
+jsonpath "$.title" == "SSO Sandbox"
+jsonpath "$.providers" count == 10
+jsonpath "$.providers[0].name" == "keycloak"
+jsonpath "$.providers[0].title" == "keycloak"
+jsonpath "$.providers[0].path" == "/self/v1/auth/login/keycloak"
+jsonpath "$.providers[9].name" == "rotated"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{login_schema}}
+```
+{{login_body}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
 
 # It is the same page whoever asks for it, so a shared cache may hold it
 GET {{base}}/self/v1/auth/login

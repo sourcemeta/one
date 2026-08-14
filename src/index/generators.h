@@ -683,6 +683,8 @@ struct GENERATE_URITEMPLATE_ROUTES {
         "/self/v1/schemas/api/schemas/trace/response"};
     constexpr std::string_view search_response_schema{
         "/self/v1/schemas/api/schemas/search/response"};
+    constexpr std::string_view auth_login_page_response_schema{
+        "/self/v1/schemas/api/auth/login/response"};
     constexpr std::string_view list_directory_request_schema{
         "/self/v1/schemas/mcp/tools/call/list-directory/request"};
     constexpr std::string_view list_directory_response_schema{
@@ -953,14 +955,16 @@ struct GENERATE_URITEMPLATE_ROUTES {
                  next_id++, sourcemeta::one::ACTION_TYPE_NOT_FOUND_V1,
                  not_found_arguments);
 
-      if (action.data == "Full") {
-        const sourcemeta::core::URITemplateRouter::Argument
-            auth_login_page_arguments[] = {
-                {"errorSchema", std::string_view{error_schema}}};
-        router.add(sourcemeta::one::ENDPOINT_AUTH_LOGIN_PAGE, "auth_login_page",
-                   next_id++, sourcemeta::one::ACTION_TYPE_AUTH_LOGIN_PAGE_V1,
-                   auth_login_page_arguments);
+      const sourcemeta::core::URITemplateRouter::Argument
+          auth_login_page_arguments[] = {
+              {"responseSchema",
+               std::string_view{auth_login_page_response_schema}},
+              {"errorSchema", std::string_view{error_schema}}};
+      router.add(sourcemeta::one::ENDPOINT_AUTH_LOGIN_PAGE, "auth_login_page",
+                 next_id++, sourcemeta::one::ACTION_TYPE_AUTH_LOGIN_PAGE_V1,
+                 auth_login_page_arguments);
 
+      if (action.data == "Full") {
         const sourcemeta::core::URITemplateRouter::Argument static_arguments[] =
             {{"path", std::string_view{SOURCEMETA_ONE_STATIC}},
              {"errorSchema", std::string_view{error_schema}}};

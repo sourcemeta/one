@@ -16,13 +16,6 @@
 
 namespace sourcemeta::one::html {
 
-// Whether a policy signs a person in rather than admitting a program, which is
-// what decides everywhere a way in or out could be offered
-[[nodiscard]] inline auto
-is_interactive(const Configuration::AuthenticationEntry &policy) -> bool {
-  return policy.type == Configuration::AuthenticationEntry::Type::OIDC;
-}
-
 // What the bar offers follows from the view it is written for, since a page is
 // written once per view and read by whoever that view is for
 inline auto make_session_control(sourcemeta::core::HTMLWriter &writer,
@@ -33,7 +26,8 @@ inline auto make_session_control(sourcemeta::core::HTMLWriter &writer,
   // nobody signs into interactively grows no control at all, which is also
   // what an instance with no policies at all gets
   if (view == VIEW_PUBLIC) {
-    if (!std::ranges::any_of(configuration.authentication, is_interactive)) {
+    if (!std::ranges::any_of(configuration.authentication,
+                             sourcemeta::one::is_interactive)) {
       return;
     }
 

@@ -1,11 +1,5 @@
-#ifndef SOURCEMETA_ONE_ACTIONS_AUTH_LOGIN_PAGE_V1_H
-#define SOURCEMETA_ONE_ACTIONS_AUTH_LOGIN_PAGE_V1_H
-
-#if defined(SOURCEMETA_ONE_ENTERPRISE)
-
-#include <sourcemeta/one/enterprise_server.h>
-
-#else
+#ifndef SOURCEMETA_ONE_ENTERPRISE_SERVER_ACTION_AUTH_LOGIN_PAGE_V1_H_
+#define SOURCEMETA_ONE_ENTERPRISE_SERVER_ACTION_AUTH_LOGIN_PAGE_V1_H_
 
 #include <sourcemeta/core/http.h>
 #include <sourcemeta/core/json.h>
@@ -17,8 +11,10 @@
 #include <sourcemeta/one/router.h>
 
 #include <filesystem>  // std::filesystem::path
+#include <optional>    // std::optional
 #include <span>        // std::span
 #include <string_view> // std::string_view
+#include <utility>     // std::move
 
 class ActionAuthLoginPage_v1 : public sourcemeta::one::RouterAction {
 public:
@@ -39,8 +35,19 @@ public:
         identifier, [this](const auto &key, const auto &value) -> void {
           if (key == "errorSchema") {
             this->error_schema_ = std::get<std::string_view>(value);
+          } else if (key == "responseSchema") {
+            this->response_schema_ = std::get<std::string_view>(value);
           }
         });
+
+    // Signing in is what a caller without a session does, so what is offered is
+    // the anonymous answer for everybody, and it says the same thing for as
+    // long as the instance stands. The data is what an instance always holds
+    // and the page is what it holds when it renders any at all
+    this->document_ = this->artifact_resolve_path_unauthenticated(
+        sourcemeta::one::VIEW_PUBLIC, "", Tree::Explorer, "login");
+    this->page_ = this->artifact_resolve_path_unauthenticated(
+        sourcemeta::one::VIEW_PUBLIC, "", Tree::Explorer, "login-html");
   }
 
   [[nodiscard]] auto is_authentication_exempt() const noexcept
@@ -69,11 +76,32 @@ public:
       return;
     }
 
-    sourcemeta::one::json_error(
-        request, response, sourcemeta::core::HTTP_STATUS_FORBIDDEN,
-        "urn:sourcemeta:one:enterprise-required",
-        "This feature is only available in the Enterprise edition",
-        this->error_schema_, "*");
+    // A browser is shown the page and everything else is handed the same answer
+    // as data. An instance that renders nothing has only the data, so asking
+    // for a page there is answered with what there is rather than with nothing
+    if (sourcemeta::one::prefers_html(request.header("accept")) &&
+        this->page_.has_value()) {
+      this->artifact_serve(
+          this->page_.value(), sourcemeta::core::HTTP_STATUS_OK, false, {}, {},
+          HTML_BROWSER_SECURITY, request, response, this->error_schema_,
+          "public, max-age=0, must-revalidate", "Accept, Accept-Encoding");
+      return;
+    }
+
+    if (!this->document_.has_value()) {
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+          "urn:sourcemeta:one:not-found", "There is nothing at this URL",
+          this->error_schema_, "*");
+      return;
+    }
+
+    // The one answer every caller is given, so a shared cache holding it hands
+    // the next caller what they would have been given anyway
+    this->artifact_serve(
+        this->document_.value(), sourcemeta::core::HTTP_STATUS_OK, true, {},
+        this->response_schema_, {}, request, response, this->error_schema_,
+        "public, max-age=0, must-revalidate", "Accept, Accept-Encoding");
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
@@ -84,9 +112,10 @@ public:
   }
 
 private:
+  std::optional<sourcemeta::one::ResolvedArtifact> document_;
+  std::optional<sourcemeta::one::ResolvedArtifact> page_;
   std::string_view error_schema_;
+  std::string_view response_schema_;
 };
-
-#endif
 
 #endif

@@ -144,6 +144,14 @@ struct Configuration {
       entries;
 };
 
+// Whether a policy signs a person in through a provider. Only such a policy
+// has anywhere to send somebody who carries nothing, so this is what decides
+// both what the login endpoint offers and whether the bar offers a way to it
+[[nodiscard]] inline auto
+is_interactive(const Configuration::AuthenticationEntry &policy) -> bool {
+  return policy.type == Configuration::AuthenticationEntry::Type::OIDC;
+}
+
 } // namespace sourcemeta::one
 
 #endif
