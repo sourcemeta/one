@@ -13,12 +13,19 @@
 # public, so each key sees one lock and never the other's.
 
 # The anonymous root names only what is open. Nothing is locked, because
-# nothing here is private to the caller reading it
+# nothing here is private to the caller reading it. The answer is the same for
+# every anonymous caller, so it is public and revalidated
 GET {{base}}/
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 0
 xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 2
 xpath "count(//tr[.//a[normalize-space(.) = 'open']]//i[contains(@class, 'bi-folder-fill')])" == 1
@@ -28,13 +35,19 @@ xpath "count(//tr[.//a[normalize-space(.) = 'ledger']])" == 0
 
 # One key in, and its collection appears with a lock. The open children stay
 # plain folders, so the mark separates private from public rather than marking
-# everything a credential was needed for
+# everything a credential was needed for. The answer varies by caller now, so
+# it is private and no shared cache may keep it
 GET {{base}}/
 Accept: text/html
 Authorization: Bearer vault-secret-key
 HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
+header "Vary" == "Accept, Accept-Encoding"
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//tr[.//a[normalize-space(.) = 'vault']]//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 2
@@ -50,10 +63,12 @@ GET {{base}}/
 Accept: text/html
 Authorization: Bearer ledger-secret-key
 HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 [Asserts]
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//tr[.//a[normalize-space(.) = 'ledger']]//i[contains(@class, 'bi-lock-fill')])" == 1
+xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 2
 xpath "count(//tr[.//a[normalize-space(.) = 'vault']])" == 0
 
 # Inside the gated collection, one level under the policy. This is the case the
@@ -63,6 +78,7 @@ GET {{base}}/vault/
 Accept: text/html
 Authorization: Bearer vault-secret-key
 HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 [Asserts]
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 1
@@ -74,6 +90,7 @@ GET {{base}}/vault/inner/
 Accept: text/html
 Authorization: Bearer vault-secret-key
 HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 [Asserts]
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 1
@@ -86,6 +103,7 @@ GET {{base}}/vault/inner/deeper/
 Accept: text/html
 Authorization: Bearer vault-secret-key
 HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 [Asserts]
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 0
@@ -97,6 +115,7 @@ xpath "count(//tr[.//a[normalize-space(.) = 'bottom']])" == 1
 GET {{base}}/open/
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 [Asserts]
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 0
@@ -115,6 +134,7 @@ xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 1
 GET {{base}}/open/deep/
 Accept: text/html
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: text/html; charset=utf-8
 [Asserts]
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 0
@@ -126,8 +146,13 @@ GET {{base}}/vault/
 Accept: text/html
 Authorization: Bearer ledger-secret-key
 HTTP 404
+Cache-Control: no-store
 Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
+header "WWW-Authenticate" not exists
 xpath "string(/html/head/title)" == "Not Found"
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 0
 
@@ -137,14 +162,20 @@ xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 0
 GET {{base}}/self/v1/api/list/vault
 Authorization: Bearer vault-secret-key
 HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
 Content-Type: application/json
 Link: </self/v1/schemas/api/list/response>; rel="describedby"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 vault_listing: body
 vault_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "ETag" exists
+jsonpath "$.path" == "/vault"
 jsonpath "$.policies" count == 1
 jsonpath "$.policies[0].name" == "vault"
+jsonpath "$.policies[0].type" == "apiKey"
 jsonpath "$.entries" count == 2
 jsonpath "$.entries[0].name" == "inner"
 jsonpath "$.entries[0].type" == "directory"
@@ -161,6 +192,8 @@ POST {{base}}/self/v1/api/schemas/evaluate{{vault_schema}}
 {{vault_listing}}
 ```
 HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
@@ -169,35 +202,165 @@ jsonpath "$.valid" == true
 GET {{base}}/self/v1/api/list/vault/inner
 Authorization: Bearer vault-secret-key
 HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
 Content-Type: application/json
+Link: </self/v1/schemas/api/list/response>; rel="describedby"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Captures]
+inner_listing: body
+inner_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "ETag" exists
+jsonpath "$.path" == "/vault/inner"
 jsonpath "$.policies" count == 1
 jsonpath "$.policies[0].name" == "vault"
 jsonpath "$.entries" count == 2
 jsonpath "$.entries[0].name" == "deeper"
+jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].policies" count == 1
 jsonpath "$.entries[0].policies[0].name" == "vault"
 jsonpath "$.entries[1].name" == "hidden"
+jsonpath "$.entries[1].type" == "schema"
 jsonpath "$.entries[1].policies" count == 1
 jsonpath "$.entries[1].policies[0].name" == "vault"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{inner_schema}}
+```
+{{inner_listing}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
 
 # A public tree names none, at any depth, so the render has nothing to mark
 GET {{base}}/self/v1/api/list/open
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
+Link: </self/v1/schemas/api/list/response>; rel="describedby"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Captures]
+open_listing: body
+open_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "ETag" exists
+jsonpath "$.path" == "/open"
 jsonpath "$.policies" count == 0
 jsonpath "$.entries" count == 2
 jsonpath "$.entries[0].name" == "deep"
+jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].policies" count == 0
 jsonpath "$.entries[1].name" == "string"
+jsonpath "$.entries[1].type" == "schema"
 jsonpath "$.entries[1].policies" count == 0
+
+POST {{base}}/self/v1/api/schemas/evaluate{{open_schema}}
+```
+{{open_listing}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
 
 GET {{base}}/self/v1/api/list/open/deep
 HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
+Link: </self/v1/schemas/api/list/response>; rel="describedby"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Captures]
+deep_listing: body
+deep_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
+header "ETag" exists
+jsonpath "$.path" == "/open/deep"
 jsonpath "$.policies" count == 0
 jsonpath "$.entries" count == 1
 jsonpath "$.entries[0].name" == "nested"
+jsonpath "$.entries[0].type" == "schema"
 jsonpath "$.entries[0].policies" count == 0
+
+POST {{base}}/self/v1/api/schemas/evaluate{{deep_schema}}
+```
+{{deep_listing}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
+# The root listing under a key, which is where the two policies are told apart.
+# One is named and the other is absent, and the absent one leaves no trace of
+# itself in the counts either
+GET {{base}}/self/v1/api/list
+Authorization: Bearer vault-secret-key
+HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
+Content-Type: application/json
+Link: </self/v1/schemas/api/list/response>; rel="describedby"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Captures]
+root_listing: body
+root_schema: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "ETag" exists
+jsonpath "$.path" == "/"
+jsonpath "$.policies" count == 0
+jsonpath "$.entries" count == 3
+jsonpath "$.entries[0].name" == "open"
+jsonpath "$.entries[0].policies" count == 0
+jsonpath "$.entries[1].name" == "self"
+jsonpath "$.entries[1].policies" count == 0
+jsonpath "$.entries[2].name" == "vault"
+jsonpath "$.entries[2].policies" count == 1
+jsonpath "$.entries[2].policies[0].name" == "vault"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{root_schema}}
+```
+{{root_listing}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
+# And anonymously, where neither is named at all
+GET {{base}}/self/v1/api/list
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/json
+Link: </self/v1/schemas/api/list/response>; rel="describedby"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Captures]
+anonymous_listing: body
+anonymous_schema: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "ETag" exists
+jsonpath "$.path" == "/"
+jsonpath "$.policies" count == 0
+jsonpath "$.entries" count == 2
+jsonpath "$.entries[0].name" == "open"
+jsonpath "$.entries[0].policies" count == 0
+jsonpath "$.entries[1].name" == "self"
+jsonpath "$.entries[1].policies" count == 0
+
+POST {{base}}/self/v1/api/schemas/evaluate{{anonymous_schema}}
+```
+{{anonymous_listing}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
