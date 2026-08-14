@@ -33,28 +33,26 @@ xpath "count(//nav[contains(@class, 'navbar')])" == 1
 xpath "count(//a[@data-sourcemeta-ui-signin])" == 0
 xpath "count(//button[@data-sourcemeta-ui-signout])" == 0
 
-# And there is no login page to reach either, since nothing signs anybody in
+# The login page is reachable and says there is nothing to offer, since nothing
+# signs anybody in here. The bar offering no way in and the page naming none are
+# the same fact, and the page is covered in full alongside its data elsewhere
 GET {{base}}/self/v1/auth/login
 Accept: text/html
-HTTP 404
-Cache-Control: no-store
-Content-Type: application/problem+json
-Link: </self/v1/schemas/api/error>; rel="describedby"
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-[Captures]
-missing_body: body
-missing_schema: header "Link" regex "<([^>]+)>"
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: text/html; charset=utf-8
+[Asserts]
+xpath "string(/html/head/title)" == "Sign In"
+xpath "count(//a[@data-sourcemeta-ui-login])" == 0
+
+POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
+```
 {
   "type": "urn:sourcemeta:one:not-found",
   "title": "Not Found",
   "status": 404,
   "detail": "There is nothing at this URL"
 }
-
-POST {{base}}/self/v1/api/schemas/evaluate{{missing_schema}}
-```
-{{missing_body}}
 ```
 HTTP 200
 Cache-Control: no-store

@@ -174,7 +174,7 @@ and a renewal marker naming the policy it signed in under, which is what lets an
 expired session be renewed against the provider without asking the person again.
 The marker carries no credential.
 
-### Sign In
+### Providers
 
 *This endpoint names the ways of signing in to this instance, as a page for a
 browser and as data for anything else.*
@@ -183,14 +183,9 @@ browser and as data for anything else.*
 GET /self/v1/auth/login
 ```
 
-A browser is answered with the sign-in page. Every other caller is answered
-with the same information as JSON, which is what a custom interface reads to
-offer the same choices without parsing the page.
-
 Only [`oidc`](configuration.md#oidc) policies appear here. A policy that admits
 a program has nowhere to send a person, so naming it would offer a way in that
-does not exist. An instance that declares no interactive policy still answers,
-with an empty list, and its page says so rather than showing nothing.
+does not exist.
 
 === "200"
 
