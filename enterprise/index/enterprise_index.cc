@@ -68,12 +68,17 @@ auto load_custom_lint_rules(
 }
 
 auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
+                        const RouteGuard &reachable,
                         sourcemeta::core::JSON &tools,
                         sourcemeta::core::JSON &tool_routes) -> void {
   const auto base_url{router.base_url()};
   for (std::size_t index{0}; index < router.size(); index++) {
     const auto identifier{router.at(index)};
     const auto context{router.context(identifier)};
+
+    if (!reachable(router.path(identifier))) {
+      continue;
+    }
 
     std::string_view rpc_request_schema;
     std::string_view rpc_response_schema;

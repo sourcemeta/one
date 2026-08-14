@@ -388,6 +388,9 @@ not it names the same provider.
 A policy governs a [Collection](#collections) or [Page](#pages), or a namespace
 above them (the instance root governs everything). It cannot gate an individual
 path inside a collection: a collection is either public or private as a whole.
+A policy may govern a [route](api.md) too, named where the route itself begins
+(`/self/v1/api/schemas/trace`) rather than at some request it serves
+(`/self/v1/api/schemas/trace/my/schema`).
 
 Every policy declares its `type`, a `name`, and the `paths` it governs,
 regardless of type:

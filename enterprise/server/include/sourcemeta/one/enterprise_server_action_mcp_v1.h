@@ -107,6 +107,37 @@ public:
       this->challenge_.append(this->metadata_path_);
       this->challenge_.append("\"");
     }
+
+    // What a caller is told this endpoint offers follows from their view, so
+    // each one's copy is read here rather than assembled per request. The
+    // anonymous copy above still answers whatever is decided before a
+    // credential is known, which is the origin a preflight is checked against
+    // and the metadata a refusal points at
+    const auto &authentication{dispatcher.authentication()};
+    for (std::size_t index{0}; index < authentication.view_count(); index++) {
+      const auto recorded{authentication.view_at(index)};
+      const auto path{this->artifact_resolve_path_unauthenticated(
+          recorded.name, "", Tree::Explorer, "mcp")};
+      if (!path.has_value()) {
+        continue;
+      }
+
+      auto metadata{this->artifact_read_json(path.value())};
+      if (metadata.has_value()) {
+        this->metadata_views_.emplace(recorded.name,
+                                      std::move(metadata).value());
+      }
+    }
+  }
+
+  // A caller whose view this instance no longer serves is answered from the
+  // anonymous one, which is a build behind a running server rather than a
+  // caller to be trusted with more
+  [[nodiscard]] auto metadata_for(const std::string_view view) const
+      -> const sourcemeta::core::JSON & {
+    const auto match{this->metadata_views_.find(view)};
+    return match == this->metadata_views_.cend() ? this->mcp_metadata_
+                                                 : match->second;
   }
 
   [[nodiscard]] auto authentication_challenge() const noexcept
@@ -433,10 +464,11 @@ private:
     return sourcemeta::core::jsonrpc_make_success(id, std::move(page));
   }
 
-  auto on_initialize(const sourcemeta::core::JSON &request_json) const
+  auto on_initialize(const sourcemeta::core::JSON &request_json,
+                     const std::string_view view) const
       -> sourcemeta::core::JSON {
     const auto &parts{
-        this->mcp_metadata_.at(sourcemeta::core::MCP_METHOD_INITIALIZE)};
+        this->metadata_for(view).at(sourcemeta::core::MCP_METHOD_INITIALIZE)};
     return sourcemeta::core::mcp_make_initialize_result(
         request_json,
         sourcemeta::core::MCPServerCapabilities{
@@ -457,10 +489,11 @@ private:
   }
 
   auto on_tools_list(const sourcemeta::core::MCPProtocolVersion version,
-                     const sourcemeta::core::JSON &request_json) const
+                     const sourcemeta::core::JSON &request_json,
+                     const std::string_view view) const
       -> sourcemeta::core::JSON {
     const auto &precomputed{
-        this->mcp_metadata_.at(sourcemeta::core::MCP_METHOD_TOOLS_LIST)};
+        this->metadata_for(view).at(sourcemeta::core::MCP_METHOD_TOOLS_LIST)};
 
     auto tools{sourcemeta::core::JSON::make_array()};
     for (const auto &tool : precomputed.as_array()) {
@@ -562,11 +595,11 @@ private:
 
   auto on_tools_call(const sourcemeta::core::MCPProtocolVersion version,
                      const sourcemeta::core::JSON &request_json,
-                     const sourcemeta::one::Credentials &credentials)
-      -> sourcemeta::core::JSON {
+                     const sourcemeta::one::Credentials &credentials,
+                     const std::string_view view) -> sourcemeta::core::JSON {
     const auto &id{request_json.at("id")};
     const auto &name{request_json.at("params").at("name").to_string()};
-    const auto &tool_routes{this->mcp_metadata_.at("toolRoutes")};
+    const auto &tool_routes{this->metadata_for(view).at("toolRoutes")};
     if (!tool_routes.defines(name)) {
       return sourcemeta::core::jsonrpc_make_error(
           &id, -32602, "Invalid tool name",
@@ -715,11 +748,14 @@ private:
     if (!this->structural_evaluate_fast(this->request_schema_, request_json)) {
       return sourcemeta::core::jsonrpc_make_error_invalid_request(id);
     }
+    // Resolved once here, since a request reaches one method and placing the
+    // caller again inside each of them would repeat the reading
+    const auto view{this->dispatcher().authentication().view(credentials)};
     if (method == sourcemeta::core::MCP_METHOD_INITIALIZE) {
-      return this->on_initialize(request_json);
+      return this->on_initialize(request_json, view);
     }
     if (method == sourcemeta::core::MCP_METHOD_TOOLS_LIST) {
-      return this->on_tools_list(version, request_json);
+      return this->on_tools_list(version, request_json, view);
     }
     if (method == sourcemeta::core::MCP_METHOD_RESOURCES_LIST) {
       return this->on_resources_list(request_json, credentials);
@@ -728,11 +764,11 @@ private:
       return this->on_resources_read(request_json, credentials);
     }
     if (method == sourcemeta::core::MCP_METHOD_TOOLS_CALL) {
-      return this->on_tools_call(version, request_json, credentials);
+      return this->on_tools_call(version, request_json, credentials, view);
     }
-    if (this->mcp_metadata_.defines(method)) {
+    if (this->metadata_for(view).defines(method)) {
       return sourcemeta::core::jsonrpc_make_success(
-          *id, this->mcp_metadata_.at(method));
+          *id, this->metadata_for(view).at(method));
     }
     return sourcemeta::core::jsonrpc_make_success_empty(*id);
   }
@@ -742,6 +778,7 @@ private:
   std::string_view request_schema_;
   std::string_view metadata_path_;
   sourcemeta::core::JSON mcp_metadata_{nullptr};
+  std::unordered_map<std::string_view, sourcemeta::core::JSON> metadata_views_;
   std::string challenge_;
   std::string resource_identifier_;
   // A caller is answered out of the index their view holds, so what a listing
