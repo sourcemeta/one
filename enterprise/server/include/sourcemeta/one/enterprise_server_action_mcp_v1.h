@@ -595,14 +595,11 @@ private:
 
   auto on_tools_call(const sourcemeta::core::MCPProtocolVersion version,
                      const sourcemeta::core::JSON &request_json,
-                     const sourcemeta::one::Credentials &credentials)
-      -> sourcemeta::core::JSON {
+                     const sourcemeta::one::Credentials &credentials,
+                     const std::string_view view) -> sourcemeta::core::JSON {
     const auto &id{request_json.at("id")};
     const auto &name{request_json.at("params").at("name").to_string()};
-    const auto &tool_routes{
-        this->metadata_for(
-                this->dispatcher().authentication().view(credentials))
-            .at("toolRoutes")};
+    const auto &tool_routes{this->metadata_for(view).at("toolRoutes")};
     if (!tool_routes.defines(name)) {
       return sourcemeta::core::jsonrpc_make_error(
           &id, -32602, "Invalid tool name",
@@ -767,7 +764,7 @@ private:
       return this->on_resources_read(request_json, credentials);
     }
     if (method == sourcemeta::core::MCP_METHOD_TOOLS_CALL) {
-      return this->on_tools_call(version, request_json, credentials);
+      return this->on_tools_call(version, request_json, credentials, view);
     }
     if (this->metadata_for(view).defines(method)) {
       return sourcemeta::core::jsonrpc_make_success(

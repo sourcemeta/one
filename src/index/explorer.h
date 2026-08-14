@@ -787,8 +787,14 @@ struct GENERATE_MCP {
           action.dependencies.back(), {}};
 
       // The artifact is written once per view and names the view it is for, so
-      // what it offers is settled here rather than worked out again per request
+      // what it offers is settled here rather than worked out again per
+      // request. A name the table does not hold cannot happen, since both come
+      // from the same enumeration, and the anonymous view standing first is
+      // what a build would fall back to: it holds no policy, so it reaches
+      // only what nobody governs
       std::size_t view{0};
+      assert(authentication.view_count() > 0);
+      assert(authentication.view_at(0).name == sourcemeta::one::VIEW_PUBLIC);
       for (std::size_t candidate{0}; candidate < authentication.view_count();
            candidate++) {
         if (authentication.view_at(candidate).name == action.view) {

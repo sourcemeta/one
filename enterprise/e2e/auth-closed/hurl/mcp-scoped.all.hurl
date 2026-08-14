@@ -71,7 +71,10 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# The handshake answers on the narrow key too
+# The handshake answers on the narrow key too, and it answers for that key
+# rather than for the instance: this one reaches no tool, so the capability
+# saying there are tools is not advertised to it. A client is spared asking for
+# a list it would find empty
 POST {{base}}/self/v1/mcp
 Authorization: Bearer mcp-secret-key
 MCP-Protocol-Version: 2025-11-25
@@ -91,7 +94,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 2
 jsonpath "$.result.protocolVersion" == "2025-11-25"
 jsonpath "$.result.capabilities.resources" exists
-jsonpath "$.result.capabilities.tools" exists
+jsonpath "$.result.capabilities.tools" not exists
 jsonpath "$.result.serverInfo.name" == "sourcemeta-one-enterprise"
 jsonpath "$.result.serverInfo.title" == "Sourcemeta One Enterprise"
 jsonpath "$.result.serverInfo.websiteUrl" == "{{base}}"
@@ -193,9 +196,23 @@ Content-Type: application/json
 HTTP 200
 Cache-Control: no-store
 Content-Type: application/json
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+[Captures]
+wide_call_body: body
 [Asserts]
 jsonpath "$.error" not exists
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 32
 jsonpath "$.result.isError" == false
+
+POST {{base}}/self/v1/api/schemas/evaluate{{mcp_schema}}
+Authorization: Bearer full-secret-key
+```
+{{wide_call_body}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
 
 # Answering the transport is not the same as opening the catalog. Every schema
 # on this instance sits behind the wide policy, so the narrow key enumerates
