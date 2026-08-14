@@ -53,6 +53,11 @@ auto GENERATE_WEB_SCHEMA::handler(
 
         // Header div
         w.div();
+        if (meta.at("private").to_boolean()) {
+          w.div().attribute("class", "mb-2");
+          html::make_private_badge(w);
+          w.close();
+        }
         if (meta.defines("title")) {
           w.h2().attribute("class", "fw-bold h4");
           w.text(title);

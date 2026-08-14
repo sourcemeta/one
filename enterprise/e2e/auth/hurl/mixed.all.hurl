@@ -165,29 +165,11 @@ Link: </self/v1/schemas/api/list/response>; rel="describedby"
 listing_body: body
 listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
-jsonpath "$.policies" count == 3
-jsonpath "$.policies[0].name" == "mixed-plain"
-jsonpath "$.policies[0].title" == "mixed-plain"
-jsonpath "$.policies[0].type" == "apiKey"
-jsonpath "$.policies[1].name" == "mixed-hashed"
-jsonpath "$.policies[1].title" == "mixed-hashed"
-jsonpath "$.policies[1].type" == "apiKey"
-jsonpath "$.policies[2].name" == "mixed-blank"
-jsonpath "$.policies[2].title" == "mixed-blank"
-jsonpath "$.policies[2].type" == "apiKey"
+jsonpath "$.private" == true
 jsonpath "$.entries" count == 1
 jsonpath "$.entries[0].name" == "thing"
 jsonpath "$.entries[0].path" == "/mixed/thing"
-jsonpath "$.entries[0].policies" count == 3
-jsonpath "$.entries[0].policies[0].name" == "mixed-plain"
-jsonpath "$.entries[0].policies[0].title" == "mixed-plain"
-jsonpath "$.entries[0].policies[0].type" == "apiKey"
-jsonpath "$.entries[0].policies[1].name" == "mixed-hashed"
-jsonpath "$.entries[0].policies[1].title" == "mixed-hashed"
-jsonpath "$.entries[0].policies[1].type" == "apiKey"
-jsonpath "$.entries[0].policies[2].name" == "mixed-blank"
-jsonpath "$.entries[0].policies[2].title" == "mixed-blank"
-jsonpath "$.entries[0].policies[2].type" == "apiKey"
+jsonpath "$.entries[0].private" == true
 
 POST {{base}}/self/v1/api/schemas/evaluate{{listing_schema}}
 ```

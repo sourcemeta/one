@@ -21,9 +21,9 @@ jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
 jsonpath "$.schemas" == 76
 jsonpath "$.entries" count >= 2
-jsonpath "$.policies" count == 0
+jsonpath "$.private" == false
 jsonpath "$.entries[0].name" == "self"
-jsonpath "$.entries[0].policies" count == 0
+jsonpath "$.entries[0].private" == false
 jsonpath "$.entries[0].title" == "Self"
 jsonpath "$.entries[0].description" == "The schemas that define the current version of this instance"
 jsonpath "$.entries[0].type" == "directory"
@@ -31,7 +31,7 @@ jsonpath "$.entries[0].health" == 100
 jsonpath "$.entries[0].schemas" == 62
 jsonpath "$.entries[0].path" == "/self/"
 jsonpath "$.entries[1].name" == "test"
-jsonpath "$.entries[1].policies" count == 0
+jsonpath "$.entries[1].private" == false
 jsonpath "$.entries[1].title" == "Test"
 jsonpath "$.entries[1].description" == "A directory full of testing schemas"
 jsonpath "$.entries[1].type" == "directory"
@@ -80,7 +80,7 @@ jsonpath "$.description" == "A directory full of testing schemas"
 jsonpath "$.title" == "Test"
 jsonpath "$.schemas" == 14
 jsonpath "$.entries" count == 3
-jsonpath "$.policies" count == 0
+jsonpath "$.private" == false
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -159,9 +159,9 @@ jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
 jsonpath "$.schemas" == 76
 jsonpath "$.entries" count >= 2
-jsonpath "$.policies" count == 0
+jsonpath "$.private" == false
 jsonpath "$.entries[0].name" == "self"
-jsonpath "$.entries[0].policies" count == 0
+jsonpath "$.entries[0].private" == false
 jsonpath "$.entries[0].title" == "Self"
 jsonpath "$.entries[0].description" == "The schemas that define the current version of this instance"
 jsonpath "$.entries[0].type" == "directory"
@@ -169,7 +169,7 @@ jsonpath "$.entries[0].health" == 100
 jsonpath "$.entries[0].schemas" == 62
 jsonpath "$.entries[0].path" == "/self/"
 jsonpath "$.entries[1].name" == "test"
-jsonpath "$.entries[1].policies" count == 0
+jsonpath "$.entries[1].private" == false
 jsonpath "$.entries[1].title" == "Test"
 jsonpath "$.entries[1].description" == "A directory full of testing schemas"
 jsonpath "$.entries[1].type" == "directory"
@@ -221,17 +221,17 @@ jsonpath "$.description" == "A directory full of testing schemas"
 jsonpath "$.title" == "Test"
 jsonpath "$.schemas" == 14
 jsonpath "$.entries" count == 3
-jsonpath "$.policies" count == 0
+jsonpath "$.private" == false
 jsonpath "$.entries[0].name" == "no-base"
-jsonpath "$.entries[0].policies" count == 0
+jsonpath "$.entries[0].private" == false
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].path" == "/test/no-base/"
 jsonpath "$.entries[1].name" == "no-blaze"
-jsonpath "$.entries[1].policies" count == 0
+jsonpath "$.entries[1].private" == false
 jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.entries[1].path" == "/test/no-blaze/"
 jsonpath "$.entries[2].name" == "schemas"
-jsonpath "$.entries[2].policies" count == 0
+jsonpath "$.entries[2].private" == false
 jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.entries[2].path" == "/test/schemas/"
 
@@ -278,17 +278,17 @@ jsonpath "$.description" == "A directory full of testing schemas"
 jsonpath "$.title" == "Test"
 jsonpath "$.schemas" == 14
 jsonpath "$.entries" count == 3
-jsonpath "$.policies" count == 0
+jsonpath "$.private" == false
 jsonpath "$.entries[0].name" == "no-base"
-jsonpath "$.entries[0].policies" count == 0
+jsonpath "$.entries[0].private" == false
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].path" == "/test/no-base/"
 jsonpath "$.entries[1].name" == "no-blaze"
-jsonpath "$.entries[1].policies" count == 0
+jsonpath "$.entries[1].private" == false
 jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.entries[1].path" == "/test/no-blaze/"
 jsonpath "$.entries[2].name" == "schemas"
-jsonpath "$.entries[2].policies" count == 0
+jsonpath "$.entries[2].private" == false
 jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.entries[2].path" == "/test/schemas/"
 

@@ -50,7 +50,7 @@ jsonpath "$.result.resources[3].uri" == "{{base}}/self/v1/schemas/api/list/respo
 jsonpath "$.result.resources[3].name" == "Sourcemeta One List API Response"
 jsonpath "$.result.resources[3].description" == "The response format for the directory listing API endpoint"
 jsonpath "$.result.resources[3].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[3].size" == 4627
+jsonpath "$.result.resources[3].size" == 3878
 jsonpath "$.result.resources[3].annotations.priority" == 0
 jsonpath "$.result.resources[4].uri" == "{{base}}/self/v1/schemas/api/schemas/dependencies/response"
 jsonpath "$.result.resources[4].name" == "Sourcemeta One Schema Dependencies API Response"
@@ -92,7 +92,7 @@ jsonpath "$.result.resources[10].uri" == "{{base}}/self/v1/schemas/api/schemas/m
 jsonpath "$.result.resources[10].name" == "Sourcemeta One Schema Metadata API Response"
 jsonpath "$.result.resources[10].description" == "The response format for the schema metadata API endpoint"
 jsonpath "$.result.resources[10].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[10].size" == 2840
+jsonpath "$.result.resources[10].size" == 2943
 jsonpath "$.result.resources[10].annotations.priority" == 0
 jsonpath "$.result.resources[11].uri" == "{{base}}/self/v1/schemas/api/schemas/output-error"
 jsonpath "$.result.resources[11].name" == "Sourcemeta One Schema Output Error"
@@ -314,7 +314,7 @@ jsonpath "$.result.resources[47].uri" == "{{base}}/self/v1/schemas/mcp/tools/cal
 jsonpath "$.result.resources[47].name" == "Sourcemeta One Schema Metadata RPC Output"
 jsonpath "$.result.resources[47].description" == "Get metadata information about a schema in the catalog"
 jsonpath "$.result.resources[47].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[47].size" == 819
+jsonpath "$.result.resources[47].size" == 843
 jsonpath "$.result.resources[47].annotations.priority" == 0
 jsonpath "$.result.resources[48].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/request"
 jsonpath "$.result.resources[48].name" == "Sourcemeta One Schema Positions RPC Input"
@@ -391,7 +391,7 @@ jsonpath "$.result.resources[5].uri" == "{{base}}/self/v1/schemas/mcp/tools/call
 jsonpath "$.result.resources[5].name" == "Sourcemeta One Directory Listing RPC Output"
 jsonpath "$.result.resources[5].description" == "List the contents of a directory in the catalog"
 jsonpath "$.result.resources[5].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[5].size" == 607
+jsonpath "$.result.resources[5].size" == 609
 jsonpath "$.result.resources[5].annotations.priority" == 0
 jsonpath "$.result.resources[6].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/request"
 jsonpath "$.result.resources[6].name" == "Sourcemeta One MCP Tools Call Request"
@@ -498,7 +498,7 @@ jsonpath "$.result.resources[6].uri" == "{{base}}/self/v1/schemas/api/list/respo
 jsonpath "$.result.resources[6].name" == "Sourcemeta One List API Response"
 jsonpath "$.result.resources[6].description" == "The response format for the directory listing API endpoint"
 jsonpath "$.result.resources[6].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[6].size" == 4627
+jsonpath "$.result.resources[6].size" == 3878
 jsonpath "$.result.resources[6].annotations.priority" == 0
 jsonpath "$.result.resources[7].uri" == "{{base}}/self/v1/schemas/api/schemas/dependencies/response"
 jsonpath "$.result.resources[7].name" == "Sourcemeta One Schema Dependencies API Response"
@@ -540,7 +540,7 @@ jsonpath "$.result.resources[13].uri" == "{{base}}/self/v1/schemas/api/schemas/m
 jsonpath "$.result.resources[13].name" == "Sourcemeta One Schema Metadata API Response"
 jsonpath "$.result.resources[13].description" == "The response format for the schema metadata API endpoint"
 jsonpath "$.result.resources[13].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[13].size" == 2840
+jsonpath "$.result.resources[13].size" == 2943
 jsonpath "$.result.resources[13].annotations.priority" == 0
 jsonpath "$.result.resources[14].uri" == "{{base}}/self/v1/schemas/api/schemas/output-error"
 jsonpath "$.result.resources[14].name" == "Sourcemeta One Schema Output Error"
@@ -784,7 +784,7 @@ jsonpath "$.result.resources[0].uri" == "{{base}}/self/v1/schemas/mcp/tools/call
 jsonpath "$.result.resources[0].name" == "Sourcemeta One Schema Metadata RPC Output"
 jsonpath "$.result.resources[0].description" == "Get metadata information about a schema in the catalog"
 jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[0].size" == 819
+jsonpath "$.result.resources[0].size" == 843
 jsonpath "$.result.resources[0].annotations.priority" == 0
 jsonpath "$.result.resources[1].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/request"
 jsonpath "$.result.resources[1].name" == "Sourcemeta One Schema Positions RPC Input"
@@ -832,7 +832,7 @@ jsonpath "$.result.resources[8].uri" == "{{base}}/self/v1/schemas/mcp/tools/call
 jsonpath "$.result.resources[8].name" == "Sourcemeta One Directory Listing RPC Output"
 jsonpath "$.result.resources[8].description" == "List the contents of a directory in the catalog"
 jsonpath "$.result.resources[8].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[8].size" == 607
+jsonpath "$.result.resources[8].size" == 609
 jsonpath "$.result.resources[8].annotations.priority" == 0
 jsonpath "$.result.resources[9].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/request"
 jsonpath "$.result.resources[9].name" == "Sourcemeta One MCP Tools Call Request"
@@ -929,7 +929,7 @@ jsonpath "$.result.resources[4].uri" == "{{base}}/self/v1/schemas/api/list/respo
 jsonpath "$.result.resources[4].name" == "Sourcemeta One List API Response"
 jsonpath "$.result.resources[4].description" == "The response format for the directory listing API endpoint"
 jsonpath "$.result.resources[4].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[4].size" == 4627
+jsonpath "$.result.resources[4].size" == 3878
 jsonpath "$.result.resources[4].annotations.priority" == 0
 jsonpath "$.result.resources[5].uri" == "{{base}}/self/v1/schemas/api/schemas/dependencies/response"
 jsonpath "$.result.resources[5].name" == "Sourcemeta One Schema Dependencies API Response"
@@ -971,7 +971,7 @@ jsonpath "$.result.resources[11].uri" == "{{base}}/self/v1/schemas/api/schemas/m
 jsonpath "$.result.resources[11].name" == "Sourcemeta One Schema Metadata API Response"
 jsonpath "$.result.resources[11].description" == "The response format for the schema metadata API endpoint"
 jsonpath "$.result.resources[11].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[11].size" == 2840
+jsonpath "$.result.resources[11].size" == 2943
 jsonpath "$.result.resources[11].annotations.priority" == 0
 jsonpath "$.result.resources[12].uri" == "{{base}}/self/v1/schemas/api/schemas/output-error"
 jsonpath "$.result.resources[12].name" == "Sourcemeta One Schema Output Error"
@@ -1193,7 +1193,7 @@ jsonpath "$.result.resources[48].uri" == "{{base}}/self/v1/schemas/mcp/tools/cal
 jsonpath "$.result.resources[48].name" == "Sourcemeta One Schema Metadata RPC Output"
 jsonpath "$.result.resources[48].description" == "Get metadata information about a schema in the catalog"
 jsonpath "$.result.resources[48].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[48].size" == 819
+jsonpath "$.result.resources[48].size" == 843
 jsonpath "$.result.resources[48].annotations.priority" == 0
 jsonpath "$.result.resources[49].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/request"
 jsonpath "$.result.resources[49].name" == "Sourcemeta One Schema Positions RPC Input"
@@ -1263,7 +1263,7 @@ jsonpath "$.result.resources[6].uri" == "{{base}}/self/v1/schemas/mcp/tools/call
 jsonpath "$.result.resources[6].name" == "Sourcemeta One Directory Listing RPC Output"
 jsonpath "$.result.resources[6].description" == "List the contents of a directory in the catalog"
 jsonpath "$.result.resources[6].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[6].size" == 607
+jsonpath "$.result.resources[6].size" == 609
 jsonpath "$.result.resources[6].annotations.priority" == 0
 jsonpath "$.result.resources[7].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/request"
 jsonpath "$.result.resources[7].name" == "Sourcemeta One MCP Tools Call Request"

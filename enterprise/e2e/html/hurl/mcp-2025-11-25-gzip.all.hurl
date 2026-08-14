@@ -836,7 +836,7 @@ jsonpath "$.result.resources[22].uri" == "{{base}}/self/v1/schemas/mcp/tools/cal
 jsonpath "$.result.resources[22].name" == "Sourcemeta One Schema Metadata RPC Output"
 jsonpath "$.result.resources[22].description" == "Get metadata information about a schema in the catalog"
 jsonpath "$.result.resources[22].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[22].size" == 819
+jsonpath "$.result.resources[22].size" == 843
 jsonpath "$.result.resources[22].annotations.priority" == 0
 jsonpath "$.result.resources[23].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/request"
 jsonpath "$.result.resources[23].name" == "Sourcemeta One Schema Positions RPC Input"
@@ -884,7 +884,7 @@ jsonpath "$.result.resources[30].uri" == "{{base}}/self/v1/schemas/mcp/tools/cal
 jsonpath "$.result.resources[30].name" == "Sourcemeta One Directory Listing RPC Output"
 jsonpath "$.result.resources[30].description" == "List the contents of a directory in the catalog"
 jsonpath "$.result.resources[30].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[30].size" == 607
+jsonpath "$.result.resources[30].size" == 609
 jsonpath "$.result.resources[30].annotations.priority" == 0
 jsonpath "$.result.resources[31].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/request"
 jsonpath "$.result.resources[31].name" == "Sourcemeta One MCP Tools Call Request"
@@ -1119,7 +1119,7 @@ jsonpath "$.result.resources[22].uri" == "{{base}}/self/v1/schemas/mcp/tools/cal
 jsonpath "$.result.resources[22].name" == "Sourcemeta One Schema Metadata RPC Output"
 jsonpath "$.result.resources[22].description" == "Get metadata information about a schema in the catalog"
 jsonpath "$.result.resources[22].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[22].size" == 819
+jsonpath "$.result.resources[22].size" == 843
 jsonpath "$.result.resources[22].annotations.priority" == 0
 jsonpath "$.result.resources[23].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/request"
 jsonpath "$.result.resources[23].name" == "Sourcemeta One Schema Positions RPC Input"
@@ -1167,7 +1167,7 @@ jsonpath "$.result.resources[30].uri" == "{{base}}/self/v1/schemas/mcp/tools/cal
 jsonpath "$.result.resources[30].name" == "Sourcemeta One Directory Listing RPC Output"
 jsonpath "$.result.resources[30].description" == "List the contents of a directory in the catalog"
 jsonpath "$.result.resources[30].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[30].size" == 607
+jsonpath "$.result.resources[30].size" == 609
 jsonpath "$.result.resources[30].annotations.priority" == 0
 jsonpath "$.result.resources[31].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/request"
 jsonpath "$.result.resources[31].name" == "Sourcemeta One MCP Tools Call Request"

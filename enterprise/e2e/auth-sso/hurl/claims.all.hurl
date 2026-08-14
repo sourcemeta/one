@@ -126,18 +126,18 @@ jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
 jsonpath "$.schemas" == 63
-jsonpath "$.policies" count == 0
+jsonpath "$.private" == false
 jsonpath "$.entries" count == 2
 jsonpath "$.entries[0].name" == "public"
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].path" == "/public/"
-jsonpath "$.entries[0].policies" count == 0
+jsonpath "$.entries[0].private" == false
 jsonpath "$.entries[0].schemas" == 1
 jsonpath "$.entries[0].health" == 0
 jsonpath "$.entries[1].name" == "self"
 jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.entries[1].path" == "/self/"
-jsonpath "$.entries[1].policies" count == 0
+jsonpath "$.entries[1].private" == false
 jsonpath "$.entries[1].schemas" == 62
 jsonpath "$.entries[1].health" == 100
 

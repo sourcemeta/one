@@ -262,19 +262,16 @@ session_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" exists
 jsonpath "$.path" == "/"
-jsonpath "$.policies" count == 0
+jsonpath "$.private" == false
 jsonpath "$.entries" count == 4
 jsonpath "$.entries[0].name" == "archive"
-jsonpath "$.entries[0].policies" count == 1
-jsonpath "$.entries[0].policies[0].name" == "keycloak"
-jsonpath "$.entries[0].policies[0].type" == "oidc"
+jsonpath "$.entries[0].private" == true
 jsonpath "$.entries[1].name" == "private"
-jsonpath "$.entries[1].policies" count == 1
-jsonpath "$.entries[1].policies[0].name" == "keycloak"
+jsonpath "$.entries[1].private" == true
 jsonpath "$.entries[2].name" == "public"
-jsonpath "$.entries[2].policies" count == 0
+jsonpath "$.entries[2].private" == false
 jsonpath "$.entries[3].name" == "self"
-jsonpath "$.entries[3].policies" count == 0
+jsonpath "$.entries[3].private" == false
 
 POST {{base}}/self/v1/api/schemas/evaluate{{session_schema}}
 ```

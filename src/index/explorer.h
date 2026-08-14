@@ -116,42 +116,18 @@ static auto child_registry_path(const std::string &directory_registry_path,
          "/" + name;
 }
 
-static auto policy_type_name(
-    const sourcemeta::one::Configuration::AuthenticationEntry::Type type)
-    -> std::string_view {
-  switch (type) {
-    case sourcemeta::one::Configuration::AuthenticationEntry::Type::ApiKey:
-      return "apiKey";
-    case sourcemeta::one::Configuration::AuthenticationEntry::Type::JWT:
-      return "jwt";
-    case sourcemeta::one::Configuration::AuthenticationEntry::Type::OIDC:
-      return "oidc";
-  }
-
-  std::unreachable();
-}
-
-static auto make_policies(const sourcemeta::one::Authentication &authentication,
-                          const sourcemeta::one::Configuration &configuration,
-                          const std::string &registry_path)
+static auto make_private(const sourcemeta::one::Authentication &authentication,
+                         const std::string &registry_path)
     -> sourcemeta::core::JSON {
-  // The policies that gate the path, in declaration order. An empty array means
-  // the path is public
-  auto result{sourcemeta::core::JSON::make_array()};
-  // The indexer composes these from the content tree, so they are already
-  // relative to the instance root
-  for (const auto index : authentication.governing(
-           sourcemeta::one::Authentication::Path::relative(registry_path))) {
-    assert(index < configuration.authentication.size());
-    const auto &entry{configuration.authentication[index]};
-    auto policy{sourcemeta::core::JSON::make_object()};
-    policy.assign("name", sourcemeta::core::JSON{entry.name});
-    policy.assign("title", sourcemeta::core::JSON{entry.title});
-    policy.assign("type", sourcemeta::core::JSON{policy_type_name(entry.type)});
-    result.push_back(std::move(policy));
-  }
-
-  return result;
+  // Whether a policy governs the path, declared on it or inherited from above.
+  // Every surface that says so reads this, so none of them can disagree about
+  // what private means. The indexer composes the path from the content tree,
+  // so it is already relative to the instance root
+  return sourcemeta::core::JSON{
+      !authentication
+           .governing(
+               sourcemeta::one::Authentication::Path::relative(registry_path))
+           .empty()};
 }
 
 namespace sourcemeta::one {
@@ -515,6 +491,11 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
 
     result.assign("breadcrumb",
                   make_breadcrumb(resolver_entry.relative_path, false));
+
+    const sourcemeta::one::Authentication authentication{
+        action.dependencies.back(), {}};
+    result.assign("private",
+                  make_private(authentication, result.at("path").to_string()));
 
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
@@ -1191,16 +1172,16 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
 
     for (auto &entry : directory_entries) {
       entry.json.assign(
-          "policies", make_policies(authentication, configuration,
-                                    child_registry_path(directory_registry_path,
-                                                        entry.name)));
+          "private", make_private(authentication,
+                                  child_registry_path(directory_registry_path,
+                                                      entry.name)));
       entries.push_back(std::move(entry.json));
     }
     for (auto &entry : schema_entries) {
       entry.json.assign(
-          "policies", make_policies(authentication, configuration,
-                                    child_registry_path(directory_registry_path,
-                                                        entry.name)));
+          "private", make_private(authentication,
+                                  child_registry_path(directory_registry_path,
+                                                      entry.name)));
       entries.push_back(std::move(entry.json));
     }
 
@@ -1224,8 +1205,8 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
     meta.assign("schemas", sourcemeta::core::JSON{total_schemas});
 
     meta.assign("entries", std::move(entries));
-    meta.assign("policies", make_policies(authentication, configuration,
-                                          directory_registry_path));
+    meta.assign("private",
+                make_private(authentication, directory_registry_path));
 
     if (relative_path == ".") {
       meta.assign("path", sourcemeta::core::JSON{"/"});

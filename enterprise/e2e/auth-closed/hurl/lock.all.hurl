@@ -27,6 +27,18 @@ xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 2
 xpath "count(//tr[.//a[normalize-space(.) = 'catalog']]//i[contains(@class, 'bi-lock-fill')])" == 1
 xpath "count(//tr[.//a[normalize-space(.) = 'self']]//i[contains(@class, 'bi-lock-fill')])" == 1
 
+# The page itself says what it is, not only the rows on it. This is the shape
+# where that matters most: every row is locked, so a reader with nothing else
+# to compare them against learns from the page rather than from the contrast
+GET {{base}}/
+Accept: text/html
+Authorization: Bearer full-secret-key
+HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
+Content-Type: text/html; charset=utf-8
+[Asserts]
+xpath "count(//span[contains(@class, 'badge')][normalize-space(.) = 'Private'])" == 1
+
 # One level in, where the policy is inherited rather than declared, and the
 # nested directory says so just the same
 GET {{base}}/catalog/
@@ -79,9 +91,11 @@ header "Access-Control-Allow-Origin" not exists
 header "WWW-Authenticate" not exists
 xpath "string(/html/head/title)" == "Not Found"
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 0
+xpath "count(//span[contains(@class, 'badge')][normalize-space(.) = 'Private'])" == 0
 
-# The data underneath it names all three policies governing the root, since a
-# caller satisfying any of them is admitted, and every entry inherits the set
+# The data underneath it marks the root as private, since three policies govern
+# it and a caller satisfying any of them is admitted, and every entry inherits
+# that
 GET {{base}}/self/v1/api/list
 Authorization: Bearer full-secret-key
 HTTP 200
@@ -96,23 +110,14 @@ root_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" exists
 jsonpath "$.path" == "/"
-jsonpath "$.policies" count == 3
-jsonpath "$.policies[0].name" == "registry"
-jsonpath "$.policies[1].name" == "machine"
-jsonpath "$.policies[2].name" == "keycloak"
+jsonpath "$.private" == true
 jsonpath "$.entries" count == 2
 jsonpath "$.entries[0].name" == "catalog"
 jsonpath "$.entries[0].type" == "directory"
-jsonpath "$.entries[0].policies" count == 3
-jsonpath "$.entries[0].policies[0].name" == "registry"
-jsonpath "$.entries[0].policies[0].type" == "apiKey"
-jsonpath "$.entries[0].policies[1].name" == "machine"
-jsonpath "$.entries[0].policies[1].type" == "jwt"
-jsonpath "$.entries[0].policies[2].name" == "keycloak"
-jsonpath "$.entries[0].policies[2].type" == "oidc"
+jsonpath "$.entries[0].private" == true
 jsonpath "$.entries[1].name" == "self"
 jsonpath "$.entries[1].type" == "directory"
-jsonpath "$.entries[1].policies" count == 3
+jsonpath "$.entries[1].private" == true
 
 POST {{base}}/self/v1/api/schemas/evaluate{{root_schema}}
 Authorization: Bearer full-secret-key
@@ -140,17 +145,17 @@ catalog_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" exists
 jsonpath "$.path" == "/catalog"
-jsonpath "$.policies" count == 3
+jsonpath "$.private" == true
 jsonpath "$.entries" count == 3
 jsonpath "$.entries[0].name" == "nested"
 jsonpath "$.entries[0].type" == "directory"
-jsonpath "$.entries[0].policies" count == 3
+jsonpath "$.entries[0].private" == true
 jsonpath "$.entries[1].name" == "classified"
 jsonpath "$.entries[1].type" == "schema"
-jsonpath "$.entries[1].policies" count == 3
+jsonpath "$.entries[1].private" == true
 jsonpath "$.entries[2].name" == "example"
 jsonpath "$.entries[2].type" == "schema"
-jsonpath "$.entries[2].policies" count == 3
+jsonpath "$.entries[2].private" == true
 
 POST {{base}}/self/v1/api/schemas/evaluate{{catalog_schema}}
 Authorization: Bearer full-secret-key

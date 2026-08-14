@@ -20,24 +20,24 @@ jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
 jsonpath "$.schemas" == 64
-jsonpath "$.policies" count == 0
+jsonpath "$.private" == false
 jsonpath "$.entries" count == 3
 jsonpath "$.entries[0].name" == "orphan"
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].path" == "/orphan/"
-jsonpath "$.entries[0].policies" count == 0
+jsonpath "$.entries[0].private" == false
 jsonpath "$.entries[0].schemas" == 1
 jsonpath "$.entries[0].health" == 50
 jsonpath "$.entries[1].name" == "public"
 jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.entries[1].path" == "/public/"
-jsonpath "$.entries[1].policies" count == 0
+jsonpath "$.entries[1].private" == false
 jsonpath "$.entries[1].schemas" == 1
 jsonpath "$.entries[1].health" == 0
 jsonpath "$.entries[2].name" == "self"
 jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.entries[2].path" == "/self/"
-jsonpath "$.entries[2].policies" count == 0
+jsonpath "$.entries[2].private" == false
 jsonpath "$.entries[2].schemas" == 62
 jsonpath "$.entries[2].health" == 100
 POST {{base}}/self/v1/api/schemas/evaluate{{root_listing_schema}}
@@ -73,42 +73,36 @@ jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
 jsonpath "$.schemas" == 67
-jsonpath "$.policies" count == 0
+jsonpath "$.private" == false
 jsonpath "$.entries" count == 5
 jsonpath "$.entries[0].name" == "orphan"
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].path" == "/orphan/"
-jsonpath "$.entries[0].policies" count == 0
+jsonpath "$.entries[0].private" == false
 jsonpath "$.entries[0].schemas" == 1
 jsonpath "$.entries[0].health" == 50
 jsonpath "$.entries[1].name" == "private"
 jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.entries[1].path" == "/private/"
-jsonpath "$.entries[1].policies" count == 1
-jsonpath "$.entries[1].policies[0].name" == "reports"
-jsonpath "$.entries[1].policies[0].title" == "reports"
-jsonpath "$.entries[1].policies[0].type" == "apiKey"
+jsonpath "$.entries[1].private" == true
 jsonpath "$.entries[1].schemas" == 2
 jsonpath "$.entries[1].health" == 34
 jsonpath "$.entries[2].name" == "public"
 jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.entries[2].path" == "/public/"
-jsonpath "$.entries[2].policies" count == 0
+jsonpath "$.entries[2].private" == false
 jsonpath "$.entries[2].schemas" == 1
 jsonpath "$.entries[2].health" == 0
 jsonpath "$.entries[3].name" == "reports"
 jsonpath "$.entries[3].type" == "directory"
 jsonpath "$.entries[3].path" == "/reports/"
-jsonpath "$.entries[3].policies" count == 1
-jsonpath "$.entries[3].policies[0].name" == "reports"
-jsonpath "$.entries[3].policies[0].title" == "reports"
-jsonpath "$.entries[3].policies[0].type" == "apiKey"
+jsonpath "$.entries[3].private" == true
 jsonpath "$.entries[3].schemas" == 1
 jsonpath "$.entries[3].health" == 50
 jsonpath "$.entries[4].name" == "self"
 jsonpath "$.entries[4].type" == "directory"
 jsonpath "$.entries[4].path" == "/self/"
-jsonpath "$.entries[4].policies" count == 0
+jsonpath "$.entries[4].private" == false
 jsonpath "$.entries[4].schemas" == 62
 jsonpath "$.entries[4].health" == 100
 
@@ -136,12 +130,12 @@ public_listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.schemas" == 1
 jsonpath "$.entries" count == 1
-jsonpath "$.policies" count == 0
+jsonpath "$.private" == false
 jsonpath "$.entries[0].name" == "string"
 jsonpath "$.entries[0].type" == "schema"
 jsonpath "$.entries[0].path" == "/public/string"
 jsonpath "$.entries[0].identifier" == "{{base}}/public/string"
-jsonpath "$.entries[0].policies" count == 0
+jsonpath "$.entries[0].private" == false
 
 POST {{base}}/self/v1/api/schemas/evaluate{{public_listing_schema}}
 ```
@@ -163,13 +157,13 @@ orphan_listing: body
 orphan_listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.schemas" == 1
-jsonpath "$.policies" count == 0
+jsonpath "$.private" == false
 jsonpath "$.entries" count == 1
 jsonpath "$.entries[0].name" == "lonely"
 jsonpath "$.entries[0].type" == "schema"
 jsonpath "$.entries[0].path" == "/orphan/lonely"
 jsonpath "$.entries[0].identifier" == "{{base}}/orphan/lonely"
-jsonpath "$.entries[0].policies" count == 0
+jsonpath "$.entries[0].private" == false
 
 POST {{base}}/self/v1/api/schemas/evaluate{{orphan_listing_schema}}
 ```
@@ -197,24 +191,15 @@ private_listing: body
 private_listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.entries" count == 2
-jsonpath "$.policies" count == 1
-jsonpath "$.policies[0].name" == "reports"
-jsonpath "$.policies[0].title" == "reports"
-jsonpath "$.policies[0].type" == "apiKey"
+jsonpath "$.private" == true
 jsonpath "$.entries[0].name" == "open"
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].path" == "/private/open/"
-jsonpath "$.entries[0].policies" count == 1
-jsonpath "$.entries[0].policies[0].name" == "reports"
-jsonpath "$.entries[0].policies[0].title" == "reports"
-jsonpath "$.entries[0].policies[0].type" == "apiKey"
+jsonpath "$.entries[0].private" == true
 jsonpath "$.entries[1].name" == "secret"
 jsonpath "$.entries[1].type" == "schema"
 jsonpath "$.entries[1].path" == "/private/secret"
-jsonpath "$.entries[1].policies" count == 1
-jsonpath "$.entries[1].policies[0].name" == "reports"
-jsonpath "$.entries[1].policies[0].title" == "reports"
-jsonpath "$.entries[1].policies[0].type" == "apiKey"
+jsonpath "$.entries[1].private" == true
 
 POST {{base}}/self/v1/api/schemas/evaluate{{private_listing_schema}}
 ```
@@ -241,19 +226,13 @@ nested_listing: body
 nested_listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.path" == "/private/open"
-jsonpath "$.policies" count == 1
-jsonpath "$.policies[0].name" == "reports"
-jsonpath "$.policies[0].title" == "reports"
-jsonpath "$.policies[0].type" == "apiKey"
+jsonpath "$.private" == true
 jsonpath "$.entries" count == 1
 jsonpath "$.entries[0].name" == "shared"
 jsonpath "$.entries[0].type" == "schema"
 jsonpath "$.entries[0].path" == "/private/open/shared"
 jsonpath "$.entries[0].identifier" == "{{base}}/private/open/shared"
-jsonpath "$.entries[0].policies" count == 1
-jsonpath "$.entries[0].policies[0].name" == "reports"
-jsonpath "$.entries[0].policies[0].title" == "reports"
-jsonpath "$.entries[0].policies[0].type" == "apiKey"
+jsonpath "$.entries[0].private" == true
 
 POST {{base}}/self/v1/api/schemas/evaluate{{nested_listing_schema}}
 ```

@@ -121,19 +121,13 @@ jsonpath "$.schemas" == 1
 jsonpath "$.breadcrumb" count == 1
 jsonpath "$.breadcrumb[0].name" == "typed"
 jsonpath "$.breadcrumb[0].path" == "/typed/"
-jsonpath "$.policies" count == 1
-jsonpath "$.policies[0].name" == "typed"
-jsonpath "$.policies[0].title" == "typed"
-jsonpath "$.policies[0].type" == "jwt"
+jsonpath "$.private" == true
 jsonpath "$.entries" count == 1
 jsonpath "$.entries[0].name" == "thing"
 jsonpath "$.entries[0].type" == "schema"
 jsonpath "$.entries[0].path" == "/typed/thing"
 jsonpath "$.entries[0].identifier" == "{{base}}/typed/thing"
-jsonpath "$.entries[0].policies" count == 1
-jsonpath "$.entries[0].policies[0].name" == "typed"
-jsonpath "$.entries[0].policies[0].title" == "typed"
-jsonpath "$.entries[0].policies[0].type" == "jwt"
+jsonpath "$.entries[0].private" == true
 
 POST {{base}}/self/v1/api/schemas/evaluate{{listing_schema}}
 ```
