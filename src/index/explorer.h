@@ -740,6 +740,13 @@ struct GENERATE_LOGIN {
   }
 };
 
+// What a listing calls a schema, and how many it names before it hands out a
+// cursor. Both are settled here, since the pages are written rather than
+// assembled
+inline constexpr std::string_view MCP_RESOURCE_MIME_TYPE{
+    "application/schema+json"};
+inline constexpr std::size_t MCP_RESOURCES_PAGE_SIZE{50};
+
 struct GENERATE_MCP {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
@@ -872,8 +879,56 @@ struct GENERATE_MCP {
     resource_templates_response.assign("resourceTemplates",
                                        std::move(resource_templates));
 
+    // Every page a caller could ask for, written once for the view rather than
+    // put together on each request. What a page holds follows from the index it
+    // is built from, and that index already holds what this view may reach, so
+    // the answer depends on neither who asks nor when
+    auto resource_pages{sourcemeta::core::JSON::make_array()};
+    {
+      sourcemeta::one::SearchView search{action.dependencies.front()};
+      const auto total{search.count()};
+      std::size_t offset{0};
+      do {
+        auto resources{sourcemeta::core::JSON::make_array()};
+        search.for_each(
+            offset, MCP_RESOURCES_PAGE_SIZE,
+            [&configuration, &resources](
+                const sourcemeta::one::SearchListEntry &entry) -> void {
+              std::string uri{configuration.origin};
+              uri.append(entry.path);
+              resources.push_back(sourcemeta::core::mcp_make_resource(
+                  uri, entry.title.empty() ? entry.path : entry.title,
+                  MCP_RESOURCE_MIME_TYPE, entry.description,
+                  static_cast<std::size_t>(entry.bytes_raw),
+                  static_cast<double>(entry.priority) / 100.0));
+            });
+
+        auto page{sourcemeta::core::JSON::make_object()};
+        page.assign("resources", std::move(resources));
+        if (offset + MCP_RESOURCES_PAGE_SIZE < total) {
+          page.assign("nextCursor", sourcemeta::core::JSON{std::to_string(
+                                        offset + MCP_RESOURCES_PAGE_SIZE)});
+        }
+
+        resource_pages.push_back(std::move(page));
+        offset += MCP_RESOURCES_PAGE_SIZE;
+        // A catalog holding nothing still has a first page, so that asking for
+        // the beginning is answered rather than refused
+      } while (offset < total);
+    }
+
     auto document{sourcemeta::core::JSON::make_object()};
     document.assign("origin", sourcemeta::core::JSON{configuration.origin});
+    document.assign(std::string{sourcemeta::core::MCP_METHOD_RESOURCES_LIST},
+                    std::move(resource_pages));
+    // How many the pages above were cut at, so that whoever reads them maps a
+    // cursor the way they were actually written rather than the way a second
+    // copy of this number happens to say. An artifact outlives the build that
+    // wrote it, and the two are then free to disagree
+    document.assign(
+        "resourcePageSize",
+        sourcemeta::core::JSON{static_cast<sourcemeta::core::JSON::Integer>(
+            MCP_RESOURCES_PAGE_SIZE)});
     document.assign(std::string{sourcemeta::core::MCP_METHOD_INITIALIZE},
                     std::move(initialize_ingredients));
     document.assign(

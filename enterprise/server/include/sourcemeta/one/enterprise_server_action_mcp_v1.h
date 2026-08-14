@@ -12,7 +12,6 @@
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
-#include <sourcemeta/one/search.h>
 
 #include <cassert>   // assert
 #include <cstddef>   // std::size_t, std::ptrdiff_t
@@ -43,31 +42,6 @@ public:
                const sourcemeta::core::URITemplateRouter::Identifier identifier,
                sourcemeta::one::Router &dispatcher)
       : sourcemeta::one::RouterAction{base, router.base_url(), dispatcher} {
-    const auto &views{dispatcher.authentication()};
-    for (std::size_t index{0}; index < views.view_count(); index++) {
-      const auto recorded{views.view_at(index)};
-      this->search_views_.emplace(
-          recorded.name,
-          std::make_unique<sourcemeta::one::SearchView>(
-              base / "explorer" / recorded.name / "%" / "search.metapack"));
-    }
-
-    // The anonymous view is among the recorded ones, so this is a lookup
-    // rather than a second index. It stands for a caller whose view this
-    // instance no longer serves, which is a build behind a running server
-    auto fallback{this->search_views_.find(sourcemeta::one::VIEW_PUBLIC)};
-    if (fallback == this->search_views_.cend()) {
-      fallback =
-          this->search_views_
-              .emplace(sourcemeta::one::VIEW_PUBLIC,
-                       std::make_unique<sourcemeta::one::SearchView>(
-                           base / "explorer" / sourcemeta::one::VIEW_PUBLIC /
-                           "%" / "search.metapack"))
-              .first;
-    }
-
-    this->default_search_view_ = fallback->second.get();
-
     router.arguments(
         identifier, [this](const auto &key, const auto &value) -> void {
           if (key == "responseSchema") {
@@ -348,14 +322,6 @@ public:
 private:
   static constexpr std::string_view MCP_TEMPLATE_MIME_TYPE{
       "application/schema+json"};
-  static constexpr std::size_t MCP_RESOURCES_PAGE_SIZE{50};
-
-  static constexpr std::string_view MCP_KEY_RESOURCES{"resources"};
-  static constexpr std::string_view MCP_KEY_NEXT_CURSOR{"nextCursor"};
-  static inline const auto MCP_HASH_RESOURCES{
-      sourcemeta::core::JSON::Object::hash(MCP_KEY_RESOURCES)};
-  static inline const auto MCP_HASH_NEXT_CURSOR{
-      sourcemeta::core::JSON::Object::hash(MCP_KEY_NEXT_CURSOR)};
 
   auto
   write_envelope(sourcemeta::one::HTTPRequest &request,
@@ -396,9 +362,16 @@ private:
   }
 
   auto on_resources_list(const sourcemeta::core::JSON &request_json,
-                         const sourcemeta::one::Credentials &credentials)
+                         const std::string_view view) const
       -> sourcemeta::core::JSON {
     const auto &id{request_json.at("id")};
+    const auto &metadata{this->metadata_for(view)};
+    const auto &pages{metadata.at(sourcemeta::core::MCP_METHOD_RESOURCES_LIST)};
+    // The pages were cut somewhere, and the artifact says where, so a cursor is
+    // read against how these very pages were written
+    const auto page_size{static_cast<std::uint64_t>(
+        metadata.at("resourcePageSize").to_integer())};
+    assert(page_size > 0);
 
     std::uint64_t offset{0};
     const auto *params{sourcemeta::core::jsonrpc_params(request_json)};
@@ -406,10 +379,9 @@ private:
       const auto cursor_input{params->at("cursor").to_string()};
       if (!cursor_input.empty()) {
         const auto parsed{sourcemeta::core::to_uint64_t(cursor_input)};
-        // A cursor must parse and align to a page boundary. Reject before the
-        // catalog scan so a malformed cursor cannot force the O(N) walk
-        if (!parsed.has_value() ||
-            parsed.value() % MCP_RESOURCES_PAGE_SIZE != 0) {
+        // A cursor names a page boundary, so one that parses to anything else
+        // names no page at all
+        if (!parsed.has_value() || parsed.value() % page_size != 0) {
           return sourcemeta::core::jsonrpc_make_error(
               &id, -32602, "Invalid resource list cursor",
               sourcemeta::core::JSON{
@@ -420,30 +392,11 @@ private:
       }
     }
 
-    // What a caller may list was settled when their view was written, so the
-    // index read here holds that and nothing else. Only the page asked for is
-    // walked, rather than the whole of it to find out
-    auto &search_view{this->search_view_for(
-        this->dispatcher().authentication().view(credentials))};
-    const auto total{search_view.count()};
-    auto resources{sourcemeta::core::JSON::make_array()};
-    search_view.for_each(
-        offset, MCP_RESOURCES_PAGE_SIZE,
-        [this,
-         &resources](const sourcemeta::one::SearchListEntry &entry) -> void {
-          std::string uri{this->allowed_origin_};
-          uri.append(entry.path);
-          resources.push_back(sourcemeta::core::mcp_make_resource(
-              uri, entry.title.empty() ? entry.path : entry.title,
-              MCP_TEMPLATE_MIME_TYPE, entry.description,
-              static_cast<std::size_t>(entry.bytes_raw),
-              static_cast<double>(entry.priority) / 100.0));
-        });
-
-    // The alignment of a non-zero cursor is already validated above. A cursor
-    // past the end of the catalog is out of range, though zero is always valid
-    // even when the catalog is empty
-    if (offset != 0 && offset >= total) {
+    // The pages were written for this view, so answering is finding the one
+    // asked for. A catalog holding nothing still has a first page, which is why
+    // the beginning is always a page and anything past the end is not
+    const auto index{offset / page_size};
+    if (index >= pages.size()) {
       return sourcemeta::core::jsonrpc_make_error(
           &id, -32602, "Invalid resource list cursor",
           sourcemeta::core::JSON{
@@ -451,17 +404,8 @@ private:
               "response, or omit it to start from the beginning"});
     }
 
-    auto page{sourcemeta::core::JSON::make_object()};
-    page.assign_assume_new("resources", std::move(resources),
-                           MCP_HASH_RESOURCES);
-    if (offset + MCP_RESOURCES_PAGE_SIZE < total) {
-      page.assign_assume_new("nextCursor",
-                             sourcemeta::core::JSON{std::to_string(
-                                 offset + MCP_RESOURCES_PAGE_SIZE)},
-                             MCP_HASH_NEXT_CURSOR);
-    }
-
-    return sourcemeta::core::jsonrpc_make_success(id, std::move(page));
+    return sourcemeta::core::jsonrpc_make_success(
+        id, pages.at(static_cast<std::size_t>(index)));
   }
 
   auto on_initialize(const sourcemeta::core::JSON &request_json,
@@ -758,7 +702,7 @@ private:
       return this->on_tools_list(version, request_json, view);
     }
     if (method == sourcemeta::core::MCP_METHOD_RESOURCES_LIST) {
-      return this->on_resources_list(request_json, credentials);
+      return this->on_resources_list(request_json, view);
     }
     if (method == sourcemeta::core::MCP_METHOD_RESOURCES_READ) {
       return this->on_resources_read(request_json, credentials);
@@ -781,19 +725,6 @@ private:
   std::unordered_map<std::string_view, sourcemeta::core::JSON> metadata_views_;
   std::string challenge_;
   std::string resource_identifier_;
-  // A caller is answered out of the index their view holds, so what a listing
-  // can name is what the caller could have reached by looking
-  [[nodiscard]] auto search_view_for(const std::string_view view)
-      -> sourcemeta::one::SearchView & {
-    const auto match{this->search_views_.find(view)};
-    return match == this->search_views_.cend() ? *this->default_search_view_
-                                               : *match->second;
-  }
-
-  std::unordered_map<std::string_view,
-                     std::unique_ptr<sourcemeta::one::SearchView>>
-      search_views_;
-  sourcemeta::one::SearchView *default_search_view_{nullptr};
 };
 
 #endif
