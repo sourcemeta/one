@@ -30,7 +30,35 @@ jobs:
 
       - run: make check ${{ matrix.edition.options }}
 
-      - run: make docker-build PRESET=Release PARALLEL=$(nproc) DOCKERFILE_TEST_REPEAT=5 ${{ matrix.edition.options }}
+      # A runner is thrown away after the job, so the compiler cache the image
+      # build keeps would start empty every time. It is carried across runs
+      # here instead, which is what stops the same objects being compiled again
+      # on every push
+      - uses: docker/setup-buildx-action@v3
+        id: buildx
+
+      - name: Cache the compiler cache
+        uses: actions/cache@v4
+        id: ccache
+        with:
+          path: ccache-mount
+          key: ccache-${{ matrix.edition.name }}-${{ github.sha }}
+          restore-keys: ccache-${{ matrix.edition.name }}-
+
+      # A cache mount lives inside the builder rather than in a layer, so
+      # neither the image cache nor the checkout carries it. This puts the
+      # restored one back before the build and takes the new one out after
+      - uses: reproducible-containers/buildkit-cache-dance@5422eac04292c961a382e0f584ea0f03ad9da723 # v3.4.0
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          cache-map: |
+            {
+              "ccache-mount": "/ccache"
+            }
+
+      # The builder above writes nowhere the later steps can see, so the image
+      # is loaded into the store they read from
+      - run: make docker-build PRESET=Release PARALLEL=$(nproc) DOCKERFILE_TEST_REPEAT=5 DOCKER="docker buildx" DOCKER_BUILD_FLAGS="--load" ${{ matrix.edition.options }}
 
       - name: SBOM (Enterprise)
         run: |
