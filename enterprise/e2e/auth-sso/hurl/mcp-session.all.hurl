@@ -67,8 +67,8 @@ anonymous_read: body
   "jsonrpc": "2.0",
   "id": 5,
   "error": {
-    "code": -32010,
-    "message": "Authentication required"
+    "code": -32002,
+    "message": "Resource not found"
   }
 }
 
@@ -106,8 +106,8 @@ forged_read: body
   "jsonrpc": "2.0",
   "id": 8,
   "error": {
-    "code": -32010,
-    "message": "Authentication required"
+    "code": -32002,
+    "message": "Resource not found"
   }
 }
 
@@ -149,8 +149,8 @@ denial_2025_03_26: body
   "jsonrpc": "2.0",
   "id": 20,
   "error": {
-    "code": -32010,
-    "message": "Authentication required"
+    "code": -32002,
+    "message": "Resource not found"
   }
 }
 
@@ -187,8 +187,8 @@ body == {{denial_2025_03_26}}
   "jsonrpc": "2.0",
   "id": 20,
   "error": {
-    "code": -32010,
-    "message": "Authentication required"
+    "code": -32002,
+    "message": "Resource not found"
   }
 }
 
@@ -225,8 +225,8 @@ body == {{denial_2025_03_26}}
   "jsonrpc": "2.0",
   "id": 20,
   "error": {
-    "code": -32010,
-    "message": "Authentication required"
+    "code": -32002,
+    "message": "Resource not found"
   }
 }
 
@@ -348,7 +348,7 @@ Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 session_page_two: body
 [Asserts]
-jsonpath "$.result.resources" count == 15
+jsonpath "$.result.resources" count == 16
 jsonpath "$.result.nextCursor" not exists
 jsonpath "$.result.resources[*].uri" not includes "{{base}}/discovery/thing"
 jsonpath "$.result.resources[*].uri" not includes "{{base}}/unavailable/thing"
@@ -423,8 +423,8 @@ other_policy_read: body
   "jsonrpc": "2.0",
   "id": 6,
   "error": {
-    "code": -32010,
-    "message": "Authentication required"
+    "code": -32002,
+    "message": "Resource not found"
   }
 }
 

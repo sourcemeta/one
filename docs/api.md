@@ -80,18 +80,12 @@ navigation and discovery purposes.
     | `/github` | String | No | The GitHub organisation or repository associated with the directory |
     | `/website` | String | No | The external URL associated with the directory  |
     | `/schemas` | Integer | Yes | The recursive count of schemas in this directory |
-    | `/policies` | Array | Yes | The authentication policies that govern this directory |
-    | `/policies/*/name` | String | Yes | The policy name |
-    | `/policies/*/title` | String | Yes | The human readable version of the policy name |
-    | `/policies/*/type` | String | Yes | The policy type (`apiKey`, `jwt`, or `oidc`) |
+    | `/private` | Boolean | Yes | Whether an authentication policy governs this directory |
     | `/entries` | Array | Yes | The entries inside the directory |
     | `/entries/*/type` | String | Yes | The type of the entry (`schema` or `directory`) |
     | `/entries/*/name` | String | Yes | The last URL path segment of the entry |
     | `/entries/*/path` | String | Yes | The relative URL of the entry |
-    | `/entries/*/policies` | Array | Yes | The authentication policies that govern the directory entry |
-    | `/entries/*/policies/*/name` | String | Yes | The policy name |
-    | `/entries/*/policies/*/title` | String | Yes | The human readable version of the policy name |
-    | `/entries/*/policies/*/type` | String | Yes | The policy type (`apiKey`, `jwt`, or `oidc`) |
+    | `/entries/*/private` | Boolean | Yes | Whether an authentication policy governs the entry |
     | `/entries/*/health` | Integer | No | The aggregated health of the entry |
     | `/entries/*/schemas` | Integer | No | For `directory` entries, the recursive count of schemas in the directory |
     | `/entries/*/title` | String | No | The title associated with the entry |
@@ -147,9 +141,13 @@ This endpoint is always mounted, but web assets are only served when the
 
 Every endpoint on this page is public unless the [configuration
 file](configuration.md#authentication) declares a policy that governs the path
-it reaches. A request no governing policy admits is answered with `401` and a
-`WWW-Authenticate` header, and directory listings omit whatever the caller
-cannot see rather than disclosing that it exists.
+it reaches. An endpoint no governing policy admits the caller to is answered
+with `401` and a `WWW-Authenticate` header.
+
+A registry path is different. A schema or collection the caller is not admitted
+to is answered exactly as one that does not exist, and directory listings leave
+it out. Where an endpoint below names a registry path among its arguments, that
+path decides the answer, so it reports `404` rather than `401`.
 
 A machine caller presents its credential on every request and needs none of the
 endpoints below:
@@ -175,6 +173,37 @@ A signed-in browser also holds a short-lived transaction cookie during a login,
 and a renewal marker naming the policy it signed in under, which is what lets an
 expired session be renewed against the provider without asking the person again.
 The marker carries no credential.
+
+### Providers
+
+*This endpoint names the ways of signing in to this instance, as a page for a
+browser and as data for anything else.*
+
+```
+GET /self/v1/auth/login
+```
+
+Only [`oidc`](configuration.md#oidc) policies appear here. A policy that admits
+a program has nowhere to send a person, so naming it would offer a way in that
+does not exist.
+
+=== "200"
+
+    | Property                       | Type                     | Required | Description |
+    |--------------------------------|--------------------------|-----|-------------------------------------|
+    | `/title` | String | No | The name this instance goes by, where it has been given one |
+    | `/providers` | Array | Yes | The identity providers a person may sign in through, in declaration order |
+    | `/providers/*/name` | String | Yes | The policy name |
+    | `/providers/*/title` | String | Yes | The human readable version of the policy name |
+    | `/providers/*/path` | String | Yes | The relative URL that starts a login through this provider |
+
+=== "403"
+
+    The instance is running the Community edition, which signs nobody in.
+
+=== "405"
+
+    The HTTP method is not `GET` or `HEAD`.
 
 ### Login
 
@@ -538,6 +567,7 @@ GET /self/v1/api/schemas/metadata/{path}
     | `/baseDialect` | String | Yes | The base dialect URI of the schema |
     | `/health` | Integer | Yes | The health score of the schema |
     | `/priority` | Integer | Yes | An importance hint from `0` (least important) to `100` (most important), inherited from the schema collection's [`x-sourcemeta-one:priority`](configuration.md) configuration value |
+    | `/private` | Boolean | Yes | Whether an authentication policy governs this schema |
     | `/dependencies` | Integer | Yes | The number of direct and indirect dependencies of the schema |
     | `/bytes` | Integer | Yes | The bytes that the schema occupies |
     | `/bytesBundled` | Integer | Yes | The bytes that the schema occupies when bundled |
@@ -827,22 +857,24 @@ clients as needed.
 addressable by its canonical absolute URI, served in paginated form. The
 configured [`x-sourcemeta-one:priority`](configuration.md) hint of each
 schema is mapped to the standard MCP `annotations.priority` value, so that
-AI clients can rank schemas by their declared importance.
+AI clients can rank schemas by their declared importance. A resource listing
+names only the schemas the client's credential reaches.
 
-**Tools.** Every action documented in this page is also exposed as an MCP
-tool that performs the same work over JSON-RPC. The server supports the full
-range of advanced MCP tool features applicable to each revision, including
-per-tool
+**Tools.** Every action documented in this page is also exposed as an MCP tool
+that performs the same work over JSON-RPC. The server supports the full range
+of advanced MCP tool features applicable to each revision, including per-tool
 [`outputSchema`](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#output-schema)
 declarations, [structured
 content](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#structured-content)
 responses,
 [`resource_link`](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#resource-links)
 content blocks, [JSON-RPC
-batching](https://www.jsonrpc.org/specification#batch), and the standard
-[tool
+batching](https://www.jsonrpc.org/specification#batch), and the standard [tool
 hints](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#tool)
 (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`).
+`tools/list` offers only the tools whose endpoint the client's credential
+admits it to, and calling one that was not listed is answered as an unknown
+tool.
 
 !!! warning "Tool argument stringification"
 

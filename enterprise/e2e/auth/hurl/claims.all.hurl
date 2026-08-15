@@ -70,23 +70,22 @@ jsonpath "$.scope" == "registry:read"
 
 # The gated schema is denied without any credential at all
 GET {{base}}/scoped/report.json
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 anonymous_denied: body
 anonymous_denied_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{anonymous_denied_schema}}
@@ -130,21 +129,20 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 # prefix, is refused. Verifying is not admitting
 GET {{base}}/scoped/report.json
 Authorization: Bearer {{outsider_token}}
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 outsider_denied: body
 outsider_denied_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{outsider_denied_schema}}
@@ -159,21 +157,20 @@ jsonpath "$.valid" == true
 # cumulative rather than alternatives
 GET {{base}}/scoped/report.json
 Authorization: Bearer {{group_only_token}}
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 group_only_denied: body
 group_only_denied_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{group_only_denied_schema}}
@@ -188,21 +185,20 @@ jsonpath "$.valid" == true
 # from the other side
 GET {{base}}/scoped/report.json
 Authorization: Bearer {{scope_only_token}}
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 scope_only_denied: body
 scope_only_denied_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{scope_only_denied_schema}}
@@ -216,21 +212,20 @@ jsonpath "$.valid" == true
 # A token carrying neither claim is refused for the same reason
 GET {{base}}/scoped/report.json
 Authorization: Bearer {{claimless_token}}
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 claimless_denied: body
 claimless_denied_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{claimless_denied_schema}}
@@ -280,15 +275,12 @@ listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.schemas" == 1
 jsonpath "$.entries" count == 1
-jsonpath "$.policies" count == 1
-jsonpath "$.policies[0].name" == "scoped"
-jsonpath "$.policies[0].type" == "jwt"
+jsonpath "$.private" == true
 jsonpath "$.entries[0].name" == "report"
 jsonpath "$.entries[0].type" == "schema"
 jsonpath "$.entries[0].path" == "/scoped/report"
 jsonpath "$.entries[0].identifier" == "{{base}}/scoped/report"
-jsonpath "$.entries[0].policies" count == 1
-jsonpath "$.entries[0].policies[0].name" == "scoped"
+jsonpath "$.entries[0].private" == true
 
 POST {{base}}/self/v1/api/schemas/evaluate{{listing_schema}}
 ```
@@ -301,21 +293,20 @@ jsonpath "$.valid" == true
 # A refused caller learns nothing about the collection either
 GET {{base}}/self/v1/api/list/scoped
 Authorization: Bearer {{outsider_token}}
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 listing_denied: body
 listing_denied_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{listing_denied_schema}}

@@ -51,8 +51,8 @@ public:
           }
         });
 
-    const auto mcp_metadata_path{
-        this->artifact_resolve_path_unauthenticated("", Tree::Explorer, "mcp")};
+    const auto mcp_metadata_path{this->artifact_resolve_path_unauthenticated(
+        sourcemeta::one::VIEW_PUBLIC, "", Tree::Explorer, "mcp")};
     assert(mcp_metadata_path.has_value());
     auto mcp_metadata_option{
         this->artifact_read_json(mcp_metadata_path.value())};

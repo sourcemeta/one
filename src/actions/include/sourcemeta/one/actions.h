@@ -32,6 +32,7 @@ namespace sourcemeta::one {
   X(MCP_V1, ActionMCP_v1)                                                      \
   X(AUTH_LOGOUT_V1, ActionAuthLogout_v1)                                       \
   X(AUTH_LOGIN_V1, ActionAuthLogin_v1)                                         \
+  X(AUTH_LOGIN_PAGE_V1, ActionAuthLoginPage_v1)                                \
   X(AUTH_CALLBACK_V1, ActionAuthCallback_v1)                                   \
   X(MCP_PROTECTED_RESOURCE_METADATA_V1, ActionMCPProtectedResourceMetadata_v1)
 

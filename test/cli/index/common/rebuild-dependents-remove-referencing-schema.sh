@@ -70,74 +70,74 @@ cat << EOF > "$TMP/expected.txt"
 Writing output to: $(realpath "$TMP")/output
 Using configuration: $(realpath "$TMP")/one.json
 Detecting: $(realpath "$TMP")/schemas/a.json (#1)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/error.json (#2)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/list/response.json (#3)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependencies/response.json (#4)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependents/response.json (#5)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/request.json (#6)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/response.json (#7)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/health/response.json (#8)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/locations/response.json (#9)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/metadata/response.json (#10)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/output-error.json (#11)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/position.json (#12)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/positions/response.json (#13)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/rdf/request.json (#14)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/rdf/response.json (#15)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/search/response.json (#16)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/stats/response.json (#17)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/request.json (#18)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/response.json (#19)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/error.json (#20)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/initialize/request.json (#21)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/initialize/response.json (#22)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/cancelled.json (#23)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/initialized.json (#24)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/request.json (#25)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/response.json (#26)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/prm/response.json (#27)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/request.json (#28)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/request.json (#29)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/response.json (#30)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/read/request.json (#31)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/read/response.json (#32)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/request.json (#33)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/response.json (#34)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#35)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/evaluate-schema/request.json (#36)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/evaluate-schema/response.json (#37)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request.json (#38)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response.json (#39)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-dependents/request.json (#40)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-dependents/response.json (#41)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-health/request.json (#42)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-health/response.json (#43)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-locations/request.json (#44)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-locations/response.json (#45)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-metadata/request.json (#46)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-metadata/response.json (#47)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-positions/request.json (#48)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-positions/response.json (#49)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-stats/request.json (#50)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-stats/response.json (#51)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/instance-to-rdf/request.json (#52)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/instance-to-rdf/response.json (#53)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/list-directory/request.json (#54)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/list-directory/response.json (#55)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/request.json (#56)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/response.json (#57)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/search-schemas/request.json (#58)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/search-schemas/response.json (#59)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request.json (#60)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response.json (#61)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/request.json (#62)
-Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/response.json (#63)
-( 14%) Producing: explorer/public/%/directory.metapack
-( 28%) Producing: explorer/public/%/directory-html.metapack
-( 42%) Producing: explorer/public/%/login-html.metapack
-( 57%) Producing: explorer/public/%/search.metapack
-( 71%) Producing: explorer/public/%/mcp.metapack
-( 85%) Disposing: explorer/public/example/schemas/b
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/auth/login/response.json (#2)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/error.json (#3)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/list/response.json (#4)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependencies/response.json (#5)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/dependents/response.json (#6)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/request.json (#7)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/response.json (#8)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/health/response.json (#9)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/locations/response.json (#10)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/metadata/response.json (#11)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/output-error.json (#12)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/position.json (#13)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/positions/response.json (#14)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/rdf/request.json (#15)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/rdf/response.json (#16)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/search/response.json (#17)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/stats/response.json (#18)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/request.json (#19)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/response.json (#20)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/error.json (#21)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/initialize/request.json (#22)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/initialize/response.json (#23)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/cancelled.json (#24)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/notifications/initialized.json (#25)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/request.json (#26)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/ping/response.json (#27)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/prm/response.json (#28)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/request.json (#29)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/request.json (#30)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/response.json (#31)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/read/request.json (#32)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/read/response.json (#33)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/request.json (#34)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/response.json (#35)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#36)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/evaluate-schema/request.json (#37)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/evaluate-schema/response.json (#38)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request.json (#39)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response.json (#40)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-dependents/request.json (#41)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-dependents/response.json (#42)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-health/request.json (#43)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-health/response.json (#44)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-locations/request.json (#45)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-locations/response.json (#46)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-metadata/request.json (#47)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-metadata/response.json (#48)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-positions/request.json (#49)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-positions/response.json (#50)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-stats/request.json (#51)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-stats/response.json (#52)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/instance-to-rdf/request.json (#53)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/instance-to-rdf/response.json (#54)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/list-directory/request.json (#55)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/list-directory/response.json (#56)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/request.json (#57)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/response.json (#58)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/search-schemas/request.json (#59)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/search-schemas/response.json (#60)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request.json (#61)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response.json (#62)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/request.json (#63)
+Detecting: $ONE_PREFIX/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/response.json (#64)
+( 16%) Producing: explorer/public/%/directory.metapack
+( 33%) Producing: explorer/public/%/directory-html.metapack
+( 50%) Producing: explorer/public/%/search.metapack
+( 66%) Producing: explorer/public/%/mcp.metapack
+( 83%) Disposing: explorer/public/example/schemas/b
 (100%) Disposing: schemas/example/schemas/b
 (100%) Combining: explorer/public/example/schemas/a/%/dependents.metapack
 EOF
@@ -154,23 +154,21 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer
 ./explorer/public
 ./explorer/public/%
-./explorer/public/%/401.metapack
 ./explorer/public/%/404.metapack
 ./explorer/public/%/directory-html.metapack
 ./explorer/public/%/directory.metapack
 ./explorer/public/%/login-html.metapack
+./explorer/public/%/login.metapack
 ./explorer/public/%/mcp.metapack
 ./explorer/public/%/search.metapack
 ./explorer/public/example
 ./explorer/public/example/%
 ./explorer/public/example/%/directory-html.metapack
 ./explorer/public/example/%/directory.metapack
-./explorer/public/example/%/login-html.metapack
 ./explorer/public/example/schemas
 ./explorer/public/example/schemas/%
 ./explorer/public/example/schemas/%/directory-html.metapack
 ./explorer/public/example/schemas/%/directory.metapack
-./explorer/public/example/schemas/%/login-html.metapack
 ./explorer/public/example/schemas/a
 ./explorer/public/example/schemas/a/%
 ./explorer/public/example/schemas/a/%/dependents.metapack
@@ -180,22 +178,31 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/%
 ./explorer/public/self/%/directory-html.metapack
 ./explorer/public/self/%/directory.metapack
-./explorer/public/self/%/login-html.metapack
 ./explorer/public/self/v1
 ./explorer/public/self/v1/%
 ./explorer/public/self/v1/%/directory-html.metapack
 ./explorer/public/self/v1/%/directory.metapack
-./explorer/public/self/v1/%/login-html.metapack
 ./explorer/public/self/v1/schemas
 ./explorer/public/self/v1/schemas/%
 ./explorer/public/self/v1/schemas/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/%/directory.metapack
-./explorer/public/self/v1/schemas/%/login-html.metapack
 ./explorer/public/self/v1/schemas/api
 ./explorer/public/self/v1/schemas/api/%
 ./explorer/public/self/v1/schemas/api/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/api/%/directory.metapack
-./explorer/public/self/v1/schemas/api/%/login-html.metapack
+./explorer/public/self/v1/schemas/api/auth
+./explorer/public/self/v1/schemas/api/auth/%
+./explorer/public/self/v1/schemas/api/auth/%/directory-html.metapack
+./explorer/public/self/v1/schemas/api/auth/%/directory.metapack
+./explorer/public/self/v1/schemas/api/auth/login
+./explorer/public/self/v1/schemas/api/auth/login/%
+./explorer/public/self/v1/schemas/api/auth/login/%/directory-html.metapack
+./explorer/public/self/v1/schemas/api/auth/login/%/directory.metapack
+./explorer/public/self/v1/schemas/api/auth/login/response
+./explorer/public/self/v1/schemas/api/auth/login/response/%
+./explorer/public/self/v1/schemas/api/auth/login/response/%/dependents.metapack
+./explorer/public/self/v1/schemas/api/auth/login/response/%/schema-html.metapack
+./explorer/public/self/v1/schemas/api/auth/login/response/%/schema.metapack
 ./explorer/public/self/v1/schemas/api/error
 ./explorer/public/self/v1/schemas/api/error/%
 ./explorer/public/self/v1/schemas/api/error/%/dependents.metapack
@@ -205,7 +212,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/api/list/%
 ./explorer/public/self/v1/schemas/api/list/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/api/list/%/directory.metapack
-./explorer/public/self/v1/schemas/api/list/%/login-html.metapack
 ./explorer/public/self/v1/schemas/api/list/response
 ./explorer/public/self/v1/schemas/api/list/response/%
 ./explorer/public/self/v1/schemas/api/list/response/%/dependents.metapack
@@ -215,12 +221,10 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/api/schemas/%
 ./explorer/public/self/v1/schemas/api/schemas/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/api/schemas/%/directory.metapack
-./explorer/public/self/v1/schemas/api/schemas/%/login-html.metapack
 ./explorer/public/self/v1/schemas/api/schemas/dependencies
 ./explorer/public/self/v1/schemas/api/schemas/dependencies/%
 ./explorer/public/self/v1/schemas/api/schemas/dependencies/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/api/schemas/dependencies/%/directory.metapack
-./explorer/public/self/v1/schemas/api/schemas/dependencies/%/login-html.metapack
 ./explorer/public/self/v1/schemas/api/schemas/dependencies/response
 ./explorer/public/self/v1/schemas/api/schemas/dependencies/response/%
 ./explorer/public/self/v1/schemas/api/schemas/dependencies/response/%/dependents.metapack
@@ -230,7 +234,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/api/schemas/dependents/%
 ./explorer/public/self/v1/schemas/api/schemas/dependents/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/api/schemas/dependents/%/directory.metapack
-./explorer/public/self/v1/schemas/api/schemas/dependents/%/login-html.metapack
 ./explorer/public/self/v1/schemas/api/schemas/dependents/response
 ./explorer/public/self/v1/schemas/api/schemas/dependents/response/%
 ./explorer/public/self/v1/schemas/api/schemas/dependents/response/%/dependents.metapack
@@ -240,7 +243,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/api/schemas/evaluate/%
 ./explorer/public/self/v1/schemas/api/schemas/evaluate/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/api/schemas/evaluate/%/directory.metapack
-./explorer/public/self/v1/schemas/api/schemas/evaluate/%/login-html.metapack
 ./explorer/public/self/v1/schemas/api/schemas/evaluate/request
 ./explorer/public/self/v1/schemas/api/schemas/evaluate/request/%
 ./explorer/public/self/v1/schemas/api/schemas/evaluate/request/%/dependents.metapack
@@ -255,7 +257,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/api/schemas/health/%
 ./explorer/public/self/v1/schemas/api/schemas/health/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/api/schemas/health/%/directory.metapack
-./explorer/public/self/v1/schemas/api/schemas/health/%/login-html.metapack
 ./explorer/public/self/v1/schemas/api/schemas/health/response
 ./explorer/public/self/v1/schemas/api/schemas/health/response/%
 ./explorer/public/self/v1/schemas/api/schemas/health/response/%/dependents.metapack
@@ -265,7 +266,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/api/schemas/locations/%
 ./explorer/public/self/v1/schemas/api/schemas/locations/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/api/schemas/locations/%/directory.metapack
-./explorer/public/self/v1/schemas/api/schemas/locations/%/login-html.metapack
 ./explorer/public/self/v1/schemas/api/schemas/locations/response
 ./explorer/public/self/v1/schemas/api/schemas/locations/response/%
 ./explorer/public/self/v1/schemas/api/schemas/locations/response/%/dependents.metapack
@@ -275,7 +275,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/api/schemas/metadata/%
 ./explorer/public/self/v1/schemas/api/schemas/metadata/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/api/schemas/metadata/%/directory.metapack
-./explorer/public/self/v1/schemas/api/schemas/metadata/%/login-html.metapack
 ./explorer/public/self/v1/schemas/api/schemas/metadata/response
 ./explorer/public/self/v1/schemas/api/schemas/metadata/response/%
 ./explorer/public/self/v1/schemas/api/schemas/metadata/response/%/dependents.metapack
@@ -295,7 +294,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/api/schemas/positions/%
 ./explorer/public/self/v1/schemas/api/schemas/positions/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/api/schemas/positions/%/directory.metapack
-./explorer/public/self/v1/schemas/api/schemas/positions/%/login-html.metapack
 ./explorer/public/self/v1/schemas/api/schemas/positions/response
 ./explorer/public/self/v1/schemas/api/schemas/positions/response/%
 ./explorer/public/self/v1/schemas/api/schemas/positions/response/%/dependents.metapack
@@ -305,7 +303,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/api/schemas/rdf/%
 ./explorer/public/self/v1/schemas/api/schemas/rdf/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/api/schemas/rdf/%/directory.metapack
-./explorer/public/self/v1/schemas/api/schemas/rdf/%/login-html.metapack
 ./explorer/public/self/v1/schemas/api/schemas/rdf/request
 ./explorer/public/self/v1/schemas/api/schemas/rdf/request/%
 ./explorer/public/self/v1/schemas/api/schemas/rdf/request/%/dependents.metapack
@@ -320,7 +317,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/api/schemas/search/%
 ./explorer/public/self/v1/schemas/api/schemas/search/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/api/schemas/search/%/directory.metapack
-./explorer/public/self/v1/schemas/api/schemas/search/%/login-html.metapack
 ./explorer/public/self/v1/schemas/api/schemas/search/response
 ./explorer/public/self/v1/schemas/api/schemas/search/response/%
 ./explorer/public/self/v1/schemas/api/schemas/search/response/%/dependents.metapack
@@ -330,7 +326,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/api/schemas/stats/%
 ./explorer/public/self/v1/schemas/api/schemas/stats/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/api/schemas/stats/%/directory.metapack
-./explorer/public/self/v1/schemas/api/schemas/stats/%/login-html.metapack
 ./explorer/public/self/v1/schemas/api/schemas/stats/response
 ./explorer/public/self/v1/schemas/api/schemas/stats/response/%
 ./explorer/public/self/v1/schemas/api/schemas/stats/response/%/dependents.metapack
@@ -340,7 +335,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/api/schemas/trace/%
 ./explorer/public/self/v1/schemas/api/schemas/trace/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/api/schemas/trace/%/directory.metapack
-./explorer/public/self/v1/schemas/api/schemas/trace/%/login-html.metapack
 ./explorer/public/self/v1/schemas/api/schemas/trace/request
 ./explorer/public/self/v1/schemas/api/schemas/trace/request/%
 ./explorer/public/self/v1/schemas/api/schemas/trace/request/%/dependents.metapack
@@ -355,7 +349,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/mcp/%
 ./explorer/public/self/v1/schemas/mcp/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/mcp/%/directory.metapack
-./explorer/public/self/v1/schemas/mcp/%/login-html.metapack
 ./explorer/public/self/v1/schemas/mcp/error
 ./explorer/public/self/v1/schemas/mcp/error/%
 ./explorer/public/self/v1/schemas/mcp/error/%/dependents.metapack
@@ -365,7 +358,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/mcp/initialize/%
 ./explorer/public/self/v1/schemas/mcp/initialize/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/mcp/initialize/%/directory.metapack
-./explorer/public/self/v1/schemas/mcp/initialize/%/login-html.metapack
 ./explorer/public/self/v1/schemas/mcp/initialize/request
 ./explorer/public/self/v1/schemas/mcp/initialize/request/%
 ./explorer/public/self/v1/schemas/mcp/initialize/request/%/dependents.metapack
@@ -380,7 +372,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/mcp/notifications/%
 ./explorer/public/self/v1/schemas/mcp/notifications/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/mcp/notifications/%/directory.metapack
-./explorer/public/self/v1/schemas/mcp/notifications/%/login-html.metapack
 ./explorer/public/self/v1/schemas/mcp/notifications/cancelled
 ./explorer/public/self/v1/schemas/mcp/notifications/cancelled/%
 ./explorer/public/self/v1/schemas/mcp/notifications/cancelled/%/dependents.metapack
@@ -395,7 +386,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/mcp/ping/%
 ./explorer/public/self/v1/schemas/mcp/ping/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/mcp/ping/%/directory.metapack
-./explorer/public/self/v1/schemas/mcp/ping/%/login-html.metapack
 ./explorer/public/self/v1/schemas/mcp/ping/request
 ./explorer/public/self/v1/schemas/mcp/ping/request/%
 ./explorer/public/self/v1/schemas/mcp/ping/request/%/dependents.metapack
@@ -410,7 +400,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/mcp/prm/%
 ./explorer/public/self/v1/schemas/mcp/prm/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/mcp/prm/%/directory.metapack
-./explorer/public/self/v1/schemas/mcp/prm/%/login-html.metapack
 ./explorer/public/self/v1/schemas/mcp/prm/response
 ./explorer/public/self/v1/schemas/mcp/prm/response/%
 ./explorer/public/self/v1/schemas/mcp/prm/response/%/dependents.metapack
@@ -425,12 +414,10 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/mcp/resources/%
 ./explorer/public/self/v1/schemas/mcp/resources/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/mcp/resources/%/directory.metapack
-./explorer/public/self/v1/schemas/mcp/resources/%/login-html.metapack
 ./explorer/public/self/v1/schemas/mcp/resources/list
 ./explorer/public/self/v1/schemas/mcp/resources/list/%
 ./explorer/public/self/v1/schemas/mcp/resources/list/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/mcp/resources/list/%/directory.metapack
-./explorer/public/self/v1/schemas/mcp/resources/list/%/login-html.metapack
 ./explorer/public/self/v1/schemas/mcp/resources/list/request
 ./explorer/public/self/v1/schemas/mcp/resources/list/request/%
 ./explorer/public/self/v1/schemas/mcp/resources/list/request/%/dependents.metapack
@@ -445,7 +432,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/mcp/resources/read/%
 ./explorer/public/self/v1/schemas/mcp/resources/read/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/mcp/resources/read/%/directory.metapack
-./explorer/public/self/v1/schemas/mcp/resources/read/%/login-html.metapack
 ./explorer/public/self/v1/schemas/mcp/resources/read/request
 ./explorer/public/self/v1/schemas/mcp/resources/read/request/%
 ./explorer/public/self/v1/schemas/mcp/resources/read/request/%/dependents.metapack
@@ -460,12 +446,10 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/mcp/resources/templates/%
 ./explorer/public/self/v1/schemas/mcp/resources/templates/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/mcp/resources/templates/%/directory.metapack
-./explorer/public/self/v1/schemas/mcp/resources/templates/%/login-html.metapack
 ./explorer/public/self/v1/schemas/mcp/resources/templates/list
 ./explorer/public/self/v1/schemas/mcp/resources/templates/list/%
 ./explorer/public/self/v1/schemas/mcp/resources/templates/list/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/mcp/resources/templates/list/%/directory.metapack
-./explorer/public/self/v1/schemas/mcp/resources/templates/list/%/login-html.metapack
 ./explorer/public/self/v1/schemas/mcp/resources/templates/list/request
 ./explorer/public/self/v1/schemas/mcp/resources/templates/list/request/%
 ./explorer/public/self/v1/schemas/mcp/resources/templates/list/request/%/dependents.metapack
@@ -485,17 +469,14 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/mcp/tools/%
 ./explorer/public/self/v1/schemas/mcp/tools/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/%/directory.metapack
-./explorer/public/self/v1/schemas/mcp/tools/%/login-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call
 ./explorer/public/self/v1/schemas/mcp/tools/call/%
 ./explorer/public/self/v1/schemas/mcp/tools/call/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/%/directory.metapack
-./explorer/public/self/v1/schemas/mcp/tools/call/%/login-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/evaluate-schema
 ./explorer/public/self/v1/schemas/mcp/tools/call/evaluate-schema/%
 ./explorer/public/self/v1/schemas/mcp/tools/call/evaluate-schema/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/evaluate-schema/%/directory.metapack
-./explorer/public/self/v1/schemas/mcp/tools/call/evaluate-schema/%/login-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/evaluate-schema/request
 ./explorer/public/self/v1/schemas/mcp/tools/call/evaluate-schema/request/%
 ./explorer/public/self/v1/schemas/mcp/tools/call/evaluate-schema/request/%/dependents.metapack
@@ -510,7 +491,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-dependencies/%
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-dependencies/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-dependencies/%/directory.metapack
-./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-dependencies/%/login-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request/%
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request/%/dependents.metapack
@@ -525,7 +505,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-dependents/%
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-dependents/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-dependents/%/directory.metapack
-./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-dependents/%/login-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-dependents/request
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-dependents/request/%
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-dependents/request/%/dependents.metapack
@@ -540,7 +519,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-health/%
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-health/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-health/%/directory.metapack
-./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-health/%/login-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-health/request
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-health/request/%
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-health/request/%/dependents.metapack
@@ -555,7 +533,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-locations/%
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-locations/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-locations/%/directory.metapack
-./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-locations/%/login-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-locations/request
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-locations/request/%
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-locations/request/%/dependents.metapack
@@ -570,7 +547,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-metadata/%
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-metadata/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-metadata/%/directory.metapack
-./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-metadata/%/login-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-metadata/request
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-metadata/request/%
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-metadata/request/%/dependents.metapack
@@ -585,7 +561,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-positions/%
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-positions/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-positions/%/directory.metapack
-./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-positions/%/login-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-positions/request
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-positions/request/%
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-positions/request/%/dependents.metapack
@@ -600,7 +575,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-stats/%
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-stats/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-stats/%/directory.metapack
-./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-stats/%/login-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-stats/request
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-stats/request/%
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-stats/request/%/dependents.metapack
@@ -615,7 +589,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/mcp/tools/call/instance-to-rdf/%
 ./explorer/public/self/v1/schemas/mcp/tools/call/instance-to-rdf/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/instance-to-rdf/%/directory.metapack
-./explorer/public/self/v1/schemas/mcp/tools/call/instance-to-rdf/%/login-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/instance-to-rdf/request
 ./explorer/public/self/v1/schemas/mcp/tools/call/instance-to-rdf/request/%
 ./explorer/public/self/v1/schemas/mcp/tools/call/instance-to-rdf/request/%/dependents.metapack
@@ -630,7 +603,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/mcp/tools/call/list-directory/%
 ./explorer/public/self/v1/schemas/mcp/tools/call/list-directory/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/list-directory/%/directory.metapack
-./explorer/public/self/v1/schemas/mcp/tools/call/list-directory/%/login-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/list-directory/request
 ./explorer/public/self/v1/schemas/mcp/tools/call/list-directory/request/%
 ./explorer/public/self/v1/schemas/mcp/tools/call/list-directory/request/%/dependents.metapack
@@ -655,7 +627,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/mcp/tools/call/search-schemas/%
 ./explorer/public/self/v1/schemas/mcp/tools/call/search-schemas/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/search-schemas/%/directory.metapack
-./explorer/public/self/v1/schemas/mcp/tools/call/search-schemas/%/login-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/search-schemas/request
 ./explorer/public/self/v1/schemas/mcp/tools/call/search-schemas/request/%
 ./explorer/public/self/v1/schemas/mcp/tools/call/search-schemas/request/%/dependents.metapack
@@ -670,7 +641,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/%
 ./explorer/public/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/%/directory.metapack
-./explorer/public/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/%/login-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request
 ./explorer/public/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request/%
 ./explorer/public/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request/%/dependents.metapack
@@ -685,7 +655,6 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./explorer/public/self/v1/schemas/mcp/tools/list/%
 ./explorer/public/self/v1/schemas/mcp/tools/list/%/directory-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/list/%/directory.metapack
-./explorer/public/self/v1/schemas/mcp/tools/list/%/login-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/list/request
 ./explorer/public/self/v1/schemas/mcp/tools/list/request/%
 ./explorer/public/self/v1/schemas/mcp/tools/list/request/%/dependents.metapack
@@ -716,6 +685,20 @@ cat << 'EOF' > "$TMP/expected_manifest.txt"
 ./schemas/self/v1
 ./schemas/self/v1/schemas
 ./schemas/self/v1/schemas/api
+./schemas/self/v1/schemas/api/auth
+./schemas/self/v1/schemas/api/auth/login
+./schemas/self/v1/schemas/api/auth/login/response
+./schemas/self/v1/schemas/api/auth/login/response/%
+./schemas/self/v1/schemas/api/auth/login/response/%/blaze-exhaustive.metapack
+./schemas/self/v1/schemas/api/auth/login/response/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/auth/login/response/%/bundle.metapack
+./schemas/self/v1/schemas/api/auth/login/response/%/dependencies.metapack
+./schemas/self/v1/schemas/api/auth/login/response/%/editor.metapack
+./schemas/self/v1/schemas/api/auth/login/response/%/health.metapack
+./schemas/self/v1/schemas/api/auth/login/response/%/locations.metapack
+./schemas/self/v1/schemas/api/auth/login/response/%/positions.metapack
+./schemas/self/v1/schemas/api/auth/login/response/%/schema.metapack
+./schemas/self/v1/schemas/api/auth/login/response/%/stats.metapack
 ./schemas/self/v1/schemas/api/error
 ./schemas/self/v1/schemas/api/error/%
 ./schemas/self/v1/schemas/api/error/%/blaze-exhaustive.metapack

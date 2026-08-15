@@ -55,23 +55,22 @@ header "ETag" exists
 # And the one without it is refused, though it is valid in every other respect
 GET {{base}}/typed/thing.json
 Authorization: Bearer {{untyped_token}}
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 denied_body: body
 denied_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{denied_schema}}
@@ -85,10 +84,9 @@ jsonpath "$.valid" == true
 # Carrying nothing is refused identically, so the untyped token discloses
 # nothing by being refused differently
 GET {{base}}/typed/thing.json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Asserts]
 body == {{denied_body}}
@@ -96,16 +94,15 @@ body == {{denied_body}}
 # The gated listing is not enumerable without the right token either
 GET {{base}}/self/v1/api/list/typed
 Authorization: Bearer {{untyped_token}}
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Asserts]
 body == {{denied_body}}
 
-# The token that carries the type enumerates it, and the listing names the
-# policy that governs
+# The token that carries the type enumerates it, and the listing marks what
+# the policy governs as private
 GET {{base}}/self/v1/api/list/typed
 Authorization: Bearer {{typed_token}}
 HTTP 200
@@ -124,19 +121,13 @@ jsonpath "$.schemas" == 1
 jsonpath "$.breadcrumb" count == 1
 jsonpath "$.breadcrumb[0].name" == "typed"
 jsonpath "$.breadcrumb[0].path" == "/typed/"
-jsonpath "$.policies" count == 1
-jsonpath "$.policies[0].name" == "typed"
-jsonpath "$.policies[0].title" == "typed"
-jsonpath "$.policies[0].type" == "jwt"
+jsonpath "$.private" == true
 jsonpath "$.entries" count == 1
 jsonpath "$.entries[0].name" == "thing"
 jsonpath "$.entries[0].type" == "schema"
 jsonpath "$.entries[0].path" == "/typed/thing"
 jsonpath "$.entries[0].identifier" == "{{base}}/typed/thing"
-jsonpath "$.entries[0].policies" count == 1
-jsonpath "$.entries[0].policies[0].name" == "typed"
-jsonpath "$.entries[0].policies[0].title" == "typed"
-jsonpath "$.entries[0].policies[0].type" == "jwt"
+jsonpath "$.entries[0].private" == true
 
 POST {{base}}/self/v1/api/schemas/evaluate{{listing_schema}}
 ```
@@ -150,9 +141,8 @@ jsonpath "$.valid" == true
 # keeps working
 GET {{base}}/machine/config.json
 Authorization: Bearer {{untyped_token}}
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 [Asserts]
 body == {{denied_body}}

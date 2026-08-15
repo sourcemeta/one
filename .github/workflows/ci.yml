@@ -33,7 +33,7 @@ jobs:
 
       - run: make check ${{ matrix.edition.options }}
 
-      - run: make docker-build PRESET=Release PARALLEL=$(nproc) ${{ matrix.edition.options }}
+      - run: make docker-build PRESET=Release PARALLEL=$(nproc) DOCKERFILE_TEST_REPEAT=5 ${{ matrix.edition.options }}
 
       - name: SBOM (Enterprise)
         run: |
@@ -101,6 +101,12 @@ jobs:
         uses: ./.github/actions/e2e
         with:
           path: enterprise/e2e/public
+          edition: ${{ matrix.edition.name }}
+        if: matrix.edition.name == 'enterprise'
+      - name: E2E (enterprise/auth-keys)
+        uses: ./.github/actions/e2e
+        with:
+          path: enterprise/e2e/auth-keys
           edition: ${{ matrix.edition.name }}
         if: matrix.edition.name == 'enterprise'
       - name: E2E (enterprise/auth)

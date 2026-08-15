@@ -12,16 +12,18 @@
 #include <sourcemeta/one/router.h>
 #include <sourcemeta/one/search.h>
 
-#include <charconv>     // std::from_chars
-#include <cstddef>      // std::size_t
-#include <cstdint>      // std::uint8_t
-#include <filesystem>   // std::filesystem
-#include <span>         // std::span
-#include <sstream>      // std::ostringstream
-#include <string>       // std::string
-#include <string_view>  // std::string_view
-#include <system_error> // std::errc
-#include <utility>      // std::move
+#include <charconv>      // std::from_chars
+#include <cstddef>       // std::size_t
+#include <cstdint>       // std::uint8_t
+#include <filesystem>    // std::filesystem
+#include <memory>        // std::make_unique, std::unique_ptr
+#include <span>          // std::span
+#include <sstream>       // std::ostringstream
+#include <string>        // std::string
+#include <string_view>   // std::string_view
+#include <system_error>  // std::errc
+#include <unordered_map> // std::unordered_map
+#include <utility>       // std::move
 
 class ActionSchemaSearch_v1 : public sourcemeta::one::RouterAction {
 public:
@@ -37,9 +39,32 @@ public:
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
       sourcemeta::one::Router &dispatcher)
-      : sourcemeta::one::RouterAction{base, router.base_url(), dispatcher},
-        search_view_{base / "explorer" / sourcemeta::one::VIEW_PUBLIC / "%" /
-                     "search.metapack"} {
+      : sourcemeta::one::RouterAction{base, router.base_url(), dispatcher} {
+    const auto &authentication{dispatcher.authentication()};
+    for (std::size_t index{0}; index < authentication.view_count(); index++) {
+      const auto recorded{authentication.view_at(index)};
+      this->search_views_.emplace(
+          recorded.name,
+          std::make_unique<sourcemeta::one::SearchView>(
+              base / "explorer" / recorded.name / "%" / "search.metapack"));
+    }
+
+    // The anonymous view is among the recorded ones, so this is a lookup
+    // rather than a second index. It stands for a caller whose view this
+    // instance no longer serves, which is a build behind a running server
+    auto fallback{this->search_views_.find(sourcemeta::one::VIEW_PUBLIC)};
+    if (fallback == this->search_views_.cend()) {
+      fallback =
+          this->search_views_
+              .emplace(sourcemeta::one::VIEW_PUBLIC,
+                       std::make_unique<sourcemeta::one::SearchView>(
+                           base / "explorer" / sourcemeta::one::VIEW_PUBLIC /
+                           "%" / "search.metapack"))
+              .first;
+    }
+
+    this->default_search_view_ = fallback->second.get();
+
     router.arguments(
         identifier, [this](const auto &key, const auto &value) -> void {
           if (key == "responseSchema") {
@@ -54,8 +79,8 @@ public:
         });
   }
 
-  auto rest(const std::span<std::string_view>, std::string_view credential,
-            std::string_view, sourcemeta::one::HTTPRequest &request,
+  auto rest(const std::span<std::string_view>, std::string_view,
+            std::string_view view, sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
       sourcemeta::one::cors_preflight(request, response, "GET, HEAD, OPTIONS",
@@ -177,18 +202,7 @@ public:
       }
     }
 
-    const sourcemeta::one::RequestCookies cookies{request};
-    auto result{this->search_view_.search(
-        query, limit, scope,
-        [this, &credential, &cookies](const std::string_view path) -> bool {
-          const auto &authentication{this->dispatcher().authentication()};
-          const auto location{this->canonical_path(path)};
-          return location.has_value() &&
-                 authentication
-                     .admits(location.value(),
-                             {.bearer = credential, .cookies = cookies})
-                     .allowed;
-        })};
+    auto result{this->search_view_for(view).search(query, limit, scope)};
     response.write_status(sourcemeta::core::HTTP_STATUS_OK);
     response.write_header("Access-Control-Allow-Origin", "*");
     response.write_header("Access-Control-Expose-Headers", "Link, ETag");
@@ -196,10 +210,10 @@ public:
     // Search results are query-dependent and the corpus shifts as
     // the catalog grows; 60 seconds is a freshness window that
     // amortises full-text cost across typing-into-a-search-box
-    // bursts without serving stale ranking long-term. A result set
-    // filtered by presented credentials is specific to the caller,
-    // so only the anonymous view may enter shared caches
-    response.write_header("Cache-Control", credential.empty() && cookies.empty()
+    // bursts without serving stale ranking long-term. What comes back
+    // is whatever the caller's view holds, so only the anonymous one
+    // answers the same to everybody and may enter a shared cache
+    response.write_header("Cache-Control", view == sourcemeta::one::VIEW_PUBLIC
                                                ? "public, max-age=60"
                                                : "private, max-age=60");
     // RFC 9110 §12.5.5: the gzip negotiation axis applies, no other
@@ -288,14 +302,9 @@ public:
       }
     }
 
-    auto results{this->search_view_.search(
-        arguments.at("q").to_string(), limit, scope,
-        [this, &credentials](const std::string_view path) -> bool {
-          const auto &authentication{this->dispatcher().authentication()};
-          const auto location{this->canonical_path(path)};
-          return location.has_value() &&
-                 authentication.admits(location.value(), credentials).allowed;
-        })};
+    auto results{this->search_view_for(
+                         this->dispatcher().authentication().view(credentials))
+                     .search(arguments.at("q").to_string(), limit, scope)};
     auto envelope{sourcemeta::core::JSON::make_object()};
     envelope.assign_assume_new("results", std::move(results));
 
@@ -319,7 +328,19 @@ public:
   }
 
 private:
-  sourcemeta::one::SearchView search_view_;
+  // A caller is answered out of the index their view holds, so what a search
+  // can name is what the caller could have reached by looking
+  [[nodiscard]] auto search_view_for(const std::string_view view)
+      -> sourcemeta::one::SearchView & {
+    const auto match{this->search_views_.find(view)};
+    return match == this->search_views_.cend() ? *this->default_search_view_
+                                               : *match->second;
+  }
+
+  std::unordered_map<std::string_view,
+                     std::unique_ptr<sourcemeta::one::SearchView>>
+      search_views_;
+  sourcemeta::one::SearchView *default_search_view_{nullptr};
   std::string_view response_schema_;
   std::string_view rpc_request_schema_;
   std::string_view rpc_response_schema_;

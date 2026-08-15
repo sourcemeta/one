@@ -116,42 +116,18 @@ static auto child_registry_path(const std::string &directory_registry_path,
          "/" + name;
 }
 
-static auto policy_type_name(
-    const sourcemeta::one::Configuration::AuthenticationEntry::Type type)
-    -> std::string_view {
-  switch (type) {
-    case sourcemeta::one::Configuration::AuthenticationEntry::Type::ApiKey:
-      return "apiKey";
-    case sourcemeta::one::Configuration::AuthenticationEntry::Type::JWT:
-      return "jwt";
-    case sourcemeta::one::Configuration::AuthenticationEntry::Type::OIDC:
-      return "oidc";
-  }
-
-  std::unreachable();
-}
-
-static auto make_policies(const sourcemeta::one::Authentication &authentication,
-                          const sourcemeta::one::Configuration &configuration,
-                          const std::string &registry_path)
+static auto make_private(const sourcemeta::one::Authentication &authentication,
+                         const std::string &registry_path)
     -> sourcemeta::core::JSON {
-  // The policies that gate the path, in declaration order. An empty array means
-  // the path is public
-  auto result{sourcemeta::core::JSON::make_array()};
-  // The indexer composes these from the content tree, so they are already
-  // relative to the instance root
-  for (const auto index : authentication.governing(
-           sourcemeta::one::Authentication::Path::relative(registry_path))) {
-    assert(index < configuration.authentication.size());
-    const auto &entry{configuration.authentication[index]};
-    auto policy{sourcemeta::core::JSON::make_object()};
-    policy.assign("name", sourcemeta::core::JSON{entry.name});
-    policy.assign("title", sourcemeta::core::JSON{entry.title});
-    policy.assign("type", sourcemeta::core::JSON{policy_type_name(entry.type)});
-    result.push_back(std::move(policy));
-  }
-
-  return result;
+  // Whether a policy governs the path, declared on it or inherited from above.
+  // Every surface that says so reads this, so none of them can disagree about
+  // what private means. The indexer composes the path from the content tree,
+  // so it is already relative to the instance root
+  return sourcemeta::core::JSON{
+      !authentication
+           .governing(
+               sourcemeta::one::Authentication::Path::relative(registry_path))
+           .empty()};
 }
 
 namespace sourcemeta::one {
@@ -516,6 +492,11 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
     result.assign("breadcrumb",
                   make_breadcrumb(resolver_entry.relative_path, false));
 
+    const sourcemeta::one::Authentication authentication{
+        action.dependencies.back(), {}};
+    result.assign("private",
+                  make_private(authentication, result.at("path").to_string()));
+
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
     const auto schema_name{
@@ -567,7 +548,7 @@ struct GENERATE_DEPENDENTS {
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
                       sourcemeta::one::Resolver &,
-                      const sourcemeta::one::Configuration &configuration,
+                      const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
 
@@ -575,14 +556,11 @@ struct GENERATE_DEPENDENTS {
         std::unordered_map<sourcemeta::core::JSON::String,
                            std::set<std::pair<sourcemeta::core::JSON::String,
                                               sourcemeta::core::JSON::String>>>;
+    // What this reads is chosen for it, so a referrer a view is without never
+    // reaches here and there is nothing to leave out
     DirectMap direct;
-    std::filesystem::path authentication_path;
     for (const auto &dependency : action.dependencies) {
-      // Named rather than inferred from what it is not, so that another
-      // dependency arriving here is passed over instead of being read as this
-      // one
       if (dependency.filename() == "authentication.bin") {
-        authentication_path = dependency;
         continue;
       }
 
@@ -596,10 +574,6 @@ struct GENERATE_DEPENDENTS {
                                                    entry.at("at").to_string());
       }
     }
-
-    assert(!authentication_path.empty());
-    const sourcemeta::one::Authentication authentication{authentication_path,
-                                                         {}};
 
     // Only this leaf's transitive dependents are needed, so traverse the
     // reverse graph from it alone rather than computing the closure for every
@@ -622,18 +596,6 @@ struct GENERATE_DEPENDENTS {
       }
 
       for (const auto &[dependent, at] : match->second) {
-        // A view is told who points at something only where it could reach the
-        // pointer itself, so the graph is walked through what it can see rather
-        // than walked whole and reported in part. What lies beyond something it
-        // cannot see is left unreported too, since a path through a schema it
-        // was never shown is a fact about that schema
-        const auto referrer{sourcemeta::one::Authentication::Path::parse(
-            dependent, configuration.url)};
-        if (!referrer.has_value() ||
-            !authentication.visible(referrer.value(), action.view)) {
-          continue;
-        }
-
         edges.emplace(dependent, current, at);
         if (visited.emplace(dependent).second) {
           queue.emplace(dependent);
@@ -731,6 +693,60 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
   }
 };
 
+// The ways of signing in, written once for the whole instance. The page that
+// offers them renders from this and nothing else, so what a person is shown and
+// what a custom interface reads cannot describe different instances
+struct GENERATE_LOGIN {
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
+                      const sourcemeta::one::BuildDynamicCallback &,
+                      sourcemeta::one::Resolver &,
+                      const sourcemeta::one::Configuration &configuration,
+                      const sourcemeta::core::JSON &) -> void {
+    const auto timestamp_start{std::chrono::steady_clock::now()};
+
+    auto document{sourcemeta::core::JSON::make_object()};
+    if (configuration.html.has_value()) {
+      document.assign("title",
+                      sourcemeta::core::JSON{configuration.html->name});
+    }
+
+    // A policy that admits a program has nowhere to send a person, so naming it
+    // here would offer a way in that does not exist
+    auto providers{sourcemeta::core::JSON::make_array()};
+    for (const auto &policy : configuration.authentication) {
+      if (!sourcemeta::one::is_interactive(policy)) {
+        continue;
+      }
+
+      auto provider{sourcemeta::core::JSON::make_object()};
+      provider.assign("name", sourcemeta::core::JSON{policy.name});
+      provider.assign("title", sourcemeta::core::JSON{policy.title});
+      std::string path{sourcemeta::one::ENDPOINT_AUTH_LOGIN_PAGE};
+      path.push_back('/');
+      path.append(policy.name);
+      provider.assign("path", sourcemeta::core::JSON{std::move(path)});
+      providers.push_back(std::move(provider));
+    }
+
+    document.assign("providers", std::move(providers));
+
+    const auto timestamp_end{std::chrono::steady_clock::now()};
+    sourcemeta::one::metapack_write_pretty_json(
+        action.destination, document, "application/json",
+        sourcemeta::one::MetapackEncoding::GZIP, {},
+        std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
+                                                              timestamp_start));
+  }
+};
+
+// What a listing calls a schema, and how many it names before it hands out a
+// cursor. Both are settled here, since the pages are written rather than
+// assembled
+inline constexpr std::string_view MCP_RESOURCE_MIME_TYPE{
+    "application/schema+json"};
+inline constexpr std::size_t MCP_RESOURCES_PAGE_SIZE{50};
+
 struct GENERATE_MCP {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
@@ -802,9 +818,35 @@ struct GENERATE_MCP {
     {
       const sourcemeta::core::URITemplateRouterView router_view{
           action.dependencies.at(2)};
-      sourcemeta::one::generate_mcp_tools(router_view, tools, tool_routes);
       const sourcemeta::one::Authentication authentication{
           action.dependencies.back(), {}};
+
+      // The artifact is written once per view and names the view it is for, so
+      // what it offers is settled here rather than worked out again per
+      // request. A name the table does not hold cannot happen, since both come
+      // from the same enumeration, and the anonymous view standing first is
+      // what a build would fall back to: it holds no policy, so it reaches
+      // only what nobody governs
+      std::size_t view{0};
+      assert(authentication.view_count() > 0);
+      assert(authentication.view_at(0).name == sourcemeta::one::VIEW_PUBLIC);
+      for (std::size_t candidate{0}; candidate < authentication.view_count();
+           candidate++) {
+        if (authentication.view_at(candidate).name == action.view) {
+          view = candidate;
+          break;
+        }
+      }
+
+      sourcemeta::one::generate_mcp_tools(
+          router_view,
+          [&authentication, view](const std::string_view uri_template) {
+            return authentication.visible(
+                sourcemeta::one::Authentication::Path::relative(
+                    sourcemeta::one::route_scope(uri_template)),
+                view);
+          },
+          tools, tool_routes);
       sourcemeta::one::generate_protected_resource_metadata(
           authentication, configuration, sourcemeta::one::ENDPOINT_MCP,
           protected_resource_metadata);
@@ -837,8 +879,66 @@ struct GENERATE_MCP {
     resource_templates_response.assign("resourceTemplates",
                                        std::move(resource_templates));
 
+    // Every page a caller might ask for, written once for the view rather than
+    // put together on each request. What a page holds follows from the index it
+    // is built from, and that index already holds what this view may reach, so
+    // the answer depends on neither who asks nor when
+    //
+    // TODO: Keep the pages out of the document that is parsed at startup. What
+    // is wanted is that answering reads an answer rather than builds one, and
+    // that does not require the answer to be a document. As written, every page
+    // of every view is materialised here and the whole of it is held parsed for
+    // as long as the server runs, which grows with the catalog and again with
+    // the number of views, where the search index beside it costs a mapping and
+    // no more. Worth exploring holding them pre-serialised, or in the mapped
+    // shape the search index already uses, so a page is written to the socket
+    // rather than reassembled from a tree
+    auto resource_pages{sourcemeta::core::JSON::make_array()};
+    {
+      sourcemeta::one::SearchView search{action.dependencies.front()};
+      const auto total{search.count()};
+      std::size_t offset{0};
+      do {
+        auto resources{sourcemeta::core::JSON::make_array()};
+        search.for_each(
+            offset, MCP_RESOURCES_PAGE_SIZE,
+            [&configuration, &resources](
+                const sourcemeta::one::SearchListEntry &entry) -> void {
+              std::string uri{configuration.origin};
+              uri.append(entry.path);
+              resources.push_back(sourcemeta::core::mcp_make_resource(
+                  uri, entry.title.empty() ? entry.path : entry.title,
+                  MCP_RESOURCE_MIME_TYPE, entry.description,
+                  static_cast<std::size_t>(entry.bytes_raw),
+                  static_cast<double>(entry.priority) / 100.0));
+            });
+
+        auto page{sourcemeta::core::JSON::make_object()};
+        page.assign("resources", std::move(resources));
+        if (offset + MCP_RESOURCES_PAGE_SIZE < total) {
+          page.assign("nextCursor", sourcemeta::core::JSON{std::to_string(
+                                        offset + MCP_RESOURCES_PAGE_SIZE)});
+        }
+
+        resource_pages.push_back(std::move(page));
+        offset += MCP_RESOURCES_PAGE_SIZE;
+        // A catalog holding nothing still has a first page, so that asking for
+        // the beginning is answered rather than refused
+      } while (offset < total);
+    }
+
     auto document{sourcemeta::core::JSON::make_object()};
     document.assign("origin", sourcemeta::core::JSON{configuration.origin});
+    document.assign(std::string{sourcemeta::core::MCP_METHOD_RESOURCES_LIST},
+                    std::move(resource_pages));
+    // How many the pages above were cut at, so that whoever reads them maps a
+    // cursor the way they were actually written rather than the way a second
+    // copy of this number happens to say. An artifact outlives the build that
+    // wrote it, and the two are then free to disagree
+    document.assign(
+        "resourcePageSize",
+        sourcemeta::core::JSON{static_cast<sourcemeta::core::JSON::Integer>(
+            MCP_RESOURCES_PAGE_SIZE)});
     document.assign(std::string{sourcemeta::core::MCP_METHOD_INITIALIZE},
                     std::move(initialize_ingredients));
     document.assign(
@@ -1184,16 +1284,16 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
 
     for (auto &entry : directory_entries) {
       entry.json.assign(
-          "policies", make_policies(authentication, configuration,
-                                    child_registry_path(directory_registry_path,
-                                                        entry.name)));
+          "private", make_private(authentication,
+                                  child_registry_path(directory_registry_path,
+                                                      entry.name)));
       entries.push_back(std::move(entry.json));
     }
     for (auto &entry : schema_entries) {
       entry.json.assign(
-          "policies", make_policies(authentication, configuration,
-                                    child_registry_path(directory_registry_path,
-                                                        entry.name)));
+          "private", make_private(authentication,
+                                  child_registry_path(directory_registry_path,
+                                                      entry.name)));
       entries.push_back(std::move(entry.json));
     }
 
@@ -1217,8 +1317,8 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
     meta.assign("schemas", sourcemeta::core::JSON{total_schemas});
 
     meta.assign("entries", std::move(entries));
-    meta.assign("policies", make_policies(authentication, configuration,
-                                          directory_registry_path));
+    meta.assign("private",
+                make_private(authentication, directory_registry_path));
 
     if (relative_path == ".") {
       meta.assign("path", sourcemeta::core::JSON{"/"});

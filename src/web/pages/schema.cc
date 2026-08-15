@@ -42,7 +42,7 @@ auto GENERATE_WEB_SCHEMA::handler(
 
   sourcemeta::core::HTMLWriter writer;
   html::make_page(
-      writer, configuration, canonical, title, description,
+      writer, configuration, action.view, canonical, title, description,
       [&](sourcemeta::core::HTMLWriter &w) -> void {
         html::make_breadcrumb(w, meta.at("breadcrumb"));
 
@@ -53,6 +53,11 @@ auto GENERATE_WEB_SCHEMA::handler(
 
         // Header div
         w.div();
+        if (meta.at("private").to_boolean()) {
+          w.div().attribute("class", "mb-3");
+          html::make_private_badge(w);
+          w.close();
+        }
         if (meta.defines("title")) {
           w.h2().attribute("class", "fw-bold h4");
           w.text(title);

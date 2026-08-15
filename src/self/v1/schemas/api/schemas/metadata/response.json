@@ -12,6 +12,7 @@
       "dialect": "https://json-schema.org/draft/2020-12/schema",
       "health": 100,
       "priority": 100,
+      "private": false,
       "breadcrumb": [
         {
           "name": "Home",
@@ -60,7 +61,8 @@
         "baseDialect",
         "dialect",
         "health",
-        "priority"
+        "priority",
+        "private"
       ],
       "properties": {
         "title": {
@@ -103,6 +105,9 @@
           "type": "integer",
           "maximum": 100,
           "minimum": 0
+        },
+        "private": {
+          "type": "boolean"
         },
         "identifier": {
           "x-format-assertion": true,

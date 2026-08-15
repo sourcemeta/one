@@ -135,7 +135,7 @@ auto Router::dispatch(
                          {.bearer = credential, .cookies = cookies},
                          instance->required_audience())
            .allowed) {
-    if (instance->serve_login(request, response)) {
+    if (instance->serve_renewal_page(request, response)) {
       return;
     }
 
@@ -153,12 +153,12 @@ auto Router::dispatch(
   instance->rest(matches, credential, view, request, response);
 }
 
-// A denial only becomes a silent renewal when the browser carries the marker a
-// previous sign-in left, and only under a policy that governs the path being
-// denied. Both matter: without the first every stranger would be sent to a
+// A dead end only becomes a silent renewal when the browser carries the marker
+// a previous sign-in left, and only under a policy that governs the path it
+// reached. Both matter: without the first every stranger would be sent to a
 // provider they have no account with, and without the second a stale marker
 // would send somebody to a provider whose answer could not admit them here,
-// which would deny them again and start over
+// which would leave them where they started and go round again
 auto RouterAction::serve_renewal(sourcemeta::one::HTTPRequest &request,
                                  sourcemeta::one::HTTPResponse &response) const
     -> bool {
@@ -208,47 +208,19 @@ auto RouterAction::serve_renewal(sourcemeta::one::HTTPRequest &request,
   return false;
 }
 
-auto RouterAction::serve_login(sourcemeta::one::HTTPRequest &request,
-                               sourcemeta::one::HTTPResponse &response) const
-    -> bool {
+auto RouterAction::serve_renewal_page(
+    sourcemeta::one::HTTPRequest &request,
+    sourcemeta::one::HTTPResponse &response) const -> bool {
   if ((request.method() != "get" && request.method() != "head") ||
       !sourcemeta::one::prefers_html(request.header("accept"))) {
     return false;
   }
 
-  // The same headers every HTML response carries. The provider link opts into
-  // a same-origin referrer on its own, so the page as a whole keeps the strict
-  // default and leaks no referrer from any other request
-  static constexpr BrowserSecurityHeaders SECURITY{
-      .referrer_policy = "strict-origin-when-cross-origin",
-      .frame_ancestors = "'none'",
-      .x_frame_options = "DENY",
-  };
-
   // A browser that signed in before is asked of its provider rather than of
-  // the person, so an expired session renews without anybody noticing
-  if (this->serve_renewal(request, response)) {
-    return true;
-  }
-
-  // The login page is a per-directory artifact, so a schema or a non-existent
-  // path is answered by the nearest directory above it that offers a login.
-  // Because every login page under the same policies is byte-identical, this
-  // never betrays whether a deeper path exists
-  const auto stripped{
-      sourcemeta::core::URI::strip_path_prefix(request.path(), "")};
-  const auto page{this->artifact_resolve_ancestor(
-      stripped.has_value() ? std::string_view{stripped.value()}
-                           : request.path(),
-      Tree::Explorer, "login-html")};
-  if (!page.has_value()) {
-    return false;
-  }
-
-  this->artifact_serve(page.value(), sourcemeta::core::HTTP_STATUS_UNAUTHORIZED,
-                       false, {}, {}, SECURITY, request, response, {},
-                       "no-store", "Accept, Accept-Encoding");
-  return true;
+  // the person, so an expired session renews without anybody noticing. Nothing
+  // else is offered in its place, since signing in is somewhere a caller goes
+  // rather than something a dead end hands them
+  return this->serve_renewal(request, response);
 }
 
 } // namespace sourcemeta::one

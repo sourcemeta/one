@@ -109,17 +109,16 @@ jsonpath "$.valid" == true
 # Naming the endpoint is not a way of naming everything
 GET {{base}}/catalog/example.json
 Authorization: Bearer {{endpoint_token}}
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 [Captures]
 endpoint_elsewhere_body: body
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}

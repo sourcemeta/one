@@ -108,21 +108,12 @@ public:
     const auto evaluation_enabled{this->artifact_resolve_path(
         sourcemeta::one::VIEW_PUBLIC, credentials, schema_uri, Tree::Schemas,
         "blaze-exhaustive")};
-    if (schema_present.outcome ==
-            sourcemeta::one::ArtifactResolution::Outcome::Denied ||
-        evaluation_enabled.outcome ==
-            sourcemeta::one::ArtifactResolution::Outcome::Denied) {
-      return sourcemeta::core::mcp_make_tool_error(request_id,
-                                                   "Authentication required");
-    }
-    if (schema_present.outcome !=
-        sourcemeta::one::ArtifactResolution::Outcome::Found) {
+    if (!schema_present.path.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(request_id,
                                                    "Schema not found");
     }
 
-    if (evaluation_enabled.outcome !=
-        sourcemeta::one::ArtifactResolution::Outcome::Found) {
+    if (!evaluation_enabled.path.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(
           request_id, "This schema was not precompiled for schema evaluation");
     }
@@ -169,8 +160,7 @@ private:
         const auto locations_resolution{this->artifact_resolve_path(
             sourcemeta::one::VIEW_PUBLIC, credentials, keyword_location_string,
             Tree::Schemas, "locations")};
-        if (locations_resolution.outcome ==
-            sourcemeta::one::ArtifactResolution::Outcome::Found) {
+        if (locations_resolution.path.has_value()) {
           auto locations{
               this->artifact_read_json(locations_resolution.path.value())};
           if (locations.has_value() && locations.value().is_object() &&
@@ -225,8 +215,7 @@ private:
     const auto locations_resolution{
         this->artifact_resolve_path(sourcemeta::one::VIEW_PUBLIC, credentials,
                                     schema_uri, Tree::Schemas, "locations")};
-    if (locations_resolution.outcome !=
-        sourcemeta::one::ArtifactResolution::Outcome::Found) {
+    if (!locations_resolution.path.has_value()) {
       throw std::runtime_error{"Failed to read schema locations metadata"};
     }
     const auto locations_option{

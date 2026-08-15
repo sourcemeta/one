@@ -146,11 +146,35 @@ make_dialect_badge(sourcemeta::core::HTMLWriter &writer,
   writer.close();
 }
 
+// What a listing says about a schema, said on the schema itself. A reader who
+// clicks through a locked row would otherwise be given no sign that what they
+// are looking at is private, which is the question somebody about to pass on a
+// link is asking
+inline auto make_private_badge(sourcemeta::core::HTMLWriter &writer) -> void {
+  writer.span().attribute(
+      "class", "align-middle badge rounded-pill border border-warning "
+               "text-warning fw-normal");
+  writer.text("Private");
+  writer.close();
+}
+
 inline auto make_directory_header(sourcemeta::core::HTMLWriter &writer,
                                   const sourcemeta::core::JSON &directory)
     -> void {
+  const auto is_private{directory.at("private").to_boolean()};
+
+  // A directory says what it is whether or not its collection was given a name
+  // to say it under, so the mark cannot depend on there being a header to hang
+  // it from
   if (!directory.defines("title")) {
-    writer.div().close();
+    if (is_private) {
+      writer.div().attribute("class", "container-fluid px-4 pt-4");
+      make_private_badge(writer);
+      writer.close();
+    } else {
+      writer.div().close();
+    }
+
     return;
   }
 
@@ -168,6 +192,11 @@ inline auto make_directory_header(sourcemeta::core::HTMLWriter &writer,
 
   // Title section
   writer.div();
+  if (is_private) {
+    writer.div().attribute("class", "mb-2");
+    make_private_badge(writer);
+    writer.close();
+  }
   writer.h2().attribute("class", "fw-bold h4");
   writer.text(directory.at("title").to_string());
   writer.close();
@@ -235,15 +264,17 @@ inline auto make_directory_header(sourcemeta::core::HTMLWriter &writer,
 
 inline auto make_file_manager_row(sourcemeta::core::HTMLWriter &writer,
                                   const sourcemeta::core::JSON &entry,
-                                  const bool barrier) -> void {
+                                  const bool is_private) -> void {
   writer.tr();
 
   // Type column
   writer.td().attribute("class", "text-nowrap");
   if (entry.at("type").to_string() == "directory") {
-    // A child whose governing policies differ from the directory being listed
-    // is an authentication barrier, shown with a lock instead of a folder
-    if (barrier) {
+    // A directory any policy governs is shown locked rather than as a folder,
+    // wherever it sits under that policy. What it marks is that the directory
+    // is private, which somebody deciding whether to pass its link on wants to
+    // know as much three levels in as at the boundary
+    if (is_private) {
       writer.i().attribute("class", "bi bi-lock-fill text-warning").close();
     } else if (entry.defines("github") && !entry.at("github").includes('/')) {
       writer.img()
@@ -346,7 +377,6 @@ inline auto make_file_manager(sourcemeta::core::HTMLWriter &writer,
 
   constexpr std::string_view self_path{"/self"};
   constexpr std::string_view self_path_slash{"/self/"};
-  const auto &policies{directory.at("policies")};
 
   writer.div().attribute("class", "container-fluid p-4 flex-grow-1");
 
@@ -362,7 +392,7 @@ inline auto make_file_manager(sourcemeta::core::HTMLWriter &writer,
         has_regular_entries = true;
       }
 
-      make_file_manager_row(writer, entry, entry.at("policies") != policies);
+      make_file_manager_row(writer, entry, entry.at("private").to_boolean());
     }
   }
 
@@ -381,7 +411,7 @@ inline auto make_file_manager(sourcemeta::core::HTMLWriter &writer,
           "class", "table table-bordered border-light-subtle table-light");
       make_file_manager_table_header(writer);
       writer.tbody();
-      make_file_manager_row(writer, entry, entry.at("policies") != policies);
+      make_file_manager_row(writer, entry, entry.at("private").to_boolean());
       writer.close();
       writer.close();
       break;

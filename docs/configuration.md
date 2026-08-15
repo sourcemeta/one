@@ -385,28 +385,12 @@ works differently for each policy type, described under each below. Sessions
 belong to `oidc` alone: a `jwt` policy has no session and no cookie, whether or
 not it names the same provider.
 
-**The UNIX model**: Visibility and access are kept separate, following the UNIX
-filesystem model. A policy that governs a directory does not erase it from its
-parent's listing.  Just as `ls` reveals a directory you cannot `cd` into, a
-consumer browsing the instance can tell that a governed directory exists, and
-can see the names of the policies that govern it, much like UNIX shows the
-owning group of a file you are not allowed to read. What stays hidden is the
-content: the directory cannot be opened, nor its schemas read, without a valid
-key. The policy names are disclosed on purpose, so that a consumer knows who to
-ask for access. The keys themselves, and the environment variables behind them,
-are never exposed.
-
-!!! tip
-
-    If the descriptive metadata of a governed directory, such as its title and
-    description, is itself sensitive, wrap it: put the policy on a deliberately
-    generic outer container that carries little metadata, and nest the
-    sensitive directories inside it. Outsiders then see only the bland
-    container, while the inner names and descriptions stay behind the gate.
-
 A policy governs a [Collection](#collections) or [Page](#pages), or a namespace
 above them (the instance root governs everything). It cannot gate an individual
 path inside a collection: a collection is either public or private as a whole.
+A policy may govern a [route](api.md) too, named where the route itself begins
+(`/self/v1/api/schemas/trace`) rather than at some request it serves
+(`/self/v1/api/schemas/trace/my/schema`).
 
 Every policy declares its `type`, a `name`, and the `paths` it governs,
 regardless of type:
@@ -602,9 +586,17 @@ An `oidc` policy grants access to a user who signs in through an OpenID Connect
 provider in the browser. Where an `apiKey` or `jwt` policy admits a machine that
 presents a credential on every request, an `oidc` policy authenticates a user
 once at their provider and then relies on a session the instance establishes and
-signs itself. Until that session exists, a browser that navigates to a governed
-page is sent to begin a login, while a request for the raw schema, or from a
-machine, is denied like any other unauthenticated request.
+signs itself. Until that session exists, a governed page is not there for the
+browser at all, exactly as a page that never existed is not.
+
+Signing in is therefore somewhere a person goes rather than something a page
+they were refused hands them. The web explorer's bar carries a sign-in control
+on every page an anonymous reader is served, pointing at one login page for the
+whole instance that names every `oidc` policy declared. Once a session exists,
+the bar offers signing out in its place. Neither control appears where it would
+lead nowhere: an instance declaring no `oidc` policy has no login page and no
+sign-in control however much of it is gated, and a page served to a machine
+credential offers no way out, since there is no session to end.
 
 The instance registers with the provider as a client, identified by its
 `clientId` and the client secret shared with it. It trusts the `issuer` both as

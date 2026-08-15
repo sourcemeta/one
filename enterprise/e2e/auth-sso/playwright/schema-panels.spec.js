@@ -14,6 +14,7 @@ import { test, expect } from '@playwright/test';
 // endpoints and only one of them is a function of the schema's own bytes.
 
 async function signIn(page) {
+  await page.goto('/self/v1/auth/login');
   await page.locator('a[data-sourcemeta-ui-login="keycloak"]').click();
   await page.locator('#username').fill('jane');
   await page.locator('#password').fill('jane-password');
@@ -24,11 +25,7 @@ test.describe('Schema page panels under a session', () => {
   test('the outgoing graph fills in for a signed-in reader', async ({
     page
   }) => {
-    await page.goto('/private/secret');
-    await expect(page).toHaveTitle('Sign In');
     await signIn(page);
-    await expect(page).toHaveURL(/\/private\/secret$/);
-
     await page.goto('/private/secret?tab=dependencies');
     const panel = page.locator('[data-sourcemeta-ui-tab-id="dependencies"]');
     await expect(panel).not.toHaveClass(/d-none/);
@@ -51,10 +48,7 @@ test.describe('Schema page panels under a session', () => {
   test('the incoming graph fills in for a signed-in reader', async ({
     page
   }) => {
-    await page.goto('/private/secret');
     await signIn(page);
-    await expect(page).toHaveURL(/\/private\/secret$/);
-
     await page.goto('/private/secret?tab=dependents');
     const panel = page.locator('[data-sourcemeta-ui-tab-id="dependents"]');
     await expect(panel).not.toHaveClass(/d-none/);
@@ -72,21 +66,23 @@ test.describe('Schema page panels under a session', () => {
 
   // The control for both of the above. They assert that a panel filled in, and
   // that means nothing unless filling in was something the session bought. Each
-  // endpoint is asked here without one, and refuses
-  test('the same endpoints refuse a reader holding no session', async ({
+  // endpoint is asked here without one. The endpoint itself is open, so what
+  // decides the answer is the schema named in its arguments, and that schema
+  // is not there for a reader holding nothing
+  test('the same endpoints hold nothing for a reader with no session', async ({
     request
   }) => {
     for (const endpoint of [
       '/self/v1/api/schemas/dependencies/private/secret',
       '/self/v1/api/schemas/dependents/private/secret'
     ]) {
-      const denied = await request.get(endpoint);
-      expect(denied.status()).toBe(401);
-      expect(await denied.json()).toEqual({
-        type: 'urn:sourcemeta:one:authentication-required',
-        title: 'Unauthorized',
-        status: 401,
-        detail: 'This resource requires authentication'
+      const missing = await request.get(endpoint);
+      expect(missing.status()).toBe(404);
+      expect(await missing.json()).toEqual({
+        type: 'urn:sourcemeta:one:not-found',
+        title: 'Not Found',
+        status: 404,
+        detail: 'There is nothing at this URL'
       });
     }
   });
@@ -95,8 +91,8 @@ test.describe('Schema page panels under a session', () => {
   // for a signed-in reader the panels above would fail for a reason that has
   // nothing to do with what they are pinning
   test('the page renders before its panels load', async ({ page }) => {
-    await page.goto('/private/secret');
     await signIn(page);
+    await page.goto('/private/secret');
     await expect(page).toHaveURL(/\/private\/secret$/);
     await expect(
       page.locator('[data-sourcemeta-ui-tab-target="dependencies"]')

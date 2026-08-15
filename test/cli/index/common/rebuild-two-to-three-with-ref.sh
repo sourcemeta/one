@@ -67,27 +67,24 @@ remove_threads_information "$TMP/output.txt"
 grep -E "Producing|Combining" "$TMP/output.txt" > "$TMP/output_producing.txt"
 
 cat << 'EOF' > "$TMP/expected.txt"
-(  4%) Producing: schemas/example/schemas/c/%/schema.metapack
-(  8%) Producing: schemas/example/schemas/c/%/dependencies.metapack
-( 13%) Producing: schemas/example/schemas/c/%/locations.metapack
-( 17%) Producing: schemas/example/schemas/c/%/positions.metapack
-( 21%) Producing: schemas/example/schemas/c/%/stats.metapack
-( 26%) Producing: schemas/example/schemas/c/%/bundle.metapack
-( 30%) Producing: schemas/example/schemas/c/%/health.metapack
-( 34%) Producing: explorer/public/example/schemas/c/%/schema.metapack
-( 39%) Producing: schemas/example/schemas/c/%/blaze-exhaustive.metapack
-( 43%) Producing: schemas/example/schemas/c/%/blaze-fast.metapack
-( 47%) Producing: schemas/example/schemas/c/%/editor.metapack
-( 52%) Producing: explorer/public/example/schemas/%/directory.metapack
-( 56%) Producing: explorer/public/example/schemas/c/%/schema-html.metapack
-( 60%) Producing: explorer/public/example/%/directory.metapack
-( 65%) Producing: explorer/public/example/schemas/%/directory-html.metapack
-( 69%) Producing: explorer/public/example/schemas/%/login-html.metapack
-( 73%) Producing: explorer/public/%/directory.metapack
-( 78%) Producing: explorer/public/example/%/directory-html.metapack
-( 82%) Producing: explorer/public/example/%/login-html.metapack
-( 86%) Producing: explorer/public/%/directory-html.metapack
-( 91%) Producing: explorer/public/%/login-html.metapack
+(  5%) Producing: schemas/example/schemas/c/%/schema.metapack
+( 10%) Producing: schemas/example/schemas/c/%/dependencies.metapack
+( 15%) Producing: schemas/example/schemas/c/%/locations.metapack
+( 20%) Producing: schemas/example/schemas/c/%/positions.metapack
+( 25%) Producing: schemas/example/schemas/c/%/stats.metapack
+( 30%) Producing: schemas/example/schemas/c/%/bundle.metapack
+( 35%) Producing: schemas/example/schemas/c/%/health.metapack
+( 40%) Producing: explorer/public/example/schemas/c/%/schema.metapack
+( 45%) Producing: schemas/example/schemas/c/%/blaze-exhaustive.metapack
+( 50%) Producing: schemas/example/schemas/c/%/blaze-fast.metapack
+( 55%) Producing: schemas/example/schemas/c/%/editor.metapack
+( 60%) Producing: explorer/public/example/schemas/%/directory.metapack
+( 65%) Producing: explorer/public/example/schemas/c/%/schema-html.metapack
+( 70%) Producing: explorer/public/example/%/directory.metapack
+( 75%) Producing: explorer/public/example/schemas/%/directory-html.metapack
+( 80%) Producing: explorer/public/%/directory.metapack
+( 85%) Producing: explorer/public/example/%/directory-html.metapack
+( 90%) Producing: explorer/public/%/directory-html.metapack
 ( 95%) Producing: explorer/public/%/search.metapack
 (100%) Producing: explorer/public/%/mcp.metapack
 ( 50%) Combining: explorer/public/example/schemas/a/%/dependents.metapack

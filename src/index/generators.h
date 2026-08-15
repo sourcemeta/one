@@ -31,7 +31,6 @@
 #include <sourcemeta/one/enterprise_index.h>
 #endif
 
-#include <algorithm>    // std::ranges::find
 #include <cassert>      // assert
 #include <cstring>      // std::memcpy
 #include <filesystem>   // std::filesystem
@@ -684,6 +683,8 @@ struct GENERATE_URITEMPLATE_ROUTES {
         "/self/v1/schemas/api/schemas/trace/response"};
     constexpr std::string_view search_response_schema{
         "/self/v1/schemas/api/schemas/search/response"};
+    constexpr std::string_view auth_login_page_response_schema{
+        "/self/v1/schemas/api/auth/login/response"};
     constexpr std::string_view list_directory_request_schema{
         "/self/v1/schemas/mcp/tools/call/list-directory/request"};
     constexpr std::string_view list_directory_response_schema{
@@ -954,6 +955,15 @@ struct GENERATE_URITEMPLATE_ROUTES {
                  next_id++, sourcemeta::one::ACTION_TYPE_NOT_FOUND_V1,
                  not_found_arguments);
 
+      const sourcemeta::core::URITemplateRouter::Argument
+          auth_login_page_arguments[] = {
+              {"responseSchema",
+               std::string_view{auth_login_page_response_schema}},
+              {"errorSchema", std::string_view{error_schema}}};
+      router.add(sourcemeta::one::ENDPOINT_AUTH_LOGIN_PAGE, "auth_login_page",
+                 next_id++, sourcemeta::one::ACTION_TYPE_AUTH_LOGIN_PAGE_V1,
+                 auth_login_page_arguments);
+
       if (action.data == "Full") {
         const sourcemeta::core::URITemplateRouter::Argument static_arguments[] =
             {{"path", std::string_view{SOURCEMETA_ONE_STATIC}},
@@ -1102,11 +1112,24 @@ struct GENERATE_AUTHENTICATION {
                                       policy_email_domains)};
 
     // A policy gates a route or a declared collection or page (or a namespace
-    // above one), never a path inside a collection
+    // above one), never a path inside a collection. A route is named where it
+    // begins rather than at some expansion of it: a scope reaching into a
+    // template would be honoured where the route is matched literally and
+    // nowhere else, which is a gate that holds on one surface and not the next
     sourcemeta::one::Authentication::save(
         policies, configuration.path, action.destination,
         [&routes, &configuration](const std::string_view path) {
-          return routes.describes(path) || configuration.covers_entry(path);
+          for (std::size_t index{0}; index < routes.size(); index++) {
+            const auto route{routes.path(routes.at(index))};
+            const auto scope{sourcemeta::one::route_scope(route)};
+            if (scope == path ||
+                (scope.size() > path.size() && scope.starts_with(path) &&
+                 scope[path.size()] == '/')) {
+              return true;
+            }
+          }
+
+          return configuration.covers_entry(path);
         });
   }
 };

@@ -1,10 +1,11 @@
 # Authorization binds to the canonical resource, so the content gate must
 # reduce every spelling of a URL (case, percent-encoding, dot-segments,
 # extension) to the same registry identity before consulting policy. These
-# cases prove no spelling grants access the canonical path would deny, and no
-# spelling denies access the canonical path would grant. Every served response
-# asserts the full schema body at its canonical id, and every denial asserts the
-# full problem document and round-trips it through the error schema.
+# cases prove no spelling grants access the canonical path would withhold, and
+# no spelling withholds access the canonical path would grant. Every served
+# response asserts the full schema body at its canonical id, and every refusal
+# asserts the full problem document and round-trips it through the error
+# schema.
 
 # ---------------------------------------------------------------------------
 # Casing: the gate lowercases, so case cannot bypass or misroute.
@@ -46,16 +47,15 @@ header "Last-Modified" exists
   "type": "string"
 }
 
-# An uppercased apiKey path is still gated: no key is denied, with the full
-# problem document, which round-trips through the error schema
+# An uppercased apiKey path is still gated: with no key it is not there, in the
+# full problem document, which round-trips through the error schema
 GET {{base}}/PRIVATE/SECRET.json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 cased_denied_body: body
 cased_denied_schema: header "Link" regex "<([^>]+)>"
@@ -63,10 +63,10 @@ cased_denied_schema: header "Link" regex "<([^>]+)>"
 header "ETag" not exists
 header "Last-Modified" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{cased_denied_schema}}
@@ -106,23 +106,22 @@ header "Last-Modified" exists
 # An uppercased extension is content negotiation, stripped case-insensitively,
 # so it is gated identically
 GET {{base}}/private/secret.JSON
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 ext_denied_body: body
 ext_denied_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{ext_denied_schema}}
@@ -160,21 +159,20 @@ header "ETag" exists
 # key, not the primary one
 GET {{base}}/INTERNAL/CONFIG.json
 Authorization: Bearer primary-secret-key
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 crosspolicy_body: body
 crosspolicy_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{crosspolicy_schema}}
@@ -224,23 +222,22 @@ header "ETag" exists
 
 # An encoded apiKey path decodes to the protected resource and is gated
 GET {{base}}/%70rivate/secret.json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 encoded_denied_body: body
 encoded_denied_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{encoded_denied_schema}}
@@ -356,21 +353,20 @@ jsonpath "$.valid" == true
 GET {{base}}/public/../private/secret.json
 [Options]
 path-as-is: true
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 traversal_denied_body: body
 traversal_denied_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{traversal_denied_schema}}
@@ -413,21 +409,20 @@ header "ETag" exists
 GET {{base}}/private/open/../secret.json
 [Options]
 path-as-is: true
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 carveout_denied_body: body
 carveout_denied_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{carveout_denied_schema}}
@@ -461,21 +456,20 @@ header "ETag" exists
 GET {{base}}/private/./secret.json
 [Options]
 path-as-is: true
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 singledot_body: body
 singledot_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{singledot_schema}}
@@ -490,21 +484,20 @@ jsonpath "$.valid" == true
 GET {{base}}/public/%2e%2e/private/secret.json
 [Options]
 path-as-is: true
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 encodeddot_body: body
 encodeddot_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{encodeddot_schema}}
@@ -522,21 +515,20 @@ jsonpath "$.valid" == true
 # The extensionless resource is gated
 GET {{base}}/private/secret
 Accept: application/json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 noext_body: body
 noext_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{noext_schema}}
@@ -549,21 +541,20 @@ jsonpath "$.valid" == true
 
 # The JSON representation is gated identically, and admitted by the key
 GET {{base}}/private/secret.json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 json_body: body
 json_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{json_schema}}
@@ -598,12 +589,15 @@ header "ETag" exists
 }
 
 # ---------------------------------------------------------------------------
-# The two gates share one policy: a cased or encoded spelling of a locked
-# endpoint misses its literal route, falls to the catch-all, and the content
-# gate canonicalises it back so the same policy still denies it.
+# The two gates share one policy, and each speaks about what it guards. The
+# health endpoint reached exactly is a route, so a caller whose credential
+# falls short is refused. A cased or encoded spelling misses that literal
+# route, falls to the catch-all, and is canonicalised back onto the same
+# policy, which withholds it as a registry path rather than refusing it. Either
+# way no spelling reaches what the canonical one does not.
 # ---------------------------------------------------------------------------
 
-# The locked health endpoint, reached exactly, is denied at the surface gate
+# The locked health endpoint, reached exactly, is refused at the surface gate
 GET {{base}}/self/v1/health
 HTTP 401
 Cache-Control: no-store
@@ -630,25 +624,27 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# An uppercased spelling misses the literal health route, falls to the catch-all
-# and is denied by the same policy via the content gate: byte-identical, no
-# bypass between the gates
+# An uppercased spelling misses the literal health route, falls to the
+# catch-all, and the content gate canonicalises it onto the same policy. It is
+# withheld as a path rather than refused as a route, which is also what an
+# admitted caller is told, since no such registry path exists for anybody
 GET {{base}}/self/v1/HEALTH
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 cased_endpoint_body: body
 cased_endpoint_schema: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "WWW-Authenticate" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{cased_endpoint_schema}}
@@ -661,21 +657,23 @@ jsonpath "$.valid" == true
 
 # A percent-encoded spelling behaves the same
 GET {{base}}/self/v1/%68ealth
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 encoded_endpoint_body: body
 encoded_endpoint_schema: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "WWW-Authenticate" not exists
+body == {{cased_endpoint_body}}
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{encoded_endpoint_schema}}

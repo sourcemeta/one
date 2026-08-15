@@ -75,30 +75,23 @@ auto RouterAction::artifact_resolve_path(
   // since there is nothing to be admitted to
   const auto path{this->canonical_path(input)};
   if (!path.has_value()) {
-    return {.outcome = ArtifactResolution::Outcome::NotFound,
-            .path = std::nullopt,
-            .is_public = false};
+    return {.path = std::nullopt, .is_public = false};
   }
 
   // The gate consults the registry path, not the filesystem, and runs before
-  // the existence check so a denial reveals nothing about whether the artifact
-  // exists
+  // the existence check, so a path held back from this caller and a path that
+  // was never here are indistinguishable from the outside
   const auto &authentication{this->dispatcher_.authentication()};
-  const auto verdict{authentication.admits(path.value(), credentials)};
-  // Nothing is served on a denial or a miss, so report the path as not public
-  // and let any caller that skips the outcome check fall back to a private
-  // caching directive rather than a public one
-  if (!verdict.allowed) {
-    return {.outcome = ArtifactResolution::Outcome::Denied,
-            .path = std::nullopt,
-            .is_public = false};
+  if (!authentication.admits(path.value(), credentials).allowed) {
+    return {.path = std::nullopt, .is_public = false};
   }
 
   auto located{this->artifact_locate(path.value(), tree, view, artifact_name)};
   if (!located.has_value()) {
-    return {.outcome = ArtifactResolution::Outcome::NotFound,
-            .path = std::nullopt,
-            .is_public = false};
+    // Nothing is served on a miss, so report the path as not public and let a
+    // caller that skips the check fall back to a private caching directive
+    // rather than a public one
+    return {.path = std::nullopt, .is_public = false};
   }
 
   // A caller that presented nothing and was admitted means the path is open
@@ -121,13 +114,12 @@ auto RouterAction::artifact_resolve_path(
       shareable &&
       ((credentials.bearer.empty() && credentials.cookies.empty()) ||
        authentication.admits(path.value(), {}).allowed)};
-  return {.outcome = ArtifactResolution::Outcome::Found,
-          .path = ResolvedArtifact{std::move(located).value()},
+  return {.path = ResolvedArtifact{std::move(located).value()},
           .is_public = is_public};
 }
 
 auto RouterAction::artifact_resolve_path_unauthenticated(
-    const std::string_view input, const Tree tree,
+    const std::string_view view, const std::string_view input, const Tree tree,
     const std::string_view artifact_name) const
     -> std::optional<ResolvedArtifact> {
   const auto path{this->canonical_path(input)};
@@ -135,44 +127,11 @@ auto RouterAction::artifact_resolve_path_unauthenticated(
     return std::nullopt;
   }
 
-  auto located{
-      this->artifact_locate(path.value(), tree, VIEW_PUBLIC, artifact_name)};
+  auto located{this->artifact_locate(path.value(), tree, view, artifact_name)};
   if (!located.has_value()) {
     return std::nullopt;
   }
   return ResolvedArtifact{std::move(located).value()};
-}
-
-auto RouterAction::artifact_resolve_ancestor(
-    const std::string_view input, const Tree tree,
-    const std::string_view artifact_name) const
-    -> std::optional<ResolvedArtifact> {
-  std::string_view remaining{input};
-  if (remaining.ends_with("/")) {
-    remaining.remove_suffix(1);
-  }
-
-  while (true) {
-    auto located{this->artifact_resolve_path_unauthenticated(remaining, tree,
-                                                             artifact_name)};
-    if (located.has_value()) {
-      const sourcemeta::core::FileView view{located.value().path()};
-      const auto info{sourcemeta::one::metapack_info(view)};
-      // Text artifacts always carry a trailing newline, so an empty placeholder
-      // is a lone byte while a real page is a whole document
-      if (info.has_value() && info->content_bytes > 1) {
-        return located;
-      }
-    }
-
-    if (remaining.empty()) {
-      return std::nullopt;
-    }
-
-    const auto slash{remaining.find_last_of('/')};
-    remaining = slash == std::string_view::npos ? std::string_view{}
-                                                : remaining.substr(0, slash);
-  }
 }
 
 auto RouterAction::artifact_resolve_static(
@@ -180,11 +139,9 @@ auto RouterAction::artifact_resolve_static(
     -> ArtifactResolution {
   auto canonical{sourcemeta::core::weakly_canonical(root / relative)};
   if (!sourcemeta::core::is_under_path(canonical, root)) {
-    return {.outcome = ArtifactResolution::Outcome::NotFound,
-            .path = std::nullopt};
+    return {.path = std::nullopt};
   }
-  return {.outcome = ArtifactResolution::Outcome::Found,
-          .path = ResolvedArtifact{std::move(canonical)}};
+  return {.path = ResolvedArtifact{std::move(canonical)}};
 }
 
 auto RouterAction::artifact_read_json(const ResolvedArtifact &artifact) const

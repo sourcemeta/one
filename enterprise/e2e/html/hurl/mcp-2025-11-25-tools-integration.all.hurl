@@ -37,9 +37,9 @@ jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent.path" == "/"
 variable "text" jsonpath "$.path" == "/"
 jsonpath "$.result.structuredContent.entries[2].name" == "test"
-jsonpath "$.result.structuredContent.entries[2].policies" count == 0
+jsonpath "$.result.structuredContent.entries[2].private" == false
 variable "text" jsonpath "$.entries[2].name" == "test"
-variable "text" jsonpath "$.entries[2].policies" count == 0
+variable "text" jsonpath "$.entries[2].private" == false
 variable "test_path" == "/test/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -95,9 +95,9 @@ jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent.path" == "/test"
 variable "text" jsonpath "$.path" == "/test"
 jsonpath "$.result.structuredContent.entries[6].name" == "object"
-jsonpath "$.result.structuredContent.entries[6].policies" count == 0
+jsonpath "$.result.structuredContent.entries[6].private" == false
 variable "text" jsonpath "$.entries[6].name" == "object"
-variable "text" jsonpath "$.entries[6].policies" count == 0
+variable "text" jsonpath "$.entries[6].private" == false
 jsonpath "$.result.structuredContent.entries[6].type" == "schema"
 variable "text" jsonpath "$.entries[6].type" == "schema"
 variable "object_path" == "/test/object"

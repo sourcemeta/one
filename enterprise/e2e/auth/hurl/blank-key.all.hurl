@@ -11,23 +11,22 @@
 # change. An empty credential is not a credential, however a policy spells the
 # value it compares against
 GET {{base}}/mixed/thing.json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 denied_body: body
 denied_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{denied_schema}}
@@ -42,13 +41,12 @@ jsonpath "$.valid" == true
 # same way, so there is no wording of nothing that the blank variable matches
 GET {{base}}/mixed/thing.json
 Authorization: Bearer
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 empty_body: body
 empty_schema: header "Link" regex "<([^>]+)>"
@@ -56,10 +54,10 @@ empty_schema: header "Link" regex "<([^>]+)>"
 header "ETag" not exists
 body == {{denied_body}}
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{empty_schema}}
@@ -73,13 +71,12 @@ jsonpath "$.valid" == true
 # Nor does any other credential match the blank variable
 GET {{base}}/mixed/thing.json
 Authorization: Bearer not-a-key
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 wrong_body: body
 wrong_schema: header "Link" regex "<([^>]+)>"
@@ -87,10 +84,10 @@ wrong_schema: header "Link" regex "<([^>]+)>"
 header "ETag" not exists
 body == {{denied_body}}
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{wrong_schema}}
@@ -104,13 +101,12 @@ jsonpath "$.valid" == true
 # The gated directory's own listing is not enumerable either, so a blank
 # variable discloses no name behind the boundary it governs
 GET {{base}}/self/v1/api/list/mixed
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 listing_body: body
 listing_schema: header "Link" regex "<([^>]+)>"
@@ -118,10 +114,10 @@ listing_schema: header "Link" regex "<([^>]+)>"
 header "ETag" not exists
 body == {{denied_body}}
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{listing_schema}}
@@ -164,7 +160,7 @@ header "Vary" not exists
     "content": [
       {
         "type": "text",
-        "text": "Authentication required"
+        "text": "Directory not found"
       }
     ],
     "isError": true
@@ -213,8 +209,8 @@ header "ETag" exists
   "type": "integer"
 }
 
-# And the listing enumerates for a real key, carrying the blank policy's name
-# alongside the working ones, since a policy that admits nobody still governs
+# And the listing enumerates for a real key, marked private, since a policy
+# that admits nobody still governs
 GET {{base}}/self/v1/api/list/mixed
 Authorization: Bearer mixed-plain-key
 HTTP 200
@@ -233,31 +229,13 @@ jsonpath "$.schemas" == 1
 jsonpath "$.breadcrumb" count == 1
 jsonpath "$.breadcrumb[0].name" == "mixed"
 jsonpath "$.breadcrumb[0].path" == "/mixed/"
-jsonpath "$.policies" count == 3
-jsonpath "$.policies[0].name" == "mixed-plain"
-jsonpath "$.policies[0].title" == "mixed-plain"
-jsonpath "$.policies[0].type" == "apiKey"
-jsonpath "$.policies[1].name" == "mixed-hashed"
-jsonpath "$.policies[1].title" == "mixed-hashed"
-jsonpath "$.policies[1].type" == "apiKey"
-jsonpath "$.policies[2].name" == "mixed-blank"
-jsonpath "$.policies[2].title" == "mixed-blank"
-jsonpath "$.policies[2].type" == "apiKey"
+jsonpath "$.private" == true
 jsonpath "$.entries" count == 1
 jsonpath "$.entries[0].name" == "thing"
 jsonpath "$.entries[0].type" == "schema"
 jsonpath "$.entries[0].path" == "/mixed/thing"
 jsonpath "$.entries[0].identifier" == "{{base}}/mixed/thing"
-jsonpath "$.entries[0].policies" count == 3
-jsonpath "$.entries[0].policies[0].name" == "mixed-plain"
-jsonpath "$.entries[0].policies[0].title" == "mixed-plain"
-jsonpath "$.entries[0].policies[0].type" == "apiKey"
-jsonpath "$.entries[0].policies[1].name" == "mixed-hashed"
-jsonpath "$.entries[0].policies[1].title" == "mixed-hashed"
-jsonpath "$.entries[0].policies[1].type" == "apiKey"
-jsonpath "$.entries[0].policies[2].name" == "mixed-blank"
-jsonpath "$.entries[0].policies[2].title" == "mixed-blank"
-jsonpath "$.entries[0].policies[2].type" == "apiKey"
+jsonpath "$.entries[0].private" == true
 
 POST {{base}}/self/v1/api/schemas/evaluate{{enumerated_schema}}
 ```

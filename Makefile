@@ -16,12 +16,12 @@ PRESET ?= Debug
 OUTPUT ?= ./build
 PREFIX ?= $(OUTPUT)/dist
 PUBLIC ?= ./enterprise/e2e/public
-PARALLEL ?= 4
+PARALLEL ?= $(shell getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)
+DOCKERFILE_TEST_REPEAT ?= 1
 # Building the Enterprise edition for development, testing, evaluation, and
 # security research is permitted by LICENSE-COMMERCIAL without a commercial
 # license. Production use of it is not. Opt in with ENTERPRISE=ON. The released
-# community artefacts are built from the default below
-ENTERPRISE ?= OFF
+# community artefacts are built from the default belowENTERPRISE ?= ON
 DOCKERFILE = $(if $(filter ON,$(ENTERPRISE)),enterprise/Dockerfile,Dockerfile)
 EDITION = $(if $(filter ON,$(ENTERPRISE)),enterprise,community)
 SANDBOX ?= test/e2e/html
@@ -71,7 +71,8 @@ test: check
 docker-build: $(DOCKERFILE)
 	$(DOCKER) build --tag one . --file $< --progress plain \
 		--build-arg SOURCEMETA_ONE_BUILD_TYPE=$(PRESET) \
-		--build-arg SOURCEMETA_ONE_PARALLEL=$(PARALLEL)
+		--build-arg SOURCEMETA_ONE_PARALLEL=$(PARALLEL) \
+		--build-arg SOURCEMETA_ONE_TEST_REPEAT=$(DOCKERFILE_TEST_REPEAT)
 
 # Useful to run the entire main suite in a single command
 .PHONY: test-e2e
@@ -86,8 +87,11 @@ ifeq ($(ENTERPRISE),ON)
 	./contrib/e2e-native.sh enterprise/e2e/empty $(EDITION) $(SANDBOX_PORT)
 	./contrib/e2e-native.sh enterprise/e2e/html $(EDITION) $(SANDBOX_PORT)
 	./contrib/e2e-native.sh enterprise/e2e/public $(EDITION) $(SANDBOX_PORT)
-	# The authentication sandboxes stand up an identity provider alongside the
-	# registry, so they only run under Docker Compose, never the native path
+	# Machine credentials need nobody to sign in, so this authentication
+	# sandbox is the one that runs without an identity provider beside it
+	./contrib/e2e-native.sh enterprise/e2e/auth-keys $(EDITION) $(SANDBOX_PORT)
+	# The rest stand up an identity provider alongside the registry, so they
+	# only run under Docker Compose, never the native path
 endif
 
 .PHONY: docker
@@ -102,8 +106,9 @@ ifeq ($(ENTERPRISE),ON)
 	$(MAKE) -C enterprise/e2e/empty EDITION=$(EDITION)
 	$(MAKE) -C enterprise/e2e/html EDITION=$(EDITION)
 	$(MAKE) -C enterprise/e2e/public EDITION=$(EDITION)
-	# The authentication sandboxes each stand up an identity provider alongside
-	# the registry, exercising both JWT and apiKey policies
+	$(MAKE) -C enterprise/e2e/auth-keys EDITION=$(EDITION)
+	# The rest each stand up an identity provider alongside the registry,
+	# exercising both JWT and apiKey policies
 	$(MAKE) -C enterprise/e2e/auth EDITION=$(EDITION)
 	$(MAKE) -C enterprise/e2e/auth-closed EDITION=$(EDITION)
 	$(MAKE) -C enterprise/e2e/auth-sso EDITION=$(EDITION)

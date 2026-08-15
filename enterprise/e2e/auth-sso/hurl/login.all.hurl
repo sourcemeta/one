@@ -15,13 +15,145 @@ header "ETag" exists
   "type": "string"
 }
 
-# The private catalog denies an anonymous caller, and the denial validates
-# against its error schema
-GET {{base}}/private/secret.json
-HTTP 401
+# An anonymous reader is offered the way in, on an open page and on the page
+# for something this view does not hold alike
+GET {{base}}/public/
+Accept: text/html
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
+[Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
+xpath "count(//a[@data-sourcemeta-ui-signin])" == 1
+xpath "string(//a[@data-sourcemeta-ui-signin]/@href)" == "/self/v1/auth/login"
+xpath "count(//button[@data-sourcemeta-ui-signout])" == 0
+
+GET {{base}}/private/
+Accept: text/html
+HTTP 404
+Cache-Control: no-store
+Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
+[Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
+xpath "string(/html/head/title)" == "Not Found"
+xpath "count(//a[@data-sourcemeta-ui-signin])" == 1
+xpath "count(//button[@data-sourcemeta-ui-signout])" == 0
+
+# The instance holds one login page, at a URL of its own, public and identical
+# for everybody. It names every interactive policy declared, whichever path
+# each one governs, since somebody signing in has not reached a path yet
+GET {{base}}/self/v1/auth/login
+Accept: text/html
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
+Vary: Accept, Accept-Encoding
+[Asserts]
+header "Set-Cookie" not exists
+header "Access-Control-Allow-Origin" not exists
+header "ETag" exists
+xpath "string(//title)" == "Sign In"
+xpath "string(//h1)" == "SSO Sandbox"
+xpath "string(//p[@class='text-secondary text-center small mb-4'])" == "Choose how you want to sign in"
+xpath "count(//a[@data-sourcemeta-ui-login])" == 10
+xpath "string((//a[@data-sourcemeta-ui-login])[1]/@data-sourcemeta-ui-login)" == "keycloak"
+xpath "string((//a[@data-sourcemeta-ui-login])[1]/@href)" == "/self/v1/auth/login/keycloak"
+xpath "normalize-space((//a[@data-sourcemeta-ui-login])[1])" == "keycloak"
+xpath "string((//a[@data-sourcemeta-ui-login])[10]/@data-sourcemeta-ui-login)" == "rotated"
+
+# The page is rendered from this and nothing else, so what a person is offered
+# and what a custom interface reads name the same providers in the same order
+GET {{base}}/self/v1/auth/login
+Accept: application/json
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/json
+Link: </self/v1/schemas/api/auth/login/response>; rel="describedby"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Captures]
+login_body: body
+login_schema: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Set-Cookie" not exists
+jsonpath "$.title" == "SSO Sandbox"
+jsonpath "$.providers" count == 10
+jsonpath "$.providers[0].name" == "keycloak"
+jsonpath "$.providers[0].title" == "keycloak"
+jsonpath "$.providers[0].path" == "/self/v1/auth/login/keycloak"
+jsonpath "$.providers[9].name" == "rotated"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{login_schema}}
+```
+{{login_body}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
+# It is the same page whoever asks for it, so a shared cache may hold it
+GET {{base}}/self/v1/auth/login
+Accept: text/html
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
+Vary: Accept, Accept-Encoding
+[Asserts]
+header "Access-Control-Allow-Origin" not exists
+xpath "count(//a[@data-sourcemeta-ui-login])" == 10
+
+# Nothing else is served there
+POST {{base}}/self/v1/auth/login
+HTTP 405
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
+Allow: GET, HEAD, OPTIONS
+Link: </self/v1/schemas/api/error>; rel="describedby"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Captures]
+method_body: body
+method_schema: header "Link" regex "<([^>]+)>"
+{
+  "type": "urn:sourcemeta:one:method-not-allowed",
+  "title": "Method Not Allowed",
+  "status": 405,
+  "detail": "This HTTP method is invalid for this URL"
+}
+
+POST {{base}}/self/v1/api/schemas/evaluate{{method_schema}}
+```
+{{method_body}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
+# The private catalog is not there for an anonymous caller, and what it is told
+# validates against its error schema
+GET {{base}}/private/secret.json
+HTTP 404
+Cache-Control: no-store
+Content-Type: application/problem+json
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 [Captures]
@@ -30,18 +162,17 @@ error_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Set-Cookie" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
-# The archive catalog is governed by that same policy, so it denies identically
+# The archive catalog is governed by that same policy, so it answers alike
 GET {{base}}/archive/record.json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 [Captures]
@@ -49,10 +180,10 @@ archive_denied: body
 [Asserts]
 header "Set-Cookie" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}
@@ -127,6 +258,98 @@ cookie "sourcemeta_one_session[HttpOnly]" exists
 cookie "sourcemeta_one_session[SameSite]" == "Lax"
 cookie "sourcemeta_one_transaction[Max-Age]" == 0
 
+# The root listing under the session marks what the session opens as private.
+# The lock is drawn from a policy governing an entry, whichever kind of
+# credential satisfies it, so an interactive session marks the same entries a
+# key would. The public collection stays a plain folder beside them
+GET {{base}}/
+Accept: text/html
+HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
+Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
+[Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 2
+xpath "count(//tr[.//a[normalize-space(.) = 'private']]//i[contains(@class, 'bi-lock-fill')])" == 1
+xpath "count(//tr[.//a[normalize-space(.) = 'archive']]//i[contains(@class, 'bi-lock-fill')])" == 1
+xpath "count(//tr[.//a[normalize-space(.) = 'public']]//i[contains(@class, 'bi-folder-fill')])" == 1
+xpath "count(//tr[.//a[normalize-space(.) = 'self']]//i[contains(@class, 'bi-folder-fill')])" == 1
+# What this session does not open is absent rather than locked, so the mark
+# never stands for something being withheld
+xpath "count(//tr[.//a[normalize-space(.) = 'team']])" == 0
+xpath "count(//tr[.//a[normalize-space(.) = 'corp']])" == 0
+
+# And the data it is drawn from marks the two the session opens and leaves the
+# open pair alone, which is the same split the render above draws
+GET {{base}}/self/v1/api/list
+HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
+Content-Type: application/json
+Link: </self/v1/schemas/api/list/response>; rel="describedby"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Captures]
+session_listing: body
+session_schema: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "ETag" exists
+jsonpath "$.path" == "/"
+jsonpath "$.private" == false
+jsonpath "$.entries" count == 4
+jsonpath "$.entries[0].name" == "archive"
+jsonpath "$.entries[0].private" == true
+jsonpath "$.entries[1].name" == "private"
+jsonpath "$.entries[1].private" == true
+jsonpath "$.entries[2].name" == "public"
+jsonpath "$.entries[2].private" == false
+jsonpath "$.entries[3].name" == "self"
+jsonpath "$.entries[3].private" == false
+
+POST {{base}}/self/v1/api/schemas/evaluate{{session_schema}}
+```
+{{session_listing}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
+# The bar in the view the session resolves to offers the way out. Every page
+# written for that view carries it, the listing and a schema page alike
+GET {{base}}/private/
+Accept: text/html
+HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
+Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
+[Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
+xpath "count(//nav[contains(@class, 'navbar')])" == 1
+xpath "count(//a[@data-sourcemeta-ui-signin])" == 0
+xpath "count(//button[@data-sourcemeta-ui-signout])" == 1
+xpath "string(//form[button/@data-sourcemeta-ui-signout]/@action)" == "/self/v1/auth/logout"
+
+GET {{base}}/private/secret
+Accept: text/html
+HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
+Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
+[Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
+xpath "count(//a[@data-sourcemeta-ui-signin])" == 0
+xpath "count(//button[@data-sourcemeta-ui-signout])" == 1
+
 # The session now opens the private catalog that was denied before, served
 # private so a shared cache cannot retain it
 GET {{base}}/private/secret.json
@@ -182,12 +405,11 @@ cookie "sourcemeta_one_transaction[Max-Age]" == 0
 cookie "sourcemeta_one_renewal[Max-Age]" == 0
 header "Location" startsWith "https://keycloak:8443/realms/main/protocol/openid-connect/logout?"
 
-# And the private catalog is gated again, the denial byte-identical to the first
+# And the private catalog is gone again, byte-identical to the first time
 GET {{base}}/private/secret.json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 [Captures]
@@ -195,10 +417,10 @@ final_denied: body
 [Asserts]
 header "Set-Cookie" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{error_schema}}

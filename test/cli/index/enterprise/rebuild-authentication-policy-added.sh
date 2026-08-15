@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Adding a policy adds a way the registry can be looked at, so a tree appears
-# for it holding everything the anonymous one holds, since nothing filters yet
+# for it, and what the policy covers leaves the anonymous tree at the same time
 
 set -o errexit
 set -o nounset
@@ -53,18 +53,17 @@ cd - > /dev/null
 cat << 'EOF' > "$TMP/expected-before.txt"
 ./explorer/public
 ./explorer/public/%
-./explorer/public/%/401.metapack
 ./explorer/public/%/404.metapack
 ./explorer/public/%/directory-html.metapack
 ./explorer/public/%/directory.metapack
 ./explorer/public/%/login-html.metapack
+./explorer/public/%/login.metapack
 ./explorer/public/%/mcp.metapack
 ./explorer/public/%/search.metapack
 ./explorer/public/schemas
 ./explorer/public/schemas/%
 ./explorer/public/schemas/%/directory-html.metapack
 ./explorer/public/schemas/%/directory.metapack
-./explorer/public/schemas/%/login-html.metapack
 ./explorer/public/schemas/a
 ./explorer/public/schemas/a/%
 ./explorer/public/schemas/a/%/dependents.metapack
@@ -113,18 +112,15 @@ cd - > /dev/null
 cat << 'EOF' > "$TMP/expected-after.txt"
 ./explorer/alpha
 ./explorer/alpha/%
-./explorer/alpha/%/401.metapack
 ./explorer/alpha/%/404.metapack
 ./explorer/alpha/%/directory-html.metapack
 ./explorer/alpha/%/directory.metapack
-./explorer/alpha/%/login-html.metapack
 ./explorer/alpha/%/mcp.metapack
 ./explorer/alpha/%/search.metapack
 ./explorer/alpha/schemas
 ./explorer/alpha/schemas/%
 ./explorer/alpha/schemas/%/directory-html.metapack
 ./explorer/alpha/schemas/%/directory.metapack
-./explorer/alpha/schemas/%/login-html.metapack
 ./explorer/alpha/schemas/a
 ./explorer/alpha/schemas/a/%
 ./explorer/alpha/schemas/a/%/dependents.metapack
@@ -137,28 +133,17 @@ cat << 'EOF' > "$TMP/expected-after.txt"
 ./explorer/alpha/schemas/b/%/schema.metapack
 ./explorer/public
 ./explorer/public/%
-./explorer/public/%/401.metapack
 ./explorer/public/%/404.metapack
 ./explorer/public/%/directory-html.metapack
 ./explorer/public/%/directory.metapack
 ./explorer/public/%/login-html.metapack
+./explorer/public/%/login.metapack
 ./explorer/public/%/mcp.metapack
 ./explorer/public/%/search.metapack
 ./explorer/public/schemas
 ./explorer/public/schemas/%
 ./explorer/public/schemas/%/directory-html.metapack
 ./explorer/public/schemas/%/directory.metapack
-./explorer/public/schemas/%/login-html.metapack
-./explorer/public/schemas/a
-./explorer/public/schemas/a/%
-./explorer/public/schemas/a/%/dependents.metapack
-./explorer/public/schemas/a/%/schema-html.metapack
-./explorer/public/schemas/a/%/schema.metapack
-./explorer/public/schemas/b
-./explorer/public/schemas/b/%
-./explorer/public/schemas/b/%/dependents.metapack
-./explorer/public/schemas/b/%/schema-html.metapack
-./explorer/public/schemas/b/%/schema.metapack
 EOF
 
 diff "$TMP/after.txt" "$TMP/expected-after.txt"

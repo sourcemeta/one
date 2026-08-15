@@ -33,10 +33,10 @@ struct BuildPlan {
     std::filesystem::path destination;
     Dependencies dependencies;
     std::string_view data;
-    // Which view this was built for, as a position in the list the build was
-    // given. Zero wherever the tree written into is not namespaced, so a
+    // Which view this was built for, named as the tree it lands in names it.
+    // Empty wherever what is written is one artifact whoever asks, so a
     // handler that does not care never has to ask
-    std::uint8_t view{0};
+    std::string_view view{};
   };
 
   std::filesystem::path output;
@@ -66,7 +66,7 @@ struct DependencyReference {
   const char *filename;
 };
 
-inline constexpr std::size_t MAX_DEPENDENCIES_PER_RULE = 4;
+inline constexpr std::size_t MAX_DEPENDENCIES_PER_RULE = 5;
 
 struct LeafRule {
   BuildPlan::Action::Type action;
@@ -82,7 +82,14 @@ struct LeafRule {
   std::uint8_t dependency_count;
 };
 
-enum class ContainerScope : std::uint8_t { AllContainers, NonRoot, RootOnly };
+enum class ContainerScope : std::uint8_t {
+  AllContainers,
+  NonRoot,
+  RootOnly,
+  // The root of the anonymous view alone, for an artifact that is the same
+  // answer whoever asks and so is held once rather than copied per view
+  PrimaryRootOnly
+};
 
 enum class ContainerDependencyKind : std::uint8_t {
   LeafMetadata,

@@ -12,6 +12,7 @@
       "dialect": "https://json-schema.org/draft/2020-12/schema",
       "health": 100,
       "priority": 100,
+      "private": false,
       "breadcrumb": [
         {
           "name": "Home",

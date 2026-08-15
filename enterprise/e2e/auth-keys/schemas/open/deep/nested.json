@@ -1,0 +1,6 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/open/deep/nested",
+  "title": "A public schema two levels down",
+  "type": "string"
+}

@@ -1,6 +1,8 @@
-# The root is governed by no policy, so it is public and lists anonymously. This
-# is the carve-in shape: a public parent enumerating its children, each carrying
-# the names of the policies that gate it, while the public children carry none
+# The root is governed by no policy, so it lists anonymously. A view is written
+# only what it can reach, so this names the ungated children and stops there:
+# the gated directories are absent rather than shown as doors, and the counts
+# behind them are absent with them. The response is shareable, so it is public
+# and revalidated rather than held privately
 GET {{base}}/self/v1/api/list
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
@@ -11,110 +13,103 @@ Link: </self/v1/schemas/api/list/response>; rel="describedby"
 [Captures]
 root_listing: body
 root_listing_schema: header "Link" regex "<([^>]+)>"
+root_etag: header "ETag"
 [Asserts]
 header "ETag" exists
 jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
-jsonpath "$.schemas" == 75
-jsonpath "$.policies" count == 0
-jsonpath "$.entries" count == 13
-jsonpath "$.entries[0].name" == "console"
+jsonpath "$.schemas" == 65
+jsonpath "$.private" == false
+jsonpath "$.entries" count == 3
+jsonpath "$.entries[0].name" == "orphan"
 jsonpath "$.entries[0].type" == "directory"
-jsonpath "$.entries[0].path" == "/console/"
-jsonpath "$.entries[0].policies" count == 2
-jsonpath "$.entries[0].policies[0].name" == "console"
-jsonpath "$.entries[0].policies[0].title" == "console"
-jsonpath "$.entries[0].policies[0].type" == "apiKey"
-jsonpath "$.entries[0].policies[1].name" == "keycloak"
-jsonpath "$.entries[0].policies[1].title" == "keycloak"
-jsonpath "$.entries[0].policies[1].type" == "oidc"
-jsonpath "$.entries[1].name" == "internal"
+jsonpath "$.entries[0].path" == "/orphan/"
+jsonpath "$.entries[0].private" == false
+jsonpath "$.entries[0].schemas" == 1
+jsonpath "$.entries[0].health" == 50
+jsonpath "$.entries[1].name" == "public"
 jsonpath "$.entries[1].type" == "directory"
-jsonpath "$.entries[1].path" == "/internal/"
-jsonpath "$.entries[1].policies" count == 1
-jsonpath "$.entries[1].policies[0].name" == "internal"
-jsonpath "$.entries[1].policies[0].title" == "internal"
-jsonpath "$.entries[1].policies[0].type" == "apiKey"
-jsonpath "$.entries[2].name" == "machine"
+jsonpath "$.entries[1].path" == "/public/"
+jsonpath "$.entries[1].private" == false
+jsonpath "$.entries[1].schemas" == 1
+jsonpath "$.entries[1].health" == 0
+jsonpath "$.entries[2].name" == "self"
 jsonpath "$.entries[2].type" == "directory"
-jsonpath "$.entries[2].path" == "/machine/"
-jsonpath "$.entries[2].policies" count == 1
-jsonpath "$.entries[2].policies[0].name" == "machine"
-jsonpath "$.entries[2].policies[0].title" == "machine"
-jsonpath "$.entries[2].policies[0].type" == "jwt"
-jsonpath "$.entries[3].name" == "mixed"
-jsonpath "$.entries[3].type" == "directory"
-jsonpath "$.entries[3].path" == "/mixed/"
-jsonpath "$.entries[3].policies" count == 3
-jsonpath "$.entries[3].policies[0].name" == "mixed-plain"
-jsonpath "$.entries[3].policies[0].title" == "mixed-plain"
-jsonpath "$.entries[3].policies[0].type" == "apiKey"
-jsonpath "$.entries[3].policies[1].name" == "mixed-hashed"
-jsonpath "$.entries[3].policies[1].title" == "mixed-hashed"
-jsonpath "$.entries[3].policies[1].type" == "apiKey"
-jsonpath "$.entries[3].policies[2].name" == "mixed-blank"
-jsonpath "$.entries[3].policies[2].title" == "mixed-blank"
-jsonpath "$.entries[3].policies[2].type" == "apiKey"
-jsonpath "$.entries[4].name" == "orphan"
-jsonpath "$.entries[4].type" == "directory"
-jsonpath "$.entries[4].path" == "/orphan/"
-jsonpath "$.entries[4].policies" count == 0
-jsonpath "$.entries[5].name" == "private"
-jsonpath "$.entries[5].type" == "directory"
-jsonpath "$.entries[5].path" == "/private/"
-jsonpath "$.entries[5].policies" count == 1
-jsonpath "$.entries[5].policies[0].name" == "reports"
-jsonpath "$.entries[5].policies[0].title" == "reports"
-jsonpath "$.entries[5].policies[0].type" == "apiKey"
-jsonpath "$.entries[6].name" == "public"
-jsonpath "$.entries[6].type" == "directory"
-jsonpath "$.entries[6].path" == "/public/"
-jsonpath "$.entries[6].policies" count == 0
-jsonpath "$.entries[7].name" == "reports"
-jsonpath "$.entries[7].type" == "directory"
-jsonpath "$.entries[7].path" == "/reports/"
-jsonpath "$.entries[7].policies" count == 1
-jsonpath "$.entries[7].policies[0].name" == "reports"
-jsonpath "$.entries[7].policies[0].title" == "reports"
-jsonpath "$.entries[7].policies[0].type" == "apiKey"
-jsonpath "$.entries[8].name" == "scoped"
-jsonpath "$.entries[8].type" == "directory"
-jsonpath "$.entries[8].path" == "/scoped/"
-jsonpath "$.entries[8].policies" count == 1
-jsonpath "$.entries[8].policies[0].name" == "scoped"
-jsonpath "$.entries[8].policies[0].title" == "scoped"
-jsonpath "$.entries[8].policies[0].type" == "jwt"
-jsonpath "$.entries[9].name" == "self"
-jsonpath "$.entries[9].type" == "directory"
-jsonpath "$.entries[9].path" == "/self/"
-jsonpath "$.entries[9].title" == "Self"
-jsonpath "$.entries[9].policies" count == 0
-jsonpath "$.entries[10].name" == "strict"
-jsonpath "$.entries[10].type" == "directory"
-jsonpath "$.entries[10].path" == "/strict/"
-jsonpath "$.entries[10].policies" count == 1
-jsonpath "$.entries[10].policies[0].name" == "strict"
-jsonpath "$.entries[10].policies[0].title" == "strict"
-jsonpath "$.entries[10].policies[0].type" == "jwt"
-jsonpath "$.entries[11].name" == "telemetry"
-jsonpath "$.entries[11].type" == "directory"
-jsonpath "$.entries[11].path" == "/telemetry/"
-jsonpath "$.entries[11].policies" count == 1
-jsonpath "$.entries[11].policies[0].name" == "telemetry"
-jsonpath "$.entries[11].policies[0].title" == "telemetry"
-jsonpath "$.entries[11].policies[0].type" == "jwt"
-jsonpath "$.entries[12].name" == "typed"
-jsonpath "$.entries[12].type" == "directory"
-jsonpath "$.entries[12].path" == "/typed/"
-jsonpath "$.entries[12].policies" count == 1
-jsonpath "$.entries[12].policies[0].name" == "typed"
-jsonpath "$.entries[12].policies[0].title" == "typed"
-jsonpath "$.entries[12].policies[0].type" == "jwt"
-
+jsonpath "$.entries[2].path" == "/self/"
+jsonpath "$.entries[2].private" == false
+jsonpath "$.entries[2].schemas" == 63
+jsonpath "$.entries[2].health" == 100
 POST {{base}}/self/v1/api/schemas/evaluate{{root_listing_schema}}
 ```
 {{root_listing}}
+```
+HTTP 200
+[Asserts]
+jsonpath "$.valid" == true
+
+# The same URL under a credential is answered from the view that credential
+# resolves to, which holds the anonymous catalog plus what its policy gates.
+# The gated children appear here and nowhere else, they are marked private,
+# and the counts move with them, so how much sits behind a gate is told only to
+# a caller that can open it. The answer varies by caller
+# and cannot be shared, so it is private, and it is a different body under a
+# different validator than the anonymous one
+GET {{base}}/self/v1/api/list
+Authorization: Bearer primary-secret-key
+HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/api/list/response>; rel="describedby"
+[Captures]
+reports_listing: body
+reports_listing_schema: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "ETag" exists
+header "ETag" != "{{root_etag}}"
+jsonpath "$.path" == "/"
+jsonpath "$.url" == "{{base}}"
+jsonpath "$.breadcrumb" count == 0
+jsonpath "$.schemas" == 68
+jsonpath "$.private" == false
+jsonpath "$.entries" count == 5
+jsonpath "$.entries[0].name" == "orphan"
+jsonpath "$.entries[0].type" == "directory"
+jsonpath "$.entries[0].path" == "/orphan/"
+jsonpath "$.entries[0].private" == false
+jsonpath "$.entries[0].schemas" == 1
+jsonpath "$.entries[0].health" == 50
+jsonpath "$.entries[1].name" == "private"
+jsonpath "$.entries[1].type" == "directory"
+jsonpath "$.entries[1].path" == "/private/"
+jsonpath "$.entries[1].private" == true
+jsonpath "$.entries[1].schemas" == 2
+jsonpath "$.entries[1].health" == 34
+jsonpath "$.entries[2].name" == "public"
+jsonpath "$.entries[2].type" == "directory"
+jsonpath "$.entries[2].path" == "/public/"
+jsonpath "$.entries[2].private" == false
+jsonpath "$.entries[2].schemas" == 1
+jsonpath "$.entries[2].health" == 0
+jsonpath "$.entries[3].name" == "reports"
+jsonpath "$.entries[3].type" == "directory"
+jsonpath "$.entries[3].path" == "/reports/"
+jsonpath "$.entries[3].private" == true
+jsonpath "$.entries[3].schemas" == 1
+jsonpath "$.entries[3].health" == 50
+jsonpath "$.entries[4].name" == "self"
+jsonpath "$.entries[4].type" == "directory"
+jsonpath "$.entries[4].path" == "/self/"
+jsonpath "$.entries[4].private" == false
+jsonpath "$.entries[4].schemas" == 63
+jsonpath "$.entries[4].health" == 100
+
+POST {{base}}/self/v1/api/schemas/evaluate{{reports_listing_schema}}
+Authorization: Bearer primary-secret-key
+```
+{{reports_listing}}
 ```
 HTTP 200
 [Asserts]
@@ -135,12 +130,12 @@ public_listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.schemas" == 1
 jsonpath "$.entries" count == 1
-jsonpath "$.policies" count == 0
+jsonpath "$.private" == false
 jsonpath "$.entries[0].name" == "string"
 jsonpath "$.entries[0].type" == "schema"
 jsonpath "$.entries[0].path" == "/public/string"
 jsonpath "$.entries[0].identifier" == "{{base}}/public/string"
-jsonpath "$.entries[0].policies" count == 0
+jsonpath "$.entries[0].private" == false
 
 POST {{base}}/self/v1/api/schemas/evaluate{{public_listing_schema}}
 ```
@@ -162,13 +157,13 @@ orphan_listing: body
 orphan_listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.schemas" == 1
-jsonpath "$.policies" count == 0
+jsonpath "$.private" == false
 jsonpath "$.entries" count == 1
 jsonpath "$.entries[0].name" == "lonely"
 jsonpath "$.entries[0].type" == "schema"
 jsonpath "$.entries[0].path" == "/orphan/lonely"
 jsonpath "$.entries[0].identifier" == "{{base}}/orphan/lonely"
-jsonpath "$.entries[0].policies" count == 0
+jsonpath "$.entries[0].private" == false
 
 POST {{base}}/self/v1/api/schemas/evaluate{{orphan_listing_schema}}
 ```
@@ -178,14 +173,13 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# Listing an apiKey directory is denied without a credential
+# Listing an apiKey directory finds nothing without a credential
 GET {{base}}/self/v1/api/list/private
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 
 # With a credential the listing is served and validates against its schema. Its
-# nested child inherits the same gate, so it carries the governing policy name
+# nested child inherits the same gate, so it is marked private too
 GET {{base}}/self/v1/api/list/private
 Authorization: Bearer primary-secret-key
 HTTP 200
@@ -197,24 +191,15 @@ private_listing: body
 private_listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.entries" count == 2
-jsonpath "$.policies" count == 1
-jsonpath "$.policies[0].name" == "reports"
-jsonpath "$.policies[0].title" == "reports"
-jsonpath "$.policies[0].type" == "apiKey"
+jsonpath "$.private" == true
 jsonpath "$.entries[0].name" == "open"
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].path" == "/private/open/"
-jsonpath "$.entries[0].policies" count == 1
-jsonpath "$.entries[0].policies[0].name" == "reports"
-jsonpath "$.entries[0].policies[0].title" == "reports"
-jsonpath "$.entries[0].policies[0].type" == "apiKey"
+jsonpath "$.entries[0].private" == true
 jsonpath "$.entries[1].name" == "secret"
 jsonpath "$.entries[1].type" == "schema"
 jsonpath "$.entries[1].path" == "/private/secret"
-jsonpath "$.entries[1].policies" count == 1
-jsonpath "$.entries[1].policies[0].name" == "reports"
-jsonpath "$.entries[1].policies[0].title" == "reports"
-jsonpath "$.entries[1].policies[0].type" == "apiKey"
+jsonpath "$.entries[1].private" == true
 
 POST {{base}}/self/v1/api/schemas/evaluate{{private_listing_schema}}
 ```
@@ -224,11 +209,10 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# The nested directory inherits the gate, so it is denied anonymously
+# The nested directory inherits the gate, so it is absent anonymously
 GET {{base}}/self/v1/api/list/private/open
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 
 # With the governing key it lists, marked private, and validates against schema
 GET {{base}}/self/v1/api/list/private/open
@@ -242,19 +226,13 @@ nested_listing: body
 nested_listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.path" == "/private/open"
-jsonpath "$.policies" count == 1
-jsonpath "$.policies[0].name" == "reports"
-jsonpath "$.policies[0].title" == "reports"
-jsonpath "$.policies[0].type" == "apiKey"
+jsonpath "$.private" == true
 jsonpath "$.entries" count == 1
 jsonpath "$.entries[0].name" == "shared"
 jsonpath "$.entries[0].type" == "schema"
 jsonpath "$.entries[0].path" == "/private/open/shared"
 jsonpath "$.entries[0].identifier" == "{{base}}/private/open/shared"
-jsonpath "$.entries[0].policies" count == 1
-jsonpath "$.entries[0].policies[0].name" == "reports"
-jsonpath "$.entries[0].policies[0].title" == "reports"
-jsonpath "$.entries[0].policies[0].type" == "apiKey"
+jsonpath "$.entries[0].private" == true
 
 POST {{base}}/self/v1/api/schemas/evaluate{{nested_listing_schema}}
 ```
@@ -264,68 +242,121 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# The HTML rendering of an apiKey directory is gated, rendering the 401 page
+# The HTML rendering of an apiKey directory is gated, rendering the page for a
+# path that is not there
 GET {{base}}/private/
 Accept: text/html
-HTTP 401
+HTTP 404
+Cache-Control: no-store
 Content-Type: text/html; charset=utf-8
-WWW-Authenticate: Bearer realm="registry"
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
-xpath "string(//title)" == "Unauthorized"
-xpath "string(//h2[@class='fw-bold'])" == "This page requires authentication"
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
+header "WWW-Authenticate" not exists
+xpath "string(//title)" == "Not Found"
+xpath "string(//h2[@class='fw-bold'])" == "Oops! What you are looking for is not here"
 
 GET {{base}}/private/
 Accept: text/html
 Authorization: Bearer primary-secret-key
 HTTP 200
 Cache-Control: private, max-age=0, must-revalidate
+Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
-header "Content-Type" contains "text/html"
-# Inside the gated collection nothing adds a new policy, so there is no further
-# barrier: the lock sits only at the boundary, never repeated within
-xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 0
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
+
+# The lock follows the policy rather than marking where it starts. A reader
+# inside the gated collection is still shown that its child is private, which
+# is what somebody deciding whether to pass a link on needs to know
+xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 1
+xpath "count(//tr[.//a[normalize-space(.) = 'open']]//i[contains(@class, 'bi-lock-fill')])" == 1
+xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 0
 
 # The HTML rendering of the nested directory is gated identically
 GET {{base}}/private/open/
 Accept: text/html
-HTTP 401
+HTTP 404
+Cache-Control: no-store
 Content-Type: text/html; charset=utf-8
-WWW-Authenticate: Bearer realm="registry"
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
-xpath "string(//title)" == "Unauthorized"
-xpath "string(//h2[@class='fw-bold'])" == "This page requires authentication"
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
+header "WWW-Authenticate" not exists
+xpath "string(//title)" == "Not Found"
+xpath "string(//h2[@class='fw-bold'])" == "Oops! What you are looking for is not here"
 
+# Two levels under the policy and it still says so. The lock is a fact about
+# the entry rather than about the distance from where the policy is declared
 GET {{base}}/private/open/
 Accept: text/html
 Authorization: Bearer primary-secret-key
 HTTP 200
 Cache-Control: private, max-age=0, must-revalidate
+Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
-header "Content-Type" contains "text/html"
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
 
-# The HTML rendering of the public root lists anonymously, never the 401 page.
-# A child whose governing policies differ from the root is an authentication
-# barrier, shown with a lock instead of the plain folder icon, while a child that
-# shares the root's public scope keeps the folder
+# Only a schema sits here, and a schema row carries its dialect rather than a
+# folder or a lock
+xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 0
+xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 0
+
+# The HTML rendering of the public root lists anonymously, never that page.
+# It renders the same three children the API names, every one of them a plain
+# folder: a directory the caller cannot enter is not drawn as a locked door,
+# it is not drawn at all
 GET {{base}}/
 Accept: text/html
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
+Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
 [Asserts]
-header "Content-Type" contains "text/html"
-xpath "string(//title)" != "Unauthorized"
-xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 10
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
+xpath "string(//title)" != "Not Found"
+xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 0
 xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 3
-xpath "count(//tr[.//a[normalize-space(.) = 'console']]//i[contains(@class, 'bi-lock-fill')])" == 1
-xpath "count(//tr[.//a[normalize-space(.) = 'scoped']]//i[contains(@class, 'bi-lock-fill')])" == 1
-xpath "count(//tr[.//a[normalize-space(.) = 'private']]//i[contains(@class, 'bi-lock-fill')])" == 1
-xpath "count(//tr[.//a[normalize-space(.) = 'internal']]//i[contains(@class, 'bi-lock-fill')])" == 1
-xpath "count(//tr[.//a[normalize-space(.) = 'typed']]//i[contains(@class, 'bi-lock-fill')])" == 1
-xpath "count(//tr[.//a[normalize-space(.) = 'reports']]//i[contains(@class, 'bi-lock-fill')])" == 1
-xpath "count(//tr[.//a[normalize-space(.) = 'mixed']]//i[contains(@class, 'bi-lock-fill')])" == 1
-xpath "count(//tr[.//a[normalize-space(.) = 'machine']]//i[contains(@class, 'bi-lock-fill')])" == 1
-xpath "count(//tr[.//a[normalize-space(.) = 'strict']]//i[contains(@class, 'bi-lock-fill')])" == 1
-xpath "count(//tr[.//a[normalize-space(.) = 'telemetry']]//i[contains(@class, 'bi-lock-fill')])" == 1
-xpath "count(//tr[.//a[normalize-space(.) = 'public']]//i[contains(@class, 'bi-lock-fill')])" == 0
-xpath "count(//tr[.//a[normalize-space(.) = 'public']]//i[contains(@class, 'bi-folder-fill')])" == 1
 xpath "count(//tr[.//a[normalize-space(.) = 'orphan']]//i[contains(@class, 'bi-folder-fill')])" == 1
+xpath "count(//tr[.//a[normalize-space(.) = 'public']]//i[contains(@class, 'bi-folder-fill')])" == 1
+xpath "count(//tr[.//a[normalize-space(.) = 'self']]//i[contains(@class, 'bi-folder-fill')])" == 1
+
+# The same rendering under a credential is drawn from that policy's view, so
+# the gated children appear, and the lock marks them because a policy governs
+# them. The children the anonymous rendering also shows stay plain folders
+GET {{base}}/
+Accept: text/html
+Authorization: Bearer primary-secret-key
+HTTP 200
+Cache-Control: private, max-age=0, must-revalidate
+Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
+[Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Access-Control-Allow-Origin" not exists
+xpath "string(//title)" != "Not Found"
+xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 2
+xpath "count(//i[contains(@class, 'bi-folder-fill')])" == 3
+xpath "count(//tr[.//a[normalize-space(.) = 'private']]//i[contains(@class, 'bi-lock-fill')])" == 1
+xpath "count(//tr[.//a[normalize-space(.) = 'reports']]//i[contains(@class, 'bi-lock-fill')])" == 1
+xpath "count(//tr[.//a[normalize-space(.) = 'orphan']]//i[contains(@class, 'bi-folder-fill')])" == 1
+xpath "count(//tr[.//a[normalize-space(.) = 'public']]//i[contains(@class, 'bi-folder-fill')])" == 1
+xpath "count(//tr[.//a[normalize-space(.) = 'self']]//i[contains(@class, 'bi-folder-fill')])" == 1

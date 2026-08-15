@@ -1,0 +1,11 @@
+services:
+  sandbox:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - SOURCEMETA_ONE_PORT=8000
+    env_file:
+      - environment
+    ports:
+      - "${PORT}:8000"

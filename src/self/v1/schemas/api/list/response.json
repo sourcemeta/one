@@ -9,13 +9,7 @@
       "entries": [],
       "path": "/schemas",
       "url": "https://example.com/schemas",
-      "policies": [
-        {
-          "name": "corporate",
-          "title": "Corporate SSO",
-          "type": "oidc"
-        }
-      ],
+      "private": true,
       "breadcrumb": [
         {
           "name": "Home",
@@ -32,14 +26,14 @@
     "path",
     "url",
     "breadcrumb",
-    "policies"
+    "private"
   ],
   "properties": {
     "title": {
       "type": "string"
     },
-    "policies": {
-      "$ref": "#/$defs/policies"
+    "private": {
+      "type": "boolean"
     },
     "description": {
       "type": "string"
@@ -79,7 +73,7 @@
               "name",
               "type",
               "path",
-              "policies"
+              "private"
             ],
             "properties": {
               "title": {
@@ -88,8 +82,8 @@
               "description": {
                 "type": "string"
               },
-              "policies": {
-                "$ref": "#/$defs/policies"
+              "private": {
+                "type": "boolean"
               },
               "type": {
                 "const": "directory"
@@ -129,16 +123,13 @@
           },
           {
             "$ref": "../schemas/metadata/response.json#base",
-            "required": [ "type", "name", "policies" ],
+            "required": [ "type", "name" ],
             "properties": {
               "type": {
                 "const": "schema"
               },
               "name": {
                 "type": "string"
-              },
-              "policies": {
-                "$ref": "#/$defs/policies"
               }
             },
             "unevaluatedProperties": false
@@ -174,28 +165,5 @@
       "format": "uri"
     }
   },
-  "additionalProperties": false,
-  "$defs": {
-    "policies": {
-      "type": "array",
-      "uniqueItems": true,
-      "items": {
-        "type": "object",
-        "required": [ "name", "title", "type" ],
-        "properties": {
-          "name": {
-            "type": "string",
-            "pattern": "^[a-z0-9-]+$"
-          },
-          "title": {
-            "type": "string"
-          },
-          "type": {
-            "enum": [ "apiKey", "jwt", "oidc" ]
-          }
-        },
-        "additionalProperties": false
-      }
-    }
-  }
+  "additionalProperties": false
 }

@@ -1,30 +1,32 @@
 # This registry is locked in its entirety behind a single apiKey policy at the
-# root. Nothing is public: content, listings, the JSON API, search, evaluate, the
-# MCP endpoint, the static assets and even the bundled self schemas all deny
-# without a credential. This file probes every surface and asserts the denial is
-# the canonical problem document, leaking nothing about what it hides.
+# root. Nothing is public: content, listings, the JSON API, search, evaluate,
+# the MCP endpoint, the static assets and even the bundled self schemas are all
+# closed without a credential. This file probes every surface. What each one
+# answers turns on what is being withheld: a registry path is answered as one
+# that is not there, while a route this software publishes is refused outright,
+# since that route exists on every instance and refusing it gives nothing away.
+# Either way the body is the canonical problem document, leaking nothing.
 
-# A schema denies, and the denial carries no hint of the schema
+# A schema is not there, and what is answered carries no hint of it
 GET {{base}}/catalog/example.json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 [Captures]
 denied_body: body
 denied_schema: header "Link" regex "<([^>]+)>"
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
-# The denial round-trips against its error schema. Evaluate is itself private, so
-# the round-trip is the one place a credential is presented. All other denials in
-# this file are byte-identical to the body validated here
+# It round-trips against its error schema. Evaluate is itself private, so the
+# round-trip is the one place a credential is presented. Every other answer of
+# this shape in this file is byte-identical to the body validated here
 POST {{base}}/self/v1/api/schemas/evaluate{{denied_schema}}
 Authorization: Bearer full-secret-key
 ```
@@ -34,161 +36,162 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# A schema that carries a title and description denies identically: none of that
-# authored content leaks
+# A schema that carries a title and description answers identically: none of
+# that authored content leaks
 GET {{base}}/catalog/classified.json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
-# A nested schema denies
+# A nested schema answers the same
 GET {{base}}/catalog/nested/deep.json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
-# Existence is not probeable: a path that does not exist denies identically to
+# Existence is not probeable: a path that does not exist answers identically to
 # one that does, since the gate precedes the existence check
 GET {{base}}/catalog/ghost.json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
-# A collection that was never declared denies the same way, so the set of
+# A collection that was never declared answers the same way, so the set of
 # collections cannot be discovered by guessing either
 GET {{base}}/made-up/anything.json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 # A cased spelling of a real path normalises to the same locked identity
 GET {{base}}/CATALOG/EXAMPLE.JSON
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 # The bundle variant (served on the Deno user agent) is gated like everything
 # else, so the cross-reference bundle cannot exfiltrate contents either
 GET {{base}}/catalog/example.json
 User-Agent: Deno/1.0
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
-# A browser navigating to a gated page is shown its login in place rather than
-# a redirect, since a single interactive policy governs the whole registry
+# A browser navigating anywhere in a registry gated whole is told there is
+# nothing there, the root included. The page names no provider, since choosing
+# one is what the login page is for, but the bar carries the way to it. On an
+# instance where nothing at all is open that link is the only thing a visitor
+# can act on, and it is what makes this answer somewhere to start rather than
+# a dead end
 GET {{base}}/
 Accept: text/html
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: text/html; charset=utf-8
-WWW-Authenticate: Bearer realm="registry"
 [Captures]
-login_etag: header "ETag"
+missing_etag: header "ETag"
 [Asserts]
 header "Location" not exists
 header "Set-Cookie" not exists
-xpath "string(//title)" == "Sign In"
-xpath "string((//a[@data-sourcemeta-ui-login])[1]/@href)" == "/self/v1/auth/login/keycloak"
+header "WWW-Authenticate" not exists
+xpath "string(//title)" == "Not Found"
+xpath "count(//a[@data-sourcemeta-ui-login])" == 0
+xpath "count(//nav[contains(@class, 'navbar')])" == 1
+xpath "count(//a[@data-sourcemeta-ui-signin])" == 1
+xpath "string(//a[@data-sourcemeta-ui-signin]/@href)" == "/self/v1/auth/login"
+xpath "count(//button[@data-sourcemeta-ui-signout])" == 0
 
 # A nested directory is answered by the byte-identical page, so the whole gated
-# tree is indistinguishable from one denied path to the next
+# tree reads the same from one path to the next
 GET {{base}}/catalog/
 Accept: text/html
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: text/html; charset=utf-8
 [Asserts]
 header "Location" not exists
 header "Set-Cookie" not exists
-header "ETag" == {{login_etag}}
+header "ETag" == {{missing_etag}}
 
-# The same directories requested as JSON deny identically, the root included
+# The same directories requested as JSON answer alike, the root included
 GET {{base}}/
 Accept: application/json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 GET {{base}}/catalog/
 Accept: application/json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
-# The machine listing denies at every level, including the root
+# The machine listing is a published route, so it is refused rather than
+# reported missing, at every level and including the root
 GET {{base}}/self/v1/api/list
 HTTP 401
 Cache-Control: no-store
@@ -270,17 +273,16 @@ Access-Control-Allow-Origin: *
 # Even the bundled self schemas, normally always public, are private here because
 # the root policy covers them and there is no public carve-out
 GET {{base}}/self/v1/schemas/api/error
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 # Static assets bypass the content gate, so the root surface policy is their only
@@ -321,8 +323,7 @@ Access-Control-Allow-Origin: *
 
 # HEAD is gated exactly like GET and per RFC 9110 carries no body
 HEAD {{base}}/catalog/example.json
-HTTP 401
-WWW-Authenticate: Bearer realm="registry"
+HTTP 404
 [Asserts]
 bytes count == 0
 

@@ -29,7 +29,7 @@ auto RouterAction::structural_template(const std::string_view schema_uri,
                                        const sourcemeta::blaze::Mode mode) const
     -> std::shared_ptr<const sourcemeta::blaze::Template> {
   const auto artifact{this->artifact_resolve_path_unauthenticated(
-      schema_uri, Tree::Schemas,
+      VIEW_PUBLIC, schema_uri, Tree::Schemas,
       mode == sourcemeta::blaze::Mode::FastValidation ? "blaze-fast"
                                                       : "blaze-exhaustive")};
   assert(artifact.has_value());
@@ -71,7 +71,7 @@ auto RouterAction::blaze_template(const Credentials credentials,
       sourcemeta::one::VIEW_PUBLIC, credentials, schema_uri, Tree::Schemas,
       mode == sourcemeta::blaze::Mode::FastValidation ? "blaze-fast"
                                                       : "blaze-exhaustive")};
-  assert(resolution.outcome == ArtifactResolution::Outcome::Found);
+  assert(resolution.path.has_value());
   return this->dispatcher_.blaze_template(resolution.path.value());
 }
 

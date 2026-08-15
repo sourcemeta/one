@@ -63,35 +63,60 @@ using BuildHandlerFunction = auto (*)(
     const sourcemeta::one::Configuration &, const sourcemeta::core::JSON &)
     -> void;
 
-static constexpr std::array<BuildHandlerFunction, 27> HANDLERS{{
-    &sourcemeta::one::GENERATE_MATERIALISED_SCHEMA::handler,
-    &sourcemeta::one::GENERATE_POINTER_POSITIONS::handler,
-    &sourcemeta::one::GENERATE_FRAME_LOCATIONS::handler,
-    &sourcemeta::one::GENERATE_DEPENDENCIES::handler,
-    &sourcemeta::one::GENERATE_STATS::handler,
-    &sourcemeta::one::GENERATE_HEALTH::handler,
-    &sourcemeta::one::GENERATE_BUNDLE::handler,
-    &sourcemeta::one::GENERATE_EDITOR::handler,
-    &sourcemeta::one::GENERATE_BLAZE_TEMPLATE_EXHAUSTIVE::handler,
-    &sourcemeta::one::GENERATE_BLAZE_TEMPLATE_FAST::handler,
-    &sourcemeta::one::GENERATE_EXPLORER_SCHEMA_METADATA::handler,
-    &sourcemeta::one::GENERATE_DEPENDENTS::handler,
-    &sourcemeta::one::GENERATE_EXPLORER_SEARCH_INDEX::handler,
-    &sourcemeta::one::GENERATE_MCP::handler,
-    &sourcemeta::one::GENERATE_EXPLORER_DIRECTORY_LIST::handler,
-    &sourcemeta::one::GENERATE_WEB_INDEX::handler,
-    &sourcemeta::one::GENERATE_WEB_NOT_FOUND::handler,
-    &sourcemeta::one::GENERATE_WEB_DIRECTORY::handler,
-    &sourcemeta::one::GENERATE_WEB_SCHEMA::handler,
-    &sourcemeta::one::GENERATE_COMMENT::handler,
-    &sourcemeta::one::GENERATE_CONFIGURATION::handler,
-    &sourcemeta::one::GENERATE_VERSION::handler,
-    &sourcemeta::one::GENERATE_URITEMPLATE_ROUTES::handler,
-    &sourcemeta::one::GENERATE_AUTHENTICATION::handler,
-    &sourcemeta::one::GENERATE_WEB_UNAUTHORIZED::handler,
-    &sourcemeta::one::GENERATE_WEB_LOGIN::handler,
-    nullptr,
-}};
+// Indexed by action type, so its size is the number of them rather than a
+// count kept in step by hand. Removing an action without removing its handler
+// is then too many initialisers rather than a slot nothing reaches, and an
+// action added without one is the assertion where this is read
+static constexpr std::array<BuildHandlerFunction, sourcemeta::one::ACTION_COUNT>
+    HANDLERS{{
+        &sourcemeta::one::GENERATE_MATERIALISED_SCHEMA::handler,
+        &sourcemeta::one::GENERATE_POINTER_POSITIONS::handler,
+        &sourcemeta::one::GENERATE_FRAME_LOCATIONS::handler,
+        &sourcemeta::one::GENERATE_DEPENDENCIES::handler,
+        &sourcemeta::one::GENERATE_STATS::handler,
+        &sourcemeta::one::GENERATE_HEALTH::handler,
+        &sourcemeta::one::GENERATE_BUNDLE::handler,
+        &sourcemeta::one::GENERATE_EDITOR::handler,
+        &sourcemeta::one::GENERATE_BLAZE_TEMPLATE_EXHAUSTIVE::handler,
+        &sourcemeta::one::GENERATE_BLAZE_TEMPLATE_FAST::handler,
+        &sourcemeta::one::GENERATE_EXPLORER_SCHEMA_METADATA::handler,
+        &sourcemeta::one::GENERATE_DEPENDENTS::handler,
+        &sourcemeta::one::GENERATE_EXPLORER_SEARCH_INDEX::handler,
+        &sourcemeta::one::GENERATE_MCP::handler,
+        &sourcemeta::one::GENERATE_EXPLORER_DIRECTORY_LIST::handler,
+        &sourcemeta::one::GENERATE_WEB_INDEX::handler,
+        &sourcemeta::one::GENERATE_WEB_NOT_FOUND::handler,
+        &sourcemeta::one::GENERATE_WEB_DIRECTORY::handler,
+        &sourcemeta::one::GENERATE_WEB_SCHEMA::handler,
+        &sourcemeta::one::GENERATE_COMMENT::handler,
+        &sourcemeta::one::GENERATE_CONFIGURATION::handler,
+        &sourcemeta::one::GENERATE_VERSION::handler,
+        &sourcemeta::one::GENERATE_URITEMPLATE_ROUTES::handler,
+        &sourcemeta::one::GENERATE_AUTHENTICATION::handler,
+        &sourcemeta::one::GENERATE_LOGIN::handler,
+        &sourcemeta::one::GENERATE_WEB_LOGIN::handler,
+        // Removal is done before anything is dispatched, so it is the one
+        // action with nothing to call
+        nullptr,
+    }};
+
+// Which views hold which leaves, answered by the same gate the server reads
+// rather than by a second reading of the policies. The artifact is written here
+// before anything is planned, because what a build emits depends on it, and the
+// build writes it again with the path validation this skips: an invalid scope
+// still refuses the build, one step later than it would have
+static auto view_filter_from(const sourcemeta::one::Authentication &gate)
+    -> sourcemeta::one::ViewFilter {
+  return
+      [&gate](const std::size_t view, const std::string_view relative) -> bool {
+        std::string path;
+        path.reserve(relative.size() + 1);
+        path.push_back('/');
+        path.append(relative);
+        return gate.visible(
+            sourcemeta::one::Authentication::Path::relative(path), view);
+      };
+}
 
 static auto parse_numeric_option(const sourcemeta::core::Options &app,
                                  const std::string_view option)
@@ -630,10 +655,17 @@ static auto index_main(const std::string_view &program,
     views.push_back(view.name);
   }
 
+  const auto authentication_path{canonical_output / "authentication.bin"};
+  sourcemeta::one::Authentication::save(
+      view_policies, configuration.path, authentication_path,
+      [](const std::string_view) { return true; });
+  const sourcemeta::one::Authentication gate{authentication_path, {}};
+  const auto visible{view_filter_from(gate)};
+
   auto produce_plan{sourcemeta::one::delta<sourcemeta::one::INDEX_RULES>(
       sourcemeta::one::BuildPhase::Produce, build_type, entries,
       canonical_output, leaves, this_version, incremental, comment, mode_label,
-      limits, views)};
+      limits, views, visible)};
   PROFILE_END(profiling, "Producing (Delta)");
   execute_plan(entries, canonical_output, resolver, configuration,
                raw_configuration, concurrency, produce_plan, "Producing");
@@ -642,7 +674,7 @@ static auto index_main(const std::string_view &program,
   auto combine_plan{sourcemeta::one::delta<sourcemeta::one::INDEX_RULES>(
       sourcemeta::one::BuildPhase::Combine, build_type, entries,
       canonical_output, leaves, this_version, incremental, comment, mode_label,
-      limits, views)};
+      limits, views, visible)};
   PROFILE_END(profiling, "Combining (Delta)");
   execute_plan(entries, canonical_output, resolver, configuration,
                raw_configuration, concurrency, combine_plan, "Combining");

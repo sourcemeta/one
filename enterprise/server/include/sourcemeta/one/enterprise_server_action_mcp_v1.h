@@ -12,20 +12,21 @@
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
-#include <sourcemeta/one/search.h>
 
 #include <cassert>   // assert
 #include <cstddef>   // std::size_t, std::ptrdiff_t
 #include <cstdint>   // std::uint64_t
 #include <exception> // std::exception, std::exception_ptr, std::rethrow_exception
-#include <filesystem>  // std::filesystem
-#include <iterator>    // std::ranges::distance
-#include <optional>    // std::optional, std::nullopt
-#include <span>        // std::span
-#include <sstream>     // std::ostringstream
-#include <string>      // std::string
-#include <string_view> // std::string_view
-#include <utility>     // std::move
+#include <filesystem>    // std::filesystem
+#include <iterator>      // std::ranges::distance
+#include <memory>        // std::make_unique, std::unique_ptr
+#include <optional>      // std::optional, std::nullopt
+#include <span>          // std::span
+#include <sstream>       // std::ostringstream
+#include <string>        // std::string
+#include <string_view>   // std::string_view
+#include <unordered_map> // std::unordered_map
+#include <utility>       // std::move
 
 class ActionMCP_v1 : public sourcemeta::one::RouterAction {
 public:
@@ -40,9 +41,7 @@ public:
                const sourcemeta::core::URITemplateRouterView &router,
                const sourcemeta::core::URITemplateRouter::Identifier identifier,
                sourcemeta::one::Router &dispatcher)
-      : sourcemeta::one::RouterAction{base, router.base_url(), dispatcher},
-        search_view_{base / "explorer" / sourcemeta::one::VIEW_PUBLIC / "%" /
-                     "search.metapack"} {
+      : sourcemeta::one::RouterAction{base, router.base_url(), dispatcher} {
     router.arguments(
         identifier, [this](const auto &key, const auto &value) -> void {
           if (key == "responseSchema") {
@@ -54,8 +53,8 @@ public:
           }
         });
 
-    const auto mcp_metadata_path{
-        this->artifact_resolve_path_unauthenticated("", Tree::Explorer, "mcp")};
+    const auto mcp_metadata_path{this->artifact_resolve_path_unauthenticated(
+        sourcemeta::one::VIEW_PUBLIC, "", Tree::Explorer, "mcp")};
     assert(mcp_metadata_path.has_value());
     auto mcp_metadata_option{
         this->artifact_read_json(mcp_metadata_path.value())};
@@ -82,6 +81,37 @@ public:
       this->challenge_.append(this->metadata_path_);
       this->challenge_.append("\"");
     }
+
+    // What a caller is told this endpoint offers follows from their view, so
+    // each one's copy is read here rather than assembled per request. The
+    // anonymous copy above still answers whatever is decided before a
+    // credential is known, which is the origin a preflight is checked against
+    // and the metadata a refusal points at
+    const auto &authentication{dispatcher.authentication()};
+    for (std::size_t index{0}; index < authentication.view_count(); index++) {
+      const auto recorded{authentication.view_at(index)};
+      const auto path{this->artifact_resolve_path_unauthenticated(
+          recorded.name, "", Tree::Explorer, "mcp")};
+      if (!path.has_value()) {
+        continue;
+      }
+
+      auto metadata{this->artifact_read_json(path.value())};
+      if (metadata.has_value()) {
+        this->metadata_views_.emplace(recorded.name,
+                                      std::move(metadata).value());
+      }
+    }
+  }
+
+  // A caller whose view this instance no longer serves is answered from the
+  // anonymous one, which is a build behind a running server rather than a
+  // caller to be trusted with more
+  [[nodiscard]] auto metadata_for(const std::string_view view) const
+      -> const sourcemeta::core::JSON & {
+    const auto match{this->metadata_views_.find(view)};
+    return match == this->metadata_views_.cend() ? this->mcp_metadata_
+                                                 : match->second;
   }
 
   [[nodiscard]] auto authentication_challenge() const noexcept
@@ -292,14 +322,6 @@ public:
 private:
   static constexpr std::string_view MCP_TEMPLATE_MIME_TYPE{
       "application/schema+json"};
-  static constexpr std::size_t MCP_RESOURCES_PAGE_SIZE{50};
-
-  static constexpr std::string_view MCP_KEY_RESOURCES{"resources"};
-  static constexpr std::string_view MCP_KEY_NEXT_CURSOR{"nextCursor"};
-  static inline const auto MCP_HASH_RESOURCES{
-      sourcemeta::core::JSON::Object::hash(MCP_KEY_RESOURCES)};
-  static inline const auto MCP_HASH_NEXT_CURSOR{
-      sourcemeta::core::JSON::Object::hash(MCP_KEY_NEXT_CURSOR)};
 
   auto
   write_envelope(sourcemeta::one::HTTPRequest &request,
@@ -340,9 +362,16 @@ private:
   }
 
   auto on_resources_list(const sourcemeta::core::JSON &request_json,
-                         const sourcemeta::one::Credentials &credentials)
+                         const std::string_view view) const
       -> sourcemeta::core::JSON {
     const auto &id{request_json.at("id")};
+    const auto &metadata{this->metadata_for(view)};
+    const auto &pages{metadata.at(sourcemeta::core::MCP_METHOD_RESOURCES_LIST)};
+    // The pages were cut somewhere, and the artifact says where, so a cursor is
+    // read against how these very pages were written
+    const auto page_size{static_cast<std::uint64_t>(
+        metadata.at("resourcePageSize").to_integer())};
+    assert(page_size > 0);
 
     std::uint64_t offset{0};
     const auto *params{sourcemeta::core::jsonrpc_params(request_json)};
@@ -350,10 +379,9 @@ private:
       const auto cursor_input{params->at("cursor").to_string()};
       if (!cursor_input.empty()) {
         const auto parsed{sourcemeta::core::to_uint64_t(cursor_input)};
-        // A cursor must parse and align to a page boundary. Reject before the
-        // catalog scan so a malformed cursor cannot force the O(N) walk
-        if (!parsed.has_value() ||
-            parsed.value() % MCP_RESOURCES_PAGE_SIZE != 0) {
+        // A cursor names a page boundary, so one that parses to anything else
+        // names no page at all
+        if (!parsed.has_value() || parsed.value() % page_size != 0) {
           return sourcemeta::core::jsonrpc_make_error(
               &id, -32602, "Invalid resource list cursor",
               sourcemeta::core::JSON{
@@ -364,41 +392,11 @@ private:
       }
     }
 
-    // The pages are not pre-baked: a caller only sees the schemas it is
-    // admitted to, so the list is filtered against its credential at request
-    // time, exactly as the search surface does
-    const auto &authentication{this->dispatcher().authentication()};
-    auto resources{sourcemeta::core::JSON::make_array()};
-    std::uint64_t admitted{0};
-    this->search_view_.for_each(
-        0, this->search_view_.count(),
-        [this, &credentials, &authentication, &resources, &admitted,
-         offset](const sourcemeta::one::SearchListEntry &entry) -> void {
-          const auto location{this->canonical_path(entry.path)};
-          if (!location.has_value() ||
-              !authentication.admits(location.value(), credentials).allowed) {
-            return;
-          }
-
-          const auto position{admitted++};
-          if (position < offset ||
-              position >= offset + MCP_RESOURCES_PAGE_SIZE) {
-            return;
-          }
-
-          std::string uri{this->allowed_origin_};
-          uri.append(entry.path);
-          resources.push_back(sourcemeta::core::mcp_make_resource(
-              uri, entry.title.empty() ? entry.path : entry.title,
-              MCP_TEMPLATE_MIME_TYPE, entry.description,
-              static_cast<std::size_t>(entry.bytes_raw),
-              static_cast<double>(entry.priority) / 100.0));
-        });
-
-    // The alignment of a non-zero cursor is already validated above. A cursor
-    // past the end of the filtered catalog is out of range, though zero is
-    // always valid even when the catalog is empty
-    if (offset != 0 && offset >= admitted) {
+    // The pages were written for this view, so answering is finding the one
+    // asked for. A catalog holding nothing still has a first page, which is why
+    // the beginning is always a page and anything past the end is not
+    const auto index{offset / page_size};
+    if (index >= pages.size()) {
       return sourcemeta::core::jsonrpc_make_error(
           &id, -32602, "Invalid resource list cursor",
           sourcemeta::core::JSON{
@@ -406,23 +404,15 @@ private:
               "response, or omit it to start from the beginning"});
     }
 
-    auto page{sourcemeta::core::JSON::make_object()};
-    page.assign_assume_new("resources", std::move(resources),
-                           MCP_HASH_RESOURCES);
-    if (offset + MCP_RESOURCES_PAGE_SIZE < admitted) {
-      page.assign_assume_new("nextCursor",
-                             sourcemeta::core::JSON{std::to_string(
-                                 offset + MCP_RESOURCES_PAGE_SIZE)},
-                             MCP_HASH_NEXT_CURSOR);
-    }
-
-    return sourcemeta::core::jsonrpc_make_success(id, std::move(page));
+    return sourcemeta::core::jsonrpc_make_success(
+        id, pages.at(static_cast<std::size_t>(index)));
   }
 
-  auto on_initialize(const sourcemeta::core::JSON &request_json) const
+  auto on_initialize(const sourcemeta::core::JSON &request_json,
+                     const std::string_view view) const
       -> sourcemeta::core::JSON {
     const auto &parts{
-        this->mcp_metadata_.at(sourcemeta::core::MCP_METHOD_INITIALIZE)};
+        this->metadata_for(view).at(sourcemeta::core::MCP_METHOD_INITIALIZE)};
     return sourcemeta::core::mcp_make_initialize_result(
         request_json,
         sourcemeta::core::MCPServerCapabilities{
@@ -443,10 +433,11 @@ private:
   }
 
   auto on_tools_list(const sourcemeta::core::MCPProtocolVersion version,
-                     const sourcemeta::core::JSON &request_json) const
+                     const sourcemeta::core::JSON &request_json,
+                     const std::string_view view) const
       -> sourcemeta::core::JSON {
     const auto &precomputed{
-        this->mcp_metadata_.at(sourcemeta::core::MCP_METHOD_TOOLS_LIST)};
+        this->metadata_for(view).at(sourcemeta::core::MCP_METHOD_TOOLS_LIST)};
 
     auto tools{sourcemeta::core::JSON::make_array()};
     for (const auto &tool : precomputed.as_array()) {
@@ -523,13 +514,7 @@ private:
     const auto resolution{this->artifact_resolve_path(
         sourcemeta::one::VIEW_PUBLIC, credentials, uri, Tree::Schemas,
         bundle ? "bundle" : "schema")};
-    if (resolution.outcome ==
-        sourcemeta::one::ArtifactResolution::Outcome::Denied) {
-      return sourcemeta::core::jsonrpc_make_error(&id, -32010,
-                                                  "Authentication required");
-    }
-    if (resolution.outcome !=
-        sourcemeta::one::ArtifactResolution::Outcome::Found) {
+    if (!resolution.path.has_value()) {
       return sourcemeta::core::jsonrpc_make_error(
           &id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
           "Resource not found");
@@ -554,11 +539,11 @@ private:
 
   auto on_tools_call(const sourcemeta::core::MCPProtocolVersion version,
                      const sourcemeta::core::JSON &request_json,
-                     const sourcemeta::one::Credentials &credentials)
-      -> sourcemeta::core::JSON {
+                     const sourcemeta::one::Credentials &credentials,
+                     const std::string_view view) -> sourcemeta::core::JSON {
     const auto &id{request_json.at("id")};
     const auto &name{request_json.at("params").at("name").to_string()};
-    const auto &tool_routes{this->mcp_metadata_.at("toolRoutes")};
+    const auto &tool_routes{this->metadata_for(view).at("toolRoutes")};
     if (!tool_routes.defines(name)) {
       return sourcemeta::core::jsonrpc_make_error(
           &id, -32602, "Invalid tool name",
@@ -707,24 +692,27 @@ private:
     if (!this->structural_evaluate_fast(this->request_schema_, request_json)) {
       return sourcemeta::core::jsonrpc_make_error_invalid_request(id);
     }
+    // Resolved once here, since a request reaches one method and placing the
+    // caller again inside each of them would repeat the reading
+    const auto view{this->dispatcher().authentication().view(credentials)};
     if (method == sourcemeta::core::MCP_METHOD_INITIALIZE) {
-      return this->on_initialize(request_json);
+      return this->on_initialize(request_json, view);
     }
     if (method == sourcemeta::core::MCP_METHOD_TOOLS_LIST) {
-      return this->on_tools_list(version, request_json);
+      return this->on_tools_list(version, request_json, view);
     }
     if (method == sourcemeta::core::MCP_METHOD_RESOURCES_LIST) {
-      return this->on_resources_list(request_json, credentials);
+      return this->on_resources_list(request_json, view);
     }
     if (method == sourcemeta::core::MCP_METHOD_RESOURCES_READ) {
       return this->on_resources_read(request_json, credentials);
     }
     if (method == sourcemeta::core::MCP_METHOD_TOOLS_CALL) {
-      return this->on_tools_call(version, request_json, credentials);
+      return this->on_tools_call(version, request_json, credentials, view);
     }
-    if (this->mcp_metadata_.defines(method)) {
+    if (this->metadata_for(view).defines(method)) {
       return sourcemeta::core::jsonrpc_make_success(
-          *id, this->mcp_metadata_.at(method));
+          *id, this->metadata_for(view).at(method));
     }
     return sourcemeta::core::jsonrpc_make_success_empty(*id);
   }
@@ -734,9 +722,9 @@ private:
   std::string_view request_schema_;
   std::string_view metadata_path_;
   sourcemeta::core::JSON mcp_metadata_{nullptr};
+  std::unordered_map<std::string_view, sourcemeta::core::JSON> metadata_views_;
   std::string challenge_;
   std::string resource_identifier_;
-  sourcemeta::one::SearchView search_view_;
 };
 
 #endif

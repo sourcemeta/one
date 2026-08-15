@@ -1,40 +1,33 @@
 # Every per-schema API is gated on the schema it describes, not on the public
 # /self URL it is reached through, so wrapping a private schema in a /self API
-# path does not bypass the gate. Each one denies an anonymous caller.
+# path does not bypass the gate. Each one is closed to an anonymous caller.
 GET {{base}}/self/v1/api/schemas/health/private/secret
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 
 GET {{base}}/self/v1/api/schemas/dependencies/private/secret
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 
 GET {{base}}/self/v1/api/schemas/dependents/private/secret
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 
 GET {{base}}/self/v1/api/schemas/locations/private/secret
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 
 GET {{base}}/self/v1/api/schemas/positions/private/secret
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 
 GET {{base}}/self/v1/api/schemas/stats/private/secret
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 
 GET {{base}}/self/v1/api/schemas/metadata/private/secret
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 
 # The same API for a public schema is anonymous, and validates against its
 # output schema
@@ -100,18 +93,16 @@ jsonpath "$.valid" == true
 # The internal schema's API is denied to a key from another policy
 GET {{base}}/self/v1/api/schemas/health/internal/config
 Authorization: Bearer primary-secret-key
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 
 # Evaluation of an apiKey schema is gated: anonymous evaluation is denied
 POST {{base}}/self/v1/api/schemas/evaluate/private/secret
 ```
 { "token": "value" }
 ```
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 
 # With the credential, evaluation runs against the apiKey schema
 POST {{base}}/self/v1/api/schemas/evaluate/private/secret
@@ -137,9 +128,8 @@ POST {{base}}/self/v1/api/schemas/trace/private/secret
 ```
 { "token": "value" }
 ```
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 
 # With the credential, tracing runs and validates against its output schema
 POST {{base}}/self/v1/api/schemas/trace/private/secret

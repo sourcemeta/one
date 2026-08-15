@@ -31,7 +31,7 @@ header "ETag" matches /^"[0-9a-f]{64}"$/
   "type": "string"
 }
 
-# The listing enumerates with a token, reporting both governing policy names
+# The listing enumerates with a token, marked private like everything here
 GET {{base}}/self/v1/api/list/catalog
 Authorization: Bearer {{access_token}}
 HTTP 200
@@ -43,25 +43,7 @@ listing_body: body
 listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.entries" count == 3
-jsonpath "$.policies" count == 3
-jsonpath "$.policies[0].name" == "registry"
-jsonpath "$.policies[0].title" == "registry"
-jsonpath "$.policies[0].type" == "apiKey"
-jsonpath "$.policies[1].name" == "machine"
-jsonpath "$.policies[1].title" == "machine"
-jsonpath "$.policies[1].type" == "jwt"
-jsonpath "$.policies[2].name" == "keycloak"
-jsonpath "$.policies[2].title" == "keycloak"
-jsonpath "$.policies[2].type" == "oidc"
-jsonpath "$.entries[0].policies[0].name" == "registry"
-jsonpath "$.entries[0].policies[0].title" == "registry"
-jsonpath "$.entries[0].policies[0].type" == "apiKey"
-jsonpath "$.entries[0].policies[1].name" == "machine"
-jsonpath "$.entries[0].policies[1].title" == "machine"
-jsonpath "$.entries[0].policies[1].type" == "jwt"
-jsonpath "$.entries[0].policies[2].name" == "keycloak"
-jsonpath "$.entries[0].policies[2].title" == "keycloak"
-jsonpath "$.entries[0].policies[2].type" == "oidc"
+jsonpath "$.private" == true
 
 POST {{base}}/self/v1/api/schemas/evaluate{{listing_schema}}
 Authorization: Bearer {{access_token}}
@@ -84,18 +66,17 @@ wrong_audience_token: jsonpath "$.access_token"
 
 GET {{base}}/catalog/example.json
 Authorization: Bearer {{wrong_audience_token}}
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 wrong_audience_denied: body
 [Asserts]
-jsonpath "$.type" == "urn:sourcemeta:one:authentication-required"
-jsonpath "$.status" == 401
+jsonpath "$.type" == "urn:sourcemeta:one:not-found"
+jsonpath "$.status" == 404
 
 POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
 Authorization: Bearer {{access_token}}
@@ -109,18 +90,17 @@ jsonpath "$.valid" == true
 # A tampered token fails signature verification
 GET {{base}}/catalog/example.json
 Authorization: Bearer {{access_token}}tampered
-HTTP 401
+HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 [Captures]
 tampered_denied: body
 [Asserts]
-jsonpath "$.type" == "urn:sourcemeta:one:authentication-required"
-jsonpath "$.status" == 401
+jsonpath "$.type" == "urn:sourcemeta:one:not-found"
+jsonpath "$.status" == 404
 
 POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/api/error
 Authorization: Bearer {{access_token}}

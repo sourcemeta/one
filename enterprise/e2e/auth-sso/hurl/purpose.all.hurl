@@ -8,12 +8,11 @@
 
 # The gated schema is denied to a caller carrying nothing
 GET {{base}}/private/secret.json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag, WWW-Authenticate
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 denied_body: body
@@ -21,10 +20,10 @@ denied_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "ETag" not exists
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{denied_schema}}
@@ -53,10 +52,9 @@ cookie "sourcemeta_one_transaction[Max-Age]" == 600
 # empty-handed caller gets, so it discloses nothing about why it failed either
 GET {{base}}/private/secret.json
 Cookie: sourcemeta_one_session={{transaction}}
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 replayed_body: body
@@ -64,10 +62,10 @@ replayed_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 body == {{denied_body}}
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{replayed_schema}}
@@ -81,10 +79,9 @@ jsonpath "$.valid" == true
 # Nor does it open any other path the same policy governs
 GET {{base}}/archive/record.json
 Cookie: sourcemeta_one_session={{transaction}}
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 archive_body: body
@@ -92,10 +89,10 @@ archive_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 body == {{denied_body}}
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{archive_schema}}
@@ -110,10 +107,9 @@ jsonpath "$.valid" == true
 GET {{base}}/private/
 Cookie: sourcemeta_one_session={{transaction}}
 Accept: application/json
-HTTP 401
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
-WWW-Authenticate: Bearer realm="registry"
 Link: </self/v1/schemas/api/error>; rel="describedby"
 [Captures]
 listing_body: body
@@ -121,10 +117,10 @@ listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 body == {{denied_body}}
 {
-  "type": "urn:sourcemeta:one:authentication-required",
-  "title": "Unauthorized",
-  "status": 401,
-  "detail": "This resource requires authentication"
+  "type": "urn:sourcemeta:one:not-found",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "There is nothing at this URL"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{listing_schema}}
