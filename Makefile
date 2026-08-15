@@ -18,9 +18,9 @@ PREFIX ?= $(OUTPUT)/dist
 PUBLIC ?= ./enterprise/e2e/public
 PARALLEL ?= $(shell getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)
 DOCKERFILE_TEST_REPEAT ?= 1
-# Building the Enterprise edition for development, testing, evaluation, and
-# security research is permitted by LICENSE-COMMERCIAL without a commercial
-# license. Production use of it is not.
+# Enterprise is the default for local development. Production use of the
+# Enterprise edition requires a commercial license.
+# See https://one.sourcemeta.com/commercial
 ENTERPRISE ?= ON
 DOCKERFILE = $(if $(filter ON,$(ENTERPRISE)),enterprise/Dockerfile,Dockerfile)
 EDITION = $(if $(filter ON,$(ENTERPRISE)),enterprise,community)
