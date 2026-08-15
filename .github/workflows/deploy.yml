@@ -48,6 +48,8 @@ jobs:
         id: meta
         with:
           images: ghcr.io/${{ github.repository_owner }}/${{ matrix.edition.package }}
+          labels: |
+            org.opencontainers.image.licenses=${{ matrix.edition.package == 'one' && 'BUSL-1.1' || 'LicenseRef-Sourcemeta-Commercial' }}
 
       - uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435
         with:
@@ -251,6 +253,8 @@ jobs:
         id: meta
         with:
           images: ghcr.io/${{ github.repository_owner }}/sourcemeta-schemas
+          labels: |
+            org.opencontainers.image.licenses=LicenseRef-Sourcemeta-Commercial
       - uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
         id: push
         with:

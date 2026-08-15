@@ -28,7 +28,9 @@ if(NOT ONE_PREFIX_IS_ABSOLUTE)
   message(FATAL_ERROR "ONE_PREFIX must be an absolute path but it was: ${ONE_PREFIX}")
 endif()
 
-# Commercial editions require a paid license
+# Building the Enterprise edition for development, testing, evaluation,
+# demonstration, and good-faith security research is permitted by
+# LICENSE-COMMERCIAL without a commercial license. Production use is not.
 # See https://one.sourcemeta.com/commercial/
 option(ONE_ENTERPRISE "Build the One Enterprise edition (commercial)" OFF)
 if(ONE_ENTERPRISE)

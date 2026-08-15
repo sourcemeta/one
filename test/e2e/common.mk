@@ -7,7 +7,7 @@ ROOT := $(dir $(lastword $(MAKEFILE_LIST)))../..
 COMPOSE = compose.yml
 BASE ?= http://localhost
 PORT ?= 8000
-EDITION ?= enterprise
+EDITION ?= community
 
 export PORT
 export EDITION

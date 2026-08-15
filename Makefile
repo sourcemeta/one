@@ -17,8 +17,11 @@ OUTPUT ?= ./build
 PREFIX ?= $(OUTPUT)/dist
 PUBLIC ?= ./enterprise/e2e/public
 PARALLEL ?= 4
-# Only for local development
-ENTERPRISE ?= ON
+# Building the Enterprise edition for development, testing, evaluation, and
+# security research is permitted by LICENSE-COMMERCIAL without a commercial
+# license. Production use of it is not. Opt in with ENTERPRISE=ON. The released
+# community artefacts are built from the default below
+ENTERPRISE ?= OFF
 DOCKERFILE = $(if $(filter ON,$(ENTERPRISE)),enterprise/Dockerfile,Dockerfile)
 EDITION = $(if $(filter ON,$(ENTERPRISE)),enterprise,community)
 SANDBOX ?= test/e2e/html

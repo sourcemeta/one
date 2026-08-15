@@ -39,8 +39,8 @@ try {
     versionInfo: version,
     downloadLocation: "https://github.com/sourcemeta/one",
     filesAnalyzed: false,
-    licenseConcluded: "NOASSERTION",
-    licenseDeclared: "NOASSERTION"
+    licenseConcluded: "LicenseRef-Sourcemeta-Commercial",
+    licenseDeclared: "LicenseRef-Sourcemeta-Commercial"
   }];
 
   const relationships = [{

@@ -96,9 +96,9 @@ supply chain security and regulatory compliance capabilities:
   verify image authenticity and integrity before deployment.
 
 - **Software Bill of Materials (SBOM).** Each release includes an SPDX SBOM
-  attached as a signed attestation to the container image, providing full
-  visibility into all vendored, npm, and system-level dependencies for
-  vulnerability management and audit purposes.
+  attached as a signed attestation to the container image, covering the
+  vendored, npm, and system-level dependencies built into it, for vulnerability
+  management and audit purposes.
 
 - **FIPS-Ready Cryptography.** The Enterprise image is built with the OpenSSL
   FIPS provider (`openssl-provider-fips`) for all cryptographic operations,

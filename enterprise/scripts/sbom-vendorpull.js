@@ -5,10 +5,10 @@ import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const LICENSES = {
-  "core": "AGPL-3.0-or-later OR LicenseRef-Commercial",
-  "blaze": "AGPL-3.0-or-later OR LicenseRef-Commercial",
-  "jsonbinpack": "AGPL-3.0-or-later OR LicenseRef-Commercial",
-  "jsonschema": "AGPL-3.0-or-later OR LicenseRef-Commercial",
+  "core": "AGPL-3.0-or-later OR LicenseRef-Sourcemeta-Commercial",
+  "blaze": "AGPL-3.0-or-later OR LicenseRef-Sourcemeta-Commercial",
+  "jsonbinpack": "AGPL-3.0-or-later OR LicenseRef-Sourcemeta-Commercial",
+  "jsonschema": "AGPL-3.0-or-later OR LicenseRef-Sourcemeta-Commercial",
   "uwebsockets": "Apache-2.0",
   "bootstrap": "MIT",
   "bootstrap-icons": "MIT",
