@@ -15,8 +15,8 @@ the Enterprise edition of Sourcemeta One. This code is not available under the
 Business Source License and requires a separate Commercial License from
 Sourcemeta. You may not use the Enterprise image, nor circumvent the build
 configuration or the software in any way to access or use Enterprise edition
-features without a valid Commercial License, unless for local development and
-sending contributions back to Sourcemeta.
+features without a valid Commercial License, unless for local development for
+the purpose of sending contributions back to Sourcemeta.
 
 Change Date: Change date is four years from release date. Please see [GitHub
 releases](https://github.com/sourcemeta/one/releases/) for exact dates
