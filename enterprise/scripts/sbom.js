@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 
 import { readFileSync, writeFileSync, mkdtempSync, rmSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve, dirname } from "node:path";
 import { execSync } from "node:child_process";
 import { tmpdir } from "node:os";
+import { fileURLToPath } from "node:url";
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
 const image = process.argv[2];
 const output = process.argv[3];
@@ -96,6 +99,27 @@ try {
     });
   }
 
+  // SPDX 2.3 requires every LicenseRef- identifier a document references to be
+  // described here. This document declares one for itself and inherits others
+  // from the documents it merges, so both are collected and de-duplicated
+  const extractedLicenses = [{
+    licenseId: "LicenseRef-Sourcemeta-Commercial",
+    name: "Sourcemeta One Commercial License",
+    extractedText: readFileSync(join(root, "LICENSE-COMMERCIAL"), "utf-8"),
+    seeAlsos: [ "https://one.sourcemeta.com/commercial/" ]
+  }];
+
+  for (const entry of [
+    ...(vendor.hasExtractedLicensingInfos || []),
+    ...(npm.hasExtractedLicensingInfos || [])
+  ]) {
+    if (extractedLicenses.some((seen) => seen.licenseId === entry.licenseId)) {
+      continue;
+    }
+
+    extractedLicenses.push(entry);
+  }
+
   writeFileSync(output, JSON.stringify({
     spdxVersion: "SPDX-2.3",
     dataLicense: "CC0-1.0",
@@ -106,6 +130,7 @@ try {
       created: new Date().toISOString(),
       creators: [ "Tool: enterprise/scripts/sbom.js" ]
     },
+    hasExtractedLicensingInfos: extractedLicenses,
     packages,
     relationships
   }, null, 2) + "\n");
