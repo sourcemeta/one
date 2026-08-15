@@ -15,8 +15,8 @@ transition to the Change License on any date.
 Additional Use Grant
 
 You may make production use of the Licensed Work as if under the terms of the
-AGPL-3.0-or-later <https://www.gnu.org/licenses/agpl-3.0.en.html>, provided
-that you do not:
+AGPL-3.0 <https://www.gnu.org/licenses/agpl-3.0.en.html>, provided that you do
+not:
 
   (i) Make the Licensed Work, or a solution whose value derives substantially
   from it, available to third parties not including your employees, your
@@ -27,18 +27,23 @@ that you do not:
   (ii) Use, modify, or extend the Licensed Work source code, object code, or
   build system to reimplement, replicate, include, or otherwise provide
   functionality equivalent to, or deriving substantially from, the Enterprise
-  edition, or
+  edition unless you own an Enterprise license, or
 
   (iii) Remove, obscure, or alter the edition, version, and Licensor notice of
-  the unmodified Licensed Work
+  the Licensed Work except through configuration options available in the
+  unmodified Licensed Work
 
 These clauses apply whether you offer the Licensed Work to others or use it
-solely within your own organisation.
+solely within your own organisation. They condition the production use this
+grant confers and no other right, leaving untouched the rights the Terms below
+grant to copy, modify, create derivative works, redistribute, and make
+non-production use. Production use in a manner these clauses describe is
+unlicensed and violates this License.
 
-For the purposes of Section 13 of the AGPL-3.0-or-later
-<https://www.gnu.org/licenses/agpl-3.0.en.html>, persons who interact with your
-deployment over a computer network include persons within your own
-organisation.
+For the purposes of Section 13 of the AGPL-3.0
+<https://www.gnu.org/licenses/agpl-3.0.en.html>, persons who interact over a
+computer network with a deployment of which you make production use include
+persons within your own organisation.
 
 Clause (ii) is not engaged by separate software that runs as a distinct program
 and communicates with the Licensed Work over a network or through its documented
@@ -48,8 +53,7 @@ however much that software overlaps with the Enterprise edition.
 Nothing in this License restricts your development, use, or distribution of
 independently created software, including software that competes with any
 edition of Sourcemeta One or provides the same functionality. Clause (ii)
-reaches such software only where it is built into or on top of the Licensed
-Work.
+reaches such software only where it is built into the Licensed Work.
 
 If your rights terminate under the Terms below and you then cease all
 violation, they are reinstated retroactively, either if the Licensor does not

@@ -20,8 +20,8 @@ PARALLEL ?= $(shell getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)
 DOCKERFILE_TEST_REPEAT ?= 1
 # Building the Enterprise edition for development, testing, evaluation, and
 # security research is permitted by LICENSE-COMMERCIAL without a commercial
-# license. Production use of it is not. Opt in with ENTERPRISE=ON. The released
-# community artefacts are built from the default belowENTERPRISE ?= ON
+# license. Production use of it is not.
+ENTERPRISE ?= ON
 DOCKERFILE = $(if $(filter ON,$(ENTERPRISE)),enterprise/Dockerfile,Dockerfile)
 EDITION = $(if $(filter ON,$(ENTERPRISE)),enterprise,community)
 SANDBOX ?= test/e2e/html
