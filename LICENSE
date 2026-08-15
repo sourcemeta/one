@@ -1,28 +1,47 @@
+License text copyright (c) 2020 MariaDB Corporation Ab, All Rights Reserved.
+"Business Source License" is a trademark of MariaDB Corporation Ab.
+
 Business Source License 1.1
 
-Licensor: Sourcemeta OU
+Licensor: Sourcemeta OÜ
 
-Licensed Work: Sourcemeta One
+Licensed Work: Sourcemeta One (Community edition) (c) 2024-2026 Sourcemeta OÜ.
 
-Additional Use Grant: You may make use of the Licensed Work as if under the
-terms of the AGPL-3.0, provided that you may not use or modify the Licensed
-Work (i) for or as part of a solution that competes with Licensor, or (ii) to
-reimplement, replicate, or otherwise provide functionality equivalent to the
-Enterprise edition.
+NOTE: The Licensed Work does not include the contents of the `enterprise/`
+directory in this source repository, which are the "Enterprise edition" of
+Sourcemeta One, are licensed separately (see LICENSE-COMMERCIAL), and do not
+transition to the Change License on any date.
 
-The `enterprise/` directory of the source repository contains code specific to
-the Enterprise edition of Sourcemeta One. This code is not available under the
-Business Source License and requires a separate Commercial License from
-Sourcemeta. You may not use the Enterprise image, nor circumvent the build
-configuration or the software in any way to access or use Enterprise edition
-features without a valid Commercial License, unless for local development for
-the purpose of sending contributions back to Sourcemeta.
+Additional Use Grant
 
-Change Date: Change date is four years from release date. Please see [GitHub
-releases](https://github.com/sourcemeta/one/releases/) for exact dates
+You may make use of the Licensed Work as if under the terms of the
+AGPL-3.0-or-later, provided that you do not:
 
-Change License: [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.en.html), as
-published by the Free Software Foundation.
+  (i) Use or modify the Licensed Work for or as part of a solution that
+  competes with Licensor, or
+
+  (ii) Extend the Licensed Work source code, object code, or build system to
+  reimplement, replicate, include, or otherwise provide functionality
+  equivalent to or deriving substantially from the Enterprise edition, or
+
+  (iii) Remove, obscure, or alter the edition, version, and Licensor notice of
+  the unmodified Licensed Work
+
+These clauses apply to any use of the Licensed Work, including internal and
+external use.
+
+Third party components incorporated into the Licensed Work are licensed under
+the original license provided by the owner of the applicable component.
+
+Change Date: Change date is four years from release date. Please see GitHub
+releases (https://github.com/sourcemeta/one/releases/) for exact dates
+
+Change License: AGPL-3.0-or-later
+(https://www.gnu.org/licenses/agpl-3.0.en.html), as published by the Free
+Software Foundation.
+
+For alternative licensing arrangements, see LICENSE-COMMERCIAL in the
+repository root or <https://one.sourcemeta.com/commercial/>.
 
 Terms
 
