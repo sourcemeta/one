@@ -21,15 +21,16 @@ Sourcemeta One is available in two editions:
 - **Community**: Licensed under the [Business Source License
   1.1](https://github.com/sourcemeta/one/blob/main/LICENSE). You may use it as
   if under the terms of AGPL-3.0, provided that you may not use it for a
-  hosting solution that competes with Sourcemeta. After four years from each
-  release, the code transitions to AGPL-3.0.
+  solution that competes with Sourcemeta. After four years from each release,
+  the code transitions to AGPL-3.0.
 
 - **Enterprise**: Includes the [Standard
   Library](https://github.com/sourcemeta/std), additional features, and supply
   chain security capabilities not available in the Community edition. Requires
   a [commercial
-  license](https://github.com/sourcemeta/one/blob/main/LICENSE-COMMERCIAL)
-  from Sourcemeta.
+  license](https://github.com/sourcemeta/one/blob/main/LICENSE-COMMERCIAL) from
+  Sourcemeta for all uses except local development for the purpose of sending a
+  contribution back to Sourcemeta.
 
 ## Model Context Protocol
 
