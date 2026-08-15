@@ -20,18 +20,22 @@ not:
 
   (i) Make the Licensed Work, or a solution whose value derives substantially
   from it, available to third parties not including your employees, your
-  affiliates, or contractors acting on your behalf, whether as a hosted or
-  managed service or by including it in something you provide to them for a fee
-  or other consideration, or
+  affiliates under common control with you, or contractors acting on your
+  behalf, whether as a hosted or managed service or by including it in
+  something you provide to them for a fee or other consideration, or
 
   (ii) Use, modify, or extend the Licensed Work source code, object code, or
   build system to reimplement, replicate, include, or otherwise provide
   functionality equivalent to, or deriving substantially from, the Enterprise
-  edition unless you own an Enterprise license, or
+  edition unless you hold a Sourcemeta One Commercial License, or
 
   (iii) Remove, obscure, or alter the edition, version, and Licensor notice of
-  the Licensed Work except through configuration options available in the
-  unmodified Licensed Work
+  the Licensed Work except by running a documented configuration in which the
+  Licensed Work displays no such notice
+
+Production use is any use of the Licensed Work other than for development,
+testing, evaluation, or demonstration, and includes any deployment that serves
+data or users in the ordinary course of your business.
 
 These clauses apply whether you offer the Licensed Work to others or use it
 solely within your own organisation. They condition the production use this
@@ -50,16 +54,18 @@ and communicates with the Licensed Work over a network or through its documented
 interfaces, such as your own authentication, gateway, or proxy infrastructure,
 however much that software overlaps with the Enterprise edition.
 
-Nothing in this License restricts your development, use, or distribution of
-independently created software, including software that competes with any
-edition of Sourcemeta One or provides the same functionality. Clause (ii)
-reaches such software only where it is built into the Licensed Work.
+Except as clause (ii) provides, nothing in this License restricts your
+development, use, or distribution of independently created software, including
+software that competes with any edition of Sourcemeta One or provides the same
+functionality. Clause (ii) reaches such software only where it is built into
+the Licensed Work.
 
 If your rights terminate under the Terms below and you then cease all
-violation, they are reinstated retroactively, either if the Licensor does not
-notify you of the violation within sixty (60) days of that cessation, or if you
-cease within thirty (30) days of the Licensor notifying you. Any violation
-after such reinstatement terminates your rights permanently.
+violation, they are reinstated as of the date of that cessation, without effect
+on any use made before it, either if the Licensor does not notify you of the
+violation within sixty (60) days of that cessation, or if you cease within
+thirty (30) days of the Licensor notifying you. Any violation after such
+reinstatement terminates your rights permanently.
 
 Third party components incorporated into the Licensed Work are licensed under
 the original license provided by the owner of the applicable component.
