@@ -79,8 +79,9 @@ public:
         });
   }
 
-  auto rest(const std::span<std::string_view>, std::string_view,
-            std::string_view view, sourcemeta::one::HTTPRequest &request,
+  auto rest(const std::span<std::string_view>,
+            const sourcemeta::one::Authentication::Caller &caller,
+            sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
       sourcemeta::one::cors_preflight(request, response, "GET, HEAD, OPTIONS",
@@ -202,7 +203,8 @@ public:
       }
     }
 
-    auto result{this->search_view_for(view).search(query, limit, scope)};
+    auto result{
+        this->search_view_for(caller.view()).search(query, limit, scope)};
     response.write_status(sourcemeta::core::HTTP_STATUS_OK);
     response.write_header("Access-Control-Allow-Origin", "*");
     response.write_header("Access-Control-Expose-Headers", "Link, ETag");
@@ -213,9 +215,10 @@ public:
     // bursts without serving stale ranking long-term. What comes back
     // is whatever the caller's view holds, so only the anonymous one
     // answers the same to everybody and may enter a shared cache
-    response.write_header("Cache-Control", view == sourcemeta::one::VIEW_PUBLIC
-                                               ? "public, max-age=60"
-                                               : "private, max-age=60");
+    response.write_header("Cache-Control",
+                          caller.view() == sourcemeta::one::VIEW_PUBLIC
+                              ? "public, max-age=60"
+                              : "private, max-age=60");
     // RFC 9110 §12.5.5: the gzip negotiation axis applies, and so does whatever
     // places a caller in a view, since one URL answers differently per view.
     // Every other content surface revalidates on each hit, which re-resolves
@@ -233,7 +236,7 @@ public:
   auto mcp(const sourcemeta::core::MCPProtocolVersion version,
            const sourcemeta::core::JSON &request_id,
            const sourcemeta::core::JSON &arguments,
-           const sourcemeta::one::Credentials &credentials)
+           const sourcemeta::one::Authentication::Caller &caller)
       -> sourcemeta::core::JSON override {
     auto [request_valid, request_output]{
         this->structural_evaluate(this->rpc_request_schema_, arguments,
@@ -305,8 +308,7 @@ public:
       }
     }
 
-    auto results{this->search_view_for(
-                         this->dispatcher().authentication().view(credentials))
+    auto results{this->search_view_for(caller.view())
                      .search(arguments.at("q").to_string(), limit, scope)};
     auto envelope{sourcemeta::core::JSON::make_object()};
     envelope.assign_assume_new("results", std::move(results));

@@ -49,7 +49,7 @@ public:
   }
 
   auto rest(const std::span<std::string_view> matches,
-            std::string_view credential, std::string_view,
+            const sourcemeta::one::Authentication::Caller &caller,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
@@ -79,9 +79,7 @@ public:
 
     const sourcemeta::one::RequestCookies cookies{request};
     const auto resolution{this->artifact_resolve_path(
-        sourcemeta::one::VIEW_PUBLIC,
-        {.bearer = credential, .cookies = cookies}, matches.front(),
-        Tree::Schemas, this->artifact_)};
+        caller, matches.front(), Tree::Schemas, this->artifact_)};
     if (!resolution.path.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
@@ -98,7 +96,7 @@ public:
   auto mcp(const sourcemeta::core::MCPProtocolVersion version,
            const sourcemeta::core::JSON &request_id,
            const sourcemeta::core::JSON &arguments,
-           const sourcemeta::one::Credentials &credentials)
+           const sourcemeta::one::Authentication::Caller &caller)
       -> sourcemeta::core::JSON override {
     auto [request_valid, request_output]{
         this->structural_evaluate(this->rpc_request_schema_, arguments,
@@ -109,9 +107,9 @@ public:
           std::move(request_output));
     }
 
-    const auto resolution{this->artifact_resolve_path(
-        sourcemeta::one::VIEW_PUBLIC, credentials,
-        arguments.at("schema").to_string(), Tree::Schemas, this->artifact_)};
+    const auto resolution{
+        this->artifact_resolve_path(caller, arguments.at("schema").to_string(),
+                                    Tree::Schemas, this->artifact_)};
     if (!resolution.path.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(request_id,
                                                    "Schema not found");

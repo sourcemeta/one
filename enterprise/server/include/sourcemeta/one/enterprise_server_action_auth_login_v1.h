@@ -61,8 +61,9 @@ public:
     return true;
   }
 
-  auto rest(const std::span<std::string_view> matches, std::string_view,
-            std::string_view, sourcemeta::one::HTTPRequest &request,
+  auto rest(const std::span<std::string_view> matches,
+            const sourcemeta::one::Authentication::Caller &,
+            sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
       response.write_status(sourcemeta::core::HTTP_STATUS_NO_CONTENT);
@@ -92,11 +93,44 @@ public:
       return;
     }
 
-    // An unknown or non-interactive policy name reveals nothing
-    const auto policy_name{matches.front()};
-    const auto &authentication{this->dispatcher().authentication()};
-    const auto policy{authentication.interactive(policy_name)};
-    if (!policy.has_value()) {
+    // Where the browser goes once this completes. An explicit `to` query wins,
+    // then the referring page, which for a login reached from a denied page is
+    // exactly that page. Only a same-origin local path is ever honoured, so
+    // this cannot be turned into an open redirect. What the policy governs
+    // stands in where neither says anything, and that is decided by whoever
+    // holds the policy rather than here
+    std::string return_to;
+    const auto destination{request.query("to")};
+    if (!destination.empty() && sourcemeta::one::is_local_path(destination)) {
+      return_to = destination;
+    } else if (const auto referer{request.header("referer")};
+               referer.starts_with(this->server_uri())) {
+      std::string candidate{referer.substr(this->server_uri().size())};
+      if (sourcemeta::one::is_local_path(candidate)) {
+        return_to = std::move(candidate);
+      }
+    }
+
+    // The callback URL is pinned from the configured public URL, never
+    // inferred from an incoming request, and it is composed here because which
+    // routes this instance serves is not something authentication knows
+    constexpr std::string_view CALLBACK_PATH{"/self/v1/auth/callback/"};
+    std::string redirect_uri;
+    redirect_uri.reserve(this->server_uri().size() + CALLBACK_PATH.size() +
+                         matches.front().size());
+    redirect_uri += this->server_uri();
+    redirect_uri += CALLBACK_PATH;
+    redirect_uri += matches.front();
+
+    const auto outcome{this->dispatcher().authentication().login(
+        matches.front(), this->server_uri(), redirect_uri,
+        !request.query("silent").empty(), return_to)};
+    for (const auto &message : outcome.log) {
+      sourcemeta::one::HTTP_LOG("Login", message);
+    }
+
+    if (outcome.result ==
+        sourcemeta::one::Authentication::Outcome::Result::Missing) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
           "urn:sourcemeta:one:not-found", "There is nothing at this URL",
@@ -104,173 +138,28 @@ public:
       return;
     }
 
-    // Starting a login that cannot be completed only strands the person at the
-    // provider, so the secret the exchange will need is required up front
-    if (!authentication.client_secret(policy_name).has_value()) {
-      sourcemeta::one::HTTP_LOG("No client secret is set for the policy",
-                                policy_name);
-      this->unavailable(request, response);
-      return;
-    }
-
-    const auto endpoints{authentication.endpoints(policy_name)};
-    if (!endpoints.has_value() || endpoints.value().authorization.empty()) {
-      sourcemeta::one::HTTP_LOG("The provider named no authorization endpoint, "
-                                "or could not be reached, for the policy",
-                                policy_name);
-      this->unavailable(request, response);
-      return;
-    }
-
-    const auto secrets{sourcemeta::core::oauth_transaction_mint()};
-    const std::string_view state{secrets.state.data(), secrets.state.size()};
-    const std::string_view verifier{secrets.code_verifier.data(),
-                                    secrets.code_verifier.size()};
-    const auto nonce_token{sourcemeta::core::oidc_nonce()};
-    const std::string_view nonce{nonce_token.data(), nonce_token.size()};
-
-    // A silent attempt asks the provider whether an existing sign-in still
-    // stands, and is answered either way without the person seeing anything.
-    // The callback has to know which kind it is completing, since a provider
-    // refusing to answer without interaction is an ordinary outcome here and a
-    // failure anywhere else
-    const auto silent{!request.query("silent").empty()};
-
-    auto payload{sourcemeta::core::JSON::make_object()};
-    payload.assign_assume_new("policy",
-                              sourcemeta::core::JSON{std::string{policy_name}});
-    if (silent) {
-      payload.assign_assume_new("silent", sourcemeta::core::JSON{true});
-    }
-    payload.assign_assume_new("state", sourcemeta::core::JSON{state});
-    payload.assign_assume_new("nonce", sourcemeta::core::JSON{nonce});
-    payload.assign_assume_new("verifier", sourcemeta::core::JSON{verifier});
-    // The return target lets the login send the browser back to the page it
-    // was denied. An explicit `to` query wins, then the referring page, which
-    // for a login served in place is exactly that denied page and so needs no
-    // query, then what the policy governs. Only a same-origin local path is
-    // ever honoured, so the login cannot be turned into an open redirect
-    std::optional<std::string> target;
-    const auto destination{request.query("to")};
-    if (!destination.empty() && sourcemeta::one::is_local_path(destination)) {
-      target = std::string{destination};
-    } else if (const auto referer{request.header("referer")};
-               referer.starts_with(this->server_uri())) {
-      std::string candidate{""};
-      candidate += referer.substr(this->server_uri().size());
-      if (sourcemeta::one::is_local_path(candidate)) {
-        target = std::move(candidate);
-      }
-    }
-    if (!target.has_value() && !policy->default_path.empty()) {
-      std::string fallback{""};
-      fallback += policy->default_path;
-      target = std::move(fallback);
-    }
-    if (target.has_value()) {
-      payload.assign_assume_new("to", sourcemeta::core::JSON{target.value()});
-    }
-    std::ostringstream payload_text;
-    sourcemeta::core::stringify(payload, payload_text);
-
-    const auto expiry{std::chrono::time_point_cast<std::chrono::seconds>(
-                          std::chrono::system_clock::now()) +
-                      TRANSACTION_LIFETIME};
-    const auto sealed{authentication.seal(
-        policy_name, sourcemeta::one::Authentication::Purpose::Transaction,
-        payload_text.str(), expiry)};
-    if (!sealed.has_value()) {
-      sourcemeta::one::HTTP_LOG("No session secret is set for the policy",
-                                policy_name);
-      this->unavailable(request, response);
-      return;
-    }
-
-    // The callback URL is pinned from the configured public URL, never
-    // inferred from the incoming request
-    constexpr std::string_view CALLBACK_PATH{"/self/v1/auth/callback/"};
-    std::string redirect_uri;
-    redirect_uri.reserve(this->server_uri().size() + CALLBACK_PATH.size() +
-                         policy_name.size());
-    redirect_uri += this->server_uri();
-    redirect_uri += CALLBACK_PATH;
-    redirect_uri += policy_name;
-
-    // A provider sends only the claims a request asks for, so a policy whose
-    // rules name any is asked for them here. The standard way is the claims
-    // request parameter, and where a provider does not honour that, the scopes
-    // that carry the standard claims are the fallback. A claim no standard
-    // scope carries is then arranged at the provider instead, since inventing
-    // a scope name risks a request refused outright
-    // The rules outlive every request built from them, since a claim request
-    // names its claim by pointing into them rather than copying
-    const auto rules{policy->claims.empty()
-                         ? std::optional<sourcemeta::core::JSON>{std::nullopt}
-                         : sourcemeta::core::try_parse_json(policy->claims)};
-    const auto wanted{this->wanted_claims(policy.value(), rules)};
-    std::string scope_request;
-    std::string claims_parameter;
-    if (endpoints.value().claims_parameter_supported && !wanted.empty()) {
-      std::ostringstream text;
-      sourcemeta::core::stringify(
-          sourcemeta::core::oidc_build_claims_parameter({}, wanted), text);
-      claims_parameter = text.str();
-    }
-
-    this->requested_scope(wanted, scope_request);
-    this->report_unadvertised_claims(wanted, endpoints.value(), policy_name);
-
-    const auto challenge{sourcemeta::core::oauth_pkce_challenge(verifier)};
-    sourcemeta::core::OIDCAuthenticationRequest authentication_request{};
-    authentication_request.client_id = policy->client_id;
-    authentication_request.redirect_uri = redirect_uri;
-    authentication_request.scope = scope_request;
-    authentication_request.claims = claims_parameter;
-    authentication_request.response_type = "code";
-    authentication_request.state = state;
-    authentication_request.code_challenge = {challenge.data(),
-                                             challenge.size()};
-    authentication_request.code_challenge_method = "S256";
-    authentication_request.nonce = nonce;
-    if (silent) {
-      authentication_request.prompt = "none";
-    }
-
-    std::string authorization_url;
-    const auto url{sourcemeta::core::oidc_build_authentication_url(
-                       endpoints.value().authorization, authentication_request,
-                       authorization_url)
-                       ? std::optional<std::string>{authorization_url}
-                       : std::nullopt};
-    if (!url.has_value()) {
-      sourcemeta::one::HTTP_LOG("The authorization endpoint is not a URL a "
-                                "request can be built against, for the policy",
-                                policy_name);
-      this->unavailable(request, response);
-      return;
-    }
-
-    const auto cookie{sourcemeta::core::http_serialize_cookie(
-        {.name = sourcemeta::one::Authentication::TRANSACTION_COOKIE,
-         .value = sealed.value(),
-         .path = sourcemeta::one::Authentication::COOKIE_PATH,
-         .max_age = TRANSACTION_LIFETIME,
-         .http_only = true,
-         .secure = sourcemeta::core::URI{this->server_uri()}.is_https(),
-         .same_site = sourcemeta::core::HTTPCookieSameSite::Lax})};
-    // A redirect without the transaction cookie could never complete at the
-    // callback, so it is not worth sending
-    if (!cookie.has_value()) {
-      sourcemeta::one::HTTP_LOG(
-          "The login transaction could not be put in a cookie, for the policy",
-          policy_name);
-      this->unavailable(request, response);
+    // Every reason a login cannot start answers identically. Which policies
+    // exist is published, but whether one is misconfigured and whether its
+    // provider is answering are neither, and telling those apart hands a
+    // caller who has authenticated to nothing a view of how this deployment is
+    // doing. The cause went to the log above, where an operator looks and a
+    // caller cannot
+    if (outcome.result !=
+        sourcemeta::one::Authentication::Outcome::Result::Redirect) {
+      sourcemeta::one::json_error(
+          request, response,
+          sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
+          "urn:sourcemeta:one:auth-unavailable", "This login cannot be started",
+          this->error_schema_, "*");
       return;
     }
 
     response.write_status(sourcemeta::core::HTTP_STATUS_SEE_OTHER);
-    response.write_header("Set-Cookie", cookie.value());
-    response.write_header("Location", url.value());
+    for (const auto &cookie : outcome.cookies) {
+      response.write_header("Set-Cookie", cookie);
+    }
+
+    response.write_header("Location", outcome.location);
     response.write_header("Cache-Control", "no-store");
     sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_SEE_OTHER,
                                    request, response);
@@ -278,122 +167,12 @@ public:
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
            const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
-           const sourcemeta::one::Credentials &)
+           const sourcemeta::one::Authentication::Caller &)
       -> sourcemeta::core::JSON override {
     return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
   }
 
 private:
-  // The claims a policy's rules speak about, each asked for as essential, so
-  // that a provider is told what is actually needed rather than being left to
-  // guess from a scope. A domain rule reads an address, so it asks for the
-  // pair OpenID Connect Core Section 5.1 defines for one
-  [[nodiscard]] static auto wanted_claims(
-      const sourcemeta::one::Authentication::InteractivePolicy &policy,
-      const std::optional<sourcemeta::core::JSON> &rules)
-      -> std::vector<sourcemeta::core::OIDCClaimRequest> {
-    std::vector<sourcemeta::core::OIDCClaimRequest> result;
-    if (!policy.email_domains.empty()) {
-      result.push_back({.name = "email", .essential = true});
-      result.push_back({.name = "email_verified", .essential = true});
-    }
-
-    if (!rules.has_value() || !rules.value().is_object()) {
-      return result;
-    }
-
-    for (const auto &rule : rules.value().as_object()) {
-      result.push_back({.name = rule.first, .essential = true});
-    }
-
-    return result;
-  }
-
-  // The scope a login asks for. Every request carries `openid`, and a claim
-  // one of the standard scopes carries adds that scope, which is the only
-  // mapping a specification defines. A claim outside them adds nothing, since
-  // a scope this invented could be refused outright by the provider
-  static auto
-  requested_scope(const std::vector<sourcemeta::core::OIDCClaimRequest> &wanted,
-                  std::string &sink) -> void {
-    sink += "openid";
-    std::vector<std::string_view> scopes;
-    for (const auto &claim : wanted) {
-      const auto scope{sourcemeta::core::oidc_claim_to_scope(claim.name)};
-      if (scope.has_value() && scope.value() != "openid" &&
-          std::ranges::find(scopes, scope.value()) == scopes.cend()) {
-        scopes.push_back(scope.value());
-      }
-    }
-
-    std::ranges::sort(scopes);
-    for (const auto scope : scopes) {
-      sink += " ";
-      sink += scope;
-    }
-  }
-
-  // A rule naming a claim the provider never sends is one that can only ever
-  // deny, and nothing in the exchange would say so: the login succeeds, the
-  // token arrives, and admission fails for a reason nobody can see. So the
-  // provider's own account of what it may supply is compared against what the
-  // rules ask for, and a gap is named where an operator will find it.
-  //
-  // This reports and never refuses. OpenID Connect Discovery Section 3 says
-  // the list "might not be an exhaustive list", so a claim missing from it is
-  // a hint rather than a verdict, and a provider publishing no list at all is
-  // saying nothing rather than saying no
-  static auto report_unadvertised_claims(
-      const std::vector<sourcemeta::core::OIDCClaimRequest> &wanted,
-      const sourcemeta::one::Authentication::ProviderEndpoints &endpoints,
-      const std::string_view policy_name) -> void {
-    if (endpoints.claims_supported.empty()) {
-      return;
-    }
-
-    // Anybody at all may start a login, so saying this on every attempt would
-    // leave a stranger able to bury everything else in the log. What it says
-    // concerns a policy and its provider rather than the attempt that
-    // surfaced it, so saying it once says all of it
-    static std::mutex mutex;
-    static std::set<std::string, std::less<>> reported;
-
-    for (const auto &claim : wanted) {
-      if (std::ranges::find(endpoints.claims_supported, claim.name) !=
-          endpoints.claims_supported.cend()) {
-        continue;
-      }
-
-      std::string subject{claim.name};
-      subject += " of the policy ";
-      subject += policy_name;
-      const std::scoped_lock guard{mutex};
-      if (!reported.insert(subject).second) {
-        continue;
-      }
-
-      sourcemeta::one::HTTP_LOG(
-          "The provider does not advertise a claim a rule requires, so the "
-          "rule may never match. The claim is",
-          subject);
-    }
-  }
-
-  // Every reason a login cannot start answers identically. The login page names
-  // its policies to anybody who reaches a gated path, so which policies exist
-  // is published rather than secret, but whether one is misconfigured and
-  // whether its provider is answering are neither, and telling those apart
-  // hands a caller who has authenticated to nothing a view of how this
-  // deployment is doing. The cause goes to the log, where an operator looks and
-  // a caller cannot
-  auto unavailable(sourcemeta::one::HTTPRequest &request,
-                   sourcemeta::one::HTTPResponse &response) const -> void {
-    sourcemeta::one::json_error(
-        request, response, sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
-        "urn:sourcemeta:one:auth-unavailable", "This login cannot be started",
-        this->error_schema_, "*");
-  }
-
   std::string_view error_schema_;
 };
 

@@ -7,6 +7,7 @@
 
 #include <sourcemeta/one/authentication_error.h>
 
+#include <sourcemeta/core/crypto.h>
 #include <sourcemeta/core/jose.h>
 
 #include <chrono>      // std::chrono::sys_seconds
@@ -20,6 +21,7 @@
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
+#include <variant>     // std::variant, std::get_if, std::holds_alternative
 #include <vector>      // std::vector
 
 namespace sourcemeta::one {
@@ -29,6 +31,22 @@ namespace sourcemeta::one {
 // already means public. Spelled once so that what a build writes and what a
 // server reads cannot disagree
 inline constexpr std::string_view VIEW_PUBLIC{"public"};
+
+// A route as the router matched it, taken by the spelling it arrived in rather
+// than by where it resolves to. A target reaching past a governed prefix is
+// still governed by it, which is why it is not canonicalised, and why it is not
+// a registry path
+class RouteTarget {
+public:
+  explicit RouteTarget(const std::string_view value) noexcept : value_{value} {}
+
+  [[nodiscard]] auto value() const noexcept -> std::string_view {
+    return this->value_;
+  }
+
+private:
+  std::string_view value_;
+};
 
 // Everything a request presented for authentication: the bearer value from
 // the authorization header and every cookie field it carried, either of which
@@ -106,75 +124,164 @@ public:
   // secret, so one kind of value cannot be presented as the other
   enum class Purpose : std::uint8_t { Session = 0, Transaction = 1 };
 
-  // A browser holds one session, whichever policy established it, and the
-  // policy travels inside the sealed value rather than in the name. One name
-  // means logging out has a single thing to end, and means a caller cannot
-  // choose which policy a value is read as by choosing what to call it
-  static constexpr std::string_view SESSION_COOKIE{"sourcemeta_one_session"};
-
-  // A login transaction follows the same shape for the short window between
-  // the login redirect and the callback
-  static constexpr std::string_view TRANSACTION_COOKIE{
-      "sourcemeta_one_transaction"};
-
-  // Names the policy a browser last signed in under, so that a denial can ask
-  // the provider whether that sign-in still stands rather than asking the
-  // person again. It outlives a session, since it is only of use once one has
-  // expired, and it carries no credential: whoever holds it can start a login
-  // they were free to start anyway
-  static constexpr std::string_view RENEWAL_COOKIE{"sourcemeta_one_renewal"};
-
-  // An instance names an origin and nothing more, so every location it serves
-  // is below the root, and a cookie scoped there travels to all of them
-  static constexpr std::string_view COOKIE_PATH{"/"};
-
   // A policy gates a set of path prefixes. A path covered by no policy is
-  // public
+  // public.
+  //
+  // What a policy needs depends entirely on what it authenticates, and the
+  // three have almost nothing in common beyond where they apply and what they
+  // are called. Keeping them apart is what stops a key policy carrying a key
+  // set location, or a machine policy carrying a client secret: a configuration
+  // that means nothing cannot be written down here at all
   struct Policy {
+    // A credential presented verbatim and compared against what an operator
+    // configured, which authenticates a program rather than a person
+    struct ApiKey {
+      // The environment variable names holding the keys this admits
+      std::span<const std::string_view> keys{};
+      Algorithm algorithm{Algorithm::Identity};
+    };
+
+    // A token obtained elsewhere and presented in an authorization header,
+    // which this validates without ever helping to obtain one
+    struct Token {
+      std::string_view issuer{};
+      std::string_view audience{};
+      // Pinning this bypasses discovery entirely
+      std::string_view jwks_uri{};
+      std::span<const sourcemeta::core::JWSAlgorithm> algorithms{};
+      // The `typ` header a presented token must carry, empty to accept any
+      std::string_view token_type{};
+      // The claims a credential must carry, serialised as the member map of an
+      // OpenID Connect claims request parameter. It arrives canonical, so that
+      // two policies admitting the same callers carry identical bytes. Empty
+      // where a policy names no rule
+      std::string_view claims{};
+      // The email domains that admit a person, beyond whatever the claims
+      // require. A domain cannot be written as a claim value, since it matches
+      // the part of an address after its last separator rather than the whole
+      std::span<const std::string_view> email_domains{};
+    };
+
+    // A person who signs in through an identity provider, which is the only
+    // kind that establishes a session
+    struct Interactive {
+      std::string_view issuer{};
+      std::string_view client_id{};
+      // The environment variable name holding the client secret
+      std::string_view client_secret_variable{};
+      std::string_view claims{};
+      std::span<const std::string_view> email_domains{};
+      // The environment variable names holding the secrets that sign this
+      // policy's session and transaction cookies, newest first. A value is
+      // signed under the first and accepted under any, so a secret can be
+      // replaced without ending the sessions signed under the one before it
+      std::span<const std::string_view> session_secrets{};
+    };
+
     std::span<const std::string_view> paths{};
-    std::span<const std::string_view> keys{};
-    Algorithm algorithm{Algorithm::Identity};
-    Type type{Type::ApiKey};
-    std::string_view issuer{};
-    std::string_view audience{};
-    std::string_view jwks_uri{};
-    std::span<const sourcemeta::core::JWSAlgorithm> algorithms{};
-    // The `typ` header a presented token must carry, empty to accept any
-    std::string_view token_type{};
-    // The claims a credential must carry, serialised as the member map of an
-    // OpenID Connect claims request parameter. It arrives canonical, so that
-    // two policies admitting the same callers carry identical bytes. Empty
-    // where a policy names no rule
-    std::string_view claims{};
-    // The email domains that admit a person, beyond whatever the claims
-    // require. A domain cannot be written as a claim value, since it matches
-    // the part of an address after its last separator rather than the whole
-    std::span<const std::string_view> email_domains{};
-    std::string_view client_id{};
-    // The environment variable name holding the client secret
-    std::string_view client_secret_variable{};
     // The policy name, which interactive policies carry so their session
-    // cookies can be recognised at the gate
+    // cookies can be recognised at the gate, and which every policy carries so
+    // that a view can be named after what it comprises
     std::string_view name{};
-    // The environment variable names holding the secrets that sign this
-    // policy's session and transaction cookies, newest first. A value is
-    // signed under the first and accepted under any, so a secret can be
-    // replaced without ending the sessions signed under the one before it
-    std::span<const std::string_view> session_secrets{};
+    std::variant<ApiKey, Token, Interactive> credential{ApiKey{}};
+
+    // Which of the three this is, which the artifact records so that reading a
+    // policy back does not depend on reading its parameters first
+    [[nodiscard]] auto type() const noexcept -> Type {
+      switch (this->credential.index()) {
+        case 1:
+          return Type::JWT;
+        case 2:
+          return Type::OIDC;
+        default:
+          return Type::ApiKey;
+      }
+    }
   };
 
-  // The identity of an admitted caller: the type of credential it presented
-  // and the declaration index of the policy that admitted it
-  struct Principal {
-    Type type{Type::ApiKey};
-    std::size_t policy{0};
+  // What this asks a provider for. Every outbound call goes through one of
+  // these, so whoever constructs an instance decides what reaches a network,
+  // and a test answers without one
+  struct ProviderRequest {
+    std::string_view url{};
+    // Empty for a retrieval. Otherwise the form body to post, which carries a
+    // client secret and so never leaves wiping storage
+    sourcemeta::core::SecureString body{};
+    // Empty where the request authenticates by other means, or not at all
+    sourcemeta::core::SecureString authorization{};
   };
 
-  struct Verdict {
-    bool allowed;
-    // Present only when a policy admitted the caller. An anonymous caller on
-    // a public path and a denied caller both carry none
-    std::optional<Principal> principal;
+  struct ProviderResponse {
+    std::uint32_t status{0};
+    std::string body{};
+    // What the response said about how long it stays fresh, where it said
+    // anything
+    std::optional<std::chrono::seconds> max_age{};
+  };
+
+  // The one way this reaches a provider, for discovery, for a key set, for
+  // redeeming an authorization code, and for asking who somebody is. Answering
+  // nothing is how a caller says the provider could not be reached
+  using Fetcher =
+      std::function<std::optional<ProviderResponse>(ProviderRequest &&)>;
+
+  // Who is asking, read from what a request presented exactly once. Everything
+  // decided afterwards is a comparison against what this holds rather than a
+  // second reading of a credential
+  class SOURCEMETA_ONE_AUTHENTICATION_EXPORT Caller {
+  public:
+    // The view this caller is served, which is the directory their artifacts
+    // were written under
+    [[nodiscard]] auto view() const noexcept -> std::string_view {
+      return this->view_;
+    }
+
+  private:
+    friend class Authentication;
+    std::string_view view_{};
+    PolicySet policies_{0};
+    // What was presented in the authorization header, kept so that a route
+    // requiring an audience can read one more claim from a token already
+    // verified. It points at the request, as the credentials it came from do
+    std::string_view bearer_{};
+  };
+
+  // What an interactive operation came to. A refusal says nothing beyond
+  // having failed, since both endpoints answer uniformly whatever went wrong,
+  // so what happened reaches the log and never a response
+  struct Outcome {
+    enum class Result : std::uint8_t {
+      // The browser is sent onwards, carrying whatever cookies came with it.
+      // A silent attempt that came to nothing ends here too, put back where it
+      // started rather than shown any of it
+      Redirect,
+      // Nothing here answers to that name, which is the same answer a typo
+      // gets
+      Missing,
+      // A login could not be started. Every reason reads alike, since telling
+      // them apart would say how this deployment is doing to whoever asked
+      Unavailable,
+      // What came back does not belong to a login this instance started
+      Invalid,
+      // The provider refused, which it named itself
+      Declined,
+      // A callback that belongs to a real login, which could not end in a
+      // session. Every reason reads alike, for the reason above
+      Incomplete,
+      // Somebody the provider vouched for, whom this policy does not admit.
+      // That is the end of the road rather than something to try again
+      NotAdmitted
+    };
+
+    Result result{Result::Unavailable};
+    // Where to send the browser afterwards
+    std::string location{};
+    // Serialised, ready to be written as they are. Whoever measures a value
+    // against what a browser will keep is whoever knows the attributes, so they
+    // are composed here rather than by the surface that writes them
+    std::vector<std::string> cookies{};
+    // What an operator would want to know, which never reaches a response
+    std::vector<std::string> log{};
   };
 
   // Whether a path is one this instance could gate. A policy scoped to
@@ -224,15 +331,22 @@ public:
   // built rather than where they are named
   static constexpr std::size_t MAXIMUM_COMBINABLE_POLICIES{16};
 
-  // Write the policies to the artifact the gate reads, refusing any policy
-  // scoped to a path the guard does not recognise
-  static auto save(std::span<const Policy> policies,
-                   const std::filesystem::path &configuration,
-                   const std::filesystem::path &destination,
-                   const PathGuard &gateable) -> void;
+  // Build the artifact the gate reads, refusing any policy scoped to a path the
+  // guard does not recognise. The configuration names where a refusal came from
+  [[nodiscard]] static auto compile(std::span<const Policy> policies,
+                                    const std::filesystem::path &configuration,
+                                    const PathGuard &gateable)
+      -> std::vector<std::byte>;
 
-  Authentication(const std::filesystem::path &path,
-                 sourcemeta::core::JWKSProvider::Fetcher fetcher);
+  // Persist what was compiled, so that a later process can map it back
+  static auto write(std::span<const std::byte> bytes,
+                    const std::filesystem::path &destination) -> void;
+
+  Authentication(const std::filesystem::path &path, Fetcher fetcher);
+
+  // Read a table compiled in this process rather than mapped from a file, so
+  // that what reads a policy set never depends on a filesystem to do it
+  Authentication(std::span<const std::byte> bytes, Fetcher fetcher);
 
   ~Authentication();
 
@@ -242,49 +356,124 @@ public:
   auto operator=(const Authentication &) -> Authentication & = delete;
   auto operator=(Authentication &&) -> Authentication & = delete;
 
-  // Whether what a request presented admits it to a path. The path arrives
-  // canonical, so every caller asks about the same location rather than about
-  // whichever spelling it happened to receive
-  [[nodiscard]] auto admits(const Path &path,
-                            const Credentials &credentials) const -> Verdict;
-
-  // Whether what a request presented admits it to an explicit route, which the
-  // router matched on the request target literally rather than on the location
-  // that target resolves to. The spelling is taken as matched, so a target
-  // reaching past a governed prefix is still governed by it
-  // A route may additionally require that a presented token names the route
-  // itself, rather than only whatever wider audience the policy admitting the
-  // caller was configured with. An empty requirement asks for nothing extra,
-  // and a credential that is not a token is unaffected, since only a token
-  // carries an audience to check
-  [[nodiscard]] auto admits_route(std::string_view target,
-                                  const Credentials &credentials,
-                                  std::string_view required_audience = {}) const
-      -> Verdict;
-
-  /// Which policies a caller satisfies, asked of the caller alone rather than
-  /// of a path, so that one answer describes the whole registry. The gate
-  /// answers whether a door opens, and this answers who is knocking.
+  /// Who is asking, read from what a request presented. This is the one place a
+  /// credential is verified, so every question asked of the result afterwards
+  /// is a comparison rather than a second verification.
   ///
   /// A caller presenting nothing satisfies nothing, which is the anonymous
   /// answer and costs nothing to reach.
   ///
-  /// Token policies naming one issuer are reported together, since a token
+  /// Token policies naming one issuer are satisfied together, since a token
   /// carrying several claims satisfies several of them at once and each is an
-  /// area its holder reaches. Every other policy is reported alone, and where a
+  /// area its holder reaches. Every other policy stands alone, and where a
   /// credential satisfies more than one, the first declared is the one read.
-  [[nodiscard]] auto classify(const Credentials &credentials) const
-      -> PolicySet;
+  [[nodiscard]] auto caller(const Credentials &credentials) const -> Caller;
 
-  /// The name of the view a caller is served, which is the directory their
-  /// artifacts were written under. A caller presenting nothing is served the
-  /// anonymous view.
+  /// Whether a caller is shown a registry path, which is whether the view they
+  /// were placed in holds it. A path nobody governs is shown to everybody, and
+  /// a governed one to a view satisfying any policy governing it.
   ///
-  /// The name comes from the table the build recorded rather than from a rule
-  /// applied again here, so what a build wrote and what a server serves cannot
-  /// disagree. The value stays valid for the lifetime of this instance.
-  [[nodiscard]] auto view(const Credentials &credentials) const
-      -> std::string_view;
+  /// The path arrives canonical, so every surface asks about the same location
+  /// rather than about whichever spelling it happened to receive.
+  [[nodiscard]] auto permits(const Path &path, const Caller &caller) const
+      -> bool;
+
+  /// The same question asked of an explicit route, which the router matched on
+  /// the request target literally rather than on the location that target
+  /// resolves to. The spelling is taken as matched, so a target reaching past a
+  /// governed prefix is still governed by it.
+  ///
+  /// A route may additionally require that a presented token names the route
+  /// itself, rather than only whatever wider audience the policy admitting the
+  /// caller was configured with. An empty requirement asks for nothing extra,
+  /// and a caller that presented no token is unaffected, since only a token
+  /// carries an audience to check.
+  [[nodiscard]] auto permits(const RouteTarget &target, const Caller &caller,
+                             std::string_view required_audience = {}) const
+      -> bool;
+
+  /// End the browser's session, and the provider's where it named a policy
+  /// whose provider offers to end one.
+  ///
+  /// Every cookie this instance mints expires on every path this can take,
+  /// including the one where nothing opened at all. A cookie is withheld on
+  /// plenty of navigations while the browser still holds it, so clearing only
+  /// what arrived would leave a session behind while telling the person they
+  /// are signed out.
+  /// Where the browser lands afterwards is named by whoever asked, since a
+  /// route is a fact about the surface that received the request rather than
+  /// about authentication. Nothing here composes a URL of its own.
+  [[nodiscard]] auto logout(const Credentials &credentials,
+                            std::string_view instance_url,
+                            std::string_view return_to) const -> Outcome;
+
+  /// Start a login, sealing the transaction the callback will complete and
+  /// naming where the provider should send the browser.
+  ///
+  /// A silent attempt asks the provider whether an existing sign-in still
+  /// stands, and is answered either way without the person seeing anything.
+  /// The transaction carries which kind it is, since a provider refusing to
+  /// answer without interaction is an ordinary outcome for one and a failure
+  /// for the other.
+  ///
+  /// The return target is where the browser goes once this completes. It
+  /// arrives already checked against what this instance serves, since only the
+  /// surface that received the request knows what it asked for. Where it is
+  /// empty, what the policy governs stands in.
+  /// The redirect URI is passed in rather than composed, for the same reason:
+  /// it names a route, and which routes exist is not something this knows. It
+  /// is what the provider is told to come back to, and what the callback will
+  /// be checked against.
+  [[nodiscard]] auto login(std::string_view policy,
+                           std::string_view instance_url,
+                           std::string_view redirect_uri, bool silent,
+                           std::string_view return_to) const -> Outcome;
+
+  /// Which interactive policy should be asked whether a lapsed sign-in still
+  /// stands, for a caller that reached this path and nothing else.
+  ///
+  /// Two things have to hold, and both matter. The caller must carry the marker
+  /// a previous sign-in left, or every stranger would be sent to a provider
+  /// they have no account with. And the policy that marker names must govern
+  /// the path they reached, or a stale marker would send somebody to a provider
+  /// whose answer could not admit them here, leaving them where they started
+  /// and going round again.
+  ///
+  /// The name is answered rather than a URL, since where a login begins is a
+  /// route and this does not know any.
+  [[nodiscard]] auto renewal(const Path &path,
+                             const Credentials &credentials) const
+      -> std::optional<std::string_view>;
+
+  // What a provider sent back, read from wherever the surface found it
+  struct CallbackRequest {
+    std::string_view state{};
+    std::string_view code{};
+    // A decline names itself with an error code, so one that is present and
+    // empty is a different thing from one that is absent
+    bool has_error{false};
+    std::string_view error{};
+    // A provider naming no issuer cannot be checked against the one addressed,
+    // so the check runs only when one arrived
+    bool has_issuer{false};
+    std::string_view issuer{};
+  };
+
+  /// Complete a login, minting the session when everything holds.
+  ///
+  /// The transaction the browser carries is the only proof that this belongs
+  /// to a login this instance started, and it is opened before either a
+  /// success or a decline is honoured, so a cross-site callback cannot trigger
+  /// an error on somebody's behalf.
+  ///
+  /// The redirect URI must be the one the login was started with, since the
+  /// provider checks it and so does this. It is passed in for the same reason
+  /// it is passed to `login`: it names a route.
+  [[nodiscard]] auto callback(std::string_view policy,
+                              std::string_view instance_url,
+                              std::string_view redirect_uri,
+                              const CallbackRequest &incoming,
+                              const Credentials &credentials) const -> Outcome;
 
   // One view as the artifact records it: the directory its artifacts live
   // under, and the policies a caller satisfies to be served from it
@@ -337,167 +526,6 @@ public:
     // nobody
     std::vector<std::string_view> email_domains{};
   };
-
-  // The interactive policy declared under the given name, if any
-  [[nodiscard]] auto interactive(std::string_view name) const
-      -> std::optional<InteractivePolicy>;
-
-  // The same, narrowed to a policy that governs the given path. A name that
-  // gates somewhere else answers nothing, so a browser carrying a stale one is
-  // never sent to a provider whose answer could not admit it here
-  [[nodiscard]] auto interactive(const Path &path, std::string_view name) const
-      -> std::optional<InteractivePolicy>;
-
-  // Where a provider says its endpoints are. The values are copies, so they
-  // stay usable across a refresh of what the provider last said
-  struct ProviderEndpoints {
-    std::string authorization{};
-    std::string token{};
-    std::string jwks_uri{};
-    // Absent from a provider that does not offer to end its own session
-    std::string end_session{};
-    // Where a provider answers for the claims a scope requested, which under
-    // the authorization code flow is where they arrive by default rather than
-    // in the token itself
-    std::string userinfo{};
-    // Whether the provider takes the client secret in an authorization header
-    // rather than in the request body
-    bool token_endpoint_basic_auth{true};
-    // Whether the provider honours the claims request parameter, which is the
-    // standard way to ask for a claim no standard scope carries
-    bool claims_parameter_supported{false};
-    // The claims the provider says it may be able to supply. OpenID Connect
-    // Discovery Section 3 calls this list non-exhaustive, so a claim missing
-    // from it is worth reporting and never worth refusing over, and a provider
-    // publishing none says nothing at all
-    std::vector<std::string> claims_supported{};
-  };
-
-  // What the named interactive policy's provider says about itself, retrieved
-  // once and refreshed on the freshness its own response advertises rather
-  // than on every request. Nothing is returned when the policy is unknown,
-  // the provider cannot be reached, or what it returned is not a description
-  // this instance can act on
-  [[nodiscard]] auto endpoints(std::string_view policy) const
-      -> std::optional<ProviderEndpoints>;
-
-  // The client secret the named interactive policy authenticates to its
-  // provider with, if the policy is known and its secret is configured in the
-  // environment. Every secret this system holds is read here rather than by
-  // whoever needs it, so no caller is in a position to read one differently
-  [[nodiscard]] auto client_secret(std::string_view policy) const
-      -> std::optional<sourcemeta::core::SecureString>;
-
-  // Recover the payload of a session value, whichever interactive policy
-  // minted it, returning nothing when no policy accepts it. A value is only
-  // accepted under the policy its payload names, so a caller learns which
-  // policy established the session rather than choosing one to try
-  [[nodiscard]] auto open_session(std::string_view value) const
-      -> std::optional<std::string>;
-
-  // Two answers from one provider about one person, read together. A rule may
-  // name a claim the identity token carried and another only the UserInfo
-  // endpoint answers for, and either answer alone would refuse somebody both
-  // together admit.
-  //
-  // The token wins wherever both speak, since it arrives signed and verified
-  // while a UserInfo response is protected only by the transport that carried
-  // it, so the second fills gaps rather than overruling a signature.
-  //
-  // An address and the assertion that it was verified are the exception: they
-  // travel as a pair, from whichever answer carried the address. OpenID
-  // Connect Core Section 5.1 has `email_verified` speak for the `email`
-  // delivered alongside it and no other, so letting one answer's assertion
-  // vouch for the other answer's address would admit an address the provider
-  // never verified
-  [[nodiscard]] static auto combine_claims(const sourcemeta::core::JSON &token,
-                                           const sourcemeta::core::JSON &extra)
-      -> sourcemeta::core::JSON;
-
-  // What a policy's rules make of the claims a provider asserted
-  enum class Admission : std::uint8_t {
-    // Every rule holds
-    Admitted,
-    // A rule names values that what arrived does not carry
-    Refused,
-    // A rule names a claim absent altogether. A provider answering the
-    // authorization code flow returns a scope's claims from its UserInfo
-    // endpoint rather than in the token by default, so this is the one
-    // outcome worth asking a second question about
-    Incomplete
-  };
-
-  // The claims this policy's rules name that arrived carrying objects rather
-  // than strings. Such a claim is compared on its `value` sub-attribute alone,
-  // which RFC 9068 gives group, role, and entitlement claims by way of RFC
-  // 7643, so a rule naming what a person sees rather than what identifies them
-  // matches nothing and says nothing about why.
-  //
-  // A denial cannot show this, and the token it concerns is sealed inside a
-  // cookie, so an operator has no way to see it for themselves. Empty where
-  // every named claim arrived in a shape the rules compare directly.
-  //
-  // A rule on `scope` is never named here. That claim is read as one
-  // space-delimited string rather than compared member by member, so one
-  // arriving as anything else is refused outright, and calling it an
-  // identifier mismatch would describe a mistake nobody made
-  [[nodiscard]] auto
-  object_shaped_claims(std::string_view policy,
-                       const sourcemeta::core::JSON &claims) const
-      -> std::vector<std::string_view>;
-
-  // What the claims a provider asserted about a person make of what the named
-  // interactive policy requires. The claims are the payload of an identity
-  // token this instance has already validated, so this decides admission
-  // rather than authenticity, and a policy naming no rule admits whoever its
-  // provider vouched for.
-  //
-  // A login asks this before a session is minted rather than the gate asking
-  // it afterwards, so that somebody a policy will never admit is told once,
-  // rather than being sent back to their provider on every request
-  [[nodiscard]] auto admits_identity(std::string_view policy,
-                                     const sourcemeta::core::JSON &claims) const
-      -> Admission;
-
-  // Sealing is an edition-dependent capability. Where an instance does not
-  // offer it, nothing seals and no value opens, so a caller that treats an
-  // absent seal as unusable and an unopened value as a denial reaches the same
-  // outcome under either edition
-
-  // Seal a payload for one purpose under the named interactive policy's
-  // session secret, producing a value that the gate and this instance's
-  // replicas accept until the expiry. Nothing is produced when the policy is
-  // unknown or its session secret is not configured in the environment
-  [[nodiscard]] auto seal(std::string_view policy, Purpose purpose,
-                          std::string_view payload,
-                          std::chrono::sys_seconds expiry) const
-      -> std::optional<std::string>;
-
-  // Recover the payload of a value sealed for that purpose under the named
-  // policy by this instance or one of its replicas, returning nothing for a
-  // value that does not verify, was sealed for another purpose, or has expired
-  [[nodiscard]] auto open(std::string_view policy, Purpose purpose,
-                          std::string_view value) const
-      -> std::optional<std::string>;
-
-  // Bind a payload and an expiry under a key derived from the secret and the
-  // purpose, producing a value that is safe to transport as a cookie. Only a
-  // holder of the secret can produce or alter such a value, though anyone can
-  // read its contents
-  [[nodiscard]] static auto
-  seal_value(std::string_view payload, Purpose purpose, std::string_view secret,
-             std::chrono::sys_seconds issued, std::chrono::sys_seconds expiry)
-      -> std::string;
-
-  // Recover the payload of a sealed value, returning nothing for a value that
-  // was not produced for that purpose under one of the given secrets, was
-  // altered in any way, or has expired. Accepting several secrets lets a newly
-  // introduced secret coexist with the one it replaces until every value
-  // sealed under the old secret has expired
-  [[nodiscard]] static auto
-  open_value(std::string_view value, Purpose purpose,
-             std::span<const std::string_view> secrets,
-             std::chrono::sys_seconds now) -> std::optional<std::string>;
 
   [[nodiscard]] auto reference_permitted(const Path &referrer,
                                          const Path &referent) const -> bool;

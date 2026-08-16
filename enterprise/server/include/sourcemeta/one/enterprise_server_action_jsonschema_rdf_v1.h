@@ -59,7 +59,7 @@ public:
   }
 
   auto rest(const std::span<std::string_view> matches,
-            const std::string_view credential, const std::string_view,
+            const sourcemeta::one::Authentication::Caller &caller,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     const auto &path{matches.front()};
@@ -105,14 +105,10 @@ public:
     schema_uri.push_back('/');
     schema_uri.append(path);
     const sourcemeta::one::RequestCookies cookies{request};
-    const auto schema_present{
-        this->artifact_resolve_path(sourcemeta::one::VIEW_PUBLIC,
-                                    {.bearer = credential, .cookies = cookies},
-                                    schema_uri, Tree::Schemas, "schema")};
+    const auto schema_present{this->artifact_resolve_path(
+        caller, schema_uri, Tree::Schemas, "schema")};
     const auto evaluation_enabled{this->artifact_resolve_path(
-        sourcemeta::one::VIEW_PUBLIC,
-        {.bearer = credential, .cookies = cookies}, schema_uri, Tree::Schemas,
-        "blaze-exhaustive")};
+        caller, schema_uri, Tree::Schemas, "blaze-exhaustive")};
     if (!schema_present.path.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
@@ -164,7 +160,8 @@ public:
         // handler
         // NOLINTNEXTLINE(bugprone-exception-escape)
         [this, schema_template, schema_uri = std::move(schema_uri),
-         bearer = std::string{credential},
+         bearer = std::string{sourcemeta::core::http_parse_bearer(
+             request.header("authorization"))},
          cookies = sourcemeta::one::owned_cookies(request)](
             sourcemeta::one::HTTPRequest &callback_request,
             sourcemeta::one::HTTPResponse &callback_response,
@@ -201,6 +198,10 @@ public:
           }
 
           const sourcemeta::one::RequestCookies fields{cookies};
+          // Placed again rather than captured, since the caller this action
+          // was handed points at a request that is gone by now
+          const auto deferred_caller{
+              this->caller_from({.bearer = bearer, .cookies = fields})};
           if (!this->structural_evaluate_fast(this->request_schema_,
                                               envelope)) {
             sourcemeta::one::json_error(
@@ -232,8 +233,7 @@ public:
                    .detail = "The instance does not conform to the schema"})};
               payload.assign(
                   "errors",
-                  this->schema_evaluate({.bearer = bearer, .cookies = fields},
-                                        schema_uri, instance,
+                  this->schema_evaluate(deferred_caller, schema_uri, instance,
                                         sourcemeta::blaze::Mode::Exhaustive)
                       .second.at("errors"));
               this->send_problem(
@@ -329,7 +329,7 @@ public:
   auto mcp(const sourcemeta::core::MCPProtocolVersion version,
            const sourcemeta::core::JSON &request_id,
            const sourcemeta::core::JSON &arguments,
-           const sourcemeta::one::Credentials &credentials)
+           const sourcemeta::one::Authentication::Caller &caller)
       -> sourcemeta::core::JSON override {
     auto [request_valid, request_output]{
         this->structural_evaluate(this->rpc_request_schema_, arguments,
@@ -341,12 +341,10 @@ public:
     }
 
     const auto &schema_uri{arguments.at("schema").to_string()};
-    const auto schema_present{
-        this->artifact_resolve_path(sourcemeta::one::VIEW_PUBLIC, credentials,
-                                    schema_uri, Tree::Schemas, "schema")};
+    const auto schema_present{this->artifact_resolve_path(
+        caller, schema_uri, Tree::Schemas, "schema")};
     const auto evaluation_enabled{this->artifact_resolve_path(
-        sourcemeta::one::VIEW_PUBLIC, credentials, schema_uri, Tree::Schemas,
-        "blaze-exhaustive")};
+        caller, schema_uri, Tree::Schemas, "blaze-exhaustive")};
     if (!schema_present.path.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(request_id,
                                                    "Schema not found");
@@ -396,7 +394,7 @@ public:
       auto payload{sourcemeta::core::JSON::make_object()};
       payload.assign("valid", sourcemeta::core::JSON{false});
       payload.assign("errors",
-                     this->schema_evaluate(credentials, schema_uri, instance,
+                     this->schema_evaluate(caller, schema_uri, instance,
                                            sourcemeta::blaze::Mode::Exhaustive)
                          .second.at("errors"));
       return sourcemeta::core::mcp_make_tool_success(version, request_id,

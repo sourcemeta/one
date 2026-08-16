@@ -22,6 +22,19 @@ static auto at(const std::string_view input)
 // serves, so every path a policy is scoped to is one to gate
 static auto anywhere(const std::string_view) -> bool { return true; }
 
+// The artifact is compiled and then persisted, which the tests below do
+// together because they read it back through a file
+static auto
+save(const std::span<const sourcemeta::one::Authentication::Policy> policies,
+     const std::filesystem::path &configuration,
+     const std::filesystem::path &destination,
+     const sourcemeta::one::Authentication::PathGuard &gateable) -> void {
+  sourcemeta::one::Authentication::write(
+      sourcemeta::one::Authentication::compile(policies, configuration,
+                                               gateable),
+      destination);
+}
+
 static auto test_path(const std::string &name) -> std::filesystem::path {
   return std::filesystem::path{AUTHENTICATION_TEST_DIRECTORY} / name;
 }
@@ -29,38 +42,41 @@ static auto test_path(const std::string &name) -> std::filesystem::path {
 TEST(admits_every_path_without_a_credential) {
   const sourcemeta::one::Authentication authentication{
       std::filesystem::path{"/no/such/authentication.bin"}, {}};
-  EXPECT_TRUE(authentication.admits(at("/"), {.bearer = ""}).allowed);
-  EXPECT_TRUE(authentication.admits(at(""), {.bearer = ""}).allowed);
   EXPECT_TRUE(
-      authentication.admits(at("/acme/foo/bar"), {.bearer = ""}).allowed);
+      authentication.permits(at("/"), authentication.caller({.bearer = ""})));
+  EXPECT_TRUE(
+      authentication.permits(at(""), authentication.caller({.bearer = ""})));
+  EXPECT_TRUE(authentication.permits(at("/acme/foo/bar"),
+                                     authentication.caller({.bearer = ""})));
 }
 
 TEST(admits_every_path_with_any_credential) {
   const sourcemeta::one::Authentication authentication{
       std::filesystem::path{"/no/such/authentication.bin"}, {}};
-  EXPECT_TRUE(
-      authentication.admits(at("/internal"), {.bearer = "anything"}).allowed);
-  EXPECT_TRUE(authentication.admits(at("/internal/foo"), {.bearer = "another"})
-                  .allowed);
+  EXPECT_TRUE(authentication.permits(
+      at("/internal"), authentication.caller({.bearer = "anything"})));
+  EXPECT_TRUE(authentication.permits(
+      at("/internal/foo"), authentication.caller({.bearer = "another"})));
 }
 
 TEST(save_emits_an_empty_artifact_that_admits_everything) {
   const auto path{test_path("community_public_root.bin")};
-  sourcemeta::one::Authentication::save({}, path, path, anywhere);
+  save({}, path, path, anywhere);
 
   EXPECT_TRUE(std::filesystem::exists(path));
   EXPECT_EQ(std::filesystem::file_size(path), 0);
 
   const sourcemeta::one::Authentication authentication{path, {}};
-  EXPECT_TRUE(authentication.admits(at("/"), {.bearer = ""}).allowed);
   EXPECT_TRUE(
-      authentication.admits(at("/internal/foo"), {.bearer = ""}).allowed);
+      authentication.permits(at("/"), authentication.caller({.bearer = ""})));
+  EXPECT_TRUE(authentication.permits(at("/internal/foo"),
+                                     authentication.caller({.bearer = ""})));
 }
 
 TEST(save_creates_the_directory_it_writes_into) {
   const auto path{test_path("nested") / "deeper" / "authentication.bin"};
   std::filesystem::remove_all(test_path("nested"));
-  sourcemeta::one::Authentication::save({}, path, path, anywhere);
+  save({}, path, path, anywhere);
 
   EXPECT_TRUE(std::filesystem::exists(path));
   EXPECT_EQ(std::filesystem::file_size(path), 0);
@@ -72,7 +88,7 @@ TEST(save_rejects_any_policy) {
       {{paths, {}}}};
   const auto path{test_path("community_policy.bin")};
   try {
-    sourcemeta::one::Authentication::save(policies, path, path, anywhere);
+    save(policies, path, path, anywhere);
     FAIL();
   } catch (const sourcemeta::one::EnterpriseOnlyFeatureError &error) {
     EXPECT_STREQ(error.what(),
@@ -120,29 +136,35 @@ TEST(serves_every_caller_the_anonymous_view) {
       {"sourcemeta_one_session=whatever"}};
   const sourcemeta::one::Authentication authentication{
       std::filesystem::path{"/no/such/authentication.bin"}, {}};
-  EXPECT_EQ(authentication.view({.bearer = ""}), "public");
-  EXPECT_EQ(authentication.view({.bearer = "anything"}), "public");
-  EXPECT_EQ(authentication.view({.bearer = "", .cookies = cookies}), "public");
+  EXPECT_EQ(authentication.caller({.bearer = ""}).view(), "public");
+  EXPECT_EQ(authentication.caller({.bearer = "anything"}).view(), "public");
+  EXPECT_EQ(authentication.caller({.bearer = "", .cookies = cookies}).view(),
+            "public");
 }
 
-TEST(classifies_a_caller_presenting_nothing_as_anonymous) {
+// Nothing is governed here, so a caller presenting anything at all reaches
+// everywhere, which is the same answer they get for presenting nothing
+TEST(admits_a_caller_presenting_nothing_everywhere) {
   const sourcemeta::one::Authentication authentication{
       std::filesystem::path{"/no/such/authentication.bin"}, {}};
-  EXPECT_EQ(authentication.classify({.bearer = ""}),
-            sourcemeta::one::Authentication::PolicySet{0});
+  EXPECT_TRUE(authentication.permits(at("/"), authentication.caller({})));
+  EXPECT_TRUE(
+      authentication.permits(at("/internal/foo"), authentication.caller({})));
 }
 
-TEST(classifies_a_caller_presenting_a_credential_as_anonymous) {
+TEST(admits_a_caller_presenting_a_credential_everywhere) {
   const std::array<std::string_view, 1> cookies{
       {"sourcemeta_one_session=whatever"}};
   const sourcemeta::one::Authentication authentication{
       std::filesystem::path{"/no/such/authentication.bin"}, {}};
-  EXPECT_EQ(authentication.classify({.bearer = "anything"}),
-            sourcemeta::one::Authentication::PolicySet{0});
-  EXPECT_EQ(authentication.classify({.bearer = "", .cookies = cookies}),
-            sourcemeta::one::Authentication::PolicySet{0});
-  EXPECT_EQ(authentication.classify({.bearer = "another", .cookies = cookies}),
-            sourcemeta::one::Authentication::PolicySet{0});
+  EXPECT_TRUE(authentication.permits(
+      at("/internal/foo"), authentication.caller({.bearer = "anything"})));
+  EXPECT_TRUE(authentication.permits(
+      at("/internal/foo"),
+      authentication.caller({.bearer = "", .cookies = cookies})));
+  EXPECT_TRUE(authentication.permits(
+      at("/internal/foo"),
+      authentication.caller({.bearer = "another", .cookies = cookies})));
 }
 
 TEST(views_of_nothing_are_the_public_one_alone) {
@@ -156,9 +178,9 @@ TEST(views_of_a_static_key_policy_are_the_public_one_alone) {
   const std::array<std::string_view, 1> keys{{"secret"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
-        .keys = keys,
-        .type = sourcemeta::one::Authentication::Type::ApiKey,
-        .name = "vault"}}};
+        .name = "vault",
+        .credential =
+            sourcemeta::one::Authentication::Policy::ApiKey{.keys = keys}}}};
 
   const auto views{sourcemeta::one::Authentication::views(policies)};
   EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
@@ -170,13 +192,14 @@ TEST(views_of_several_policies_are_the_public_one_alone) {
   const std::array<std::string_view, 1> second_paths{{"/tech"}};
   const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
       {{.paths = first_paths,
-        .type = sourcemeta::one::Authentication::Type::JWT,
-        .issuer = "https://idp.example.com/realms/staff",
-        .name = "legal"},
+        .name = "legal",
+        .credential =
+            sourcemeta::one::Authentication::Policy::Token{
+                .issuer = "https://idp.example.com/realms/staff"}},
        {.paths = second_paths,
-        .type = sourcemeta::one::Authentication::Type::JWT,
-        .issuer = "https://idp.example.com/realms/staff",
-        .name = "tech"}}};
+        .name = "tech",
+        .credential = sourcemeta::one::Authentication::Policy::Token{
+            .issuer = "https://idp.example.com/realms/staff"}}}};
 
   const auto views{sourcemeta::one::Authentication::views(policies)};
   EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{

@@ -42,8 +42,9 @@ public:
         });
   }
 
-  auto rest(const std::span<std::string_view>, std::string_view credential,
-            std::string_view view, sourcemeta::one::HTTPRequest &request,
+  auto rest(const std::span<std::string_view>,
+            const sourcemeta::one::Authentication::Caller &caller,
+            sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
       sourcemeta::one::cors_preflight(request, response, "GET, HEAD, OPTIONS",
@@ -76,8 +77,7 @@ public:
       const auto serve_html{
           sourcemeta::one::prefers_html(request.header("accept"))};
       const auto root_html{this->artifact_resolve_path(
-          view, {.bearer = credential, .cookies = cookies}, "", Tree::Explorer,
-          "directory-html")};
+          caller, "", Tree::Explorer, "directory-html")};
       if (serve_html && root_html.path.has_value()) {
         this->artifact_serve(
             root_html.path.value(), sourcemeta::core::HTTP_STATUS_OK, false, {},
@@ -85,7 +85,7 @@ public:
             this->content_cache_control(root_html.is_public),
             "Accept, Accept-Encoding");
       } else if (serve_html) {
-        this->serve_missing_html(view, request, response);
+        this->serve_missing_html(caller.view(), request, response);
       } else {
         sourcemeta::one::json_error(
             request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
@@ -98,7 +98,7 @@ public:
     const auto stripped_json{
         sourcemeta::core::remove_suffix_ignore_case(path, ".json")};
     if (stripped_json.size() != path.size()) {
-      ActionJSONSchemaServe_v1::serve(*this, credential, stripped_json, request,
+      ActionJSONSchemaServe_v1::serve(*this, caller, stripped_json, request,
                                       response, this->error_schema_);
       return;
     }
@@ -106,11 +106,9 @@ public:
     if (request.method() == "get" || request.method() == "head") {
       if (sourcemeta::one::prefers_html(request.header("accept"))) {
         const auto schema_html{this->artifact_resolve_path(
-            view, {.bearer = credential, .cookies = cookies}, path,
-            Tree::Explorer, "schema-html")};
+            caller, path, Tree::Explorer, "schema-html")};
         const auto directory_html{this->artifact_resolve_path(
-            view, {.bearer = credential, .cookies = cookies}, path,
-            Tree::Explorer, "directory-html")};
+            caller, path, Tree::Explorer, "directory-html")};
         if (!path.ends_with("/") && schema_html.path.has_value()) {
           this->artifact_serve(
               schema_html.path.value(), sourcemeta::core::HTTP_STATUS_OK, false,
@@ -126,26 +124,22 @@ public:
               this->content_cache_control(directory_html.is_public),
               "Accept, Accept-Encoding");
         } else {
-          this->serve_missing_html(view, request, response);
+          this->serve_missing_html(caller.view(), request, response);
         }
       } else {
-        ActionJSONSchemaServe_v1::serve(*this, credential, path, request,
-                                        response, this->error_schema_);
+        ActionJSONSchemaServe_v1::serve(*this, caller, path, request, response,
+                                        this->error_schema_);
       }
     } else {
       // RFC 9110 §15.5.6: when the path resolves to an existing resource
       // the response must be 405 with Allow listing what is supported.
       // https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.6
-      const auto schema_json{this->artifact_resolve_path(
-          sourcemeta::one::VIEW_PUBLIC,
-          {.bearer = credential, .cookies = cookies}, path, Tree::Schemas,
-          "schema")};
+      const auto schema_json{
+          this->artifact_resolve_path(caller, path, Tree::Schemas, "schema")};
       const auto schema_html{this->artifact_resolve_path(
-          view, {.bearer = credential, .cookies = cookies}, path,
-          Tree::Explorer, "schema-html")};
+          caller, path, Tree::Explorer, "schema-html")};
       const auto directory_html{this->artifact_resolve_path(
-          view, {.bearer = credential, .cookies = cookies}, path,
-          Tree::Explorer, "directory-html")};
+          caller, path, Tree::Explorer, "directory-html")};
       if (schema_json.path.has_value() ||
           (!path.ends_with("/") && schema_html.path.has_value()) ||
           directory_html.path.has_value()) {
@@ -165,7 +159,7 @@ public:
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
            const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
-           const sourcemeta::one::Credentials &)
+           const sourcemeta::one::Authentication::Caller &)
       -> sourcemeta::core::JSON override {
     return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
   }

@@ -7,8 +7,10 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/oauth.h>
 #include <sourcemeta/core/oidc.h>
+#include <sourcemeta/core/uri.h>
 
 #include "authentication_format.h"
+#include "session.h"
 
 #include <algorithm>     // std::ranges::all_of
 #include <bit>           // std::countr_zero
@@ -63,15 +65,266 @@ auto find_child(const sourcemeta::one::AuthenticationNode &node,
 // corruption could leave a header whose magic and version still match while
 // its offsets and counts point out of bounds. Validating the whole layout
 // once here keeps the matching hot path free of any per-call bounds checks
-auto structurally_valid(const sourcemeta::core::FileView &view) noexcept
+// A browser holds one session, whichever policy established it, and the policy
+// travels inside the sealed value rather than in the name. One name means
+// signing out has a single thing to end, and means a caller cannot choose which
+// policy a value is read as by choosing what to call it
+constexpr std::string_view SESSION_COOKIE{"sourcemeta_one_session"};
+
+// A login transaction follows the same shape for the short window between the
+// login redirect and the callback
+constexpr std::string_view TRANSACTION_COOKIE{"sourcemeta_one_transaction"};
+
+// Names the policy a browser last signed in under, so that a denial can ask the
+// provider whether that sign-in still stands rather than asking the person
+// again. It outlives a session, since it is only of use once one has expired,
+// and it carries no credential: whoever holds it can start a login they were
+// free to start anyway
+constexpr std::string_view RENEWAL_COOKIE{"sourcemeta_one_renewal"};
+
+// An instance names an origin and nothing more, so every location it serves is
+// below the root, and a cookie scoped there travels to all of them
+constexpr std::string_view COOKIE_PATH{"/"};
+
+// Where a provider says its endpoints are. The values are copies, so they stay
+// usable across a refresh of what the provider last said
+struct ProviderEndpoints {
+  std::string authorization{};
+  std::string token{};
+  std::string jwks_uri{};
+  // Absent from a provider that does not offer to end its own session
+  std::string end_session{};
+  // Where a provider answers for the claims a scope requested, which under the
+  // authorization code flow is where they arrive by default rather than in the
+  // token itself
+  std::string userinfo{};
+  // Whether the provider takes the client secret in an authorization header
+  // rather than in the request body
+  bool token_endpoint_basic_auth{true};
+  // Whether the provider honours the claims request parameter, which is the
+  // standard way to ask for a claim no standard scope carries
+  bool claims_parameter_supported{false};
+  // The claims the provider says it may be able to supply. OpenID Connect
+  // Discovery Section 3 calls this list non-exhaustive, so a claim missing from
+  // it is worth reporting and never worth refusing over, and a provider
+  // publishing none says nothing at all
+  std::vector<std::string> claims_supported{};
+};
+
+// A provider answering twice about one person is two halves of one account,
+// but only one of them is signed. The address pair is carved out of the merge
+// because `email_verified` speaks for the address delivered with it, so the
+// pair is only ever taken from an answer that carried the address, and an
+// assertion left on its own is dropped whichever answer it came from
+auto combine_claims(const sourcemeta::core::JSON &token,
+                    const sourcemeta::core::JSON &extra)
+    -> sourcemeta::core::JSON {
+  if (!token.is_object()) {
+    return extra.is_object() ? extra : token;
+  }
+
+  // Nothing to combine leaves what the token said untouched, since an
+  // assertion it carried alone can vouch for no address but its own
+  if (!extra.is_object()) {
+    return token;
+  }
+
+  auto result{token};
+  const auto token_has_address{token.defines("email")};
+  const auto extra_has_address{extra.defines("email")};
+  if (!token_has_address) {
+    result.erase("email_verified");
+  }
+
+  for (const auto &claim : extra.as_object()) {
+    const auto address_pair{claim.first == "email" ||
+                            claim.first == "email_verified"};
+    // The answer that carried the address carries the assertion about it, so
+    // neither half is taken from an answer holding only one of them
+    if (address_pair && (token_has_address || !extra_has_address)) {
+      continue;
+    }
+
+    if (!result.defines(claim.first)) {
+      result.assign(claim.first, claim.second);
+    }
+  }
+
+  return result;
+}
+
+// What a policy's rules make of the claims a provider asserted
+enum class Admission : std::uint8_t {
+  // Every rule holds
+  Admitted,
+  // A rule names values that what arrived does not carry
+  Refused,
+  // A rule names a claim absent altogether. A provider answering the
+  // authorization code flow returns a scope's claims from its UserInfo endpoint
+  // rather than in the token by default, so this is the one outcome worth
+  // asking a second question about
+  Incomplete
+};
+
+// How long a login has to come back before the transaction that started it
+// stops opening
+constexpr std::chrono::seconds TRANSACTION_LIFETIME{std::chrono::minutes{10}};
+
+// The claims a policy's rules speak about, each asked for as essential, so that
+// a provider is told what is actually needed rather than being left to guess
+// from a scope. A domain rule reads an address, so it asks for the pair OpenID
+// Connect Core Section 5.1 defines for one
+auto wanted_claims(
+    const sourcemeta::one::Authentication::InteractivePolicy &policy,
+    const std::optional<sourcemeta::core::JSON> &rules)
+    -> std::vector<sourcemeta::core::OIDCClaimRequest> {
+  std::vector<sourcemeta::core::OIDCClaimRequest> result;
+  if (!policy.email_domains.empty()) {
+    result.push_back({.name = "email", .essential = true});
+    result.push_back({.name = "email_verified", .essential = true});
+  }
+
+  if (!rules.has_value() || !rules.value().is_object()) {
+    return result;
+  }
+
+  for (const auto &rule : rules.value().as_object()) {
+    result.push_back({.name = rule.first, .essential = true});
+  }
+
+  return result;
+}
+
+// The scope a login asks for. Every request carries `openid`, and a claim one
+// of the standard scopes carries adds that scope, which is the only mapping a
+// specification defines. A claim outside them adds nothing, since a scope this
+// invented could be refused outright by the provider
+auto requested_scope(
+    const std::vector<sourcemeta::core::OIDCClaimRequest> &wanted,
+    std::string &sink) -> void {
+  sink += "openid";
+  std::vector<std::string_view> scopes;
+  for (const auto &claim : wanted) {
+    const auto scope{sourcemeta::core::oidc_claim_to_scope(claim.name)};
+    if (scope.has_value() && scope.value() != "openid" &&
+        std::ranges::find(scopes, scope.value()) == scopes.cend()) {
+      scopes.push_back(scope.value());
+    }
+  }
+
+  std::ranges::sort(scopes);
+  for (const auto scope : scopes) {
+    sink += " ";
+    sink += scope;
+  }
+}
+
+// A rule naming a claim the provider never sends is one that can only ever
+// deny, and nothing in the exchange would say so: the login succeeds, the token
+// arrives, and admission fails for a reason nobody can see. So the provider's
+// own account of what it may supply is compared against what the rules ask for,
+// and a gap is named where an operator will find it.
+//
+// This reports and never refuses. OpenID Connect Discovery Section 3 says the
+// list "might not be an exhaustive list", so a claim missing from it is a hint
+// rather than a verdict, and a provider publishing no list at all is saying
+// nothing rather than saying no
+auto report_unadvertised_claims(
+    const std::vector<sourcemeta::core::OIDCClaimRequest> &wanted,
+    const ProviderEndpoints &endpoints, const std::string_view policy_name,
+    std::vector<std::string> &log) -> void {
+  if (endpoints.claims_supported.empty()) {
+    return;
+  }
+
+  // Anybody at all may start a login, so saying this on every attempt would
+  // leave a stranger able to bury everything else in the log. What it says
+  // concerns a policy and its provider rather than the attempt that surfaced
+  // it, so saying it once says all of it
+  static std::mutex mutex;
+  static std::set<std::string, std::less<>> reported;
+
+  for (const auto &claim : wanted) {
+    if (std::ranges::find(endpoints.claims_supported, claim.name) !=
+        endpoints.claims_supported.cend()) {
+      continue;
+    }
+
+    std::string subject{claim.name};
+    subject += " of the policy ";
+    subject += policy_name;
+    const std::scoped_lock guard{mutex};
+    if (!reported.insert(subject).second) {
+      continue;
+    }
+
+    std::string message{"The provider does not advertise a claim a rule "
+                        "requires, so the rule may never match. The claim is "};
+    message += subject;
+    log.push_back(std::move(message));
+  }
+}
+
+// The signature algorithms an identity token may be signed with: every
+// asymmetric one, since a provider picks from these and an instance that named
+// a narrower set would refuse a provider it could otherwise serve, after the
+// person had already signed in. The symmetric ones are left out deliberately.
+// They sign with the client secret rather than a key from the provider's
+// published set, so admitting them alongside the rest is the shape that lets
+// one algorithm be verified as though it were another
+constexpr std::array<sourcemeta::core::JWSAlgorithm, 10> ID_TOKEN_ALGORITHMS{
+    {sourcemeta::core::JWSAlgorithm::RS256,
+     sourcemeta::core::JWSAlgorithm::RS384,
+     sourcemeta::core::JWSAlgorithm::RS512,
+     sourcemeta::core::JWSAlgorithm::PS256,
+     sourcemeta::core::JWSAlgorithm::PS384,
+     sourcemeta::core::JWSAlgorithm::PS512,
+     sourcemeta::core::JWSAlgorithm::ES256,
+     sourcemeta::core::JWSAlgorithm::ES384,
+     sourcemeta::core::JWSAlgorithm::ES512,
+     sourcemeta::core::JWSAlgorithm::EdDSA}};
+
+// The tolerance allowed on an identity token's time-based claims, matching what
+// a presented access token is already given. A provider whose clock runs a
+// little fast otherwise mints a token this refuses the instant it arrives,
+// which ends a login that did everything right
+constexpr std::chrono::seconds ID_TOKEN_CLOCK_SKEW{60};
+
+// A session lasts an hour, kept short so that a lost cookie cannot outlive its
+// usefulness, with silent re-authentication as the eventual refresh
+constexpr std::chrono::seconds SESSION_LIFETIME{3600};
+
+// How long a browser stays eligible for a silent renewal after signing in.
+// Long enough to outlast a provider session, since the provider is the one that
+// decides whether a renewal succeeds, and losing it early only costs a sign-in
+// page that would otherwise have been skipped
+constexpr std::chrono::seconds RENEWAL_LIFETIME{43200};
+
+// RFC 6265 Section 6.1 asks a user agent to support "at least 4096 bytes per
+// cookie (as measured by the sum of the length of the cookie's name, value, and
+// attributes)". That is a floor they should honour rather than a ceiling they
+// must enforce, and what happens above it is left unsaid, so the whole
+// serialised cookie is kept under it with room to spare
+constexpr std::size_t MAXIMUM_COOKIE_LENGTH{4000};
+
+// Address a section of the artifact wherever it was read from, so that mapping
+// a file and holding the bytes outright reach the same structures
+template <typename T>
+auto at_offset(const std::span<const std::byte> bytes,
+               const std::size_t offset = 0) noexcept -> const T * {
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  return reinterpret_cast<const T *>(bytes.data() + offset);
+}
+
+auto structurally_valid(const std::span<const std::byte> bytes) noexcept
     -> bool {
   using namespace sourcemeta::one;
-  const auto size{view.size()};
+  const auto size{bytes.size()};
   if (size < sizeof(AuthenticationHeader)) {
     return false;
   }
 
-  const auto *header{view.as<AuthenticationHeader>()};
+  const auto *header{at_offset<AuthenticationHeader>(bytes)};
   // The policy count must fit the bitmask width, otherwise matching would
   // shift past the width of a PolicySet, which is undefined behavior
   if (header->magic != AUTHENTICATION_MAGIC ||
@@ -118,7 +371,8 @@ auto structurally_valid(const sourcemeta::core::FileView &view) noexcept
     return false;
   }
 
-  const auto *views{view.as<AuthenticationViewEntry>(header->views_offset)};
+  const auto *views{
+      at_offset<AuthenticationViewEntry>(bytes, header->views_offset)};
   bool names_the_anonymous{false};
   for (std::uint32_t index{0}; index < header->view_count; index += 1) {
     const auto &entry{views[index]};
@@ -152,7 +406,7 @@ auto structurally_valid(const sourcemeta::core::FileView &view) noexcept
 
   if (header->policy_count > 0) {
     const auto *policies{
-        view.as<AuthenticationPolicyEntry>(header->policies_offset)};
+        at_offset<AuthenticationPolicyEntry>(bytes, header->policies_offset)};
     // Each policy's metadata is appended in declaration order after the string
     // blob, so a valid artifact lays them out contiguously from there onward
     auto metadata_cursor{strings_offset + strings_length};
@@ -172,7 +426,7 @@ auto structurally_valid(const sourcemeta::core::FileView &view) noexcept
     }
   }
 
-  const auto *nodes{view.as<AuthenticationNode>(header->nodes_offset)};
+  const auto *nodes{at_offset<AuthenticationNode>(bytes, header->nodes_offset)};
   for (std::uint32_t index{0}; index < header->node_count; index += 1) {
     const auto &node{nodes[index]};
     if (node.edge_count > header->edge_count ||
@@ -182,7 +436,8 @@ auto structurally_valid(const sourcemeta::core::FileView &view) noexcept
   }
 
   if (header->edge_count > 0) {
-    const auto *edges{view.as<AuthenticationEdge>(header->edges_offset)};
+    const auto *edges{
+        at_offset<AuthenticationEdge>(bytes, header->edges_offset)};
     for (std::uint32_t index{0}; index < header->edge_count; index += 1) {
       const auto &edge{edges[index]};
       if (edge.child >= header->node_count ||
@@ -509,9 +764,7 @@ auto carries_objects(const sourcemeta::core::JSON &value) -> bool {
 // rules themselves are cumulative, which is what lets a policy widen who it
 // admits without also widening what they reach
 auto admits_claims(const sourcemeta::core::JSON &payload,
-                   const sourcemeta::core::JSON &rules)
-    -> sourcemeta::one::Authentication::Admission {
-  using Admission = sourcemeta::one::Authentication::Admission;
+                   const sourcemeta::core::JSON &rules) -> Admission {
   if (!rules.is_object()) {
     return Admission::Admitted;
   }
@@ -715,8 +968,7 @@ auto interactive_policy(const OIDCPolicyMetadata &decoded)
 // regard to case against domains the artifact already holds in lower case
 auto admits_email_domain(const sourcemeta::core::JSON &claims,
                          const std::span<const std::byte> domains)
-    -> sourcemeta::one::Authentication::Admission {
-  using Admission = sourcemeta::one::Authentication::Admission;
+    -> Admission {
   const auto *verified{claims.try_at("email_verified")};
   const auto *address{claims.try_at("email")};
   // Whatever arrived is judged before whatever did not. An address the
@@ -805,8 +1057,7 @@ struct Authentication::Impl {
   // everything: the section pointers below stay null, so matching yields the
   // empty set and admits no one. Opening the file covers the missing and
   // unreadable cases without a separate, throwing existence check
-  Impl(const std::filesystem::path &path,
-       sourcemeta::core::JWKSProvider::Fetcher fetcher)
+  Impl(const std::filesystem::path &path, Authentication::Fetcher fetcher)
       : fetcher_{std::move(fetcher)} {
     std::unique_ptr<sourcemeta::core::FileView> view;
     try {
@@ -815,11 +1066,31 @@ struct Authentication::Impl {
       return;
     }
 
-    if (!structurally_valid(*view)) {
-      return;
+    if (this->adopt({view->as<std::byte>(), view->size()})) {
+      this->view_ = std::move(view);
+    }
+  }
+
+  // A table compiled in this process is held rather than mapped, so the bytes
+  // are copied once and never move again, which is what keeps every section
+  // pointer below valid for as long as this exists
+  Impl(const std::span<const std::byte> bytes, Authentication::Fetcher fetcher)
+      : fetcher_{std::move(fetcher)} {
+    this->owned_.assign(bytes.begin(), bytes.end());
+    if (!this->adopt(this->owned_)) {
+      this->owned_.clear();
+    }
+  }
+
+  // Whether the artifact could be read, and every section pointer set where it
+  // could. Nothing is set on a refusal, so a caller that ignores the answer
+  // still denies everything
+  auto adopt(const std::span<const std::byte> bytes) -> bool {
+    if (!structurally_valid(bytes)) {
+      return false;
     }
 
-    const auto *header{view->as<AuthenticationHeader>()};
+    const auto *header{at_offset<AuthenticationHeader>(bytes)};
 
     // Claim rules are read and parsed once here rather than on each request,
     // since a request answers a rule by lookup while the bytes behind it never
@@ -833,7 +1104,7 @@ struct Authentication::Impl {
     std::vector<sourcemeta::core::JSON> claims;
     claims.assign(header->policy_count, sourcemeta::core::JSON{nullptr});
     const auto *policies{
-        view->as<AuthenticationPolicyEntry>(header->policies_offset)};
+        at_offset<AuthenticationPolicyEntry>(bytes, header->policies_offset)};
     for (std::uint32_t index{0}; index < header->policy_count; index += 1) {
       const auto &entry{policies[index]};
       const auto type{static_cast<Authentication::Type>(entry.type)};
@@ -844,16 +1115,17 @@ struct Authentication::Impl {
       }
 
       const std::span<const std::byte> metadata{
-          view->as<std::byte>(entry.metadata_offset), entry.metadata_length};
+          at_offset<std::byte>(bytes, entry.metadata_offset),
+          entry.metadata_length};
       std::string_view serialized;
       if (type == Authentication::Type::JWT) {
         if (!read_jwt_claims(metadata, serialized)) {
-          return;
+          return false;
         }
       } else {
         OIDCPolicyMetadata decoded;
         if (!decode_oidc_metadata(metadata, decoded)) {
-          return;
+          return false;
         }
 
         serialized = decoded.claims;
@@ -865,36 +1137,188 @@ struct Authentication::Impl {
 
       auto document{sourcemeta::core::try_parse_json(serialized)};
       if (!document.has_value() || !document.value().is_object()) {
-        return;
+        return false;
       }
 
       claims[index] = std::move(document).value();
     }
 
-    this->nodes_ = view->as<AuthenticationNode>(header->nodes_offset);
+    this->nodes_ = at_offset<AuthenticationNode>(bytes, header->nodes_offset);
     // The edge section is empty when no policy declares a nested prefix, in
     // which case it sits at the end of the buffer and must not be addressed
     if (header->edge_count > 0) {
-      this->edges_ = view->as<AuthenticationEdge>(header->edges_offset);
+      this->edges_ = at_offset<AuthenticationEdge>(bytes, header->edges_offset);
     }
 
     // Every name is a range into the string section, so it is addressed
     // whenever anything was named rather than only when a prefix was nested
     if (header->strings_length > 0) {
-      this->strings_ = view->as<char>(header->strings_offset);
+      this->strings_ = at_offset<char>(bytes, header->strings_offset);
     }
 
-    this->views_ = view->as<AuthenticationViewEntry>(header->views_offset);
+    this->views_ =
+        at_offset<AuthenticationViewEntry>(bytes, header->views_offset);
     this->view_count_ = header->view_count;
 
     if (header->policy_count > 0) {
       this->policies_ =
-          view->as<AuthenticationPolicyEntry>(header->policies_offset);
+          at_offset<AuthenticationPolicyEntry>(bytes, header->policies_offset);
       this->policy_count_ = header->policy_count;
     }
 
     this->claims_ = std::move(claims);
-    this->view_ = std::move(view);
+    this->bytes_ = bytes;
+    return true;
+  }
+
+  // The transaction a callback belongs to, if the request carries one. A
+  // request can present several cookies under one name, since a parent domain
+  // and the host itself can each set one and neither the header nor the order
+  // says which is which, so every value is tried. Letting whoever controls a
+  // neighbouring host decide which transaction this reads is what turns the
+  // cookie from a defence against a forged callback into the way to mount one
+  [[nodiscard]] auto transaction(const std::string_view policy_name,
+                                 const std::string_view state,
+                                 const Credentials &credentials) const
+      -> std::optional<sourcemeta::core::JSON> {
+    if (state.empty()) {
+      return std::nullopt;
+    }
+
+    std::vector<std::string_view> candidates;
+    for (const auto field : credentials.cookies) {
+      sourcemeta::core::http_cookie_values(field, TRANSACTION_COOKIE,
+                                           candidates);
+    }
+
+    for (const auto sealed : candidates) {
+      auto opened{this->open(policy_name, Authentication::Purpose::Transaction,
+                             sealed)};
+      if (!opened.has_value()) {
+        continue;
+      }
+
+      auto document{sourcemeta::core::try_parse_json(opened.value())};
+      if (!document.has_value() || !document.value().is_object()) {
+        continue;
+      }
+
+      const auto *sealed_policy{document.value().try_at("policy")};
+      const auto *sealed_state{document.value().try_at("state")};
+      const auto *nonce{document.value().try_at("nonce")};
+      const auto *verifier{document.value().try_at("verifier")};
+      if (sealed_policy == nullptr || !sealed_policy->is_string() ||
+          sealed_policy->to_string() != policy_name ||
+          sealed_state == nullptr || !sealed_state->is_string() ||
+          sealed_state->to_string() != state || nonce == nullptr ||
+          !nonce->is_string() || nonce->to_string().empty() ||
+          verifier == nullptr || !verifier->is_string() ||
+          verifier->to_string().empty()) {
+        continue;
+      }
+
+      return document;
+    }
+
+    return std::nullopt;
+  }
+
+  // The session cookie for a login, carrying the identity token when one is
+  // given. Building it is separated out so the caller can measure the result
+  // and ask for a smaller one
+  [[nodiscard]] auto session_cookie(const std::string_view policy_name,
+                                    const std::string_view subject,
+                                    const std::string_view id_token,
+                                    const std::chrono::sys_seconds expiry,
+                                    const bool secure,
+                                    std::vector<std::string> &log) const
+      -> std::optional<std::string> {
+    auto payload{sourcemeta::core::JSON::make_object()};
+    payload.assign_assume_new("policy",
+                              sourcemeta::core::JSON{std::string{policy_name}});
+    payload.assign_assume_new("subject",
+                              sourcemeta::core::JSON{std::string{subject}});
+    if (!id_token.empty()) {
+      payload.assign_assume_new("id_token",
+                                sourcemeta::core::JSON{std::string{id_token}});
+    }
+
+    std::ostringstream payload_text;
+    sourcemeta::core::stringify(payload, payload_text);
+    const auto sealed{this->seal(policy_name, Authentication::Purpose::Session,
+                                 payload_text.str(), expiry)};
+    if (!sealed.has_value()) {
+      log.emplace_back("No session secret is set for the policy");
+      return std::nullopt;
+    }
+
+    auto cookie{sourcemeta::core::http_serialize_cookie(
+        {.name = SESSION_COOKIE,
+         .value = sealed.value(),
+         .path = COOKIE_PATH,
+         .max_age = SESSION_LIFETIME,
+         .http_only = true,
+         .secure = secure,
+         .same_site = sourcemeta::core::HTTPCookieSameSite::Lax})};
+    if (!cookie.has_value()) {
+      log.emplace_back("The session could not be put in a cookie, for the "
+                       "policy");
+    }
+
+    return cookie;
+  }
+
+  // A rule compared against a claim carrying objects is compared on the `value`
+  // sub-attribute alone, so a rule naming what a person sees rather than what
+  // identifies them matches nothing. A denial cannot show that, and the token
+  // it concerns is sealed inside a cookie where an operator cannot look, so it
+  // is said here. Only a refusal reaches this, so a working policy stays quiet,
+  // and each claim is named once however often somebody signs in
+  auto report_object_shaped_claims(const std::string_view policy_name,
+                                   const sourcemeta::core::JSON &claims,
+                                   std::vector<std::string> &log) const
+      -> void {
+    static std::mutex mutex;
+    static std::set<std::string, std::less<>> reported;
+    for (const auto claim : this->object_shaped_claims(policy_name, claims)) {
+      std::string subject{claim};
+      subject += " of the policy ";
+      subject += policy_name;
+      const std::scoped_lock guard{mutex};
+      if (!reported.insert(subject).second) {
+        continue;
+      }
+
+      std::string message{
+          "A rule names a claim the provider answers with objects, which are "
+          "compared on their identifier rather than on any name shown to a "
+          "person. The claim is "};
+      message += subject;
+      log.push_back(std::move(message));
+    }
+  }
+
+  // Which policies govern a location, or nothing at all when the artifact
+  // could not be read. A missing or structurally broken one leaves the section
+  // pointers null and governs nothing it could answer for, which is why an
+  // empty set and an unreadable table are told apart here rather than by
+  // whoever asks
+  [[nodiscard]] auto governing_mask(const std::string_view path) const
+      -> std::optional<Authentication::PolicySet> {
+    if (this->nodes_ == nullptr) {
+      return std::nullopt;
+    }
+
+    return this->match(path);
+  }
+
+  // Whether a caller satisfying these policies is shown a location
+  [[nodiscard]] auto permits(const std::string_view path,
+                             const Authentication::PolicySet policies) const
+      -> bool {
+    const auto governing{this->governing_mask(path)};
+    return governing.has_value() &&
+           (governing.value() == 0 || (governing.value() & policies) != 0);
   }
 
   // The policies that govern a registry path, accumulated from every prefix
@@ -955,45 +1379,6 @@ struct Authentication::Impl {
     return result;
   }
 
-  [[nodiscard]] auto admits(const std::string_view registry_path,
-                            const std::string_view credential,
-                            const std::span<const std::string_view> cookies,
-                            const std::string_view required_audience = {}) const
-      -> Authentication::Verdict {
-    // A missing or structurally broken artifact leaves the section pointers
-    // null and denies everything. Only a valid policy fails open below
-    if (this->nodes_ == nullptr) {
-      return {.allowed = false, .principal = std::nullopt};
-    }
-
-    const auto governing{this->match(registry_path)};
-    if (governing == 0) {
-      // No policy covers this path, so it is public and the caller anonymous
-      return {.allowed = true, .principal = std::nullopt};
-    }
-
-    const auto token{sourcemeta::core::JWT::from(credential)};
-
-    const auto *policies{
-        static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
-    for (std::uint32_t index{0}; index < this->policy_count_; index += 1) {
-      if ((governing & (PolicySet{1} << index)) == 0) {
-        continue;
-      }
-
-      if (this->admits_policy(index, credential, cookies, token,
-                              required_audience)) {
-        return {
-            .allowed = true,
-            .principal = Authentication::Principal{
-                .type = static_cast<Authentication::Type>(policies[index].type),
-                .policy = static_cast<std::size_t>(index)}};
-      }
-    }
-
-    return {.allowed = false, .principal = std::nullopt};
-  }
-
   // Whether one policy accepts what a request presented, which is the whole of
   // reading a credential and is asked both of a policy governing a path and of
   // every policy when placing a caller. Two answers to this could disagree,
@@ -1007,7 +1392,7 @@ struct Authentication::Impl {
         static_cast<const AuthenticationPolicyEntry *>(this->policies_)[index]};
     std::span<const std::byte> metadata;
     if (entry.metadata_length > 0) {
-      metadata = {this->view_->as<std::byte>(entry.metadata_offset),
+      metadata = {at_offset<std::byte>(this->bytes_, entry.metadata_offset),
                   entry.metadata_length};
     }
 
@@ -1140,8 +1525,7 @@ struct Authentication::Impl {
       return false;
     }
 
-    return admits_claims(token.payload(), claims) ==
-           Authentication::Admission::Admitted;
+    return admits_claims(token.payload(), claims) == Admission::Admitted;
   }
 
   [[nodiscard]] auto
@@ -1166,8 +1550,7 @@ struct Authentication::Impl {
     // when any of them is a session for this policy
     std::vector<std::string_view> candidates;
     for (const auto field : cookies) {
-      sourcemeta::core::http_cookie_values(
-          field, Authentication::SESSION_COOKIE, candidates);
+      sourcemeta::core::http_cookie_values(field, SESSION_COOKIE, candidates);
     }
     for (const auto sealed : candidates) {
       const auto payload{this->session_open(
@@ -1220,7 +1603,7 @@ struct Authentication::Impl {
       }
 
       const std::span<const std::byte> metadata{
-          this->view_->as<std::byte>(entry.metadata_offset),
+          at_offset<std::byte>(this->bytes_, entry.metadata_offset),
           entry.metadata_length};
       OIDCPolicyMetadata decoded;
       if (!decode_oidc_metadata(metadata, decoded) || decoded.name.empty()) {
@@ -1270,7 +1653,7 @@ struct Authentication::Impl {
       }
 
       const std::span<const std::byte> metadata{
-          this->view_->as<std::byte>(entry.metadata_offset),
+          at_offset<std::byte>(this->bytes_, entry.metadata_offset),
           entry.metadata_length};
       if (decode_oidc_metadata(metadata, result) && result.name == name) {
         return true;
@@ -1307,7 +1690,7 @@ struct Authentication::Impl {
 
       OIDCPolicyMetadata decoded;
       if (!decode_oidc_metadata(
-              {this->view_->as<std::byte>(entry.metadata_offset),
+              {at_offset<std::byte>(this->bytes_, entry.metadata_offset),
                entry.metadata_length},
               decoded) ||
           decoded.name != policy) {
@@ -1342,7 +1725,7 @@ struct Authentication::Impl {
 
   [[nodiscard]] auto admits_identity(const std::string_view policy,
                                      const sourcemeta::core::JSON &claims) const
-      -> Authentication::Admission {
+      -> Admission {
     const auto *policies{
         static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
     for (std::uint32_t index{0}; index < this->policy_count_; index += 1) {
@@ -1355,7 +1738,7 @@ struct Authentication::Impl {
 
       OIDCPolicyMetadata decoded;
       if (!decode_oidc_metadata(
-              {this->view_->as<std::byte>(entry.metadata_offset),
+              {at_offset<std::byte>(this->bytes_, entry.metadata_offset),
                entry.metadata_length},
               decoded) ||
           decoded.name != policy) {
@@ -1367,28 +1750,28 @@ struct Authentication::Impl {
       std::uint32_t domains{0};
       std::size_t cursor{0};
       if (!read_u32(decoded.email_domains, cursor, domains)) {
-        return Authentication::Admission::Refused;
+        return Admission::Refused;
       }
 
       const auto address{
           domains > 0 ? admits_email_domain(claims, decoded.email_domains)
-                      : Authentication::Admission::Admitted};
-      if (address == Authentication::Admission::Refused) {
+                      : Admission::Admitted};
+      if (address == Admission::Refused) {
         return address;
       }
 
       const auto rules{admits_claims(claims, this->claims_[index])};
-      if (rules == Authentication::Admission::Refused) {
+      if (rules == Admission::Refused) {
         return rules;
       }
 
       // Either half wanting more is the whole wanting more
-      return rules == Authentication::Admission::Incomplete ? rules : address;
+      return rules == Admission::Incomplete ? rules : address;
     }
 
     // A name that no interactive policy answers to could never have minted a
     // session, so nothing it asserts is admitted
-    return Authentication::Admission::Refused;
+    return Admission::Refused;
   }
 
   [[nodiscard]] auto interactive(const std::string_view path,
@@ -1414,7 +1797,7 @@ struct Authentication::Impl {
       }
 
       const std::span<const std::byte> metadata{
-          this->view_->as<std::byte>(entry.metadata_offset),
+          at_offset<std::byte>(this->bytes_, entry.metadata_offset),
           entry.metadata_length};
       OIDCPolicyMetadata decoded;
       if (decode_oidc_metadata(metadata, decoded) && decoded.name == name) {
@@ -1469,8 +1852,7 @@ struct Authentication::Impl {
 
     const auto issued{std::chrono::time_point_cast<std::chrono::seconds>(
         std::chrono::system_clock::now())};
-    return Authentication::seal_value(payload, purpose, resolved.front(),
-                                      issued, expiry);
+    return seal_value(payload, purpose, resolved.front(), issued, expiry);
   }
 
   [[nodiscard]] auto session_open(const std::span<const std::byte> variables,
@@ -1491,7 +1873,7 @@ struct Authentication::Impl {
 
     const auto now{std::chrono::time_point_cast<std::chrono::seconds>(
         std::chrono::system_clock::now())};
-    return Authentication::open_value(value, purpose, secrets, now);
+    return open_value(value, purpose, secrets, now);
   }
 
   [[nodiscard]] auto seal(const std::string_view policy,
@@ -1526,7 +1908,7 @@ struct Authentication::Impl {
   // Connect layer is applied again only when that snapshot changes rather than
   // once per request
   [[nodiscard]] auto endpoints(const std::string_view policy) const
-      -> std::optional<Authentication::ProviderEndpoints> {
+      -> std::optional<ProviderEndpoints> {
     OIDCPolicyMetadata decoded;
     if (!this->find_interactive(policy, decoded) || !this->fetcher_) {
       return std::nullopt;
@@ -1542,7 +1924,7 @@ struct Authentication::Impl {
         // so the one transport this instance was given is adapted rather than
         // a second one being introduced
         auto transport{
-            [fetcher = this->fetcher_](const std::string_view url)
+            [fetcher = this->key_fetcher()](const std::string_view url)
                 -> std::optional<
                     sourcemeta::core::OAuthMetadataProvider::FetchResult> {
               auto result{fetcher(url)};
@@ -1579,7 +1961,7 @@ struct Authentication::Impl {
         return std::nullopt;
       }
 
-      Authentication::ProviderEndpoints resolved;
+      ProviderEndpoints resolved;
       if (document.value().authorization_endpoint().has_value()) {
         resolved.authorization =
             document.value().authorization_endpoint().value();
@@ -1655,7 +2037,7 @@ struct Authentication::Impl {
         return nullptr;
       }
 
-      const auto metadata{this->fetcher_(url.value())};
+      const auto metadata{this->retrieve(url.value())};
       if (!metadata.has_value()) {
         return nullptr;
       }
@@ -1679,7 +2061,7 @@ struct Authentication::Impl {
     sourcemeta::core::JWKSProvider::Options options;
     options.clock_skew = JWT_CLOCK_SKEW;
     auto provider{std::make_unique<sourcemeta::core::JWKSProvider>(
-        std::move(location), this->fetcher_, options)};
+        std::move(location), this->key_fetcher(), options)};
 
     // A concurrent caller may have installed this key while the lock was
     // released, so its provider wins and ours is discarded
@@ -1725,7 +2107,7 @@ struct Authentication::Impl {
       const auto &entry{policies[index]};
       if (entry.metadata_length > 0) {
         const std::span<const std::byte> metadata{
-            this->view_->as<std::byte>(entry.metadata_offset),
+            at_offset<std::byte>(this->bytes_, entry.metadata_offset),
             entry.metadata_length};
         const auto type{static_cast<Authentication::Type>(entry.type)};
         if (type == Authentication::Type::JWT) {
@@ -1790,9 +2172,54 @@ struct Authentication::Impl {
   // above, null where a policy declares none
   std::vector<sourcemeta::core::JSON> claims_;
 
+  // Whichever of the two holds the bytes every section above points into. A
+  // mapped table keeps the mapping, a compiled one keeps its own copy, and the
+  // span is how anything reads them without caring which
   std::unique_ptr<sourcemeta::core::FileView> view_;
+  std::vector<std::byte> owned_;
+  std::span<const std::byte> bytes_{};
 
-  sourcemeta::core::JWKSProvider::Fetcher fetcher_;
+  Authentication::Fetcher fetcher_;
+
+  [[nodiscard]] auto fetcher() const -> const Authentication::Fetcher & {
+    return this->fetcher_;
+  }
+
+  // A plain retrieval, which is what discovery and a key set both are
+  [[nodiscard]] auto retrieve(const std::string_view url) const
+      -> std::optional<Authentication::ProviderResponse> {
+    if (!this->fetcher_) {
+      return std::nullopt;
+    }
+
+    auto response{this->fetcher_({.url = url})};
+    if (!response.has_value() || response.value().status < 200 ||
+        response.value().status >= 300) {
+      return std::nullopt;
+    }
+
+    return response;
+  }
+
+  // What a key set is retrieved with, which is the one fetcher asked for a
+  // plain retrieval. Adapting here rather than holding two keeps every
+  // outbound call this makes going through the same place
+  [[nodiscard]] auto key_fetcher() const
+      -> sourcemeta::core::JWKSProvider::Fetcher {
+    return [fetcher = this->fetcher_](const std::string_view url)
+               -> std::optional<sourcemeta::core::JWKSProvider::FetchResult> {
+      auto response{fetcher({.url = url})};
+      if (!response.has_value() || response.value().status < 200 ||
+          response.value().status >= 300) {
+        return std::nullopt;
+      }
+
+      const auto max_age{response.value().max_age};
+      return sourcemeta::core::JWKSProvider::FetchResult{
+          .body = std::move(response).value().body, .max_age = max_age};
+    };
+  }
+
   mutable std::mutex jwks_mutex_;
   mutable std::map<std::pair<std::string, std::string>,
                    std::unique_ptr<sourcemeta::core::JWKSProvider>>
@@ -1800,7 +2227,7 @@ struct Authentication::Impl {
 
   struct ResolvedEndpoints {
     std::shared_ptr<const sourcemeta::core::OAuthServerMetadata> source;
-    Authentication::ProviderEndpoints resolved;
+    ProviderEndpoints resolved;
   };
 
   mutable std::mutex metadata_mutex_;
@@ -1811,8 +2238,12 @@ struct Authentication::Impl {
 };
 
 Authentication::Authentication(const std::filesystem::path &path,
-                               sourcemeta::core::JWKSProvider::Fetcher fetcher)
+                               Authentication::Fetcher fetcher)
     : impl_{std::make_unique<Impl>(path, std::move(fetcher))} {}
+
+Authentication::Authentication(const std::span<const std::byte> bytes,
+                               Authentication::Fetcher fetcher)
+    : impl_{std::make_unique<Impl>(bytes, std::move(fetcher))} {}
 
 Authentication::~Authentication() = default;
 
@@ -1869,14 +2300,16 @@ auto Authentication::views(
 
   for (std::size_t index{0}; index < policies.size(); index++) {
     const auto &policy{policies[index]};
-    if (policy.type != Authentication::Type::JWT) {
+    const auto *token{
+        std::get_if<Authentication::Policy::Token>(&policy.credential)};
+    if (token == nullptr) {
       named.push_back({.name = std::string{policy.name}, .policies = {index}});
       continue;
     }
 
-    const auto match{std::ranges::find(issuers, policy.issuer)};
+    const auto match{std::ranges::find(issuers, token->issuer)};
     if (match == issuers.cend()) {
-      issuers.emplace_back(policy.issuer);
+      issuers.emplace_back(token->issuer);
       groups.push_back({index});
     } else {
       groups[static_cast<std::size_t>(match - issuers.begin())].push_back(
@@ -1915,122 +2348,692 @@ auto Authentication::views(
   return result;
 }
 
-auto Authentication::admits(const Authentication::Path &path,
-                            const Credentials &credentials) const
-    -> Authentication::Verdict {
-  return this->impl_->admits(path.value(), credentials.bearer,
-                             credentials.cookies);
+namespace {
+
+// Whether a value is somewhere on this instance rather than somewhere else, so
+// that what a login sealed cannot become a redirect to another origin
+auto is_local_path(const std::string_view value) -> bool {
+  if (value.empty() || value.front() != '/') {
+    return false;
+  }
+
+  if (value.size() >= 2 && (value[1] == '/' || value[1] == '\\')) {
+    return false;
+  }
+
+  for (const auto character : value) {
+    const auto code{static_cast<unsigned char>(character)};
+    if (code <= 0x20 || code == 0x7f || character == '\\') {
+      return false;
+    }
+  }
+
+  return true;
 }
 
-auto Authentication::classify(const Credentials &credentials) const
-    -> Authentication::PolicySet {
-  return this->impl_->classify(credentials.bearer, credentials.cookies);
+// What redeeming an authorization code yields, of which only the identity token
+// decides anything. The access token comes along solely so that a claim missing
+// from that token can be asked for at the UserInfo endpoint
+struct Grant {
+  std::string id_token;
+  std::string access_token;
+};
+
+// RFC 6749 Section 2.3.1 has every server accept the client secret in an
+// authorization header, and asks that carrying it in the request body be
+// limited to clients that cannot send one. A body is the part of a request that
+// logging and proxies keep, while an authorization header is the part they
+// already know to redact, so the header is used wherever the provider takes it
+auto exchange(const sourcemeta::one::Authentication::Fetcher &fetcher,
+              const std::string_view token_endpoint,
+              const std::string_view client_id,
+              const sourcemeta::core::SecureString &client_secret,
+              const std::string_view redirect_uri, const std::string_view code,
+              const std::string_view code_verifier, const bool basic_auth)
+    -> std::optional<Grant> {
+  if (!fetcher) {
+    return std::nullopt;
+  }
+
+  sourcemeta::one::Authentication::ProviderRequest request{.url =
+                                                               token_endpoint};
+  sourcemeta::core::oauth_build_token_request_code(
+      code, redirect_uri, code_verifier, {}, request.body);
+  if (basic_auth) {
+    sourcemeta::core::oauth_client_secret_basic(client_id, client_secret,
+                                                request.authorization);
+  } else {
+    sourcemeta::core::oauth_client_secret_post(client_id, client_secret,
+                                               request.body);
+  }
+
+  const auto result{fetcher(std::move(request))};
+  if (!result.has_value() || result.value().status < 200 ||
+      result.value().status >= 300) {
+    return std::nullopt;
+  }
+
+  const auto document{sourcemeta::core::try_parse_json(result.value().body)};
+  if (!document.has_value()) {
+    return std::nullopt;
+  }
+
+  auto identity{sourcemeta::core::oidc_parse_id_token(document.value())};
+  if (!identity.has_value()) {
+    return std::nullopt;
+  }
+
+  // The access token is kept only so that the UserInfo endpoint can be asked
+  // for a claim the identity token did not carry. It is never stored, never
+  // logged, and never leaves this exchange
+  Grant grant;
+  grant.id_token = std::move(identity).value();
+  const sourcemeta::core::OAuthTokenResponse response{document.value()};
+  if (response.access_token().has_value()) {
+    grant.access_token = response.access_token().value();
+  }
+
+  return grant;
 }
 
-auto Authentication::view(const Credentials &credentials) const
-    -> std::string_view {
-  return this->impl_->view_name(
-      this->impl_->classify(credentials.bearer, credentials.cookies));
+// What a provider answers at its UserInfo endpoint, which under the
+// authorization code flow is where the claims a scope requested arrive by
+// default (OpenID Connect Core Section 5.4).
+//
+// OpenID Connect Core Section 5.3.2 requires the subject it returns to match
+// the one the identity token asserted, and to be checked before anything it
+// says is used. Without that a response about somebody else would be read as
+// being about this person, which is the whole of what this is for
+auto userinfo(const sourcemeta::one::Authentication::Fetcher &fetcher,
+              const std::string_view endpoint,
+              const std::string_view access_token,
+              const std::string_view subject, std::vector<std::string> &log)
+    -> std::optional<sourcemeta::core::JSON> {
+  if (!fetcher || access_token.empty()) {
+    return std::nullopt;
+  }
+
+  std::string authorization;
+  if (!sourcemeta::core::oauth_bearer_header(access_token, authorization)) {
+    return std::nullopt;
+  }
+
+  // An access token is a secret, so what carries it travels in wiping storage
+  // even though what built it did not
+  sourcemeta::one::Authentication::ProviderRequest request{.url = endpoint};
+  request.authorization.append(authorization);
+
+  const auto result{fetcher(std::move(request))};
+  if (!result.has_value() || result.value().status < 200 ||
+      result.value().status >= 300) {
+    return std::nullopt;
+  }
+
+  auto document{sourcemeta::core::try_parse_json(result.value().body)};
+  if (!document.has_value() || !document.value().is_object()) {
+    return std::nullopt;
+  }
+
+  const auto *asserted{document.value().try_at("sub")};
+  if (asserted == nullptr || !asserted->is_string() ||
+      asserted->to_string() != subject) {
+    log.emplace_back("The UserInfo endpoint answered about a different subject "
+                     "than the identity token did");
+    return std::nullopt;
+  }
+
+  return document;
 }
 
-auto Authentication::interactive(const std::string_view name) const
-    -> std::optional<Authentication::InteractivePolicy> {
-  return this->impl_->interactive(name);
+auto id_token_keys(std::string location,
+                   sourcemeta::core::JWKSProvider::Fetcher fetcher)
+    -> sourcemeta::core::JWKSProvider {
+  return sourcemeta::core::JWKSProvider{std::move(location),
+                                        std::move(fetcher),
+                                        {.clock_skew = ID_TOKEN_CLOCK_SKEW}};
 }
 
-auto Authentication::interactive(const Authentication::Path &path,
-                                 const std::string_view name) const
-    -> std::optional<Authentication::InteractivePolicy> {
-  return this->impl_->interactive(path.value(), name);
-}
+// Expire a cookie under the attributes it was minted with, so the browser
 
-auto Authentication::client_secret(const std::string_view policy) const
-    -> std::optional<sourcemeta::core::SecureString> {
-  return this->impl_->client_secret(policy);
-}
-
-auto Authentication::endpoints(const std::string_view policy) const
-    -> std::optional<Authentication::ProviderEndpoints> {
-  return this->impl_->endpoints(policy);
-}
-
-auto Authentication::open_session(const std::string_view value) const
+// replaces it rather than keeping a second one of the same name beside it
+auto expired_cookie(const std::string_view name, const bool secure)
     -> std::optional<std::string> {
-  return this->impl_->open_session(value);
+  return sourcemeta::core::http_serialize_cookie(
+      {.name = name,
+       .value = "",
+       .path = COOKIE_PATH,
+       .max_age = std::chrono::seconds{0},
+       .http_only = true,
+       .secure = secure,
+       .same_site = sourcemeta::core::HTTPCookieSameSite::Lax});
 }
 
-// A provider answering twice about one person is two halves of one account,
-// but only one of them is signed. The address pair is carved out of the merge
-// because `email_verified` speaks for the address delivered with it, so the
-// pair is only ever taken from an answer that carried the address, and an
-// assertion left on its own is dropped whichever answer it came from
-auto Authentication::combine_claims(const sourcemeta::core::JSON &token,
-                                    const sourcemeta::core::JSON &extra)
-    -> sourcemeta::core::JSON {
-  if (!token.is_object()) {
-    return extra.is_object() ? extra : token;
+} // namespace
+
+auto Authentication::login(const std::string_view policy_name,
+                           const std::string_view instance_url,
+                           const std::string_view redirect_uri,
+                           const bool silent,
+                           const std::string_view return_to) const
+    -> Authentication::Outcome {
+  Authentication::Outcome result;
+
+  // An unknown or non-interactive policy name reveals nothing
+  const auto policy{this->impl_->interactive(policy_name)};
+  if (!policy.has_value()) {
+    result.result = Authentication::Outcome::Result::Missing;
+    return result;
   }
 
-  // Nothing to combine leaves what the token said untouched, since an
-  // assertion it carried alone can vouch for no address but its own
-  if (!extra.is_object()) {
-    return token;
+  // Starting a login that cannot be completed only strands the person at the
+  // provider, so the secret the exchange will need is required up front
+  if (!this->impl_->client_secret(policy_name).has_value()) {
+    result.log.emplace_back("No client secret is set for the policy");
+    return result;
   }
 
-  auto result{token};
-  const auto token_has_address{token.defines("email")};
-  const auto extra_has_address{extra.defines("email")};
-  if (!token_has_address) {
-    result.erase("email_verified");
+  const auto endpoints{this->impl_->endpoints(policy_name)};
+  if (!endpoints.has_value() || endpoints.value().authorization.empty()) {
+    result.log.emplace_back("The provider named no authorization endpoint, or "
+                            "could not be reached, for the policy");
+    return result;
   }
 
-  for (const auto &claim : extra.as_object()) {
-    const auto address_pair{claim.first == "email" ||
-                            claim.first == "email_verified"};
-    // The answer that carried the address carries the assertion about it, so
-    // neither half is taken from an answer holding only one of them
-    if (address_pair && (token_has_address || !extra_has_address)) {
+  const auto secrets{sourcemeta::core::oauth_transaction_mint()};
+  const std::string_view state{secrets.state.data(), secrets.state.size()};
+  const std::string_view verifier{secrets.code_verifier.data(),
+                                  secrets.code_verifier.size()};
+  const auto nonce_token{sourcemeta::core::oidc_nonce()};
+  const std::string_view nonce{nonce_token.data(), nonce_token.size()};
+
+  auto payload{sourcemeta::core::JSON::make_object()};
+  payload.assign_assume_new("policy",
+                            sourcemeta::core::JSON{std::string{policy_name}});
+  if (silent) {
+    payload.assign_assume_new("silent", sourcemeta::core::JSON{true});
+  }
+
+  payload.assign_assume_new("state", sourcemeta::core::JSON{state});
+  payload.assign_assume_new("nonce", sourcemeta::core::JSON{nonce});
+  payload.assign_assume_new("verifier", sourcemeta::core::JSON{verifier});
+
+  // Where the browser goes once this completes. What the request asked for
+  // wins, and what the policy governs stands in where it asked for nothing
+  if (!return_to.empty()) {
+    payload.assign_assume_new("to",
+                              sourcemeta::core::JSON{std::string{return_to}});
+  } else if (!policy->default_path.empty()) {
+    payload.assign_assume_new(
+        "to", sourcemeta::core::JSON{std::string{policy->default_path}});
+  }
+
+  std::ostringstream payload_text;
+  sourcemeta::core::stringify(payload, payload_text);
+
+  const auto expiry{std::chrono::time_point_cast<std::chrono::seconds>(
+                        std::chrono::system_clock::now()) +
+                    TRANSACTION_LIFETIME};
+  const auto sealed{this->impl_->seal(policy_name,
+                                      Authentication::Purpose::Transaction,
+                                      payload_text.str(), expiry)};
+  if (!sealed.has_value()) {
+    result.log.emplace_back("No session secret is set for the policy");
+    return result;
+  }
+
+  // A provider sends only the claims a request asks for, so a policy whose
+  // rules name any is asked for them here. The standard way is the claims
+  // request parameter, and where a provider does not honour that, the scopes
+  // that carry the standard claims are the fallback. A claim no standard scope
+  // carries is then arranged at the provider instead, since inventing a scope
+  // name risks a request refused outright.
+  // The rules outlive every request built from them, since a claim request
+  // names its claim by pointing into them rather than copying
+  const auto rules{policy->claims.empty()
+                       ? std::optional<sourcemeta::core::JSON>{std::nullopt}
+                       : sourcemeta::core::try_parse_json(policy->claims)};
+  const auto wanted{wanted_claims(policy.value(), rules)};
+  std::string scope_request;
+  std::string claims_parameter;
+  if (endpoints.value().claims_parameter_supported && !wanted.empty()) {
+    std::ostringstream text;
+    sourcemeta::core::stringify(
+        sourcemeta::core::oidc_build_claims_parameter({}, wanted), text);
+    claims_parameter = text.str();
+  }
+
+  requested_scope(wanted, scope_request);
+  report_unadvertised_claims(wanted, endpoints.value(), policy_name,
+                             result.log);
+
+  const auto challenge{sourcemeta::core::oauth_pkce_challenge(verifier)};
+  sourcemeta::core::OIDCAuthenticationRequest authentication_request{};
+  authentication_request.client_id = policy->client_id;
+  authentication_request.redirect_uri = redirect_uri;
+  authentication_request.scope = scope_request;
+  authentication_request.claims = claims_parameter;
+  authentication_request.response_type = "code";
+  authentication_request.state = state;
+  authentication_request.code_challenge = {challenge.data(), challenge.size()};
+  authentication_request.code_challenge_method = "S256";
+  authentication_request.nonce = nonce;
+  if (silent) {
+    authentication_request.prompt = "none";
+  }
+
+  std::string authorization_url;
+  if (!sourcemeta::core::oidc_build_authentication_url(
+          endpoints.value().authorization, authentication_request,
+          authorization_url)) {
+    result.log.emplace_back("The authorization endpoint is not a URL a request "
+                            "can be built against, for the policy");
+    return result;
+  }
+
+  // A redirect without the transaction cookie could never complete at the
+  // callback, so it is not worth sending
+  auto cookie{sourcemeta::core::http_serialize_cookie(
+      {.name = TRANSACTION_COOKIE,
+       .value = sealed.value(),
+       .path = COOKIE_PATH,
+       .max_age = TRANSACTION_LIFETIME,
+       .http_only = true,
+       .secure = sourcemeta::core::URI{std::string{instance_url}}.is_https(),
+       .same_site = sourcemeta::core::HTTPCookieSameSite::Lax})};
+  if (!cookie.has_value()) {
+    result.log.emplace_back(
+        "The login transaction could not be put in a cookie, for the policy");
+    return result;
+  }
+
+  result.cookies.push_back(std::move(cookie).value());
+  result.location = std::move(authorization_url);
+  result.result = Authentication::Outcome::Result::Redirect;
+  return result;
+}
+
+auto Authentication::renewal(const Authentication::Path &path,
+                             const Credentials &credentials) const
+    -> std::optional<std::string_view> {
+  if (credentials.cookies.empty()) {
+    return std::nullopt;
+  }
+
+  std::vector<std::string_view> candidates;
+  for (const auto field : credentials.cookies) {
+    sourcemeta::core::http_cookie_values(field, RENEWAL_COOKIE, candidates);
+  }
+
+  for (const auto candidate : candidates) {
+    const auto policy{this->impl_->interactive(path.value(), candidate)};
+    if (policy.has_value()) {
+      return candidate;
+    }
+  }
+
+  return std::nullopt;
+}
+
+auto Authentication::callback(const std::string_view policy_name,
+                              const std::string_view instance_url,
+                              const std::string_view redirect_uri,
+                              const Authentication::CallbackRequest &incoming,
+                              const Credentials &credentials) const
+    -> Authentication::Outcome {
+  Authentication::Outcome result;
+  result.result = Authentication::Outcome::Result::Invalid;
+  const auto secure{
+      sourcemeta::core::URI{std::string{instance_url}}.is_https()};
+
+  // The transaction is the only proof that this response belongs to a login
+  // this instance started, and the state it carries must match the one the
+  // provider echoes back. This runs before either the success or the decline is
+  // honoured, so a cross-site callback cannot even trigger an error on a
+  // person's behalf, per RFC 6749 Section 4.1.2.1
+  const auto transaction{
+      this->impl_->transaction(policy_name, incoming.state, credentials)};
+  if (!transaction.has_value()) {
+    return result;
+  }
+
+  // Nobody asked for a silent attempt, so from here on nothing it does is shown
+  // to them: every way this can end without a session puts the browser back
+  // where it started instead
+  const auto silent{transaction.value().try_at("silent") != nullptr};
+  const auto *nonce{transaction.value().try_at("nonce")};
+  const auto *verifier{transaction.value().try_at("verifier")};
+
+  // Where a silent attempt leaves the browser when it did not come back with a
+  // grant: back where it was denied, carrying neither a session nor the marker
+  // that would send it here again. The marker goes whatever the reason, so an
+  // attempt that failed is not made again on the next navigation, and every
+  // navigation after that
+  const auto abandon{[&](const Authentication::Outcome::Result outcome)
+                         -> Authentication::Outcome {
+    if (!silent) {
+      result.result = outcome;
+      return result;
+    }
+
+    result.result = Authentication::Outcome::Result::Redirect;
+    result.location = "";
+    const auto *sealed{transaction.value().try_at("to")};
+    if (sealed != nullptr && sealed->is_string() &&
+        is_local_path(sealed->to_string())) {
+      result.location = sealed->to_string();
+    }
+
+    for (const auto name : {RENEWAL_COOKIE, TRANSACTION_COOKIE}) {
+      auto cookie{expired_cookie(name, secure)};
+      if (cookie.has_value()) {
+        result.cookies.push_back(std::move(cookie).value());
+      }
+    }
+
+    result.log.emplace_back("A silent renewal did not end in a session");
+    return result;
+  }};
+
+  // Which policy a callback belongs to is settled by opening its transaction,
+  // so nothing reaching here names one this instance does not serve
+  const auto policy{this->impl_->interactive(policy_name)};
+  if (!policy.has_value()) {
+    return abandon(Authentication::Outcome::Result::Invalid);
+  }
+
+  // RFC 9207 Section 2.4 has a client compare the issuer an answer names
+  // against the one it addressed the request to, which is what catches an
+  // answer relayed from somewhere else. A provider naming none cannot be
+  // checked that way, so this runs only when one arrives, and it runs ahead of
+  // the outcome so that no answer is acted on before it is placed
+  if (incoming.has_issuer && incoming.issuer != policy->issuer) {
+    return abandon(Authentication::Outcome::Result::Invalid);
+  }
+
+  // Only once the callback is proven to belong to a real login is the
+  // provider's outcome honoured: a decline returns an error instead of a code,
+  // and a success without a code is malformed. RFC 6749 Section 4.1.2.1 has a
+  // decline name itself with an error code, so one that names nothing is not a
+  // decision this can report as the provider's. It is no grant either, and a
+  // code arriving beside it is left unredeemed
+  if (incoming.has_error) {
+    return abandon(incoming.error.empty()
+                       ? Authentication::Outcome::Result::Invalid
+                       : Authentication::Outcome::Result::Declined);
+  }
+
+  if (incoming.code.empty()) {
+    return abandon(Authentication::Outcome::Result::Invalid);
+  }
+
+  const auto client_secret{this->impl_->client_secret(policy_name)};
+  if (!client_secret.has_value()) {
+    result.log.emplace_back("No client secret is set for the policy");
+    return abandon(Authentication::Outcome::Result::Incomplete);
+  }
+
+  const auto endpoints{this->impl_->endpoints(policy_name)};
+  if (!endpoints.has_value() || endpoints.value().token.empty()) {
+    result.log.emplace_back("The provider named no token endpoint, or could "
+                            "not be reached, for the policy");
+    return abandon(Authentication::Outcome::Result::Incomplete);
+  }
+
+  const auto grant{exchange(this->impl_->fetcher(), endpoints.value().token,
+                            policy->client_id, client_secret.value(),
+                            redirect_uri, incoming.code, verifier->to_string(),
+                            endpoints.value().token_endpoint_basic_auth)};
+  if (!grant.has_value()) {
+    result.log.emplace_back(
+        "The authorization code could not be redeemed for the policy");
+    return abandon(Authentication::Outcome::Result::Incomplete);
+  }
+
+  const auto token{sourcemeta::core::JWT::from(grant.value().id_token)};
+  if (!token.has_value()) {
+    result.log.emplace_back("The provider returned an identity token that "
+                            "could not be read, for the policy");
+    return abandon(Authentication::Outcome::Result::Incomplete);
+  }
+
+  auto provider{
+      id_token_keys(endpoints.value().jwks_uri, this->impl_->key_fetcher())};
+  sourcemeta::core::OIDCValidationOptions options;
+  options.nonce = nonce->to_string();
+  const auto identity{sourcemeta::core::oidc_validate_id_token(
+      provider, token.value(), ID_TOKEN_ALGORITHMS, policy->issuer,
+      policy->client_id, options)};
+  if (!identity.has_value()) {
+    result.log.emplace_back("The identity token did not validate for the "
+                            "policy");
+    return abandon(Authentication::Outcome::Result::Incomplete);
+  }
+
+  // A policy's rules are answered here rather than at the gate, so that a
+  // session only ever exists for somebody the policy admits. Answering it
+  // afterwards would leave a valid session denied on every request, and a
+  // denial asks the provider again, which is a loop rather than an answer
+  std::optional<sourcemeta::core::JSON> combined;
+  auto admission{
+      this->impl_->admits_identity(policy_name, token.value().payload())};
+
+  // OpenID Connect Core Section 5.4 has a provider answer for the claims a
+  // scope requested at its UserInfo endpoint rather than in the token, by
+  // default, under the flow this is completing. So a rule naming a claim the
+  // token does not carry is asked there before it is refused, and only then,
+  // since a token carrying everything needed spares the round trip
+  if (admission == Admission::Incomplete &&
+      !endpoints.value().userinfo.empty()) {
+    const auto extra{userinfo(
+        this->impl_->fetcher(), endpoints.value().userinfo,
+        grant.value().access_token, identity.value().subject, result.log)};
+    if (extra.has_value()) {
+      combined = combine_claims(token.value().payload(), extra.value());
+      admission = this->impl_->admits_identity(policy_name, combined.value());
+    }
+  }
+
+  if (admission != Admission::Admitted) {
+    result.log.emplace_back("The provider authenticated somebody the policy "
+                            "does not admit, for the policy");
+    // Whatever the decision was actually made against, which is the pair taken
+    // together once a second answer arrived. Explaining a refusal against the
+    // token alone would miss a claim the UserInfo endpoint supplied
+    const auto &asserted{combined.has_value() ? combined.value()
+                                              : token.value().payload()};
+    this->impl_->report_object_shaped_claims(policy_name, asserted, result.log);
+    return abandon(Authentication::Outcome::Result::NotAdmitted);
+  }
+
+  const auto expiry{std::chrono::time_point_cast<std::chrono::seconds>(
+                        std::chrono::system_clock::now()) +
+                    SESSION_LIFETIME};
+
+  // The identity token is kept so that logging out can prove whose session it
+  // is asking the provider to end, which is what spares the person a
+  // confirmation page there. A provider that mints a large one can push the
+  // cookie past what a browser will store, and a browser drops such a cookie
+  // without saying so, which would look like signing in and then not being
+  // signed in. So the whole cookie is measured, and the token is left out when
+  // it does not fit, which costs the confirmation page and nothing else
+  auto session{this->impl_->session_cookie(
+      policy_name, identity.value().subject, grant.value().id_token, expiry,
+      secure, result.log)};
+  if (session.has_value() && session.value().size() > MAXIMUM_COOKIE_LENGTH) {
+    session = this->impl_->session_cookie(policy_name, identity.value().subject,
+                                          "", expiry, secure, result.log);
+  }
+
+  // Without the token there is very little left, so exceeding the limit here
+  // takes something extraordinary, such as a provider that identifies people by
+  // something enormous. Answering plainly beats handing over a cookie the
+  // browser discards, which would look like signing in and then not being
+  // signed in, with nothing anywhere to explain it
+  if (!session.has_value() || session.value().size() > MAXIMUM_COOKIE_LENGTH) {
+    if (session.has_value()) {
+      result.log.emplace_back("The provider returned more than a session can "
+                              "hold, for the policy");
+    }
+
+    return abandon(Authentication::Outcome::Result::Incomplete);
+  }
+
+  result.cookies.push_back(std::move(session).value());
+
+  // Signing in is what earns a browser a silent renewal later, and the marker
+  // outlives the session it accompanies because it is only of use once that
+  // session has expired
+  auto renewal{sourcemeta::core::http_serialize_cookie(
+      {.name = RENEWAL_COOKIE,
+       .value = policy_name,
+       .path = COOKIE_PATH,
+       .max_age = RENEWAL_LIFETIME,
+       .http_only = true,
+       .secure = secure,
+       .same_site = sourcemeta::core::HTTPCookieSameSite::Lax})};
+  if (renewal.has_value()) {
+    result.cookies.push_back(std::move(renewal).value());
+  }
+
+  // The single-use transaction has served its purpose, so it is expired
+  // alongside minting the session
+  auto spent{expired_cookie(TRANSACTION_COOKIE, secure)};
+  if (spent.has_value()) {
+    result.cookies.push_back(std::move(spent).value());
+  }
+
+  // The login may have sealed a page to return to. It came through this
+  // instance's own signature, yet it is re-checked as a local path before being
+  // trusted as a redirect target
+  result.location = "";
+  const auto *sealed_destination{transaction.value().try_at("to")};
+  if (sealed_destination != nullptr && sealed_destination->is_string() &&
+      is_local_path(sealed_destination->to_string())) {
+    result.location = sealed_destination->to_string();
+  }
+
+  result.result = Authentication::Outcome::Result::Redirect;
+  return result;
+}
+
+auto Authentication::logout(const Credentials &credentials,
+                            const std::string_view instance_url,
+                            const std::string_view return_to) const
+    -> Authentication::Outcome {
+  Authentication::Outcome result;
+  const auto secure{
+      sourcemeta::core::URI{std::string{instance_url}}.is_https()};
+
+  // Composed before anything that could fail, so no path below ends with a
+  // session surviving. Somebody who has signed out is asking not to be signed
+  // in, so the marker that would have renewed them silently goes with it
+  for (const auto name : {SESSION_COOKIE, TRANSACTION_COOKIE, RENEWAL_COOKIE}) {
+    auto cookie{expired_cookie(name, secure)};
+    if (cookie.has_value()) {
+      result.cookies.push_back(std::move(cookie).value());
+    }
+  }
+
+  result.location = return_to;
+
+  // Ending the session here leaves the provider's own untouched, so signing in
+  // again would not ask who you are. Where the session names a policy whose
+  // provider offers to end it, the browser finishes the job there, carrying the
+  // identity token as the proof of whose session it is. Every step that cannot
+  // be completed simply stops, since the local session is already gone
+  std::vector<std::string_view> candidates;
+  for (const auto field : credentials.cookies) {
+    sourcemeta::core::http_cookie_values(field, SESSION_COOKIE, candidates);
+  }
+
+  for (const auto sealed : candidates) {
+    const auto payload{this->impl_->open_session(sealed)};
+    if (!payload.has_value()) {
       continue;
     }
 
-    if (!result.defines(claim.first)) {
-      result.assign(claim.first, claim.second);
+    const auto document{sourcemeta::core::try_parse_json(payload.value())};
+    if (!document.has_value() || !document.value().is_object()) {
+      continue;
     }
+
+    const auto *policy{document.value().try_at("policy")};
+    const auto *token{document.value().try_at("id_token")};
+    if (policy == nullptr || !policy->is_string()) {
+      continue;
+    }
+
+    const auto endpoints{this->impl_->endpoints(policy->to_string())};
+    if (!endpoints.has_value() || endpoints.value().end_session.empty()) {
+      continue;
+    }
+
+    sourcemeta::core::OIDCLogoutRequest logout;
+    if (token != nullptr && token->is_string()) {
+      logout.id_token_hint = token->to_string();
+    }
+
+    // Where the provider sends the browser back to once it is done, which is
+    // this instance rather than the local path a caller without a provider
+    // session lands on
+    logout.post_logout_redirect_uri = instance_url;
+    std::string url;
+    sourcemeta::core::oidc_build_logout_url(endpoints.value().end_session,
+                                            logout, url);
+    result.location = std::move(url);
+    break;
   }
 
   return result;
 }
 
-auto Authentication::object_shaped_claims(
-    const std::string_view policy, const sourcemeta::core::JSON &claims) const
-    -> std::vector<std::string_view> {
-  return this->impl_->object_shaped_claims(policy, claims);
+auto Authentication::caller(const Credentials &credentials) const
+    -> Authentication::Caller {
+  Authentication::Caller result;
+  result.policies_ =
+      this->impl_->classify(credentials.bearer, credentials.cookies);
+  result.view_ = this->impl_->view_name(result.policies_);
+  result.bearer_ = credentials.bearer;
+  return result;
 }
 
-auto Authentication::admits_identity(const std::string_view policy,
-                                     const sourcemeta::core::JSON &claims) const
-    -> Authentication::Admission {
-  return this->impl_->admits_identity(policy, claims);
+auto Authentication::permits(const Authentication::Path &path,
+                             const Authentication::Caller &caller) const
+    -> bool {
+  return this->impl_->permits(path.value(), caller.policies_);
 }
 
-auto Authentication::seal(const std::string_view policy, const Purpose purpose,
-                          const std::string_view payload,
-                          const std::chrono::sys_seconds expiry) const
-    -> std::optional<std::string> {
-  return this->impl_->seal(policy, purpose, payload, expiry);
-}
+auto Authentication::permits(const RouteTarget &target,
+                             const Authentication::Caller &caller,
+                             const std::string_view required_audience) const
+    -> bool {
+  const auto governing{this->impl_->governing_mask(target.value())};
+  if (!governing.has_value()) {
+    return false;
+  }
 
-auto Authentication::open(const std::string_view policy, const Purpose purpose,
-                          const std::string_view value) const
-    -> std::optional<std::string> {
-  return this->impl_->open(policy, purpose, value);
-}
+  // A route nobody governs is reached by anybody, so there is nothing for an
+  // audience to narrow. Requiring one here would refuse a caller for presenting
+  // a credential they did not need, at a route they could have reached by
+  // presenting nothing at all
+  if (governing.value() == 0) {
+    return true;
+  }
 
-auto Authentication::admits_route(
-    const std::string_view target, const Credentials &credentials,
-    const std::string_view required_audience) const -> Authentication::Verdict {
-  return this->impl_->admits(target, credentials.bearer, credentials.cookies,
-                             required_audience);
+  if ((governing.value() & caller.policies_) == 0) {
+    return false;
+  }
+
+  if (required_audience.empty()) {
+    return true;
+  }
+
+  // Only a token carries an audience, so a caller admitted by anything else is
+  // unaffected by a requirement it could never have satisfied or broken. The
+  // signature is already established, so this is one more claim read from a
+  // token that has been verified rather than a second verification
+  const auto token{sourcemeta::core::JWT::from(caller.bearer_)};
+  return !token.has_value() || token.value().has_audience(required_audience);
 }
 
 auto Authentication::view_count() const -> std::size_t {

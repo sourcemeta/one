@@ -48,8 +48,9 @@ public:
     return true;
   }
 
-  auto rest(const std::span<std::string_view>, std::string_view,
-            std::string_view, sourcemeta::one::HTTPRequest &request,
+  auto rest(const std::span<std::string_view>,
+            const sourcemeta::one::Authentication::Caller &,
+            sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
       response.write_status(sourcemeta::core::HTTP_STATUS_NO_CONTENT);
@@ -78,7 +79,7 @@ public:
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
            const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
-           const sourcemeta::one::Credentials &)
+           const sourcemeta::one::Authentication::Caller &)
       -> sourcemeta::core::JSON override {
     return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
   }

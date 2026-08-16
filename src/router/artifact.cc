@@ -65,10 +65,15 @@ auto RouterAction::artifact_locate(const Authentication::Path &path,
   return canonical;
 }
 
+auto RouterAction::caller_from(const Credentials &credentials) const
+    -> Authentication::Caller {
+  return this->dispatcher_.authentication().caller(credentials);
+}
+
 auto RouterAction::artifact_resolve_path(
-    const std::string_view view, const Credentials credentials,
-    const std::string_view input, const Tree tree,
-    const std::string_view artifact_name) const -> ArtifactResolution {
+    const Authentication::Caller &caller, const std::string_view input,
+    const Tree tree, const std::string_view artifact_name) const
+    -> ArtifactResolution {
   // The gate and the locator have to agree on where a request points, so both
   // read the one canonical path rather than each deriving its own. A path that
   // names nowhere in this instance is refused without consulting the gate,
@@ -82,11 +87,12 @@ auto RouterAction::artifact_resolve_path(
   // the existence check, so a path held back from this caller and a path that
   // was never here are indistinguishable from the outside
   const auto &authentication{this->dispatcher_.authentication()};
-  if (!authentication.admits(path.value(), credentials).allowed) {
+  if (!authentication.permits(path.value(), caller)) {
     return {.path = std::nullopt, .is_public = false};
   }
 
-  auto located{this->artifact_locate(path.value(), tree, view, artifact_name)};
+  auto located{
+      this->artifact_locate(path.value(), tree, caller.view(), artifact_name)};
   if (!located.has_value()) {
     // Nothing is served on a miss, so report the path as not public and let a
     // caller that skips the check fall back to a private caching directive
@@ -94,11 +100,6 @@ auto RouterAction::artifact_resolve_path(
     return {.path = std::nullopt, .is_public = false};
   }
 
-  // A caller that presented nothing and was admitted means the path is open
-  // to anonymous callers, otherwise its public reach is checked with nothing
-  // presented, so a response admitted through a session is never marked
-  // public for shared caches
-  //
   // Reaching a location anonymously is not the same as every caller being
   // served the same thing there. A shared cache keys on the URL, and one URL in
   // the view tree answers differently per view, so storing one caller's copy
@@ -107,13 +108,17 @@ auto RouterAction::artifact_resolve_path(
   //
   // Only the anonymous answer may be stored for reuse, since what it holds is
   // what anybody may read by construction, and it is the answer any other
-  // anonymous caller would have been given anyway. The unit tree holds one
-  // answer whoever asks, so nothing there turns on this
-  const auto shareable{tree == Tree::Schemas || view == VIEW_PUBLIC};
+  // anonymous caller would have been given anyway.
+  //
+  // The two trees answer this differently because they are shaped differently.
+  // A view tree answer is shareable exactly when it came from the anonymous
+  // view, since reaching one at all means the location is ungoverned. The unit
+  // tree holds one answer whoever asks, so what decides it there is whether
+  // anybody at all may read the location, asked of the anonymous view
   const auto is_public{
-      shareable &&
-      ((credentials.bearer.empty() && credentials.cookies.empty()) ||
-       authentication.admits(path.value(), {}).allowed)};
+      tree == Tree::Schemas
+          ? authentication.permits(path.value(), authentication.caller({}))
+          : caller.view() == VIEW_PUBLIC};
   return {.path = ResolvedArtifact{std::move(located).value()},
           .is_public = is_public};
 }

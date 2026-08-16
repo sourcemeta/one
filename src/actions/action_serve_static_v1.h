@@ -39,8 +39,9 @@ public:
         });
   }
 
-  auto rest(const std::span<std::string_view> matches, std::string_view,
-            std::string_view, sourcemeta::one::HTTPRequest &request,
+  auto rest(const std::span<std::string_view> matches,
+            const sourcemeta::one::Authentication::Caller &,
+            sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
       sourcemeta::one::cors_preflight(request, response, "GET, HEAD, OPTIONS",
@@ -97,7 +98,7 @@ public:
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
            const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
-           const sourcemeta::one::Credentials &)
+           const sourcemeta::one::Authentication::Caller &)
       -> sourcemeta::core::JSON override {
     return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
   }

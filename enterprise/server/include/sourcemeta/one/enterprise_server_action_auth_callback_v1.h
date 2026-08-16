@@ -76,8 +76,9 @@ public:
     return true;
   }
 
-  auto rest(const std::span<std::string_view> matches, std::string_view,
-            std::string_view, sourcemeta::one::HTTPRequest &request,
+  auto rest(const std::span<std::string_view> matches,
+            const sourcemeta::one::Authentication::Caller &,
+            sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
       response.write_status(sourcemeta::core::HTTP_STATUS_NO_CONTENT);
@@ -106,255 +107,72 @@ public:
           "This action requires a policy name match", this->error_schema_, "*");
       return;
     }
-    const auto policy_name{matches.front()};
-    const auto state{request.query("state")};
-
-    // The transaction cookie is the only proof that this response belongs to
-    // a login this instance started, and the state it carries must match the
-    // one the provider echoes back. This gate runs before either the success
-    // or the decline is honoured, so a cross-site callback cannot even
-    // trigger an error on a person's behalf, per RFC 6749 section 4.1.2.1
-    const auto &authentication{this->dispatcher().authentication()};
-    const auto transaction{
-        this->transaction(request, authentication, policy_name, state)};
-    if (!transaction.has_value()) {
-      this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-                 "urn:sourcemeta:one:auth-invalid-callback",
-                 "The login could not be completed");
-      return;
-    }
-
-    // Nobody asked for a silent attempt, so from here on nothing it does is
-    // shown to them: every way this can end without a session puts the browser
-    // back where it started instead
-    const auto silent{transaction.value().try_at("silent") != nullptr};
-    const auto *nonce{transaction.value().try_at("nonce")};
-    const auto *verifier{transaction.value().try_at("verifier")};
-
-    // Which policy a callback belongs to is settled by opening its
-    // transaction, so nothing reaching here names one this instance does not
-    // serve. Answering as though the callback were unproven keeps that the
-    // only thing this URL ever says about a name
-    const auto policy{authentication.interactive(policy_name)};
-    if (!policy.has_value()) {
-      this->abandon(silent, transaction.value(), request, response,
-                    sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-                    "urn:sourcemeta:one:auth-invalid-callback",
-                    "The login could not be completed");
-      return;
-    }
-
-    // RFC 9207 Section 2.4 has a client compare the issuer an answer names
-    // against the one it addressed the request to, which is what catches an
-    // answer relayed from somewhere else. A provider naming none cannot be
-    // checked that way, so this runs only when one arrives, and it runs ahead
-    // of the outcome so that no answer is acted on before it is placed
-    if (request.has_query("iss") && request.query("iss") != policy->issuer) {
-      this->abandon(silent, transaction.value(), request, response,
-                    sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-                    "urn:sourcemeta:one:auth-invalid-callback",
-                    "The login could not be completed");
-      return;
-    }
-
-    // Only once the callback is proven to belong to a real login is the
-    // provider's outcome honoured: a decline returns an error instead of a
-    // code, and a success without a code is malformed. RFC 6749 Section
-    // 4.1.2.1 has a decline name itself with an error code, so one that names
-    // nothing is not a decision this can report as the provider's. It is no
-    // grant either, and a code arriving beside it is left unredeemed
-    if (request.has_query("error")) {
-      if (request.query("error").empty()) {
-        this->abandon(silent, transaction.value(), request, response,
-                      sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-                      "urn:sourcemeta:one:auth-invalid-callback",
-                      "The login could not be completed");
-      } else {
-        this->abandon(silent, transaction.value(), request, response,
-                      sourcemeta::core::HTTP_STATUS_FORBIDDEN,
-                      "urn:sourcemeta:one:auth-login-declined",
-                      "The identity provider declined the login");
-      }
-
-      return;
-    }
-
-    const auto code{request.query("code")};
-    if (code.empty()) {
-      this->abandon(silent, transaction.value(), request, response,
-                    sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-                    "urn:sourcemeta:one:auth-invalid-callback",
-                    "The login could not be completed");
-      return;
-    }
-
-    const auto client_secret{authentication.client_secret(policy_name)};
-    if (!client_secret.has_value()) {
-      sourcemeta::one::HTTP_LOG("No client secret is set for the policy",
-                                policy_name);
-      this->incomplete(silent, transaction.value(), request, response);
-      return;
-    }
-
-    const auto endpoints{authentication.endpoints(policy_name)};
-    if (!endpoints.has_value() || endpoints.value().token.empty()) {
-      sourcemeta::one::HTTP_LOG("The provider named no token endpoint, or "
-                                "could not be reached, for the policy",
-                                policy_name);
-      this->incomplete(silent, transaction.value(), request, response);
-      return;
-    }
-
+    // The redirect URI must be the one the login was started with, since the
+    // provider checks it and so does the exchange. It is composed here because
+    // which routes this instance serves is not something authentication knows
+    constexpr std::string_view CALLBACK_PATH{"/self/v1/auth/callback/"};
     std::string redirect_uri{this->server_uri()};
-    redirect_uri += "/self/v1/auth/callback/";
-    redirect_uri += policy_name;
+    redirect_uri += CALLBACK_PATH;
+    redirect_uri += matches.front();
 
-    const auto grant{this->exchange(
-        endpoints.value().token, policy->client_id, client_secret.value(),
-        redirect_uri, code, verifier->to_string(),
-        endpoints.value().token_endpoint_basic_auth)};
-    const auto id_token{grant.has_value()
-                            ? std::optional<std::string>{grant.value().id_token}
-                            : std::nullopt};
-    if (!id_token.has_value()) {
-      sourcemeta::one::HTTP_LOG(
-          "The authorization code could not be redeemed for the policy",
-          policy_name);
-      this->incomplete(silent, transaction.value(), request, response);
-      return;
+    const sourcemeta::one::RequestCookies cookies{request};
+    const auto outcome{this->dispatcher().authentication().callback(
+        matches.front(), this->server_uri(), redirect_uri,
+        {.state = request.query("state"),
+         .code = request.query("code"),
+         .has_error = request.has_query("error"),
+         .error = request.query("error"),
+         .has_issuer = request.has_query("iss"),
+         .issuer = request.query("iss")},
+        {.cookies = cookies})};
+    for (const auto &message : outcome.log) {
+      sourcemeta::one::HTTP_LOG("Callback", message);
     }
 
-    const auto token{sourcemeta::core::JWT::from(id_token.value())};
-    if (!token.has_value()) {
-      sourcemeta::one::HTTP_LOG(
-          "The provider returned an identity token that could not be read, "
-          "for the policy",
-          policy_name);
-      this->incomplete(silent, transaction.value(), request, response);
-      return;
-    }
-
-    auto provider{this->jwks_provider(endpoints.value().jwks_uri)};
-    sourcemeta::core::OIDCValidationOptions options;
-    options.nonce = nonce->to_string();
-    const auto identity{sourcemeta::core::oidc_validate_id_token(
-        provider, token.value(), ID_TOKEN_ALGORITHMS, policy->issuer,
-        policy->client_id, options)};
-    if (!identity.has_value()) {
-      sourcemeta::one::HTTP_LOG(
-          "The identity token did not validate for the policy", policy_name);
-      this->incomplete(silent, transaction.value(), request, response);
-      return;
-    }
-
-    // A policy's rules are answered here rather than at the gate, so that a
-    // session only ever exists for somebody the policy admits. Answering it
-    // afterwards would leave a valid session denied on every request, and a
-    // denial asks the provider again, which is a loop rather than an answer
-    std::optional<sourcemeta::core::JSON> combined;
-    auto admission{
-        authentication.admits_identity(policy_name, token.value().payload())};
-
-    // OpenID Connect Core Section 5.4 has a provider answer for the claims a
-    // scope requested at its UserInfo endpoint rather than in the token, by
-    // default, under the flow this is completing. So a rule naming a claim the
-    // token does not carry is asked there before it is refused, and only then,
-    // since a token carrying everything needed spares the round trip
-    if (admission == sourcemeta::one::Authentication::Admission::Incomplete &&
-        !endpoints.value().userinfo.empty()) {
-      const auto extra{this->userinfo(endpoints.value().userinfo,
-                                      grant.value().access_token,
-                                      identity.value().subject)};
-      if (extra.has_value()) {
-        combined = sourcemeta::one::Authentication::combine_claims(
-            token.value().payload(), extra.value());
-        admission =
-            authentication.admits_identity(policy_name, combined.value());
-      }
-    }
-
-    // Whatever the decision was actually made against, which is the pair taken
-    // together once a second answer arrived. Explaining a refusal against the
-    // token alone would miss a claim the UserInfo endpoint supplied, and that
-    // is where a scope's claims arrive by default under this flow
-    const auto &asserted{combined.has_value() ? combined.value()
-                                              : token.value().payload()};
-
-    if (admission != sourcemeta::one::Authentication::Admission::Admitted) {
-      sourcemeta::one::HTTP_LOG(
-          "The provider authenticated somebody the policy does not admit, "
-          "for the policy",
-          policy_name);
-      this->report_object_shaped_claims(authentication, policy_name, asserted);
-      this->not_admitted(silent, transaction.value(), request, response);
-      return;
-    }
-
-    const auto expiry{std::chrono::time_point_cast<std::chrono::seconds>(
-                          std::chrono::system_clock::now()) +
-                      SESSION_LIFETIME};
-    const auto secure{sourcemeta::core::URI{this->server_uri()}.is_https()};
-
-    // The identity token is kept so that logging out can prove whose session
-    // it is asking the provider to end, which is what spares the person a
-    // confirmation page there. A provider that mints a large one can push the
-    // cookie past what a browser will store, and a browser drops such a cookie
-    // without saying so, which would look like signing in and then not being
-    // signed in. So the whole cookie is measured, and the token is left out
-    // when it does not fit, which costs the confirmation page and nothing else
-    auto session_cookie{this->session_cookie(authentication, policy_name,
-                                             identity.value().subject,
-                                             id_token.value(), expiry, secure)};
-    if (session_cookie.has_value() &&
-        session_cookie.value().size() > MAXIMUM_COOKIE_LENGTH) {
-      session_cookie =
-          this->session_cookie(authentication, policy_name,
-                               identity.value().subject, "", expiry, secure);
-    }
-
-    // Without the token there is very little left, so exceeding the limit here
-    // takes something extraordinary, such as a provider that identifies people
-    // by something enormous. Answering plainly beats handing over a cookie the
-    // browser discards, which would look like signing in and then not being
-    // signed in, with nothing anywhere to explain it
-    if (session_cookie.has_value() &&
-        session_cookie.value().size() > MAXIMUM_COOKIE_LENGTH) {
-      sourcemeta::one::HTTP_LOG(
-          "The provider returned more than a session can hold, for the policy",
-          policy_name);
-      this->incomplete(silent, transaction.value(), request, response);
-      return;
-    }
-
-    if (!session_cookie.has_value()) {
-      this->incomplete(silent, transaction.value(), request, response);
-      return;
-    }
-
-    // The login may have sealed a page to return to. It came through this
-    // instance's own signature, yet it is re-checked as a same-origin local
-    // path before being trusted as a redirect target, defaulting to the
-    // instance root
-    std::string destination{"/"};
-    const auto *sealed_destination{transaction.value().try_at("to")};
-    if (sealed_destination != nullptr && sealed_destination->is_string()) {
-      const auto &candidate{sealed_destination->to_string()};
-      if (sourcemeta::one::is_local_path(candidate)) {
-        destination = candidate;
-      }
+    using Result = sourcemeta::one::Authentication::Outcome::Result;
+    switch (outcome.result) {
+      case Result::Redirect:
+        break;
+      // A failed login leaves its transaction cookie in place, sealed and
+      // bound to a state the provider would have to echo, expiring on its own
+      // within minutes, so no cookie is cleared here and the error response
+      // owns the status line uncontested
+      case Result::Declined:
+        this->fail(request, response, sourcemeta::core::HTTP_STATUS_FORBIDDEN,
+                   "urn:sourcemeta:one:auth-login-declined",
+                   "The identity provider declined the login");
+        return;
+      case Result::NotAdmitted:
+        this->fail(request, response, sourcemeta::core::HTTP_STATUS_FORBIDDEN,
+                   "urn:sourcemeta:one:auth-not-admitted",
+                   "This account is not admitted here");
+        return;
+      // Every reason a proven callback cannot end in a session answers
+      // identically. Anybody may start a login and bring back a code of their
+      // own invention, so reaching here proves nothing about who is asking,
+      // while telling a secret apart from an unanswering provider apart from a
+      // token that would not validate reports how this deployment and its
+      // provider are faring. The cause went to the log above
+      case Result::Incomplete:
+        this->fail(request, response,
+                   sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
+                   "urn:sourcemeta:one:auth-incomplete",
+                   "The session could not be established");
+        return;
+      default:
+        this->fail(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+                   "urn:sourcemeta:one:auth-invalid-callback",
+                   "The login could not be completed");
+        return;
     }
 
     response.write_status(sourcemeta::core::HTTP_STATUS_SEE_OTHER);
-    response.write_header("Set-Cookie", session_cookie.value());
-    // Signing in is what earns a browser a silent renewal later, and the
-    // marker outlives the session it accompanies because it is only of use
-    // once that session has expired
-    this->remember_renewal(response, policy_name, secure);
-    // The single-use transaction has served its purpose, so it is expired
-    // alongside minting the session
-    this->expire(response, sourcemeta::one::Authentication::TRANSACTION_COOKIE,
-                 secure);
-    response.write_header("Location", destination);
+    for (const auto &cookie : outcome.cookies) {
+      response.write_header("Set-Cookie", cookie);
+    }
+
+    response.write_header("Location",
+                          outcome.location.empty() ? "/" : outcome.location);
     response.write_header("Cache-Control", "no-store");
     sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_SEE_OTHER,
                                    request, response);
@@ -362,408 +180,12 @@ public:
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
            const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
-           const sourcemeta::one::Credentials &)
+           const sourcemeta::one::Authentication::Caller &)
       -> sourcemeta::core::JSON override {
     return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
   }
 
 private:
-  // The signature algorithms an identity token may be signed with: every
-  // asymmetric one, since a provider picks from these and an instance that
-  // named a narrower set would refuse a provider it could otherwise serve,
-  // after the person had already signed in. The symmetric ones are left out
-  // deliberately. They sign with the client secret rather than a key from the
-  // provider's published set, so admitting them alongside the rest is the
-  // shape that lets one algorithm be verified as though it were another
-  static constexpr std::array<sourcemeta::core::JWSAlgorithm, 10>
-      ID_TOKEN_ALGORITHMS{{sourcemeta::core::JWSAlgorithm::RS256,
-                           sourcemeta::core::JWSAlgorithm::RS384,
-                           sourcemeta::core::JWSAlgorithm::RS512,
-                           sourcemeta::core::JWSAlgorithm::PS256,
-                           sourcemeta::core::JWSAlgorithm::PS384,
-                           sourcemeta::core::JWSAlgorithm::PS512,
-                           sourcemeta::core::JWSAlgorithm::ES256,
-                           sourcemeta::core::JWSAlgorithm::ES384,
-                           sourcemeta::core::JWSAlgorithm::ES512,
-                           sourcemeta::core::JWSAlgorithm::EdDSA}};
-
-  // The tolerance allowed on an identity token's time-based claims, matching
-  // what a presented access token is already given. A provider whose clock
-  // runs a little fast otherwise mints a token this refuses the instant it
-  // arrives, which ends a login that did everything right
-  static constexpr std::chrono::seconds ID_TOKEN_CLOCK_SKEW{60};
-
-  // The transaction a callback belongs to, if the request carries one. A
-  // request can present several cookies under one name, since a parent
-  // domain and the host itself can each set one and neither the header nor
-  // the order says which is which, so every value is tried. Letting whoever
-  // controls a neighbouring host decide which transaction this instance
-  // reads is what turns the cookie from a defence against a forged callback
-  // into the way to mount one
-  [[nodiscard]] auto
-  transaction(sourcemeta::one::HTTPRequest &request,
-              const sourcemeta::one::Authentication &authentication,
-              const std::string_view policy_name,
-              const std::string_view state) const
-      -> std::optional<sourcemeta::core::JSON> {
-    if (state.empty()) {
-      return std::nullopt;
-    }
-
-    std::vector<std::string_view> candidates;
-    request.header_values(
-        "cookie", [&candidates](const std::string_view field) -> void {
-          sourcemeta::core::http_cookie_values(
-              field, sourcemeta::one::Authentication::TRANSACTION_COOKIE,
-              candidates);
-        });
-    for (const auto sealed : candidates) {
-      auto opened{authentication.open(
-          policy_name, sourcemeta::one::Authentication::Purpose::Transaction,
-          sealed)};
-      if (!opened.has_value()) {
-        continue;
-      }
-
-      auto document{sourcemeta::core::try_parse_json(opened.value())};
-      if (!document.has_value() || !document.value().is_object()) {
-        continue;
-      }
-
-      const auto *sealed_policy{document.value().try_at("policy")};
-      const auto *sealed_state{document.value().try_at("state")};
-      const auto *nonce{document.value().try_at("nonce")};
-      const auto *verifier{document.value().try_at("verifier")};
-      if (sealed_policy == nullptr || !sealed_policy->is_string() ||
-          sealed_policy->to_string() != policy_name ||
-          sealed_state == nullptr || !sealed_state->is_string() ||
-          sealed_state->to_string() != state || nonce == nullptr ||
-          !nonce->is_string() || nonce->to_string().empty() ||
-          verifier == nullptr || !verifier->is_string() ||
-          verifier->to_string().empty()) {
-        continue;
-      }
-
-      return document;
-    }
-
-    return std::nullopt;
-  }
-
-  // The session cookie for a login, carrying the identity token when one is
-  // given. Building it is separated out so the caller can measure the result
-  // and ask for a smaller one
-  [[nodiscard]] auto session_cookie(
-      const sourcemeta::one::Authentication &authentication,
-      const std::string_view policy_name, const std::string_view subject,
-      const std::string_view id_token, const std::chrono::sys_seconds expiry,
-      const bool secure) const -> std::optional<std::string> {
-    auto payload{sourcemeta::core::JSON::make_object()};
-    payload.assign_assume_new("policy",
-                              sourcemeta::core::JSON{std::string{policy_name}});
-    payload.assign_assume_new("subject",
-                              sourcemeta::core::JSON{std::string{subject}});
-    if (!id_token.empty()) {
-      payload.assign_assume_new("id_token",
-                                sourcemeta::core::JSON{std::string{id_token}});
-    }
-
-    std::ostringstream payload_text;
-    sourcemeta::core::stringify(payload, payload_text);
-    const auto sealed{authentication.seal(
-        policy_name, sourcemeta::one::Authentication::Purpose::Session,
-        payload_text.str(), expiry)};
-    if (!sealed.has_value()) {
-      sourcemeta::one::HTTP_LOG("No session secret is set for the policy",
-                                policy_name);
-      return std::nullopt;
-    }
-
-    auto cookie{sourcemeta::core::http_serialize_cookie(
-        {.name = sourcemeta::one::Authentication::SESSION_COOKIE,
-         .value = sealed.value(),
-         .path = sourcemeta::one::Authentication::COOKIE_PATH,
-         .max_age = SESSION_LIFETIME,
-         .http_only = true,
-         .secure = secure,
-         .same_site = sourcemeta::core::HTTPCookieSameSite::Lax})};
-    if (!cookie.has_value()) {
-      sourcemeta::one::HTTP_LOG("The session could not be put in a cookie, "
-                                "for the policy",
-                                policy_name);
-    }
-
-    return cookie;
-  }
-
-  // Every way a callback that belongs to a real login can end without a
-  // session. A silent attempt is put back where it started rather than shown
-  // any of this, since an error page would be the first anybody knew a renewal
-  // had been tried at all. The marker goes with it whatever the reason, so an
-  // attempt that did not come back with a grant is not made again on the next
-  // navigation, and every navigation after that
-  auto abandon(const bool silent, const sourcemeta::core::JSON &transaction,
-               sourcemeta::one::HTTPRequest &request,
-               sourcemeta::one::HTTPResponse &response,
-               const sourcemeta::core::HTTPStatus &status,
-               const std::string_view type, const std::string_view detail) const
-      -> void {
-    if (silent) {
-      sourcemeta::one::HTTP_LOG("A silent renewal did not end in a session",
-                                detail);
-      this->forget_renewal_and_redirect_back(transaction, request, response);
-      return;
-    }
-
-    this->fail(request, response, status, type, detail);
-  }
-
-  auto remember_renewal(sourcemeta::one::HTTPResponse &response,
-                        const std::string_view policy_name,
-                        const bool secure) const -> void {
-    const auto cookie{sourcemeta::core::http_serialize_cookie(
-        {.name = sourcemeta::one::Authentication::RENEWAL_COOKIE,
-         .value = policy_name,
-         .path = sourcemeta::one::Authentication::COOKIE_PATH,
-         .max_age = RENEWAL_LIFETIME,
-         .http_only = true,
-         .secure = secure,
-         .same_site = sourcemeta::core::HTTPCookieSameSite::Lax})};
-    if (cookie.has_value()) {
-      response.write_header("Set-Cookie", cookie.value());
-    }
-  }
-
-  // Where a silent attempt leaves the browser when it did not come back with a
-  // grant: back where it was denied, carrying neither a session nor the marker
-  // that would send it here again
-  auto forget_renewal_and_redirect_back(
-      const sourcemeta::core::JSON &transaction,
-      sourcemeta::one::HTTPRequest &request,
-      sourcemeta::one::HTTPResponse &response) const -> void {
-    const auto secure{sourcemeta::core::URI{this->server_uri()}.is_https()};
-    std::string destination{"/"};
-    const auto *sealed_destination{transaction.try_at("to")};
-    if (sealed_destination != nullptr && sealed_destination->is_string() &&
-        sourcemeta::one::is_local_path(sealed_destination->to_string())) {
-      destination = sealed_destination->to_string();
-    }
-
-    response.write_status(sourcemeta::core::HTTP_STATUS_SEE_OTHER);
-    this->expire(response, sourcemeta::one::Authentication::RENEWAL_COOKIE,
-                 secure);
-    this->expire(response, sourcemeta::one::Authentication::TRANSACTION_COOKIE,
-                 secure);
-    response.write_header("Location", destination);
-    response.write_header("Cache-Control", "no-store");
-    sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_SEE_OTHER,
-                                   request, response);
-  }
-
-  auto expire(sourcemeta::one::HTTPResponse &response,
-              const std::string_view name, const bool secure) const -> void {
-    const auto cookie{sourcemeta::core::http_serialize_cookie(
-        {.name = name,
-         .value = "",
-         .path = sourcemeta::one::Authentication::COOKIE_PATH,
-         .max_age = std::chrono::seconds{0},
-         .http_only = true,
-         .secure = secure,
-         .same_site = sourcemeta::core::HTTPCookieSameSite::Lax})};
-    if (cookie.has_value()) {
-      response.write_header("Set-Cookie", cookie.value());
-    }
-  }
-
-  // What redeeming an authorization code yields, of which only the identity
-  // token decides anything. The access token comes along solely so that a
-  // claim missing from that token can be asked for at the UserInfo endpoint
-  struct Grant {
-    std::string id_token;
-    std::string access_token;
-  };
-
-  // RFC 6749 Section 2.3.1 has every server accept the client secret in an
-  // authorization header, and asks that carrying it in the request body be
-  // limited to clients that cannot send one. A body is the part of a request
-  // that logging and proxies keep, while an authorization header is the part
-  // they already know to redact, so the header is used wherever the provider
-  // takes it
-  [[nodiscard]] auto exchange(
-      const std::string_view token_endpoint, const std::string_view client_id,
-      const std::string_view client_secret, const std::string_view redirect_uri,
-      const std::string_view code, const std::string_view code_verifier,
-      const bool basic_auth) const -> std::optional<Grant> {
-    try {
-      sourcemeta::core::HTTPSystemRequest fetch{
-          std::string{token_endpoint}, sourcemeta::core::HTTPMethod::POST};
-      fetch.connect_timeout(std::chrono::seconds{2});
-      fetch.timeout(std::chrono::seconds{5});
-      fetch.maximum_response_size(1024UL * 1024UL);
-      fetch.follow_redirects(false);
-      sourcemeta::core::SecureString body;
-      sourcemeta::core::oauth_build_token_request_code(code, redirect_uri,
-                                                       code_verifier, {}, body);
-      if (basic_auth) {
-        sourcemeta::core::SecureString authorization;
-        sourcemeta::core::oauth_client_secret_basic(client_id, client_secret,
-                                                    authorization);
-        fetch.header("authorization", std::move(authorization));
-      } else {
-        sourcemeta::core::oauth_client_secret_post(client_id, client_secret,
-                                                   body);
-      }
-
-      fetch.body(std::move(body), "application/x-www-form-urlencoded");
-      const auto result{fetch.send()};
-      if (result.status.code < 200 || result.status.code >= 300) {
-        return std::nullopt;
-      }
-
-      const auto document{sourcemeta::core::try_parse_json(result.body)};
-      if (!document.has_value()) {
-        return std::nullopt;
-      }
-
-      auto identity{sourcemeta::core::oidc_parse_id_token(document.value())};
-      if (!identity.has_value()) {
-        return std::nullopt;
-      }
-
-      // The access token is kept only so that the UserInfo endpoint can be
-      // asked for a claim the identity token did not carry. It is never
-      // stored, never logged, and never leaves this exchange
-      Grant grant;
-      grant.id_token = std::move(identity).value();
-      const sourcemeta::core::OAuthTokenResponse response{document.value()};
-      if (response.access_token().has_value()) {
-        grant.access_token = response.access_token().value();
-      }
-
-      return grant;
-    } catch (...) {
-      return std::nullopt;
-    }
-  }
-
-  // A rule compared against a claim carrying objects is compared on the
-  // `value` sub-attribute alone, so a rule naming what a person sees rather
-  // than what identifies them matches nothing. A denial cannot show that, and
-  // the token it concerns is sealed inside a cookie where an operator cannot
-  // look, so it is said here.
-  //
-  // Only a refusal reaches this, so a working policy stays quiet, and each
-  // claim is named once however often somebody signs in
-  static auto report_object_shaped_claims(
-      const sourcemeta::one::Authentication &authentication,
-      const std::string_view policy_name, const sourcemeta::core::JSON &claims)
-      -> void {
-    static std::mutex mutex;
-    static std::set<std::string, std::less<>> reported;
-    for (const auto claim :
-         authentication.object_shaped_claims(policy_name, claims)) {
-      std::string subject{claim};
-      subject += " of the policy ";
-      subject += policy_name;
-      const std::scoped_lock guard{mutex};
-      if (!reported.insert(subject).second) {
-        continue;
-      }
-
-      sourcemeta::one::HTTP_LOG(
-          "A rule names a claim the provider answers with objects, which are "
-          "compared on their identifier rather than on any name shown to a "
-          "person. The claim is",
-          subject);
-    }
-  }
-
-  // What a provider answers at its UserInfo endpoint, which under the
-  // authorization code flow is where the claims a scope requested arrive by
-  // default (OpenID Connect Core Section 5.4).
-  //
-  // OpenID Connect Core Section 5.3.2 requires the subject it returns to match
-  // the one the identity token asserted, and to be checked before anything it
-  // says is used. Without that a response about somebody else would be read as
-  // being about this person, which is the whole of what this is for.
-  //
-  // A signed or encrypted response is refused rather than half-checked, since
-  // reading one without verifying it would defeat the signature it carries
-  [[nodiscard]] auto userinfo(const std::string_view endpoint,
-                              const std::string_view access_token,
-                              const std::string_view subject) const
-      -> std::optional<sourcemeta::core::JSON> {
-    if (access_token.empty()) {
-      return std::nullopt;
-    }
-
-    try {
-      sourcemeta::core::HTTPSystemRequest fetch{std::string{endpoint}};
-      fetch.connect_timeout(std::chrono::seconds{2});
-      fetch.timeout(std::chrono::seconds{5});
-      fetch.maximum_response_size(1024UL * 1024UL);
-      fetch.follow_redirects(false);
-      std::string authorization;
-      if (!sourcemeta::core::oauth_bearer_header(access_token, authorization)) {
-        return std::nullopt;
-      }
-
-      fetch.header("authorization", std::move(authorization));
-      const auto result{fetch.send()};
-      if (result.status.code < 200 || result.status.code >= 300) {
-        return std::nullopt;
-      }
-
-      const auto document{sourcemeta::core::try_parse_json(result.body)};
-      if (!document.has_value() || !document.value().is_object()) {
-        return std::nullopt;
-      }
-
-      const auto *asserted{document.value().try_at("sub")};
-      if (asserted == nullptr || !asserted->is_string() ||
-          asserted->to_string() != subject) {
-        sourcemeta::one::HTTP_LOG(
-            "The UserInfo endpoint answered about a different subject than "
-            "the identity token did");
-        return std::nullopt;
-      }
-
-      return document;
-    } catch (...) {
-      return std::nullopt;
-    }
-  }
-
-  [[nodiscard]] static auto jwks_provider(std::string location)
-      -> sourcemeta::core::JWKSProvider {
-    return sourcemeta::core::JWKSProvider{
-        std::move(location),
-        [](const std::string_view url)
-            -> std::optional<sourcemeta::core::JWKSProvider::FetchResult> {
-          try {
-            sourcemeta::core::HTTPSystemRequest fetch{std::string{url}};
-            fetch.connect_timeout(std::chrono::seconds{2});
-            fetch.timeout(std::chrono::seconds{5});
-            fetch.maximum_response_size(1024UL * 1024UL);
-            fetch.follow_redirects(false);
-            const auto result{fetch.send()};
-            if (result.status.code < 200 || result.status.code >= 300) {
-              return std::nullopt;
-            }
-
-            return sourcemeta::core::JWKSProvider::FetchResult{
-                .body = result.body, .max_age = std::nullopt};
-          } catch (...) {
-            return std::nullopt;
-          }
-        },
-        {.clock_skew = ID_TOKEN_CLOCK_SKEW}};
-  }
-
-  // A failed login leaves its transaction cookie in place, sealed and bound
-  // to a state the provider would have to echo, expiring on its own within
-  // minutes, so no cookie is cleared here and the error response owns the
-  // status line uncontested
   auto fail(sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response,
             const sourcemeta::core::HTTPStatus &status,
@@ -771,36 +193,6 @@ private:
       -> void {
     sourcemeta::one::json_error(request, response, status, type, detail,
                                 this->error_schema_, "*");
-  }
-
-  // Every reason a proven callback cannot end in a session answers
-  // identically. Anybody may start a login and bring back a code of their own
-  // invention, so reaching here proves nothing about who is asking, while
-  // telling a secret apart from an unanswering provider apart from a token
-  // that would not validate reports how this deployment and its provider are
-  // faring. The cause goes to the log, where an operator looks and a caller
-  // cannot
-  auto incomplete(const bool silent, const sourcemeta::core::JSON &transaction,
-                  sourcemeta::one::HTTPRequest &request,
-                  sourcemeta::one::HTTPResponse &response) const -> void {
-    this->abandon(silent, transaction, request, response,
-                  sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
-                  "urn:sourcemeta:one:auth-incomplete",
-                  "The session could not be established");
-  }
-
-  // Somebody the provider vouched for, who this policy does not admit. That is
-  // a different answer from being refused a login, and it is the end of the
-  // road rather than something to try again, so a silent attempt gives up its
-  // marker here exactly as any other failure does and stops asking
-  auto not_admitted(const bool silent,
-                    const sourcemeta::core::JSON &transaction,
-                    sourcemeta::one::HTTPRequest &request,
-                    sourcemeta::one::HTTPResponse &response) const -> void {
-    this->abandon(silent, transaction, request, response,
-                  sourcemeta::core::HTTP_STATUS_FORBIDDEN,
-                  "urn:sourcemeta:one:auth-not-admitted",
-                  "This account is not admitted here");
   }
 
   std::string_view error_schema_;

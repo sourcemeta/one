@@ -2,21 +2,144 @@
 
 #include <sourcemeta/core/test.h>
 
-#include <array> // std::array
-#include <chrono>
-#include <cstddef>     // std::chrono::sys_seconds, std::chrono::seconds
+#include <array>       // std::array
+#include <cstddef>     // std::size_t
+#include <filesystem>  // std::filesystem::path
+#include <map>         // std::map
+#include <optional>    // std::optional
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
-static constexpr std::chrono::sys_seconds NOW{std::chrono::seconds{1000000}};
-static constexpr std::chrono::sys_seconds LATER{std::chrono::seconds{1000060}};
+// The sealed values this instance mints are its own workings rather than its
+// interface, so these reach them the only way anybody can: by starting a login
+// and handing what it produced back to the callback that reads it. That is also
+// the only way they are ever reached in service of a request.
+//
+// A value that opens carries the callback past the one gate that reads it, and
+// a value that does not is refused there. So the two answers below are what
+// every case here distinguishes, and the provider is deliberately given no
+// token endpoint, which stops the callback one step after that gate and keeps
+// every test off a network
 
-static const std::array<std::string_view, 1> SECRETS{{"session-secret"}};
+static const std::string_view INSTANCE{"https://registry.test"};
+static const std::string_view REDIRECT{
+    "https://registry.test/self/v1/auth/callback/okta"};
 
-// These cases exercise the sealed format itself, which is the same whatever a
-// value is for, so they name one purpose throughout
-static constexpr auto PURPOSE{
-    sourcemeta::one::Authentication::Purpose::Session};
+static auto test_path(const std::string &name) -> std::filesystem::path {
+  return std::filesystem::path{AUTHENTICATION_TEST_DIRECTORY} / name;
+}
+
+static auto anywhere(const std::string_view) -> bool { return true; }
+
+// A request carries cookie fields rather than bare values, so a test that
+// wants a value read has to present it the way a browser would
+static auto field(const std::string_view value) -> std::string {
+  std::string result{"sourcemeta_one_transaction="};
+  result += value;
+  return result;
+}
+
+// A provider complete enough to start a login against, which answers nothing
+// at its token endpoint. A callback that got past the seal stops there, and
+// one that did not is refused before it is ever consulted
+static auto provider() -> sourcemeta::one::Authentication::Fetcher {
+  return
+      [](sourcemeta::one::Authentication::ProviderRequest &&request)
+          -> std::optional<sourcemeta::one::Authentication::ProviderResponse> {
+        if (request.url !=
+            "https://acme.test/.well-known/openid-configuration") {
+          return std::nullopt;
+        }
+
+        return sourcemeta::one::Authentication::ProviderResponse{
+            .status = 200,
+            .body = R"JSON({
+          "issuer": "https://acme.test",
+          "authorization_endpoint": "https://acme.test/authorize",
+          "token_endpoint": "https://acme.test/token",
+          "jwks_uri": "https://acme.test/keys",
+          "response_types_supported": [ "code" ],
+          "subject_types_supported": [ "public" ],
+          "id_token_signing_alg_values_supported": [ "RS256" ]
+        })JSON",
+            .max_age = std::nullopt};
+      };
+}
+
+static const std::array<std::string_view, 1> SESSION_SECRETS{
+    {"ONE_TEST_SEAL_SECRET"}};
+static const std::array<std::string_view, 2> ROTATED_SECRETS{
+    {"ONE_TEST_SEAL_ROTATED", "ONE_TEST_SEAL_SECRET"}};
+
+static auto instance(const std::string &name,
+                     const std::span<const std::string_view> secrets)
+    -> sourcemeta::one::Authentication {
+  setenv("ONE_TEST_SEAL_SECRET", "session-secret", 1);
+  setenv("ONE_TEST_SEAL_ROTATED", "rotated-secret", 1);
+  setenv("ONE_TEST_SEAL_CLIENT", "confidential", 1);
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .name = "okta",
+        .credential = sourcemeta::one::Authentication::Policy::Interactive{
+            .issuer = "https://acme.test",
+            .client_id = "dashboard",
+            .client_secret_variable = "ONE_TEST_SEAL_CLIENT",
+            .session_secrets = secrets}}}};
+  return sourcemeta::one::Authentication{
+      sourcemeta::one::Authentication::compile(policies, test_path(name),
+                                               anywhere),
+      provider()};
+}
+
+// What a login handed the browser: the sealed value it must bring back, and the
+// state the provider is expected to echo beside it
+struct Started {
+  std::string sealed;
+  std::string state;
+};
+
+static auto value_of(const std::string_view cookie) -> std::string {
+  const auto equals{cookie.find('=')};
+  const auto end{cookie.find(';', equals)};
+  return std::string{cookie.substr(equals + 1, end - equals - 1)};
+}
+
+static auto query_of(const std::string_view url, const std::string_view name)
+    -> std::string {
+  std::string needle{name};
+  needle += "=";
+  const auto start{url.find(needle) + needle.size()};
+  const auto end{url.find('&', start)};
+  return std::string{url.substr(start, end - start)};
+}
+
+static auto start(const sourcemeta::one::Authentication &authentication)
+    -> Started {
+  const auto outcome{
+      authentication.login("okta", INSTANCE, REDIRECT, false, "")};
+  EXPECT_EQ(outcome.result,
+            sourcemeta::one::Authentication::Outcome::Result::Redirect);
+  EXPECT_EQ(outcome.cookies.size(), 1);
+  return {.sealed = value_of(outcome.cookies.front()),
+          .state = query_of(outcome.location, "state")};
+}
+
+// Whether the callback read the value as the transaction it names. Anything it
+// cannot open is refused before the provider is consulted at all, and anything
+// it opens gets one step further, to a provider that named no token endpoint
+static auto opens(const sourcemeta::one::Authentication &authentication,
+                  const Started &started, const std::string_view sealed)
+    -> bool {
+  const auto carried{field(sealed)};
+  const std::array<std::string_view, 1> presented{{carried}};
+  const auto outcome{authentication.callback(
+      "okta", INSTANCE, REDIRECT,
+      {.state = started.state, .code = "an-authorization-code"},
+      {.cookies = presented})};
+  return outcome.result !=
+         sourcemeta::one::Authentication::Outcome::Result::Invalid;
+}
 
 // A sealed value is version.issued.expiry.payload.signature. Every field is
 // covered by the signature, so a test that disturbs the wrong one still passes
@@ -40,390 +163,226 @@ static auto field_start(const std::string_view value, const Field field)
   return position;
 }
 
-TEST(session_round_trips_a_payload) {
-  const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", NOW, LATER)};
-  const auto payload{sourcemeta::one::Authentication::open_value(value, PURPOSE,
-                                                                 SECRETS, NOW)};
-  EXPECT_TRUE(payload.has_value());
-  EXPECT_EQ(payload.value(), "the-payload");
+// Change one character of one field, which is the smallest disturbance that
+// should cost a value its signature
+static auto disturb(const std::string_view value, const Field field)
+    -> std::string {
+  std::string result{value};
+  const auto position{field_start(value, field)};
+  result[position] = (result[position] == 'a' ? 'b' : 'a');
+  return result;
 }
 
-TEST(session_round_trips_an_empty_payload) {
-  const auto value{sourcemeta::one::Authentication::seal_value(
-      "", PURPOSE, "session-secret", NOW, LATER)};
-  const auto payload{sourcemeta::one::Authentication::open_value(value, PURPOSE,
-                                                                 SECRETS, NOW)};
-  EXPECT_TRUE(payload.has_value());
-  EXPECT_EQ(payload.value(), "");
-}
-
-TEST(session_round_trips_a_payload_containing_separators) {
-  const auto value{sourcemeta::one::Authentication::seal_value(
-      "left.right.{\"claims\":[1,2]}\n", PURPOSE, "session-secret", NOW,
-      LATER)};
-  const auto payload{sourcemeta::one::Authentication::open_value(value, PURPOSE,
-                                                                 SECRETS, NOW)};
-  EXPECT_TRUE(payload.has_value());
-  EXPECT_EQ(payload.value(), "left.right.{\"claims\":[1,2]}\n");
+TEST(session_round_trips_what_a_login_sealed) {
+  const auto authentication{instance("seal_roundtrip", SESSION_SECRETS)};
+  const auto started{start(authentication)};
+  EXPECT_TRUE(opens(authentication, started, started.sealed));
 }
 
 TEST(session_value_is_cookie_safe) {
-  const auto value{sourcemeta::one::Authentication::seal_value(
-      "payload with spaces; and = signs", PURPOSE, "session-secret", NOW,
-      LATER)};
-  for (const auto character : value) {
-    const auto safe{(character >= 'a' && character <= 'z') ||
-                    (character >= 'A' && character <= 'Z') ||
-                    (character >= '0' && character <= '9') ||
-                    character == '.' || character == '-' || character == '_'};
-    EXPECT_TRUE(safe);
+  const auto authentication{instance("seal_cookie_safe", SESSION_SECRETS)};
+  const auto started{start(authentication)};
+  for (const auto character : started.sealed) {
+    EXPECT_TRUE(character > 0x20 && character < 0x7f && character != '"' &&
+                character != ',' && character != ';' && character != '\\');
   }
 }
 
-TEST(session_denies_at_and_after_the_expiry_instant) {
-  const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", NOW, LATER)};
-  EXPECT_TRUE(
-      sourcemeta::one::Authentication::open_value(value, PURPOSE, SECRETS, NOW)
-          .has_value());
-  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(value, PURPOSE,
-                                                           SECRETS, LATER)
-                   .has_value());
-  const std::chrono::sys_seconds after{LATER + std::chrono::seconds{1}};
-  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(value, PURPOSE,
-                                                           SECRETS, after)
-                   .has_value());
-}
-
-TEST(session_denies_a_wrong_secret) {
-  const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "other-secret", NOW, LATER)};
-  EXPECT_FALSE(
-      sourcemeta::one::Authentication::open_value(value, PURPOSE, SECRETS, NOW)
-          .has_value());
-}
-
-TEST(session_denies_with_no_secrets) {
-  const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", NOW, LATER)};
-  const std::array<std::string_view, 0> no_secrets{};
-  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(value, PURPOSE,
-                                                           no_secrets, NOW)
-                   .has_value());
-}
-
-TEST(session_admits_a_value_sealed_under_an_older_secret) {
-  const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "old-secret", NOW, LATER)};
-  const std::array<std::string_view, 2> rotated{{"new-secret", "old-secret"}};
-  const auto payload{sourcemeta::one::Authentication::open_value(value, PURPOSE,
-                                                                 rotated, NOW)};
-  EXPECT_TRUE(payload.has_value());
-  EXPECT_EQ(payload.value(), "the-payload");
-  const std::array<std::string_view, 1> retired{{"new-secret"}};
-  EXPECT_FALSE(
-      sourcemeta::one::Authentication::open_value(value, PURPOSE, retired, NOW)
-          .has_value());
-}
-
 TEST(session_value_has_the_shape_the_tests_below_assume) {
-  // Several tests locate a field by index, so a change to the grammar would
-  // silently move what they disturb while leaving them green. This pins the
-  // whole shape against known inputs, so such a change fails here first and
-  // names what moved
-  const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", NOW, LATER)};
-  constexpr std::string_view prefix{"1.1000000.1000060.dGhlLXBheWxvYWQ."};
-  EXPECT_TRUE(value.starts_with(prefix));
-  // The signature is the unpadded encoding of a fixed-width digest
-  EXPECT_EQ(value.size(), prefix.size() + 43);
-}
-
-TEST(session_denies_a_tampered_payload) {
-  const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", NOW, LATER)};
-  auto tampered{value};
-  const auto payload_start{field_start(tampered, Field::Payload)};
-  tampered[payload_start] = tampered[payload_start] == 'A' ? 'B' : 'A';
-  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(tampered, PURPOSE,
-                                                           SECRETS, NOW)
-                   .has_value());
-}
-
-TEST(session_denies_a_tampered_expiry) {
-  const auto expired{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", NOW, NOW)};
-  // Extending the lifetime of an expired value must break its signature
-  const auto expiry_start{field_start(expired, Field::Expiry)};
-  auto tampered{expired};
-  tampered.insert(expiry_start, "9");
-  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(tampered, PURPOSE,
-                                                           SECRETS, NOW)
-                   .has_value());
+  const auto authentication{instance("seal_shape", SESSION_SECRETS)};
+  const auto started{start(authentication)};
+  EXPECT_EQ(std::ranges::count(started.sealed, '.'), 4);
+  EXPECT_EQ(started.sealed.front(), '1');
 }
 
 TEST(session_denies_a_tampered_version) {
-  const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", NOW, LATER)};
-  auto tampered{value};
-  tampered[0] = '2';
-  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(tampered, PURPOSE,
-                                                           SECRETS, NOW)
-                   .has_value());
-}
-
-TEST(session_denies_a_transplanted_signature) {
-  const auto first{sourcemeta::one::Authentication::seal_value(
-      "first-payload", PURPOSE, "session-secret", NOW, LATER)};
-  const auto second{sourcemeta::one::Authentication::seal_value(
-      "second-payload", PURPOSE, "session-secret", NOW, LATER)};
-  const auto first_body{first.substr(0, first.rfind('.'))};
-  const auto second_signature{second.substr(second.rfind('.') + 1)};
-  const auto spliced{first_body + "." + second_signature};
-  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(spliced, PURPOSE,
-                                                           SECRETS, NOW)
-                   .has_value());
-}
-
-TEST(session_denies_a_truncated_signature) {
-  const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", NOW, LATER)};
-  const auto truncated{value.substr(0, value.size() - 2)};
-  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(truncated, PURPOSE,
-                                                           SECRETS, NOW)
-                   .has_value());
-}
-
-TEST(session_denies_a_lengthened_signature) {
-  const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", NOW, LATER)};
-  const auto lengthened{value + "AA"};
-  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(lengthened, PURPOSE,
-                                                           SECRETS, NOW)
-                   .has_value());
-}
-
-TEST(session_denies_a_value_sealed_with_a_pre_epoch_expiry) {
-  const std::chrono::sys_seconds before_epoch{std::chrono::seconds{-1}};
-  const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", NOW, before_epoch)};
+  const auto authentication{instance("seal_version", SESSION_SECRETS)};
+  const auto started{start(authentication)};
+  // The control is the value it was made from, which opens
+  EXPECT_TRUE(opens(authentication, started, started.sealed));
   EXPECT_FALSE(
-      sourcemeta::one::Authentication::open_value(value, PURPOSE, SECRETS, NOW)
-          .has_value());
-  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(
-                   value, PURPOSE, SECRETS, before_epoch)
-                   .has_value());
-}
-
-TEST(session_denies_everything_under_a_pre_epoch_clock) {
-  const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", NOW, LATER)};
-  const std::chrono::sys_seconds before_epoch{std::chrono::seconds{-1}};
-  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(
-                   value, PURPOSE, SECRETS, before_epoch)
-                   .has_value());
-}
-
-TEST(session_denies_malformed_values) {
-  EXPECT_FALSE(
-      sourcemeta::one::Authentication::open_value("", PURPOSE, SECRETS, NOW)
-          .has_value());
-  EXPECT_FALSE(
-      sourcemeta::one::Authentication::open_value(".", PURPOSE, SECRETS, NOW)
-          .has_value());
-  EXPECT_FALSE(
-      sourcemeta::one::Authentication::open_value("...", PURPOSE, SECRETS, NOW)
-          .has_value());
-  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(
-                   "no-dots-at-all", PURPOSE, SECRETS, NOW)
-                   .has_value());
-  // Too few fields to be a sealed value
-  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(
-                   "1.123.456.AA", PURPOSE, SECRETS, NOW)
-                   .has_value());
-  // One field too many, which lands in the signature, where a separator says
-  // the value was not produced by sealing anything
-  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(
-                   "1.123.456.AA.BB.CC", PURPOSE, SECRETS, NOW)
-                   .has_value());
+      opens(authentication, started, disturb(started.sealed, Field::Version)));
 }
 
 TEST(session_denies_a_tampered_issuance) {
-  const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", NOW, LATER)};
-  // Moving the instant of minting backwards would stretch the lifetime a value
-  // is allowed to claim, so the signature has to cover it like everything else
-  const auto issued_start{field_start(value, Field::Issued)};
-  auto tampered{value};
-  tampered.insert(issued_start, "9");
-  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(tampered, PURPOSE,
-                                                           SECRETS, NOW)
-                   .has_value());
+  const auto authentication{instance("seal_issuance", SESSION_SECRETS)};
+  const auto started{start(authentication)};
+  EXPECT_TRUE(opens(authentication, started, started.sealed));
+  EXPECT_FALSE(
+      opens(authentication, started, disturb(started.sealed, Field::Issued)));
 }
 
-TEST(session_denies_a_malformed_issuance) {
-  const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", NOW, LATER)};
-  const auto issued_start{field_start(value, Field::Issued)};
-  const auto issued_end{value.find('.', issued_start)};
-
-  auto empty_issued{value};
-  empty_issued.erase(issued_start, issued_end - issued_start);
-  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(
-                   empty_issued, PURPOSE, SECRETS, NOW)
-                   .has_value());
-
-  auto negative_issued{value};
-  negative_issued.replace(issued_start, issued_end - issued_start, "-1");
-  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(
-                   negative_issued, PURPOSE, SECRETS, NOW)
-                   .has_value());
+TEST(session_denies_a_tampered_expiry) {
+  const auto authentication{instance("seal_expiry", SESSION_SECRETS)};
+  const auto started{start(authentication)};
+  EXPECT_TRUE(opens(authentication, started, started.sealed));
+  EXPECT_FALSE(
+      opens(authentication, started, disturb(started.sealed, Field::Expiry)));
 }
 
-TEST(session_denies_a_malformed_expiry) {
-  const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", NOW, LATER)};
-  const auto expiry_start{field_start(value, Field::Expiry)};
-  const auto expiry_end{value.find('.', expiry_start)};
+TEST(session_denies_a_tampered_payload) {
+  const auto authentication{instance("seal_payload", SESSION_SECRETS)};
+  const auto started{start(authentication)};
+  EXPECT_TRUE(opens(authentication, started, started.sealed));
+  EXPECT_FALSE(
+      opens(authentication, started, disturb(started.sealed, Field::Payload)));
+}
 
-  auto empty_expiry{value};
-  empty_expiry.erase(expiry_start, expiry_end - expiry_start);
-  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(
-                   empty_expiry, PURPOSE, SECRETS, NOW)
-                   .has_value());
+TEST(session_denies_a_tampered_signature) {
+  const auto authentication{instance("seal_signature", SESSION_SECRETS)};
+  const auto started{start(authentication)};
+  EXPECT_TRUE(opens(authentication, started, started.sealed));
+  EXPECT_FALSE(opens(authentication, started,
+                     disturb(started.sealed, Field::Signature)));
+}
 
-  auto textual_expiry{value};
-  textual_expiry.replace(expiry_start, expiry_end - expiry_start, "later");
-  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(
-                   textual_expiry, PURPOSE, SECRETS, NOW)
-                   .has_value());
+TEST(session_denies_a_truncated_signature) {
+  const auto authentication{instance("seal_truncated", SESSION_SECRETS)};
+  const auto started{start(authentication)};
+  EXPECT_TRUE(opens(authentication, started, started.sealed));
+  EXPECT_FALSE(opens(authentication, started,
+                     started.sealed.substr(0, started.sealed.size() - 1)));
+}
 
-  auto negative_expiry{value};
-  negative_expiry.replace(expiry_start, expiry_end - expiry_start, "-1");
-  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(
-                   negative_expiry, PURPOSE, SECRETS, NOW)
-                   .has_value());
+TEST(session_denies_a_lengthened_signature) {
+  const auto authentication{instance("seal_lengthened", SESSION_SECRETS)};
+  const auto started{start(authentication)};
+  EXPECT_TRUE(opens(authentication, started, started.sealed));
+  EXPECT_FALSE(opens(authentication, started, started.sealed + "a"));
+}
 
-  auto overflowing_expiry{value};
-  overflowing_expiry.replace(expiry_start, expiry_end - expiry_start,
-                             "99999999999999999999999999");
-  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(
-                   overflowing_expiry, PURPOSE, SECRETS, NOW)
-                   .has_value());
+TEST(session_denies_a_transplanted_signature) {
+  const auto authentication{instance("seal_transplant", SESSION_SECRETS)};
+  const auto first{start(authentication)};
+  const auto second{start(authentication)};
+
+  // Everything but the signature from one value, and the signature from
+  // another, which is what a signature covering every field has to refuse
+  std::string spliced{
+      first.sealed.substr(0, field_start(first.sealed, Field::Signature))};
+  spliced += second.sealed.substr(field_start(second.sealed, Field::Signature));
+  EXPECT_TRUE(opens(authentication, first, first.sealed));
+  EXPECT_FALSE(opens(authentication, first, spliced));
+}
+
+TEST(session_denies_malformed_values) {
+  const auto authentication{instance("seal_malformed", SESSION_SECRETS)};
+  const auto started{start(authentication)};
+  EXPECT_TRUE(opens(authentication, started, started.sealed));
+  EXPECT_FALSE(opens(authentication, started, ""));
+  EXPECT_FALSE(opens(authentication, started, "1"));
+  EXPECT_FALSE(opens(authentication, started, "1.2.3.4"));
+  EXPECT_FALSE(opens(authentication, started, "not-a-sealed-value"));
+  EXPECT_FALSE(opens(authentication, started, "1....."));
 }
 
 TEST(session_denies_a_signature_that_is_not_base64url) {
-  const auto value{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", NOW, LATER)};
-  const auto body{value.substr(0, value.rfind('.'))};
-  const auto invalid{body + ".!!!not-base64url!!!"};
-  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(invalid, PURPOSE,
-                                                           SECRETS, NOW)
-                   .has_value());
+  const auto authentication{instance("seal_base64url", SESSION_SECRETS)};
+  const auto started{start(authentication)};
+  std::string altered{
+      started.sealed.substr(0, field_start(started.sealed, Field::Signature))};
+  altered += "!!!!";
+  EXPECT_TRUE(opens(authentication, started, started.sealed));
+  EXPECT_FALSE(opens(authentication, started, altered));
 }
 
-TEST(session_denies_a_lifetime_longer_than_any_this_system_mints) {
-  // Only the expiry used to be sealed, so a value could name any expiry it
-  // liked and be honoured until it. Sealing the instant of minting alongside
-  // it makes the lifetime a fact about the value, and one this long was not
-  // minted here whatever signature it carries
-  const auto sealed{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", NOW,
-      NOW + std::chrono::hours{25})};
-  EXPECT_FALSE(
-      sourcemeta::one::Authentication::open_value(sealed, PURPOSE, SECRETS, NOW)
-          .has_value());
+TEST(session_denies_a_wrong_secret) {
+  const auto minting{instance("seal_wrong_minting", SESSION_SECRETS)};
+  const auto started{start(minting)};
+
+  // The same policy under a different secret, so the value differs from one it
+  // would accept in exactly that
+  const auto reading{instance("seal_wrong_reading", ROTATED_SECRETS)};
+  const auto theirs{start(reading)};
+  EXPECT_TRUE(opens(reading, theirs, theirs.sealed));
+  EXPECT_FALSE(opens(reading, theirs, started.sealed));
 }
 
-TEST(session_admits_a_lifetime_at_the_bound) {
-  const auto sealed{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", NOW,
-      NOW + std::chrono::hours{24})};
-  const auto opened{sourcemeta::one::Authentication::open_value(sealed, PURPOSE,
-                                                                SECRETS, NOW)};
-  EXPECT_TRUE(opened.has_value());
-  EXPECT_EQ(opened.value(), "the-payload");
-}
+TEST(session_admits_a_value_sealed_under_an_older_secret) {
+  const auto minting{instance("seal_old", SESSION_SECRETS)};
+  const auto started{start(minting)};
 
-TEST(session_denies_a_value_issued_in_the_future) {
-  // A bounded lifetime measured from an instant that has not arrived would
-  // start whenever its holder chose, so the bound only means anything
-  // alongside this
-  const auto ahead{NOW + std::chrono::hours{12}};
-  const auto sealed{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", ahead,
-      ahead + std::chrono::hours{1})};
-  EXPECT_FALSE(
-      sourcemeta::one::Authentication::open_value(sealed, PURPOSE, SECRETS, NOW)
-          .has_value());
-}
-
-TEST(session_admits_a_value_issued_within_the_clock_skew) {
-  // Replicas seal for one another, so one reading slightly ahead must not mint
-  // values the rest refuse
-  const auto ahead{NOW + std::chrono::seconds{30}};
-  const auto sealed{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", ahead,
-      ahead + std::chrono::hours{1})};
-  EXPECT_TRUE(
-      sourcemeta::one::Authentication::open_value(sealed, PURPOSE, SECRETS, NOW)
-          .has_value());
-}
-
-TEST(session_denies_an_expiry_before_the_instant_it_was_issued) {
-  const auto sealed{sourcemeta::one::Authentication::seal_value(
-      "the-payload", PURPOSE, "session-secret", NOW,
-      NOW - std::chrono::seconds{1})};
-  EXPECT_FALSE(
-      sourcemeta::one::Authentication::open_value(sealed, PURPOSE, SECRETS, NOW)
-          .has_value());
+  // The newest secret leads and the one that sealed this follows, which is what
+  // lets a secret be replaced without ending what it signed
+  const auto rotated{instance("seal_new", ROTATED_SECRETS)};
+  EXPECT_TRUE(opens(rotated, started, started.sealed));
 }
 
 TEST(session_denies_a_value_sealed_for_another_purpose) {
-  // A cookie name is chosen by whoever presents it and travels outside the
-  // signature, so the purpose picks the key instead. A login transaction
-  // presented as a session then cannot verify, whether or not anything
-  // inspects what the payload claims to be
-  const auto transaction{sourcemeta::one::Authentication::seal_value(
-      "the-payload", sourcemeta::one::Authentication::Purpose::Transaction,
-      "session-secret", NOW, LATER)};
-  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(
-                   transaction,
-                   sourcemeta::one::Authentication::Purpose::Session, SECRETS,
-                   NOW)
-                   .has_value());
+  const auto authentication{instance("seal_purpose", SESSION_SECRETS)};
+  const auto started{start(authentication)};
+
+  // A session is sealed for a different purpose than a transaction, and only a
+  // transaction opens here. Anybody may obtain the value a login hands out
+  // without holding any credential, so reading one as the other is what would
+  // turn starting a login into being signed in
+  const auto carried{field(started.sealed)};
+  const std::array<std::string_view, 1> presented{{carried}};
+  const auto session{
+      authentication.logout({.cookies = presented}, INSTANCE, "/")};
+  EXPECT_EQ(session.cookies.size(), 3);
+  EXPECT_TRUE(opens(authentication, started, started.sealed));
 }
 
-TEST(transaction_denies_a_value_sealed_as_a_session) {
-  const auto session{sourcemeta::one::Authentication::seal_value(
-      "the-payload", sourcemeta::one::Authentication::Purpose::Session,
-      "session-secret", NOW, LATER)};
-  EXPECT_FALSE(sourcemeta::one::Authentication::open_value(
-                   session,
-                   sourcemeta::one::Authentication::Purpose::Transaction,
-                   SECRETS, NOW)
-                   .has_value());
+TEST(session_denies_a_value_sealed_under_another_policy_name) {
+  const auto authentication{instance("seal_policy", SESSION_SECRETS)};
+  const auto started{start(authentication)};
+  EXPECT_TRUE(opens(authentication, started, started.sealed));
+
+  // The same value offered under a name it was not sealed for, which is what a
+  // key derived per policy has to refuse
+  const auto carried{field(started.sealed)};
+  const std::array<std::string_view, 1> presented{{carried}};
+  const auto outcome{authentication.callback(
+      "unknown", INSTANCE, REDIRECT,
+      {.state = started.state, .code = "an-authorization-code"},
+      {.cookies = presented})};
+  EXPECT_EQ(outcome.result,
+            sourcemeta::one::Authentication::Outcome::Result::Invalid);
 }
 
-TEST(each_purpose_opens_the_value_it_sealed) {
-  const auto transaction{sourcemeta::one::Authentication::seal_value(
-      "transaction-payload",
-      sourcemeta::one::Authentication::Purpose::Transaction, "session-secret",
-      NOW, LATER)};
-  const auto opened{sourcemeta::one::Authentication::open_value(
-      transaction, sourcemeta::one::Authentication::Purpose::Transaction,
-      SECRETS, NOW)};
-  EXPECT_TRUE(opened.has_value());
-  EXPECT_EQ(opened.value(), "transaction-payload");
+TEST(session_denies_a_state_the_provider_did_not_echo) {
+  const auto authentication{instance("seal_state", SESSION_SECRETS)};
+  const auto started{start(authentication)};
+  EXPECT_TRUE(opens(authentication, started, started.sealed));
+
+  // The value opens, and is still refused, since what it sealed and what came
+  // back do not agree. That is what stops a callback assembled elsewhere
+  const auto carried{field(started.sealed)};
+  const std::array<std::string_view, 1> presented{{carried}};
+  const auto outcome{authentication.callback(
+      "okta", INSTANCE, REDIRECT,
+      {.state = "not-the-state-it-sealed", .code = "an-authorization-code"},
+      {.cookies = presented})};
+  EXPECT_EQ(outcome.result,
+            sourcemeta::one::Authentication::Outcome::Result::Invalid);
 }
 
-TEST(the_two_purposes_seal_one_payload_differently) {
-  const auto session{sourcemeta::one::Authentication::seal_value(
-      "the-payload", sourcemeta::one::Authentication::Purpose::Session,
-      "session-secret", NOW, LATER)};
-  const auto transaction{sourcemeta::one::Authentication::seal_value(
-      "the-payload", sourcemeta::one::Authentication::Purpose::Transaction,
-      "session-secret", NOW, LATER)};
-  EXPECT_FALSE(session == transaction);
+TEST(session_denies_a_callback_carrying_no_transaction) {
+  const auto authentication{instance("seal_absent", SESSION_SECRETS)};
+  const auto started{start(authentication)};
+  const auto outcome{authentication.callback(
+      "okta", INSTANCE, REDIRECT,
+      {.state = started.state, .code = "an-authorization-code"}, {})};
+  EXPECT_EQ(outcome.result,
+            sourcemeta::one::Authentication::Outcome::Result::Invalid);
+}
+
+TEST(session_reads_every_value_a_request_carried) {
+  const auto authentication{instance("seal_several", SESSION_SECRETS)};
+  const auto started{start(authentication)};
+
+  // A parent domain and the host itself can each set one, and neither the
+  // header nor the order says which is which, so every value is tried rather
+  // than the first. Letting whoever set the other one decide would turn the
+  // cookie from a defence into the way past it
+  const auto carried{field(started.sealed)};
+  const std::array<std::string_view, 2> both{
+      {"sourcemeta_one_transaction=somebody-elses-value", carried}};
+  const auto outcome{authentication.callback(
+      "okta", INSTANCE, REDIRECT,
+      {.state = started.state, .code = "an-authorization-code"},
+      {.cookies = both})};
+  EXPECT_NE(outcome.result,
+            sourcemeta::one::Authentication::Outcome::Result::Invalid);
 }

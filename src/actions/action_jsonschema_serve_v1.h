@@ -32,7 +32,8 @@ public:
   }
 
   static auto serve(const sourcemeta::one::RouterAction &self,
-                    std::string_view credential, std::string_view schema_path,
+                    const sourcemeta::one::Authentication::Caller &caller,
+                    std::string_view schema_path,
                     sourcemeta::one::HTTPRequest &request,
                     sourcemeta::one::HTTPResponse &response,
                     std::string_view error_schema) -> void {
@@ -60,9 +61,8 @@ public:
                                         : std::string_view{"schema"}};
     const sourcemeta::one::RequestCookies cookies{request};
     const auto resolution{self.artifact_resolve_path(
-        sourcemeta::one::VIEW_PUBLIC,
-        {.bearer = credential, .cookies = cookies}, schema_path,
-        sourcemeta::one::RouterAction::Tree::Schemas, artifact)};
+        caller, schema_path, sourcemeta::one::RouterAction::Tree::Schemas,
+        artifact)};
     if (!resolution.path.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
@@ -85,7 +85,7 @@ public:
   }
 
   auto rest(const std::span<std::string_view> matches,
-            std::string_view credential, std::string_view,
+            const sourcemeta::one::Authentication::Caller &caller,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
@@ -94,13 +94,13 @@ public:
                                       "If-Modified-Since");
       return;
     }
-    serve(*this, credential, matches.front(), request, response,
+    serve(*this, caller, matches.front(), request, response,
           this->error_schema_);
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
            const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
-           const sourcemeta::one::Credentials &)
+           const sourcemeta::one::Authentication::Caller &)
       -> sourcemeta::core::JSON override {
     return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
   }
