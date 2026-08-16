@@ -61,8 +61,7 @@ function(sourcemeta_debug_symbols_extract TARGET_NAME)
     # Both commands only read the linked binary. Rewriting it would be an
     # output the build graph does not declare, so nothing can be ordered
     # against it, and a code generation step that runs the binary gets
-    # scheduled alongside the rewrite rather than after it. The stripped
-    # copy reaches its destination through `sourcemeta_debug_symbols_install`
+    # scheduled alongside the rewrite rather than after it
     add_custom_command(OUTPUT "${BINARY_PATH}.debug"
       COMMAND "${CMAKE_OBJCOPY}" --only-keep-debug
               "${BINARY_INPUT}" "${BINARY_PATH}.debug"
@@ -80,42 +79,20 @@ function(sourcemeta_debug_symbols_extract TARGET_NAME)
     install(FILES "${BINARY_PATH}.debug"
       DESTINATION "${CMAKE_INSTALL_BINDIR}"
       COMPONENT "${EXTRACT_DEBUG_SYMBOLS_COMPONENT}")
-    set_property(GLOBAL APPEND PROPERTY
-      SOURCEMETA_DEBUG_SYMBOLS_BINARIES "${BINARY_PATH}.stripped")
-    set_property(GLOBAL APPEND PROPERTY
-      SOURCEMETA_DEBUG_SYMBOLS_NAMES
-      "${BINARY_OUTPUT_NAME}${BINARY_OUTPUT_SUFFIX}")
-    set_property(GLOBAL APPEND PROPERTY
-      SOURCEMETA_DEBUG_SYMBOLS_COMPONENTS
-      "${EXTRACT_DEBUG_SYMBOLS_COMPONENT}")
+
+    # The stripped copy has to land on top of whatever `install(TARGETS)`
+    # puts in the destination, and CMake emits the install rules of a
+    # directory ahead of those of its children. Calling this function at all
+    # means the target already exists, so its directory was added before we
+    # got here, and a child scope opened now is always ordered after it
+    set(SCOPE "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}_debug_symbols")
+    file(WRITE "${SCOPE}/CMakeLists.txt"
+      "install(PROGRAMS \"${BINARY_PATH}.stripped\"\n"
+      "  DESTINATION \"${CMAKE_INSTALL_BINDIR}\"\n"
+      "  RENAME \"${BINARY_OUTPUT_NAME}${BINARY_OUTPUT_SUFFIX}\"\n"
+      "  COMPONENT \"${EXTRACT_DEBUG_SYMBOLS_COMPONENT}\")\n")
+    add_subdirectory("${SCOPE}" "${SCOPE}.scope")
   else()
     message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
   endif()
-endfunction()
-
-# A stripped binary takes the place of the one `install(TARGETS)` puts in the
-# destination, so its rule has to run after that one. CMake emits the install
-# rules of a directory before those of its subdirectories, which means this
-# cannot live where the binaries are declared, as some of them belong to
-# vendored subdirectories. Call it from a directory added last instead
-function(sourcemeta_debug_symbols_install)
-  get_property(BINARIES GLOBAL PROPERTY SOURCEMETA_DEBUG_SYMBOLS_BINARIES)
-  get_property(NAMES GLOBAL PROPERTY SOURCEMETA_DEBUG_SYMBOLS_NAMES)
-  get_property(COMPONENTS GLOBAL PROPERTY SOURCEMETA_DEBUG_SYMBOLS_COMPONENTS)
-  list(LENGTH BINARIES TOTAL)
-  if(TOTAL EQUAL 0)
-    return()
-  endif()
-
-  math(EXPR LAST_INDEX "${TOTAL} - 1")
-  foreach(INDEX RANGE ${LAST_INDEX})
-    list(GET BINARIES ${INDEX} BINARY_PATH)
-    list(GET NAMES ${INDEX} BINARY_NAME)
-    list(GET COMPONENTS ${INDEX} BINARY_COMPONENT)
-    message(STATUS "Installing stripped binary for: ${BINARY_NAME}")
-    install(PROGRAMS "${BINARY_PATH}"
-      DESTINATION "${CMAKE_INSTALL_BINDIR}"
-      RENAME "${BINARY_NAME}"
-      COMPONENT "${BINARY_COMPONENT}")
-  endforeach()
 endfunction()

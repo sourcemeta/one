@@ -162,8 +162,3 @@ if(ONE_TESTS)
   endif()
   add_subdirectory(test/cli)
 endif()
-
-# Keep this last. See `sourcemeta_debug_symbols_install`
-if(ONE_DEBUG_SYMBOLS)
-  add_subdirectory(cmake/debug-symbols)
-endif()
