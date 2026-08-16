@@ -43,8 +43,11 @@ jobs:
         id: ccache
         with:
           path: ccache-mount
-          key: ccache-${{ matrix.edition.name }}-${{ github.sha }}
-          restore-keys: ccache-${{ matrix.edition.name }}-
+          # The restore key carries the newest stored cache into every later
+          # build, so a cache that goes bad keeps being handed forward and
+          # saved again. Bumping the number below is how we throw them away
+          key: ccache-v1-${{ matrix.edition.name }}-${{ github.sha }}
+          restore-keys: ccache-v1-${{ matrix.edition.name }}-
       - uses: reproducible-containers/buildkit-cache-dance@5422eac04292c961a382e0f584ea0f03ad9da723 # v3.4.0
         with:
           builder: ${{ steps.buildx.outputs.name }}

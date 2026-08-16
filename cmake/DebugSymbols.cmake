@@ -58,29 +58,64 @@ function(sourcemeta_debug_symbols_extract TARGET_NAME)
       COMPONENT "${EXTRACT_DEBUG_SYMBOLS_COMPONENT}")
   elseif(UNIX)
     message(STATUS "Extracting debug symbols (.debug) for: ${TARGET_NAME}")
-    # Stripping happens on a copy that atomically replaces the binary.
-    # Rewriting the binary in place races against concurrent build steps
-    # that execute it, such as code generation, failing with ETXTBSY.
-    # The final touch keeps the declared output newer than the binary the
-    # rule just replaced, otherwise the rule re-runs on every build
+    # Both commands only read the linked binary. Rewriting it would be an
+    # output the build graph does not declare, so nothing can be ordered
+    # against it, and a code generation step that runs the binary gets
+    # scheduled alongside the rewrite rather than after it. The stripped
+    # copy reaches its destination through `sourcemeta_debug_symbols_install`
     add_custom_command(OUTPUT "${BINARY_PATH}.debug"
       COMMAND "${CMAKE_OBJCOPY}" --only-keep-debug
               "${BINARY_INPUT}" "${BINARY_PATH}.debug"
+      DEPENDS "${TARGET_NAME}"
+      VERBATIM)
+    add_custom_command(OUTPUT "${BINARY_PATH}.stripped"
       COMMAND "${CMAKE_OBJCOPY}" --strip-debug
               "--add-gnu-debuglink=${BINARY_PATH}.debug"
               "${BINARY_INPUT}" "${BINARY_PATH}.stripped"
-      COMMAND "${CMAKE_COMMAND}" -E rename
-              "${BINARY_PATH}.stripped" "${BINARY_PATH}"
-      COMMAND "${CMAKE_COMMAND}" -E touch "${BINARY_PATH}.debug"
-      DEPENDS "${TARGET_NAME}"
+      DEPENDS "${TARGET_NAME}" "${BINARY_PATH}.debug"
       VERBATIM)
     add_custom_target("${TARGET_NAME}_debug_symbols" ALL
-      DEPENDS "${BINARY_PATH}.debug")
+      DEPENDS "${BINARY_PATH}.stripped")
 
     install(FILES "${BINARY_PATH}.debug"
       DESTINATION "${CMAKE_INSTALL_BINDIR}"
       COMPONENT "${EXTRACT_DEBUG_SYMBOLS_COMPONENT}")
+    set_property(GLOBAL APPEND PROPERTY
+      SOURCEMETA_DEBUG_SYMBOLS_BINARIES "${BINARY_PATH}.stripped")
+    set_property(GLOBAL APPEND PROPERTY
+      SOURCEMETA_DEBUG_SYMBOLS_NAMES
+      "${BINARY_OUTPUT_NAME}${BINARY_OUTPUT_SUFFIX}")
+    set_property(GLOBAL APPEND PROPERTY
+      SOURCEMETA_DEBUG_SYMBOLS_COMPONENTS
+      "${EXTRACT_DEBUG_SYMBOLS_COMPONENT}")
   else()
     message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
   endif()
+endfunction()
+
+# A stripped binary takes the place of the one `install(TARGETS)` puts in the
+# destination, so its rule has to run after that one. CMake emits the install
+# rules of a directory before those of its subdirectories, which means this
+# cannot live where the binaries are declared, as some of them belong to
+# vendored subdirectories. Call it from a directory added last instead
+function(sourcemeta_debug_symbols_install)
+  get_property(BINARIES GLOBAL PROPERTY SOURCEMETA_DEBUG_SYMBOLS_BINARIES)
+  get_property(NAMES GLOBAL PROPERTY SOURCEMETA_DEBUG_SYMBOLS_NAMES)
+  get_property(COMPONENTS GLOBAL PROPERTY SOURCEMETA_DEBUG_SYMBOLS_COMPONENTS)
+  list(LENGTH BINARIES TOTAL)
+  if(TOTAL EQUAL 0)
+    return()
+  endif()
+
+  math(EXPR LAST_INDEX "${TOTAL} - 1")
+  foreach(INDEX RANGE ${LAST_INDEX})
+    list(GET BINARIES ${INDEX} BINARY_PATH)
+    list(GET NAMES ${INDEX} BINARY_NAME)
+    list(GET COMPONENTS ${INDEX} BINARY_COMPONENT)
+    message(STATUS "Installing stripped binary for: ${BINARY_NAME}")
+    install(PROGRAMS "${BINARY_PATH}"
+      DESTINATION "${CMAKE_INSTALL_BINDIR}"
+      RENAME "${BINARY_NAME}"
+      COMPONENT "${BINARY_COMPONENT}")
+  endforeach()
 endfunction()
