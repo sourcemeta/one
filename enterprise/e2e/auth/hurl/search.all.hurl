@@ -88,6 +88,7 @@ Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
 [Captures]
 last_response: body
 [Asserts]
+header "Vary" == "Accept-Encoding, Authorization, Cookie"
 jsonpath "$" count == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{search_schema}}
@@ -111,6 +112,7 @@ Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
 [Captures]
 last_response: body
 [Asserts]
+header "Vary" == "Accept-Encoding, Authorization, Cookie"
 jsonpath "$" count == 1
 jsonpath "$[0].path" == "/private/open/shared"
 
