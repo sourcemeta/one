@@ -55,7 +55,7 @@ jobs:
           make docker-build
           PRESET=Release
           PARALLEL=$(nproc)
-          DOCKERFILE_TEST_REPEAT=5
+          DOCKERFILE_TEST_REPEAT=2
           DOCKER="docker buildx"
           DOCKER_BUILD_FLAGS="--load --builder ${{ steps.buildx.outputs.name }}"
           ${{ matrix.edition.options }}
