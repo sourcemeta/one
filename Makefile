@@ -17,6 +17,10 @@ OUTPUT ?= ./build
 PREFIX ?= $(OUTPUT)/dist
 PUBLIC ?= ./enterprise/e2e/public
 PARALLEL ?= $(shell getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)
+DOCKERFILE_TEST_REPEAT ?= 1
+DOCKER_BUILD_FLAGS ?=
+SANDBOX ?= test/e2e/html
+SANDBOX_PORT ?= 8000
 
 # Only for local development
 # Enterprise is the default for local development. Production use of the
@@ -24,11 +28,7 @@ PARALLEL ?= $(shell getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)
 # See https://one.sourcemeta.com/commercial
 ENTERPRISE ?= ON
 DOCKERFILE = $(if $(filter ON,$(ENTERPRISE)),enterprise/Dockerfile,Dockerfile)
-DOCKERFILE_TEST_REPEAT ?= 1
-DOCKER_BUILD_FLAGS ?=
 EDITION = $(if $(filter ON,$(ENTERPRISE)),enterprise,community)
-SANDBOX ?= test/e2e/html
-SANDBOX_PORT ?= 8000
 
 .PHONY: all
 all: configure compile test
