@@ -33,9 +33,16 @@ jobs:
       # A runner is thrown away after the job, so the compiler cache the image
       # build keeps would start empty every time. It is carried across runs
       # here instead, which is what stops the same objects being compiled again
-      # on every push
+      # on every push.
+      #
+      # The sandbox images are built from this one by Compose, which reads the
+      # daemon's image store. A builder of this kind keeps a store of its own,
+      # so it is created without becoming the current one, and named where it
+      # is wanted instead
       - uses: docker/setup-buildx-action@v3
         id: buildx
+        with:
+          use: false
 
       - name: Cache the compiler cache
         uses: actions/cache@v4
@@ -55,10 +62,13 @@ jobs:
             {
               "ccache-mount": "/ccache"
             }
+          # A build that succeeded produced a cache worth keeping, whatever a
+          # later step goes on to do with it
+          save-always: true
 
       # The builder above writes nowhere the later steps can see, so the image
       # is loaded into the store they read from
-      - run: make docker-build PRESET=Release PARALLEL=$(nproc) DOCKERFILE_TEST_REPEAT=5 DOCKER="docker buildx" DOCKER_BUILD_FLAGS="--load" ${{ matrix.edition.options }}
+      - run: make docker-build PRESET=Release PARALLEL=$(nproc) DOCKERFILE_TEST_REPEAT=5 DOCKER="docker buildx" DOCKER_BUILD_FLAGS="--load --builder ${{ steps.buildx.outputs.name }}" ${{ matrix.edition.options }}
 
       - name: SBOM (Enterprise)
         run: |
