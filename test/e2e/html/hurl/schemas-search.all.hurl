@@ -190,7 +190,7 @@ Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
-header "Vary" == "Accept-Encoding"
+header "Vary" == "Accept-Encoding, Authorization, Cookie"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -223,7 +223,7 @@ Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
-header "Vary" == "Accept-Encoding"
+header "Vary" == "Accept-Encoding, Authorization, Cookie"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -268,7 +268,7 @@ Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
-header "Vary" == "Accept-Encoding"
+header "Vary" == "Accept-Encoding, Authorization, Cookie"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -313,7 +313,7 @@ Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
-header "Vary" == "Accept-Encoding"
+header "Vary" == "Accept-Encoding, Authorization, Cookie"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -350,7 +350,7 @@ Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
-header "Vary" == "Accept-Encoding"
+header "Vary" == "Accept-Encoding, Authorization, Cookie"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -383,7 +383,7 @@ Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
-header "Vary" == "Accept-Encoding"
+header "Vary" == "Accept-Encoding, Authorization, Cookie"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -422,7 +422,7 @@ Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
-header "Vary" == "Accept-Encoding"
+header "Vary" == "Accept-Encoding, Authorization, Cookie"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -461,7 +461,7 @@ Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
-header "Vary" == "Accept-Encoding"
+header "Vary" == "Accept-Encoding, Authorization, Cookie"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -506,7 +506,7 @@ Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
-header "Vary" == "Accept-Encoding"
+header "Vary" == "Accept-Encoding, Authorization, Cookie"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -545,7 +545,7 @@ Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
-header "Vary" == "Accept-Encoding"
+header "Vary" == "Accept-Encoding, Authorization, Cookie"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -836,7 +836,7 @@ Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
-header "Vary" == "Accept-Encoding"
+header "Vary" == "Accept-Encoding, Authorization, Cookie"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -917,7 +917,7 @@ Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
-header "Vary" == "Accept-Encoding"
+header "Vary" == "Accept-Encoding, Authorization, Cookie"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -994,7 +994,7 @@ Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
 [Captures]
 get_content_length: header "Content-Length"
 [Asserts]
-header "Vary" == "Accept-Encoding"
+header "Vary" == "Accept-Encoding, Authorization, Cookie"
 
 HEAD {{base}}/self/v1/api/schemas/search?q=xxxxxxxxxxxx
 HTTP 200
@@ -1004,7 +1004,7 @@ Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
 [Asserts]
-header "Vary" == "Accept-Encoding"
+header "Vary" == "Accept-Encoding, Authorization, Cookie"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -1023,7 +1023,7 @@ Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
 [Captures]
 get_content_length: header "Content-Length"
 [Asserts]
-header "Vary" == "Accept-Encoding"
+header "Vary" == "Accept-Encoding, Authorization, Cookie"
 
 HEAD {{base}}/self/v1/api/schemas/search?q=bundling
 HTTP 200
@@ -1033,7 +1033,7 @@ Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
 [Asserts]
-header "Vary" == "Accept-Encoding"
+header "Vary" == "Accept-Encoding, Authorization, Cookie"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
