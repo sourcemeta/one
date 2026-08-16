@@ -46,6 +46,7 @@ COPY src /source/src
 COPY contrib /source/contrib
 COPY vendor /source/vendor
 COPY DEPENDENCIES /source/DEPENDENCIES
+COPY LICENSE-COMMERCIAL /source/LICENSE-COMMERCIAL
 COPY CMakeLists.txt /source/CMakeLists.txt
 COPY VERSION /source/VERSION
 COPY enterprise /source/enterprise
@@ -108,7 +109,7 @@ RUN apt-get --yes update && apt-get install --yes --no-install-recommends \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /etc/ssl/openssl.cnf /etc/ssl/openssl.cnf
 
-# Commercial editions require a paid license
+# Production use of the Enterprise edition requires a commercial license.
 # See https://one.sourcemeta.com/commercial/
 
 # See https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
@@ -116,7 +117,7 @@ LABEL org.opencontainers.image.url="https://one.sourcemeta.com"
 LABEL org.opencontainers.image.documentation="https://one.sourcemeta.com"
 LABEL org.opencontainers.image.source="https://github.com/sourcemeta/one"
 LABEL org.opencontainers.image.vendor="Sourcemeta"
-LABEL org.opencontainers.image.licenses="LicenseRef-Commercial"
+LABEL org.opencontainers.image.licenses="LicenseRef-Sourcemeta-Commercial"
 LABEL org.opencontainers.image.title="Sourcemeta One Enterprise"
 LABEL org.opencontainers.image.description="A self-hosted platform for publishing, browsing, and governing your JSON Schema collections"
 LABEL org.opencontainers.image.authors="Sourcemeta <hello@sourcemeta.com>"
@@ -137,6 +138,8 @@ COPY --from=builder /usr/share/bash-completion/completions/jsonschema \
   /usr/share/bash-completion/completions/jsonschema
 COPY --from=builder /usr/share/sourcemeta/one \
   /usr/share/sourcemeta/one
+COPY LICENSE /usr/share/doc/sourcemeta-one/LICENSE
+COPY LICENSE-COMMERCIAL /usr/share/doc/sourcemeta-one/LICENSE-COMMERCIAL
 
 # For debugging purposes
 RUN ldd /usr/bin/sourcemeta-one-index

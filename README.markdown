@@ -32,8 +32,8 @@ catalogs with enterprise-grade governance capabilities.
 ## :page_facing_up: License
 
 This project is dual-licensed. See
-[LICENSE](https://github.com/sourcemeta/one/blob/main/LICENSE) for the
-open-source offering and
+[LICENSE](https://github.com/sourcemeta/one/blob/main/LICENSE) for the free
+offering and
 [LICENSE-COMMERCIAL](https://github.com/sourcemeta/one/blob/main/LICENSE-COMMERCIAL)
 for the enterprise offering. Reach out to
 [hello@sourcemeta.com](mailto:hello@sourcemeta.com) to discuss commercial

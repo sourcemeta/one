@@ -5,10 +5,10 @@ import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const LICENSES = {
-  "core": "AGPL-3.0-or-later OR LicenseRef-Commercial",
-  "blaze": "AGPL-3.0-or-later OR LicenseRef-Commercial",
-  "jsonbinpack": "AGPL-3.0-or-later OR LicenseRef-Commercial",
-  "jsonschema": "AGPL-3.0-or-later OR LicenseRef-Commercial",
+  "core": "AGPL-3.0-or-later OR LicenseRef-Sourcemeta-Commercial",
+  "blaze": "AGPL-3.0-or-later OR LicenseRef-Sourcemeta-Commercial",
+  "jsonbinpack": "AGPL-3.0-or-later OR LicenseRef-Sourcemeta-Commercial",
+  "jsonschema": "AGPL-3.0-or-later OR LicenseRef-Sourcemeta-Commercial",
   "uwebsockets": "Apache-2.0",
   "bootstrap": "MIT",
   "bootstrap-icons": "MIT",
@@ -141,6 +141,16 @@ if (staleLicenses.length > 0) {
   process.exit(1);
 }
 
+// SPDX 2.3 requires every LicenseRef- identifier a document references to be
+// described here. The JSON Schema cannot express that dependency, so schema
+// validation alone does not catch a missing entry
+const extractedLicenses = [{
+  licenseId: "LicenseRef-Sourcemeta-Commercial",
+  name: "Sourcemeta One Commercial License",
+  extractedText: readFileSync(join(root, "LICENSE-COMMERCIAL"), "utf-8"),
+  seeAlsos: [ "https://one.sourcemeta.com/commercial/" ]
+}];
+
 process.stdout.write(JSON.stringify({
   spdxVersion: "SPDX-2.3",
   dataLicense: "CC0-1.0",
@@ -151,6 +161,7 @@ process.stdout.write(JSON.stringify({
     created: new Date().toISOString(),
     creators: [ "Tool: enterprise/scripts/sbom-vendorpull.js" ]
   },
+  hasExtractedLicensingInfos: extractedLicenses,
   packages,
   relationships
 }, null, 2) + "\n");

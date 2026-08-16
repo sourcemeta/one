@@ -1,27 +1,90 @@
+License text copyright (c) 2020 MariaDB Corporation Ab, All Rights Reserved.
+"Business Source License" is a trademark of MariaDB Corporation Ab.
+
 Business Source License 1.1
 
-Licensor: Sourcemeta OU
+Licensor: Sourcemeta OÜ (17180733), Estonia
 
-Licensed Work: Sourcemeta One
+Licensed Work: Sourcemeta One (Community edition) (c) 2024-2026 Sourcemeta OÜ.
 
-Additional Use Grant: You may make use of the Licensed Work as if under the
-terms of the AGPL-3.0, provided that you may not use or modify the Licensed
-Work (i) for or as part of a hosting solution that competes with Licensor, or
-(ii) to reimplement, replicate, or otherwise provide functionality equivalent
-to the Enterprise edition.
+NOTE: The Licensed Work does not include the contents of the `enterprise/`
+directory in this source repository, which are the "Enterprise edition" of
+Sourcemeta One, are licensed separately (see LICENSE-COMMERCIAL), and do not
+transition to the Change License on any date.
 
-The `enterprise/` directory of the source repository contains code specific to
-the Enterprise edition of Sourcemeta One. This code is not available under the
-Business Source License and requires a separate Commercial License from
-Sourcemeta. You may not use the Enterprise image, nor circumvent the build
-configuration or the software in any way to access or use Enterprise edition
-features without a valid Commercial License.
+Additional Use Grant
 
-Change Date: Change date is four years from release date. Please see [GitHub
-releases](https://github.com/sourcemeta/one/releases/) for exact dates
+You may make production use of the Licensed Work as if under the terms of the
+AGPL-3.0 <https://www.gnu.org/licenses/agpl-3.0.en.html>, provided that you do
+not:
 
-Change License: [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.en.html), as
-published by the Free Software Foundation.
+  (i) Make the Licensed Work, or a solution whose value derives substantially
+  from it, available to third parties not including your employees, your
+  affiliates under common control with you, or contractors acting on your
+  behalf, whether as a hosted or managed service or by including it in
+  something you provide to them for a fee or other consideration, or
+
+  (ii) Use, modify, or extend the Licensed Work source code, object code, or
+  build system to reimplement, replicate, include, or otherwise provide
+  functionality equivalent to, or deriving substantially from, the Enterprise
+  edition unless you hold a Sourcemeta One Commercial License, or
+
+  (iii) Remove, obscure, or alter the edition, version, and Licensor notice of
+  the Licensed Work except by running a documented configuration in which the
+  Licensed Work displays no such notice
+
+Production use is any use of the Licensed Work other than for development,
+testing, evaluation, or demonstration, and includes any deployment that serves
+data or users in the ordinary course of your business.
+
+These clauses apply whether you offer the Licensed Work to others or use it
+solely within your own organisation. They condition the production use this
+grant confers and no other right, leaving untouched the rights the Terms below
+grant to copy, modify, create derivative works, redistribute, and make
+non-production use. Production use in a manner these clauses describe is
+unlicensed and violates this License.
+
+For the purposes of Section 13 of the AGPL-3.0
+<https://www.gnu.org/licenses/agpl-3.0.en.html>, persons who interact over a
+computer network with a deployment of which you make production use include
+persons within your own organisation.
+
+Clause (ii) is not engaged by separate software that runs as a distinct program
+and communicates with the Licensed Work over a network or through its documented
+interfaces, such as your own authentication, gateway, or proxy infrastructure,
+however much that software overlaps with the Enterprise edition.
+
+Except as clause (ii) provides, nothing in this License restricts your
+development, use, or distribution of independently created software, including
+software that competes with any edition of Sourcemeta One or provides the same
+functionality. Clause (ii) reaches such software only where it is built into
+the Licensed Work.
+
+If your rights terminate under the Terms below and you then cease all
+violation, they are reinstated as of the date of that cessation, without effect
+on any use made before it, either if the Licensor does not notify you of the
+violation within sixty (60) days of that cessation, or if you cease within
+thirty (30) days of the Licensor notifying you. Any violation after such
+reinstatement terminates your rights permanently.
+
+Third party components incorporated into the Licensed Work are licensed under
+the original license provided by the owner of the applicable component.
+
+If any provision of this License is held void, unenforceable, or contrary to
+mandatory law in any jurisdiction, it is severed as to that jurisdiction alone
+and the remainder continues in force. Nothing in this License restricts any act
+that the mandatory law of your jurisdiction permits and does not allow to be
+restricted by agreement.
+
+Change Date: Change date is four years from release date. Please see GitHub
+releases <https://github.com/sourcemeta/one/releases/> for exact dates
+
+Change License: AGPL-3.0-or-later
+<https://www.gnu.org/licenses/agpl-3.0.en.html>, as published by the Free
+Software Foundation.
+
+For alternative licensing arrangements, see LICENSE-COMMERCIAL in the
+repository root or <https://one.sourcemeta.com/commercial/>.
 
 Terms
 

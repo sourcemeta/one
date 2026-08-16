@@ -57,7 +57,11 @@ Sourcemeta One as a foundational component in their own products. For example,
 OpenAPI editors and developer platforms can leverage Sourcemeta's advanced
 schema technology through the [HTTP API](api.md) to power their schema-related
 features (such as offering built-in schema collections to their end users)
-without building complex JSON Schema infrastructure from scratch.
+without building complex JSON Schema infrastructure from scratch. Embedding
+Sourcemeta One in a product or service you provide to third parties for a fee or
+other consideration, and offering it to third parties as a hosted or managed
+service whether or not for a fee, each require a
+[commercial license](commercial.md).
 
 ## Key Features
 
