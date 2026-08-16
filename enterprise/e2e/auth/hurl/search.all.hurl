@@ -50,7 +50,9 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-# Search must not leak apiKey schemas to anonymous callers
+# Search must not leak apiKey schemas to anonymous callers. This answer may be
+# stored and reused without asking again, so it names every axis that selects
+# it, or a shared cache would hand it to somebody entitled to more
 GET {{base}}/self/v1/api/schemas/search?q=secret
 HTTP 200
 Cache-Control: public, max-age=60
@@ -61,6 +63,7 @@ Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
 [Captures]
 last_response: body
 [Asserts]
+header "Vary" == "Accept-Encoding, Authorization, Cookie"
 jsonpath "$" count == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{search_schema}}
@@ -121,7 +124,8 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-# The same query reveals the schema once the caller is authorized for it
+# The same query reveals the schema once the caller is authorized for it, which
+# is why the answer above cannot be reused for this one
 GET {{base}}/self/v1/api/schemas/search?q=secret
 Authorization: Bearer primary-secret-key
 HTTP 200
@@ -133,6 +137,7 @@ Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
 [Captures]
 last_response: body
 [Asserts]
+header "Vary" == "Accept-Encoding, Authorization, Cookie"
 jsonpath "$" count == 1
 jsonpath "$[0].path" == "/private/secret"
 

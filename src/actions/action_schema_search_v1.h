@@ -216,9 +216,12 @@ public:
     response.write_header("Cache-Control", view == sourcemeta::one::VIEW_PUBLIC
                                                ? "public, max-age=60"
                                                : "private, max-age=60");
-    // RFC 9110 §12.5.5: the gzip negotiation axis applies, no other
-    // request-shaping axis selects the representation on this surface.
-    response.write_header("Vary", "Accept-Encoding");
+    // RFC 9110 §12.5.5: the gzip negotiation axis applies, and so does whatever
+    // places a caller in a view, since one URL answers differently per view.
+    // Every other content surface revalidates on each hit, which re-resolves
+    // the view at the origin. This one may be stored without revalidating, so
+    // the axes that select the representation have to be named here instead
+    response.write_header("Vary", "Accept-Encoding, Authorization, Cookie");
     sourcemeta::one::write_link_header(response, this->response_schema_);
     std::ostringstream output;
     sourcemeta::core::prettify(result, output);
