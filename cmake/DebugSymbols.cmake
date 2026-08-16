@@ -58,40 +58,28 @@ function(sourcemeta_debug_symbols_extract TARGET_NAME)
       COMPONENT "${EXTRACT_DEBUG_SYMBOLS_COMPONENT}")
   elseif(UNIX)
     message(STATUS "Extracting debug symbols (.debug) for: ${TARGET_NAME}")
-    # Both commands only read the linked binary. Rewriting it would be an
-    # output the build graph does not declare, so nothing can be ordered
-    # against it, and a code generation step that runs the binary gets
-    # scheduled alongside the rewrite rather than after it
+    # Stripping happens on a copy that atomically replaces the binary.
+    # Rewriting the binary in place races against concurrent build steps
+    # that execute it, such as code generation, failing with ETXTBSY.
+    # The final touch keeps the declared output newer than the binary the
+    # rule just replaced, otherwise the rule re-runs on every build
     add_custom_command(OUTPUT "${BINARY_PATH}.debug"
       COMMAND "${CMAKE_OBJCOPY}" --only-keep-debug
               "${BINARY_INPUT}" "${BINARY_PATH}.debug"
-      DEPENDS "${TARGET_NAME}"
-      VERBATIM)
-    add_custom_command(OUTPUT "${BINARY_PATH}.stripped"
       COMMAND "${CMAKE_OBJCOPY}" --strip-debug
               "--add-gnu-debuglink=${BINARY_PATH}.debug"
               "${BINARY_INPUT}" "${BINARY_PATH}.stripped"
-      DEPENDS "${TARGET_NAME}" "${BINARY_PATH}.debug"
+      COMMAND "${CMAKE_COMMAND}" -E rename
+              "${BINARY_PATH}.stripped" "${BINARY_PATH}"
+      COMMAND "${CMAKE_COMMAND}" -E touch "${BINARY_PATH}.debug"
+      DEPENDS "${TARGET_NAME}"
       VERBATIM)
     add_custom_target("${TARGET_NAME}_debug_symbols" ALL
-      DEPENDS "${BINARY_PATH}.stripped")
+      DEPENDS "${BINARY_PATH}.debug")
 
     install(FILES "${BINARY_PATH}.debug"
       DESTINATION "${CMAKE_INSTALL_BINDIR}"
       COMPONENT "${EXTRACT_DEBUG_SYMBOLS_COMPONENT}")
-
-    # The stripped copy has to land on top of whatever `install(TARGETS)`
-    # puts in the destination, and CMake emits the install rules of a
-    # directory ahead of those of its children. Calling this function at all
-    # means the target already exists, so its directory was added before we
-    # got here, and a child scope opened now is always ordered after it
-    set(SCOPE "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}_debug_symbols")
-    file(WRITE "${SCOPE}/CMakeLists.txt"
-      "install(PROGRAMS \"${BINARY_PATH}.stripped\"\n"
-      "  DESTINATION \"${CMAKE_INSTALL_BINDIR}\"\n"
-      "  RENAME \"${BINARY_OUTPUT_NAME}${BINARY_OUTPUT_SUFFIX}\"\n"
-      "  COMPONENT \"${EXTRACT_DEBUG_SYMBOLS_COMPONENT}\")\n")
-    add_subdirectory("${SCOPE}" "${SCOPE}.scope")
   else()
     message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
   endif()

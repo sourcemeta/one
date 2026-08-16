@@ -37,37 +37,9 @@ RUN	cmake -S /source -B ./build -G Ninja \
   -DBUILD_SHARED_LIBS:BOOL=OFF \
   -DONE_DEBUG_SYMBOLS:BOOL=ON
 
-# TEMPORARY DIAGNOSTIC, REVERT BEFORE MERGING
-# On failure, re-run the crashing code generator against the very same binary.
-# Crashing again means the binary is bad, succeeding means the crash was
-# transient and depends on what else the build was doing at that moment
 RUN --mount=type=cache,target=/ccache,sharing=locked cmake --build /build \
   --config ${SOURCEMETA_ONE_BUILD_TYPE} \
-  --parallel ${SOURCEMETA_ONE_PARALLEL} \
-  || { \
-    JSONSCHEMA=/build/vendor/jsonschema/src/jsonschema; \
-    SCHEMA=/source/src/configuration/schema/configuration.json; \
-    echo "=== DIAGNOSTIC: build failed ==="; \
-    df -h /build /tmp || true; \
-    head -3 /proc/meminfo || true; \
-    ls -l "$JSONSCHEMA"; \
-    sha256sum "$JSONSCHEMA"; \
-    CRASHED=0; \
-    for attempt in 1 2 3; do \
-      if "$JSONSCHEMA" compile --include CONFIGURATION "$SCHEMA" > /tmp/retry.h; then \
-        echo "DIAGNOSTIC retry $attempt: OK"; \
-      else \
-        echo "DIAGNOSTIC retry $attempt: crashed again"; \
-        CRASHED=1; \
-      fi; \
-    done; \
-    if [ "$CRASHED" = "1" ]; then \
-      apt-get --yes update && apt-get install --yes --no-install-recommends gdb; \
-      gdb -batch -ex "set args compile --include CONFIGURATION $SCHEMA > /tmp/gdb.h" \
-        -ex run -ex 'bt 40' -ex 'info registers rip' -ex 'x/4i $rip' "$JSONSCHEMA"; \
-    fi; \
-    exit 1; \
-  }
+  --parallel ${SOURCEMETA_ONE_PARALLEL}
 RUN cmake --install /build --prefix /usr --verbose \
   --config ${SOURCEMETA_ONE_BUILD_TYPE} \
   --component sourcemeta_one
