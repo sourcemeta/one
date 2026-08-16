@@ -33,7 +33,32 @@ jobs:
 
       - run: make check ${{ matrix.edition.options }}
 
-      - run: make docker-build PRESET=Release PARALLEL=$(nproc) DOCKERFILE_TEST_REPEAT=5 ${{ matrix.edition.options }}
+      # Cache the image ccache mount
+      - uses: docker/setup-buildx-action@v3
+        id: buildx
+        with:
+          use: false
+      - name: Cache the compiler cache
+        uses: actions/cache@v4
+        id: ccache
+        with:
+          path: ccache-mount
+          key: ccache-${{ matrix.edition.name }}-${{ github.sha }}
+          restore-keys: ccache-${{ matrix.edition.name }}-
+      - uses: reproducible-containers/buildkit-cache-dance@5422eac04292c961a382e0f584ea0f03ad9da723 # v3.4.0
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          cache-map: |
+            { "ccache-mount": "/ccache" }
+
+      - run: >
+          make docker-build
+          PRESET=Release
+          PARALLEL=$(nproc)
+          DOCKERFILE_TEST_REPEAT=5
+          DOCKER="docker buildx"
+          DOCKER_BUILD_FLAGS="--load --builder ${{ steps.buildx.outputs.name }}"
+          ${{ matrix.edition.options }}
 
       - name: SBOM (Enterprise)
         run: |
