@@ -48,7 +48,8 @@ auto get_schema_template(
   if (precompiled.has_value()) {
     sourcemeta::jsonschema::LOG_VERBOSE(options)
         << "Parsing pre-compiled schema template: "
-        << sourcemeta::core::weakly_canonical(precompiled.value()).string()
+        << sourcemeta::core::weakly_canonical(precompiled.value())
+               .generic_string()
         << "\n";
     const auto schema_template{
         sourcemeta::core::read_yaml_or_json(precompiled.value())};
@@ -140,10 +141,8 @@ auto process_entry(
     const sourcemeta::jsonschema::CustomResolver &custom_resolver,
     const sourcemeta::blaze::SchemaFrame &frame, bool benchmark,
     std::uint64_t benchmark_loop, bool trace, bool fast_mode, bool json_output,
-    bool continue_on_error, bool schema_from_stdin,
-    const std::filesystem::path &schema_resolution_base,
+    bool continue_on_error, const std::filesystem::path &schema_resolution_base,
     const sourcemeta::core::Options &options, bool &result) -> bool {
-  std::ostringstream error;
   sourcemeta::blaze::SimpleOutput output{entry.second};
   sourcemeta::blaze::TraceOutput trace_output{
       sourcemeta::blaze::schema_walker, custom_resolver,
@@ -157,7 +156,6 @@ auto process_entry(
                              : static_cast<std::int64_t>(-1),
                          benchmark_loop);
     if (!subresult) {
-      error << "error: Schema validation failure\n";
       result = false;
     }
   } else if (trace) {
@@ -205,10 +203,7 @@ auto process_entry(
     }
     sourcemeta::jsonschema::LOG_VERBOSE(options)
         << "\n  matches "
-        << (schema_from_stdin
-                ? "/dev/stdin"
-                : sourcemeta::core::weakly_canonical(schema_resolution_base)
-                      .string())
+        << sourcemeta::jsonschema::stdin_path_string(schema_resolution_base)
         << "\n";
     sourcemeta::jsonschema::print_annotations(output, options, entry.positions,
                                               std::cerr);
@@ -224,7 +219,6 @@ auto process_entry(
     } else {
       std::cerr << "\n";
     }
-    std::cerr << error.str();
     sourcemeta::jsonschema::print(output, entry.positions, std::cerr);
     result = false;
     if (entry.multidocument && !continue_on_error) {
@@ -306,8 +300,8 @@ auto sourcemeta::jsonschema::validate(const sourcemeta::core::Options &options)
         "Re-compile the template with --format-assertion instead"};
   }
 
-  const auto schema_default_id{
-      sourcemeta::jsonschema::default_id(schema_resolution_base)};
+  const auto schema_default_id{sourcemeta::jsonschema::default_id(
+      schema_resolution_base, schema_from_stdin)};
 
   const auto bundled{
       bundle_for_evaluation(schema, custom_resolver, dialect, schema_default_id,
@@ -374,8 +368,8 @@ auto sourcemeta::jsonschema::validate(const sourcemeta::core::Options &options)
     for (const auto &entry : for_each_json({}, options)) {
       if (!process_entry(entry, evaluator, schema_template, custom_resolver,
                          frame, benchmark, benchmark_loop, trace, fast_mode,
-                         json_output, continue_on_error, schema_from_stdin,
-                         schema_resolution_base, options, result)) {
+                         json_output, continue_on_error, schema_resolution_base,
+                         options, result)) {
         break;
       }
     }
@@ -409,7 +403,7 @@ auto sourcemeta::jsonschema::validate(const sourcemeta::core::Options &options)
         for (const auto &entry : for_each_json({instance_path_view}, options)) {
           if (!process_entry(entry, evaluator, schema_template, custom_resolver,
                              frame, benchmark, benchmark_loop, trace, fast_mode,
-                             json_output, continue_on_error, schema_from_stdin,
+                             json_output, continue_on_error,
                              schema_resolution_base, options, result)) {
             break;
           }
@@ -428,7 +422,6 @@ auto sourcemeta::jsonschema::validate(const sourcemeta::core::Options &options)
           }
           return sourcemeta::core::read_yaml_or_json(instance_path);
         }()};
-        std::ostringstream error;
         sourcemeta::blaze::SimpleOutput output{instance};
         sourcemeta::blaze::TraceOutput trace_output{
             sourcemeta::blaze::schema_walker, custom_resolver,
@@ -436,11 +429,10 @@ auto sourcemeta::jsonschema::validate(const sourcemeta::core::Options &options)
             sourcemeta::core::empty_weak_pointer, frame};
         bool subresult{true};
         if (benchmark) {
-          subresult =
-              run_loop(evaluator, schema_template, instance,
-                       instance_path.string(), (int64_t)-1, benchmark_loop);
+          subresult = run_loop(evaluator, schema_template, instance,
+                               instance_path.generic_string(), (int64_t)-1,
+                               benchmark_loop);
           if (!subresult) {
-            error << "error: Schema validation failure\n";
             result = false;
           }
         } else if (trace) {
@@ -473,20 +465,16 @@ auto sourcemeta::jsonschema::validate(const sourcemeta::core::Options &options)
         } else if (subresult) {
           LOG_VERBOSE(options)
               << "ok: "
-              << sourcemeta::core::weakly_canonical(instance_path).string()
-              << "\n  matches "
-              << (schema_from_stdin ? "/dev/stdin"
-                                    : sourcemeta::core::weakly_canonical(
-                                          schema_resolution_base)
-                                          .string())
+              << sourcemeta::core::weakly_canonical(instance_path)
+                     .generic_string()
+              << "\n  matches " << stdin_path_string(schema_resolution_base)
               << "\n";
           print_annotations(output, options, tracker, std::cerr);
         } else {
-          std::cerr
-              << "fail: "
-              << sourcemeta::core::weakly_canonical(instance_path).string()
-              << "\n";
-          std::cerr << error.str();
+          std::cerr << "fail: "
+                    << sourcemeta::core::weakly_canonical(instance_path)
+                           .generic_string()
+                    << "\n";
           print(output, tracker, std::cerr);
           result = false;
         }
