@@ -31,13 +31,26 @@ catalogs with enterprise-grade governance capabilities.
 
 ## :page_facing_up: License
 
-This project is dual-licensed. See
-[LICENSE](https://github.com/sourcemeta/one/blob/main/LICENSE) for the free
-offering and
-[LICENSE-COMMERCIAL](https://github.com/sourcemeta/one/blob/main/LICENSE-COMMERCIAL)
-for the enterprise offering. Reach out to
-[hello@sourcemeta.com](mailto:hello@sourcemeta.com) to discuss commercial
-licensing.
+Sourcemeta One is source-available, not open source: a similar open-core split
+to the one [GitLab](https://gitlab.com/gitlab-org/gitlab/-/blob/master/ee/LICENSE),
+[PostHog](https://github.com/PostHog/posthog/blob/master/ee/LICENSE), and
+[SigNoz](https://github.com/SigNoz/signoz/blob/main/ee/LICENSE) apply through
+their own `ee/` directories.
+
+- **Community**: [BUSL-1.1](LICENSE), converting to AGPL-3.0-or-later four
+  years after each release.
+- **Enterprise** (`enterprise/`): commercial per
+  [`enterprise/LICENSE`](enterprise/LICENSE), free to build and run for
+  evaluation and contribution.
+
+A [commercial license](LICENSE-COMMERCIAL) is what you need to offer Sourcemeta
+One to third parties as a hosted or managed service, to bundle it into
+something you sell, to build Enterprise functionality into the Community
+edition, or to put the Enterprise edition to any other use. Write to
+[hello@sourcemeta.com](mailto:hello@sourcemeta.com) to discuss one.
+
+Read the respective licenses for the specific conditions and other details, and
+[NOTICE](NOTICE) for the licenses of vendored dependencies.
 
 ## :handshake: Contributing
 

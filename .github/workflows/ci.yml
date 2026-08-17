@@ -15,8 +15,9 @@ concurrency:
 
 jobs:
   test:
-    # Building the Enterprise edition here is permitted by LICENSE-COMMERCIAL,
-    # which allows building and running it for development and testing without a
+    # Building the Enterprise edition here is permitted by enterprise/LICENSE
+    # clause (c), which allows building and running it for development and
+    # testing in an automated continuous-integration environment without a
     # commercial license
     strategy:
       fail-fast: false

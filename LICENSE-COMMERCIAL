@@ -1,57 +1,32 @@
 Sourcemeta One Commercial License
+(This file is a pointer to the commercial license, not the agreement itself.)
 
-For acquiring a commercial license, contact: hello@sourcemeta.com
+Copyright (c) 2024-2026 Sourcemeta OÜ (registry code 17180733), Estonia.
 
-Copyright (c) 2026 Sourcemeta
+Sourcemeta One is dual-edition software:
 
-This Commercial License is an alternative to the Business Source License 1.1
-(BUSL-1.1) and the AGPL-3.0 Change License that governs the open-source release
-of Sourcemeta One. By purchasing a Commercial License, you receive the
-following benefits:
+  * The Community edition is governed by the Business Source License 1.1 in the
+    file LICENSE.
+  * The Enterprise edition (the contents of the "enterprise/" directory) is
+    governed by the notice in enterprise/LICENSE and by this Commercial License.
 
-LICENSE GRANT:
+A commercial license from Sourcemeta OÜ is required for:
 
-Subject to the terms of this agreement, Sourcemeta grants you a non-exclusive,
-non-transferable license to use, copy, modify, and distribute the Software,
-including the Enterprise edition, without the restrictions of the BUSL-1.1 or
-AGPL-3.0 licenses. This includes:
+  * any use of the Enterprise edition beyond the limited development, testing,
+    evaluation, demonstration, and contribution uses permitted in
+    enterprise/LICENSE; and
+  * any use of the Community edition beyond the terms of the Business Source
+    License 1.1. Those terms condition production use, and they apply whether
+    you offer the Community edition to others or use it solely within your own
+    organisation. See LICENSE for the conditions themselves.
 
-1. Proprietary Integration: Integrate the Software into proprietary products
-   and services without open-source disclosure requirements.
+Using the Enterprise edition, or using the Community edition outside the Business
+Source License, without a commercial license in effect is unlicensed and
+infringes the copyright of Sourcemeta OÜ.
 
-2. Enterprise Edition: Access to the Enterprise edition of Sourcemeta One,
-   which includes additional features not available in the open-source release.
+The commercial license is a separate written agreement between you and Sourcemeta
+OÜ. It sets out the grant, fees, term, support, and other terms, and is provided
+on request. This file does not itself state those terms.
 
-3. Private Modifications: Create and maintain modifications to the Software
-   without the obligation to disclose or open-source your changes.
-
-PREMIUM SUPPORT:
-
-Commercial License holders receive premium support from Sourcemeta, including:
-
-1. Priority Support: Dedicated support channels with guaranteed response times.
-
-2. Technical Assistance: Direct access to Sourcemeta engineers for integration,
-   deployment, and troubleshooting assistance.
-
-3. Updates and Upgrades: Access to all updates, patches, and new releases
-   during the license term.
-
-RESTRICTIONS:
-
-1. You may not sublicense, sell, or transfer the Commercial License to third
-   parties without written consent from Sourcemeta.
-
-2. You may not remove or alter any proprietary notices, labels, or marks on
-   the Software.
-
-NO WARRANTY: THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-
-LIMITATION OF LIABILITY: IN NO EVENT SHALL SOURCEMETA OR ITS AFFILIATES BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
-CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-For commercial licensing inquiries, contact: hello@sourcemeta.com
+To obtain a commercial license and its terms, contact hello@sourcemeta.com or see
+https://one.sourcemeta.com/commercial/.

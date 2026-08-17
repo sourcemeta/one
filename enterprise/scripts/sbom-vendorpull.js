@@ -12,7 +12,7 @@ const LICENSES = {
   "uwebsockets": "Apache-2.0",
   "bootstrap": "MIT",
   "bootstrap-icons": "MIT",
-  "pcre2": "BSD-3-Clause",
+  "pcre2": "BSD-3-Clause WITH PCRE2-exception",
   "libdeflate": "MIT",
   "cmark-gfm": "BSD-2-Clause",
   "unicodetools": "Unicode-3.0"

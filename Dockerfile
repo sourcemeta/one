@@ -88,6 +88,7 @@ COPY --from=builder /usr/share/bash-completion/completions/jsonschema \
 COPY --from=builder /usr/share/sourcemeta/one \
   /usr/share/sourcemeta/one
 COPY LICENSE /usr/share/doc/sourcemeta-one/LICENSE
+COPY NOTICE /usr/share/doc/sourcemeta-one/NOTICE
 
 # For debugging purposes
 RUN ldd /usr/bin/sourcemeta-one-index

@@ -147,9 +147,7 @@ operational risk.
 [GitHub](https://github.com/sourcemeta/one), providing complete code
 transparency for security audits, compliance reviews, internal assessments, and
 modification. Enterprises can examine every line of code, eliminating black-box
-concerns and ensuring no vendor lock-in. If Sourcemeta would ever cease
-operations, you retain full access to continue running and maintaining your
-instances.
+concerns and ensuring no vendor lock-in.
 
 **Supply chain security**: The Enterprise container image is cryptographically
 signed with Cosign/Sigstore, includes a signed SPDX Software Bill of Materials

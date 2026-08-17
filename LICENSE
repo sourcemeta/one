@@ -9,8 +9,8 @@ Licensed Work: Sourcemeta One (Community edition) (c) 2024-2026 Sourcemeta OÜ.
 
 NOTE: The Licensed Work does not include the contents of the `enterprise/`
 directory in this source repository, which are the "Enterprise edition" of
-Sourcemeta One, are licensed separately (see LICENSE-COMMERCIAL), and do not
-transition to the Change License on any date.
+Sourcemeta One, are licensed separately (see enterprise/LICENSE and
+LICENSE-COMMERCIAL), and do not transition to the Change License on any date.
 
 Additional Use Grant
 

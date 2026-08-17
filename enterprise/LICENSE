@@ -1,0 +1,43 @@
+Sourcemeta One Enterprise Edition
+
+The contents of this "enterprise/" directory are the Enterprise edition of
+Sourcemeta One, the copyrighted work of Sourcemeta OÜ (registry code 17180733,
+Estonia). They are made available in source form for transparency and audit.
+They are NOT open source and are NOT covered by the Business Source License in
+the repository root, which excludes this directory from its "Licensed Work" and
+which the Enterprise edition never transitions to.
+
+Access to these files does not grant any right to use them. Except as expressly
+permitted below, any use of the Enterprise edition, including building, running,
+deploying, or creating derivative works, whether in production or not and whether
+internal or offered to others, requires a valid Sourcemeta One Commercial License
+(see LICENSE-COMMERCIAL in the repository root).
+
+Provided you comply with this notice, and without a Commercial License, you may:
+
+  (a) view and audit these files;
+  (b) copy them only as incidental to cloning or mirroring the repository;
+  (c) build and run the Enterprise edition for development, testing, evaluation,
+      or demonstration, on infrastructure you control or in an automated build or
+      continuous-integration environment acting on your behalf. This includes
+      evaluating it within your organisation with your own schemas, and making
+      that evaluation available to your employees, your affiliates under common
+      control with you, and contractors acting on your behalf, provided it is not
+      made available to anyone else and is not relied upon in the ordinary course
+      of your business; and
+  (d) create and distribute modifications solely to propose them to Sourcemeta as
+      a contribution, for example in a public fork opened as a pull request.
+
+Any other use is unlicensed and infringes the copyright of Sourcemeta OÜ. If you
+do not comply with the conditions above, you have no license to these files and
+your use of them infringes that copyright.
+
+These terms apply to anyone who receives these files, whether from Sourcemeta or
+from a third party. If any provision of this notice is held unenforceable, the
+remaining provisions continue in effect.
+
+This notice grants no rights in any Sourcemeta name, trademark, or logo. TO THE
+EXTENT PERMITTED BY LAW, THE ENTERPRISE EDITION IS PROVIDED "AS IS", WITHOUT
+WARRANTY OR CONDITION OF ANY KIND.
+
+For commercial licensing and its terms, contact hello@sourcemeta.com.

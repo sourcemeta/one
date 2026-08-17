@@ -110,7 +110,7 @@ RUN apt-get --yes update && apt-get install --yes --no-install-recommends \
 COPY --from=builder /etc/ssl/openssl.cnf /etc/ssl/openssl.cnf
 
 # Production use of the Enterprise edition requires a commercial license.
-# See https://one.sourcemeta.com/commercial/
+# See enterprise/LICENSE and https://one.sourcemeta.com/commercial/
 
 # See https://github.com/opencontainers/image-spec/blob/main/annotations.md#pre-defined-annotation-keys
 LABEL org.opencontainers.image.url="https://one.sourcemeta.com"
@@ -139,7 +139,9 @@ COPY --from=builder /usr/share/bash-completion/completions/jsonschema \
 COPY --from=builder /usr/share/sourcemeta/one \
   /usr/share/sourcemeta/one
 COPY LICENSE /usr/share/doc/sourcemeta-one/LICENSE
+COPY enterprise/LICENSE /usr/share/doc/sourcemeta-one/LICENSE.enterprise
 COPY LICENSE-COMMERCIAL /usr/share/doc/sourcemeta-one/LICENSE-COMMERCIAL
+COPY NOTICE /usr/share/doc/sourcemeta-one/NOTICE
 
 # For debugging purposes
 RUN ldd /usr/bin/sourcemeta-one-index

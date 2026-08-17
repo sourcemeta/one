@@ -12,25 +12,36 @@ technology.*
 
 Sourcemeta One is [publicly available on
 GitHub](https://github.com/sourcemeta/one) with full source code transparency,
-enabling comprehensive auditing and community contributions.
+enabling comprehensive auditing and community contributions. It is
+source-available rather than open source: the Community edition is free to
+self-host, while the Enterprise edition's source is published for audit but
+requires a commercial license to run in production. This is a similar open-core
+split to the one
+[GitLab](https://gitlab.com/gitlab-org/gitlab/-/blob/master/ee/LICENSE),
+[PostHog](https://github.com/PostHog/posthog/blob/master/ee/LICENSE), and
+[SigNoz](https://github.com/SigNoz/signoz/blob/main/ee/LICENSE) apply through
+their own `ee/` directories.
 
 ## Editions
 
 Sourcemeta One is available in two editions:
 
-- **Community**: Licensed under the [Business Source License
-  1.1](https://github.com/sourcemeta/one/blob/main/LICENSE). You may use it as
-  if under the terms of AGPL-3.0, provided that you may not use it for a
-  solution that competes with Sourcemeta. After four years from each release,
-  the code transitions to AGPL-3.0.
+- **Community**: The free edition, offering a subset of the functionality for
+  self-hosting under the [Business Source License
+  1.1](https://github.com/sourcemeta/one/blob/main/LICENSE), with certain
+  restrictions. Four years after each release, that release transitions to
+  `AGPL-3.0-or-later`.
 
-- **Enterprise**: Includes the [Standard
-  Library](https://github.com/sourcemeta/std), additional features, and supply
-  chain security capabilities not available in the Community edition. Requires
-  a [commercial
-  license](https://github.com/sourcemeta/one/blob/main/LICENSE-COMMERCIAL) from
-  Sourcemeta for all uses except local development for the purpose of sending a
-  contribution back to Sourcemeta.
+- **Enterprise**: Adds the [Standard
+  Library](https://github.com/sourcemeta/std), the capabilities described
+  below, and supply chain security features. Its source is published for
+  transparency and audit, but it is commercial software, governed by
+  [`enterprise/LICENSE`](https://github.com/sourcemeta/one/blob/main/enterprise/LICENSE)
+  and the [commercial
+  license](https://github.com/sourcemeta/one/blob/main/LICENSE-COMMERCIAL).
+
+Read the respective licenses for the specific conditions of each edition and
+other details.
 
 ## Model Context Protocol
 
