@@ -58,7 +58,6 @@ WRITE schemas/a.json UNTIL EOF
 EOF
 
 RUN --skip-banner --deterministic --concurrency 1 one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 0
-DROP LINES MATCHING '^1>' IN output.txt
 REPLACE MATCHING ' \[[^\]\n]*[^a-z\-\n][^\]\n]*\]' WITH '' IN output.txt
 COPY output.txt TO produced.txt
 DROP LINES MATCHING '^(?!.*(Producing|Combining)).*$' IN produced.txt

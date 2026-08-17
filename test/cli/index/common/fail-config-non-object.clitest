@@ -6,7 +6,6 @@ WRITE one.json UNTIL EOF
 EOF
 
 RUN --skip-banner one.json output STDIN /dev/null IN . INTO output_0.txt EXPECTING 1
-DROP LINES MATCHING '^2>' IN output_0.txt
 REPLACE $CWD WITH '[CWD]' IN output_0.txt
 
 WRITE expected_0.txt UNTIL EOF
@@ -15,6 +14,8 @@ WRITE expected_0.txt UNTIL EOF
 1> The value was expected to be an object that defines the property "url"
 1>   at instance location ""
 1>   at evaluate path "/required"
+2> Writing output to: [CWD]/output
+2> Using configuration: [CWD]/one.json
 EOF
 
 COMPARE output_0.txt AGAINST expected_0.txt
@@ -24,7 +25,6 @@ WRITE one.json UNTIL EOF
 EOF
 
 RUN --skip-banner one.json output STDIN /dev/null IN . INTO output_1.txt EXPECTING 1
-DROP LINES MATCHING '^2>' IN output_1.txt
 REPLACE $CWD WITH '[CWD]' IN output_1.txt
 
 WRITE expected_1.txt UNTIL EOF
@@ -33,6 +33,8 @@ WRITE expected_1.txt UNTIL EOF
 1> The value was expected to be an object that defines the property "url"
 1>   at instance location ""
 1>   at evaluate path "/required"
+2> Writing output to: [CWD]/output
+2> Using configuration: [CWD]/one.json
 EOF
 
 COMPARE output_1.txt AGAINST expected_1.txt
@@ -42,7 +44,6 @@ WRITE one.json UNTIL EOF
 EOF
 
 RUN --skip-banner one.json output STDIN /dev/null IN . INTO output_2.txt EXPECTING 1
-DROP LINES MATCHING '^2>' IN output_2.txt
 REPLACE $CWD WITH '[CWD]' IN output_2.txt
 
 WRITE expected_2.txt UNTIL EOF
@@ -51,6 +52,8 @@ WRITE expected_2.txt UNTIL EOF
 1> The value was expected to be an object that defines the property "url"
 1>   at instance location ""
 1>   at evaluate path "/required"
+2> Writing output to: [CWD]/output
+2> Using configuration: [CWD]/one.json
 EOF
 
 COMPARE output_2.txt AGAINST expected_2.txt
@@ -60,7 +63,6 @@ true
 EOF
 
 RUN --skip-banner one.json output STDIN /dev/null IN . INTO output_3.txt EXPECTING 1
-DROP LINES MATCHING '^2>' IN output_3.txt
 REPLACE $CWD WITH '[CWD]' IN output_3.txt
 
 WRITE expected_3.txt UNTIL EOF
@@ -69,6 +71,8 @@ WRITE expected_3.txt UNTIL EOF
 1> The value was expected to be an object that defines the property "url"
 1>   at instance location ""
 1>   at evaluate path "/required"
+2> Writing output to: [CWD]/output
+2> Using configuration: [CWD]/one.json
 EOF
 
 COMPARE output_3.txt AGAINST expected_3.txt
@@ -78,7 +82,6 @@ null
 EOF
 
 RUN --skip-banner one.json output STDIN /dev/null IN . INTO output_4.txt EXPECTING 1
-DROP LINES MATCHING '^2>' IN output_4.txt
 REPLACE $CWD WITH '[CWD]' IN output_4.txt
 
 WRITE expected_4.txt UNTIL EOF
@@ -87,6 +90,8 @@ WRITE expected_4.txt UNTIL EOF
 1> The value was expected to be an object that defines the property "url"
 1>   at instance location ""
 1>   at evaluate path "/required"
+2> Writing output to: [CWD]/output
+2> Using configuration: [CWD]/one.json
 EOF
 
 COMPARE output_4.txt AGAINST expected_4.txt

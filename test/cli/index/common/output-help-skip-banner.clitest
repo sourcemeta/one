@@ -35,16 +35,13 @@ WRITE expected.txt UNTIL EOF
 EOF
 
 RUN --help --skip-banner STDIN /dev/null IN . INTO output.txt EXPECTING 0
-DROP LINES MATCHING '^2>' IN output.txt
 REPLACE $PROGRAM WITH '[PROGRAM]' IN output.txt
 COMPARE output.txt AGAINST expected.txt
 
 RUN -h -s STDIN /dev/null IN . INTO output.txt EXPECTING 0
-DROP LINES MATCHING '^2>' IN output.txt
 REPLACE $PROGRAM WITH '[PROGRAM]' IN output.txt
 COMPARE output.txt AGAINST expected.txt
 
 RUN --skip-banner STDIN /dev/null IN . INTO output.txt EXPECTING 1
-DROP LINES MATCHING '^2>' IN output.txt
 REPLACE $PROGRAM WITH '[PROGRAM]' IN output.txt
 COMPARE output.txt AGAINST expected.txt

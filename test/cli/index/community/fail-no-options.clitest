@@ -1,5 +1,4 @@
 RUN --skip-banner STDIN /dev/null IN . INTO output.txt EXPECTING 1
-DROP LINES MATCHING '^2>' IN output.txt
 
 WRITE expected.txt UNTIL EOF
 1> Usage: [PROGRAM] <one.json> <path/to/output/directory>

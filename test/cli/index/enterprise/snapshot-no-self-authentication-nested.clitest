@@ -79,7 +79,6 @@ EOF
 
 ENV ONE_KEY_VAULT secret
 RUN --skip-banner --deterministic --concurrency 1 one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
-DROP LINES MATCHING '^2>' IN log_1.txt
 DROP LINES MATCHING '^' IN log_1.txt
 WRITE silent.txt UNTIL EOF
 EOF

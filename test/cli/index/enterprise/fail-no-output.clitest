@@ -15,7 +15,6 @@ WRITE one.json UNTIL EOF
 EOF
 
 RUN --skip-banner one.json STDIN /dev/null IN . INTO output.txt EXPECTING 1
-DROP LINES MATCHING '^2>' IN output.txt
 
 WRITE expected.txt UNTIL EOF
 1> Usage: sourcemeta-one-index <one.json> <path/to/output/directory>

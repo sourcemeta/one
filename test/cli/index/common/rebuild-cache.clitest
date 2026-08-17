@@ -24,7 +24,6 @@ WRITE schemas/foo.json UNTIL EOF
 EOF
 
 RUN --skip-banner --deterministic one.json output --concurrency 1 STDIN /dev/null IN . INTO output.txt EXPECTING 0
-DROP LINES MATCHING '^1>' IN output.txt
 REPLACE MATCHING ' \[[^\]\n]*[^a-z\-\n][^\]\n]*\]' WITH '' IN output.txt
 WRITE expected.txt UNTIL EOF
 2> Writing output to: [CWD]/output
@@ -1100,7 +1099,6 @@ COMPARE output.txt AGAINST expected.txt
 // Run it once more
 
 RUN --skip-banner --deterministic one.json output --concurrency 1 STDIN /dev/null IN . INTO output.txt EXPECTING 0
-DROP LINES MATCHING '^1>' IN output.txt
 REPLACE MATCHING ' \[[^\]\n]*[^a-z\-\n][^\]\n]*\]' WITH '' IN output.txt
 WRITE expected.txt UNTIL EOF
 2> Writing output to: [CWD]/output
@@ -1183,7 +1181,6 @@ WRITE schemas/foo.json UNTIL EOF
 }
 EOF
 RUN --skip-banner --deterministic one.json output --concurrency 1 STDIN /dev/null IN . INTO output.txt EXPECTING 0
-DROP LINES MATCHING '^1>' IN output.txt
 REPLACE MATCHING ' \[[^\]\n]*[^a-z\-\n][^\]\n]*\]' WITH '' IN output.txt
 WRITE expected.txt UNTIL EOF
 2> Writing output to: [CWD]/output
@@ -1282,7 +1279,6 @@ COMPARE output.txt AGAINST expected.txt
 COPY output/configuration.json TO stamp_4
 COPY stamp_4 TO output/configuration.json
 RUN --skip-banner --deterministic one.json output --concurrency 1 STDIN /dev/null IN . INTO output.txt EXPECTING 0
-DROP LINES MATCHING '^1>' IN output.txt
 REPLACE MATCHING ' \[[^\]\n]*[^a-z\-\n][^\]\n]*\]' WITH '' IN output.txt
 WRITE expected.txt UNTIL EOF
 2> Writing output to: [CWD]/output

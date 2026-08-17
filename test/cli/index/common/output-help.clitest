@@ -37,21 +37,18 @@ WRITE expected.txt UNTIL EOF
 EOF
 
 RUN --help STDIN /dev/null IN . INTO output.txt EXPECTING 0
-DROP LINES MATCHING '^2>' IN output.txt
 REPLACE $PROGRAM WITH '[PROGRAM]' IN output.txt
 REPLACE $EDITION WITH '[EDITION]' IN output.txt
 REPLACE $VERSION WITH '[VERSION]' IN output.txt
 COMPARE output.txt AGAINST expected.txt
 
 RUN -h STDIN /dev/null IN . INTO output.txt EXPECTING 0
-DROP LINES MATCHING '^2>' IN output.txt
 REPLACE $PROGRAM WITH '[PROGRAM]' IN output.txt
 REPLACE $EDITION WITH '[EDITION]' IN output.txt
 REPLACE $VERSION WITH '[VERSION]' IN output.txt
 COMPARE output.txt AGAINST expected.txt
 
 RUN STDIN /dev/null IN . INTO output.txt EXPECTING 1
-DROP LINES MATCHING '^2>' IN output.txt
 REPLACE $PROGRAM WITH '[PROGRAM]' IN output.txt
 REPLACE $EDITION WITH '[EDITION]' IN output.txt
 REPLACE $VERSION WITH '[VERSION]' IN output.txt

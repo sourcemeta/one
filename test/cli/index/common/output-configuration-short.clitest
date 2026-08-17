@@ -24,7 +24,6 @@ WRITE schemas/foo.json UNTIL EOF
 EOF
 
 RUN --skip-banner one.json output -g STDIN /dev/null IN . INTO output.txt EXPECTING 0
-DROP LINES MATCHING '^2>' IN output.txt
 WRITE expected.txt UNTIL EOF
 1> {
 1>   "contents": {
@@ -64,6 +63,8 @@ WRITE expected.txt UNTIL EOF
 1>   },
 1>   "api": {}
 1> }
+2> Writing output to: [CWD]/output
+2> Using configuration: [CWD]/one.json
 EOF
 REPLACE $CWD WITH '[CWD]' IN output.txt
 REPLACE $ONE_PREFIX WITH '[PREFIX]' IN output.txt

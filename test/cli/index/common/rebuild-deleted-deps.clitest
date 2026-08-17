@@ -46,7 +46,6 @@ EOF
 COMPARE listing_3.txt AGAINST presence_3.txt
 
 RUN --skip-banner --deterministic one.json output --concurrency 1 STDIN /dev/null IN . INTO output.txt EXPECTING 0
-DROP LINES MATCHING '^1>' IN output.txt
 REPLACE MATCHING ' \[[^\]\n]*[^a-z\-\n][^\]\n]*\]' WITH '' IN output.txt
 
 WRITE expected.txt UNTIL EOF

@@ -7,7 +7,6 @@ EOF
 // First run with --comment
 
 RUN --skip-banner --deterministic one.json output --comment hello --concurrency 1 STDIN /dev/null IN . INTO output.txt EXPECTING 0
-DROP LINES MATCHING '^1>' IN output.txt
 REPLACE MATCHING ' \[[^\]\n]*[^a-z\-\n][^\]\n]*\]' WITH '' IN output.txt
 
 WRITE expected.txt UNTIL EOF
@@ -1073,7 +1072,6 @@ COMPARE probe_2.txt AGAINST probed_2.txt
 // Second run without --comment
 
 RUN --skip-banner --deterministic one.json output --concurrency 1 STDIN /dev/null IN . INTO output.txt EXPECTING 0
-DROP LINES MATCHING '^1>' IN output.txt
 REPLACE MATCHING ' \[[^\]\n]*[^a-z\-\n][^\]\n]*\]' WITH '' IN output.txt
 
 WRITE expected.txt UNTIL EOF
