@@ -78,15 +78,86 @@ WRITE one.json UNTIL EOF
 EOF
 
 ENV ONE_KEY_VAULT secret
-// This build sets the scene for what comes after it and its log is
-// not what this test is about. Every observation has to be read, so
-// the log is thrown away outright rather than dressed up as an
-// assertion that could never fail
-RUN --skip-banner --deterministic --concurrency 1 one.json output STDIN /dev/null IN . INTO unchecked_1.txt EXPECTING 0
-DROP LINES MATCHING '^' IN unchecked_1.txt
-WRITE nothing.txt UNTIL EOF
+RUN --skip-banner --deterministic --concurrency 1 one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+REPLACE MATCHING ' \[[^\]\n]*[^a-z\-\n][^\]\n]*\]' WITH '' IN log_1.txt
+DROP LINES MATCHING '^[12]> \([ 0-9]+%\) ' IN log_1.txt
+REPLACE $CWD WITH '[CWD]' IN log_1.txt
+REPLACE $ONE_PREFIX WITH '[PREFIX]' IN log_1.txt
+REPLACE $EDITION WITH '[EDITION]' IN log_1.txt
+REPLACE $VERSION WITH '[VERSION]' IN log_1.txt
+WRITE expected_log_1.txt UNTIL EOF
+2> Writing output to: [CWD]/output
+2> Using configuration: [CWD]/one.json
+2> Detecting: [CWD]/closed/nested/deeper.json (#1)
+2> Detecting: [CWD]/closed/secret.json (#2)
+2> Detecting: [CWD]/open/nested/two.json (#3)
+2> Detecting: [CWD]/open/one.json (#4)
+2> Detecting: [CWD]/loose/plain.json (#5)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/auth/login/response.json (#6)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/error.json (#7)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/list/response.json (#8)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/dependencies/response.json (#9)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/dependents/response.json (#10)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/request.json (#11)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/response.json (#12)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/health/response.json (#13)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/locations/response.json (#14)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/metadata/response.json (#15)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/output-error.json (#16)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/position.json (#17)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/positions/response.json (#18)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/rdf/request.json (#19)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/rdf/response.json (#20)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/search/response.json (#21)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/stats/response.json (#22)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/request.json (#23)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/response.json (#24)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/error.json (#25)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/initialize/request.json (#26)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/initialize/response.json (#27)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/notifications/cancelled.json (#28)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/notifications/initialized.json (#29)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/ping/request.json (#30)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/ping/response.json (#31)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/prm/response.json (#32)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/request.json (#33)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/request.json (#34)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/response.json (#35)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/resources/read/request.json (#36)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/resources/read/response.json (#37)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/request.json (#38)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/response.json (#39)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#40)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/evaluate-schema/request.json (#41)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/evaluate-schema/response.json (#42)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request.json (#43)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response.json (#44)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-dependents/request.json (#45)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-dependents/response.json (#46)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-health/request.json (#47)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-health/response.json (#48)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-locations/request.json (#49)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-locations/response.json (#50)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-metadata/request.json (#51)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-metadata/response.json (#52)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-positions/request.json (#53)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-positions/response.json (#54)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-stats/request.json (#55)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-stats/response.json (#56)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/instance-to-rdf/request.json (#57)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/instance-to-rdf/response.json (#58)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/list-directory/request.json (#59)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/list-directory/response.json (#60)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/request.json (#61)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/response.json (#62)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/search-schemas/request.json (#63)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/search-schemas/response.json (#64)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request.json (#65)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response.json (#66)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/request.json (#67)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/response.json (#68)
 EOF
-COMPARE unchecked_1.txt AGAINST nothing.txt
+COMPARE log_1.txt AGAINST expected_log_1.txt
 
 TREE output INTO manifest.txt
 DROP LINES MATCHING '^\./schemas/self(/.*)?$' IN manifest.txt

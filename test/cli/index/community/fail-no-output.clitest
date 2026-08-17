@@ -17,7 +17,7 @@ EOF
 RUN --skip-banner one.json STDIN /dev/null IN . INTO output.txt EXPECTING 1
 
 WRITE expected.txt UNTIL EOF
-1> Usage: [PROGRAM] <one.json> <path/to/output/directory>
+1> Usage: sourcemeta-one-index <one.json> <path/to/output/directory>
 1>
 1> Global Options:
 1>
@@ -52,5 +52,4 @@ WRITE expected.txt UNTIL EOF
 1> For more documentation, visit https://one.sourcemeta.com
 EOF
 
-REPLACE $PROGRAM WITH '[PROGRAM]' IN output.txt
 COMPARE output.txt AGAINST expected.txt
