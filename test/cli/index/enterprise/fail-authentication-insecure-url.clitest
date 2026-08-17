@@ -1,0 +1,41 @@
+MAKE DIRECTORY private
+
+WRITE private/secret.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object"
+}
+EOF
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://schemas.example.com",
+  "authentication": [
+    {
+      "type": "oidc",
+      "name": "corporate",
+      "paths": [ "/private" ],
+      "issuer": "https://accounts.example.com",
+      "clientId": "registry",
+      "clientSecret": { "environmentVariable": "ONE_TEST_OIDC_SECRET" },
+      "sessionSecrets": [ { "environmentVariable": "ONE_TEST_OIDC_SESSION" } ]
+    }
+  ],
+  "contents": {
+    "private": { "path": "./private" }
+  }
+}
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+DROP LINES MATCHING '^2>' IN output.txt
+
+WRITE expected.txt UNTIL EOF
+1> error: An interactive authentication policy requires an https instance, or a loopback one for local development
+1>   at url http://schemas.example.com
+1>   at name corporate
+1>   at path [CWD]/one.json
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected.txt

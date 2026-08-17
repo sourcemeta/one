@@ -1,0 +1,40 @@
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "example": {
+      "baseUri": "https://example.com",
+      "path": "./schemas"
+    }
+  }
+}
+EOF
+
+RUN one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+DROP LINES MATCHING '^' IN log_1.txt
+WRITE silent.txt UNTIL EOF
+EOF
+COMPARE log_1.txt AGAINST silent.txt
+
+TREE output INTO manifest.txt
+DROP LINES MATCHING '^\./schemas/self(/.*)?$' IN manifest.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN manifest.txt
+
+WRITE expected.txt UNTIL EOF
+./authentication.bin
+./configuration.json
+./explorer
+./explorer/public
+./explorer/public/%
+./explorer/public/%/directory.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./routes.bin
+./schemas
+./state.bin
+./version.json
+EOF
+
+COMPARE manifest.txt AGAINST expected.txt

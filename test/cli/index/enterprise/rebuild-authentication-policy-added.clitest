@@ -1,0 +1,141 @@
+// Adding a policy adds a way the registry can be looked at, so a tree appears
+// for it, and what the policy covers leaves the anonymous tree at the same time
+
+MAKE DIRECTORY schemas
+
+WRITE schemas/a.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/a",
+  "type": "object"
+}
+EOF
+
+WRITE schemas/b.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/b",
+  "$ref": "./a"
+}
+EOF
+
+WRITE one.json UNTIL EOF
+{
+  "url": "https://example.com",
+  "contents": {
+    "schemas": {
+      "baseUri": "https://example.com/",
+      "path": "./schemas"
+    }
+  }
+}
+EOF
+
+RUN --skip-banner --deterministic --concurrency 1 one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+DROP LINES MATCHING '^' IN log_1.txt
+WRITE silent.txt UNTIL EOF
+EOF
+COMPARE log_1.txt AGAINST silent.txt
+
+TREE output INTO before.txt
+DROP LINES MATCHING '^\./(?!explorer/).*$' IN before.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN before.txt
+
+WRITE expected-before.txt UNTIL EOF
+./explorer/public
+./explorer/public/%
+./explorer/public/%/404.metapack
+./explorer/public/%/directory-html.metapack
+./explorer/public/%/directory.metapack
+./explorer/public/%/login-html.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/schemas
+./explorer/public/schemas/%
+./explorer/public/schemas/%/directory-html.metapack
+./explorer/public/schemas/%/directory.metapack
+./explorer/public/schemas/a
+./explorer/public/schemas/a/%
+./explorer/public/schemas/a/%/dependents.metapack
+./explorer/public/schemas/a/%/schema-html.metapack
+./explorer/public/schemas/a/%/schema.metapack
+./explorer/public/schemas/b
+./explorer/public/schemas/b/%
+./explorer/public/schemas/b/%/dependents.metapack
+./explorer/public/schemas/b/%/schema-html.metapack
+./explorer/public/schemas/b/%/schema.metapack
+EOF
+
+COMPARE before.txt AGAINST expected-before.txt
+
+WRITE one.json UNTIL EOF
+{
+  "url": "https://example.com",
+  "authentication": [
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "name": "alpha",
+      "paths": [ "/schemas" ],
+      "keys": [ { "environmentVariable": "ONE_TEST_KEY_ALPHA" } ]
+    }
+  ],
+  "contents": {
+    "schemas": {
+      "baseUri": "https://example.com/",
+      "path": "./schemas"
+    }
+  }
+}
+EOF
+
+RUN --skip-banner --deterministic --concurrency 1 one.json output STDIN /dev/null IN . INTO log_2.txt EXPECTING 0
+DROP LINES MATCHING '^' IN log_2.txt
+WRITE silent.txt UNTIL EOF
+EOF
+COMPARE log_2.txt AGAINST silent.txt
+
+TREE output INTO after.txt
+DROP LINES MATCHING '^\./(?!explorer/).*$' IN after.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN after.txt
+DROP LINES MATCHING '^\./explorer/alpha/self(/.*)?$' IN after.txt
+
+WRITE expected-after.txt UNTIL EOF
+./explorer/alpha
+./explorer/alpha/%
+./explorer/alpha/%/404.metapack
+./explorer/alpha/%/directory-html.metapack
+./explorer/alpha/%/directory.metapack
+./explorer/alpha/%/mcp.metapack
+./explorer/alpha/%/search.metapack
+./explorer/alpha/schemas
+./explorer/alpha/schemas/%
+./explorer/alpha/schemas/%/directory-html.metapack
+./explorer/alpha/schemas/%/directory.metapack
+./explorer/alpha/schemas/a
+./explorer/alpha/schemas/a/%
+./explorer/alpha/schemas/a/%/dependents.metapack
+./explorer/alpha/schemas/a/%/schema-html.metapack
+./explorer/alpha/schemas/a/%/schema.metapack
+./explorer/alpha/schemas/b
+./explorer/alpha/schemas/b/%
+./explorer/alpha/schemas/b/%/dependents.metapack
+./explorer/alpha/schemas/b/%/schema-html.metapack
+./explorer/alpha/schemas/b/%/schema.metapack
+./explorer/public
+./explorer/public/%
+./explorer/public/%/404.metapack
+./explorer/public/%/directory-html.metapack
+./explorer/public/%/directory.metapack
+./explorer/public/%/login-html.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/schemas
+./explorer/public/schemas/%
+./explorer/public/schemas/%/directory-html.metapack
+./explorer/public/schemas/%/directory.metapack
+EOF
+
+COMPARE after.txt AGAINST expected-after.txt

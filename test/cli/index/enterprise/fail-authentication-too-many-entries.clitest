@@ -1,0 +1,93 @@
+// The number of authentication entries is capped, and a configuration that
+// goes past the cap must fail validation rather than be trimmed.
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "authentication": [
+    { "type": "public", "paths": [ "/p0" ] },
+    { "type": "public", "paths": [ "/p1" ] },
+    { "type": "public", "paths": [ "/p2" ] },
+    { "type": "public", "paths": [ "/p3" ] },
+    { "type": "public", "paths": [ "/p4" ] },
+    { "type": "public", "paths": [ "/p5" ] },
+    { "type": "public", "paths": [ "/p6" ] },
+    { "type": "public", "paths": [ "/p7" ] },
+    { "type": "public", "paths": [ "/p8" ] },
+    { "type": "public", "paths": [ "/p9" ] },
+    { "type": "public", "paths": [ "/p10" ] },
+    { "type": "public", "paths": [ "/p11" ] },
+    { "type": "public", "paths": [ "/p12" ] },
+    { "type": "public", "paths": [ "/p13" ] },
+    { "type": "public", "paths": [ "/p14" ] },
+    { "type": "public", "paths": [ "/p15" ] },
+    { "type": "public", "paths": [ "/p16" ] },
+    { "type": "public", "paths": [ "/p17" ] },
+    { "type": "public", "paths": [ "/p18" ] },
+    { "type": "public", "paths": [ "/p19" ] },
+    { "type": "public", "paths": [ "/p20" ] },
+    { "type": "public", "paths": [ "/p21" ] },
+    { "type": "public", "paths": [ "/p22" ] },
+    { "type": "public", "paths": [ "/p23" ] },
+    { "type": "public", "paths": [ "/p24" ] },
+    { "type": "public", "paths": [ "/p25" ] },
+    { "type": "public", "paths": [ "/p26" ] },
+    { "type": "public", "paths": [ "/p27" ] },
+    { "type": "public", "paths": [ "/p28" ] },
+    { "type": "public", "paths": [ "/p29" ] },
+    { "type": "public", "paths": [ "/p30" ] },
+    { "type": "public", "paths": [ "/p31" ] },
+    { "type": "public", "paths": [ "/p32" ] },
+    { "type": "public", "paths": [ "/p33" ] },
+    { "type": "public", "paths": [ "/p34" ] },
+    { "type": "public", "paths": [ "/p35" ] },
+    { "type": "public", "paths": [ "/p36" ] },
+    { "type": "public", "paths": [ "/p37" ] },
+    { "type": "public", "paths": [ "/p38" ] },
+    { "type": "public", "paths": [ "/p39" ] },
+    { "type": "public", "paths": [ "/p40" ] },
+    { "type": "public", "paths": [ "/p41" ] },
+    { "type": "public", "paths": [ "/p42" ] },
+    { "type": "public", "paths": [ "/p43" ] },
+    { "type": "public", "paths": [ "/p44" ] },
+    { "type": "public", "paths": [ "/p45" ] },
+    { "type": "public", "paths": [ "/p46" ] },
+    { "type": "public", "paths": [ "/p47" ] },
+    { "type": "public", "paths": [ "/p48" ] },
+    { "type": "public", "paths": [ "/p49" ] },
+    { "type": "public", "paths": [ "/p50" ] },
+    { "type": "public", "paths": [ "/p51" ] },
+    { "type": "public", "paths": [ "/p52" ] },
+    { "type": "public", "paths": [ "/p53" ] },
+    { "type": "public", "paths": [ "/p54" ] },
+    { "type": "public", "paths": [ "/p55" ] },
+    { "type": "public", "paths": [ "/p56" ] },
+    { "type": "public", "paths": [ "/p57" ] },
+    { "type": "public", "paths": [ "/p58" ] },
+    { "type": "public", "paths": [ "/p59" ] },
+    { "type": "public", "paths": [ "/p60" ] },
+    { "type": "public", "paths": [ "/p61" ] },
+    { "type": "public", "paths": [ "/p62" ] },
+    { "type": "public", "paths": [ "/p63" ] },
+    { "type": "public", "paths": [ "/p64" ] }
+  ],
+  "contents": {}
+}
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+DROP LINES MATCHING '^2>' IN output.txt
+REPLACE $CWD WITH '[CWD]' IN output.txt
+
+WRITE expected.txt UNTIL EOF
+1> error: Invalid configuration
+1>   at path [CWD]/one.json
+1> The array value was expected to contain at most 64 items but it contained 65 items
+1>   at instance location "/authentication"
+1>   at evaluate path "/properties/authentication/maxItems"
+1> The object value was expected to validate against the 6 defined properties subschemas
+1>   at instance location ""
+1>   at evaluate path "/properties"
+EOF
+
+COMPARE output.txt AGAINST expected.txt

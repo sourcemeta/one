@@ -1,0 +1,9 @@
+RUN --concurrency STDIN /dev/null IN . INTO output.txt EXPECTING 1
+DROP LINES MATCHING '^2>' IN output.txt
+
+WRITE expected.txt UNTIL EOF
+1> error: This option must take a value
+1>   at option concurrency
+EOF
+
+COMPARE output.txt AGAINST expected.txt

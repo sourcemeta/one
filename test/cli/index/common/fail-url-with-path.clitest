@@ -1,0 +1,31 @@
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000/registry",
+  "contents": {
+    "example": {
+      "path": "./schemas"
+    }
+  }
+}
+EOF
+
+MAKE DIRECTORY schemas
+
+WRITE schemas/example.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string"
+}
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+DROP LINES MATCHING '^2>' IN output.txt
+
+WRITE expected.txt UNTIL EOF
+1> error: The instance URL must contain no path
+1>   at url http://localhost:8000/registry
+1>   at path [CWD]/one.json
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected.txt

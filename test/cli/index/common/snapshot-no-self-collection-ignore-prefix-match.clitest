@@ -1,0 +1,82 @@
+MAKE DIRECTORY schemas/foo
+MAKE DIRECTORY schemas/foobar
+
+WRITE schemas/foo/junk.json UNTIL EOF
+[1, 2, 3]
+EOF
+
+WRITE schemas/foobar/baz.json UNTIL EOF
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/foobar/baz",
+  "type": "object"
+}
+EOF
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "example": {
+      "baseUri": "https://example.com",
+      "path": "./schemas",
+      "ignore": [
+        "./schemas/foo"
+      ]
+    }
+  }
+}
+EOF
+
+RUN one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+DROP LINES MATCHING '^' IN log_1.txt
+WRITE silent.txt UNTIL EOF
+EOF
+COMPARE log_1.txt AGAINST silent.txt
+
+TREE output INTO manifest.txt
+DROP LINES MATCHING '^\./schemas/self(/.*)?$' IN manifest.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN manifest.txt
+
+WRITE expected.txt UNTIL EOF
+./authentication.bin
+./configuration.json
+./explorer
+./explorer/public
+./explorer/public/%
+./explorer/public/%/directory.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/example
+./explorer/public/example/%
+./explorer/public/example/%/directory.metapack
+./explorer/public/example/foobar
+./explorer/public/example/foobar/%
+./explorer/public/example/foobar/%/directory.metapack
+./explorer/public/example/foobar/baz
+./explorer/public/example/foobar/baz/%
+./explorer/public/example/foobar/baz/%/dependents.metapack
+./explorer/public/example/foobar/baz/%/schema.metapack
+./routes.bin
+./schemas
+./schemas/example
+./schemas/example/foobar
+./schemas/example/foobar/baz
+./schemas/example/foobar/baz/%
+./schemas/example/foobar/baz/%/blaze-exhaustive.metapack
+./schemas/example/foobar/baz/%/blaze-fast.metapack
+./schemas/example/foobar/baz/%/bundle.metapack
+./schemas/example/foobar/baz/%/dependencies.metapack
+./schemas/example/foobar/baz/%/editor.metapack
+./schemas/example/foobar/baz/%/health.metapack
+./schemas/example/foobar/baz/%/locations.metapack
+./schemas/example/foobar/baz/%/positions.metapack
+./schemas/example/foobar/baz/%/schema.metapack
+./schemas/example/foobar/baz/%/stats.metapack
+./state.bin
+./version.json
+EOF
+
+COMPARE manifest.txt AGAINST expected.txt

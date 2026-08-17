@@ -1,0 +1,12 @@
+RUN /tmp 8000xx STDIN /dev/null IN . INTO output.txt EXPECTING 1
+
+WRITE expected.txt UNTIL EOF
+1> Sourcemeta One [EDITION] v[VERSION]
+1> Usage: [PROGRAM] <path/to/output/directory> <port>
+1> error: The port must be a valid TCP port
+EOF
+
+REPLACE $PROGRAM WITH '[PROGRAM]' IN output.txt
+REPLACE $EDITION WITH '[EDITION]' IN output.txt
+REPLACE $VERSION WITH '[VERSION]' IN output.txt
+COMPARE output.txt AGAINST expected.txt

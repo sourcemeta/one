@@ -1,0 +1,100 @@
+WRITE one.json UNTIL EOF
+{
+  "url": "https://example.com",
+  "html": {},
+  "authentication": [
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "name": "test",
+      "paths": [ "/test" ],
+      "keys": [ { "environmentVariable": "ONE_KEY" } ]
+    }
+  ],
+  "contents": {
+    "test": {
+      "contents": {
+        "schemas": {
+          "path": "./schemas"
+        }
+      }
+    }
+  }
+}
+EOF
+
+MAKE DIRECTORY schemas
+
+WRITE schemas/test-1.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/test-1",
+  "type": "string"
+}
+EOF
+
+RUN one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+DROP LINES MATCHING '^' IN log_1.txt
+WRITE silent.txt UNTIL EOF
+EOF
+COMPARE log_1.txt AGAINST silent.txt
+
+TREE output INTO manifest.txt
+DROP LINES MATCHING '^\./schemas/self(/.*)?$' IN manifest.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN manifest.txt
+DROP LINES MATCHING '^\./explorer/test/self(/.*)?$' IN manifest.txt
+
+WRITE expected.txt UNTIL EOF
+./authentication.bin
+./configuration.json
+./explorer
+./explorer/public
+./explorer/public/%
+./explorer/public/%/404.metapack
+./explorer/public/%/directory-html.metapack
+./explorer/public/%/directory.metapack
+./explorer/public/%/login-html.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/test
+./explorer/test/%
+./explorer/test/%/404.metapack
+./explorer/test/%/directory-html.metapack
+./explorer/test/%/directory.metapack
+./explorer/test/%/mcp.metapack
+./explorer/test/%/search.metapack
+./explorer/test/test
+./explorer/test/test/%
+./explorer/test/test/%/directory-html.metapack
+./explorer/test/test/%/directory.metapack
+./explorer/test/test/schemas
+./explorer/test/test/schemas/%
+./explorer/test/test/schemas/%/directory-html.metapack
+./explorer/test/test/schemas/%/directory.metapack
+./explorer/test/test/schemas/test-1
+./explorer/test/test/schemas/test-1/%
+./explorer/test/test/schemas/test-1/%/dependents.metapack
+./explorer/test/test/schemas/test-1/%/schema-html.metapack
+./explorer/test/test/schemas/test-1/%/schema.metapack
+./routes.bin
+./schemas
+./schemas/test
+./schemas/test/schemas
+./schemas/test/schemas/test-1
+./schemas/test/schemas/test-1/%
+./schemas/test/schemas/test-1/%/blaze-exhaustive.metapack
+./schemas/test/schemas/test-1/%/blaze-fast.metapack
+./schemas/test/schemas/test-1/%/bundle.metapack
+./schemas/test/schemas/test-1/%/dependencies.metapack
+./schemas/test/schemas/test-1/%/editor.metapack
+./schemas/test/schemas/test-1/%/health.metapack
+./schemas/test/schemas/test-1/%/locations.metapack
+./schemas/test/schemas/test-1/%/positions.metapack
+./schemas/test/schemas/test-1/%/schema.metapack
+./schemas/test/schemas/test-1/%/stats.metapack
+./state.bin
+./version.json
+EOF
+
+COMPARE manifest.txt AGAINST expected.txt

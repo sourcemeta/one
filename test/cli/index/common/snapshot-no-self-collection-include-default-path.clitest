@@ -1,0 +1,73 @@
+MAKE DIRECTORY data
+
+WRITE data/foo.json UNTIL EOF
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object"
+}
+EOF
+
+WRITE data/jsonschema.json UNTIL EOF
+{
+  "title": "Example"
+}
+EOF
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "example": {
+      "include": "./data"
+    }
+  }
+}
+EOF
+RUN one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+DROP LINES MATCHING '^' IN log_1.txt
+WRITE silent.txt UNTIL EOF
+EOF
+COMPARE log_1.txt AGAINST silent.txt
+
+TREE output INTO manifest.txt
+DROP LINES MATCHING '^\./schemas/self(/.*)?$' IN manifest.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN manifest.txt
+
+WRITE expected.txt UNTIL EOF
+./authentication.bin
+./configuration.json
+./explorer
+./explorer/public
+./explorer/public/%
+./explorer/public/%/directory.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/example
+./explorer/public/example/%
+./explorer/public/example/%/directory.metapack
+./explorer/public/example/foo
+./explorer/public/example/foo/%
+./explorer/public/example/foo/%/dependents.metapack
+./explorer/public/example/foo/%/schema.metapack
+./routes.bin
+./schemas
+./schemas/example
+./schemas/example/foo
+./schemas/example/foo/%
+./schemas/example/foo/%/blaze-exhaustive.metapack
+./schemas/example/foo/%/blaze-fast.metapack
+./schemas/example/foo/%/bundle.metapack
+./schemas/example/foo/%/dependencies.metapack
+./schemas/example/foo/%/editor.metapack
+./schemas/example/foo/%/health.metapack
+./schemas/example/foo/%/locations.metapack
+./schemas/example/foo/%/positions.metapack
+./schemas/example/foo/%/schema.metapack
+./schemas/example/foo/%/stats.metapack
+./state.bin
+./version.json
+EOF
+
+COMPARE manifest.txt AGAINST expected.txt

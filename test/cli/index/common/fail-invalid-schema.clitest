@@ -1,0 +1,49 @@
+WRITE one.json UNTIL EOF
+{
+  "url": "https://sourcemeta.com",
+  "contents": {
+    "example": {
+      "contents": {
+        "schemas": {
+          "baseUri": "https://example.com/",
+          "path": "./schemas"
+        }
+      }
+    }
+  }
+}
+EOF
+
+MAKE DIRECTORY schemas
+
+WRITE schemas/test.json UNTIL EOF
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/test.json",
+  "type": 1
+}
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+DROP LINES MATCHING '^2>' IN output.txt
+
+WRITE expected.txt UNTIL EOF
+1> error: The schema does not adhere to its metaschema
+1> The integer value 1 was expected to equal one of the following values: "array", "boolean", "integer", "null", "number", "object", and "string"
+1>   at instance location "/type"
+1>   at evaluate path "/properties/type/anyOf/0/$ref/enum"
+1> The integer value was expected to validate against the referenced schema
+1>   at instance location "/type"
+1>   at evaluate path "/properties/type/anyOf/0/$ref"
+1> The value was expected to be of type array but it was of type integer
+1>   at instance location "/type"
+1>   at evaluate path "/properties/type/anyOf/1/type"
+1> The integer value was expected to validate against at least one of the 2 given subschemas
+1>   at instance location "/type"
+1>   at evaluate path "/properties/type/anyOf"
+1> The object value was expected to validate against the 46 defined properties subschemas
+1>   at instance location ""
+1>   at evaluate path "/properties"
+EOF
+
+COMPARE output.txt AGAINST expected.txt

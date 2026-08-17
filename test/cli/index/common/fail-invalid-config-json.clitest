@@ -1,0 +1,16 @@
+WRITE one.json UNTIL EOF
+{ invalid json
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+DROP LINES MATCHING '^2>' IN output.txt
+
+WRITE expected.txt UNTIL EOF
+1> error: Failed to parse the JSON document
+1>   at path [CWD]/one.json
+1>   at line 1
+1>   at column 3
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected.txt

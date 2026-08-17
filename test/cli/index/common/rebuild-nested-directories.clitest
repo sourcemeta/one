@@ -1,0 +1,115 @@
+WRITE one.json UNTIL EOF
+{
+  "url": "https://sourcemeta.com",
+  "contents": {
+    "left": {
+      "contents": {
+        "left-a": {
+          "baseUri": "https://example.com/left/left-a/",
+          "path": "./schemas-left-a"
+        },
+        "left-b": {
+          "baseUri": "https://example.com/left/left-b/",
+          "path": "./schemas-left-b"
+        }
+      }
+    },
+    "right": {
+      "contents": {
+        "right-a": {
+          "baseUri": "https://example.com/right/right-a/",
+          "path": "./schemas-right-a"
+        },
+        "right-b": {
+          "baseUri": "https://example.com/right/right-b/",
+          "path": "./schemas-right-b"
+        }
+      }
+    }
+  }
+}
+EOF
+
+MAKE DIRECTORY schemas-left-a
+MAKE DIRECTORY schemas-left-b
+MAKE DIRECTORY schemas-right-a
+MAKE DIRECTORY schemas-right-b
+
+WRITE schemas-left-a/s1.json UNTIL EOF
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/left/left-a/s1"
+}
+EOF
+
+WRITE schemas-left-b/s2.json UNTIL EOF
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/left/left-b/s2"
+}
+EOF
+
+WRITE schemas-right-a/s3.json UNTIL EOF
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/right/right-a/s3"
+}
+EOF
+
+WRITE schemas-right-b/s4.json UNTIL EOF
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/right/right-b/s4"
+}
+EOF
+
+// Run 1: index four schemas across four directories
+RUN --skip-banner one.json output --concurrency 1 STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+DROP LINES MATCHING '^' IN log_1.txt
+WRITE silent.txt UNTIL EOF
+EOF
+COMPARE log_1.txt AGAINST silent.txt
+
+// Run 2: add a fifth schema to left/left-a
+// Only the new schema's artifacts and affected directories should rebuild
+WRITE schemas-left-a/s5.json UNTIL EOF
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/left/left-a/s5"
+}
+EOF
+RUN --skip-banner one.json output --concurrency 1 STDIN /dev/null IN . INTO output.txt EXPECTING 0
+DROP LINES MATCHING '^1>' IN output.txt
+REPLACE MATCHING ' \[[^\]\n]*[^a-z\-\n][^\]\n]*\]' WITH '' IN output.txt
+COPY output.txt TO output_producing.txt
+DROP LINES MATCHING '^(?!.*(Producing|Combining)).*$' IN output_producing.txt
+
+// TODO(over-rebuild): Adding s5 causes dependents.metapack to rebuild for
+// s1, s2, s3, and s4 even though none of these schemas reference each other.
+// The dependency-tree.metapack global aggregate triggers ForceOnGraphChange
+// for all dependents, not just the ones whose graph actually changed.
+WRITE expected.txt UNTIL EOF
+2> (  5%) Producing: schemas/left/left-a/s5/%/schema.metapack
+2> ( 10%) Producing: schemas/left/left-a/s5/%/dependencies.metapack
+2> ( 15%) Producing: schemas/left/left-a/s5/%/locations.metapack
+2> ( 20%) Producing: schemas/left/left-a/s5/%/positions.metapack
+2> ( 25%) Producing: schemas/left/left-a/s5/%/stats.metapack
+2> ( 30%) Producing: schemas/left/left-a/s5/%/bundle.metapack
+2> ( 35%) Producing: schemas/left/left-a/s5/%/health.metapack
+2> ( 40%) Producing: explorer/public/left/left-a/s5/%/schema.metapack
+2> ( 45%) Producing: schemas/left/left-a/s5/%/blaze-exhaustive.metapack
+2> ( 50%) Producing: schemas/left/left-a/s5/%/blaze-fast.metapack
+2> ( 55%) Producing: schemas/left/left-a/s5/%/editor.metapack
+2> ( 60%) Producing: explorer/public/left/left-a/%/directory.metapack
+2> ( 65%) Producing: explorer/public/left/left-a/s5/%/schema-html.metapack
+2> ( 70%) Producing: explorer/public/left/%/directory.metapack
+2> ( 75%) Producing: explorer/public/left/left-a/%/directory-html.metapack
+2> ( 80%) Producing: explorer/public/%/directory.metapack
+2> ( 85%) Producing: explorer/public/left/%/directory-html.metapack
+2> ( 90%) Producing: explorer/public/%/directory-html.metapack
+2> ( 95%) Producing: explorer/public/%/search.metapack
+2> (100%) Producing: explorer/public/%/mcp.metapack
+2> (100%) Combining: explorer/public/left/left-a/s5/%/dependents.metapack
+EOF
+
+COMPARE output_producing.txt AGAINST expected.txt

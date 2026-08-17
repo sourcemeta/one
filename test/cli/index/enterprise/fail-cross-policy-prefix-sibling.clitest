@@ -1,0 +1,48 @@
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "authentication": [
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "name": "pub",
+      "paths": [ "/pub" ],
+      "keys": [ { "environmentVariable": "ONE_TEST_KEY_PUB" } ]
+    }
+  ],
+  "contents": {
+    "public": { "path": "./public" },
+    "pub": { "path": "./pub" }
+  }
+}
+EOF
+
+MAKE DIRECTORY public
+MAKE DIRECTORY pub
+
+WRITE pub/b.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object"
+}
+EOF
+
+WRITE public/a.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": { "other": { "$ref": "../pub/b" } }
+}
+EOF
+
+RUN --skip-banner --concurrency 1 one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+DROP LINES MATCHING '^2>' IN output.txt
+
+WRITE expected.txt UNTIL EOF
+1> error: A schema cannot reference a schema behind a stricter authentication policy
+1>   at schema http://localhost:8000/public/a
+1>   with reference http://localhost:8000/pub/b
+1>   at path [CWD]/one.json
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected.txt

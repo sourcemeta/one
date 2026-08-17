@@ -1,0 +1,77 @@
+MAKE DIRECTORY schemas/baz/baz
+
+WRITE schemas/baz/baz/test.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array"
+}
+EOF
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "contents": {
+    "baz": {
+      "path": "./schemas/baz"
+    }
+  }
+}
+EOF
+
+RUN one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+DROP LINES MATCHING '^' IN log_1.txt
+WRITE silent.txt UNTIL EOF
+EOF
+COMPARE log_1.txt AGAINST silent.txt
+
+TREE output INTO manifest.txt
+DROP LINES MATCHING '^\./schemas/self(/.*)?$' IN manifest.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN manifest.txt
+
+WRITE expected.txt UNTIL EOF
+./authentication.bin
+./configuration.json
+./explorer
+./explorer/public
+./explorer/public/%
+./explorer/public/%/404.metapack
+./explorer/public/%/directory-html.metapack
+./explorer/public/%/directory.metapack
+./explorer/public/%/login-html.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/baz
+./explorer/public/baz/%
+./explorer/public/baz/%/directory-html.metapack
+./explorer/public/baz/%/directory.metapack
+./explorer/public/baz/baz
+./explorer/public/baz/baz/%
+./explorer/public/baz/baz/%/directory-html.metapack
+./explorer/public/baz/baz/%/directory.metapack
+./explorer/public/baz/baz/test
+./explorer/public/baz/baz/test/%
+./explorer/public/baz/baz/test/%/dependents.metapack
+./explorer/public/baz/baz/test/%/schema-html.metapack
+./explorer/public/baz/baz/test/%/schema.metapack
+./routes.bin
+./schemas
+./schemas/baz
+./schemas/baz/baz
+./schemas/baz/baz/test
+./schemas/baz/baz/test/%
+./schemas/baz/baz/test/%/blaze-exhaustive.metapack
+./schemas/baz/baz/test/%/blaze-fast.metapack
+./schemas/baz/baz/test/%/bundle.metapack
+./schemas/baz/baz/test/%/dependencies.metapack
+./schemas/baz/baz/test/%/editor.metapack
+./schemas/baz/baz/test/%/health.metapack
+./schemas/baz/baz/test/%/locations.metapack
+./schemas/baz/baz/test/%/positions.metapack
+./schemas/baz/baz/test/%/schema.metapack
+./schemas/baz/baz/test/%/stats.metapack
+./state.bin
+./version.json
+EOF
+
+COMPARE manifest.txt AGAINST expected.txt

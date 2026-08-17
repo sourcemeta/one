@@ -1,0 +1,38 @@
+MAKE DIRECTORY private
+
+WRITE private/secret.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object"
+}
+EOF
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "authentication": [
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "name": "mcp",
+      "paths": [ "/self/v1/mcp/extra" ],
+      "keys": [ { "environmentVariable": "ONE_TEST_KEY_INTERNAL" } ]
+    }
+  ],
+  "contents": {
+    "private": { "path": "./private" }
+  }
+}
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+DROP LINES MATCHING '^2>' IN output.txt
+
+WRITE expected.txt UNTIL EOF
+1> error: An authentication policy matches no known collection, page, or route
+1>   at scope /self/v1/mcp/extra
+1>   at path [CWD]/one.json
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected.txt

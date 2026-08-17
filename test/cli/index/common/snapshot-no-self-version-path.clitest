@@ -1,0 +1,69 @@
+MAKE DIRECTORY schemas
+
+WRITE schemas/test.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/test"
+}
+EOF
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "v2.0": {
+      "baseUri": "https://example.com",
+      "path": "./schemas"
+    }
+  }
+}
+EOF
+
+RUN one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+DROP LINES MATCHING '^' IN log_1.txt
+WRITE silent.txt UNTIL EOF
+EOF
+COMPARE log_1.txt AGAINST silent.txt
+
+TREE output INTO manifest.txt
+DROP LINES MATCHING '^\./schemas/self(/.*)?$' IN manifest.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN manifest.txt
+
+WRITE expected.txt UNTIL EOF
+./authentication.bin
+./configuration.json
+./explorer
+./explorer/public
+./explorer/public/%
+./explorer/public/%/directory.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/v2.0
+./explorer/public/v2.0/%
+./explorer/public/v2.0/%/directory.metapack
+./explorer/public/v2.0/test
+./explorer/public/v2.0/test/%
+./explorer/public/v2.0/test/%/dependents.metapack
+./explorer/public/v2.0/test/%/schema.metapack
+./routes.bin
+./schemas
+./schemas/v2.0
+./schemas/v2.0/test
+./schemas/v2.0/test/%
+./schemas/v2.0/test/%/blaze-exhaustive.metapack
+./schemas/v2.0/test/%/blaze-fast.metapack
+./schemas/v2.0/test/%/bundle.metapack
+./schemas/v2.0/test/%/dependencies.metapack
+./schemas/v2.0/test/%/editor.metapack
+./schemas/v2.0/test/%/health.metapack
+./schemas/v2.0/test/%/locations.metapack
+./schemas/v2.0/test/%/positions.metapack
+./schemas/v2.0/test/%/schema.metapack
+./schemas/v2.0/test/%/stats.metapack
+./state.bin
+./version.json
+EOF
+
+COMPARE manifest.txt AGAINST expected.txt

@@ -1,0 +1,70 @@
+// A percent-encoded traversal in the resolved URI must never escape the
+// collection directory into a sibling path.
+
+WRITE one.json UNTIL EOF
+{
+  "url": "https://sourcemeta.com",
+  "contents": {
+    "schemas": {
+      "baseUri": "https://example.com/",
+      "path": "./schemas"
+    }
+  }
+}
+EOF
+
+MAKE DIRECTORY schemas
+MAKE DIRECTORY secret
+
+WRITE schemas/foo.json UNTIL EOF
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/foo"
+}
+EOF
+
+WRITE secret/passwd.json UNTIL EOF
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/passwd"
+}
+EOF
+
+WRITE silent.txt UNTIL EOF
+EOF
+
+// A legitimate resolution inside the collection still works
+RUN one.json output --resolve-schema https://sourcemeta.com/schemas/foo.json STDIN /dev/null IN . INTO resolved_0.txt EXPECTING 0
+DROP LINES MATCHING '^2>' IN resolved_0.txt
+REPLACE $CWD WITH '[CWD]' IN resolved_0.txt
+
+WRITE expected_0.txt UNTIL EOF
+1> [CWD]/schemas/foo.json
+EOF
+
+COMPARE resolved_0.txt AGAINST expected_0.txt
+
+// Dot-segment traversals are removed and never reach the sibling directory
+RUN one.json output --resolve-schema https://sourcemeta.com/schemas/%2E%2E/secret/passwd STDIN /dev/null IN . INTO resolved_1.txt EXPECTING 1
+DROP LINES MATCHING '^' IN resolved_1.txt
+COMPARE resolved_1.txt AGAINST silent.txt
+
+RUN one.json output --resolve-schema https://sourcemeta.com/schemas/%2E%2E/%2E%2E/secret/passwd STDIN /dev/null IN . INTO resolved_2.txt EXPECTING 1
+DROP LINES MATCHING '^' IN resolved_2.txt
+COMPARE resolved_2.txt AGAINST silent.txt
+
+RUN one.json output --resolve-schema /schemas/%2E%2E/secret/passwd STDIN /dev/null IN . INTO resolved_3.txt EXPECTING 1
+DROP LINES MATCHING '^' IN resolved_3.txt
+COMPARE resolved_3.txt AGAINST silent.txt
+
+// A fully percent-encoded separator stays a single, contained filename rather
+// than escaping into the sibling directory
+RUN one.json output --resolve-schema https://sourcemeta.com/schemas/%2E%2E%2Fsecret%2Fpasswd STDIN /dev/null IN . INTO resolved_4.txt EXPECTING 0
+DROP LINES MATCHING '^2>' IN resolved_4.txt
+REPLACE $CWD WITH '[CWD]' IN resolved_4.txt
+
+WRITE expected_4.txt UNTIL EOF
+1> [CWD]/schemas/..%2Fsecret%2Fpasswd.json
+EOF
+
+COMPARE resolved_4.txt AGAINST expected_4.txt

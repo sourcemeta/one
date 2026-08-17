@@ -1,0 +1,58 @@
+MAKE DIRECTORY private
+
+WRITE private/secret.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object"
+}
+EOF
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "authentication": [
+    {
+      "type": "apiKey",
+      "algorithm": "md5",
+      "name": "reports",
+      "paths": [ "/private" ],
+      "keys": [ { "environmentVariable": "ONE_TEST_KEY_REPORTS" } ]
+    }
+  ],
+  "contents": {
+    "private": { "path": "./private" }
+  }
+}
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+DROP LINES MATCHING '^2>' IN output.txt
+
+WRITE expected.txt UNTIL EOF
+1> error: Invalid configuration
+1>   at path [CWD]/one.json
+1> The string value "md5" was expected to equal one of the following values: "identity", and "sha256"
+1>   at instance location "/authentication/0/algorithm"
+1>   at evaluate path "/properties/authentication/items/anyOf/0/properties/algorithm/enum"
+1> The object value was expected to validate against the defined properties subschemas
+1>   at instance location "/authentication/0"
+1>   at evaluate path "/properties/authentication/items/anyOf/0/properties"
+1> The value was expected to be an object that defines properties "algorithms", "audience", "issuer", "name", "paths", and "type"
+1>   at instance location "/authentication/0"
+1>   at evaluate path "/properties/authentication/items/anyOf/1/required"
+1> The value was expected to be an object that defines properties "clientId", "clientSecret", "issuer", "name", "paths", "sessionSecrets", and "type"
+1>   at instance location "/authentication/0"
+1>   at evaluate path "/properties/authentication/items/anyOf/2/required"
+1> The object value was expected to validate against at least one of the 3 given subschemas
+1>   at instance location "/authentication/0"
+1>   at evaluate path "/properties/authentication/items/anyOf"
+1> Every item in the array value was expected to validate against the given subschema
+1>   at instance location "/authentication"
+1>   at evaluate path "/properties/authentication/items"
+1> The object value was expected to validate against the 6 defined properties subschemas
+1>   at instance location ""
+1>   at evaluate path "/properties"
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected.txt

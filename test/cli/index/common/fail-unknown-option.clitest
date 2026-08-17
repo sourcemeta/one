@@ -1,0 +1,9 @@
+RUN --unknown-flag STDIN /dev/null IN . INTO output.txt EXPECTING 1
+DROP LINES MATCHING '^2>' IN output.txt
+
+WRITE expected.txt UNTIL EOF
+1> error: Unknown option
+1>   at option unknown-flag
+EOF
+
+COMPARE output.txt AGAINST expected.txt

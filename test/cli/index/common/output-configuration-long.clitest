@@ -1,0 +1,70 @@
+WRITE one.json UNTIL EOF
+{
+  "url": "https://sourcemeta.com",
+  "contents": {
+    "example": {
+      "contents": {
+        "schemas": {
+          "baseUri": "https://example.com/",
+          "path": "./schemas"
+        }
+      }
+    }
+  }
+}
+EOF
+
+MAKE DIRECTORY schemas
+
+WRITE schemas/foo.json UNTIL EOF
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/foo"
+}
+EOF
+
+RUN --skip-banner one.json output --configuration STDIN /dev/null IN . INTO output.txt EXPECTING 0
+DROP LINES MATCHING '^2>' IN output.txt
+WRITE expected.txt UNTIL EOF
+1> {
+1>   "contents": {
+1>     "self": {
+1>       "title": "Self",
+1>       "description": "The schemas that define the current version of this instance",
+1>       "email": "hello@sourcemeta.com",
+1>       "github": "sourcemeta/one",
+1>       "website": "https://www.sourcemeta.com",
+1>       "contents": {
+1>         "v1": {
+1>           "contents": {
+1>             "schemas": {
+1>               "path": "[PREFIX]/share/sourcemeta/one/self/v1/schemas",
+1>               "x-sourcemeta-one:path": "[PREFIX]/share/sourcemeta/one/self/v1/one.json",
+1>               "x-sourcemeta-one:priority": 0,
+1>               "baseUri": "https://sourcemeta.com"
+1>             }
+1>           }
+1>         }
+1>       }
+1>     },
+1>     "example": {
+1>       "contents": {
+1>         "schemas": {
+1>           "baseUri": "https://example.com/",
+1>           "path": "[CWD]/schemas",
+1>           "x-sourcemeta-one:path": "[CWD]/one.json"
+1>         }
+1>       }
+1>     }
+1>   },
+1>   "url": "https://sourcemeta.com",
+1>   "html": {
+1>     "name": "Sourcemeta",
+1>     "description": "The next-generation JSON Schema platform"
+1>   },
+1>   "api": {}
+1> }
+EOF
+REPLACE $CWD WITH '[CWD]' IN output.txt
+REPLACE $ONE_PREFIX WITH '[PREFIX]' IN output.txt
+COMPARE output.txt AGAINST expected.txt

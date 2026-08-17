@@ -1,0 +1,168 @@
+// A browser policy and a machine policy govern the same registry. Neither can be
+// satisfied alongside the other, since one is held as a session and the other
+// presented as a key, so the registry is looked at three ways rather than four:
+// anonymously and under each of them, with no tree for a pair
+
+MAKE DIRECTORY schemas
+
+WRITE schemas/a.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/a",
+  "type": "object"
+}
+EOF
+
+WRITE one.json UNTIL EOF
+{
+  "url": "https://example.com",
+  "authentication": [
+    {
+      "type": "oidc",
+      "name": "corporate",
+      "paths": [ "/schemas" ],
+      "issuer": "https://login.example.com",
+      "clientId": "registry",
+      "clientSecret": { "environmentVariable": "ONE_TEST_OIDC_CLIENT" },
+      "sessionSecrets": [
+        { "environmentVariable": "ONE_TEST_OIDC_SESSION" }
+      ]
+    },
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "name": "vault",
+      "paths": [ "/schemas" ],
+      "keys": [ { "environmentVariable": "ONE_TEST_KEY_VAULT" } ]
+    }
+  ],
+  "contents": {
+    "schemas": {
+      "baseUri": "https://example.com/",
+      "path": "./schemas"
+    }
+  }
+}
+EOF
+
+RUN --skip-banner --deterministic --concurrency 1 one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+DROP LINES MATCHING '^' IN log_1.txt
+WRITE silent.txt UNTIL EOF
+EOF
+COMPARE log_1.txt AGAINST silent.txt
+
+TREE output INTO before.txt
+DROP LINES MATCHING '^\./(?!explorer/).*$' IN before.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN before.txt
+DROP LINES MATCHING '^\./explorer/corporate/self(/.*)?$' IN before.txt
+DROP LINES MATCHING '^\./explorer/vault/self(/.*)?$' IN before.txt
+
+WRITE expected-before.txt UNTIL EOF
+./explorer/corporate
+./explorer/corporate/%
+./explorer/corporate/%/404.metapack
+./explorer/corporate/%/directory-html.metapack
+./explorer/corporate/%/directory.metapack
+./explorer/corporate/%/mcp.metapack
+./explorer/corporate/%/search.metapack
+./explorer/corporate/schemas
+./explorer/corporate/schemas/%
+./explorer/corporate/schemas/%/directory-html.metapack
+./explorer/corporate/schemas/%/directory.metapack
+./explorer/corporate/schemas/a
+./explorer/corporate/schemas/a/%
+./explorer/corporate/schemas/a/%/dependents.metapack
+./explorer/corporate/schemas/a/%/schema-html.metapack
+./explorer/corporate/schemas/a/%/schema.metapack
+./explorer/public
+./explorer/public/%
+./explorer/public/%/404.metapack
+./explorer/public/%/directory-html.metapack
+./explorer/public/%/directory.metapack
+./explorer/public/%/login-html.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/vault
+./explorer/vault/%
+./explorer/vault/%/404.metapack
+./explorer/vault/%/directory-html.metapack
+./explorer/vault/%/directory.metapack
+./explorer/vault/%/mcp.metapack
+./explorer/vault/%/search.metapack
+./explorer/vault/schemas
+./explorer/vault/schemas/%
+./explorer/vault/schemas/%/directory-html.metapack
+./explorer/vault/schemas/%/directory.metapack
+./explorer/vault/schemas/a
+./explorer/vault/schemas/a/%
+./explorer/vault/schemas/a/%/dependents.metapack
+./explorer/vault/schemas/a/%/schema-html.metapack
+./explorer/vault/schemas/a/%/schema.metapack
+EOF
+
+COMPARE before.txt AGAINST expected-before.txt
+
+// Retiring the browser policy takes its tree with it and leaves the machine one
+// untouched, since neither ever contributed to the other
+WRITE one.json UNTIL EOF
+{
+  "url": "https://example.com",
+  "authentication": [
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "name": "vault",
+      "paths": [ "/schemas" ],
+      "keys": [ { "environmentVariable": "ONE_TEST_KEY_VAULT" } ]
+    }
+  ],
+  "contents": {
+    "schemas": {
+      "baseUri": "https://example.com/",
+      "path": "./schemas"
+    }
+  }
+}
+EOF
+
+RUN --skip-banner --deterministic --concurrency 1 one.json output STDIN /dev/null IN . INTO log_2.txt EXPECTING 0
+DROP LINES MATCHING '^' IN log_2.txt
+WRITE silent.txt UNTIL EOF
+EOF
+COMPARE log_2.txt AGAINST silent.txt
+
+TREE output INTO after.txt
+DROP LINES MATCHING '^\./(?!explorer/).*$' IN after.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN after.txt
+DROP LINES MATCHING '^\./explorer/vault/self(/.*)?$' IN after.txt
+
+WRITE expected-after.txt UNTIL EOF
+./explorer/public
+./explorer/public/%
+./explorer/public/%/404.metapack
+./explorer/public/%/directory-html.metapack
+./explorer/public/%/directory.metapack
+./explorer/public/%/login-html.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/vault
+./explorer/vault/%
+./explorer/vault/%/404.metapack
+./explorer/vault/%/directory-html.metapack
+./explorer/vault/%/directory.metapack
+./explorer/vault/%/mcp.metapack
+./explorer/vault/%/search.metapack
+./explorer/vault/schemas
+./explorer/vault/schemas/%
+./explorer/vault/schemas/%/directory-html.metapack
+./explorer/vault/schemas/%/directory.metapack
+./explorer/vault/schemas/a
+./explorer/vault/schemas/a/%
+./explorer/vault/schemas/a/%/dependents.metapack
+./explorer/vault/schemas/a/%/schema-html.metapack
+./explorer/vault/schemas/a/%/schema.metapack
+EOF
+
+COMPARE after.txt AGAINST expected-after.txt
