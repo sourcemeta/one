@@ -477,6 +477,18 @@ auto Authentication::login(const std::string_view policy_name,
     return result;
   }
 
+  // Where the browser was going to be sent back to is carried in the sealed
+  // transaction, and whoever asked for the login chose it, so this can be made
+  // to outgrow what a browser will keep. A cookie the browser discards would
+  // send somebody to their provider and refuse them on the way back, with
+  // nothing anywhere to explain it, so it is refused before the redirect
+  if (cookie.value().size() > MAXIMUM_COOKIE_LENGTH) {
+    result.log.emplace_back(
+        "The login transaction is larger than a cookie can hold, for the "
+        "policy");
+    return result;
+  }
+
   result.cookies.push_back(std::move(cookie).value());
   result.location = std::move(authorization_url);
   result.result = Authentication::Outcome::Result::Redirect;

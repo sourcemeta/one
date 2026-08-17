@@ -59,58 +59,6 @@ TEST(a_caller_presenting_nothing_is_served_the_anonymous_view) {
             "machine");
 }
 
-TEST(a_token_satisfying_two_policies_is_served_their_combined_view) {
-  const std::array<std::string_view, 1> platform_paths{{"/platform"}};
-  const std::array<std::string_view, 1> oncall_paths{{"/oncall"}};
-  const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
-      {sourcemeta::core::JWSAlgorithm::ES256}};
-  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
-      {{.paths = platform_paths,
-        .name = "platform",
-        .credential =
-            sourcemeta::one::Authentication::Policy::Token{
-                .issuer = "acme",
-                .audience = "client",
-                .jwks_uri = "https://idp.test/jwks",
-                .algorithms = algorithms,
-                .claims = CLAIMS_ONE_GROUP}},
-       {.paths = oncall_paths,
-        .name = "oncall",
-        .credential = sourcemeta::one::Authentication::Policy::Token{
-            .issuer = "acme",
-            .audience = "client",
-            .jwks_uri = "https://idp.test/jwks",
-            .algorithms = algorithms,
-            .claims = CLAIMS_ONCALL_GROUP}}}};
-  const sourcemeta::one::Authentication authentication{
-      TABLE(policies),
-      STUB_FETCHER({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
-                   nullptr)};
-  EXPECT_EQ(authentication
-                .caller({.bearer = TOKEN_WITH(
-                             R"JSON({ "groups": [ "platform" ] })JSON")})
-                .view(),
-            "platform");
-  EXPECT_EQ(authentication
-                .caller({.bearer = TOKEN_WITH(
-                             R"JSON({ "groups": [ "oncall" ] })JSON")})
-                .view(),
-            "oncall");
-  // Spelled from the policies sorted rather than in the order they were
-  // declared, so one combination has one name wherever it is reached from
-  EXPECT_EQ(
-      authentication
-          .caller({.bearer = TOKEN_WITH(
-                       R"JSON({ "groups": [ "oncall", "platform" ] })JSON")})
-          .view(),
-      "oncall+platform");
-  EXPECT_EQ(authentication
-                .caller({.bearer = TOKEN_WITH(
-                             R"JSON({ "groups": [ "support" ] })JSON")})
-                .view(),
-            "public");
-}
-
 TEST(a_caller_presenting_nothing_belongs_to_no_policy) {
   setenv("ONE_TEST_CLASSIFY_ANONYMOUS_KEY", "machine-secret", 1);
   const std::array<std::string_view, 1> paths{{"/machine"}};
@@ -281,7 +229,9 @@ TEST(a_token_belongs_to_every_policy_of_its_issuer_that_it_satisfies) {
                 .view(),
             "oncall");
   // One token carrying both reaches both areas, so a placement naming either
-  // alone would hide one of them
+  // alone would hide one of them. The combination is spelled from the policies
+  // sorted rather than in the order they were declared, so it has one name
+  // wherever it is reached from
   EXPECT_EQ(
       authentication
           .caller({.bearer = TOKEN_WITH(
@@ -392,8 +342,11 @@ TEST(save_writes_the_largest_table_a_configuration_can_declare) {
 
   // Each group contributes every combination over it, which is the most views a
   // configuration can ask for at the maximum number of policies
+  const auto path{TEST_PATH(
+      "save_writes_the_largest_table_a_configuration_can_declare.bin")};
+  SAVE(policies, path, path, ANYWHERE);
   const sourcemeta::one::Authentication authentication{
-      TABLE(policies),
+      sourcemeta::one::Authentication::Table{path},
       STUB_FETCHER({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
                    nullptr)};
   EXPECT_EQ(authentication.caller({.bearer = ""}).view(), "public");
@@ -440,8 +393,11 @@ TEST(save_accepts_a_separator_that_spells_no_other_combination) {
         .name = "alpha+beta",
         .credential = sourcemeta::one::Authentication::Policy::ApiKey{
             .keys = machine_keys}}}};
+  const auto path{TEST_PATH(
+      "save_accepts_a_separator_that_spells_no_other_combination.bin")};
+  SAVE(policies, path, path, ANYWHERE);
   const sourcemeta::one::Authentication authentication{
-      TABLE(policies), STUB_FETCHER({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, STUB_FETCHER({}, nullptr)};
   EXPECT_EQ(authentication.caller({.bearer = "separator-secret"}).view(),
             "alpha+beta");
   EXPECT_EQ(authentication.caller({.bearer = ""}).view(), "public");

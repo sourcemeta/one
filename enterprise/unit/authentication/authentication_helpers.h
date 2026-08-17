@@ -349,10 +349,6 @@ inline auto STUB_FETCHER(std::map<std::string, std::string> responses,
 // token endpoint, which stops the callback one step after that gate and keeps
 // every test off a network
 
-inline const std::string_view INSTANCE{"https://registry.test"};
-inline const std::string_view REDIRECT{
-    "https://registry.test/self/v1/auth/callback/okta"};
-
 // A request carries cookie fields rather than bare values, so a test that
 // wants a value read has to present it the way a browser would
 inline auto field(const std::string_view value) -> std::string {
@@ -421,7 +417,7 @@ struct TestStarted {
 inline auto start(const sourcemeta::one::Authentication &authentication)
     -> TestStarted {
   const auto outcome{
-      authentication.login("okta", INSTANCE, REDIRECT, false, "")};
+      authentication.login("okta", INSTANCE_URL, REDIRECT_URI, false, "")};
   EXPECT_EQ(outcome.result,
             sourcemeta::one::Authentication::Outcome::Result::Redirect);
   EXPECT_EQ(outcome.cookies.size(), 1);
@@ -434,7 +430,7 @@ inline auto start(const sourcemeta::one::Authentication &authentication)
 // would have had them
 struct Presented {
   std::string_view policy{"okta"};
-  std::string_view redirect{REDIRECT};
+  std::string_view redirect{REDIRECT_URI};
   // Empty means whatever state the login actually minted
   std::string_view state{};
   std::string_view cookie{"sourcemeta_one_transaction"};
@@ -468,7 +464,7 @@ inline auto OPENS(const sourcemeta::one::Authentication &authentication,
   }
 
   const auto outcome{authentication.callback(
-      given.policy, INSTANCE, given.redirect,
+      given.policy, INSTANCE_URL, given.redirect,
       {.state = given.state.empty() ? started.state : given.state,
        .code = "an-authorization-code"},
       {.cookies = fields})};

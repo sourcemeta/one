@@ -266,3 +266,42 @@ TEST(a_login_without_a_session_secret_cannot_start) {
   EXPECT_TRUE(REPORTED(outcome, "No session secret is set"));
   EXPECT_TRUE(outcome.cookies.empty());
 }
+
+// Where a browser is sent back to afterwards is chosen by whoever asked for the
+// login, so it can be made to outgrow what a browser will keep. A cookie the
+// browser discards would send somebody to their provider and refuse them on the
+// way back, with nothing anywhere to say why, so it is refused before the
+// redirect rather than after it
+TEST(a_login_returning_to_more_than_a_cookie_holds_cannot_start) {
+  setenv("ONE_TEST_LOGIN_LONG", "confidential", 1);
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
+  const TestProvider provider;
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .name = "okta",
+        .credential = sourcemeta::one::Authentication::Policy::Interactive{
+            .issuer = provider.issuer,
+            .client_id = "client",
+            .client_secret_variable = "ONE_TEST_LOGIN_LONG",
+            .session_secrets = SESSION_SECRETS}}}};
+  const sourcemeta::one::Authentication authentication{
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, TEST_PATH("login_long_return"), ANYWHERE)},
+      provider.fetcher()};
+
+  // The control, which differs in the length of the return target and in
+  // nothing else
+  EXPECT_EQ(
+      authentication.login("okta", INSTANCE_URL, REDIRECT_URI, false, "/portal")
+          .result,
+      sourcemeta::one::Authentication::Outcome::Result::Redirect);
+
+  const std::string enormous{"/" + std::string(5000, 'a')};
+  const auto outcome{authentication.login("okta", INSTANCE_URL, REDIRECT_URI,
+                                          false, enormous)};
+  EXPECT_NE(outcome.result,
+            sourcemeta::one::Authentication::Outcome::Result::Redirect);
+  EXPECT_TRUE(REPORTED(outcome, "larger than a cookie can hold"));
+}

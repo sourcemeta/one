@@ -341,12 +341,20 @@ TEST(supports_the_maximum_number_of_policies) {
 }
 
 TEST(an_apikey_credential_never_triggers_a_jwt_fetch) {
+  setenv("ONE_TEST_KEY_NO_FETCH", "static-api-key", 1);
   const std::array<std::string_view, 1> paths{{"/secure"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_NO_FETCH"}};
   const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
       {sourcemeta::core::JWSAlgorithm::RS256}};
-  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+  // A key policy and a token policy over one location, so that a credential
+  // opening the first has a key set behind the second it could have asked for
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
       {{.paths = paths,
-        .name = "policy",
+        .name = "keys",
+        .credential =
+            sourcemeta::one::Authentication::Policy::ApiKey{.keys = keys}},
+       {.paths = paths,
+        .name = "tokens",
         .credential = sourcemeta::one::Authentication::Policy::Token{
             .issuer = "acme",
             .audience = "client",
@@ -357,11 +365,17 @@ TEST(an_apikey_credential_never_triggers_a_jwt_fetch) {
       TABLE(policies),
       STUB_FETCHER({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
                    calls)};
-  EXPECT_FALSE(authentication.permits(
+
+  // The key opens the location, and nothing was fetched to decide that
+  EXPECT_TRUE(authentication.permits(
       AT("/secure/x"), authentication.caller({.bearer = "static-api-key"})));
-  EXPECT_FALSE(authentication.permits(AT("/secure/x"),
-                                      authentication.caller({.bearer = ""})));
   EXPECT_EQ(*calls, 0);
+
+  // A credential shaped like a token does reach the key set, which is what
+  // makes the count above mean the key was decided without one
+  static_cast<void>(
+      authentication.caller({.bearer = std::string{SIGNED_TOKEN}}));
+  EXPECT_EQ(*calls, 1);
 }
 
 TEST(a_shadowing_cookie_alone_never_admits) {

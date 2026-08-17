@@ -99,15 +99,27 @@ struct Authentication::Table::Impl {
     for (std::uint32_t index{0}; index < header->policy_count; index += 1) {
       const auto &entry{policies[index]};
       const auto type{static_cast<AuthenticationPolicyType>(entry.type)};
-      if ((type != AuthenticationPolicyType::JWT &&
-           type != AuthenticationPolicyType::OIDC) ||
-          entry.metadata_length == 0) {
+      if (entry.metadata_length == 0) {
         continue;
       }
 
       const std::span<const std::byte> metadata{
           at_offset<std::byte>(bytes, entry.metadata_offset),
           entry.metadata_length};
+
+      // What a key policy declares is read only when a credential is compared
+      // against it, and reading it then cannot report a failure. So it is read
+      // once here instead, because a policy whose keys cannot be recovered
+      // would otherwise stand for an audience of nobody, and a reference into
+      // it would be permitted for want of anything to compare
+      if (type == AuthenticationPolicyType::ApiKey) {
+        if (!each_counted_string(metadata,
+                                 [](const std::string_view) -> void {})) {
+          return false;
+        }
+
+        continue;
+      }
       std::string_view serialized;
       if (type == AuthenticationPolicyType::JWT) {
         if (!read_jwt_claims(metadata, serialized)) {

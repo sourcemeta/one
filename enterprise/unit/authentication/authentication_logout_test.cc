@@ -10,6 +10,9 @@ TEST(signing_out_asks_the_provider_that_established_the_session) {
   setenv("ONE_TEST_LOGOUT_A", "confidential", 1);
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   TestProvider provider;
+  // The identity token a session carries is minted against this issuer, so the
+  // policy names it too and the hint forwarded is one this provider would take
+  provider.issuer = "https://signin.test";
   provider.advertises =
       R"JSON({ "end_session_endpoint": "https://provider.test/logout" })JSON";
   const std::array<std::string_view, 1> paths{{"/portal"}};
@@ -33,7 +36,7 @@ TEST(signing_out_asks_the_provider_that_established_the_session) {
       authentication.logout({.cookies = FIELDS(carried)}, INSTANCE_URL, "/")};
   EXPECT_TRUE(outcome.location.starts_with("https://provider.test/logout"));
   EXPECT_TRUE(outcome.location.find("id_token_hint=") != std::string::npos);
-  // Both cookies expire whatever happened
+  // All three cookies expire whatever happened
   EXPECT_EQ(outcome.cookies.size(), 3);
 }
 
@@ -43,6 +46,9 @@ TEST(signing_out_with_a_session_naming_no_policy_here_asks_nobody) {
   setenv("ONE_TEST_LOGOUT_B", "confidential", 1);
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   TestProvider provider;
+  // The identity token a session carries is minted against this issuer, so the
+  // policy names it too and the hint forwarded is one this provider would take
+  provider.issuer = "https://signin.test";
   provider.advertises =
       R"JSON({ "end_session_endpoint": "https://provider.test/logout" })JSON";
   const std::array<std::string_view, 1> paths{{"/portal"}};
@@ -65,6 +71,8 @@ TEST(signing_out_with_a_session_naming_no_policy_here_asks_nobody) {
   const auto carried{"sourcemeta_one_session=" + elsewhere};
   const auto outcome{
       authentication.logout({.cookies = FIELDS(carried)}, INSTANCE_URL, "/")};
+  // Nobody is asked, which is what the location not naming a provider means
+  EXPECT_EQ(*provider.discoveries, 0);
   EXPECT_EQ(outcome.location, "/");
   // The instance still forgets, which is the secure outcome either way
   EXPECT_EQ(outcome.cookies.size(), 3);

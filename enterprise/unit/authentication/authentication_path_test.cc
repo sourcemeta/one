@@ -5,10 +5,10 @@
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
-static constexpr std::string_view INSTANCE{"http://localhost:8000"};
+static constexpr std::string_view INSTANCE_URL{"http://localhost:8000"};
 
 static auto parse(const std::string_view input,
-                  const std::string_view instance = INSTANCE)
+                  const std::string_view instance = INSTANCE_URL)
     -> std::optional<sourcemeta::one::Authentication::Path> {
   return sourcemeta::one::Authentication::Path::parse(input, instance);
 }
@@ -16,7 +16,8 @@ static auto parse(const std::string_view input,
 // Returned by value: a view would dangle into the parsed path, which lives
 // only for this call
 static auto value(const std::string_view input,
-                  const std::string_view instance = INSTANCE) -> std::string {
+                  const std::string_view instance = INSTANCE_URL)
+    -> std::string {
   const auto result{parse(input, instance)};
   return result.has_value() ? std::string{result.value().value()}
                             : std::string{"<none>"};
