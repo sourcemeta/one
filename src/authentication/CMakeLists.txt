@@ -4,8 +4,7 @@ if(ONE_ENTERPRISE)
     SOURCES
       path.cc
       "${PROJECT_SOURCE_DIR}/enterprise/authentication/authentication.cc"
-      "${PROJECT_SOURCE_DIR}/enterprise/authentication/authentication_save.cc"
-      "${PROJECT_SOURCE_DIR}/enterprise/authentication/session.cc")
+      "${PROJECT_SOURCE_DIR}/enterprise/authentication/authentication_save.cc")
   target_compile_definitions(sourcemeta_one_authentication PUBLIC SOURCEMETA_ONE_ENTERPRISE)
   target_link_libraries(sourcemeta_one_authentication PRIVATE sourcemeta::core::crypto)
   target_link_libraries(sourcemeta_one_authentication PRIVATE sourcemeta::core::http)

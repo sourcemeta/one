@@ -5,10 +5,10 @@
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
-static constexpr std::string_view INSTANCE{"http://localhost:8000"};
+static constexpr std::string_view INSTANCE_URL{"http://localhost:8000"};
 
 static auto parse(const std::string_view input,
-                  const std::string_view instance = INSTANCE)
+                  const std::string_view instance = INSTANCE_URL)
     -> std::optional<sourcemeta::one::Authentication::Path> {
   return sourcemeta::one::Authentication::Path::parse(input, instance);
 }
@@ -16,7 +16,8 @@ static auto parse(const std::string_view input,
 // Returned by value: a view would dangle into the parsed path, which lives
 // only for this call
 static auto value(const std::string_view input,
-                  const std::string_view instance = INSTANCE) -> std::string {
+                  const std::string_view instance = INSTANCE_URL)
+    -> std::string {
   const auto result{parse(input, instance)};
   return result.has_value() ? std::string{result.value().value()}
                             : std::string{"<none>"};
@@ -133,9 +134,6 @@ TEST(a_url_on_another_origin_names_nowhere_here) {
   EXPECT_FALSE(parse("https://localhost:8000/private/secret").has_value());
   EXPECT_FALSE(parse("http://localhost:9999/private/secret").has_value());
 }
-
-// Each of the spellings below was a gate bypass attempt. Every one has to name
-// the governed location rather than something a policy would miss
 
 TEST(a_repeated_leading_separator_with_upper_case_names_the_location) {
   EXPECT_EQ(value("//PRIVATE/secret"), "private/secret");

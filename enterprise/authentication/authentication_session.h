@@ -1,8 +1,10 @@
+#ifndef SOURCEMETA_ONE_ENTERPRISE_AUTHENTICATION_SESSION_H_
+#define SOURCEMETA_ONE_ENTERPRISE_AUTHENTICATION_SESSION_H_
+
 #include <sourcemeta/one/authentication.h>
 
-#include "session.h"
-
 #include <sourcemeta/core/crypto.h>
+#include <sourcemeta/core/jose.h>
 
 #include <algorithm>   // std::max
 #include <array>       // std::array
@@ -17,28 +19,112 @@
 #include <string_view> // std::string_view
 #include <utility>     // std::unreachable
 
-namespace {
+// The sealing primitive the sessions and login transactions of this module are
+// built out of. It sits beside the sources that use it rather than under the
+// installed headers, so nothing outside this directory can reach it, and the
+// interface next door stays what a consumer may call
+namespace sourcemeta::one {
+
+// What a sealed value is for. A value is only ever opened for the purpose it
+// was sealed under, because the two derive different keys from the policy's
+// secret, so one kind of value cannot be presented as the other
+enum class SealPurpose : std::uint8_t { Session = 0, Transaction = 1 };
+
+// The artifact is produced by a trusted indexer, but on-disk truncation or
+// corruption could leave a header whose magic and version still match while
+// its offsets and counts point out of bounds. Validating the whole layout
+// once here keeps the matching hot path free of any per-call bounds checks
+// A browser holds one session, whichever policy established it, and the policy
+// travels inside the sealed value rather than in the name. One name means
+// signing out has a single thing to end, and means a caller cannot choose which
+// policy a value is read as by choosing what to call it
+inline constexpr std::string_view SESSION_COOKIE{"sourcemeta_one_session"};
+
+// A login transaction follows the same shape for the short window between the
+// login redirect and the callback
+inline constexpr std::string_view TRANSACTION_COOKIE{
+    "sourcemeta_one_transaction"};
+
+// Names the policy a browser last signed in under, so that a denial can ask the
+// provider whether that sign-in still stands rather than asking the person
+// again. It outlives a session, since it is only of use once one has expired,
+// and it carries no credential: whoever holds it can start a login they were
+// free to start anyway
+inline constexpr std::string_view RENEWAL_COOKIE{"sourcemeta_one_renewal"};
+
+// An instance names an origin and nothing more, so every location it serves is
+// below the root, and a cookie scoped there travels to all of them
+inline constexpr std::string_view COOKIE_PATH{"/"};
+
+// How long a login has to come back before the transaction that started it
+// stops opening
+inline constexpr std::chrono::seconds TRANSACTION_LIFETIME{
+    std::chrono::minutes{10}};
+
+// The signature algorithms an identity token may be signed with: every
+// asymmetric one, since a provider picks from these and an instance that named
+// a narrower set would refuse a provider it could otherwise serve, after the
+// person had already signed in. The symmetric ones are left out deliberately.
+// They sign with the client secret rather than a key from the provider's
+// published set, so admitting them alongside the rest is the shape that lets
+// one algorithm be verified as though it were another
+inline constexpr std::array<sourcemeta::core::JWSAlgorithm, 10>
+    ID_TOKEN_ALGORITHMS{{sourcemeta::core::JWSAlgorithm::RS256,
+                         sourcemeta::core::JWSAlgorithm::RS384,
+                         sourcemeta::core::JWSAlgorithm::RS512,
+                         sourcemeta::core::JWSAlgorithm::PS256,
+                         sourcemeta::core::JWSAlgorithm::PS384,
+                         sourcemeta::core::JWSAlgorithm::PS512,
+                         sourcemeta::core::JWSAlgorithm::ES256,
+                         sourcemeta::core::JWSAlgorithm::ES384,
+                         sourcemeta::core::JWSAlgorithm::ES512,
+                         sourcemeta::core::JWSAlgorithm::EdDSA}};
+
+// The tolerance allowed on an identity token's time-based claims, matching what
+// a presented access token is already given. A provider whose clock runs a
+// little fast otherwise mints a token this refuses the instant it arrives,
+// which ends a login that did everything right
+inline constexpr std::chrono::seconds ID_TOKEN_CLOCK_SKEW{60};
+
+// A session lasts an hour, kept short so that a lost cookie cannot outlive its
+// usefulness, with silent re-authentication as the eventual refresh
+inline constexpr std::chrono::seconds SESSION_LIFETIME{3600};
+
+// How long a browser stays eligible for a silent renewal after signing in.
+// Long enough to outlast a provider session, since the provider is the one that
+// decides whether a renewal succeeds, and losing it early only costs a sign-in
+// page that would otherwise have been skipped
+inline constexpr std::chrono::seconds RENEWAL_LIFETIME{43200};
+
+// RFC 6265 Section 6.1 asks a user agent to support "at least 4096 bytes per
+// cookie (as measured by the sum of the length of the cookie's name, value, and
+// attributes)". That is a floor they should honour rather than a ceiling they
+// must enforce, and what happens above it is left unsaid, so the whole
+// serialised cookie is kept under it with room to spare
+inline constexpr std::size_t MAXIMUM_COOKIE_LENGTH{4000};
+
+inline constexpr std::chrono::seconds JWT_CLOCK_SKEW{60};
 
 // The version prefix lets the sealed format evolve without a value produced
 // under one format ever verifying under another
-constexpr std::string_view SESSION_VERSION{"1"};
+inline constexpr std::string_view SESSION_VERSION{"1"};
 
-constexpr std::size_t SESSION_SIGNATURE_LENGTH{32};
+inline constexpr std::size_t SESSION_SIGNATURE_LENGTH{32};
 
 // A sealed value carries the instant it was minted alongside the instant it
 // stops being honoured, so a lifetime is a fact about the value rather than
 // whatever its expiry happens to claim. Nothing this system mints lives
 // anywhere near this long, and refusing more bounds what a leaked secret is
 // worth: a forged value cannot outlive this no matter what expiry it names
-constexpr std::chrono::seconds MAXIMUM_LIFETIME{std::chrono::hours{24}};
+inline constexpr std::chrono::seconds MAXIMUM_LIFETIME{std::chrono::hours{24}};
 
 // Replicas seal and open each other's values, so a clock that reads slightly
 // ahead of the one opening must not produce values nobody accepts yet
-constexpr std::chrono::seconds CLOCK_SKEW{60};
+inline constexpr std::chrono::seconds CLOCK_SKEW{60};
 
 // The canonical unpadded encoding of a signature has exactly one length, so
 // anything else is rejected before it is even decoded
-constexpr std::size_t SESSION_SIGNATURE_ENCODED_LENGTH{
+inline constexpr std::size_t SESSION_SIGNATURE_ENCODED_LENGTH{
     ((SESSION_SIGNATURE_LENGTH * 4) + 2) / 3};
 
 // A value is only ever opened for the purpose it was sealed under, and the
@@ -46,31 +132,29 @@ constexpr std::size_t SESSION_SIGNATURE_ENCODED_LENGTH{
 // signature where a client chooses it. So the purpose picks the key rather
 // than being asserted alongside it: a value sealed for one purpose cannot
 // verify under another's key, whether or not a caller remembers to check
-auto purpose_label(const sourcemeta::one::SealPurpose purpose)
-    -> std::string_view {
+inline auto purpose_label(const SealPurpose purpose) -> std::string_view {
   switch (purpose) {
-    case sourcemeta::one::SealPurpose::Session:
+    case SealPurpose::Session:
       return "sourcemeta/one/session";
-    case sourcemeta::one::SealPurpose::Transaction:
+    case SealPurpose::Transaction:
       return "sourcemeta/one/transaction";
   }
 
   std::unreachable();
 }
 
-auto derive_key(const std::string_view secret,
-                const sourcemeta::one::SealPurpose purpose)
+inline auto derive_key(const std::string_view secret, const SealPurpose purpose)
     -> std::array<std::uint8_t, 32> {
   return sourcemeta::core::hmac_sha256_digest(secret, purpose_label(purpose));
 }
 
-auto digest_view(const std::array<std::uint8_t, 32> &digest)
+inline auto digest_view(const std::array<std::uint8_t, 32> &digest)
     -> std::string_view {
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   return {reinterpret_cast<const char *>(digest.data()), digest.size()};
 }
 
-auto parse_expiry(const std::string_view input)
+inline auto parse_expiry(const std::string_view input)
     -> std::optional<std::chrono::sys_seconds> {
   if (input.empty()) {
     return std::nullopt;
@@ -90,14 +174,10 @@ auto parse_expiry(const std::string_view input)
       std::chrono::seconds{static_cast<std::int64_t>(count)}};
 }
 
-} // namespace
-
-namespace sourcemeta::one {
-
-auto seal_value(const std::string_view payload, const SealPurpose purpose,
-                const std::string_view secret,
-                const std::chrono::sys_seconds issued,
-                const std::chrono::sys_seconds expiry) -> std::string {
+inline auto seal_value(const std::string_view payload,
+                       const SealPurpose purpose, const std::string_view secret,
+                       const std::chrono::sys_seconds issued,
+                       const std::chrono::sys_seconds expiry) -> std::string {
   const auto key{derive_key(secret, purpose)};
   std::string result{SESSION_VERSION};
   result += '.';
@@ -117,9 +197,9 @@ auto seal_value(const std::string_view payload, const SealPurpose purpose,
   return result;
 }
 
-auto open_value(const std::string_view value, const SealPurpose purpose,
-                const std::span<const std::string_view> secrets,
-                const std::chrono::sys_seconds now)
+inline auto open_value(const std::string_view value, const SealPurpose purpose,
+                       const std::span<const std::string_view> secrets,
+                       const std::chrono::sys_seconds now)
     -> std::optional<std::string> {
   // Expiry comparisons are meaningless under a clock that reads before the
   // epoch, so such a clock validates nothing
@@ -219,3 +299,5 @@ auto open_value(const std::string_view value, const SealPurpose purpose,
 }
 
 } // namespace sourcemeta::one
+
+#endif
