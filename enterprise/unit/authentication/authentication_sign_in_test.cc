@@ -299,8 +299,8 @@ TEST(a_second_answer_fills_gaps_without_overruling_the_token) {
 // so letting one answer's assertion vouch for the other answer's address would
 // admit an address the provider never verified
 TEST(an_address_arrives_with_its_own_assertion_or_not_at_all) {
-  // Minting a session needs this, and a case says so itself rather
-  // than relying on whichever case ran before it
+  // The policies below name this as their session secret, so the case sets
+  // it itself rather than relying on whichever case ran before it
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   setenv("ONE_TEST_COMBINE_PAIR", "confidential", 1);
   const std::array<std::string_view, 1> paths{{"/portal"}};

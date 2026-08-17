@@ -381,7 +381,7 @@ TEST(a_session_never_admits_under_a_policy_sharing_its_secret) {
 }
 
 TEST(a_transaction_never_admits_as_a_session) {
-  // Minting a session needs this, and a case says so itself rather
+  // The session below is minted under this, so the case sets it itself rather
   // than relying on whichever case ran before it
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   setenv("ONE_TEST_PURPOSE_CLIENT", "confidential", 1);
@@ -431,11 +431,12 @@ TEST(a_transaction_never_admits_as_a_session) {
 }
 
 TEST(session_cookie_without_a_configured_secret_is_denied) {
-  // Minting a session needs this, and a case says so itself rather
-  // than relying on whichever case ran before it
+  // The control session below is minted under this, so the case sets it itself
+  // rather than relying on whichever case ran before it
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   const std::array<std::string_view, 1> paths{{"/portal"}};
-  // The session secret variable is deliberately never set in the environment
+  // The policy names a session secret of its own, and that one is deliberately
+  // never set, so the policy holds nothing to verify a session with
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
       {{.paths = paths,
         .name = "okta",
@@ -455,9 +456,6 @@ TEST(session_cookie_without_a_configured_secret_is_denied) {
 }
 
 TEST(session_admitted_under_a_rotated_secret) {
-  // Minting a session needs this, and a case says so itself rather
-  // than relying on whichever case ran before it
-  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   // The policy names the newest secret first, then the one it replaces, so a
   // session established under the old secret still verifies
   setenv("ONE_TEST_OIDC_ROTATED_SECRET", "new-secret", 1);
@@ -500,7 +498,7 @@ TEST(session_admitted_under_a_rotated_secret) {
 }
 
 TEST(session_with_a_blank_configured_secret_is_denied) {
-  // Minting a session needs this, and a case says so itself rather
+  // The session below is minted under this, so the case sets it itself rather
   // than relying on whichever case ran before it
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   setenv("ONE_TEST_OIDC_BLANK_SECRET", "", 1);
