@@ -170,13 +170,29 @@ enum class Admission : std::uint8_t {
 // stops opening
 constexpr std::chrono::seconds TRANSACTION_LIFETIME{std::chrono::minutes{10}};
 
+// What an interactive policy declares about its provider client. The views
+// point into the artifact and remain valid for as long as it is mapped
+struct InteractivePolicy {
+  std::string_view issuer{};
+  std::string_view client_id{};
+  // The first registry path the policy governs
+  std::string_view default_path{};
+  // The claims a person must carry to be admitted, serialised as the member map
+  // of an OpenID Connect claims request parameter. Empty where the policy names
+  // no rule
+  std::string_view claims{};
+  // The email domains that admit a person. A login asks its provider for an
+  // address whenever this is non-empty, since a rule it cannot read admits
+  // nobody
+  std::vector<std::string_view> email_domains{};
+};
+
 // The claims a policy's rules speak about, each asked for as essential, so that
 // a provider is told what is actually needed rather than being left to guess
 // from a scope. A domain rule reads an address, so it asks for the pair OpenID
 // Connect Core Section 5.1 defines for one
-auto wanted_claims(
-    const sourcemeta::one::Authentication::InteractivePolicy &policy,
-    const std::optional<sourcemeta::core::JSON> &rules)
+auto wanted_claims(const InteractivePolicy &policy,
+                   const std::optional<sourcemeta::core::JSON> &rules)
     -> std::vector<sourcemeta::core::OIDCClaimRequest> {
   std::vector<sourcemeta::core::OIDCClaimRequest> result;
   if (!policy.email_domains.empty()) {
@@ -329,7 +345,7 @@ auto structurally_valid(const std::span<const std::byte> bytes) noexcept
   // shift past the width of a PolicySet, which is undefined behavior
   if (header->magic != AUTHENTICATION_MAGIC ||
       header->version != AUTHENTICATION_VERSION || header->node_count == 0 ||
-      header->policy_count > Authentication::MAXIMUM_POLICIES) {
+      header->policy_count > AUTHENTICATION_MAXIMUM_POLICIES) {
     return false;
   }
 
@@ -385,7 +401,7 @@ auto structurally_valid(const std::span<const std::byte> bytes) noexcept
 
     // A view naming a policy the artifact does not carry could never be
     // resolved to, and on a full mask would shift past the width of a set
-    if (header->policy_count < Authentication::MAXIMUM_POLICIES &&
+    if (header->policy_count < AUTHENTICATION_MAXIMUM_POLICIES &&
         (entry.policies >> header->policy_count) != 0) {
       return false;
     }
@@ -418,7 +434,8 @@ auto structurally_valid(const std::span<const std::byte> bytes) noexcept
           entry.name_length > strings_length - entry.name_offset ||
           entry.algorithm >
               static_cast<std::uint8_t>(Authentication::Algorithm::Sha256) ||
-          entry.type > static_cast<std::uint8_t>(Authentication::Type::OIDC)) {
+          entry.type >
+              static_cast<std::uint8_t>(AuthenticationPolicyType::OIDC)) {
         return false;
       }
 
@@ -942,8 +959,8 @@ auto decode_oidc_metadata(const std::span<const std::byte> metadata,
 // is stored as. The domains are copied out, since a caller matching an address
 // against them should not have to know how they are laid out
 auto interactive_policy(const OIDCPolicyMetadata &decoded)
-    -> sourcemeta::one::Authentication::InteractivePolicy {
-  sourcemeta::one::Authentication::InteractivePolicy result;
+    -> InteractivePolicy {
+  InteractivePolicy result;
   result.issuer = decoded.issuer;
   result.client_id = decoded.client_id;
   result.default_path = decoded.default_path;
@@ -1049,7 +1066,7 @@ namespace sourcemeta::one {
 // a governing set is a single machine word
 using PolicySet = std::uint64_t;
 
-struct Authentication::Impl {
+struct Authentication::Table::Impl {
   // The indexer always emits this artifact. A missing, unreadable, or
   // malformed file means it was deleted, corrupted, or produced by an older
   // indexer. Rather than failing open and serving every path publicly, or
@@ -1057,8 +1074,7 @@ struct Authentication::Impl {
   // everything: the section pointers below stay null, so matching yields the
   // empty set and admits no one. Opening the file covers the missing and
   // unreadable cases without a separate, throwing existence check
-  Impl(const std::filesystem::path &path, Authentication::Fetcher fetcher)
-      : fetcher_{std::move(fetcher)} {
+  explicit Impl(const std::filesystem::path &path) {
     std::unique_ptr<sourcemeta::core::FileView> view;
     try {
       view = std::make_unique<sourcemeta::core::FileView>(path);
@@ -1074,8 +1090,7 @@ struct Authentication::Impl {
   // A table compiled in this process is held rather than mapped, so the bytes
   // are copied once and never move again, which is what keeps every section
   // pointer below valid for as long as this exists
-  Impl(const std::span<const std::byte> bytes, Authentication::Fetcher fetcher)
-      : fetcher_{std::move(fetcher)} {
+  explicit Impl(const std::span<const std::byte> bytes) {
     this->owned_.assign(bytes.begin(), bytes.end());
     if (!this->adopt(this->owned_)) {
       this->owned_.clear();
@@ -1107,9 +1122,9 @@ struct Authentication::Impl {
         at_offset<AuthenticationPolicyEntry>(bytes, header->policies_offset)};
     for (std::uint32_t index{0}; index < header->policy_count; index += 1) {
       const auto &entry{policies[index]};
-      const auto type{static_cast<Authentication::Type>(entry.type)};
-      if ((type != Authentication::Type::JWT &&
-           type != Authentication::Type::OIDC) ||
+      const auto type{static_cast<AuthenticationPolicyType>(entry.type)};
+      if ((type != AuthenticationPolicyType::JWT &&
+           type != AuthenticationPolicyType::OIDC) ||
           entry.metadata_length == 0) {
         continue;
       }
@@ -1118,7 +1133,7 @@ struct Authentication::Impl {
           at_offset<std::byte>(bytes, entry.metadata_offset),
           entry.metadata_length};
       std::string_view serialized;
-      if (type == Authentication::Type::JWT) {
+      if (type == AuthenticationPolicyType::JWT) {
         if (!read_jwt_claims(metadata, serialized)) {
           return false;
         }
@@ -1193,8 +1208,7 @@ struct Authentication::Impl {
     }
 
     for (const auto sealed : candidates) {
-      auto opened{this->open(policy_name, Authentication::Purpose::Transaction,
-                             sealed)};
+      auto opened{this->open(policy_name, SealPurpose::Transaction, sealed)};
       if (!opened.has_value()) {
         continue;
       }
@@ -1249,7 +1263,7 @@ struct Authentication::Impl {
 
     std::ostringstream payload_text;
     sourcemeta::core::stringify(payload, payload_text);
-    const auto sealed{this->seal(policy_name, Authentication::Purpose::Session,
+    const auto sealed{this->seal(policy_name, SealPurpose::Session,
                                  payload_text.str(), expiry)};
     if (!sealed.has_value()) {
       log.emplace_back("No session secret is set for the policy");
@@ -1400,8 +1414,8 @@ struct Authentication::Impl {
                   entry.metadata_length};
     }
 
-    const auto type{static_cast<Authentication::Type>(entry.type)};
-    if (type == Authentication::Type::JWT) {
+    const auto type{static_cast<AuthenticationPolicyType>(entry.type)};
+    if (type == AuthenticationPolicyType::JWT) {
       return token.has_value() &&
              this->admits_jwt(metadata, token.value(), required_audience,
                               this->claims_[index]);
@@ -1411,7 +1425,7 @@ struct Authentication::Impl {
     // browser login established, never a presented credential. A request that
     // presented one is asking to be read as that credential, so its session is
     // not consulted at all rather than quietly widening what it reaches
-    if (type == Authentication::Type::OIDC) {
+    if (type == AuthenticationPolicyType::OIDC) {
       return credential.empty() && this->admits_session(metadata, cookies);
     }
 
@@ -1443,8 +1457,8 @@ struct Authentication::Impl {
 
       // Only token policies combine, so anything else stands for the caller on
       // its own and the first one reached is the one read
-      if (static_cast<Authentication::Type>(policies[index].type) !=
-          Authentication::Type::JWT) {
+      if (static_cast<AuthenticationPolicyType>(policies[index].type) !=
+          AuthenticationPolicyType::JWT) {
         if (result == 0) {
           return Authentication::PolicySet{1} << index;
         }
@@ -1467,8 +1481,10 @@ struct Authentication::Impl {
     assert(index < this->view_count_);
     const auto &entry{
         static_cast<const AuthenticationViewEntry *>(this->views_)[index]};
-    return {.name = {this->strings_ + entry.name_offset, entry.name_length},
-            .policies = entry.policies};
+    Authentication::RecordedView result;
+    result.name_ = {this->strings_ + entry.name_offset, entry.name_length};
+    result.policies_ = entry.policies;
+    return result;
   }
 
   // The name a set of policies is served under, read from the recorded table
@@ -1557,8 +1573,8 @@ struct Authentication::Impl {
       sourcemeta::core::http_cookie_values(field, SESSION_COOKIE, candidates);
     }
     for (const auto sealed : candidates) {
-      const auto payload{this->session_open(
-          decoded.session_secrets, Authentication::Purpose::Session, sealed)};
+      const auto payload{this->session_open(decoded.session_secrets,
+                                            SealPurpose::Session, sealed)};
       if (!payload.has_value()) {
         continue;
       }
@@ -1600,8 +1616,8 @@ struct Authentication::Impl {
         static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
     for (std::uint32_t index{0}; index < this->policy_count_; index += 1) {
       const auto &entry{policies[index]};
-      if (static_cast<Authentication::Type>(entry.type) !=
-              Authentication::Type::OIDC ||
+      if (static_cast<AuthenticationPolicyType>(entry.type) !=
+              AuthenticationPolicyType::OIDC ||
           entry.metadata_length == 0) {
         continue;
       }
@@ -1614,8 +1630,8 @@ struct Authentication::Impl {
         continue;
       }
 
-      const auto payload{this->session_open(
-          decoded.session_secrets, Authentication::Purpose::Session, value)};
+      const auto payload{this->session_open(decoded.session_secrets,
+                                            SealPurpose::Session, value)};
       if (!payload.has_value()) {
         continue;
       }
@@ -1650,8 +1666,8 @@ struct Authentication::Impl {
         static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
     for (std::uint32_t index{0}; index < this->policy_count_; index += 1) {
       const auto &entry{policies[index]};
-      if (static_cast<Authentication::Type>(entry.type) !=
-              Authentication::Type::OIDC ||
+      if (static_cast<AuthenticationPolicyType>(entry.type) !=
+              AuthenticationPolicyType::OIDC ||
           entry.metadata_length == 0) {
         continue;
       }
@@ -1668,7 +1684,7 @@ struct Authentication::Impl {
   }
 
   [[nodiscard]] auto interactive(const std::string_view name) const
-      -> std::optional<Authentication::InteractivePolicy> {
+      -> std::optional<InteractivePolicy> {
     OIDCPolicyMetadata decoded;
     if (!this->find_interactive(name, decoded)) {
       return std::nullopt;
@@ -1686,8 +1702,8 @@ struct Authentication::Impl {
         static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
     for (std::uint32_t index{0}; index < this->policy_count_; index += 1) {
       const auto &entry{policies[index]};
-      if (static_cast<Authentication::Type>(entry.type) !=
-              Authentication::Type::OIDC ||
+      if (static_cast<AuthenticationPolicyType>(entry.type) !=
+              AuthenticationPolicyType::OIDC ||
           entry.metadata_length == 0) {
         continue;
       }
@@ -1734,8 +1750,8 @@ struct Authentication::Impl {
         static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
     for (std::uint32_t index{0}; index < this->policy_count_; index += 1) {
       const auto &entry{policies[index]};
-      if (static_cast<Authentication::Type>(entry.type) !=
-              Authentication::Type::OIDC ||
+      if (static_cast<AuthenticationPolicyType>(entry.type) !=
+              AuthenticationPolicyType::OIDC ||
           entry.metadata_length == 0) {
         continue;
       }
@@ -1780,7 +1796,7 @@ struct Authentication::Impl {
 
   [[nodiscard]] auto interactive(const std::string_view path,
                                  const std::string_view name) const
-      -> std::optional<Authentication::InteractivePolicy> {
+      -> std::optional<InteractivePolicy> {
     const auto mask{this->match(path)};
     if (mask == 0 || this->policy_count_ == 0 || name.empty()) {
       return std::nullopt;
@@ -1794,8 +1810,8 @@ struct Authentication::Impl {
       }
 
       const auto &entry{policies[index]};
-      if (static_cast<Authentication::Type>(entry.type) !=
-              Authentication::Type::OIDC ||
+      if (static_cast<AuthenticationPolicyType>(entry.type) !=
+              AuthenticationPolicyType::OIDC ||
           entry.metadata_length == 0) {
         continue;
       }
@@ -1845,7 +1861,7 @@ struct Authentication::Impl {
   // so a secret can be replaced by putting the new one first and dropping the
   // old once every value signed under it has expired
   [[nodiscard]] auto session_seal(const std::span<const std::byte> variables,
-                                  const Authentication::Purpose purpose,
+                                  const SealPurpose purpose,
                                   const std::string_view payload,
                                   const std::chrono::sys_seconds expiry) const
       -> std::optional<std::string> {
@@ -1860,7 +1876,7 @@ struct Authentication::Impl {
   }
 
   [[nodiscard]] auto session_open(const std::span<const std::byte> variables,
-                                  const Authentication::Purpose purpose,
+                                  const SealPurpose purpose,
                                   const std::string_view value) const
       -> std::optional<std::string> {
     const auto resolved{session_secrets(variables)};
@@ -1881,7 +1897,7 @@ struct Authentication::Impl {
   }
 
   [[nodiscard]] auto seal(const std::string_view policy,
-                          const Authentication::Purpose purpose,
+                          const SealPurpose purpose,
                           const std::string_view payload,
                           const std::chrono::sys_seconds expiry) const
       -> std::optional<std::string> {
@@ -1895,7 +1911,7 @@ struct Authentication::Impl {
   }
 
   [[nodiscard]] auto open(const std::string_view policy,
-                          const Authentication::Purpose purpose,
+                          const SealPurpose purpose,
                           const std::string_view value) const
       -> std::optional<std::string> {
     OIDCPolicyMetadata decoded;
@@ -2113,10 +2129,10 @@ struct Authentication::Impl {
         const std::span<const std::byte> metadata{
             at_offset<std::byte>(this->bytes_, entry.metadata_offset),
             entry.metadata_length};
-        const auto type{static_cast<Authentication::Type>(entry.type)};
-        if (type == Authentication::Type::JWT) {
+        const auto type{static_cast<AuthenticationPolicyType>(entry.type)};
+        if (type == AuthenticationPolicyType::JWT) {
           collect_jwt_identifiers(metadata, result.keys);
-        } else if (type == Authentication::Type::OIDC) {
+        } else if (type == AuthenticationPolicyType::OIDC) {
           collect_oidc_identifiers(metadata, result.keys);
         } else {
           collect_keys(metadata, result.keys);
@@ -2241,13 +2257,31 @@ struct Authentication::Impl {
   mutable std::map<std::string, ResolvedEndpoints> endpoints_;
 };
 
-Authentication::Authentication(const std::filesystem::path &path,
-                               Authentication::Fetcher fetcher)
-    : impl_{std::make_unique<Impl>(path, std::move(fetcher))} {}
+Authentication::Table::Table(const std::filesystem::path &path)
+    : impl_{std::make_unique<Impl>(path)} {}
 
-Authentication::Authentication(const std::span<const std::byte> bytes,
+Authentication::Table::Table(const std::span<const std::byte> bytes)
+    : impl_{std::make_unique<Impl>(bytes)} {}
+
+Authentication::Table::~Table() = default;
+
+Authentication::Table::Table(Authentication::Table &&) noexcept = default;
+
+auto Authentication::Table::operator=(Authentication::Table &&) noexcept
+    -> Authentication::Table & = default;
+
+// The table is taken rather than borrowed, and the fetcher is installed on it,
+// so that what performs the protocol and what the protocol reads cannot come
+// apart for as long as either exists
+Authentication::Authentication(Authentication::Table &&table,
                                Authentication::Fetcher fetcher)
-    : impl_{std::make_unique<Impl>(bytes, std::move(fetcher))} {}
+    : table_{std::move(table)} {
+  this->table_.impl_->fetcher_ = std::move(fetcher);
+}
+
+auto Authentication::table() const noexcept -> const Authentication::Table & {
+  return this->table_;
+}
 
 Authentication::~Authentication() = default;
 
@@ -2278,10 +2312,10 @@ auto view_name(const std::span<const Authentication::Policy> policies,
 
 } // namespace
 
-auto Authentication::views(
+auto Authentication::Table::enumerate(
     const std::span<const Authentication::Policy> policies)
-    -> std::vector<Authentication::View> {
-  std::vector<Authentication::View> result;
+    -> std::vector<Authentication::Table::View> {
+  std::vector<Authentication::Table::View> result;
   // Always present, and the only entry when nothing is declared. A registry
   // whose every path is governed still has one, since it is what a caller
   // holding nothing is shown and what a lookup falls back to
@@ -2291,8 +2325,14 @@ auto Authentication::views(
   // is read, so only token policies declared against the same issuer can ever
   // be satisfied together. Every other policy stands alone, since a caller
   // presents one key or holds one session
-  // One view takes another's name if two policies share one, which the
-  // configuration refuses long before this is reached
+  // A view is spelled from the names of the policies it comprises, so a policy
+  // without a name leaves a view naming nowhere, and one sharing a name with
+  // another, or taking the name a caller holding nothing is served under,
+  // leaves two views under one name. A configuration is refused for all three
+  // before any of this is reached, so these say what has been established
+  assert(std::ranges::none_of(policies, [](const auto &policy) -> bool {
+    return policy.name.empty() || policy.name == VIEW_PUBLIC;
+  }));
   assert(std::ranges::all_of(policies, [&policies](const auto &policy) -> bool {
     return std::ranges::count(policies, policy.name,
                               &Authentication::Policy::name) == 1;
@@ -2300,7 +2340,7 @@ auto Authentication::views(
 
   std::vector<std::string_view> issuers;
   std::vector<std::vector<std::size_t>> groups;
-  std::vector<Authentication::View> named;
+  std::vector<Authentication::Table::View> named;
 
   for (std::size_t index{0}; index < policies.size(); index++) {
     const auto &policy{policies[index]};
@@ -2323,7 +2363,7 @@ auto Authentication::views(
 
   for (std::size_t group{0}; group < groups.size(); group++) {
     const auto &members{groups[group]};
-    if (members.size() > Authentication::MAXIMUM_COMBINABLE_POLICIES) {
+    if (members.size() > Authentication::Table::MAXIMUM_COMBINABLE_POLICIES) {
       throw AuthenticationTooManyViewsError(std::string{issuers[group]},
                                             members.size());
     }
@@ -2523,7 +2563,7 @@ auto Authentication::login(const std::string_view policy_name,
   Authentication::Outcome result;
 
   // An unknown or non-interactive policy name reveals nothing
-  const auto policy{this->impl_->interactive(policy_name)};
+  const auto policy{this->table_.impl_->interactive(policy_name)};
   if (!policy.has_value()) {
     result.result = Authentication::Outcome::Result::Missing;
     return result;
@@ -2531,12 +2571,12 @@ auto Authentication::login(const std::string_view policy_name,
 
   // Starting a login that cannot be completed only strands the person at the
   // provider, so the secret the exchange will need is required up front
-  if (!this->impl_->client_secret(policy_name).has_value()) {
+  if (!this->table_.impl_->client_secret(policy_name).has_value()) {
     result.log.emplace_back("No client secret is set for the policy");
     return result;
   }
 
-  const auto endpoints{this->impl_->endpoints(policy_name)};
+  const auto endpoints{this->table_.impl_->endpoints(policy_name)};
   if (!endpoints.has_value() || endpoints.value().authorization.empty()) {
     result.log.emplace_back("The provider named no authorization endpoint, or "
                             "could not be reached, for the policy");
@@ -2582,9 +2622,8 @@ auto Authentication::login(const std::string_view policy_name,
   const auto expiry{std::chrono::time_point_cast<std::chrono::seconds>(
                         std::chrono::system_clock::now()) +
                     TRANSACTION_LIFETIME};
-  const auto sealed{this->impl_->seal(policy_name,
-                                      Authentication::Purpose::Transaction,
-                                      payload_text.str(), expiry)};
+  const auto sealed{this->table_.impl_->seal(
+      policy_name, SealPurpose::Transaction, payload_text.str(), expiry)};
   if (!sealed.has_value()) {
     result.log.emplace_back("No session secret is set for the policy");
     return result;
@@ -2674,7 +2713,7 @@ auto Authentication::renewal(const Authentication::Path &path,
   }
 
   for (const auto candidate : candidates) {
-    const auto policy{this->impl_->interactive(path.value(), candidate)};
+    const auto policy{this->table_.impl_->interactive(path.value(), candidate)};
     if (policy.has_value()) {
       return candidate;
     }
@@ -2699,8 +2738,8 @@ auto Authentication::callback(const std::string_view policy_name,
   // provider echoes back. This runs before either the success or the decline is
   // honoured, so a cross-site callback cannot even trigger an error on a
   // person's behalf, per RFC 6749 Section 4.1.2.1
-  const auto transaction{this->impl_->transaction(policy_name, incoming.state,
-                                                  redirect_uri, credentials)};
+  const auto transaction{this->table_.impl_->transaction(
+      policy_name, incoming.state, redirect_uri, credentials)};
   if (!transaction.has_value()) {
     return result;
   }
@@ -2745,7 +2784,7 @@ auto Authentication::callback(const std::string_view policy_name,
 
   // Which policy a callback belongs to is settled by opening its transaction,
   // so nothing reaching here names one this instance does not serve
-  const auto policy{this->impl_->interactive(policy_name)};
+  const auto policy{this->table_.impl_->interactive(policy_name)};
   if (!policy.has_value()) {
     return abandon(Authentication::Outcome::Result::Invalid);
   }
@@ -2775,23 +2814,23 @@ auto Authentication::callback(const std::string_view policy_name,
     return abandon(Authentication::Outcome::Result::Invalid);
   }
 
-  const auto client_secret{this->impl_->client_secret(policy_name)};
+  const auto client_secret{this->table_.impl_->client_secret(policy_name)};
   if (!client_secret.has_value()) {
     result.log.emplace_back("No client secret is set for the policy");
     return abandon(Authentication::Outcome::Result::Incomplete);
   }
 
-  const auto endpoints{this->impl_->endpoints(policy_name)};
+  const auto endpoints{this->table_.impl_->endpoints(policy_name)};
   if (!endpoints.has_value() || endpoints.value().token.empty()) {
     result.log.emplace_back("The provider named no token endpoint, or could "
                             "not be reached, for the policy");
     return abandon(Authentication::Outcome::Result::Incomplete);
   }
 
-  const auto grant{exchange(this->impl_->fetcher(), endpoints.value().token,
-                            policy->client_id, client_secret.value(),
-                            redirect_uri, incoming.code, verifier->to_string(),
-                            endpoints.value().token_endpoint_basic_auth)};
+  const auto grant{exchange(
+      this->table_.impl_->fetcher(), endpoints.value().token, policy->client_id,
+      client_secret.value(), redirect_uri, incoming.code, verifier->to_string(),
+      endpoints.value().token_endpoint_basic_auth)};
   if (!grant.has_value()) {
     result.log.emplace_back(
         "The authorization code could not be redeemed for the policy");
@@ -2805,8 +2844,8 @@ auto Authentication::callback(const std::string_view policy_name,
     return abandon(Authentication::Outcome::Result::Incomplete);
   }
 
-  auto provider{
-      id_token_keys(endpoints.value().jwks_uri, this->impl_->key_fetcher())};
+  auto provider{id_token_keys(endpoints.value().jwks_uri,
+                              this->table_.impl_->key_fetcher())};
   sourcemeta::core::OIDCValidationOptions options;
   options.nonce = nonce->to_string();
   const auto identity{sourcemeta::core::oidc_validate_id_token(
@@ -2823,8 +2862,8 @@ auto Authentication::callback(const std::string_view policy_name,
   // afterwards would leave a valid session denied on every request, and a
   // denial asks the provider again, which is a loop rather than an answer
   std::optional<sourcemeta::core::JSON> combined;
-  auto admission{
-      this->impl_->admits_identity(policy_name, token.value().payload())};
+  auto admission{this->table_.impl_->admits_identity(policy_name,
+                                                     token.value().payload())};
 
   // OpenID Connect Core Section 5.4 has a provider answer for the claims a
   // scope requested at its UserInfo endpoint rather than in the token, by
@@ -2834,11 +2873,12 @@ auto Authentication::callback(const std::string_view policy_name,
   if (admission == Admission::Incomplete &&
       !endpoints.value().userinfo.empty()) {
     const auto extra{userinfo(
-        this->impl_->fetcher(), endpoints.value().userinfo,
+        this->table_.impl_->fetcher(), endpoints.value().userinfo,
         grant.value().access_token, identity.value().subject, result.log)};
     if (extra.has_value()) {
       combined = combine_claims(token.value().payload(), extra.value());
-      admission = this->impl_->admits_identity(policy_name, combined.value());
+      admission =
+          this->table_.impl_->admits_identity(policy_name, combined.value());
     }
   }
 
@@ -2850,7 +2890,8 @@ auto Authentication::callback(const std::string_view policy_name,
     // token alone would miss a claim the UserInfo endpoint supplied
     const auto &asserted{combined.has_value() ? combined.value()
                                               : token.value().payload()};
-    this->impl_->report_object_shaped_claims(policy_name, asserted, result.log);
+    this->table_.impl_->report_object_shaped_claims(policy_name, asserted,
+                                                    result.log);
     return abandon(Authentication::Outcome::Result::NotAdmitted);
   }
 
@@ -2865,12 +2906,12 @@ auto Authentication::callback(const std::string_view policy_name,
   // without saying so, which would look like signing in and then not being
   // signed in. So the whole cookie is measured, and the token is left out when
   // it does not fit, which costs the confirmation page and nothing else
-  auto session{this->impl_->session_cookie(
+  auto session{this->table_.impl_->session_cookie(
       policy_name, identity.value().subject, grant.value().id_token, expiry,
       secure, result.log)};
   if (session.has_value() && session.value().size() > MAXIMUM_COOKIE_LENGTH) {
-    session = this->impl_->session_cookie(policy_name, identity.value().subject,
-                                          "", expiry, secure, result.log);
+    session = this->table_.impl_->session_cookie(
+        policy_name, identity.value().subject, "", expiry, secure, result.log);
   }
 
   // Without the token there is very little left, so exceeding the limit here
@@ -2956,7 +2997,7 @@ auto Authentication::logout(const Credentials &credentials,
   }
 
   for (const auto sealed : candidates) {
-    const auto payload{this->impl_->open_session(sealed)};
+    const auto payload{this->table_.impl_->open_session(sealed)};
     if (!payload.has_value()) {
       continue;
     }
@@ -2972,7 +3013,7 @@ auto Authentication::logout(const Credentials &credentials,
       continue;
     }
 
-    const auto endpoints{this->impl_->endpoints(policy->to_string())};
+    const auto endpoints{this->table_.impl_->endpoints(policy->to_string())};
     if (!endpoints.has_value() || endpoints.value().end_session.empty()) {
       continue;
     }
@@ -3000,8 +3041,8 @@ auto Authentication::caller(const Credentials &credentials) const
     -> Authentication::Caller {
   Authentication::Caller result;
   result.policies_ =
-      this->impl_->classify(credentials.bearer, credentials.cookies);
-  result.view_ = this->impl_->view_name(result.policies_);
+      this->table_.impl_->classify(credentials.bearer, credentials.cookies);
+  result.view_ = this->table_.impl_->view_name(result.policies_);
   result.bearer_ = credentials.bearer;
   return result;
 }
@@ -3009,14 +3050,14 @@ auto Authentication::caller(const Credentials &credentials) const
 auto Authentication::permits(const Authentication::Path &path,
                              const Authentication::Caller &caller) const
     -> bool {
-  return this->impl_->permits(path.value(), caller.policies_);
+  return this->table_.impl_->permits(path.value(), caller.policies_);
 }
 
 auto Authentication::permits(const RouteTarget &target,
                              const Authentication::Caller &caller,
                              const std::string_view required_audience) const
     -> bool {
-  const auto governing{this->impl_->governing_mask(target.value())};
+  const auto governing{this->table_.impl_->governing_mask(target.value())};
   if (!governing.has_value()) {
     return false;
   }
@@ -3045,44 +3086,57 @@ auto Authentication::permits(const RouteTarget &target,
   return !token.has_value() || token.value().has_audience(required_audience);
 }
 
-auto Authentication::view_count() const -> std::size_t {
-  return this->impl_->view_count();
-}
-
-auto Authentication::view_at(const std::size_t index) const
-    -> Authentication::RecordedView {
-  return this->impl_->view_at(index);
-}
-
-auto Authentication::visible(const Authentication::Path &path,
-                             const std::size_t view) const -> bool {
-  // An index naming no view is one nothing can be shown under, and an instance
-  // that could not read its artifact names none at all. Both answer here rather
-  // than below, since what nobody governs would otherwise be shown by an
-  // instance that knows nothing about who governs what, which is the one way
-  // this could disclose more than the gate admits
-  if (view >= this->impl_->view_count()) {
-    return false;
+auto Authentication::Table::views() const
+    -> std::vector<Authentication::RecordedView> {
+  std::vector<Authentication::RecordedView> result;
+  result.reserve(this->impl_->view_count());
+  for (std::size_t index{0}; index < this->impl_->view_count(); index += 1) {
+    result.push_back(this->impl_->view_at(index));
   }
 
-  const auto governing{this->impl_->match(path.value())};
-  return governing == 0 ||
-         (governing & this->impl_->view_at(view).policies) != 0;
+  return result;
 }
 
-auto Authentication::governing(const Authentication::Path &path) const
-    -> std::vector<std::size_t> {
+auto Authentication::Table::view(const std::string_view name) const
+    -> Authentication::RecordedView {
+  for (std::size_t index{0}; index < this->impl_->view_count(); index += 1) {
+    const auto candidate{this->impl_->view_at(index)};
+    if (candidate.name() == name) {
+      return candidate;
+    }
+  }
+
+  Authentication::RecordedView result;
+  result.name_ = VIEW_PUBLIC;
+  return result;
+}
+
+auto Authentication::Table::visible(
+    const Authentication::Path &path,
+    const Authentication::RecordedView &view) const -> bool {
+  // An instance that could not read its artifact shows nothing at all, which
+  // this answers rather than whoever asks. Otherwise what nobody governs would
+  // be shown by an instance knowing nothing about who governs what, which is
+  // the one way this could disclose more than the gate admits
+  return this->impl_->permits(path.value(), view.policies_);
+}
+
+auto Authentication::Table::governing(const Authentication::Path &path) const
+    -> std::vector<std::string_view> {
   auto mask{this->impl_->match(path.value())};
-  std::vector<std::size_t> result;
+  std::vector<std::string_view> result;
   while (mask != 0) {
-    result.push_back(static_cast<std::size_t>(std::countr_zero(mask)));
+    // A policy standing on its own is a view, and the table names every one, so
+    // what a policy is called is read from there rather than stored twice
+    const auto policy{Authentication::PolicySet{1} << std::countr_zero(mask)};
+    result.push_back(this->impl_->view_name(policy));
     mask &= mask - 1;
   }
 
   return result;
 }
 
-auto Authentication::reference_permitted(
+auto Authentication::Table::reference_permitted(
     const Authentication::Path &referrer,
     const Authentication::Path &referent) const -> bool {
   return this->impl_->reference_permitted(referrer.value(), referent.value());

@@ -217,7 +217,7 @@ auto mcp_resource_identifier(
 }
 
 auto generate_protected_resource_metadata(
-    const sourcemeta::one::Authentication &authentication,
+    const sourcemeta::one::Authentication::Table &authentication,
     const sourcemeta::one::Configuration &configuration,
     const std::string_view endpoint, sourcemeta::core::JSON &result) -> void {
   const auto resource{mcp_resource_identifier(configuration, endpoint)};
@@ -232,10 +232,22 @@ auto generate_protected_resource_metadata(
   // client reading them learns what to ask its provider for, rather than
   // discovering it by being refused
   std::vector<std::string_view> scopes;
-  for (const auto index : authentication.governing(
+  for (const auto name : authentication.governing(
            sourcemeta::one::Authentication::Path::relative(endpoint))) {
-    assert(index < configuration.authentication.size());
-    const auto &entry{configuration.authentication[index]};
+    // What a policy declares is read from the configuration that declared it,
+    // which is where the claim rules are already parsed, and the name is what
+    // the two agree on
+    const auto match{std::ranges::find(
+        configuration.authentication, name,
+        &sourcemeta::one::Configuration::AuthenticationEntry::name)};
+    // A policy the artifact records but this configuration no longer declares
+    // is one a build behind this one wrote. It names no client anybody could
+    // ask for a token, so it is passed over rather than reported
+    if (match == configuration.authentication.cend()) {
+      continue;
+    }
+
+    const auto &entry{*match};
     if (entry.type !=
             sourcemeta::one::Configuration::AuthenticationEntry::Type::JWT ||
         entry.audience != resource) {

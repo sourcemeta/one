@@ -51,11 +51,28 @@ save(const std::span<const sourcemeta::one::Authentication::Policy> policies,
      const std::filesystem::path &configuration,
      const std::filesystem::path &destination,
      const sourcemeta::one::Authentication::PathGuard &gateable) -> void {
-  sourcemeta::one::Authentication::write(
-      sourcemeta::one::Authentication::compile(policies, configuration,
-                                               gateable),
+  sourcemeta::one::Authentication::Table::write(
+      sourcemeta::one::Authentication::Table::compile(policies, configuration,
+                                                      gateable),
       destination);
 }
+
+// The names a table serves, which is what the naming rule below decides. What
+// each name stands for is read from what its view reaches rather than from the
+// set behind it, since that set is the artifact's own business
+static auto view_names(const sourcemeta::one::Authentication::Table &table)
+    -> std::vector<std::string_view> {
+  std::vector<std::string_view> result;
+  for (const auto &view : table.views()) {
+    result.push_back(view.name());
+  }
+
+  return result;
+}
+
+// How many policies naming one issuer a table will combine, which the artifact
+// decides rather than these cases
+static constexpr std::size_t COMBINABLE_CEILING{16};
 
 static auto test_path(const std::string &name) -> std::filesystem::path {
   return std::filesystem::path{AUTHENTICATION_TEST_DIRECTORY} / name;
@@ -279,6 +296,27 @@ static_assert(names_an_audience<TokenPolicy>);
 static_assert(names_session_secrets<InteractivePolicy>);
 static_assert(names_a_client_secret<InteractivePolicy>);
 
+template <typename T>
+concept assembled_from_a_set =
+    requires { T{std::string_view{}, std::uint64_t{}}; };
+template <typename T>
+concept states_a_set = requires(T value) { value.policies = std::uint64_t{}; };
+
+// What the two above detect, so that the pair below says something
+struct AssembledView {
+  std::string_view name;
+  std::uint64_t policies;
+};
+static_assert(assembled_from_a_set<AssembledView>);
+static_assert(states_a_set<AssembledView>);
+
+// A view is what a table answers with rather than something a caller states.
+// A set assembled anywhere else names a view no build ever wrote, and would be
+// read as admitting whatever it happened to hold
+static_assert(
+    !assembled_from_a_set<sourcemeta::one::Authentication::RecordedView>);
+static_assert(!states_a_set<sourcemeta::one::Authentication::RecordedView>);
+
 // A provider a case has control of, and what it says. Everything this module
 // reaches goes through one function, so a case configures what the provider
 // advertises and answers with, and then reads what was made of it. Nothing
@@ -444,8 +482,9 @@ static auto session_for(const std::string_view policy_name,
   // signed once that is known and left here for the exchange to answer with
   const auto identity{std::make_shared<std::string>()};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(policies, test_path("sign_in"),
-                                               anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("sign_in"), anywhere)},
       [identity](sourcemeta::one::Authentication::ProviderRequest &&request)
           -> std::optional<sourcemeta::one::Authentication::ProviderResponse> {
         if (request.url ==
@@ -558,7 +597,8 @@ static auto stub_fetcher(std::map<std::string, std::string> responses,
 
 TEST(missing_artifact_denies_everything) {
   const sourcemeta::one::Authentication authentication{
-      std::filesystem::path{"/no/such/authentication.bin"},
+      sourcemeta::one::Authentication::Table{
+          std::filesystem::path{"/no/such/authentication.bin"}},
       stub_fetcher({}, nullptr)};
   EXPECT_FALSE(
       authentication.permits(at("/"), authentication.caller({.bearer = ""})));
@@ -576,7 +616,7 @@ TEST(malformed_artifact_denies_everything) {
   stream.close();
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_FALSE(
       authentication.permits(at("/"), authentication.caller({.bearer = ""})));
   EXPECT_FALSE(authentication.permits(at("/acme/foo"),
@@ -597,7 +637,7 @@ TEST(structurally_corrupt_artifact_denies_everything) {
   stream.close();
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_FALSE(
       authentication.permits(at("/"), authentication.caller({.bearer = ""})));
   EXPECT_FALSE(authentication.permits(at("/internal/foo"),
@@ -614,14 +654,14 @@ TEST(artifact_exceeding_the_policy_ceiling_denies_everything) {
   header[2] = 'T';
   header[3] = 'H';
   header[4] = 4;
-  header[8] =
-      static_cast<char>(sourcemeta::one::Authentication::MAXIMUM_POLICIES + 1);
+  // One past what a 64 bit mask has room to name
+  header[8] = static_cast<char>(65);
   header[12] = 1;
   stream.write(header.data(), header.size());
   stream.close();
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_FALSE(
       authentication.permits(at("/"), authentication.caller({.bearer = ""})));
   EXPECT_FALSE(authentication.permits(at("/acme/foo"),
@@ -647,7 +687,7 @@ TEST(corrupted_section_offset_denies_everything) {
   stream.close();
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_FALSE(authentication.permits(at("/internal/foo"),
                                       authentication.caller({.bearer = ""})));
   EXPECT_FALSE(
@@ -660,16 +700,17 @@ TEST(zero_policies_admits_every_path) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_TRUE(
       authentication.permits(at("/"), authentication.caller({.bearer = ""})));
   EXPECT_TRUE(
       authentication.permits(at(""), authentication.caller({.bearer = ""})));
   EXPECT_TRUE(authentication.permits(at("/acme/foo/bar"),
                                      authentication.caller({.bearer = ""})));
-  EXPECT_EQ(authentication.governing(at("/")), (std::vector<std::size_t>{}));
-  EXPECT_EQ(authentication.governing(at("/acme")),
-            (std::vector<std::size_t>{}));
+  EXPECT_EQ(authentication.table().governing(at("/")),
+            (std::vector<std::string_view>{}));
+  EXPECT_EQ(authentication.table().governing(at("/acme")),
+            (std::vector<std::string_view>{}));
 }
 
 TEST(uncovered_paths_are_public_around_a_gated_scope) {
@@ -685,7 +726,7 @@ TEST(uncovered_paths_are_public_around_a_gated_scope) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   // The covered subtree is gated
   EXPECT_FALSE(authentication.permits(at("/internal"),
                                       authentication.caller({.bearer = ""})));
@@ -716,7 +757,7 @@ TEST(scope_matches_whole_segments_only) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   // The scope gates its own segment
   EXPECT_FALSE(authentication.permits(at("/internal"),
                                       authentication.caller({.bearer = ""})));
@@ -755,7 +796,7 @@ TEST(distinct_policies_each_gate_their_scope) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_FALSE(authentication.permits(at("/alpha/one"),
                                       authentication.caller({.bearer = ""})));
   EXPECT_FALSE(authentication.permits(at("/beta/two"),
@@ -786,7 +827,7 @@ TEST(nested_prefixes_gate_their_subtrees) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_FALSE(authentication.permits(at("/internal"),
                                       authentication.caller({.bearer = ""})));
   EXPECT_FALSE(authentication.permits(at("/internal/other"),
@@ -822,7 +863,7 @@ TEST(nested_inner_key_widens_access) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   // The inner path is covered by both, so either key admits it
   EXPECT_TRUE(authentication.permits(
       at("/internal/secret"), authentication.caller({.bearer = "wo-secret"})));
@@ -847,7 +888,7 @@ TEST(single_policy_with_multiple_prefixes) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_FALSE(authentication.permits(at("/internal/foo"),
                                       authentication.caller({.bearer = ""})));
   EXPECT_FALSE(authentication.permits(at("/vendor/bar"),
@@ -869,7 +910,7 @@ TEST(extensionless_policy_gates_every_representation) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   // The resource, every representation of it, and its subtree are all governed
   EXPECT_FALSE(authentication.permits(at("/secret/data"),
                                       authentication.caller({.bearer = ""})));
@@ -911,7 +952,7 @@ TEST(extension_specific_policy_gates_only_that_representation) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   // Only the named representation is gated
   EXPECT_FALSE(authentication.permits(at("/secret/data.json"),
                                       authentication.caller({.bearer = ""})));
@@ -940,7 +981,7 @@ TEST(extension_handling_is_confined_to_the_terminal_segment) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   // The policy on /v1 gates its own subtree
   EXPECT_FALSE(
       authentication.permits(at("/v1"), authentication.caller({.bearer = ""})));
@@ -969,21 +1010,21 @@ TEST(an_explicit_route_is_gated_on_the_target_as_it_arrived) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_FALSE(authentication.permits(
-      sourcemeta::one::RouteTarget{"/private/secret"},
+      sourcemeta::one::Authentication::RouteTarget{"/private/secret"},
       authentication.caller({.bearer = "", .cookies = {}})));
   EXPECT_TRUE(authentication.permits(
-      sourcemeta::one::RouteTarget{"/private/secret"},
+      sourcemeta::one::Authentication::RouteTarget{"/private/secret"},
       authentication.caller({.bearer = "route-secret", .cookies = {}})));
 
   // A target covered by no policy is admitted, including one whose spelling
   // only resembles a governed prefix
   EXPECT_TRUE(authentication.permits(
-      sourcemeta::one::RouteTarget{"/public/string"},
+      sourcemeta::one::Authentication::RouteTarget{"/public/string"},
       authentication.caller({.bearer = "", .cookies = {}})));
   EXPECT_TRUE(authentication.permits(
-      sourcemeta::one::RouteTarget{"/privateextra/secret"},
+      sourcemeta::one::Authentication::RouteTarget{"/privateextra/secret"},
       authentication.caller({.bearer = "", .cookies = {}})));
 }
 
@@ -1000,7 +1041,7 @@ TEST(apikey_admits_matching_credential) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_TRUE(authentication.permits(
       at("/internal/foo"), authentication.caller({.bearer = "secret-match"})));
   EXPECT_FALSE(authentication.permits(
@@ -1024,7 +1065,7 @@ TEST(apikey_with_multiple_keys_admits_any) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_TRUE(authentication.permits(
       at("/internal/foo"), authentication.caller({.bearer = "key-a"})));
   EXPECT_TRUE(authentication.permits(
@@ -1045,7 +1086,7 @@ TEST(apikey_with_unset_variable_denies) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_FALSE(authentication.permits(
       at("/internal/foo"), authentication.caller({.bearer = "anything"})));
   EXPECT_FALSE(authentication.permits(at("/internal/foo"),
@@ -1065,7 +1106,7 @@ TEST(apikey_with_an_empty_variable_denies) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   // A variable an operator meant to hold a key but left blank gates the path
   // exactly as an unset one does, rather than opening it to everyone
   EXPECT_FALSE(authentication.permits(at("/internal/foo"),
@@ -1089,7 +1130,7 @@ TEST(apikey_ignores_an_empty_variable_beside_a_real_one) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   // The blank one neither admits anybody nor keeps the key beside it from
   // working
   EXPECT_TRUE(authentication.permits(
@@ -1114,7 +1155,7 @@ TEST(sha256_policy_with_an_empty_variable_denies) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_FALSE(authentication.permits(at("/secret/foo"),
                                       authentication.caller({.bearer = ""})));
   EXPECT_FALSE(authentication.permits(
@@ -1140,7 +1181,7 @@ TEST(sha256_policy_admits_the_matching_credential) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_TRUE(authentication.permits(at("/secret/foo"),
                                      authentication.caller({.bearer = raw})));
   EXPECT_FALSE(authentication.permits(
@@ -1177,7 +1218,7 @@ TEST(mixed_algorithms_admit_either_key_with_identity_first) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   // Either key type opens the path regardless of declaration order. The sha256
   // key must work even though the identity policy is checked first and fails
   EXPECT_TRUE(authentication.permits(
@@ -1213,7 +1254,7 @@ TEST(mixed_algorithms_admit_either_key_with_sha256_first) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   // The identity key must work even though the sha256 policy is checked first
   EXPECT_TRUE(authentication.permits(at("/mixed/x"),
                                      authentication.caller({.bearer = raw})));
@@ -1224,7 +1265,9 @@ TEST(mixed_algorithms_admit_either_key_with_sha256_first) {
 }
 
 TEST(supports_the_maximum_number_of_policies) {
-  constexpr auto maximum{sourcemeta::one::Authentication::MAXIMUM_POLICIES};
+  // One bit per policy in a 64 bit mask, which is what an artifact has room
+  // to name
+  constexpr std::size_t maximum{64};
   std::vector<std::string> path_storage;
   path_storage.reserve(maximum);
   for (std::size_t index{0}; index < maximum; index += 1) {
@@ -1256,7 +1299,7 @@ TEST(supports_the_maximum_number_of_policies) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   // The keyless policies gate their scope with no key that can open it
   EXPECT_FALSE(authentication.permits(at("/p0/foo"),
                                       authentication.caller({.bearer = ""})));
@@ -1267,7 +1310,7 @@ TEST(supports_the_maximum_number_of_policies) {
                                      authentication.caller({.bearer = ""})));
 }
 
-TEST(governing_returns_policy_indices_in_declaration_order) {
+TEST(governing_names_the_policies_in_declaration_order) {
   const std::array<std::string_view, 1> root_paths{{"/"}};
   const std::array<std::string_view, 1> internal_paths{{"/internal"}};
   const std::array<std::string_view, 1> root_keys{{"ONE_TEST_KEY_GR"}};
@@ -1284,15 +1327,14 @@ TEST(governing_returns_policy_indices_in_declaration_order) {
   const auto path{test_path("governing.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-  EXPECT_EQ(authentication.governing(at("/")), (std::vector<std::size_t>{0}));
-  EXPECT_EQ(authentication.governing(at("/vendor")),
-            (std::vector<std::size_t>{0}));
-  EXPECT_EQ(authentication.governing(at("/internal")),
-            (std::vector<std::size_t>{0, 1}));
-  EXPECT_EQ(authentication.governing(at("/internal/foo")),
-            (std::vector<std::size_t>{0, 1}));
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_EQ(gate.governing(at("/")), (std::vector<std::string_view>{"root"}));
+  EXPECT_EQ(gate.governing(at("/vendor")),
+            (std::vector<std::string_view>{"root"}));
+  EXPECT_EQ(gate.governing(at("/internal")),
+            (std::vector<std::string_view>{"root", "internal"}));
+  EXPECT_EQ(gate.governing(at("/internal/foo")),
+            (std::vector<std::string_view>{"root", "internal"}));
 }
 
 TEST(governing_of_an_ungoverned_path_is_empty) {
@@ -1306,24 +1348,18 @@ TEST(governing_of_an_ungoverned_path_is_empty) {
   const auto path{test_path("governing_empty.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-  EXPECT_EQ(authentication.governing(at("/vendor")),
-            (std::vector<std::size_t>{}));
-  EXPECT_EQ(authentication.governing(at("/internal")),
-            (std::vector<std::size_t>{0}));
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_EQ(gate.governing(at("/vendor")), (std::vector<std::string_view>{}));
+  EXPECT_EQ(gate.governing(at("/internal")),
+            (std::vector<std::string_view>{"policy"}));
 }
 
 TEST(reference_through_a_broken_artifact_is_rejected) {
-  const sourcemeta::one::Authentication authentication{
-      std::filesystem::path{"/no/such/authentication.bin"},
-      stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/open/one"), at("/open/two")));
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/open/one"), at("/secret/two")));
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/secret/one"), at("/secret/two")));
+  const sourcemeta::one::Authentication::Table gate{
+      std::filesystem::path{"/no/such/authentication.bin"}};
+  EXPECT_FALSE(gate.reference_permitted(at("/open/one"), at("/open/two")));
+  EXPECT_FALSE(gate.reference_permitted(at("/open/one"), at("/secret/two")));
+  EXPECT_FALSE(gate.reference_permitted(at("/secret/one"), at("/secret/two")));
 }
 
 TEST(reference_to_a_public_schema_is_permitted) {
@@ -1337,12 +1373,9 @@ TEST(reference_to_a_public_schema_is_permitted) {
   const auto path{test_path("ref_to_public.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-  EXPECT_TRUE(
-      authentication.reference_permitted(at("/secret/one"), at("/open/two")));
-  EXPECT_TRUE(
-      authentication.reference_permitted(at("/open/one"), at("/open/two")));
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_TRUE(gate.reference_permitted(at("/secret/one"), at("/open/two")));
+  EXPECT_TRUE(gate.reference_permitted(at("/open/one"), at("/open/two")));
 }
 
 TEST(public_schema_referencing_an_apikey_schema_is_rejected) {
@@ -1356,10 +1389,8 @@ TEST(public_schema_referencing_an_apikey_schema_is_rejected) {
   const auto path{test_path("ref_public_to_apikey.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/open/one"), at("/secret/two")));
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_FALSE(gate.reference_permitted(at("/open/one"), at("/secret/two")));
 }
 
 TEST(reference_within_the_same_policy_is_permitted) {
@@ -1373,12 +1404,11 @@ TEST(reference_within_the_same_policy_is_permitted) {
   const auto path{test_path("ref_same_policy.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-  EXPECT_TRUE(authentication.reference_permitted(at("/internal/one"),
-                                                 at("/internal/two")));
-  EXPECT_TRUE(authentication.reference_permitted(at("/internal/one"),
-                                                 at("/internal/one")));
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_TRUE(
+      gate.reference_permitted(at("/internal/one"), at("/internal/two")));
+  EXPECT_TRUE(
+      gate.reference_permitted(at("/internal/one"), at("/internal/one")));
 }
 
 TEST(reference_across_disjoint_policies_is_rejected) {
@@ -1399,12 +1429,9 @@ TEST(reference_across_disjoint_policies_is_rejected) {
   const auto path{test_path("ref_disjoint.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/beta/two"), at("/alpha/one")));
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_FALSE(gate.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_FALSE(gate.reference_permitted(at("/beta/two"), at("/alpha/one")));
 }
 
 TEST(reference_from_a_narrower_to_a_wider_audience_is_permitted) {
@@ -1425,12 +1452,9 @@ TEST(reference_from_a_narrower_to_a_wider_audience_is_permitted) {
   const auto path{test_path("ref_narrow_to_wide.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-  EXPECT_TRUE(
-      authentication.reference_permitted(at("/p/one"), at("/p/inner/two")));
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/p/inner/two"), at("/p/one")));
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_TRUE(gate.reference_permitted(at("/p/one"), at("/p/inner/two")));
+  EXPECT_FALSE(gate.reference_permitted(at("/p/inner/two"), at("/p/one")));
 }
 
 TEST(jwt_admits_a_valid_token_and_caches_the_key_set) {
@@ -1450,8 +1474,9 @@ TEST(jwt_admits_a_valid_token_and_caches_the_key_set) {
 
   const auto calls{std::make_shared<int>(0)};
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
-                         calls)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
+                   calls)};
   EXPECT_TRUE(authentication.permits(
       at("/secure/x"), authentication.caller({.bearer = SIGNED_TOKEN})));
   EXPECT_FALSE(authentication.permits(
@@ -1481,8 +1506,9 @@ TEST(jwt_admits_a_token_whose_type_the_policy_requires) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
-                         nullptr)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
+                   nullptr)};
   EXPECT_TRUE(authentication.permits(
       at("/secure/x"), authentication.caller({.bearer = SIGNED_TOKEN})));
 }
@@ -1507,8 +1533,9 @@ TEST(jwt_denies_a_token_whose_type_is_not_the_required_one) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
-                         nullptr)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
+                   nullptr)};
   EXPECT_FALSE(authentication.permits(
       at("/secure/x"), authentication.caller({.bearer = SIGNED_TOKEN})));
 }
@@ -1531,8 +1558,9 @@ TEST(jwt_without_a_required_type_admits_any_type) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
-                         nullptr)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
+                   nullptr)};
   EXPECT_TRUE(authentication.permits(
       at("/secure/x"), authentication.caller({.bearer = SIGNED_TOKEN})));
 }
@@ -1553,8 +1581,9 @@ TEST(jwt_denies_a_token_for_the_wrong_audience) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
-                         nullptr)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
+                   nullptr)};
   EXPECT_FALSE(authentication.permits(
       at("/secure/x"), authentication.caller({.bearer = SIGNED_TOKEN})));
 }
@@ -1575,8 +1604,9 @@ TEST(jwt_denies_a_token_from_the_wrong_issuer) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
-                         nullptr)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
+                   nullptr)};
   EXPECT_FALSE(authentication.permits(
       at("/secure/x"), authentication.caller({.bearer = SIGNED_TOKEN})));
 }
@@ -1597,8 +1627,9 @@ TEST(jwt_denies_a_disallowed_algorithm) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
-                         nullptr)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
+                   nullptr)};
   EXPECT_FALSE(authentication.permits(
       at("/secure/x"), authentication.caller({.bearer = SIGNED_TOKEN})));
 }
@@ -1619,7 +1650,7 @@ TEST(jwt_denies_when_the_signing_key_is_absent) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path,
+      sourcemeta::one::Authentication::Table{path},
       stub_fetcher({{"https://idp.test/jwks", std::string{UNRELATED_KEYS}}},
                    nullptr)};
   EXPECT_FALSE(authentication.permits(
@@ -1642,7 +1673,7 @@ TEST(jwt_denies_when_the_key_set_cannot_be_fetched) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_FALSE(authentication.permits(
       at("/secure/x"), authentication.caller({.bearer = SIGNED_TOKEN})));
 }
@@ -1664,8 +1695,9 @@ TEST(an_apikey_credential_never_triggers_a_jwt_fetch) {
 
   const auto calls{std::make_shared<int>(0)};
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
-                         calls)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
+                   calls)};
   EXPECT_FALSE(authentication.permits(
       at("/secure/x"), authentication.caller({.bearer = "static-api-key"})));
   EXPECT_FALSE(authentication.permits(at("/secure/x"),
@@ -1690,16 +1722,17 @@ TEST(jwt_resolves_the_key_set_through_discovery) {
 
   const auto calls{std::make_shared<int>(0)};
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://acme.test/.well-known/openid-configuration",
-                           R"JSON({
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://acme.test/.well-known/openid-configuration",
+                     R"JSON({
               "issuer": "https://acme.test",
               "jwks_uri": "https://acme.test/keys",
               "response_types_supported": [ "code" ],
               "subject_types_supported": [ "public" ],
               "id_token_signing_alg_values_supported": [ "RS256" ]
             })JSON"},
-                          {"https://acme.test/keys", std::string{SIGNED_KEYS}}},
-                         calls)};
+                    {"https://acme.test/keys", std::string{SIGNED_KEYS}}},
+                   calls)};
   // Both the provider metadata and the key set it names are retrieved, and
   // the token then fails only on its issuer claim, which names a different
   // issuer than the policy trusts
@@ -1725,7 +1758,7 @@ TEST(jwt_without_a_discoverable_issuer_fails_closed) {
   save(policies, path, path, anywhere);
   const auto calls{std::make_shared<int>(0)};
   const sourcemeta::one::Authentication authentication{
-      path,
+      sourcemeta::one::Authentication::Table{path},
       stub_fetcher(
           {{"acme/.well-known/openid-configuration",
             R"JSON({ "issuer": "acme", "jwks_uri": "https://acme.test/keys" })JSON"},
@@ -1758,8 +1791,9 @@ TEST(mixed_apikey_and_jwt_policies_admit_either_credential) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
-                         nullptr)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
+                   nullptr)};
   // The static key opens the path
   EXPECT_TRUE(authentication.permits(
       at("/both/x"), authentication.caller({.bearer = "static-secret"})));
@@ -1787,8 +1821,9 @@ TEST(a_policy_naming_no_rule_admits_whoever_signs_in) {
             .client_secret_variable = "ONE_TEST_ADMIT_OPEN",
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("one_test_admit_open"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("one_test_admit_open"), anywhere)},
       provider.fetcher()};
 
   EXPECT_EQ(sign_in(authentication, provider, "okta", "client",
@@ -1825,8 +1860,9 @@ TEST(a_claim_that_never_arrived_is_asked_for_rather_than_refused) {
             .claims = CLAIMS_ONE_GROUP,
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("one_test_admit_partial"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("one_test_admit_partial"), anywhere)},
       provider.fetcher()};
 
   // It never arrived, so UserInfo is asked and answers
@@ -1866,8 +1902,9 @@ TEST(a_claim_that_never_arrived_and_is_nowhere_to_ask_refuses) {
             .claims = CLAIMS_ONE_GROUP,
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("one_test_admit_no_userinfo"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("one_test_admit_no_userinfo"), anywhere)},
       provider.fetcher()};
 
   EXPECT_EQ(sign_in(authentication, provider, "okta", "client",
@@ -1901,8 +1938,9 @@ TEST(a_rule_that_refuses_settles_it_whatever_another_wants) {
             .email_domains = domains,
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("one_test_admit_both"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("one_test_admit_both"), anywhere)},
       provider.fetcher()};
 
   // Both hold, which is the control
@@ -1949,8 +1987,9 @@ TEST(an_address_the_provider_will_not_vouch_for_is_refused) {
             .email_domains = domains,
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("one_test_admit_unvouched"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("one_test_admit_unvouched"), anywhere)},
       provider.fetcher()};
 
   // The provider declined to vouch, which is an answer, so asking again cannot
@@ -1993,8 +2032,9 @@ TEST(a_second_answer_fills_gaps_without_overruling_the_token) {
             .claims = CLAIMS_ONE_GROUP,
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("one_test_combine_token"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("one_test_combine_token"), anywhere)},
       provider.fetcher()};
 
   // The token said something else about the very claim UserInfo would satisfy,
@@ -2040,8 +2080,9 @@ TEST(an_address_arrives_with_its_own_assertion_or_not_at_all) {
   Provider orphaned;
   orphaned.userinfo = R"JSON({ "sub": "a1b2", "email": "jane@acme.test" })JSON";
   const sourcemeta::one::Authentication unvouched{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("combine_pair"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("combine_pair"), anywhere)},
       orphaned.fetcher()};
   EXPECT_EQ(sign_in(unvouched, orphaned, "okta", "client",
                     R"JSON({ "sub": "a1b2", "email_verified": true })JSON")
@@ -2054,8 +2095,9 @@ TEST(an_address_arrives_with_its_own_assertion_or_not_at_all) {
   whole.userinfo = R"JSON({ "sub": "a1b2", "email": "jane@acme.test",
                             "email_verified": true })JSON";
   const sourcemeta::one::Authentication vouched{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("combine_whole"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("combine_whole"), anywhere)},
       whole.fetcher()};
   EXPECT_EQ(sign_in(vouched, whole, "okta", "client",
                     R"JSON({ "sub": "a1b2", "email_verified": true })JSON")
@@ -2082,8 +2124,9 @@ TEST(admitting_reads_two_answers_only_once_they_are_combined) {
             .email_domains = domains,
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("one_test_admit_split"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("one_test_admit_split"), anywhere)},
       provider.fetcher()};
 
   // The token carries the group and UserInfo carries the address, so only the
@@ -2122,8 +2165,9 @@ TEST(a_claim_answered_with_objects_is_named_where_an_operator_looks) {
             .claims = CLAIMS_ONE_GROUP,
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("shape_objects"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("shape_objects"), anywhere)},
       provider.fetcher()};
 
   const auto objects{sign_in(authentication, provider, "shapes", "client",
@@ -2154,8 +2198,9 @@ TEST(a_claim_answered_in_the_shape_a_rule_names_says_nothing) {
             .claims = CLAIMS_ONE_GROUP,
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("shape_strings"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("shape_strings"), anywhere)},
       provider.fetcher()};
 
   // It matched, so there is nothing to explain
@@ -2195,8 +2240,9 @@ TEST(a_scope_arriving_as_objects_is_refused_without_being_named) {
             .claims = CLAIMS_SCOPE,
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("shape_scope"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("shape_scope"), anywhere)},
       provider.fetcher()};
 
   const auto objects{sign_in(
@@ -2221,8 +2267,9 @@ TEST(a_callback_under_a_name_this_instance_does_not_serve_is_refused) {
             .client_secret_variable = "ONE_TEST_ADMIT_UNKNOWN",
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("one_test_admit_unknown"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("one_test_admit_unknown"), anywhere)},
       provider.fetcher()};
 
   EXPECT_EQ(sign_in(authentication, provider, "okta", "client",
@@ -2254,7 +2301,7 @@ TEST(oidc_policy_admits_no_presented_credential) {
   // would accept, and the provider is never contacted
   const auto calls{std::make_shared<int>(0)};
   const sourcemeta::one::Authentication authentication{
-      path,
+      sourcemeta::one::Authentication::Table{path},
       stub_fetcher({{"acme/.well-known/openid-configuration",
                      R"JSON({ "jwks_uri": "https://acme.test/keys" })JSON"},
                     {"https://acme.test/keys", std::string{SIGNED_KEYS}}},
@@ -2295,7 +2342,7 @@ TEST(union_of_an_apikey_and_an_oidc_policy_admits_only_the_key) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
 
   const auto key_permitted{authentication.permits(
       at("/both/x"), authentication.caller({.bearer = "union-secret"}))};
@@ -2321,8 +2368,8 @@ TEST(oidc_policy_admits_its_session_cookie) {
   save(policies, path, path, anywhere);
 
   const auto calls{std::make_shared<int>(0)};
-  const sourcemeta::one::Authentication authentication{path,
-                                                       stub_fetcher({}, calls)};
+  const sourcemeta::one::Authentication authentication{
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, calls)};
 
   const auto sealed{session_for("okta", SESSION_SECRETS, "jane@acme.test")};
   const std::string cookies{"theme=dark; sourcemeta_one_session=" + sealed};
@@ -2362,7 +2409,7 @@ TEST(session_cookie_is_bound_to_the_policy_it_was_minted_for) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
 
   const auto sealed{session_for("okta", SESSION_SECRETS, "")};
 
@@ -2394,8 +2441,9 @@ TEST(forged_session_cookie_is_denied) {
             .client_secret_variable = "ONE_TEST_OIDC_FORGED",
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("oidc_session_forged"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("oidc_session_forged"), anywhere)},
       stub_fetcher({}, nullptr)};
 
   // The control, which is a session this policy did mint
@@ -2445,7 +2493,7 @@ TEST(session_is_admitted_when_a_shadowing_cookie_precedes_it) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   const auto sealed{session_for("okta", SESSION_SECRETS, "")};
 
   // A parent domain can set a cookie the host also sets, and the header says
@@ -2474,7 +2522,7 @@ TEST(session_is_admitted_when_a_shadowing_cookie_follows_it) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   const auto sealed{session_for("okta", SESSION_SECRETS, "")};
 
   // Taking the last match would deny here, which is the shape that lets a
@@ -2501,7 +2549,7 @@ TEST(session_is_admitted_when_it_arrives_in_a_later_cookie_field) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   const auto sealed{session_for("okta", SESSION_SECRETS, "")};
 
   // A request may carry its cookies across several fields rather than one, so
@@ -2529,7 +2577,7 @@ TEST(session_is_admitted_when_it_arrives_in_an_earlier_cookie_field) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   const auto sealed{session_for("okta", SESSION_SECRETS, "")};
 
   // And neither field is the one that decides, so a later one carrying nothing
@@ -2568,7 +2616,7 @@ TEST(a_session_for_another_policy_does_not_end_the_search) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   const auto other{session_for("google", SESSION_SECRETS, "")};
   const auto mine{session_for("okta", SESSION_SECRETS, "")};
 
@@ -2602,7 +2650,7 @@ TEST(a_shadowing_cookie_alone_never_admits) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   // Trying every value admits a caller if any one opens, and never because
   // several did not
   const std::string cookies{"sourcemeta_one_session=not-a-session; "
@@ -2639,7 +2687,7 @@ TEST(a_session_never_admits_under_a_policy_sharing_its_secret) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   const auto sealed{session_for("okta", SESSION_SECRETS, "")};
   const std::string cookies{"sourcemeta_one_session=" + sealed};
 
@@ -2670,8 +2718,9 @@ TEST(signing_out_asks_the_provider_that_established_the_session) {
             .client_secret_variable = "ONE_TEST_LOGOUT_A",
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("logout_known"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("logout_known"), anywhere)},
       provider.fetcher()};
 
   const auto established{session_for("okta", SESSION_SECRETS, "jane")};
@@ -2702,8 +2751,9 @@ TEST(signing_out_with_a_session_naming_no_policy_here_asks_nobody) {
             .client_secret_variable = "ONE_TEST_LOGOUT_B",
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("logout_unknown"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("logout_unknown"), anywhere)},
       provider.fetcher()};
 
   // A session another instance minted under a name this one never declared
@@ -2728,8 +2778,9 @@ TEST(a_transaction_never_admits_as_a_session) {
             .client_secret_variable = "ONE_TEST_PURPOSE_CLIENT",
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("oidc_open_session_purpose"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("oidc_open_session_purpose"), anywhere)},
       stub_fetcher({{"https://acme.test/.well-known/openid-configuration",
                      R"JSON({
               "issuer": "https://acme.test",
@@ -2777,7 +2828,7 @@ TEST(session_cookie_without_a_configured_secret_is_denied) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
 
   const auto sealed{session_for("okta", SESSION_SECRETS, "")};
   const std::string cookies{"sourcemeta_one_session=" + sealed};
@@ -2801,8 +2852,9 @@ TEST(session_admitted_under_a_rotated_secret) {
             .client_secret_variable = "ONE_TEST_OIDC_ROTATED",
             .session_secrets = SESSION_SECRETS_ROTATED}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("oidc_session_rotated"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("oidc_session_rotated"), anywhere)},
       stub_fetcher({}, nullptr)};
 
   // A session established when the old secret was the only one is still
@@ -2839,8 +2891,9 @@ TEST(session_with_a_blank_configured_secret_is_denied) {
             .client_secret_variable = "ONE_TEST_OIDC_BLANK",
             .session_secrets = SESSION_SECRETS_BLANK}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("oidc_session_blank"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("oidc_session_blank"), anywhere)},
       stub_fetcher({}, nullptr)};
 
   // A blank secret would let anybody forge a session, so nothing verifies one,
@@ -2867,27 +2920,9 @@ TEST(save_creates_the_directory_it_writes_into) {
 
   EXPECT_TRUE(std::filesystem::exists(path));
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_TRUE(authentication.permits(
       at("/internal/foo"), authentication.caller({.bearer = "nested-secret"})));
-}
-
-TEST(save_rejects_a_nameless_policy) {
-  const std::array<std::string_view, 1> paths{{"/portal"}};
-  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{.paths = paths,
-        .credential = sourcemeta::one::Authentication::Policy::Interactive{
-            .issuer = "acme",
-            .client_id = "client",
-            .client_secret_variable = "ONE_TEST_OIDC_NAMELESS"}}}};
-  const auto path{test_path("oidc_nameless.bin")};
-  try {
-    save(policies, path, path, anywhere);
-    FAIL();
-  } catch (const sourcemeta::one::AuthenticationPolicyNameError &error) {
-    EXPECT_STREQ(error.what(),
-                 "An authentication policy requires a name of its own");
-  }
 }
 
 TEST(an_artifact_whose_table_omits_the_anonymous_view_is_refused) {
@@ -2918,12 +2953,30 @@ TEST(an_artifact_whose_table_omits_the_anonymous_view_is_refused) {
   stream.close();
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   // A refused artifact denies rather than serving anybody a tree it guessed at
   EXPECT_FALSE(authentication.permits(
       at("/machine/x"), authentication.caller({.bearer = "table-secret"})));
   EXPECT_FALSE(authentication.permits(at("/anywhere"),
                                       authentication.caller({.bearer = ""})));
+}
+
+TEST(save_rejects_a_nameless_policy) {
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .credential = sourcemeta::one::Authentication::Policy::Interactive{
+            .issuer = "acme",
+            .client_id = "client",
+            .client_secret_variable = "ONE_TEST_OIDC_NAMELESS"}}}};
+  const auto path{test_path("oidc_nameless.bin")};
+  try {
+    save(policies, path, path, anywhere);
+    FAIL();
+  } catch (const sourcemeta::one::AuthenticationPolicyNameError &error) {
+    EXPECT_STREQ(error.what(),
+                 "An authentication policy requires a name of its own");
+  }
 }
 
 TEST(save_rejects_a_nameless_key_policy) {
@@ -2968,10 +3021,27 @@ TEST(save_rejects_two_policies_sharing_a_name) {
   }
 }
 
+TEST(save_rejects_a_policy_taking_the_anonymous_name) {
+  const std::array<std::string_view, 1> paths{{"/machine"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_RESERVED"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .name = "public",
+        .credential =
+            sourcemeta::one::Authentication::Policy::ApiKey{.keys = keys}}}};
+  const auto path{test_path("name_reserved.bin")};
+  try {
+    save(policies, path, path, anywhere);
+    FAIL();
+  } catch (const sourcemeta::one::AuthenticationPolicyNameError &error) {
+    EXPECT_STREQ(error.what(),
+                 "An authentication policy requires a name of its own");
+  }
+}
+
 TEST(save_writes_the_largest_table_a_configuration_can_declare) {
   constexpr std::size_t groups{4};
-  constexpr auto per_group{
-      sourcemeta::one::Authentication::MAXIMUM_COMBINABLE_POLICIES};
+  constexpr auto per_group{COMBINABLE_CEILING};
   constexpr auto total{groups * per_group};
   std::vector<std::string> path_storage;
   std::vector<std::string> name_storage;
@@ -3025,8 +3095,9 @@ TEST(save_writes_the_largest_table_a_configuration_can_declare) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
-                         nullptr)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                   nullptr)};
   EXPECT_EQ(authentication.caller({.bearer = ""}).view(), "public");
   // A name read back out of a table this size, rather than the entry that sits
   // first in it whatever was written after
@@ -3118,28 +3189,10 @@ TEST(save_accepts_a_separator_that_spells_no_other_combination) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_EQ(authentication.caller({.bearer = "separator-secret"}).view(),
             "alpha+beta");
   EXPECT_EQ(authentication.caller({.bearer = ""}).view(), "public");
-}
-
-TEST(save_rejects_a_policy_taking_the_anonymous_name) {
-  const std::array<std::string_view, 1> paths{{"/machine"}};
-  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_RESERVED"}};
-  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{.paths = paths,
-        .name = "public",
-        .credential =
-            sourcemeta::one::Authentication::Policy::ApiKey{.keys = keys}}}};
-  const auto path{test_path("name_reserved.bin")};
-  try {
-    save(policies, path, path, anywhere);
-    FAIL();
-  } catch (const sourcemeta::one::AuthenticationPolicyNameError &error) {
-    EXPECT_STREQ(error.what(),
-                 "An authentication policy requires a name of its own");
-  }
 }
 
 TEST(union_of_an_apikey_and_an_oidc_policy_admits_key_or_session) {
@@ -3163,7 +3216,7 @@ TEST(union_of_an_apikey_and_an_oidc_policy_admits_key_or_session) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
 
   const auto key_permitted{authentication.permits(
       at("/both/x"), authentication.caller({.bearer = "union-key"}))};
@@ -3194,7 +3247,7 @@ TEST(session_cookie_does_not_open_an_apikey_path) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
 
   const auto sealed{session_for("okta", SESSION_SECRETS, "")};
   const std::string cookies{"sourcemeta_one_session=" + sealed};
@@ -3220,8 +3273,9 @@ TEST(a_login_starts_only_under_a_declared_name) {
             .client_secret_variable = "ONE_TEST_NAMED",
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(policies, test_path("named"),
-                                               anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("named"), anywhere)},
       provider.fetcher()};
 
   EXPECT_EQ(authentication.login("okta", INSTANCE_URL, REDIRECT_URI, false, "")
@@ -3254,8 +3308,9 @@ TEST(what_a_provider_said_is_retrieved_once_and_reused) {
             .client_secret_variable = "ONE_TEST_OIDC_CACHE",
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("one_test_oidc_cache"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("one_test_oidc_cache"), anywhere)},
       provider.fetcher()};
 
   EXPECT_EQ(authentication.login("okta", INSTANCE_URL, REDIRECT_URI, false, "")
@@ -3288,8 +3343,9 @@ TEST(a_provider_naming_no_authentication_method_gets_the_header) {
             .client_secret_variable = "ONE_TEST_OIDC_AUTH_SILENT",
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("one_test_oidc_auth_silent"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("one_test_oidc_auth_silent"), anywhere)},
       provider.fetcher()};
 
   EXPECT_EQ(sign_in(authentication, provider, "okta", "client",
@@ -3315,8 +3371,9 @@ TEST(a_provider_naming_the_header_gets_the_header) {
             .client_secret_variable = "ONE_TEST_OIDC_AUTH_BASIC",
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("one_test_oidc_auth_basic"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("one_test_oidc_auth_basic"), anywhere)},
       provider.fetcher()};
 
   EXPECT_EQ(sign_in(authentication, provider, "okta", "client",
@@ -3345,8 +3402,9 @@ TEST(a_provider_refusing_the_header_gets_the_body_instead) {
             .client_secret_variable = "ONE_TEST_OIDC_AUTH_POST",
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("one_test_oidc_auth_post"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("one_test_oidc_auth_post"), anywhere)},
       provider.fetcher()};
 
   EXPECT_EQ(sign_in(authentication, provider, "okta", "client",
@@ -3371,14 +3429,16 @@ TEST(a_login_against_an_unreachable_provider_cannot_start) {
             .client_secret_variable = "ONE_TEST_OIDC_UNREACHABLE",
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("one_test_oidc_unreachable"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("one_test_oidc_unreachable"), anywhere)},
       provider.fetcher()};
   Provider silent{provider};
   silent.reachable = false;
   const sourcemeta::one::Authentication unreachable{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("unreachable"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("unreachable"), anywhere)},
       silent.fetcher()};
 
   const auto outcome{
@@ -3405,8 +3465,9 @@ TEST(a_login_without_a_client_secret_cannot_start) {
             .client_secret_variable = "ONE_TEST_SECRET_UNSET",
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("secret_unset"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("secret_unset"), anywhere)},
       provider.fetcher()};
 
   const auto outcome{
@@ -3436,8 +3497,9 @@ TEST(a_login_with_a_blank_client_secret_cannot_start) {
             .client_secret_variable = "ONE_TEST_SECRET_BLANK",
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("secret_blank"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("secret_blank"), anywhere)},
       provider.fetcher()};
   const auto outcome{
       authentication.login("okta", INSTANCE_URL, REDIRECT_URI, false, "")};
@@ -3454,8 +3516,9 @@ TEST(a_login_with_a_blank_client_secret_cannot_start) {
             .client_secret_variable = "ONE_TEST_SECRET_SET",
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication working{
-      sourcemeta::one::Authentication::compile(
-          configured, test_path("secret_set"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              configured, test_path("secret_set"), anywhere)},
       provider.fetcher()};
   EXPECT_EQ(working.login("okta", INSTANCE_URL, REDIRECT_URI, false, "").result,
             sourcemeta::one::Authentication::Outcome::Result::Redirect);
@@ -3473,8 +3536,9 @@ TEST(a_login_naming_no_secret_variable_cannot_start) {
             .client_id = "client",
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("secret_unnamed"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("secret_unnamed"), anywhere)},
       provider.fetcher()};
 
   const auto outcome{
@@ -3494,8 +3558,9 @@ TEST(a_machine_policy_starts_no_login) {
         .credential =
             sourcemeta::one::Authentication::Policy::ApiKey{.keys = keys}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("machine_login"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("machine_login"), anywhere)},
       Provider{}.fetcher()};
 
   EXPECT_EQ(
@@ -3518,8 +3583,9 @@ TEST(a_login_asking_for_nowhere_returns_to_what_the_policy_governs) {
             .client_secret_variable = "ONE_TEST_DEFAULT_PATH",
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("default_path"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("default_path"), anywhere)},
       provider.fetcher()};
 
   const auto completed{sign_in(authentication, provider, "okta", "client",
@@ -3533,7 +3599,9 @@ TEST(a_login_asking_for_nowhere_returns_to_what_the_policy_governs) {
 // is the same answer it gives to every other question
 TEST(a_login_through_a_broken_artifact_is_missing) {
   const sourcemeta::one::Authentication authentication{
-      std::filesystem::path{"/no/such/authentication.bin"}, {}};
+      sourcemeta::one::Authentication::Table{
+          std::filesystem::path{"/no/such/authentication.bin"}},
+      {}};
   EXPECT_EQ(authentication.login("okta", INSTANCE_URL, REDIRECT_URI, false, "")
                 .result,
             sourcemeta::one::Authentication::Outcome::Result::Missing);
@@ -3568,8 +3636,9 @@ TEST(a_session_is_bound_to_the_policy_whose_secret_sealed_it) {
             .client_secret_variable = "ONE_TEST_BIND_B",
             .session_secrets = other}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("bind_policies"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("bind_policies"), anywhere)},
       provider.fetcher()};
 
   const auto established{session_for("okta", SESSION_SECRETS, "jane")};
@@ -3599,8 +3668,9 @@ TEST(a_login_without_a_session_secret_cannot_start) {
             .client_secret_variable = "ONE_TEST_SEAL_NONE",
             .session_secrets = absent}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(policies, test_path("seal_none"),
-                                               anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("seal_none"), anywhere)},
       provider.fetcher()};
 
   const auto outcome{
@@ -3636,12 +3706,9 @@ TEST(reference_within_the_same_oidc_scope_is_permitted) {
   const auto path{test_path("oidc_ref_same.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-  EXPECT_TRUE(
-      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
-  EXPECT_TRUE(
-      authentication.reference_permitted(at("/beta/two"), at("/alpha/one")));
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_TRUE(gate.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_TRUE(gate.reference_permitted(at("/beta/two"), at("/alpha/one")));
 }
 
 TEST(reference_across_distinct_oidc_clients_is_rejected) {
@@ -3666,12 +3733,9 @@ TEST(reference_across_distinct_oidc_clients_is_rejected) {
   const auto path{test_path("oidc_ref_distinct.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/beta/two"), at("/alpha/one")));
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_FALSE(gate.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_FALSE(gate.reference_permitted(at("/beta/two"), at("/alpha/one")));
 }
 
 TEST(reference_across_swapped_oidc_identities_is_rejected) {
@@ -3698,12 +3762,9 @@ TEST(reference_across_swapped_oidc_identities_is_rejected) {
   const auto path{test_path("oidc_ref_swapped.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/beta/two"), at("/alpha/one")));
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_FALSE(gate.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_FALSE(gate.reference_permitted(at("/beta/two"), at("/alpha/one")));
 }
 
 TEST(reference_mixing_identities_across_oidc_policies_is_rejected) {
@@ -3739,10 +3800,8 @@ TEST(reference_mixing_identities_across_oidc_policies_is_rejected) {
   const auto path{test_path("oidc_ref_mixed.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/source/one"), at("/target/two")));
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_FALSE(gate.reference_permitted(at("/source/one"), at("/target/two")));
 }
 
 TEST(reference_between_oidc_scopes_distinguishes_claims) {
@@ -3769,14 +3828,11 @@ TEST(reference_between_oidc_scopes_distinguishes_claims) {
   const auto path{test_path("oidc_ref_claims.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+  const sourcemeta::one::Authentication::Table gate{path};
   // The same provider client admitting a narrower set of people is a different
   // audience, so neither direction reaches the other
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/open/one"), at("/gated/two")));
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/gated/two"), at("/open/one")));
+  EXPECT_FALSE(gate.reference_permitted(at("/open/one"), at("/gated/two")));
+  EXPECT_FALSE(gate.reference_permitted(at("/gated/two"), at("/open/one")));
 }
 
 TEST(reference_between_oidc_scopes_distinguishes_email_domains) {
@@ -3806,10 +3862,8 @@ TEST(reference_between_oidc_scopes_distinguishes_email_domains) {
   const auto path{test_path("oidc_ref_domains.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_FALSE(gate.reference_permitted(at("/alpha/one"), at("/beta/two")));
 }
 
 TEST(reference_between_oidc_scopes_ignores_how_rules_were_written) {
@@ -3844,14 +3898,11 @@ TEST(reference_between_oidc_scopes_ignores_how_rules_were_written) {
   const auto path{test_path("oidc_ref_spelling.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+  const sourcemeta::one::Authentication::Table gate{path};
   // A domain names a host, so its case says nothing about who is admitted,
   // and neither does the order the rules were written in
-  EXPECT_TRUE(
-      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
-  EXPECT_TRUE(
-      authentication.reference_permitted(at("/beta/two"), at("/alpha/one")));
+  EXPECT_TRUE(gate.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_TRUE(gate.reference_permitted(at("/beta/two"), at("/alpha/one")));
 }
 
 TEST(admission_by_an_apikey_policy_identifies_the_principal) {
@@ -3867,7 +3918,7 @@ TEST(admission_by_an_apikey_policy_identifies_the_principal) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   const auto permitted{authentication.permits(
       at("/internal/foo"),
       authentication.caller({.bearer = "principal-secret"}))};
@@ -3890,8 +3941,9 @@ TEST(admission_by_a_jwt_policy_identifies_the_principal) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
-                         nullptr)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
+                   nullptr)};
   const auto permitted{authentication.permits(
       at("/secure/foo"), authentication.caller({.bearer = SIGNED_TOKEN}))};
   EXPECT_TRUE(permitted);
@@ -3919,8 +3971,9 @@ TEST(principal_identifies_the_admitting_policy_among_several) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
-                         nullptr)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://idp.test/jwks", std::string{SIGNED_KEYS}}},
+                   nullptr)};
 
   const auto apikey_permitted{authentication.permits(
       at("/both/x"), authentication.caller({.bearer = "principal-mixed"}))};
@@ -3944,7 +3997,7 @@ TEST(anonymous_and_denied_verdicts_carry_no_principal) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
 
   // An uncovered path admits an anonymous caller
   const auto anonymous_permitted{authentication.permits(
@@ -3958,7 +4011,8 @@ TEST(anonymous_and_denied_verdicts_carry_no_principal) {
 
   // A broken artifact denies with no principal either
   const sourcemeta::one::Authentication missing{
-      std::filesystem::path{"/no/such/authentication.bin"},
+      sourcemeta::one::Authentication::Table{
+          std::filesystem::path{"/no/such/authentication.bin"}},
       stub_fetcher({}, nullptr)};
   const auto missing_permitted{missing.permits(
       at("/internal/foo"), missing.caller({.bearer = "principal-none"}))};
@@ -3981,16 +4035,12 @@ TEST(reference_rules_treat_a_jwt_scope_conservatively) {
   save(policies, path, path, anywhere);
 
   // Reference checks read only the policy, so no key set transport is needed
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+  const sourcemeta::one::Authentication::Table gate{path};
   // A public schema may not reference one behind the token scope
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/open/one"), at("/secure/two")));
+  EXPECT_FALSE(gate.reference_permitted(at("/open/one"), at("/secure/two")));
   // The token scope may reference a public schema, and itself
-  EXPECT_TRUE(
-      authentication.reference_permitted(at("/secure/one"), at("/open/two")));
-  EXPECT_TRUE(
-      authentication.reference_permitted(at("/secure/one"), at("/secure/two")));
+  EXPECT_TRUE(gate.reference_permitted(at("/secure/one"), at("/open/two")));
+  EXPECT_TRUE(gate.reference_permitted(at("/secure/one"), at("/secure/two")));
 }
 
 TEST(jwt_without_a_transport_denies_rather_than_crashes) {
@@ -4008,7 +4058,8 @@ TEST(jwt_without_a_transport_denies_rather_than_crashes) {
   const auto path{test_path("jwt_no_transport.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{path, {}};
+  const sourcemeta::one::Authentication authentication{
+      sourcemeta::one::Authentication::Table{path}, {}};
   EXPECT_FALSE(authentication.permits(
       at("/secure/x"), authentication.caller({.bearer = SIGNED_TOKEN})));
 }
@@ -4038,10 +4089,11 @@ TEST(jwt_policies_sharing_an_issuer_use_their_own_key_set) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher(
-                {{"https://idp.test/primary", std::string{SIGNED_KEYS}},
-                 {"https://idp.test/secondary", std::string{UNRELATED_KEYS}}},
-                nullptr)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher(
+          {{"https://idp.test/primary", std::string{SIGNED_KEYS}},
+           {"https://idp.test/secondary", std::string{UNRELATED_KEYS}}},
+          nullptr)};
   // The primary path is populated first, which under a per-issuer cache would
   // have leaked its key set to the secondary path
   EXPECT_TRUE(authentication.permits(
@@ -4067,8 +4119,9 @@ TEST(jwt_claims_admit_only_a_token_carrying_a_named_value) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
-                         nullptr)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                   nullptr)};
   EXPECT_TRUE(authentication.permits(
       at("/secure/x"),
       authentication.caller(
@@ -4099,8 +4152,9 @@ TEST(jwt_claims_admit_any_one_of_the_named_values) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
-                         nullptr)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                   nullptr)};
   EXPECT_TRUE(authentication.permits(
       at("/secure/x"),
       authentication.caller(
@@ -4138,8 +4192,9 @@ TEST(jwt_claims_require_every_rule_it_declares) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
-                         nullptr)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                   nullptr)};
   EXPECT_TRUE(authentication.permits(
       at("/secure/x"),
       authentication.caller(
@@ -4174,8 +4229,9 @@ TEST(jwt_claims_read_a_scope_as_a_space_delimited_set) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
-                         nullptr)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                   nullptr)};
   EXPECT_TRUE(authentication.permits(
       at("/secure/x"),
       authentication.caller(
@@ -4221,8 +4277,9 @@ TEST(jwt_claims_deny_an_ordinary_rule_that_names_no_value) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
-                         nullptr)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                   nullptr)};
   // The same reading the scope rule gets, on the path that defers the
   // comparison rather than making it here
   EXPECT_FALSE(authentication.permits(
@@ -4248,8 +4305,9 @@ TEST(jwt_claims_deny_a_scope_rule_that_names_no_value) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
-                         nullptr)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                   nullptr)};
   // An allow list naming nothing admits nobody, rather than widening to
   // every token that carries any scope at all
   EXPECT_FALSE(authentication.permits(
@@ -4275,8 +4333,9 @@ TEST(jwt_claims_deny_a_scope_rule_this_cannot_read) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
-                         nullptr)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                   nullptr)};
   // A value that is not a scope token denies, since passing it over would
   // leave a rule that admits every token carrying any scope
   EXPECT_FALSE(authentication.permits(
@@ -4302,8 +4361,9 @@ TEST(jwt_claims_scope_without_a_constraint_still_requires_a_scope) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
-                         nullptr)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                   nullptr)};
   // Constraining no value asks only that a scope be carried, so any one does
   EXPECT_TRUE(authentication.permits(
       at("/secure/x"),
@@ -4335,8 +4395,9 @@ TEST(jwt_claims_match_a_group_object_on_its_identifier_alone) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
-                         nullptr)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                   nullptr)};
   // The shape RFC 9068 Section 2.2.3.1 gives the claim by way of RFC 7643
   EXPECT_TRUE(authentication.permits(
       at("/secure/x"),
@@ -4369,8 +4430,9 @@ TEST(jwt_claims_never_match_a_value_that_is_not_a_string) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
-                         nullptr)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                   nullptr)};
   EXPECT_FALSE(authentication.permits(
       at("/secure/x"),
       authentication.caller(
@@ -4401,8 +4463,9 @@ TEST(jwt_without_claims_admits_a_token_carrying_none) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
-                         nullptr)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                   nullptr)};
   EXPECT_TRUE(authentication.permits(
       at("/secure/x"), authentication.caller({.bearer = token_with("{}")})));
 }
@@ -4452,8 +4515,9 @@ TEST(jwt_claims_that_do_not_parse_deny_everything) {
   }
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
-                         nullptr)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                   nullptr)};
   // Rules that cannot be read are not passed over, since doing so would drop
   // the restriction and admit everyone the policy was meant to narrow
   EXPECT_FALSE(authentication.permits(
@@ -4490,19 +4554,15 @@ TEST(reference_between_jwt_scopes_distinguishes_claims) {
   const auto path{test_path("jwt_claims_reference.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
-                         nullptr)};
+  const sourcemeta::one::Authentication::Table gate{path};
   // Two policies alike but for their rules admit different callers, so the
   // looser one may not reach what the stricter one guards
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/open/one"), at("/gated/two")));
+  EXPECT_FALSE(gate.reference_permitted(at("/open/one"), at("/gated/two")));
   // The reverse is refused too, exactly as a differing token type is. A scope
   // is one indivisible identity rather than a set compared piecewise, so the
   // cost is a build that has to say so, against disclosing a referent to
   // somebody the referrer never admitted
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/gated/two"), at("/open/one")));
+  EXPECT_FALSE(gate.reference_permitted(at("/gated/two"), at("/open/one")));
 }
 
 TEST(reference_between_jwt_scopes_ignores_the_order_rules_were_written_in) {
@@ -4531,15 +4591,11 @@ TEST(reference_between_jwt_scopes_ignores_the_order_rules_were_written_in) {
   const auto path{test_path("jwt_claims_reference_order.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
-                         nullptr)};
+  const sourcemeta::one::Authentication::Table gate{path};
   // The rules arrive canonical, so two policies admitting the same callers
   // carry identical bytes and count as one audience in either direction
-  EXPECT_TRUE(
-      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
-  EXPECT_TRUE(
-      authentication.reference_permitted(at("/beta/two"), at("/alpha/one")));
+  EXPECT_TRUE(gate.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_TRUE(gate.reference_permitted(at("/beta/two"), at("/alpha/one")));
 }
 
 TEST(reference_between_jwt_scopes_distinguishes_algorithms) {
@@ -4577,15 +4633,12 @@ TEST(reference_between_jwt_scopes_distinguishes_algorithms) {
   const auto path{test_path("jwt_reference_algorithms.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+  const sourcemeta::one::Authentication::Table gate{path};
   // Same issuer, audience, and key set but a different algorithm is a different
   // scope, so no token could satisfy the reference
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_FALSE(gate.reference_permitted(at("/alpha/one"), at("/beta/two")));
   // An identical policy is the same scope
-  EXPECT_TRUE(
-      authentication.reference_permitted(at("/alpha/one"), at("/gamma/two")));
+  EXPECT_TRUE(gate.reference_permitted(at("/alpha/one"), at("/gamma/two")));
 }
 
 TEST(reference_between_jwt_scopes_ignores_algorithm_order) {
@@ -4618,12 +4671,9 @@ TEST(reference_between_jwt_scopes_ignores_algorithm_order) {
   const auto path{test_path("jwt_reference_algorithm_order.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-  EXPECT_TRUE(
-      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
-  EXPECT_TRUE(
-      authentication.reference_permitted(at("/beta/two"), at("/alpha/one")));
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_TRUE(gate.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_TRUE(gate.reference_permitted(at("/beta/two"), at("/alpha/one")));
 }
 
 TEST(reference_between_jwt_scopes_ignores_token_type_spelling) {
@@ -4654,12 +4704,9 @@ TEST(reference_between_jwt_scopes_ignores_token_type_spelling) {
   const auto path{test_path("jwt_reference_token_type_spelling.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-  EXPECT_TRUE(
-      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
-  EXPECT_TRUE(
-      authentication.reference_permitted(at("/beta/two"), at("/alpha/one")));
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_TRUE(gate.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_TRUE(gate.reference_permitted(at("/beta/two"), at("/alpha/one")));
 }
 
 TEST(reference_between_jwt_scopes_ignores_repeated_algorithms) {
@@ -4692,12 +4739,9 @@ TEST(reference_between_jwt_scopes_ignores_repeated_algorithms) {
   const auto path{test_path("jwt_reference_repeated_algorithms.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-  EXPECT_TRUE(
-      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
-  EXPECT_TRUE(
-      authentication.reference_permitted(at("/beta/two"), at("/alpha/one")));
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_TRUE(gate.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_TRUE(gate.reference_permitted(at("/beta/two"), at("/alpha/one")));
 }
 
 TEST(a_token_type_that_is_the_bare_media_prefix_still_names_a_type) {
@@ -4728,12 +4772,9 @@ TEST(a_token_type_that_is_the_bare_media_prefix_still_names_a_type) {
   const auto path{test_path("jwt_token_type_bare_prefix.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/beta/two"), at("/alpha/one")));
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_FALSE(gate.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_FALSE(gate.reference_permitted(at("/beta/two"), at("/alpha/one")));
 }
 
 TEST(a_token_type_carrying_a_further_separator_keeps_its_prefix) {
@@ -4764,12 +4805,9 @@ TEST(a_token_type_carrying_a_further_separator_keeps_its_prefix) {
   const auto path{test_path("jwt_token_type_nested_separator.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/beta/two"), at("/alpha/one")));
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_FALSE(gate.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_FALSE(gate.reference_permitted(at("/beta/two"), at("/alpha/one")));
 }
 
 TEST(reference_across_swapped_jwt_identities_is_rejected) {
@@ -4798,12 +4836,9 @@ TEST(reference_across_swapped_jwt_identities_is_rejected) {
   const auto path{test_path("jwt_reference_swapped.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/beta/two"), at("/alpha/one")));
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_FALSE(gate.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_FALSE(gate.reference_permitted(at("/beta/two"), at("/alpha/one")));
 }
 
 TEST(reference_mixing_identities_across_jwt_policies_is_rejected) {
@@ -4841,10 +4876,8 @@ TEST(reference_mixing_identities_across_jwt_policies_is_rejected) {
   const auto path{test_path("jwt_reference_mixed.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/source/one"), at("/target/two")));
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_FALSE(gate.reference_permitted(at("/source/one"), at("/target/two")));
 }
 
 TEST(reference_across_swapped_jwt_key_set_locations_is_rejected) {
@@ -4874,12 +4907,9 @@ TEST(reference_across_swapped_jwt_key_set_locations_is_rejected) {
   const auto path{test_path("jwt_reference_swapped_keys.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/alpha/one"), at("/beta/two")));
-  EXPECT_FALSE(
-      authentication.reference_permitted(at("/beta/two"), at("/alpha/one")));
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_FALSE(gate.reference_permitted(at("/alpha/one"), at("/beta/two")));
+  EXPECT_FALSE(gate.reference_permitted(at("/beta/two"), at("/alpha/one")));
 }
 
 // A configured policy path that only differs cosmetically still has to gate the
@@ -4899,7 +4929,7 @@ TEST(a_policy_path_declared_canonically_gates_its_location) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_FALSE(authentication.permits(at("/private/secret"),
                                       authentication.caller({.bearer = ""})));
   EXPECT_TRUE(authentication.permits(
@@ -4923,7 +4953,7 @@ TEST(a_policy_path_carrying_a_dot_segment_gates_its_location) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_FALSE(authentication.permits(at("/private/secret"),
                                       authentication.caller({.bearer = ""})));
   EXPECT_TRUE(authentication.permits(
@@ -4947,7 +4977,7 @@ TEST(a_policy_path_that_climbs_back_into_itself_gates_its_location) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_FALSE(authentication.permits(at("/private/secret"),
                                       authentication.caller({.bearer = ""})));
   EXPECT_TRUE(authentication.permits(
@@ -4971,7 +5001,7 @@ TEST(a_policy_path_carrying_a_repeated_separator_gates_its_location) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_FALSE(authentication.permits(at("/private/secret"),
                                       authentication.caller({.bearer = ""})));
   EXPECT_TRUE(authentication.permits(
@@ -4983,9 +5013,11 @@ TEST(a_policy_path_carrying_a_repeated_separator_gates_its_location) {
 }
 
 TEST(views_of_nothing_are_the_public_one_alone) {
-  const auto views{sourcemeta::one::Authentication::views({})};
-  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
-                       {.name = "public", .policies = {}}}));
+  const auto path{test_path("views_of_nothing_are_the_public_one_alone.bin")};
+  save(std::span<const sourcemeta::one::Authentication::Policy>{}, path, path,
+       anywhere);
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_EQ(view_names(gate), (std::vector<std::string_view>{"public"}));
 }
 
 TEST(views_name_a_static_key_policy_on_its_own) {
@@ -4997,10 +5029,11 @@ TEST(views_name_a_static_key_policy_on_its_own) {
         .credential =
             sourcemeta::one::Authentication::Policy::ApiKey{.keys = keys}}}};
 
-  const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
-                       {.name = "public", .policies = {}},
-                       {.name = "vault", .policies = {0}}}));
+  const auto path{test_path("views_name_a_static_key_policy_on_its_own.bin")};
+  save(policies, path, path, anywhere);
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_EQ(view_names(gate),
+            (std::vector<std::string_view>{"public", "vault"}));
 }
 
 TEST(views_name_an_interactive_policy_on_its_own) {
@@ -5009,12 +5042,14 @@ TEST(views_name_an_interactive_policy_on_its_own) {
       {{.paths = paths,
         .name = "desk",
         .credential = sourcemeta::one::Authentication::Policy::Interactive{
-            .issuer = "https://idp.example.com/realms/staff"}}}};
+            .issuer = "https://idp.example.com/realms/staff",
+            .session_secrets = SESSION_SECRETS}}}};
 
-  const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
-                       {.name = "public", .policies = {}},
-                       {.name = "desk", .policies = {0}}}));
+  const auto path{test_path("views_name_an_interactive_policy_on_its_own.bin")};
+  save(policies, path, path, anywhere);
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_EQ(view_names(gate),
+            (std::vector<std::string_view>{"public", "desk"}));
 }
 
 TEST(views_name_a_token_policy_on_its_own) {
@@ -5025,10 +5060,11 @@ TEST(views_name_a_token_policy_on_its_own) {
         .credential = sourcemeta::one::Authentication::Policy::Token{
             .issuer = "https://idp.example.com/realms/staff"}}}};
 
-  const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
-                       {.name = "public", .policies = {}},
-                       {.name = "machine", .policies = {0}}}));
+  const auto path{test_path("views_name_a_token_policy_on_its_own.bin")};
+  save(policies, path, path, anywhere);
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_EQ(view_names(gate),
+            (std::vector<std::string_view>{"public", "machine"}));
 }
 
 TEST(views_combine_token_policies_that_name_one_issuer) {
@@ -5047,12 +5083,12 @@ TEST(views_combine_token_policies_that_name_one_issuer) {
 
   // A claim is a list and a rule is met by any of its values, so one token can
   // satisfy both
-  const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
-                       {.name = "public", .policies = {}},
-                       {.name = "legal", .policies = {0}},
-                       {.name = "legal+tech", .policies = {0, 1}},
-                       {.name = "tech", .policies = {1}}}));
+  const auto path{
+      test_path("views_combine_token_policies_that_name_one_issuer.bin")};
+  save(policies, path, path, anywhere);
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_EQ(view_names(gate), (std::vector<std::string_view>{
+                                  "public", "legal", "legal+tech", "tech"}));
 }
 
 TEST(views_never_combine_token_policies_across_issuers) {
@@ -5071,11 +5107,12 @@ TEST(views_never_combine_token_policies_across_issuers) {
 
   // A token carries one issuer and is verified against it before any rule is
   // read, so nobody can ever hold both
-  const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
-                       {.name = "public", .policies = {}},
-                       {.name = "partner", .policies = {1}},
-                       {.name = "staff", .policies = {0}}}));
+  const auto path{
+      test_path("views_never_combine_token_policies_across_issuers.bin")};
+  save(policies, path, path, anywhere);
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_EQ(view_names(gate),
+            (std::vector<std::string_view>{"public", "partner", "staff"}));
 }
 
 TEST(views_never_combine_token_policies_testing_one_claim_across_issuers) {
@@ -5096,11 +5133,12 @@ TEST(views_never_combine_token_policies_testing_one_claim_across_issuers) {
 
   // The issuer is decisive and is read first, so testing the same claim for the
   // same value means nothing across them
-  const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
-                       {.name = "public", .policies = {}},
-                       {.name = "legal", .policies = {0}},
-                       {.name = "partner-legal", .policies = {1}}}));
+  const auto path{test_path("views_never_combine_token_policies_testing_one_"
+                            "claim_across_issuers.bin")};
+  save(policies, path, path, anywhere);
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_EQ(view_names(gate), (std::vector<std::string_view>{"public", "legal",
+                                                             "partner-legal"}));
 }
 
 TEST(views_never_combine_interactive_policies_under_one_issuer) {
@@ -5111,19 +5149,22 @@ TEST(views_never_combine_interactive_policies_under_one_issuer) {
         .name = "first",
         .credential =
             sourcemeta::one::Authentication::Policy::Interactive{
-                .issuer = "https://idp.example.com/realms/staff"}},
+                .issuer = "https://idp.example.com/realms/staff",
+                .session_secrets = SESSION_SECRETS}},
        {.paths = second_paths,
         .name = "second",
         .credential = sourcemeta::one::Authentication::Policy::Interactive{
-            .issuer = "https://idp.example.com/realms/staff"}}}};
+            .issuer = "https://idp.example.com/realms/staff",
+            .session_secrets = SESSION_SECRETS}}}};
 
   // A browser holds one session naming one policy, so sharing an issuer buys an
   // interactive caller nothing
-  const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
-                       {.name = "public", .policies = {}},
-                       {.name = "first", .policies = {0}},
-                       {.name = "second", .policies = {1}}}));
+  const auto path{test_path(
+      "views_never_combine_interactive_policies_under_one_issuer.bin")};
+  save(policies, path, path, anywhere);
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_EQ(view_names(gate),
+            (std::vector<std::string_view>{"public", "first", "second"}));
 }
 
 TEST(views_never_combine_static_key_policies) {
@@ -5143,11 +5184,11 @@ TEST(views_never_combine_static_key_policies) {
             .keys = second_keys}}}};
 
   // A caller presents one key, so it satisfies one of these whatever it holds
-  const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
-                       {.name = "public", .policies = {}},
-                       {.name = "first", .policies = {0}},
-                       {.name = "second", .policies = {1}}}));
+  const auto path{test_path("views_never_combine_static_key_policies.bin")};
+  save(policies, path, path, anywhere);
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_EQ(view_names(gate),
+            (std::vector<std::string_view>{"public", "first", "second"}));
 }
 
 TEST(views_spell_a_combination_the_same_however_it_was_declared) {
@@ -5164,12 +5205,12 @@ TEST(views_spell_a_combination_the_same_however_it_was_declared) {
         .credential = sourcemeta::one::Authentication::Policy::Token{
             .issuer = "https://idp.example.com/realms/staff"}}}};
 
-  const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
-                       {.name = "public", .policies = {}},
-                       {.name = "legal", .policies = {1}},
-                       {.name = "legal+tech", .policies = {0, 1}},
-                       {.name = "tech", .policies = {0}}}));
+  const auto path{test_path(
+      "views_spell_a_combination_the_same_however_it_was_declared.bin")};
+  save(policies, path, path, anywhere);
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_EQ(view_names(gate), (std::vector<std::string_view>{
+                                  "public", "legal", "legal+tech", "tech"}));
 }
 
 TEST(views_of_three_token_policies_under_one_issuer_are_every_combination) {
@@ -5190,16 +5231,13 @@ TEST(views_of_three_token_policies_under_one_issuer_are_every_combination) {
         .credential = sourcemeta::one::Authentication::Policy::Token{
             .issuer = "https://idp.example.com/realms/staff"}}}};
 
-  const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
-                       {.name = "public", .policies = {}},
-                       {.name = "a", .policies = {0}},
-                       {.name = "a+b", .policies = {0, 1}},
-                       {.name = "a+b+c", .policies = {0, 1, 2}},
-                       {.name = "a+c", .policies = {0, 2}},
-                       {.name = "b", .policies = {1}},
-                       {.name = "b+c", .policies = {1, 2}},
-                       {.name = "c", .policies = {2}}}));
+  const auto path{test_path("views_of_three_token_policies_under_one_issuer_"
+                            "are_every_combination.bin")};
+  save(policies, path, path, anywhere);
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_EQ(view_names(gate),
+            (std::vector<std::string_view>{"public", "a", "a+b", "a+b+c", "a+c",
+                                           "b", "b+c", "c"}));
 }
 
 TEST(views_mix_a_combining_group_with_policies_that_stand_alone) {
@@ -5220,13 +5258,13 @@ TEST(views_mix_a_combining_group_with_policies_that_stand_alone) {
         .credential = sourcemeta::one::Authentication::Policy::Token{
             .issuer = "https://idp.example.com/realms/staff"}}}};
 
-  const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
-                       {.name = "public", .policies = {}},
-                       {.name = "legal", .policies = {1}},
-                       {.name = "legal+tech", .policies = {1, 2}},
-                       {.name = "tech", .policies = {2}},
-                       {.name = "vault", .policies = {0}}}));
+  const auto path{test_path(
+      "views_mix_a_combining_group_with_policies_that_stand_alone.bin")};
+  save(policies, path, path, anywhere);
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_EQ(view_names(gate),
+            (std::vector<std::string_view>{"public", "legal", "legal+tech",
+                                           "tech", "vault"}));
 }
 
 TEST(views_hold_the_public_one_even_when_every_path_is_governed) {
@@ -5238,10 +5276,12 @@ TEST(views_hold_the_public_one_even_when_every_path_is_governed) {
         .credential =
             sourcemeta::one::Authentication::Policy::ApiKey{.keys = keys}}}};
 
-  const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
-                       {.name = "public", .policies = {}},
-                       {.name = "everything", .policies = {0}}}));
+  const auto path{test_path(
+      "views_hold_the_public_one_even_when_every_path_is_governed.bin")};
+  save(policies, path, path, anywhere);
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_EQ(view_names(gate),
+            (std::vector<std::string_view>{"public", "everything"}));
 }
 
 TEST(views_of_six_token_policies_under_one_issuer_are_every_combination) {
@@ -5257,8 +5297,11 @@ TEST(views_of_six_token_policies_under_one_issuer_are_every_combination) {
   }
 
   // Two to the sixth, being every non-empty combination plus the anonymous one
-  const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(views.size(), 64);
+  const auto path{test_path("views_of_six_token_policies_under_one_issuer_are_"
+                            "every_combination.bin")};
+  save(policies, path, path, anywhere);
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_EQ(gate.views().size(), 64);
 }
 
 TEST(views_of_two_issuer_groups_are_a_sum_rather_than_a_product) {
@@ -5277,14 +5320,16 @@ TEST(views_of_two_issuer_groups_are_a_sum_rather_than_a_product) {
 
   // Each group contributes its own combinations and nothing crosses between
   // them, so the total adds rather than multiplies
-  const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(views.size(), 1 + 15 + 15);
+  const auto path{test_path(
+      "views_of_two_issuer_groups_are_a_sum_rather_than_a_product.bin")};
+  save(policies, path, path, anywhere);
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_EQ(gate.views().size(), 1 + 15 + 15);
 }
 
 TEST(views_of_the_largest_combinable_group_are_every_combination) {
   const std::array<std::string_view, 1> paths{{"/one"}};
-  std::array<sourcemeta::one::Authentication::Policy,
-             sourcemeta::one::Authentication::MAXIMUM_COMBINABLE_POLICIES>
+  std::array<sourcemeta::one::Authentication::Policy, COMBINABLE_CEILING>
       policies{};
   std::vector<std::string> names;
   names.reserve(policies.size());
@@ -5300,17 +5345,17 @@ TEST(views_of_the_largest_combinable_group_are_every_combination) {
             .issuer = "https://idp.example.com/realms/staff"};
   }
 
-  const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(views.size(),
-            (std::size_t{1}
-             << sourcemeta::one::Authentication::MAXIMUM_COMBINABLE_POLICIES));
-  EXPECT_EQ(views.at(0).name, "public");
+  const auto path{test_path(
+      "views_of_the_largest_combinable_group_are_every_combination.bin")};
+  save(policies, path, path, anywhere);
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_EQ(gate.views().size(), (std::size_t{1} << COMBINABLE_CEILING));
+  EXPECT_EQ(gate.views().at(0).name(), "public");
 }
 
 TEST(views_refuse_a_group_whose_combinations_cannot_be_produced) {
   const std::array<std::string_view, 1> paths{{"/one"}};
-  std::array<sourcemeta::one::Authentication::Policy,
-             sourcemeta::one::Authentication::MAXIMUM_COMBINABLE_POLICIES + 1>
+  std::array<sourcemeta::one::Authentication::Policy, COMBINABLE_CEILING + 1>
       policies{};
   std::vector<std::string> names;
   names.reserve(policies.size());
@@ -5326,16 +5371,16 @@ TEST(views_refuse_a_group_whose_combinations_cannot_be_produced) {
             .issuer = "https://idp.example.com/realms/staff"};
   }
 
+  const auto path{
+      test_path("views_refuse_a_group_whose_combinations_cannot_be_produced")};
   try {
-    const auto views{sourcemeta::one::Authentication::views(policies)};
-    EXPECT_EQ(views.size(), 0);
+    save(policies, path, path, anywhere);
     FAIL();
   } catch (const sourcemeta::one::AuthenticationTooManyViewsError &error) {
     EXPECT_STREQ(error.what(),
                  "Too many authentication policies share an issuer");
     EXPECT_EQ(error.issuer(), "https://idp.example.com/realms/staff");
-    EXPECT_EQ(error.count(),
-              sourcemeta::one::Authentication::MAXIMUM_COMBINABLE_POLICIES + 1);
+    EXPECT_EQ(error.count(), COMBINABLE_CEILING + 1);
   }
 }
 
@@ -5358,8 +5403,11 @@ TEST(views_of_many_policies_across_issuers_are_never_refused) {
                                                            names.at(index)};
   }
 
-  const auto views{sourcemeta::one::Authentication::views(policies)};
-  EXPECT_EQ(views.size(), 41);
+  const auto path{
+      test_path("views_of_many_policies_across_issuers_are_never_refused.bin")};
+  save(policies, path, path, anywhere);
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_EQ(gate.views().size(), 41);
 }
 
 TEST(a_presented_key_decides_over_a_session) {
@@ -5387,7 +5435,7 @@ TEST(a_presented_key_decides_over_a_session) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   const auto sealed{session_for("okta", SESSION_SECRETS, "jane@acme.test")};
   const std::string cookies{"sourcemeta_one_session=" + sealed};
 
@@ -5434,7 +5482,7 @@ TEST(a_presented_key_that_opens_nothing_sets_a_session_aside) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   const auto sealed{session_for("okta", SESSION_SECRETS, "jane@acme.test")};
   const std::string cookies{"sourcemeta_one_session=" + sealed};
 
@@ -5465,7 +5513,7 @@ TEST(a_caller_presenting_nothing_is_served_the_anonymous_view) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_EQ(authentication.caller({.bearer = ""}).view(), "public");
   EXPECT_EQ(authentication.caller({.bearer = "retired-secret"}).view(),
             "public");
@@ -5500,8 +5548,9 @@ TEST(a_token_satisfying_two_policies_is_served_their_combined_view) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
-                         nullptr)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                   nullptr)};
   EXPECT_EQ(authentication
                 .caller({.bearer = token_with(
                              R"JSON({ "groups": [ "platform" ] })JSON")})
@@ -5527,7 +5576,7 @@ TEST(a_token_satisfying_two_policies_is_served_their_combined_view) {
             "public");
 }
 
-TEST(the_recorded_table_names_a_view_at_every_index) {
+TEST(the_recorded_table_names_every_view_it_serves) {
   const std::array<std::string_view, 1> platform_paths{{"/platform"}};
   const std::array<std::string_view, 1> oncall_paths{{"/oncall"}};
   const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
@@ -5551,23 +5600,26 @@ TEST(the_recorded_table_names_a_view_at_every_index) {
   const auto path{test_path("recorded_table.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+  const sourcemeta::one::Authentication::Table gate{path};
   // The anonymous view first, then the rest by name, which is the order a build
   // fans its actions out in
-  EXPECT_EQ(authentication.view_count(), std::size_t{4});
-  EXPECT_EQ(authentication.view_at(0).name, "public");
-  EXPECT_EQ(authentication.view_at(0).policies,
-            sourcemeta::one::Authentication::PolicySet{0});
-  EXPECT_EQ(authentication.view_at(1).name, "oncall");
-  EXPECT_EQ(authentication.view_at(1).policies,
-            sourcemeta::one::Authentication::PolicySet{0b10});
-  EXPECT_EQ(authentication.view_at(2).name, "oncall+platform");
-  EXPECT_EQ(authentication.view_at(2).policies,
-            sourcemeta::one::Authentication::PolicySet{0b11});
-  EXPECT_EQ(authentication.view_at(3).name, "platform");
-  EXPECT_EQ(authentication.view_at(3).policies,
-            sourcemeta::one::Authentication::PolicySet{0b01});
+  const auto table{gate.views()};
+  EXPECT_EQ(table.size(), std::size_t{4});
+  EXPECT_EQ(table.at(0).name(), "public");
+  EXPECT_EQ(table.at(1).name(), "oncall");
+  EXPECT_EQ(table.at(2).name(), "oncall+platform");
+  EXPECT_EQ(table.at(3).name(), "platform");
+
+  // And which policies each of those names stands for is read from what the
+  // view reaches rather than from the set behind it
+  EXPECT_FALSE(gate.visible(at("/oncall/x"), table.at(0)));
+  EXPECT_TRUE(gate.visible(at("/oncall/x"), table.at(1)));
+  EXPECT_TRUE(gate.visible(at("/oncall/x"), table.at(2)));
+  EXPECT_FALSE(gate.visible(at("/oncall/x"), table.at(3)));
+  EXPECT_FALSE(gate.visible(at("/platform/x"), table.at(0)));
+  EXPECT_FALSE(gate.visible(at("/platform/x"), table.at(1)));
+  EXPECT_TRUE(gate.visible(at("/platform/x"), table.at(2)));
+  EXPECT_TRUE(gate.visible(at("/platform/x"), table.at(3)));
 }
 
 TEST(a_view_shows_what_it_governs_and_whatever_nobody_governs) {
@@ -5594,43 +5646,43 @@ TEST(a_view_shows_what_it_governs_and_whatever_nobody_governs) {
   const auto path{test_path("view_visibility.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-  // Indices as the table records them: anonymous, then oncall, their
-  // combination, and platform
-  EXPECT_EQ(authentication.view_at(0).name, "public");
-  EXPECT_EQ(authentication.view_at(1).name, "oncall");
-  EXPECT_EQ(authentication.view_at(2).name, "oncall+platform");
-  EXPECT_EQ(authentication.view_at(3).name, "platform");
+  const sourcemeta::one::Authentication::Table gate{path};
+  const auto anonymous{gate.view("public")};
+  const auto oncall{gate.view("oncall")};
+  const auto both{gate.view("oncall+platform")};
+  const auto platform{gate.view("platform")};
 
   // What nobody governs is shown to everybody, the anonymous view included
-  EXPECT_TRUE(authentication.visible(at("/open/x"), 0));
-  EXPECT_TRUE(authentication.visible(at("/open/x"), 1));
-  EXPECT_TRUE(authentication.visible(at("/open/x"), 2));
-  EXPECT_TRUE(authentication.visible(at("/open/x"), 3));
+  EXPECT_TRUE(gate.visible(at("/open/x"), anonymous));
+  EXPECT_TRUE(gate.visible(at("/open/x"), oncall));
+  EXPECT_TRUE(gate.visible(at("/open/x"), both));
+  EXPECT_TRUE(gate.visible(at("/open/x"), platform));
 
   // And a governed location only to a view satisfying something governing it
-  EXPECT_FALSE(authentication.visible(at("/platform/x"), 0));
-  EXPECT_FALSE(authentication.visible(at("/platform/x"), 1));
-  EXPECT_TRUE(authentication.visible(at("/platform/x"), 2));
-  EXPECT_TRUE(authentication.visible(at("/platform/x"), 3));
-  EXPECT_FALSE(authentication.visible(at("/oncall/x"), 0));
-  EXPECT_TRUE(authentication.visible(at("/oncall/x"), 1));
-  EXPECT_TRUE(authentication.visible(at("/oncall/x"), 2));
-  EXPECT_FALSE(authentication.visible(at("/oncall/x"), 3));
+  EXPECT_FALSE(gate.visible(at("/platform/x"), anonymous));
+  EXPECT_FALSE(gate.visible(at("/platform/x"), oncall));
+  EXPECT_TRUE(gate.visible(at("/platform/x"), both));
+  EXPECT_TRUE(gate.visible(at("/platform/x"), platform));
+  EXPECT_FALSE(gate.visible(at("/oncall/x"), anonymous));
+  EXPECT_TRUE(gate.visible(at("/oncall/x"), oncall));
+  EXPECT_TRUE(gate.visible(at("/oncall/x"), both));
+  EXPECT_FALSE(gate.visible(at("/oncall/x"), platform));
 }
 
 TEST(an_instance_that_read_no_artifact_shows_nothing) {
   const sourcemeta::one::Authentication authentication{
-      std::filesystem::path{"/no/such/authentication.bin"},
+      sourcemeta::one::Authentication::Table{
+          std::filesystem::path{"/no/such/authentication.bin"}},
       stub_fetcher({}, nullptr)};
   // It admits nobody, so it must not answer that everything is public either,
   // which is what knowing nothing about who governs what would otherwise mean
   EXPECT_FALSE(authentication.permits(at("/anywhere"),
                                       authentication.caller({.bearer = ""})));
-  EXPECT_EQ(authentication.view_count(), std::size_t{0});
-  EXPECT_FALSE(authentication.visible(at("/anywhere"), 0));
-  EXPECT_FALSE(authentication.visible(at("/"), 0));
+  EXPECT_TRUE(authentication.table().views().empty());
+  EXPECT_FALSE(authentication.table().visible(
+      at("/anywhere"), authentication.table().view("public")));
+  EXPECT_FALSE(authentication.table().visible(
+      at("/"), authentication.table().view("public")));
 }
 
 TEST(a_corrupt_artifact_shows_nothing) {
@@ -5641,14 +5693,15 @@ TEST(a_corrupt_artifact_shows_nothing) {
   stream.close();
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_FALSE(authentication.permits(at("/anywhere"),
                                       authentication.caller({.bearer = ""})));
-  EXPECT_EQ(authentication.view_count(), std::size_t{0});
-  EXPECT_FALSE(authentication.visible(at("/anywhere"), 0));
+  EXPECT_TRUE(authentication.table().views().empty());
+  EXPECT_FALSE(authentication.table().visible(
+      at("/anywhere"), authentication.table().view("public")));
 }
 
-TEST(an_index_naming_no_view_shows_nothing) {
+TEST(a_name_no_view_holds_is_served_as_anonymous) {
   setenv("ONE_TEST_KEY_VIEW_INDEX", "index-secret", 1);
   const std::array<std::string_view, 1> paths{{"/machine"}};
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_VIEW_INDEX"}};
@@ -5660,15 +5713,19 @@ TEST(an_index_naming_no_view_shows_nothing) {
   const auto path{test_path("visible_index.bin")};
   save(policies, path, path, anywhere);
 
-  const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
-  EXPECT_EQ(authentication.view_count(), std::size_t{2});
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_EQ(gate.views().size(), std::size_t{2});
   // A location nobody governs is shown under either view this declares
-  EXPECT_TRUE(authentication.visible(at("/open/x"), 0));
-  EXPECT_TRUE(authentication.visible(at("/open/x"), 1));
-  // And under no index beyond them, which a stale action would carry
-  EXPECT_FALSE(authentication.visible(at("/open/x"), 2));
-  EXPECT_FALSE(authentication.visible(at("/machine/x"), 2));
+  EXPECT_TRUE(gate.visible(at("/open/x"), gate.view("public")));
+  EXPECT_TRUE(gate.visible(at("/open/x"), gate.view("machine")));
+
+  // A build stamps a view's name on the actions it fans out, so a policy
+  // withdrawn since leaves a name this no longer holds. It is served what a
+  // caller holding nothing is served, rather than what the name used to reach
+  const auto withdrawn{gate.view("retired")};
+  EXPECT_EQ(withdrawn.name(), "public");
+  EXPECT_TRUE(gate.visible(at("/open/x"), withdrawn));
+  EXPECT_FALSE(gate.visible(at("/machine/x"), withdrawn));
 }
 
 TEST(a_caller_presenting_nothing_belongs_to_no_policy) {
@@ -5685,7 +5742,7 @@ TEST(a_caller_presenting_nothing_belongs_to_no_policy) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_EQ(authentication.caller({.bearer = ""}).view(),
             sourcemeta::one::VIEW_PUBLIC);
 }
@@ -5703,7 +5760,7 @@ TEST(a_credential_opening_nothing_belongs_to_no_policy) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_EQ(authentication.caller({.bearer = "retired-secret"}).view(),
             sourcemeta::one::VIEW_PUBLIC);
 }
@@ -5731,7 +5788,7 @@ TEST(a_key_places_its_caller_in_the_policy_it_opens) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_EQ(authentication.caller({.bearer = "first-secret"}).view(), "first");
   EXPECT_EQ(authentication.caller({.bearer = "second-secret"}).view(),
             "second");
@@ -5750,7 +5807,7 @@ TEST(a_key_is_placed_without_reference_to_any_path) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   // Admitted under the policy where it governs, so the gate has read the key
   const auto governed{
       authentication.permits(at("/deep/inside/somewhere/x"),
@@ -5799,7 +5856,7 @@ TEST(a_key_opening_two_policies_reaches_only_the_first_declared) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   // Two variables holding one value is the form the configuration cannot see,
   // and it is the only shape where being admitted and being shown could ever
   // have parted. A caller is read as the first policy their key opens, and what
@@ -5845,8 +5902,9 @@ TEST(a_token_belongs_to_every_policy_of_its_issuer_that_it_satisfies) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
-                         nullptr)};
+      sourcemeta::one::Authentication::Table{path},
+      stub_fetcher({{"https://idp.test/jwks", std::string{CLAIMS_KEYS}}},
+                   nullptr)};
   EXPECT_EQ(authentication
                 .caller({.bearer = token_with(
                              R"JSON({ "groups": [ "platform" ] })JSON")})
@@ -5897,7 +5955,7 @@ TEST(a_session_places_its_caller_in_the_policy_that_established_it) {
   save(policies, path, path, anywhere);
 
   const sourcemeta::one::Authentication authentication{
-      path, stub_fetcher({}, nullptr)};
+      sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   const auto sealed{session_for("okta", SESSION_SECRETS, "jane@acme.test")};
   const std::string cookies{"sourcemeta_one_session=" + sealed};
 
@@ -5934,8 +5992,9 @@ TEST(a_compiled_table_reads_a_policy_without_a_mapping) {
             sourcemeta::one::Authentication::Policy::ApiKey{.keys = keys}}}};
 
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("compiled_only"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("compiled_only"), anywhere)},
       stub_fetcher({}, nullptr)};
 
   EXPECT_TRUE(authentication.permits(at("/open"), authentication.caller({})));
@@ -5964,11 +6023,12 @@ TEST(an_ungoverned_route_ignores_the_audience_it_requires) {
             sourcemeta::one::Authentication::Policy::ApiKey{.keys = keys}}}};
 
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("ungoverned_route"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("ungoverned_route"), anywhere)},
       stub_fetcher({}, nullptr)};
 
-  const sourcemeta::one::RouteTarget target{"/self/v1/mcp"};
+  const sourcemeta::one::Authentication::RouteTarget target{"/self/v1/mcp"};
 
   // Nobody governs it, so it opens whatever the caller brought
   EXPECT_TRUE(authentication.permits(target, authentication.caller({}),
@@ -6008,8 +6068,9 @@ TEST(a_session_never_opens_as_a_transaction) {
             .client_secret_variable = "ONE_TEST_PURPOSE_BACK",
             .session_secrets = SESSION_SECRETS}}}};
   const sourcemeta::one::Authentication authentication{
-      sourcemeta::one::Authentication::compile(
-          policies, test_path("purpose_back"), anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path("purpose_back"), anywhere)},
       provider.fetcher()};
 
   // A session this instance established, obtained the way anybody obtains one
@@ -6032,4 +6093,58 @@ TEST(a_session_never_opens_as_a_transaction) {
   EXPECT_TRUE(authentication.permits(
       at("/portal/x"),
       authentication.caller({.cookies = fields(as_a_session)})));
+}
+
+// A ceiling and a missing secret are refusals a caller earns the same way, and
+// both used to answer with an error naming no policy at all
+TEST(save_rejects_more_policies_than_a_set_can_name) {
+  std::vector<std::vector<std::string_view>> paths;
+  std::vector<std::vector<std::string_view>> keys;
+  std::vector<std::string> names;
+  // One past what a 64 bit mask has room to name
+  constexpr std::size_t total{65};
+  for (std::size_t index{0}; index < total; index += 1) {
+    names.push_back("policy-" + std::to_string(index));
+    paths.push_back({"/scope"});
+    keys.push_back({"ONE_TEST_KEY_CEILING"});
+  }
+
+  std::vector<sourcemeta::one::Authentication::Policy> policies;
+  for (std::size_t index{0}; index < total; index += 1) {
+    policies.push_back(
+        {.paths = paths[index],
+         .name = names[index],
+         .credential = sourcemeta::one::Authentication::Policy::ApiKey{
+             .keys = keys[index]}});
+  }
+
+  const auto path{test_path("ceiling.bin")};
+  try {
+    save(policies, path, path, anywhere);
+    FAIL();
+  } catch (const sourcemeta::one::AuthenticationTooManyPoliciesError &error) {
+    EXPECT_STREQ(error.what(), "Too many authentication policies");
+    EXPECT_EQ(error.count(), total);
+  }
+}
+
+TEST(save_rejects_an_interactive_policy_without_a_session_secret) {
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .name = "okta",
+        .credential = sourcemeta::one::Authentication::Policy::Interactive{
+            .issuer = "https://acme.test",
+            .client_id = "client",
+            .client_secret_variable = "ONE_TEST_OIDC_NO_SECRET"}}}};
+  const auto path{test_path("no_session_secret.bin")};
+  try {
+    save(policies, path, path, anywhere);
+    FAIL();
+  } catch (const sourcemeta::one::AuthenticationMissingSecretError &error) {
+    EXPECT_STREQ(error.what(),
+                 "An interactive authentication policy requires a session "
+                 "secret");
+    EXPECT_EQ(error.name(), "okta");
+  }
 }

@@ -41,12 +41,11 @@ public:
       sourcemeta::one::Router &dispatcher)
       : sourcemeta::one::RouterAction{base, router.base_url(), dispatcher} {
     const auto &authentication{dispatcher.authentication()};
-    for (std::size_t index{0}; index < authentication.view_count(); index++) {
-      const auto recorded{authentication.view_at(index)};
+    for (const auto &recorded : authentication.table().views()) {
       this->search_views_.emplace(
-          recorded.name,
+          recorded.name(),
           std::make_unique<sourcemeta::one::SearchView>(
-              base / "explorer" / recorded.name / "%" / "search.metapack"));
+              base / "explorer" / recorded.name() / "%" / "search.metapack"));
     }
 
     // The anonymous view is among the recorded ones, so this is a lookup

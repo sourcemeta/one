@@ -32,40 +32,13 @@ namespace sourcemeta::one {
 // server reads cannot disagree
 inline constexpr std::string_view VIEW_PUBLIC{"public"};
 
-// A route as the router matched it, taken by the spelling it arrived in rather
-// than by where it resolves to. A target reaching past a governed prefix is
-// still governed by it, which is why it is not canonicalised, and why it is not
-// a registry path
-class RouteTarget {
-public:
-  explicit RouteTarget(const std::string_view value) noexcept : value_{value} {}
-
-  [[nodiscard]] auto value() const noexcept -> std::string_view {
-    return this->value_;
-  }
-
-private:
-  std::string_view value_;
-};
-
-// Everything a request presented for authentication: the bearer value from
-// the authorization header and every cookie field it carried, either of which
-// may admit the caller under a covering policy. The cookie fields are kept as
-// they arrived rather than joined, since a request may carry more than one and
-// what a cookie means is decided by whoever reads it
-struct Credentials {
-  std::string_view bearer{};
-  std::span<const std::string_view> cookies{};
-};
-
 class SOURCEMETA_ONE_AUTHENTICATION_EXPORT Authentication {
-public:
-  static constexpr std::size_t MAXIMUM_POLICIES{64};
-
+private:
   // A set of policies, one bit per declaration index, which is why there can
   // only ever be as many policies as this has bits
   using PolicySet = std::uint64_t;
 
+public:
   /// Where a resource lives within an instance, in the single spelling every
   /// part of the system agrees on: no leading or trailing separator, no empty
   /// or relative segments, and lowercase throughout. The instance root is the
@@ -113,16 +86,26 @@ public:
     std::string value_;
   };
 
+  // A route as the router matched it, taken by the spelling it arrived in
+  // rather than by where it resolves to. A target reaching past a governed
+  // prefix is still governed by it, which is why it is not canonicalised, and
+  // why it is not a registry path
+  class RouteTarget {
+  public:
+    explicit RouteTarget(const std::string_view value) noexcept
+        : value_{value} {}
+
+    [[nodiscard]] auto value() const noexcept -> std::string_view {
+      return this->value_;
+    }
+
+  private:
+    std::string_view value_;
+  };
+
   // How a presented credential is compared against a policy's stored keys.
   // Identity stores the key verbatim, every other algorithm stores it hashed
   enum class Algorithm : std::uint8_t { Identity = 0, Sha256 = 1 };
-
-  enum class Type : std::uint8_t { ApiKey = 0, JWT = 1, OIDC = 2 };
-
-  // What a sealed value is for. A value is only ever opened for the purpose it
-  // was sealed under, because the two derive different keys from the policy's
-  // secret, so one kind of value cannot be presented as the other
-  enum class Purpose : std::uint8_t { Session = 0, Transaction = 1 };
 
   // A policy gates a set of path prefixes. A path covered by no policy is
   // public.
@@ -180,19 +163,6 @@ public:
     // that a view can be named after what it comprises
     std::string_view name{};
     std::variant<ApiKey, Token, Interactive> credential{ApiKey{}};
-
-    // Which of the three this is, which the artifact records so that reading a
-    // policy back does not depend on reading its parameters first
-    [[nodiscard]] auto type() const noexcept -> Type {
-      switch (this->credential.index()) {
-        case 1:
-          return Type::JWT;
-        case 2:
-          return Type::OIDC;
-        default:
-          return Type::ApiKey;
-      }
-    }
   };
 
   // What this asks a provider for. Every outbound call goes through one of
@@ -220,6 +190,16 @@ public:
   // nothing is how a caller says the provider could not be reached
   using Fetcher =
       std::function<std::optional<ProviderResponse>(ProviderRequest &&)>;
+
+  // Everything a request presented for authentication: the bearer value from
+  // the authorization header and every cookie field it carried, either of which
+  // may admit the caller under a covering policy. The cookie fields are kept as
+  // they arrived rather than joined, since a request may carry more than one
+  // and what a cookie means is decided by whoever reads it
+  struct Credentials {
+    std::string_view bearer{};
+    std::span<const std::string_view> cookies{};
+  };
 
   // Who is asking, read from what a request presented exactly once. Everything
   // decided afterwards is a comparison against what this holds rather than a
@@ -285,64 +265,155 @@ public:
   // knows what this instance serves
   using PathGuard = std::function<bool(std::string_view)>;
 
-  // One way the registry looks to somebody: the name its artifacts live under
-  // and the policies a caller of it satisfies. The anonymous view comprises
-  // none, which is what makes it the base every other view adds to
-  struct View {
-    std::string name;
-    std::vector<std::size_t> policies;
+  class Table;
 
-    [[nodiscard]] auto operator==(const View &other) const -> bool = default;
+  // One view as the artifact records it: the directory its artifacts live
+  // under, and the policies a caller satisfies to be served from it.
+  //
+  // The set is not something a caller can state, only something a table
+  // answers with, because what it shows is decided by which policies a build
+  // recorded together rather than by whoever asks. A set assembled elsewhere
+  // would name a view no build ever wrote and be taken for one that admits
+  // whatever it happens to hold
+  class RecordedView {
+  public:
+    [[nodiscard]] auto name() const noexcept -> std::string_view {
+      return this->name_;
+    }
+
+  private:
+    friend Table;
+    friend Authentication;
+    std::string_view name_{};
+    PolicySet policies_{0};
   };
 
-  /// Every view over a registry declaring these policies, which is what
-  /// segments its output. A pure function of what was declared: the anonymous
-  /// view first, then the rest ordered by name.
+  /// The compiled policy table: what a build wrote and what every question
+  /// about who governs what is answered from.
   ///
-  /// A credential carries one issuer and is checked against it before any
-  /// rule, so only token policies declared against the same issuer can be
-  /// satisfied together, and only those combine. Every other policy stands
-  /// alone, since a caller presents one key or holds one session.
-  ///
-  /// The count is one, plus one per policy that stands alone, plus two to the
-  /// power of each issuer group's size less one.
-  ///
-  /// Whether that many views is affordable is not decided here, since what they
-  /// cost is known where they are built rather than where they are named. What
-  /// is decided here is only that an enumeration doubling with every policy has
-  /// to stop somewhere, which the ceiling below picks a point for.
-  ///
-  /// Every policy name must be distinct, which is what keeps one view from
-  /// taking another's name.
-  [[nodiscard]] static auto views(std::span<const Policy> policies)
-      -> std::vector<View>;
+  /// A pure function of its bytes. It holds no client, reads no secret and
+  /// reaches no network, which is why whoever only needs these answers takes
+  /// one of these rather than the serving class that owns one.
+  class SOURCEMETA_ONE_AUTHENTICATION_EXPORT Table {
+  public:
+    // Build the artifact the gate reads, refusing any policy scoped to a path
+    // the guard does not recognise. The configuration names where a refusal
+    // came from
+    [[nodiscard]] static auto
+    compile(const std::span<const Policy> policies,
+            const std::filesystem::path &configuration,
+            const PathGuard &gateable) -> std::vector<std::byte>;
 
-  // How many policies may name one issuer. The combinations over a group double
-  // with every policy added to it, so where to stop is a choice rather than a
-  // discovery: this sits far above anything a configuration has reason to
-  // declare and far below where enumerating them becomes a burden. Raising it
-  // is a decision about what a build should attempt, bounded only in that it
-  // can never reach the ceiling on policies, where the enumeration stops being
-  // expressible at all. What a number of views costs is decided where they are
-  // built rather than where they are named
-  static constexpr std::size_t MAXIMUM_COMBINABLE_POLICIES{16};
+    // Persist what was compiled, so that a later process can map it back
+    static auto write(const std::span<const std::byte> bytes,
+                      const std::filesystem::path &destination) -> void;
 
-  // Build the artifact the gate reads, refusing any policy scoped to a path the
-  // guard does not recognise. The configuration names where a refusal came from
-  [[nodiscard]] static auto compile(std::span<const Policy> policies,
-                                    const std::filesystem::path &configuration,
-                                    const PathGuard &gateable)
-      -> std::vector<std::byte>;
+    /// Map a table a build wrote. A missing, unreadable or malformed artifact
+    /// yields a table that governs nothing it could answer for, rather than one
+    /// that serves every path publicly.
+    explicit Table(const std::filesystem::path &path);
 
-  // Persist what was compiled, so that a later process can map it back
-  static auto write(std::span<const std::byte> bytes,
-                    const std::filesystem::path &destination) -> void;
+    /// Adopt a table compiled in this process rather than mapped from a file,
+    /// so that reading a policy set never depends on a filesystem to do it
+    explicit Table(const std::span<const std::byte> bytes);
 
-  Authentication(const std::filesystem::path &path, Fetcher fetcher);
+    ~Table();
 
-  // Read a table compiled in this process rather than mapped from a file, so
-  // that what reads a policy set never depends on a filesystem to do it
-  Authentication(std::span<const std::byte> bytes, Fetcher fetcher);
+    // The bytes are owned for the lifetime of the table, either as a mapping or
+    // as a copy, so one is handed on rather than duplicated
+    Table(Table &&) noexcept;
+    auto operator=(Table &&) noexcept -> Table &;
+    Table(const Table &) = delete;
+    auto operator=(const Table &) -> Table & = delete;
+
+    /// Every view this table serves, which is every copy of the view tree a
+    /// build of it produced, ordered as the artifact records them. A table that
+    /// could not be read serves none.
+    [[nodiscard]] auto views() const -> std::vector<RecordedView>;
+
+    /// The view served under a name. A name this table does not serve answers
+    /// the anonymous view, which is what a build stamped before a policy was
+    /// withdrawn leaves behind, and which reaches only what nobody governs.
+    [[nodiscard]] auto view(const std::string_view name) const -> RecordedView;
+
+    /// Whether a view shows a path, which is the rule a build filters by and
+    /// the only place it is stated. A path nobody governs is shown to
+    /// everybody, and a governed one is shown to a view satisfying any policy
+    /// governing it, exactly as the gate admits a caller under any policy
+    /// covering the path they asked for.
+    [[nodiscard]] auto visible(const Path &path, const RecordedView &view) const
+        -> bool;
+
+    /// The names of the policies that govern a path, in the order they were
+    /// declared. A name is what a configuration and the artifact built from it
+    /// agree on, so a caller holding the configuration can find what it
+    /// declared without depending on the order it declared it in. The names
+    /// point into the artifact and stay valid for the lifetime of this table.
+    [[nodiscard]] auto governing(const Path &path) const
+        -> std::vector<std::string_view>;
+
+    /// Whether a schema at one path may reference a schema at another, which is
+    /// whether the second is reachable by everybody the first is.
+    [[nodiscard]] auto reference_permitted(const Path &referrer,
+                                           const Path &referent) const -> bool;
+
+  private:
+    friend Authentication;
+
+    // One way the registry looks to somebody: the name its artifacts live under
+    // and the policies a caller of it satisfies. The anonymous view comprises
+    // none, which is what makes it the base every other view adds to
+    struct View {
+      std::string name;
+      std::vector<std::size_t> policies;
+
+      [[nodiscard]] auto operator==(const View &other) const -> bool = default;
+    };
+
+    // How many policies may name one issuer. The combinations over a group
+    // double with every policy added to it, so where to stop is a choice rather
+    // than a discovery: this sits far above anything a configuration has reason
+    // to declare and far below where enumerating them becomes a burden. Raising
+    // it is a decision about what a build should attempt, bounded only in that
+    // it can never reach the ceiling on policies, where the enumeration stops
+    // being expressible at all. What a number of views costs is decided where
+    // they are built rather than where they are named
+    static constexpr std::size_t MAXIMUM_COMBINABLE_POLICIES{16};
+
+    /// Every view over a registry declaring these policies, which is what
+    /// segments its output. A pure function of what was declared: the anonymous
+    /// view first, then the rest ordered by name.
+    ///
+    /// A credential carries one issuer and is checked against it before any
+    /// rule, so only token policies declared against the same issuer can be
+    /// satisfied together, and only those combine. Every other policy stands
+    /// alone, since a caller presents one key or holds one session.
+    ///
+    /// The count is one, plus one per policy that stands alone, plus two to the
+    /// power of each issuer group's size less one.
+    ///
+    /// Whether that many views is affordable is not decided here, since what
+    /// they cost is known where they are built rather than where they are
+    /// named. What is decided here is only that an enumeration doubling with
+    /// every policy has to stop somewhere, which the ceiling below picks a
+    /// point for.
+    ///
+    /// Every policy name must be distinct, which is what keeps one view from
+    /// taking another's name.
+    [[nodiscard]] static auto enumerate(const std::span<const Policy> policies)
+        -> std::vector<View>;
+
+    // The implementation differs by edition and owns the memory-mapped
+    // artifact, so it is hidden behind a pointer to keep the binary format out
+    // of the shared interface
+    struct Impl;
+    std::unique_ptr<Impl> impl_;
+  };
+
+  /// Serve a table, which is what turns answering who governs what into
+  /// admitting somebody: the fetcher is how a provider is reached, and nothing
+  /// but this class ever holds one.
+  Authentication(Table &&table, Fetcher fetcher);
 
   ~Authentication();
 
@@ -351,6 +422,10 @@ public:
   Authentication(Authentication &&) = delete;
   auto operator=(const Authentication &) -> Authentication & = delete;
   auto operator=(Authentication &&) -> Authentication & = delete;
+
+  /// The table this serves, which answers everything derived from what a build
+  /// wrote rather than from what a request presented.
+  [[nodiscard]] auto table() const noexcept -> const Table &;
 
   /// Who is asking, read from what a request presented. This is the one place a
   /// credential is verified, so every question asked of the result afterwards
@@ -384,9 +459,9 @@ public:
   /// caller was configured with. An empty requirement asks for nothing extra,
   /// and a caller that presented no token is unaffected, since only a token
   /// carries an audience to check.
-  [[nodiscard]] auto permits(const RouteTarget &target, const Caller &caller,
-                             std::string_view required_audience = {}) const
-      -> bool;
+  [[nodiscard]] auto
+  permits(const RouteTarget &target, const Caller &caller,
+          const std::string_view required_audience = {}) const -> bool;
 
   /// End the browser's session, and the provider's where it named a policy
   /// whose provider offers to end one.
@@ -400,8 +475,8 @@ public:
   /// route is a fact about the surface that received the request rather than
   /// about authentication. Nothing here composes a URL of its own.
   [[nodiscard]] auto logout(const Credentials &credentials,
-                            std::string_view instance_url,
-                            std::string_view return_to) const -> Outcome;
+                            const std::string_view instance_url,
+                            const std::string_view return_to) const -> Outcome;
 
   /// Start a login, sealing the transaction the callback will complete and
   /// naming where the provider should send the browser.
@@ -420,10 +495,11 @@ public:
   /// it names a route, and which routes exist is not something this knows. It
   /// is what the provider is told to come back to, and what the callback will
   /// be checked against.
-  [[nodiscard]] auto login(std::string_view policy,
-                           std::string_view instance_url,
-                           std::string_view redirect_uri, bool silent,
-                           std::string_view return_to) const -> Outcome;
+  [[nodiscard]] auto login(const std::string_view policy,
+                           const std::string_view instance_url,
+                           const std::string_view redirect_uri,
+                           const bool silent,
+                           const std::string_view return_to) const -> Outcome;
 
   /// Which interactive policy should be asked whether a lapsed sign-in still
   /// stands, for a caller that reached this path and nothing else.
@@ -465,73 +541,16 @@ public:
   /// The redirect URI must be the one the login was started with, since the
   /// provider checks it and so does this. It is passed in for the same reason
   /// it is passed to `login`: it names a route.
-  [[nodiscard]] auto callback(std::string_view policy,
-                              std::string_view instance_url,
-                              std::string_view redirect_uri,
+  [[nodiscard]] auto callback(const std::string_view policy,
+                              const std::string_view instance_url,
+                              const std::string_view redirect_uri,
                               const CallbackRequest &incoming,
                               const Credentials &credentials) const -> Outcome;
 
-  // One view as the artifact records it: the directory its artifacts live
-  // under, and the policies a caller satisfies to be served from it
-  struct RecordedView {
-    std::string_view name;
-    PolicySet policies;
-  };
-
-  /// How many views this instance serves, which is how many copies of the view
-  /// tree a build of it produced.
-  [[nodiscard]] auto view_count() const -> std::size_t;
-
-  /// The view an index names, ordered as the artifact records them, so that an
-  /// index here is the one a build stamped on the actions it fanned out. The
-  /// name points into the artifact and stays valid for the lifetime of this
-  /// instance.
-  [[nodiscard]] auto view_at(std::size_t index) const -> RecordedView;
-
-  /// Whether a view shows a path, which is the rule a build filters by and the
-  /// only place it is stated. A path nobody governs is shown to everybody, and
-  /// a governed one is shown to a view satisfying any policy governing it,
-  /// exactly as the gate admits a caller under any policy covering the path
-  /// they asked for.
-  ///
-  /// The view is named by its index rather than by the policies it comprises,
-  /// since that is what a build carries on the action it is filtering for, and
-  /// since a set and an index are both numbers that would otherwise be told
-  /// apart by nothing.
-  [[nodiscard]] auto visible(const Path &path, std::size_t view) const -> bool;
-
-  // The configuration declaration indices of the policies that govern a path,
-  // sorted ascending
-  [[nodiscard]] auto governing(const Path &path) const
-      -> std::vector<std::size_t>;
-
-  // What an interactive policy declares about its provider client. The views
-  // point into the artifact and remain valid for the lifetime of this
-  // instance
-  struct InteractivePolicy {
-    std::string_view issuer{};
-    std::string_view client_id{};
-    // The first registry path the policy governs
-    std::string_view default_path{};
-    // The claims a person must carry to be admitted, serialised as the member
-    // map of an OpenID Connect claims request parameter. Empty where the
-    // policy names no rule
-    std::string_view claims{};
-    // The email domains that admit a person. A login asks its provider for an
-    // address whenever this is non-empty, since a rule it cannot read admits
-    // nobody
-    std::vector<std::string_view> email_domains{};
-  };
-
-  [[nodiscard]] auto reference_permitted(const Path &referrer,
-                                         const Path &referent) const -> bool;
-
 private:
-  // The implementation differs by edition and owns the memory-mapped artifact,
-  // so it is hidden behind a pointer to keep the binary format out of the
-  // shared interface
-  struct Impl;
-  std::unique_ptr<Impl> impl_;
+  // The table this serves, held rather than borrowed so that nothing can
+  // outlive the artifact every answer is read from
+  Table table_;
 };
 
 } // namespace sourcemeta::one

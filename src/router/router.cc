@@ -67,7 +67,9 @@ Router::Router(const std::filesystem::path &base,
       // NOLINTNEXTLINE(modernize-avoid-c-arrays)
       slots_{std::make_unique<Slot[]>(router.size() + 1)},
       slots_size_{router.size() + 1},
-      authentication_{base / "authentication.bin", provider_fetcher()} {
+      authentication_{
+          sourcemeta::one::Authentication::Table{base / "authentication.bin"},
+          provider_fetcher()} {
   router.arguments(0, [this](const auto &key, const auto &value) -> void {
     if (key == "errorSchema") {
       this->default_error_schema_ = std::get<std::string_view>(value);
@@ -149,8 +151,9 @@ auto Router::dispatch(
       this->authentication_.caller({.bearer = credential, .cookies = cookies})};
   if (identifier != 0 && request.method() != "options" &&
       !instance->is_authentication_exempt() &&
-      !this->authentication_.permits(RouteTarget{request.path()}, caller,
-                                     instance->required_audience())) {
+      !this->authentication_.permits(
+          Authentication::RouteTarget{request.path()}, caller,
+          instance->required_audience())) {
     if (instance->serve_renewal_page(request, response)) {
       return;
     }

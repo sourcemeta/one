@@ -2,8 +2,6 @@
 
 #include "session.h"
 
-#include "session.h"
-
 #include <sourcemeta/core/crypto.h>
 
 #include <algorithm>   // std::max
@@ -48,12 +46,12 @@ constexpr std::size_t SESSION_SIGNATURE_ENCODED_LENGTH{
 // signature where a client chooses it. So the purpose picks the key rather
 // than being asserted alongside it: a value sealed for one purpose cannot
 // verify under another's key, whether or not a caller remembers to check
-auto purpose_label(const sourcemeta::one::Authentication::Purpose purpose)
+auto purpose_label(const sourcemeta::one::SealPurpose purpose)
     -> std::string_view {
   switch (purpose) {
-    case sourcemeta::one::Authentication::Purpose::Session:
+    case sourcemeta::one::SealPurpose::Session:
       return "sourcemeta/one/session";
-    case sourcemeta::one::Authentication::Purpose::Transaction:
+    case sourcemeta::one::SealPurpose::Transaction:
       return "sourcemeta/one/transaction";
   }
 
@@ -61,7 +59,7 @@ auto purpose_label(const sourcemeta::one::Authentication::Purpose purpose)
 }
 
 auto derive_key(const std::string_view secret,
-                const sourcemeta::one::Authentication::Purpose purpose)
+                const sourcemeta::one::SealPurpose purpose)
     -> std::array<std::uint8_t, 32> {
   return sourcemeta::core::hmac_sha256_digest(secret, purpose_label(purpose));
 }
@@ -96,8 +94,7 @@ auto parse_expiry(const std::string_view input)
 
 namespace sourcemeta::one {
 
-auto seal_value(const std::string_view payload,
-                const Authentication::Purpose purpose,
+auto seal_value(const std::string_view payload, const SealPurpose purpose,
                 const std::string_view secret,
                 const std::chrono::sys_seconds issued,
                 const std::chrono::sys_seconds expiry) -> std::string {
@@ -120,8 +117,7 @@ auto seal_value(const std::string_view payload,
   return result;
 }
 
-auto open_value(const std::string_view value,
-                const Authentication::Purpose purpose,
+auto open_value(const std::string_view value, const SealPurpose purpose,
                 const std::span<const std::string_view> secrets,
                 const std::chrono::sys_seconds now)
     -> std::optional<std::string> {
