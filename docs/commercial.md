@@ -15,8 +15,8 @@ GitHub](https://github.com/sourcemeta/one) with full source code transparency,
 enabling comprehensive auditing and community contributions. It is
 source-available rather than open source: the Community edition is free to
 self-host, while the Enterprise edition's source is published for audit but
-requires a commercial license to run in production. This is the same open-core
-split that
+requires a commercial license to run in production. This is a similar open-core
+split to the one
 [GitLab](https://gitlab.com/gitlab-org/gitlab/-/blob/master/ee/LICENSE),
 [PostHog](https://github.com/PostHog/posthog/blob/master/ee/LICENSE), and
 [SigNoz](https://github.com/SigNoz/signoz/blob/main/ee/LICENSE) apply through

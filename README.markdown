@@ -31,8 +31,8 @@ catalogs with enterprise-grade governance capabilities.
 
 ## :page_facing_up: License
 
-Sourcemeta One is source-available, not open source: the same open-core split
-that [GitLab](https://gitlab.com/gitlab-org/gitlab/-/blob/master/ee/LICENSE),
+Sourcemeta One is source-available, not open source: a similar open-core split
+to the one [GitLab](https://gitlab.com/gitlab-org/gitlab/-/blob/master/ee/LICENSE),
 [PostHog](https://github.com/PostHog/posthog/blob/master/ee/LICENSE), and
 [SigNoz](https://github.com/SigNoz/signoz/blob/main/ee/LICENSE) apply through
 their own `ee/` directories.
