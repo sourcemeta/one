@@ -31,10 +31,14 @@ catalogs with enterprise-grade governance capabilities.
 
 ## :page_facing_up: License
 
-Sourcemeta One is source-available, not open source. Like GitLab, PostHog, and
-SigNoz, the Community edition is free to self-host, while the Enterprise
-edition's source is open for audit but requires a commercial license to run in
-production.
+Sourcemeta One is source-available, not open source. The Community edition is
+free to self-host, while the Enterprise edition's source is published for audit
+but requires a commercial license to run in production. This is the same
+open-core split that
+[GitLab](https://gitlab.com/gitlab-org/gitlab/-/blob/master/ee/LICENSE),
+[PostHog](https://github.com/PostHog/posthog/blob/master/ee/LICENSE), and
+[SigNoz](https://github.com/SigNoz/signoz/blob/main/ee/LICENSE) apply through
+their own `ee/` directories.
 
 The Community edition (everything outside `enterprise/`) is under the [Business
 Source License 1.1](https://github.com/sourcemeta/one/blob/main/LICENSE), which
