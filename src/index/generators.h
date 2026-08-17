@@ -1029,16 +1029,16 @@ struct GENERATE_AUTHENTICATION {
         policy_claims.push_back(claims.str());
         policies.push_back(
             {.paths = policy_paths.back(),
-             .type = sourcemeta::one::Authentication::Type::JWT,
-             .issuer = entry.issuer,
-             .audience = entry.audience,
-             .jwks_uri = entry.jwks_uri.has_value()
-                             ? std::string_view{entry.jwks_uri.value()}
-                             : std::string_view{},
-             .algorithms = entry.algorithms,
-             .token_type = entry.token_type,
-             .claims = policy_claims.back(),
-             .name = entry.name});
+             .name = entry.name,
+             .credential = sourcemeta::one::Authentication::Policy::Token{
+                 .issuer = entry.issuer,
+                 .audience = entry.audience,
+                 .jwks_uri = entry.jwks_uri.has_value()
+                                 ? std::string_view{entry.jwks_uri.value()}
+                                 : std::string_view{},
+                 .algorithms = entry.algorithms,
+                 .token_type = entry.token_type,
+                 .claims = policy_claims.back()}});
       } else if (entry.type == Entry::Type::OIDC) {
         std::vector<std::string_view> session_secrets;
         session_secrets.reserve(entry.session_secret_variables.size());
@@ -1064,14 +1064,14 @@ struct GENERATE_AUTHENTICATION {
         policy_email_domains.push_back(std::move(domains));
         policies.push_back(
             {.paths = policy_paths.back(),
-             .type = sourcemeta::one::Authentication::Type::OIDC,
-             .issuer = entry.issuer,
-             .claims = policy_claims.back(),
-             .email_domains = policy_email_domains.back(),
-             .client_id = entry.client_id,
-             .client_secret_variable = entry.client_secret_variable,
              .name = entry.name,
-             .session_secrets = policy_session_secrets.back()});
+             .credential = sourcemeta::one::Authentication::Policy::Interactive{
+                 .issuer = entry.issuer,
+                 .client_id = entry.client_id,
+                 .client_secret_variable = entry.client_secret_variable,
+                 .claims = policy_claims.back(),
+                 .email_domains = policy_email_domains.back(),
+                 .session_secrets = policy_session_secrets.back()}});
       } else {
         std::vector<std::string_view> keys;
         keys.reserve(entry.keys.size());
@@ -1084,10 +1084,11 @@ struct GENERATE_AUTHENTICATION {
             entry.algorithm == Entry::Algorithm::Sha256
                 ? sourcemeta::one::Authentication::Algorithm::Sha256
                 : sourcemeta::one::Authentication::Algorithm::Identity};
-        policies.push_back({.paths = policy_paths.back(),
-                            .keys = policy_keys.back(),
-                            .algorithm = algorithm,
-                            .name = entry.name});
+        policies.push_back(
+            {.paths = policy_paths.back(),
+             .name = entry.name,
+             .credential = sourcemeta::one::Authentication::Policy::ApiKey{
+                 .keys = policy_keys.back(), .algorithm = algorithm}});
       }
     }
 
@@ -1116,21 +1117,23 @@ struct GENERATE_AUTHENTICATION {
     // begins rather than at some expansion of it: a scope reaching into a
     // template would be honoured where the route is matched literally and
     // nowhere else, which is a gate that holds on one surface and not the next
-    sourcemeta::one::Authentication::save(
-        policies, configuration.path, action.destination,
-        [&routes, &configuration](const std::string_view path) {
-          for (std::size_t index{0}; index < routes.size(); index++) {
-            const auto route{routes.path(routes.at(index))};
-            const auto scope{sourcemeta::one::route_scope(route)};
-            if (scope == path ||
-                (scope.size() > path.size() && scope.starts_with(path) &&
-                 scope[path.size()] == '/')) {
-              return true;
-            }
-          }
+    sourcemeta::one::Authentication::write(
+        sourcemeta::one::Authentication::compile(
+            policies, configuration.path,
+            [&routes, &configuration](const std::string_view path) {
+              for (std::size_t index{0}; index < routes.size(); index++) {
+                const auto route{routes.path(routes.at(index))};
+                const auto scope{sourcemeta::one::route_scope(route)};
+                if (scope == path ||
+                    (scope.size() > path.size() && scope.starts_with(path) &&
+                     scope[path.size()] == '/')) {
+                  return true;
+                }
+              }
 
-          return configuration.covers_entry(path);
-        });
+              return configuration.covers_entry(path);
+            }),
+        action.destination);
   }
 };
 

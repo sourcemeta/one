@@ -15,20 +15,32 @@ namespace sourcemeta::one {
 
 namespace {
 
-auto default_jwks_fetcher() -> sourcemeta::core::JWKSProvider::Fetcher {
-  return [](const std::string_view url)
-             -> std::optional<sourcemeta::core::JWKSProvider::FetchResult> {
+// The one way authentication reaches a provider from a running server. It is
+// composed here rather than inside the module, so what may touch a network is
+// decided by whoever stands the server up
+auto provider_fetcher() -> Authentication::Fetcher {
+  return [](Authentication::ProviderRequest &&incoming)
+             -> std::optional<Authentication::ProviderResponse> {
     try {
-      sourcemeta::core::HTTPSystemRequest request{std::string{url}};
+      const auto posting{!incoming.body.empty()};
+      sourcemeta::core::HTTPSystemRequest request{
+          std::string{incoming.url}, posting
+                                         ? sourcemeta::core::HTTPMethod::POST
+                                         : sourcemeta::core::HTTPMethod::GET};
       request.connect_timeout(std::chrono::seconds{2});
       request.timeout(std::chrono::seconds{5});
       request.maximum_response_size(1024UL * 1024UL);
       request.follow_redirects(false);
-      const auto response{request.send()};
-      if (response.status.code < 200 || response.status.code >= 300) {
-        return std::nullopt;
+      if (!incoming.authorization.empty()) {
+        request.header("authorization", std::move(incoming.authorization));
       }
 
+      if (posting) {
+        request.body(std::move(incoming.body),
+                     "application/x-www-form-urlencoded");
+      }
+
+      const auto response{request.send()};
       std::optional<std::chrono::seconds> max_age;
       const auto header{sourcemeta::core::http_header_find(response.headers,
                                                            "cache-control")};
@@ -36,8 +48,10 @@ auto default_jwks_fetcher() -> sourcemeta::core::JWKSProvider::Fetcher {
         max_age = sourcemeta::core::http_cache_control_max_age(header.value());
       }
 
-      return sourcemeta::core::JWKSProvider::FetchResult{.body = response.body,
-                                                         .max_age = max_age};
+      return Authentication::ProviderResponse{
+          .status = static_cast<std::uint32_t>(response.status.code),
+          .body = response.body,
+          .max_age = max_age};
     } catch (...) {
       return std::nullopt;
     }
@@ -53,7 +67,7 @@ Router::Router(const std::filesystem::path &base,
       // NOLINTNEXTLINE(modernize-avoid-c-arrays)
       slots_{std::make_unique<Slot[]>(router.size() + 1)},
       slots_size_{router.size() + 1},
-      authentication_{base / "authentication.bin", default_jwks_fetcher()} {
+      authentication_{base / "authentication.bin", provider_fetcher()} {
   router.arguments(0, [this](const auto &key, const auto &value) -> void {
     if (key == "errorSchema") {
       this->default_error_schema_ = std::get<std::string_view>(value);
@@ -128,13 +142,15 @@ auto Router::dispatch(
   // target reaching past a governed prefix is therefore still governed by it,
   // while one that merely addresses content relative to its own route is not
   const RequestCookies cookies{request};
+  // Read once here, since the same caller is served every artifact this request
+  // reaches and every gate question asked of them afterwards is a comparison
+  // against this rather than another reading of what they presented
+  const auto caller{
+      this->authentication_.caller({.bearer = credential, .cookies = cookies})};
   if (identifier != 0 && request.method() != "options" &&
       !instance->is_authentication_exempt() &&
-      !this->authentication_
-           .admits_route(request.path(),
-                         {.bearer = credential, .cookies = cookies},
-                         instance->required_audience())
-           .allowed) {
+      !this->authentication_.permits(RouteTarget{request.path()}, caller,
+                                     instance->required_audience())) {
     if (instance->serve_renewal_page(request, response)) {
       return;
     }
@@ -145,12 +161,7 @@ auto Router::dispatch(
     return;
   }
 
-  // Resolved once here, since the same caller is served every artifact this
-  // request reaches and placing them again for each of them would repeat the
-  // reading rather than the lookup
-  const auto view{
-      this->authentication_.view({.bearer = credential, .cookies = cookies})};
-  instance->rest(matches, credential, view, request, response);
+  instance->rest(matches, caller, request, response);
 }
 
 // A dead end only becomes a silent renewal when the browser carries the marker
@@ -163,49 +174,33 @@ auto RouterAction::serve_renewal(sourcemeta::one::HTTPRequest &request,
                                  sourcemeta::one::HTTPResponse &response) const
     -> bool {
   const RequestCookies cookies{request};
-  if (cookies.empty()) {
-    return false;
-  }
-
-  std::vector<std::string_view> candidates;
-  for (const auto field : std::span<const std::string_view>{cookies}) {
-    sourcemeta::core::http_cookie_values(field, Authentication::RENEWAL_COOKIE,
-                                         candidates);
-  }
-
-  if (candidates.empty()) {
-    return false;
-  }
-
   const auto path{
       Authentication::Path::parse(request.path(), this->server_uri())};
   if (!path.has_value()) {
     return false;
   }
 
-  const auto &authentication{this->dispatcher().authentication()};
-  for (const auto candidate : candidates) {
-    if (!authentication.interactive(path.value(), candidate).has_value()) {
-      continue;
-    }
-
-    // The denied page is named outright rather than left to a referrer, which
-    // a redirect carries from wherever the browser came from rather than from
-    // the page it is being sent away from
-    std::string location{""};
-    location += "/self/v1/auth/login/";
-    location += candidate;
-    location += "?silent=1&to=";
-    sourcemeta::core::URI::escape(request.path(), location);
-    response.write_status(sourcemeta::core::HTTP_STATUS_SEE_OTHER);
-    response.write_header("Location", location);
-    response.write_header("Cache-Control", "no-store");
-    sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_SEE_OTHER,
-                                   request, response);
-    return true;
+  const auto policy{this->dispatcher().authentication().renewal(
+      path.value(), {.cookies = cookies})};
+  if (!policy.has_value()) {
+    return false;
   }
 
-  return false;
+  // Where a login begins is this instance's own layout, so it is composed here
+  // rather than answered from elsewhere. The denied page is named outright
+  // rather than left to a referrer, which a redirect carries from wherever the
+  // browser came from rather than from the page it is being sent away from
+  std::string location{""};
+  location += "/self/v1/auth/login/";
+  location += policy.value();
+  location += "?silent=1&to=";
+  sourcemeta::core::URI::escape(request.path(), location);
+  response.write_status(sourcemeta::core::HTTP_STATUS_SEE_OTHER);
+  response.write_header("Location", location);
+  response.write_header("Cache-Control", "no-store");
+  sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_SEE_OTHER,
+                                 request, response);
+  return true;
 }
 
 auto RouterAction::serve_renewal_page(

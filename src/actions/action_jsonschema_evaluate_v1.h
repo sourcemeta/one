@@ -51,25 +51,29 @@ public:
   }
 
   auto rest(const std::span<std::string_view> matches,
-            std::string_view credential, std::string_view,
+            const sourcemeta::one::Authentication::Caller &caller,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
-    const sourcemeta::one::RequestCookies cookies{request};
     ActionJSONSchemaEvaluate_v1::serve_post(
-        matches, {.bearer = credential, .cookies = cookies}, request, response,
-        *this, this->response_schema_, this->error_schema_,
-        this->request_schema_,
+        matches, caller, request, response, *this, this->response_schema_,
+        this->error_schema_, this->request_schema_,
         // A throw here is intended and caught by the surrounding request
         // handler
         // NOLINTNEXTLINE(bugprone-exception-escape)
-        [this, bearer = std::string{credential},
+        [this,
+         bearer = std::string{sourcemeta::core::http_parse_bearer(
+             request.header("authorization"))},
          cookies = sourcemeta::one::owned_cookies(request)](
             const std::string_view schema_uri,
             const std::string &body) -> sourcemeta::core::JSON {
           const sourcemeta::one::RequestCookies fields{cookies};
+          // Placed again rather than captured, since the caller this action
+          // was handed points at a request that is gone by now
+          const auto deferred_caller{
+              this->caller_from({.bearer = bearer, .cookies = fields})};
           return this
-              ->schema_evaluate({.bearer = bearer, .cookies = fields},
-                                schema_uri, sourcemeta::core::parse_json(body),
+              ->schema_evaluate(deferred_caller, schema_uri,
+                                sourcemeta::core::parse_json(body),
                                 sourcemeta::blaze::Mode::Exhaustive)
               .second;
         });
@@ -78,7 +82,7 @@ public:
   auto mcp(const sourcemeta::core::MCPProtocolVersion version,
            const sourcemeta::core::JSON &request_id,
            const sourcemeta::core::JSON &arguments,
-           const sourcemeta::one::Credentials &credentials)
+           const sourcemeta::one::Authentication::Caller &caller)
       -> sourcemeta::core::JSON override {
     auto [request_valid, request_output]{
         this->structural_evaluate(this->rpc_request_schema_, arguments,
@@ -90,12 +94,10 @@ public:
     }
 
     const auto &schema_uri{arguments.at("schema").to_string()};
-    const auto schema_present{
-        this->artifact_resolve_path(sourcemeta::one::VIEW_PUBLIC, credentials,
-                                    schema_uri, Tree::Schemas, "schema")};
+    const auto schema_present{this->artifact_resolve_path(
+        caller, schema_uri, Tree::Schemas, "schema")};
     const auto evaluation_enabled{this->artifact_resolve_path(
-        sourcemeta::one::VIEW_PUBLIC, credentials, schema_uri, Tree::Schemas,
-        "blaze-exhaustive")};
+        caller, schema_uri, Tree::Schemas, "blaze-exhaustive")};
     if (!schema_present.path.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(request_id,
                                                    "Schema not found");
@@ -120,14 +122,14 @@ public:
 
     return sourcemeta::core::mcp_make_tool_success(
         version, request_id,
-        this->schema_evaluate(credentials, schema_uri, parsed_instance,
+        this->schema_evaluate(caller, schema_uri, parsed_instance,
                               sourcemeta::blaze::Mode::Exhaustive)
             .second);
   }
 
   template <typename Perform>
   static auto serve_post(const std::span<std::string_view> matches,
-                         const sourcemeta::one::Credentials credentials,
+                         const sourcemeta::one::Authentication::Caller &caller,
                          sourcemeta::one::HTTPRequest &request,
                          sourcemeta::one::HTTPResponse &response,
                          const sourcemeta::one::RouterAction &self,
@@ -177,11 +179,11 @@ public:
     schema_uri.push_back('/');
     schema_uri.append(path);
     const auto schema_present{self.artifact_resolve_path(
-        sourcemeta::one::VIEW_PUBLIC, credentials, schema_uri,
-        sourcemeta::one::RouterAction::Tree::Schemas, "schema")};
+        caller, schema_uri, sourcemeta::one::RouterAction::Tree::Schemas,
+        "schema")};
     const auto evaluation_enabled{self.artifact_resolve_path(
-        sourcemeta::one::VIEW_PUBLIC, credentials, schema_uri,
-        sourcemeta::one::RouterAction::Tree::Schemas, "blaze-exhaustive")};
+        caller, schema_uri, sourcemeta::one::RouterAction::Tree::Schemas,
+        "blaze-exhaustive")};
     if (!schema_present.path.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
@@ -230,10 +232,7 @@ public:
         // handler
         // NOLINTNEXTLINE(bugprone-exception-escape)
         [response_schema, error_schema, schema_uri = std::move(schema_uri),
-         &self, request_schema, bearer = std::string{credentials.bearer},
-         cookies = std::vector<std::string>{credentials.cookies.begin(),
-                                            credentials.cookies.end()},
-         perform = std::move(perform)](
+         &self, request_schema, perform = std::move(perform)](
             sourcemeta::one::HTTPRequest &callback_request,
             sourcemeta::one::HTTPResponse &callback_response,
             std::string &&body, bool too_big) -> void {
@@ -268,7 +267,6 @@ public:
             return;
           }
 
-          const sourcemeta::one::RequestCookies fields{cookies};
           if (!self.structural_evaluate_fast(request_schema, instance)) {
             sourcemeta::one::json_error(
                 callback_request, callback_response,

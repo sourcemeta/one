@@ -185,10 +185,10 @@ auto encode_jwt_metadata(
 
 namespace sourcemeta::one {
 
-auto Authentication::save(std::span<const Authentication::Policy> policies,
-                          const std::filesystem::path &configuration,
-                          const std::filesystem::path &destination,
-                          const Authentication::PathGuard &gateable) -> void {
+auto Authentication::compile(std::span<const Authentication::Policy> policies,
+                             const std::filesystem::path &configuration,
+                             const Authentication::PathGuard &gateable)
+    -> std::vector<std::byte> {
   assert(gateable);
   // Each policy occupies one bit of the node masks, so exceeding the ceiling
   // would shift past the width of a PolicySet
@@ -363,25 +363,35 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
   for (std::size_t index{0}; index < policies.size(); index += 1) {
     const auto &policy{policies[index]};
     std::vector<std::byte> policy_metadata;
-    if (policy.type == Authentication::Type::JWT) {
-      policy_metadata = encode_jwt_metadata(policy.issuer, policy.audience,
-                                            policy.jwks_uri, policy.algorithms,
-                                            policy.token_type, policy.claims);
-    } else if (policy.type == Authentication::Type::OIDC) {
+    auto algorithm{Authentication::Algorithm::Identity};
+    if (const auto *token{
+            std::get_if<Authentication::Policy::Token>(&policy.credential)}) {
+      policy_metadata = encode_jwt_metadata(token->issuer, token->audience,
+                                            token->jwks_uri, token->algorithms,
+                                            token->token_type, token->claims);
+    } else if (const auto *interactive{
+                   std::get_if<Authentication::Policy::Interactive>(
+                       &policy.credential)}) {
       // An interactive policy without a session secret could never mint or
       // verify one, so it fails loudly here rather than silently denying every
       // login at runtime
-      if (policy.session_secrets.empty()) {
+      if (interactive->session_secrets.empty()) {
         throw std::runtime_error(
             "Interactive authentication policies require a session secret");
       }
 
       policy_metadata = encode_oidc_metadata(
-          policy.issuer, policy.client_id, policy.claims, policy.email_domains,
-          policy.client_secret_variable, policy.name, policy.session_secrets,
+          interactive->issuer, interactive->client_id, interactive->claims,
+          interactive->email_domains, interactive->client_secret_variable,
+          policy.name, interactive->session_secrets,
           policy.paths.empty() ? std::string_view{} : policy.paths.front());
-    } else if (!policy.keys.empty()) {
-      policy_metadata = encode_apikey_metadata(policy.keys);
+    } else {
+      const auto &key{
+          std::get<Authentication::Policy::ApiKey>(policy.credential)};
+      algorithm = key.algorithm;
+      if (!key.keys.empty()) {
+        policy_metadata = encode_apikey_metadata(key.keys);
+      }
     }
 
     AuthenticationPolicyEntry entry{};
@@ -390,8 +400,8 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
     entry.metadata_length = static_cast<std::uint32_t>(policy_metadata.size());
     entry.name_offset = policy_names[index].first;
     entry.name_length = policy_names[index].second;
-    entry.algorithm = static_cast<std::uint8_t>(policy.algorithm);
-    entry.type = static_cast<std::uint8_t>(policy.type);
+    entry.algorithm = static_cast<std::uint8_t>(algorithm);
+    entry.type = static_cast<std::uint8_t>(policy.type());
     policy_table.push_back(entry);
     metadata.insert(metadata.end(), policy_metadata.begin(),
                     policy_metadata.end());
@@ -429,7 +439,12 @@ auto Authentication::save(std::span<const Authentication::Policy> policies,
                 metadata.size());
   }
 
-  sourcemeta::core::write_file(destination, buffer);
+  return buffer;
+}
+
+auto Authentication::write(const std::span<const std::byte> bytes,
+                           const std::filesystem::path &destination) -> void {
+  sourcemeta::core::write_file(destination, bytes);
 }
 
 } // namespace sourcemeta::one

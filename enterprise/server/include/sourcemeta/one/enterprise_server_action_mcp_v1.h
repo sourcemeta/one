@@ -126,8 +126,9 @@ public:
     return this->resource_identifier_;
   }
 
-  auto rest(const std::span<std::string_view>, std::string_view credential,
-            std::string_view, sourcemeta::one::HTTPRequest &request,
+  auto rest(const std::span<std::string_view>,
+            const sourcemeta::one::Authentication::Caller &,
+            sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     // MCP Streamable HTTP transport / Security Warning:
     // "Servers MUST validate the Origin header on all incoming connections
@@ -277,7 +278,9 @@ public:
     }
 
     request.body(
-        [this, credential = std::string{credential},
+        [this,
+         bearer = std::string{sourcemeta::core::http_parse_bearer(
+             request.header("authorization"))},
          cookies = sourcemeta::one::owned_cookies(request),
          version = negotiated_version.value()](
             sourcemeta::one::HTTPRequest &callback_request,
@@ -293,9 +296,12 @@ public:
             return;
           }
           const sourcemeta::one::RequestCookies fields{cookies};
+          // Placed again rather than captured, since the caller this action
+          // was handed points at a request that is gone by now
+          const auto deferred_caller{
+              this->caller_from({.bearer = bearer, .cookies = fields})};
           this->on_message(version, callback_request, callback_response,
-                           std::move(body),
-                           {.bearer = credential, .cookies = fields});
+                           std::move(body), deferred_caller);
         },
         [this, version = negotiated_version.value()](
             sourcemeta::one::HTTPRequest &callback_request,
@@ -314,7 +320,7 @@ public:
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
            const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
-           const sourcemeta::one::Credentials &)
+           const sourcemeta::one::Authentication::Caller &)
       -> sourcemeta::core::JSON override {
     return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
   }
@@ -462,8 +468,9 @@ private:
                                                   std::move(result));
   }
 
-  auto on_resources_read(const sourcemeta::core::JSON &request_json,
-                         const sourcemeta::one::Credentials &credentials) const
+  auto
+  on_resources_read(const sourcemeta::core::JSON &request_json,
+                    const sourcemeta::one::Authentication::Caller &caller) const
       -> sourcemeta::core::JSON {
     const auto &id{request_json.at("id")};
     const auto &uri{request_json.at("params").at("uri").to_string()};
@@ -512,8 +519,7 @@ private:
     }
 
     const auto resolution{this->artifact_resolve_path(
-        sourcemeta::one::VIEW_PUBLIC, credentials, uri, Tree::Schemas,
-        bundle ? "bundle" : "schema")};
+        caller, uri, Tree::Schemas, bundle ? "bundle" : "schema")};
     if (!resolution.path.has_value()) {
       return sourcemeta::core::jsonrpc_make_error(
           &id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
@@ -539,8 +545,9 @@ private:
 
   auto on_tools_call(const sourcemeta::core::MCPProtocolVersion version,
                      const sourcemeta::core::JSON &request_json,
-                     const sourcemeta::one::Credentials &credentials,
-                     const std::string_view view) -> sourcemeta::core::JSON {
+                     const sourcemeta::one::Authentication::Caller &caller)
+      -> sourcemeta::core::JSON {
+    const auto view{caller.view()};
     const auto &id{request_json.at("id")};
     const auto &name{request_json.at("params").at("name").to_string()};
     const auto &tool_routes{this->metadata_for(view).at("toolRoutes")};
@@ -563,7 +570,7 @@ private:
     try {
       return instance->mcp(version, id,
                            arguments == nullptr ? empty_arguments : *arguments,
-                           credentials);
+                           caller);
     } catch (const std::exception &error) {
       return sourcemeta::core::mcp_make_tool_error(id, error.what());
     }
@@ -572,7 +579,8 @@ private:
   auto on_message(const sourcemeta::core::MCPProtocolVersion version,
                   sourcemeta::one::HTTPRequest &request,
                   sourcemeta::one::HTTPResponse &response, std::string &&body,
-                  const sourcemeta::one::Credentials &credentials) -> void {
+                  const sourcemeta::one::Authentication::Caller &caller)
+      -> void {
     sourcemeta::core::JSON request_json{nullptr};
     try {
       request_json = sourcemeta::core::parse_json(body);
@@ -616,7 +624,7 @@ private:
           sub_id = *parsed_id;
         }
         try {
-          auto envelope{this->process_one(version, sub, credentials)};
+          auto envelope{this->process_one(version, sub, caller)};
           if (envelope.has_value()) {
             responses.push_back(std::move(envelope).value());
           }
@@ -649,7 +657,7 @@ private:
       return;
     }
 
-    auto envelope{this->process_one(version, request_json, credentials)};
+    auto envelope{this->process_one(version, request_json, caller)};
     if (envelope.has_value()) {
       this->write_envelope(request, response, sourcemeta::core::HTTP_STATUS_OK,
                            envelope.value(), version);
@@ -669,7 +677,7 @@ private:
 
   auto process_one(const sourcemeta::core::MCPProtocolVersion version,
                    const sourcemeta::core::JSON &request_json,
-                   const sourcemeta::one::Credentials &credentials)
+                   const sourcemeta::one::Authentication::Caller &caller)
       -> std::optional<sourcemeta::core::JSON> {
     if (sourcemeta::core::jsonrpc_is_notification(request_json)) {
       return std::nullopt;
@@ -684,6 +692,7 @@ private:
     if (!sourcemeta::core::mcp_is_request_method(method)) {
       return sourcemeta::core::jsonrpc_make_error_method_not_found(*id);
     }
+    const auto view{caller.view()};
     // Schema validation enforces MCP's stricter rules on top of JSON-RPC 2.0.
     // Most notably, MCP requires `id` MUST NOT be null even though JSON-RPC
     // §4 only calls null-id "discouraged" (technically valid). Sourcemeta One
@@ -694,7 +703,6 @@ private:
     }
     // Resolved once here, since a request reaches one method and placing the
     // caller again inside each of them would repeat the reading
-    const auto view{this->dispatcher().authentication().view(credentials)};
     if (method == sourcemeta::core::MCP_METHOD_INITIALIZE) {
       return this->on_initialize(request_json, view);
     }
@@ -705,10 +713,10 @@ private:
       return this->on_resources_list(request_json, view);
     }
     if (method == sourcemeta::core::MCP_METHOD_RESOURCES_READ) {
-      return this->on_resources_read(request_json, credentials);
+      return this->on_resources_read(request_json, caller);
     }
     if (method == sourcemeta::core::MCP_METHOD_TOOLS_CALL) {
-      return this->on_tools_call(version, request_json, credentials, view);
+      return this->on_tools_call(version, request_json, caller);
     }
     if (this->metadata_for(view).defines(method)) {
       return sourcemeta::core::jsonrpc_make_success(

@@ -656,10 +656,13 @@ static auto index_main(const std::string_view &program,
   }
 
   const auto authentication_path{canonical_output / "authentication.bin"};
-  sourcemeta::one::Authentication::save(
-      view_policies, configuration.path, authentication_path,
-      [](const std::string_view) { return true; });
-  const sourcemeta::one::Authentication gate{authentication_path, {}};
+  // The table this build just compiled is what the plan is filtered against, so
+  // it is read from memory rather than through the file it is also written to
+  const auto compiled{sourcemeta::one::Authentication::compile(
+      view_policies, configuration.path,
+      [](const std::string_view) { return true; })};
+  sourcemeta::one::Authentication::write(compiled, authentication_path);
+  const sourcemeta::one::Authentication gate{compiled, {}};
   const auto visible{view_filter_from(gate)};
 
   auto produce_plan{sourcemeta::one::delta<sourcemeta::one::INDEX_RULES>(

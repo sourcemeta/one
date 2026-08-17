@@ -62,18 +62,19 @@ public:
   }
 
   auto rest(const std::span<std::string_view> matches,
-            std::string_view credential, std::string_view,
+            const sourcemeta::one::Authentication::Caller &caller,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     const sourcemeta::one::RequestCookies cookies{request};
     ActionJSONSchemaEvaluate_v1::serve_post(
-        matches, {.bearer = credential, .cookies = cookies}, request, response,
-        *this, this->response_schema_, this->error_schema_,
-        this->request_schema_,
+        matches, caller, request, response, *this, this->response_schema_,
+        this->error_schema_, this->request_schema_,
         // A throw here is intended and caught by the surrounding request
         // handler
         // NOLINTNEXTLINE(bugprone-exception-escape)
-        [this, bearer = std::string{credential},
+        [this,
+         bearer = std::string{sourcemeta::core::http_parse_bearer(
+             request.header("authorization"))},
          cookies = sourcemeta::one::owned_cookies(request)](
             const std::string_view schema_uri,
             const std::string &body) -> sourcemeta::core::JSON {
@@ -81,16 +82,19 @@ public:
           sourcemeta::core::JSON instance_json{nullptr};
           sourcemeta::core::parse_json(body, instance_json, std::ref(tracker));
           const sourcemeta::one::RequestCookies fields{cookies};
-          return this->trace({.bearer = bearer, .cookies = fields}, schema_uri,
-                             instance_json, &tracker,
-                             sourcemeta::core::Pointer{});
+          // Placed again rather than captured, since the caller this action
+          // was handed points at a request that is gone by now
+          const auto deferred_caller{
+              this->caller_from({.bearer = bearer, .cookies = fields})};
+          return this->trace(deferred_caller, schema_uri, instance_json,
+                             &tracker, sourcemeta::core::Pointer{});
         });
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion version,
            const sourcemeta::core::JSON &request_id,
            const sourcemeta::core::JSON &arguments,
-           const sourcemeta::one::Credentials &credentials)
+           const sourcemeta::one::Authentication::Caller &caller)
       -> sourcemeta::core::JSON override {
     auto [request_valid, request_output]{
         this->structural_evaluate(this->rpc_request_schema_, arguments,
@@ -102,12 +106,10 @@ public:
     }
 
     const auto &schema_uri{arguments.at("schema").to_string()};
-    const auto schema_present{
-        this->artifact_resolve_path(sourcemeta::one::VIEW_PUBLIC, credentials,
-                                    schema_uri, Tree::Schemas, "schema")};
+    const auto schema_present{this->artifact_resolve_path(
+        caller, schema_uri, Tree::Schemas, "schema")};
     const auto evaluation_enabled{this->artifact_resolve_path(
-        sourcemeta::one::VIEW_PUBLIC, credentials, schema_uri, Tree::Schemas,
-        "blaze-exhaustive")};
+        caller, schema_uri, Tree::Schemas, "blaze-exhaustive")};
     if (!schema_present.path.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(request_id,
                                                    "Schema not found");
@@ -134,13 +136,13 @@ public:
 
     return sourcemeta::core::mcp_make_tool_success(
         version, request_id,
-        this->trace(credentials, schema_uri, parsed_instance, &tracker,
+        this->trace(caller, schema_uri, parsed_instance, &tracker,
                     sourcemeta::core::Pointer{}));
   }
 
 private:
   auto
-  resolve_vocabulary(const sourcemeta::one::Credentials credentials,
+  resolve_vocabulary(const sourcemeta::one::Authentication::Caller &caller,
                      const std::string_view keyword_location,
                      const sourcemeta::core::WeakPointer &evaluate_path,
                      const sourcemeta::core::JSON &static_locations,
@@ -158,8 +160,7 @@ private:
       auto cached{referenced_locations.find(schema_uri)};
       if (cached == referenced_locations.end()) {
         const auto locations_resolution{this->artifact_resolve_path(
-            sourcemeta::one::VIEW_PUBLIC, credentials, keyword_location_string,
-            Tree::Schemas, "locations")};
+            caller, keyword_location_string, Tree::Schemas, "locations")};
         if (locations_resolution.path.has_value()) {
           auto locations{
               this->artifact_read_json(locations_resolution.path.value())};
@@ -204,7 +205,7 @@ private:
     return sourcemeta::core::JSON{nullptr};
   }
 
-  auto trace(const sourcemeta::one::Credentials credentials,
+  auto trace(const sourcemeta::one::Authentication::Caller &caller,
              const std::string_view schema_uri,
              const sourcemeta::core::JSON &instance_json,
              const sourcemeta::core::PointerPositionTracker *tracker,
@@ -212,9 +213,8 @@ private:
       -> sourcemeta::core::JSON {
     auto steps{sourcemeta::core::JSON::make_array()};
 
-    const auto locations_resolution{
-        this->artifact_resolve_path(sourcemeta::one::VIEW_PUBLIC, credentials,
-                                    schema_uri, Tree::Schemas, "locations")};
+    const auto locations_resolution{this->artifact_resolve_path(
+        caller, schema_uri, Tree::Schemas, "locations")};
     if (!locations_resolution.path.has_value()) {
       throw std::runtime_error{"Failed to read schema locations metadata"};
     }
@@ -237,9 +237,9 @@ private:
         referenced_locations;
 
     const auto result{this->schema_evaluate_with_tracing(
-        credentials, schema_uri, instance_json,
-        [this, &credentials, &steps, tracker, &instance_prefix,
-         &static_locations, &instance_json, &referenced_locations](
+        caller, schema_uri, instance_json,
+        [this, &caller, &steps, tracker, &instance_prefix, &static_locations,
+         &instance_json, &referenced_locations](
             const sourcemeta::blaze::EvaluationType type, const bool valid,
             const sourcemeta::blaze::Instruction &instruction,
             const sourcemeta::blaze::InstructionExtra &extra,
@@ -293,9 +293,9 @@ private:
           }
 
           step.assign("vocabulary",
-                      this->resolve_vocabulary(
-                          credentials, extra.keyword_location, evaluate_path,
-                          static_locations, referenced_locations));
+                      this->resolve_vocabulary(caller, extra.keyword_location,
+                                               evaluate_path, static_locations,
+                                               referenced_locations));
 
           steps.push_back(std::move(step));
         })};

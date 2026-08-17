@@ -30,50 +30,85 @@ auto Authentication::views(const std::span<const Authentication::Policy>)
   return result;
 }
 
-auto Authentication::save(
+auto Authentication::compile(
     const std::span<const Authentication::Policy> policies,
     const std::filesystem::path &configuration,
-    const std::filesystem::path &destination, const Authentication::PathGuard &)
-    -> void {
+    const Authentication::PathGuard &) -> std::vector<std::byte> {
   if (!policies.empty()) {
     throw EnterpriseOnlyFeatureError(
         configuration,
         "Authentication is only available on the enterprise edition");
   }
 
-  sourcemeta::core::write_file(destination, std::vector<std::byte>{});
+  return {};
+}
+
+auto Authentication::write(const std::span<const std::byte> bytes,
+                           const std::filesystem::path &destination) -> void {
+  sourcemeta::core::write_file(destination, bytes);
 }
 
 // NOLINTBEGIN(performance-unnecessary-value-param)
 Authentication::Authentication(const std::filesystem::path &,
-                               sourcemeta::core::JWKSProvider::Fetcher) {}
+                               Authentication::Fetcher) {}
+
+Authentication::Authentication(const std::span<const std::byte>,
+                               Authentication::Fetcher) {}
 // NOLINTEND(performance-unnecessary-value-param)
 
 Authentication::~Authentication() = default;
 
-auto Authentication::admits(const Authentication::Path &,
-                            const Credentials &) const
-    -> Authentication::Verdict {
-  return {.allowed = true, .principal = std::nullopt};
-}
-
-auto Authentication::admits_route(const std::string_view, const Credentials &,
-                                  const std::string_view) const
-    -> Authentication::Verdict {
-  return {.allowed = true, .principal = std::nullopt};
-}
-
 // This edition declares no policies, so there is nobody to be other than
-// anonymous and every caller is classified the same way
-auto Authentication::classify(const Credentials &) const
-    -> Authentication::PolicySet {
-  return 0;
+// anonymous and every caller is placed the same way. The view is still named
+// rather than implied, which keeps the output one shape across editions
+// This edition signs nobody in, so there is no login to start and no session
+// to end, and both answer as the endpoints that reach them already do
+auto Authentication::login(const std::string_view, const std::string_view,
+                           const std::string_view, const bool,
+                           const std::string_view) const
+    -> Authentication::Outcome {
+  return {.result = Authentication::Outcome::Result::Missing};
 }
 
-// One way to see the registry means one view, which is still named rather than
-// implied so that the output is one shape across editions
-auto Authentication::view(const Credentials &) const -> std::string_view {
-  return VIEW_PUBLIC;
+// This edition signs nobody in, so no marker it could carry names a policy
+auto Authentication::renewal(const Authentication::Path &,
+                             const Credentials &) const
+    -> std::optional<std::string_view> {
+  return std::nullopt;
+}
+
+auto Authentication::callback(const std::string_view, const std::string_view,
+                              const std::string_view,
+                              const Authentication::CallbackRequest &,
+                              const Credentials &) const
+    -> Authentication::Outcome {
+  return {.result = Authentication::Outcome::Result::Missing};
+}
+
+auto Authentication::logout(const Credentials &, const std::string_view,
+                            const std::string_view) const
+    -> Authentication::Outcome {
+  return {.result = Authentication::Outcome::Result::Missing};
+}
+
+auto Authentication::caller(const Credentials &) const
+    -> Authentication::Caller {
+  Authentication::Caller result;
+  result.view_ = VIEW_PUBLIC;
+  return result;
+}
+
+// Nothing is governed here, so every location is part of what the one view
+// shows
+auto Authentication::permits(const Authentication::Path &,
+                             const Authentication::Caller &) const -> bool {
+  return true;
+}
+
+auto Authentication::permits(const RouteTarget &,
+                             const Authentication::Caller &,
+                             const std::string_view) const -> bool {
+  return true;
 }
 
 // One way to see the registry means one view, and nothing governs anything, so
@@ -98,87 +133,10 @@ auto Authentication::governing(const Authentication::Path &) const
   return {};
 }
 
-auto Authentication::interactive(const std::string_view) const
-    -> std::optional<Authentication::InteractivePolicy> {
-  return std::nullopt;
-}
-
-auto Authentication::interactive(const Authentication::Path &,
-                                 const std::string_view) const
-    -> std::optional<Authentication::InteractivePolicy> {
-  return std::nullopt;
-}
-
-auto Authentication::client_secret(const std::string_view) const
-    -> std::optional<sourcemeta::core::SecureString> {
-  return std::nullopt;
-}
-
-auto Authentication::endpoints(const std::string_view) const
-    -> std::optional<Authentication::ProviderEndpoints> {
-  return std::nullopt;
-}
-
-auto Authentication::open_session(const std::string_view) const
-    -> std::optional<std::string> {
-  return std::nullopt;
-}
-
-// Only an interactive login ever answers for a claim, and this edition
-// establishes none, so there is never a shape to report
-auto Authentication::object_shaped_claims(const std::string_view,
-                                          const sourcemeta::core::JSON &) const
-    -> std::vector<std::string_view> {
-  return {};
-}
-
-// Only an interactive login ever has two answers to combine, and this edition
-// establishes none, so nothing here reaches this
-auto Authentication::combine_claims(const sourcemeta::core::JSON &token,
-                                    const sourcemeta::core::JSON &)
-    -> sourcemeta::core::JSON {
-  return token;
-}
-
-auto Authentication::admits_identity(const std::string_view,
-                                     const sourcemeta::core::JSON &) const
-    -> Authentication::Admission {
-  return Authentication::Admission::Refused;
-}
-
-auto Authentication::seal(const std::string_view, const Purpose,
-                          const std::string_view,
-                          const std::chrono::sys_seconds) const
-    -> std::optional<std::string> {
-  return std::nullopt;
-}
-
-auto Authentication::open(const std::string_view, const Purpose,
-                          const std::string_view) const
-    -> std::optional<std::string> {
-  return std::nullopt;
-}
-
 auto Authentication::reference_permitted(const Authentication::Path &,
                                          const Authentication::Path &) const
     -> bool {
   return true;
-}
-
-// Sessions only arise from interactive authentication, which is an enterprise
-// feature, so this edition never produces a sealed value and never accepts one
-auto Authentication::seal_value(const std::string_view, const Purpose,
-                                const std::string_view,
-                                const std::chrono::sys_seconds,
-                                const std::chrono::sys_seconds) -> std::string {
-  return {};
-}
-
-auto Authentication::open_value(const std::string_view, const Purpose,
-                                const std::span<const std::string_view>,
-                                const std::chrono::sys_seconds)
-    -> std::optional<std::string> {
-  return std::nullopt;
 }
 
 } // namespace sourcemeta::one

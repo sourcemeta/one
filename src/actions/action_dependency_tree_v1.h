@@ -53,7 +53,7 @@ public:
   }
 
   auto rest(const std::span<std::string_view> matches,
-            std::string_view credential, std::string_view view,
+            const sourcemeta::one::Authentication::Caller &caller,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
@@ -83,8 +83,7 @@ public:
 
     const sourcemeta::one::RequestCookies cookies{request};
     const auto resolution{this->artifact_resolve_path(
-        view, {.bearer = credential, .cookies = cookies}, matches.front(),
-        this->tree_, this->metapack_)};
+        caller, matches.front(), this->tree_, this->metapack_)};
     if (!resolution.path.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
@@ -101,7 +100,7 @@ public:
   auto mcp(const sourcemeta::core::MCPProtocolVersion version,
            const sourcemeta::core::JSON &request_id,
            const sourcemeta::core::JSON &arguments,
-           const sourcemeta::one::Credentials &credentials)
+           const sourcemeta::one::Authentication::Caller &caller)
       -> sourcemeta::core::JSON override {
     auto [request_valid, request_output]{
         this->structural_evaluate(this->rpc_request_schema_, arguments,
@@ -114,10 +113,9 @@ public:
 
     // A tool call reaches one artifact, so placing the caller here is still
     // once for the request that carried them
-    const auto view{this->dispatcher().authentication().view(credentials)};
-    const auto resolution{this->artifact_resolve_path(
-        view, credentials, arguments.at("schema").to_string(), this->tree_,
-        this->metapack_)};
+    const auto resolution{
+        this->artifact_resolve_path(caller, arguments.at("schema").to_string(),
+                                    this->tree_, this->metapack_)};
     if (!resolution.path.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(request_id,
                                                    "Schema not found");

@@ -16,6 +16,11 @@ const STATE = 'e2e-forged-state-value-for-callback-tests-1';
 const NONCE = 'e2e-forged-nonce-value-for-callback-tests-1';
 const VERIFIER = 'e2e-forged-verifier-value-for-callback-12';
 
+// Where the provider was told to come back to. A login seals this into the
+// transaction, so a forged one has to name the address this instance would
+// have sent, or it is refused for that before anything else about it is read
+const REDIRECT = 'http://localhost:8000/self/v1/auth/callback/keycloak';
+
 const CALLBACK = /\/self\/v1\/auth\/callback\//;
 
 function sealTransaction(payload) {
@@ -106,7 +111,8 @@ test.describe('Callback transaction validation', () => {
       policy: 'keycloak',
       state: STATE,
       nonce: NONCE,
-      verifier: VERIFIER
+      verifier: VERIFIER,
+      redirect_uri: REDIRECT
     });
     // A transaction that is rejected outright is refused as a bad request, so
     // getting past that to a server-side failure is what shows this one was
@@ -127,7 +133,8 @@ test.describe('Callback transaction validation', () => {
       policy: 'keycloak',
       state: STATE,
       nonce: NONCE,
-      verifier: ''
+      verifier: '',
+      redirect_uri: REDIRECT
     });
     expect(response.status()).toBe(400);
     expect(await response.json()).toEqual({
@@ -145,7 +152,8 @@ test.describe('Callback transaction validation', () => {
       policy: 'keycloak',
       state: STATE,
       nonce: '',
-      verifier: VERIFIER
+      verifier: VERIFIER,
+      redirect_uri: REDIRECT
     });
     expect(response.status()).toBe(400);
     expect(await response.json()).toEqual({
@@ -169,7 +177,8 @@ test.describe('Callback transaction validation', () => {
             policy: 'keycloak',
             state: '',
             nonce: NONCE,
-            verifier: VERIFIER
+            verifier: VERIFIER,
+            redirect_uri: REDIRECT
           })}`
         }
       }
@@ -195,13 +204,15 @@ test.describe('Callback transaction validation', () => {
       policy: 'keycloak',
       state: 'a-state-belonging-to-some-other-login-1',
       nonce: NONCE,
-      verifier: VERIFIER
+      verifier: VERIFIER,
+      redirect_uri: REDIRECT
     });
     const mine = sealTransaction({
       policy: 'keycloak',
       state: STATE,
       nonce: NONCE,
-      verifier: VERIFIER
+      verifier: VERIFIER,
+      redirect_uri: REDIRECT
     });
     const declined = {
       type: 'urn:sourcemeta:one:auth-login-declined',
@@ -311,6 +322,29 @@ test.describe('Callback identity validation against a real login', () => {
       title: 'Internal Server Error',
       status: 500,
       detail: 'The session could not be established'
+    });
+    expect(response.headers()['set-cookie']).toBeUndefined();
+  });
+
+  test('a code redeemed for a return address other than the one asked for is refused', async ({
+    page,
+    context
+  }) => {
+    // The authorization request named where the provider was to come back to,
+    // and the exchange has to name the same address for the code to be worth
+    // anything. Reading that from the transaction rather than from the request
+    // being answered is what keeps a callback reached some other way from
+    // redeeming a code against an address this instance never asked for
+    const { response } = await signInAlteringTheTransaction(page, context, {
+      redirect_uri: 'http://localhost:8000/self/v1/auth/callback/elsewhere'
+    });
+
+    expect(response.status()).toBe(400);
+    expect(await response.json()).toEqual({
+      type: 'urn:sourcemeta:one:auth-invalid-callback',
+      title: 'Bad Request',
+      status: 400,
+      detail: 'The login could not be completed'
     });
     expect(response.headers()['set-cookie']).toBeUndefined();
   });

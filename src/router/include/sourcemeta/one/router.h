@@ -126,21 +126,21 @@ public:
   auto operator=(const RouterAction &) -> RouterAction & = delete;
   auto operator=(RouterAction &&) -> RouterAction & = delete;
 
-  // The view a caller is served arrives alongside what they presented, because
-  // it follows from the same reading and a request resolves several artifacts.
-  // Working it out where a path is built would place the same caller once per
-  // artifact rather than once per request
+  // Who is asking arrives already read, because a request resolves several
+  // artifacts and every one of them asks the same question about the same
+  // caller. Reading it where a path is built would place the same caller once
+  // per artifact rather than once per request
   virtual auto rest(const std::span<std::string_view> matches,
-                    std::string_view credential, std::string_view view,
-                    HTTPRequest &request, HTTPResponse &response) -> void = 0;
+                    const Authentication::Caller &caller, HTTPRequest &request,
+                    HTTPResponse &response) -> void = 0;
 
-  // The whole credential rather than the bearer alone, since a browser reaching
-  // a tool is admitted by its session cookie and would otherwise pass the gate
-  // and then be refused by whatever the tool resolves on its behalf
+  // The caller rather than the bearer alone, since a browser reaching a tool is
+  // admitted by its session cookie and would otherwise pass the gate and then
+  // be refused by whatever the tool resolves on its behalf
   virtual auto mcp(const sourcemeta::core::MCPProtocolVersion version,
                    const sourcemeta::core::JSON &id,
                    const sourcemeta::core::JSON &arguments,
-                   const Credentials &credentials)
+                   const Authentication::Caller &caller)
       -> sourcemeta::core::JSON = 0;
 
   // Whether this route stays reachable no matter which policies cover its path.
@@ -237,11 +237,18 @@ public:
       .x_frame_options = "DENY",
   };
 
-  [[nodiscard]] auto artifact_resolve_path(std::string_view view,
-                                           Credentials credentials,
+  // The tree decides whether a view applies, since the unit tree holds one
+  // answer whoever asks, so a caller names who they are and nothing else
+  [[nodiscard]] auto artifact_resolve_path(const Authentication::Caller &caller,
                                            std::string_view input, Tree tree,
                                            std::string_view artifact_name) const
       -> ArtifactResolution;
+
+  // Place a caller from credentials this action is holding rather than from the
+  // request it arrived on. A deferred body outlives its request, so what it
+  // presented has to be owned and read again once the body is there
+  [[nodiscard]] auto caller_from(const Credentials &credentials) const
+      -> Authentication::Caller;
 
   // The caching directive for served registry content. A response admitted
   // only via a credential must not be stored by shared caches, so it is
@@ -282,17 +289,18 @@ public:
       -> bool;
 
   [[nodiscard]] auto
-  schema_evaluate_fast(Credentials credentials, std::string_view schema_uri,
+  schema_evaluate_fast(const Authentication::Caller &caller,
+                       std::string_view schema_uri,
                        const sourcemeta::core::JSON &instance) const -> bool;
 
-  [[nodiscard]] auto schema_evaluate(Credentials credentials,
+  [[nodiscard]] auto schema_evaluate(const Authentication::Caller &caller,
                                      std::string_view schema_uri,
                                      const sourcemeta::core::JSON &instance,
                                      sourcemeta::blaze::Mode mode) const
       -> std::pair<bool, sourcemeta::core::JSON>;
 
   [[nodiscard]] auto schema_evaluate_with_tracing(
-      Credentials credentials, std::string_view schema_uri,
+      const Authentication::Caller &caller, std::string_view schema_uri,
       const sourcemeta::core::JSON &instance,
       const sourcemeta::blaze::Callback &callback) const -> bool;
 
@@ -333,7 +341,7 @@ private:
                                          sourcemeta::blaze::Mode mode) const
       -> std::shared_ptr<const sourcemeta::blaze::Template>;
 
-  [[nodiscard]] auto blaze_template(Credentials credentials,
+  [[nodiscard]] auto blaze_template(const Authentication::Caller &caller,
                                     std::string_view schema_uri,
                                     sourcemeta::blaze::Mode mode) const
       -> std::shared_ptr<const sourcemeta::blaze::Template>;

@@ -1,5 +1,9 @@
 #include <sourcemeta/one/authentication.h>
 
+#include "session.h"
+
+#include "session.h"
+
 #include <sourcemeta/core/crypto.h>
 
 #include <algorithm>   // std::max
@@ -92,12 +96,11 @@ auto parse_expiry(const std::string_view input)
 
 namespace sourcemeta::one {
 
-auto Authentication::seal_value(const std::string_view payload,
-                                const Purpose purpose,
-                                const std::string_view secret,
-                                const std::chrono::sys_seconds issued,
-                                const std::chrono::sys_seconds expiry)
-    -> std::string {
+auto seal_value(const std::string_view payload,
+                const Authentication::Purpose purpose,
+                const std::string_view secret,
+                const std::chrono::sys_seconds issued,
+                const std::chrono::sys_seconds expiry) -> std::string {
   const auto key{derive_key(secret, purpose)};
   std::string result{SESSION_VERSION};
   result += '.';
@@ -117,10 +120,10 @@ auto Authentication::seal_value(const std::string_view payload,
   return result;
 }
 
-auto Authentication::open_value(const std::string_view value,
-                                const Purpose purpose,
-                                const std::span<const std::string_view> secrets,
-                                const std::chrono::sys_seconds now)
+auto open_value(const std::string_view value,
+                const Authentication::Purpose purpose,
+                const std::span<const std::string_view> secrets,
+                const std::chrono::sys_seconds now)
     -> std::optional<std::string> {
   // Expiry comparisons are meaningless under a clock that reads before the
   // epoch, so such a clock validates nothing
