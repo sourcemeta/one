@@ -31,13 +31,28 @@ catalogs with enterprise-grade governance capabilities.
 
 ## :page_facing_up: License
 
-This project is dual-licensed. See
-[LICENSE](https://github.com/sourcemeta/one/blob/main/LICENSE) for the free
-offering and
+Sourcemeta One is source-available, not open source. Like GitLab, PostHog, and
+SigNoz, the Community edition is free to self-host, while the Enterprise
+edition's source is open for audit but requires a commercial license to run in
+production.
+
+The Community edition (everything outside `enterprise/`) is under the [Business
+Source License 1.1](https://github.com/sourcemeta/one/blob/main/LICENSE), which
+grants production use as if under AGPL-3.0 except that you may not offer it to
+third parties as a hosted or managed service or bundle it into something you
+provide to them for a fee, may not reimplement the Enterprise edition, and may
+not remove the edition, version, and licensor notice. Each release converts to
+AGPL-3.0-or-later four years later.
+
+The Enterprise edition (`enterprise/`) is commercial. Its source is published
+for transparency and audit, and
+[enterprise/LICENSE](https://github.com/sourcemeta/one/blob/main/enterprise/LICENSE)
+permits building and running it for development, testing, evaluation,
+demonstration, and contribution, but any other use needs a commercial license.
+See
 [LICENSE-COMMERCIAL](https://github.com/sourcemeta/one/blob/main/LICENSE-COMMERCIAL)
-for the enterprise offering. Reach out to
-[hello@sourcemeta.com](mailto:hello@sourcemeta.com) to discuss commercial
-licensing.
+and reach out to [hello@sourcemeta.com](mailto:hello@sourcemeta.com) to discuss
+commercial licensing.
 
 ## :handshake: Contributing
 

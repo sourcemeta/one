@@ -12,25 +12,36 @@ technology.*
 
 Sourcemeta One is [publicly available on
 GitHub](https://github.com/sourcemeta/one) with full source code transparency,
-enabling comprehensive auditing and community contributions.
+enabling comprehensive auditing and community contributions. Like GitLab,
+PostHog, and SigNoz, it is source-available rather than open source: the
+Community edition is free to self-host, while the Enterprise edition's source
+is open for audit but requires a commercial license to run in production.
 
 ## Editions
 
 Sourcemeta One is available in two editions:
 
 - **Community**: Licensed under the [Business Source License
-  1.1](https://github.com/sourcemeta/one/blob/main/LICENSE). You may use it as
-  if under the terms of AGPL-3.0, provided that you may not use it for a
-  solution that competes with Sourcemeta. After four years from each release,
-  the code transitions to AGPL-3.0.
+  1.1](https://github.com/sourcemeta/one/blob/main/LICENSE). You may make
+  production use of it as if under the terms of AGPL-3.0, provided that you do
+  not (i) make it, or a solution whose value derives substantially from it,
+  available to third parties as a hosted or managed service or by including it
+  in something you provide to them for a fee or other consideration, (ii)
+  reimplement the Enterprise edition within it, or (iii) remove or alter its
+  edition, version, and licensor notice. After four years from each release,
+  the code transitions to AGPL-3.0-or-later.
 
 - **Enterprise**: Includes the [Standard
   Library](https://github.com/sourcemeta/std), additional features, and supply
-  chain security capabilities not available in the Community edition. Requires
-  a [commercial
+  chain security capabilities not available in the Community edition. Its
+  source is published for transparency and audit under
+  [`enterprise/LICENSE`](https://github.com/sourcemeta/one/blob/main/enterprise/LICENSE),
+  which permits building and running it for local development, testing,
+  evaluation, and demonstration, and permits distributing modifications to
+  propose them back to Sourcemeta as a contribution. Every other use, including
+  any production use, requires a [commercial
   license](https://github.com/sourcemeta/one/blob/main/LICENSE-COMMERCIAL) from
-  Sourcemeta for all uses except local development for the purpose of sending a
-  contribution back to Sourcemeta.
+  Sourcemeta.
 
 ## Model Context Protocol
 

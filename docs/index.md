@@ -148,8 +148,9 @@ operational risk.
 transparency for security audits, compliance reviews, internal assessments, and
 modification. Enterprises can examine every line of code, eliminating black-box
 concerns and ensuring no vendor lock-in. If Sourcemeta would ever cease
-operations, you retain full access to continue running and maintaining your
-instances.
+operations, the [Community edition](commercial.md#editions) remains yours to
+run and maintain under the Business Source License, and each of its releases
+converts to AGPL-3.0-or-later four years after that release.
 
 **Supply chain security**: The Enterprise container image is cryptographically
 signed with Cosign/Sigstore, includes a signed SPDX Software Bill of Materials

@@ -1,0 +1,22 @@
+Sourcemeta One
+Copyright (c) 2024-2026 Sourcemeta OÜ, Estonia.
+
+This product includes third-party software:
+
+  * uWebSockets and uSockets (Apache-2.0), https://github.com/uNetworking/uWebSockets
+  * Bootstrap and Bootstrap Icons (MIT), https://github.com/twbs
+  * PCRE2 (BSD-3-Clause), https://github.com/PCRE2Project/pcre2
+  * libdeflate (MIT), https://github.com/ebiggers/libdeflate
+  * cmark-gfm (BSD-2-Clause), https://github.com/github/cmark-gfm
+  * Unicode character data from unicodetools (Unicode-3.0),
+    https://github.com/unicode-org/unicodetools
+  * OpenSSL (Apache-2.0) and libcurl (curl license), linked at runtime in the
+    Enterprise image
+  * The jsonschema binary bundled in these images is Sourcemeta's own work,
+    published under AGPL-3.0-or-later or a commercial license.
+
+Each such component is licensed under its own terms by its respective owner.
+For the complete set of dependencies built into a given image, see the SPDX
+SBOMs published with each Enterprise-edition release. Full license texts are
+available in the source repository and, where applicable, in the container
+image under /usr/share/doc/sourcemeta-one/.
