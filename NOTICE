@@ -29,5 +29,6 @@ under /usr/share/doc/sourcemeta-one/. Components provided by system packages
 are not duplicated there: their license texts are in the usual system
 locations, under /usr/share/doc/ and /usr/share/common-licenses/.
 
-In the source repository, each text is available alongside its component under
-vendor/, or under node_modules/ for those installed with NPM.
+In the source repository, vendored components carry their license text
+alongside them under vendor/, and components installed with NPM under
+node_modules/.
