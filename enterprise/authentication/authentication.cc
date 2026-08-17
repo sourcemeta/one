@@ -1481,8 +1481,10 @@ struct Authentication::Table::Impl {
     assert(index < this->view_count_);
     const auto &entry{
         static_cast<const AuthenticationViewEntry *>(this->views_)[index]};
-    return {.name = {this->strings_ + entry.name_offset, entry.name_length},
-            .policies = entry.policies};
+    Authentication::RecordedView result;
+    result.name_ = {this->strings_ + entry.name_offset, entry.name_length};
+    result.policies_ = entry.policies;
+    return result;
   }
 
   // The name a set of policies is served under, read from the recorded table
@@ -3100,12 +3102,14 @@ auto Authentication::Table::view(const std::string_view name) const
     -> Authentication::RecordedView {
   for (std::size_t index{0}; index < this->impl_->view_count(); index += 1) {
     const auto candidate{this->impl_->view_at(index)};
-    if (candidate.name == name) {
+    if (candidate.name() == name) {
       return candidate;
     }
   }
 
-  return {.name = VIEW_PUBLIC, .policies = 0};
+  Authentication::RecordedView result;
+  result.name_ = VIEW_PUBLIC;
+  return result;
 }
 
 auto Authentication::Table::visible(
@@ -3115,7 +3119,7 @@ auto Authentication::Table::visible(
   // this answers rather than whoever asks. Otherwise what nobody governs would
   // be shown by an instance knowing nothing about who governs what, which is
   // the one way this could disclose more than the gate admits
-  return this->impl_->permits(path.value(), view.policies);
+  return this->impl_->permits(path.value(), view.policies());
 }
 
 auto Authentication::Table::governing(const Authentication::Path &path) const

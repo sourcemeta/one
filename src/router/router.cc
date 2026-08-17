@@ -151,8 +151,9 @@ auto Router::dispatch(
       this->authentication_.caller({.bearer = credential, .cookies = cookies})};
   if (identifier != 0 && request.method() != "options" &&
       !instance->is_authentication_exempt() &&
-      !this->authentication_.permits(RouteTarget{request.path()}, caller,
-                                     instance->required_audience())) {
+      !this->authentication_.permits(
+          Authentication::RouteTarget{request.path()}, caller,
+          instance->required_audience())) {
     if (instance->serve_renewal_page(request, response)) {
       return;
     }

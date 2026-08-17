@@ -247,7 +247,8 @@ public:
   // Place a caller from credentials this action is holding rather than from the
   // request it arrived on. A deferred body outlives its request, so what it
   // presented has to be owned and read again once the body is there
-  [[nodiscard]] auto caller_from(const Credentials &credentials) const
+  [[nodiscard]] auto
+  caller_from(const Authentication::Credentials &credentials) const
       -> Authentication::Caller;
 
   // The caching directive for served registry content. A response admitted

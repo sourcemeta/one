@@ -114,8 +114,8 @@ TEST(records_the_anonymous_view_alone) {
       std::filesystem::path{"/no/such/authentication.bin"}};
   const auto table{gate.views()};
   EXPECT_EQ(table.size(), std::size_t{1});
-  EXPECT_EQ(table.at(0).name, "public");
-  EXPECT_EQ(table.at(0).policies,
+  EXPECT_EQ(table.at(0).name(), "public");
+  EXPECT_EQ(table.at(0).policies(),
             sourcemeta::one::Authentication::PolicySet{0});
 }
 
@@ -132,8 +132,9 @@ TEST(serves_a_name_no_view_holds_as_the_anonymous_one) {
   const sourcemeta::one::Authentication::Table gate{
       std::filesystem::path{"/no/such/authentication.bin"}};
   const auto withdrawn{gate.view("retired")};
-  EXPECT_EQ(withdrawn.name, "public");
-  EXPECT_EQ(withdrawn.policies, sourcemeta::one::Authentication::PolicySet{0});
+  EXPECT_EQ(withdrawn.name(), "public");
+  EXPECT_EQ(withdrawn.policies(),
+            sourcemeta::one::Authentication::PolicySet{0});
   // Nothing is governed here, so the one view shows every location whichever
   // name it was asked for
   EXPECT_TRUE(gate.visible(at("/"), withdrawn));

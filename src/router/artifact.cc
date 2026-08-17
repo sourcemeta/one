@@ -65,8 +65,8 @@ auto RouterAction::artifact_locate(const Authentication::Path &path,
   return canonical;
 }
 
-auto RouterAction::caller_from(const Credentials &credentials) const
-    -> Authentication::Caller {
+auto RouterAction::caller_from(const Authentication::Credentials &credentials)
+    const -> Authentication::Caller {
   return this->dispatcher_.authentication().caller(credentials);
 }
 

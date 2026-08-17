@@ -665,7 +665,7 @@ static auto index_main(const std::string_view &program,
   std::vector<std::string_view> views;
   views.reserve(view_table.size());
   for (const auto &view : view_table) {
-    views.push_back(view.name);
+    views.push_back(view.name());
   }
 
   const auto visible{view_filter_from(gate, view_table)};
@@ -865,6 +865,18 @@ auto main(int argc, char *argv[]) noexcept -> int {
   } catch (const sourcemeta::one::AuthenticationTooManyViewsError &error) {
     std::print(stdout, "error: {}\n  at issuer {}\n  at count {}\n",
                error.what(), error.issuer(), error.count());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::one::AuthenticationPolicyNameError &error) {
+    std::print(stdout, "error: {}\n  at name {}\n  at path {}\n", error.what(),
+               error.name(), error.path().string());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::one::AuthenticationTooManyPoliciesError &error) {
+    std::print(stdout, "error: {}\n  at count {}\n  at path {}\n", error.what(),
+               error.count(), error.path().string());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::one::AuthenticationMissingSecretError &error) {
+    std::print(stdout, "error: {}\n  at name {}\n  at path {}\n", error.what(),
+               error.name(), error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::AuthenticationViewNameCollisionError &error) {
     std::print(stdout, "error: {}\n  at name {}\n  at path {}\n", error.what(),

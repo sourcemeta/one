@@ -126,12 +126,14 @@ auto Authentication::permits(const RouteTarget &,
 // every location is part of what that view shows
 auto Authentication::Table::views() const
     -> std::vector<Authentication::RecordedView> {
-  return {{.name = VIEW_PUBLIC, .policies = 0}};
+  return {this->view(VIEW_PUBLIC)};
 }
 
 auto Authentication::Table::view(const std::string_view) const
     -> Authentication::RecordedView {
-  return {.name = VIEW_PUBLIC, .policies = 0};
+  Authentication::RecordedView result;
+  result.name_ = VIEW_PUBLIC;
+  return result;
 }
 
 auto Authentication::Table::visible(const Authentication::Path &,

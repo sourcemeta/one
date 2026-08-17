@@ -240,7 +240,13 @@ auto generate_protected_resource_metadata(
     const auto match{std::ranges::find(
         configuration.authentication, name,
         &sourcemeta::one::Configuration::AuthenticationEntry::name)};
-    assert(match != configuration.authentication.cend());
+    // A policy the artifact records but this configuration no longer declares
+    // is one a build behind this one wrote. It names no client anybody could
+    // ask for a token, so it is passed over rather than reported
+    if (match == configuration.authentication.cend()) {
+      continue;
+    }
+
     const auto &entry{*match};
     if (entry.type !=
             sourcemeta::one::Configuration::AuthenticationEntry::Type::JWT ||

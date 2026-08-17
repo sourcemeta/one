@@ -279,6 +279,30 @@ static_assert(names_an_audience<TokenPolicy>);
 static_assert(names_session_secrets<InteractivePolicy>);
 static_assert(names_a_client_secret<InteractivePolicy>);
 
+template <typename T>
+concept assembled_from_a_set = requires {
+  T{std::string_view{}, sourcemeta::one::Authentication::PolicySet{}};
+};
+template <typename T>
+concept states_a_set = requires(T value) {
+  value.policies = sourcemeta::one::Authentication::PolicySet{};
+};
+
+// What the two above detect, so that the pair below says something
+struct AssembledView {
+  std::string_view name;
+  sourcemeta::one::Authentication::PolicySet policies;
+};
+static_assert(assembled_from_a_set<AssembledView>);
+static_assert(states_a_set<AssembledView>);
+
+// A view is what a table answers with rather than something a caller states.
+// A set assembled anywhere else names a view no build ever wrote, and would be
+// read as admitting whatever it happened to hold
+static_assert(
+    !assembled_from_a_set<sourcemeta::one::Authentication::RecordedView>);
+static_assert(!states_a_set<sourcemeta::one::Authentication::RecordedView>);
+
 // A provider a case has control of, and what it says. Everything this module
 // reaches goes through one function, so a case configures what the provider
 // advertises and answers with, and then reads what was made of it. Nothing
@@ -974,19 +998,19 @@ TEST(an_explicit_route_is_gated_on_the_target_as_it_arrived) {
   const sourcemeta::one::Authentication authentication{
       sourcemeta::one::Authentication::Table{path}, stub_fetcher({}, nullptr)};
   EXPECT_FALSE(authentication.permits(
-      sourcemeta::one::RouteTarget{"/private/secret"},
+      sourcemeta::one::Authentication::RouteTarget{"/private/secret"},
       authentication.caller({.bearer = "", .cookies = {}})));
   EXPECT_TRUE(authentication.permits(
-      sourcemeta::one::RouteTarget{"/private/secret"},
+      sourcemeta::one::Authentication::RouteTarget{"/private/secret"},
       authentication.caller({.bearer = "route-secret", .cookies = {}})));
 
   // A target covered by no policy is admitted, including one whose spelling
   // only resembles a governed prefix
   EXPECT_TRUE(authentication.permits(
-      sourcemeta::one::RouteTarget{"/public/string"},
+      sourcemeta::one::Authentication::RouteTarget{"/public/string"},
       authentication.caller({.bearer = "", .cookies = {}})));
   EXPECT_TRUE(authentication.permits(
-      sourcemeta::one::RouteTarget{"/privateextra/secret"},
+      sourcemeta::one::Authentication::RouteTarget{"/privateextra/secret"},
       authentication.caller({.bearer = "", .cookies = {}})));
 }
 
@@ -2919,6 +2943,84 @@ TEST(an_artifact_whose_table_omits_the_anonymous_view_is_refused) {
       at("/machine/x"), authentication.caller({.bearer = "table-secret"})));
   EXPECT_FALSE(authentication.permits(at("/anywhere"),
                                       authentication.caller({.bearer = ""})));
+}
+
+TEST(save_rejects_a_nameless_policy) {
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .credential = sourcemeta::one::Authentication::Policy::Interactive{
+            .issuer = "acme",
+            .client_id = "client",
+            .client_secret_variable = "ONE_TEST_OIDC_NAMELESS"}}}};
+  const auto path{test_path("oidc_nameless.bin")};
+  try {
+    save(policies, path, path, anywhere);
+    FAIL();
+  } catch (const sourcemeta::one::AuthenticationPolicyNameError &error) {
+    EXPECT_STREQ(error.what(),
+                 "An authentication policy requires a name of its own");
+  }
+}
+
+TEST(save_rejects_a_nameless_key_policy) {
+  const std::array<std::string_view, 1> paths{{"/machine"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_NAMELESS"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .credential =
+            sourcemeta::one::Authentication::Policy::ApiKey{.keys = keys}}}};
+  const auto path{test_path("key_nameless.bin")};
+  try {
+    save(policies, path, path, anywhere);
+    FAIL();
+  } catch (const sourcemeta::one::AuthenticationPolicyNameError &error) {
+    EXPECT_STREQ(error.what(),
+                 "An authentication policy requires a name of its own");
+  }
+}
+
+TEST(save_rejects_two_policies_sharing_a_name) {
+  const std::array<std::string_view, 1> alpha_paths{{"/alpha"}};
+  const std::array<std::string_view, 1> beta_paths{{"/beta"}};
+  const std::array<std::string_view, 1> alpha_keys{{"ONE_TEST_KEY_SAME_A"}};
+  const std::array<std::string_view, 1> beta_keys{{"ONE_TEST_KEY_SAME_B"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = alpha_paths,
+        .name = "shared",
+        .credential =
+            sourcemeta::one::Authentication::Policy::ApiKey{.keys =
+                                                                alpha_keys}},
+       {.paths = beta_paths,
+        .name = "shared",
+        .credential = sourcemeta::one::Authentication::Policy::ApiKey{
+            .keys = beta_keys}}}};
+  const auto path{test_path("name_shared.bin")};
+  try {
+    save(policies, path, path, anywhere);
+    FAIL();
+  } catch (const sourcemeta::one::AuthenticationPolicyNameError &error) {
+    EXPECT_STREQ(error.what(),
+                 "An authentication policy requires a name of its own");
+  }
+}
+
+TEST(save_rejects_a_policy_taking_the_anonymous_name) {
+  const std::array<std::string_view, 1> paths{{"/machine"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_RESERVED"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .name = "public",
+        .credential =
+            sourcemeta::one::Authentication::Policy::ApiKey{.keys = keys}}}};
+  const auto path{test_path("name_reserved.bin")};
+  try {
+    save(policies, path, path, anywhere);
+    FAIL();
+  } catch (const sourcemeta::one::AuthenticationPolicyNameError &error) {
+    EXPECT_STREQ(error.what(),
+                 "An authentication policy requires a name of its own");
+  }
 }
 
 TEST(save_writes_the_largest_table_a_configuration_can_declare) {
@@ -5476,17 +5578,17 @@ TEST(the_recorded_table_names_every_view_it_serves) {
   // fans its actions out in
   const auto table{gate.views()};
   EXPECT_EQ(table.size(), std::size_t{4});
-  EXPECT_EQ(table.at(0).name, "public");
-  EXPECT_EQ(table.at(0).policies,
+  EXPECT_EQ(table.at(0).name(), "public");
+  EXPECT_EQ(table.at(0).policies(),
             sourcemeta::one::Authentication::PolicySet{0});
-  EXPECT_EQ(table.at(1).name, "oncall");
-  EXPECT_EQ(table.at(1).policies,
+  EXPECT_EQ(table.at(1).name(), "oncall");
+  EXPECT_EQ(table.at(1).policies(),
             sourcemeta::one::Authentication::PolicySet{0b10});
-  EXPECT_EQ(table.at(2).name, "oncall+platform");
-  EXPECT_EQ(table.at(2).policies,
+  EXPECT_EQ(table.at(2).name(), "oncall+platform");
+  EXPECT_EQ(table.at(2).policies(),
             sourcemeta::one::Authentication::PolicySet{0b11});
-  EXPECT_EQ(table.at(3).name, "platform");
-  EXPECT_EQ(table.at(3).policies,
+  EXPECT_EQ(table.at(3).name(), "platform");
+  EXPECT_EQ(table.at(3).policies(),
             sourcemeta::one::Authentication::PolicySet{0b01});
 }
 
@@ -5591,7 +5693,7 @@ TEST(a_name_no_view_holds_is_served_as_anonymous) {
   // withdrawn since leaves a name this no longer holds. It is served what a
   // caller holding nothing is served, rather than what the name used to reach
   const auto withdrawn{gate.view("retired")};
-  EXPECT_EQ(withdrawn.name, "public");
+  EXPECT_EQ(withdrawn.name(), "public");
   EXPECT_TRUE(gate.visible(at("/open/x"), withdrawn));
   EXPECT_FALSE(gate.visible(at("/machine/x"), withdrawn));
 }
@@ -5896,7 +5998,7 @@ TEST(an_ungoverned_route_ignores_the_audience_it_requires) {
               policies, test_path("ungoverned_route"), anywhere)},
       stub_fetcher({}, nullptr)};
 
-  const sourcemeta::one::RouteTarget target{"/self/v1/mcp"};
+  const sourcemeta::one::Authentication::RouteTarget target{"/self/v1/mcp"};
 
   // Nobody governs it, so it opens whatever the caller brought
   EXPECT_TRUE(authentication.permits(target, authentication.caller({}),
@@ -5961,4 +6063,57 @@ TEST(a_session_never_opens_as_a_transaction) {
   EXPECT_TRUE(authentication.permits(
       at("/portal/x"),
       authentication.caller({.cookies = fields(as_a_session)})));
+}
+
+// A ceiling and a missing secret are refusals a caller earns the same way, and
+// both used to answer with an error naming no policy at all
+TEST(save_rejects_more_policies_than_a_set_can_name) {
+  std::vector<std::vector<std::string_view>> paths;
+  std::vector<std::vector<std::string_view>> keys;
+  std::vector<std::string> names;
+  constexpr auto total{sourcemeta::one::Authentication::MAXIMUM_POLICIES + 1};
+  for (std::size_t index{0}; index < total; index += 1) {
+    names.push_back("policy-" + std::to_string(index));
+    paths.push_back({"/scope"});
+    keys.push_back({"ONE_TEST_KEY_CEILING"});
+  }
+
+  std::vector<sourcemeta::one::Authentication::Policy> policies;
+  for (std::size_t index{0}; index < total; index += 1) {
+    policies.push_back(
+        {.paths = paths[index],
+         .name = names[index],
+         .credential = sourcemeta::one::Authentication::Policy::ApiKey{
+             .keys = keys[index]}});
+  }
+
+  const auto path{test_path("ceiling.bin")};
+  try {
+    save(policies, path, path, anywhere);
+    FAIL();
+  } catch (const sourcemeta::one::AuthenticationTooManyPoliciesError &error) {
+    EXPECT_STREQ(error.what(), "Too many authentication policies");
+    EXPECT_EQ(error.count(), total);
+  }
+}
+
+TEST(save_rejects_an_interactive_policy_without_a_session_secret) {
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .name = "okta",
+        .credential = sourcemeta::one::Authentication::Policy::Interactive{
+            .issuer = "https://acme.test",
+            .client_id = "client",
+            .client_secret_variable = "ONE_TEST_OIDC_NO_SECRET"}}}};
+  const auto path{test_path("no_session_secret.bin")};
+  try {
+    save(policies, path, path, anywhere);
+    FAIL();
+  } catch (const sourcemeta::one::AuthenticationMissingSecretError &error) {
+    EXPECT_STREQ(error.what(),
+                 "An interactive authentication policy requires a session "
+                 "secret");
+    EXPECT_EQ(error.name(), "okta");
+  }
 }

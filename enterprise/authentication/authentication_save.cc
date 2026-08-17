@@ -14,7 +14,6 @@
 #include <cstring>     // std::memcpy
 #include <filesystem>  // std::filesystem::path
 #include <span>        // std::span
-#include <stdexcept>   // std::runtime_error
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::pair
@@ -186,14 +185,14 @@ auto encode_jwt_metadata(
 namespace sourcemeta::one {
 
 auto Authentication::Table::compile(
-    std::span<const Authentication::Policy> policies,
+    const std::span<const Authentication::Policy> policies,
     const std::filesystem::path &configuration,
     const Authentication::PathGuard &gateable) -> std::vector<std::byte> {
   assert(gateable);
   // Each policy occupies one bit of the node masks, so exceeding the ceiling
   // would shift past the width of a PolicySet
   if (policies.size() > Authentication::MAXIMUM_POLICIES) {
-    throw std::runtime_error("Too many authentication policies");
+    throw AuthenticationTooManyPoliciesError(configuration, policies.size());
   }
 
   // A typo, a stray extension, or a scope this instance does not serve names
@@ -204,6 +203,24 @@ auto Authentication::Table::compile(
       if (!gateable(policy_path)) {
         throw AuthenticationUnknownPathError(configuration,
                                              std::string{policy_path});
+      }
+    }
+  }
+
+  // A view is spelled from the names of the policies it comprises, so a policy
+  // without one, or sharing one, or taking the name every caller holding
+  // nothing is served under, yields a view that names somewhere else or
+  // nowhere. A configuration is refused for all three long before this is
+  // reached, and this is what makes that a guarantee rather than a convention
+  for (std::size_t index{0}; index < policies.size(); index += 1) {
+    const auto name{policies[index].name};
+    if (name.empty() || name == VIEW_PUBLIC) {
+      throw AuthenticationPolicyNameError(configuration, std::string{name});
+    }
+
+    for (std::size_t other{0}; other < index; other += 1) {
+      if (policies[other].name == name) {
+        throw AuthenticationPolicyNameError(configuration, std::string{name});
       }
     }
   }
@@ -358,8 +375,8 @@ auto Authentication::Table::compile(
       // verify one, so it fails loudly here rather than silently denying every
       // login at runtime
       if (interactive->session_secrets.empty()) {
-        throw std::runtime_error(
-            "Interactive authentication policies require a session secret");
+        throw AuthenticationMissingSecretError(configuration,
+                                               std::string{policy.name});
       }
 
       policy_metadata = encode_oidc_metadata(

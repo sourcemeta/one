@@ -90,14 +90,14 @@ public:
     const auto &authentication{dispatcher.authentication()};
     for (const auto &recorded : authentication.table().views()) {
       const auto path{this->artifact_resolve_path_unauthenticated(
-          recorded.name, "", Tree::Explorer, "mcp")};
+          recorded.name(), "", Tree::Explorer, "mcp")};
       if (!path.has_value()) {
         continue;
       }
 
       auto metadata{this->artifact_read_json(path.value())};
       if (metadata.has_value()) {
-        this->metadata_views_.emplace(recorded.name,
+        this->metadata_views_.emplace(recorded.name(),
                                       std::move(metadata).value());
       }
     }

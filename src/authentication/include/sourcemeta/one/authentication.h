@@ -32,32 +32,6 @@ namespace sourcemeta::one {
 // server reads cannot disagree
 inline constexpr std::string_view VIEW_PUBLIC{"public"};
 
-// A route as the router matched it, taken by the spelling it arrived in rather
-// than by where it resolves to. A target reaching past a governed prefix is
-// still governed by it, which is why it is not canonicalised, and why it is not
-// a registry path
-class RouteTarget {
-public:
-  explicit RouteTarget(const std::string_view value) noexcept : value_{value} {}
-
-  [[nodiscard]] auto value() const noexcept -> std::string_view {
-    return this->value_;
-  }
-
-private:
-  std::string_view value_;
-};
-
-// Everything a request presented for authentication: the bearer value from
-// the authorization header and every cookie field it carried, either of which
-// may admit the caller under a covering policy. The cookie fields are kept as
-// they arrived rather than joined, since a request may carry more than one and
-// what a cookie means is decided by whoever reads it
-struct Credentials {
-  std::string_view bearer{};
-  std::span<const std::string_view> cookies{};
-};
-
 class SOURCEMETA_ONE_AUTHENTICATION_EXPORT Authentication {
 public:
   static constexpr std::size_t MAXIMUM_POLICIES{64};
@@ -111,6 +85,23 @@ public:
     Path() = default;
     explicit Path(std::string value) : value_{std::move(value)} {}
     std::string value_;
+  };
+
+  // A route as the router matched it, taken by the spelling it arrived in
+  // rather than by where it resolves to. A target reaching past a governed
+  // prefix is still governed by it, which is why it is not canonicalised, and
+  // why it is not a registry path
+  class RouteTarget {
+  public:
+    explicit RouteTarget(const std::string_view value) noexcept
+        : value_{value} {}
+
+    [[nodiscard]] auto value() const noexcept -> std::string_view {
+      return this->value_;
+    }
+
+  private:
+    std::string_view value_;
   };
 
   // How a presented credential is compared against a policy's stored keys.
@@ -221,6 +212,16 @@ public:
   using Fetcher =
       std::function<std::optional<ProviderResponse>(ProviderRequest &&)>;
 
+  // Everything a request presented for authentication: the bearer value from
+  // the authorization header and every cookie field it carried, either of which
+  // may admit the caller under a covering policy. The cookie fields are kept as
+  // they arrived rather than joined, since a request may carry more than one
+  // and what a cookie means is decided by whoever reads it
+  struct Credentials {
+    std::string_view bearer{};
+    std::span<const std::string_view> cookies{};
+  };
+
   // Who is asking, read from what a request presented exactly once. Everything
   // decided afterwards is a comparison against what this holds rather than a
   // second reading of a credential
@@ -295,11 +296,31 @@ public:
     [[nodiscard]] auto operator==(const View &other) const -> bool = default;
   };
 
+  class Table;
+
   // One view as the artifact records it: the directory its artifacts live
-  // under, and the policies a caller satisfies to be served from it
-  struct RecordedView {
-    std::string_view name;
-    PolicySet policies;
+  // under, and the policies a caller satisfies to be served from it.
+  //
+  // The set is not something a caller can state, only something a table
+  // answers with, because what it shows is decided by which policies a build
+  // recorded together rather than by whoever asks. A set assembled elsewhere
+  // would name a view no build ever wrote and be taken for one that admits
+  // whatever it happens to hold
+  class RecordedView {
+  public:
+    [[nodiscard]] auto name() const noexcept -> std::string_view {
+      return this->name_;
+    }
+
+    [[nodiscard]] auto policies() const noexcept -> PolicySet {
+      return this->policies_;
+    }
+
+  private:
+    friend Table;
+    friend Authentication;
+    std::string_view name_{};
+    PolicySet policies_{0};
   };
 
   /// The compiled policy table: what a build wrote and what every question
@@ -314,12 +335,12 @@ public:
     // the guard does not recognise. The configuration names where a refusal
     // came from
     [[nodiscard]] static auto
-    compile(std::span<const Policy> policies,
+    compile(const std::span<const Policy> policies,
             const std::filesystem::path &configuration,
             const PathGuard &gateable) -> std::vector<std::byte>;
 
     // Persist what was compiled, so that a later process can map it back
-    static auto write(std::span<const std::byte> bytes,
+    static auto write(const std::span<const std::byte> bytes,
                       const std::filesystem::path &destination) -> void;
 
     // How many policies may name one issuer. The combinations over a group
@@ -352,7 +373,7 @@ public:
     ///
     /// Every policy name must be distinct, which is what keeps one view from
     /// taking another's name.
-    [[nodiscard]] static auto enumerate(std::span<const Policy> policies)
+    [[nodiscard]] static auto enumerate(const std::span<const Policy> policies)
         -> std::vector<View>;
 
     /// Map a table a build wrote. A missing, unreadable or malformed artifact
@@ -362,7 +383,7 @@ public:
 
     /// Adopt a table compiled in this process rather than mapped from a file,
     /// so that reading a policy set never depends on a filesystem to do it
-    explicit Table(std::span<const std::byte> bytes);
+    explicit Table(const std::span<const std::byte> bytes);
 
     ~Table();
 
@@ -381,7 +402,7 @@ public:
     /// The view served under a name. A name this table does not serve answers
     /// the anonymous view, which is what a build stamped before a policy was
     /// withdrawn leaves behind, and which reaches only what nobody governs.
-    [[nodiscard]] auto view(std::string_view name) const -> RecordedView;
+    [[nodiscard]] auto view(const std::string_view name) const -> RecordedView;
 
     /// Whether a view shows a path, which is the rule a build filters by and
     /// the only place it is stated. A path nobody governs is shown to
@@ -462,9 +483,9 @@ public:
   /// caller was configured with. An empty requirement asks for nothing extra,
   /// and a caller that presented no token is unaffected, since only a token
   /// carries an audience to check.
-  [[nodiscard]] auto permits(const RouteTarget &target, const Caller &caller,
-                             std::string_view required_audience = {}) const
-      -> bool;
+  [[nodiscard]] auto
+  permits(const RouteTarget &target, const Caller &caller,
+          const std::string_view required_audience = {}) const -> bool;
 
   /// End the browser's session, and the provider's where it named a policy
   /// whose provider offers to end one.
@@ -478,8 +499,8 @@ public:
   /// route is a fact about the surface that received the request rather than
   /// about authentication. Nothing here composes a URL of its own.
   [[nodiscard]] auto logout(const Credentials &credentials,
-                            std::string_view instance_url,
-                            std::string_view return_to) const -> Outcome;
+                            const std::string_view instance_url,
+                            const std::string_view return_to) const -> Outcome;
 
   /// Start a login, sealing the transaction the callback will complete and
   /// naming where the provider should send the browser.
@@ -498,10 +519,11 @@ public:
   /// it names a route, and which routes exist is not something this knows. It
   /// is what the provider is told to come back to, and what the callback will
   /// be checked against.
-  [[nodiscard]] auto login(std::string_view policy,
-                           std::string_view instance_url,
-                           std::string_view redirect_uri, bool silent,
-                           std::string_view return_to) const -> Outcome;
+  [[nodiscard]] auto login(const std::string_view policy,
+                           const std::string_view instance_url,
+                           const std::string_view redirect_uri,
+                           const bool silent,
+                           const std::string_view return_to) const -> Outcome;
 
   /// Which interactive policy should be asked whether a lapsed sign-in still
   /// stands, for a caller that reached this path and nothing else.
@@ -543,9 +565,9 @@ public:
   /// The redirect URI must be the one the login was started with, since the
   /// provider checks it and so does this. It is passed in for the same reason
   /// it is passed to `login`: it names a route.
-  [[nodiscard]] auto callback(std::string_view policy,
-                              std::string_view instance_url,
-                              std::string_view redirect_uri,
+  [[nodiscard]] auto callback(const std::string_view policy,
+                              const std::string_view instance_url,
+                              const std::string_view redirect_uri,
                               const CallbackRequest &incoming,
                               const Credentials &credentials) const -> Outcome;
 

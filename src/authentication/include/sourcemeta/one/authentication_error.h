@@ -85,6 +85,84 @@ private:
   std::size_t count_;
 };
 
+// Raised when an authentication policy carries no name, shares one with
+// another, or takes the name every caller holding nothing is served under. A
+// view is named after the policies it comprises, so any of the three leaves a
+// view naming somewhere else or nowhere
+class SOURCEMETA_ONE_AUTHENTICATION_EXPORT AuthenticationPolicyNameError
+    : public std::exception {
+public:
+  AuthenticationPolicyNameError(std::filesystem::path path, std::string name)
+      : path_{std::move(path)}, name_{std::move(name)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "An authentication policy requires a name of its own";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto name() const noexcept -> const std::string & {
+    return this->name_;
+  }
+
+private:
+  std::filesystem::path path_;
+  std::string name_;
+};
+
+// Raised when more policies are declared than one policy set has bits to name,
+// since each occupies one of them
+class SOURCEMETA_ONE_AUTHENTICATION_EXPORT AuthenticationTooManyPoliciesError
+    : public std::exception {
+public:
+  AuthenticationTooManyPoliciesError(std::filesystem::path path,
+                                     const std::size_t count)
+      : path_{std::move(path)}, count_{count} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "Too many authentication policies";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto count() const noexcept -> std::size_t {
+    return this->count_;
+  }
+
+private:
+  std::filesystem::path path_;
+  std::size_t count_;
+};
+
+// Raised when a policy that signs people in names no secret to seal their
+// session with, which could neither mint one nor read one back
+class SOURCEMETA_ONE_AUTHENTICATION_EXPORT AuthenticationMissingSecretError
+    : public std::exception {
+public:
+  AuthenticationMissingSecretError(std::filesystem::path path, std::string name)
+      : path_{std::move(path)}, name_{std::move(name)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "An interactive authentication policy requires a session secret";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto name() const noexcept -> const std::string & {
+    return this->name_;
+  }
+
+private:
+  std::filesystem::path path_;
+  std::string name_;
+};
+
 // Raised when a policy is named exactly as the view over some combination of
 // others is spelled, which would serve two sets of policies from one directory
 class SOURCEMETA_ONE_AUTHENTICATION_EXPORT AuthenticationViewNameCollisionError
