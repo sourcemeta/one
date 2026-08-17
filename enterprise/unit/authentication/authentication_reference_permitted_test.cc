@@ -667,7 +667,3 @@ TEST(reference_across_swapped_jwt_key_set_locations_is_rejected) {
   EXPECT_FALSE(gate.reference_permitted(AT("/alpha/one"), AT("/beta/two")));
   EXPECT_FALSE(gate.reference_permitted(AT("/beta/two"), AT("/alpha/one")));
 }
-
-// A configured policy path that only differs cosmetically still has to gate the
-// location it names. A spelling the matcher could not traverse would leave the
-// target public while the configuration reads as though it were gated

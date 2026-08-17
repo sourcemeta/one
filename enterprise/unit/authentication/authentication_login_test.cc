@@ -3,6 +3,8 @@
 // What starting a login answers with. Every case builds a table, asks it to
 // start a login, and reads the outcome
 
+// An instance that could not read its artifact offers no login at all, which
+// is the same answer it gives to every other question
 TEST(a_login_through_a_broken_artifact_is_missing) {
   const sourcemeta::one::Authentication authentication{
       sourcemeta::one::Authentication::Table{
@@ -13,10 +15,9 @@ TEST(a_login_through_a_broken_artifact_is_missing) {
             sourcemeta::one::Authentication::Outcome::Result::Missing);
 }
 
-// A session is sealed under the secret of the policy that established it, so a
-// value one policy minted is nothing to another, even where both are declared
-// here. That is what stops a caller choosing which policy a value is read as
-
+// A login is offered under the name a policy was declared with, and nowhere
+// else. A name this instance does not serve is answered as missing, which is
+// the same answer a typo gets
 TEST(a_login_starts_only_under_a_declared_name) {
   setenv("ONE_TEST_NAMED", "confidential", 1);
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
@@ -51,7 +52,6 @@ TEST(a_login_starts_only_under_a_declared_name) {
 // What a provider says about itself is retrieved once and kept for as long as
 // it said, so a second login costs nothing. Anybody may start one, so asking
 // again each time would let a stranger drive traffic at the provider
-
 TEST(what_a_provider_said_is_retrieved_once_and_reused) {
   setenv("ONE_TEST_OIDC_CACHE", "confidential", 1);
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
@@ -82,11 +82,6 @@ TEST(what_a_provider_said_is_retrieved_once_and_reused) {
             sourcemeta::one::Authentication::Outcome::Result::Redirect);
   EXPECT_EQ(*provider.discoveries, 1);
 }
-
-// RFC 6749 Section 2.3.1 has every server accept the client secret in an
-// authorization header and discourages carrying it in the request body, so the
-// header is used wherever the provider takes it. A provider that lists nothing
-// is taken to accept it, which is what the specification assigns to silence
 
 TEST(a_login_against_an_unreachable_provider_cannot_start) {
   setenv("ONE_TEST_OIDC_UNREACHABLE", "confidential", 1);
@@ -156,7 +151,6 @@ TEST(a_login_without_a_client_secret_cannot_start) {
 
 // A variable set to nothing is not a secret, so it is the same answer as one
 // that was never set, which is what the control beside it shows
-
 TEST(a_login_with_a_blank_client_secret_cannot_start) {
   setenv("ONE_TEST_SECRET_BLANK", "", 1);
   setenv("ONE_TEST_SECRET_SET", "confidential", 1);
@@ -200,7 +194,6 @@ TEST(a_login_with_a_blank_client_secret_cannot_start) {
 }
 
 // A policy naming no variable at all names no secret either
-
 TEST(a_login_naming_no_secret_variable_cannot_start) {
   const TestProvider provider;
   const std::array<std::string_view, 1> paths{{"/portal"}};
@@ -245,6 +238,7 @@ TEST(a_machine_policy_starts_no_login) {
       sourcemeta::one::Authentication::Outcome::Result::Missing);
 }
 
+// Without a secret there is nothing to seal a login with, so it does not start
 TEST(a_login_without_a_session_secret_cannot_start) {
   setenv("ONE_TEST_SEAL_NONE", "confidential", 1);
   unsetenv("ONE_TEST_SEAL_NONE_SECRET");

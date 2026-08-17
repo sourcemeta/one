@@ -42,6 +42,8 @@ static auto SIGN_IN(const sourcemeta::one::Authentication &authentication,
       {.cookies = presented});
 }
 
+// A policy naming no rule admits whoever its provider vouched for, so signing
+// in is the whole of it
 TEST(a_policy_naming_no_rule_admits_whoever_signs_in) {
   setenv("ONE_TEST_ADMIT_OPEN", "confidential", 1);
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
@@ -79,7 +81,6 @@ TEST(a_policy_naming_no_rule_admits_whoever_signs_in) {
 // Whether asking again could still change the answer is exactly what tells the
 // two apart, so that is what these say: the same provider answers the missing
 // claim at UserInfo, and only the one that had not been answered is admitted
-
 TEST(a_claim_that_never_arrived_is_asked_for_rather_than_refused) {
   setenv("ONE_TEST_ADMIT_PARTIAL", "confidential", 1);
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
@@ -123,7 +124,6 @@ TEST(a_claim_that_never_arrived_is_asked_for_rather_than_refused) {
 
 // The same claim, with a provider that answers nothing at its UserInfo
 // endpoint, which is what shows the admission above came from asking
-
 TEST(a_claim_that_never_arrived_and_is_nowhere_to_ask_refuses) {
   setenv("ONE_TEST_ADMIT_NO_USERINFO", "confidential", 1);
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
@@ -156,7 +156,6 @@ TEST(a_claim_that_never_arrived_and_is_nowhere_to_ask_refuses) {
 
 // Rules are cumulative, so one that refuses settles it whatever another would
 // have allowed
-
 TEST(a_rule_that_refuses_settles_it_whatever_another_wants) {
   setenv("ONE_TEST_ADMIT_BOTH", "confidential", 1);
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
@@ -207,7 +206,6 @@ TEST(a_rule_that_refuses_settles_it_whatever_another_wants) {
 // OpenID Connect Core Section 5.1 has speak for the address delivered with it
 // and no other. A provider saying it will not vouch is an answer, so it settles
 // the matter, while absence alone is what leaves the question open
-
 TEST(an_address_the_provider_will_not_vouch_for_is_refused) {
   setenv("ONE_TEST_ADMIT_UNVOUCHED", "confidential", 1);
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
@@ -255,7 +253,6 @@ TEST(an_address_the_provider_will_not_vouch_for_is_refused) {
 // The token wins wherever both answers speak, since it arrives signed and
 // verified while a UserInfo response is protected only by the transport that
 // carried it. So the second fills gaps rather than overruling a signature
-
 TEST(a_second_answer_fills_gaps_without_overruling_the_token) {
   setenv("ONE_TEST_COMBINE_TOKEN", "confidential", 1);
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
@@ -301,8 +298,10 @@ TEST(a_second_answer_fills_gaps_without_overruling_the_token) {
 // `email_verified` speak for the `email` delivered alongside it and no other,
 // so letting one answer's assertion vouch for the other answer's address would
 // admit an address the provider never verified
-
 TEST(an_address_arrives_with_its_own_assertion_or_not_at_all) {
+  // Minting a session needs this, and a case says so itself rather
+  // than relying on whichever case ran before it
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   setenv("ONE_TEST_COMBINE_PAIR", "confidential", 1);
   const std::array<std::string_view, 1> paths{{"/portal"}};
   const std::array<std::string_view, 1> domains{{"acme.test"}};
@@ -391,7 +390,6 @@ TEST(admitting_reads_two_answers_only_once_they_are_combined) {
 // identifies them matches nothing, and a refusal cannot show that: the token it
 // concerns is sealed inside a cookie where an operator cannot look. It is said
 // in the log instead, which is the only place it can be said
-
 TEST(a_claim_answered_with_objects_is_named_where_an_operator_looks) {
   setenv("ONE_TEST_SHAPE_OBJECTS", "confidential", 1);
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
@@ -425,7 +423,6 @@ TEST(a_claim_answered_with_objects_is_named_where_an_operator_looks) {
 // The same rule, answered in the shape it names, says nothing at all. This
 // names a policy of its own because what is said is said once per claim and
 // policy however often somebody signs in
-
 TEST(a_claim_answered_in_the_shape_a_rule_names_says_nothing) {
   setenv("ONE_TEST_SHAPE_STRINGS", "confidential", 1);
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
@@ -468,7 +465,6 @@ TEST(a_claim_answered_in_the_shape_a_rule_names_says_nothing) {
 // space-delimited string rather than compared member by member, so one arriving
 // as anything else is refused outright, and calling it an identifier mismatch
 // would describe a mistake nobody made
-
 TEST(a_scope_arriving_as_objects_is_refused_without_being_named) {
   setenv("ONE_TEST_SHAPE_SCOPE", "confidential", 1);
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
@@ -526,6 +522,10 @@ TEST(a_callback_under_a_name_this_instance_does_not_serve_is_refused) {
             sourcemeta::one::Authentication::Outcome::Result::Missing);
 }
 
+// RFC 6749 Section 2.3.1 has every server accept the client secret in an
+// authorization header and discourages carrying it in the request body, so the
+// header is used wherever the provider takes it. A provider that lists nothing
+// is taken to accept it, which is what the specification assigns to silence
 TEST(a_provider_naming_no_authentication_method_gets_the_header) {
   setenv("ONE_TEST_OIDC_AUTH_SILENT", "confidential", 1);
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
@@ -585,7 +585,6 @@ TEST(a_provider_naming_the_header_gets_the_header) {
 // A provider that does not take the header leaves the body as the only way to
 // authenticate, so the preference gives way rather than the login failing. A
 // body is what logging and proxies keep, which is why it is the second choice
-
 TEST(a_provider_refusing_the_header_gets_the_body_instead) {
   setenv("ONE_TEST_OIDC_AUTH_POST", "confidential", 1);
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
@@ -640,6 +639,3 @@ TEST(a_login_asking_for_nowhere_returns_to_what_the_policy_governs) {
             sourcemeta::one::Authentication::Outcome::Result::Redirect);
   EXPECT_EQ(completed.location, "/portal");
 }
-
-// An instance that could not read its artifact offers no login at all, which
-// is the same answer it gives to every other question

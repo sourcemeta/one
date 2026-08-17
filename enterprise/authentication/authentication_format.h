@@ -315,6 +315,27 @@ inline auto structurally_valid(const std::span<const std::byte> bytes) noexcept
         return false;
       }
     }
+
+    // A node's edges are searched by halving rather than scanned, so labels out
+    // of order would lose a child that is present. Losing one leaves the
+    // subtree below it ungoverned, which is the one direction this must not
+    // fail in, so the order the search relies on is established here rather
+    // than assumed of whoever wrote the file
+    const char *strings{at_offset<char>(bytes, header->strings_offset)};
+    for (std::uint32_t index{0}; index < header->node_count; index += 1) {
+      const auto &node{nodes[index]};
+      for (std::uint32_t edge{1}; edge < node.edge_count; edge += 1) {
+        const auto &previous{edges[node.first_edge + edge - 1]};
+        const auto &current{edges[node.first_edge + edge]};
+        const std::string_view before{strings + previous.segment_offset,
+                                      previous.segment_length};
+        const std::string_view after{strings + current.segment_offset,
+                                     current.segment_length};
+        if (before.compare(after) >= 0) {
+          return false;
+        }
+      }
+    }
   }
 
   return true;
@@ -391,6 +412,11 @@ inline auto decode_jwt_metadata(const std::span<const std::byte> metadata,
       return false;
     }
 
+    // A token is verified against a key set, which carries public keys, so only
+    // an asymmetric algorithm can ever be meant here. Admitting a symmetric one
+    // would let a public key be read as a shared secret, which is why a
+    // configuration cannot name one either. The asymmetric values are the ones
+    // up to and including this, so anything beyond it is refused
     const auto value{static_cast<std::uint8_t>(metadata[cursor])};
     cursor += 1;
     if (value >

@@ -3,6 +3,9 @@
 // What ending a session answers with. Every case builds a table, asks it to
 // sign somebody out, and reads the outcome
 
+// Signing out asks the provider to end its own session, carrying the identity
+// token as proof of whose it is asking about. Reaching that at all means the
+// session opened and named the policy that minted it
 TEST(signing_out_asks_the_provider_that_established_the_session) {
   setenv("ONE_TEST_LOGOUT_A", "confidential", 1);
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
@@ -36,7 +39,6 @@ TEST(signing_out_asks_the_provider_that_established_the_session) {
 
 // A session naming a policy this instance does not serve opens nothing, so
 // there is nobody to ask and the browser is simply forgotten here
-
 TEST(signing_out_with_a_session_naming_no_policy_here_asks_nobody) {
   setenv("ONE_TEST_LOGOUT_B", "confidential", 1);
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);

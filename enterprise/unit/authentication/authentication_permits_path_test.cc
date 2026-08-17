@@ -470,6 +470,10 @@ TEST(a_policy_path_carrying_a_repeated_separator_gates_its_location) {
                                      authentication.caller({.bearer = ""})));
 }
 
+// A route nobody governs is reached by anybody, so an audience requirement on
+// it narrows nothing. Refusing a caller there for presenting a token issued
+// elsewhere would refuse them for holding a credential they did not need, at a
+// route they could have reached by presenting nothing at all
 TEST(an_ungoverned_route_ignores_the_audience_it_requires) {
   setenv("ONE_TEST_UNGOVERNED_ROUTE_KEY", "elsewhere-secret", 1);
   const std::array<std::string_view, 1> paths{{"/elsewhere"}};
@@ -506,9 +510,3 @@ TEST(an_ungoverned_route_ignores_the_audience_it_requires) {
       AT("/elsewhere/x"),
       authentication.caller({.bearer = "elsewhere-secret"})));
 }
-
-// The other direction of the same separation. A session is what somebody holds
-// once they are signed in, and a transaction is what anybody may obtain without
-// holding anything, so reading either as the other is what the purposes exist
-// to stop. Both are sealed under one policy secret, so nothing but the purpose
-// tells them apart

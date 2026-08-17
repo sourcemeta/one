@@ -380,11 +380,10 @@ TEST(a_session_never_admits_under_a_policy_sharing_its_secret) {
       authentication.caller({.bearer = "", .cookies = FIELDS(cookies)})));
 }
 
-// Signing out asks the provider to end its own session, carrying the identity
-// token as proof of whose it is asking about. Reaching that at all means the
-// session opened and named the policy that minted it
-
 TEST(a_transaction_never_admits_as_a_session) {
+  // Minting a session needs this, and a case says so itself rather
+  // than relying on whichever case ran before it
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   setenv("ONE_TEST_PURPOSE_CLIENT", "confidential", 1);
   const std::array<std::string_view, 1> paths{{"/portal"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
@@ -432,6 +431,9 @@ TEST(a_transaction_never_admits_as_a_session) {
 }
 
 TEST(session_cookie_without_a_configured_secret_is_denied) {
+  // Minting a session needs this, and a case says so itself rather
+  // than relying on whichever case ran before it
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   const std::array<std::string_view, 1> paths{{"/portal"}};
   // The session secret variable is deliberately never set in the environment
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
@@ -453,6 +455,9 @@ TEST(session_cookie_without_a_configured_secret_is_denied) {
 }
 
 TEST(session_admitted_under_a_rotated_secret) {
+  // Minting a session needs this, and a case says so itself rather
+  // than relying on whichever case ran before it
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   // The policy names the newest secret first, then the one it replaces, so a
   // session established under the old secret still verifies
   setenv("ONE_TEST_OIDC_ROTATED_SECRET", "new-secret", 1);
@@ -495,6 +500,9 @@ TEST(session_admitted_under_a_rotated_secret) {
 }
 
 TEST(session_with_a_blank_configured_secret_is_denied) {
+  // Minting a session needs this, and a case says so itself rather
+  // than relying on whichever case ran before it
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
   setenv("ONE_TEST_OIDC_BLANK_SECRET", "", 1);
   const std::array<std::string_view, 1> paths{{"/portal"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
@@ -575,10 +583,9 @@ TEST(session_cookie_does_not_open_an_apikey_path) {
       authentication.caller({.bearer = "", .cookies = FIELDS(cookies)})));
 }
 
-// A login is offered under the name a policy was declared with, and nowhere
-// else. A name this instance does not serve is answered as missing, which is
-// the same answer a typo gets
-
+// A session is sealed under the secret of the policy that established it, so a
+// value one policy minted is nothing to another, even where both are declared
+// here. That is what stops a caller choosing which policy a value is read as
 TEST(a_session_is_bound_to_the_policy_whose_secret_sealed_it) {
   setenv("ONE_TEST_BIND_A", "confidential", 1);
   setenv("ONE_TEST_BIND_B", "confidential", 1);
@@ -620,8 +627,6 @@ TEST(a_session_is_bound_to_the_policy_whose_secret_sealed_it) {
   EXPECT_FALSE(authentication.permits(
       AT("/beta/x"), authentication.caller({.cookies = FIELDS(carried)})));
 }
-
-// Without a secret there is nothing to seal a login with, so it does not start
 
 TEST(a_presented_key_decides_over_a_session) {
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
@@ -707,6 +712,11 @@ TEST(a_presented_key_that_opens_nothing_sets_a_session_aside) {
       authentication.caller({.bearer = "", .cookies = FIELDS(cookies)})));
 }
 
+// The other direction of the same separation. A session is what somebody holds
+// once they are signed in, and a transaction is what anybody may obtain without
+// holding anything, so reading either as the other is what the purposes exist
+// to stop. Both are sealed under one policy secret, so nothing but the purpose
+// tells them apart
 TEST(a_session_never_opens_as_a_transaction) {
   setenv("ONE_TEST_PURPOSE_BACK", "confidential", 1);
   setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
@@ -747,6 +757,3 @@ TEST(a_session_never_opens_as_a_transaction) {
       AT("/portal/x"),
       authentication.caller({.cookies = FIELDS(as_a_session)})));
 }
-
-// A ceiling and a missing secret are refusals a caller earns the same way, and
-// both used to answer with an error naming no policy at all

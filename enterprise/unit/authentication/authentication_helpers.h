@@ -10,15 +10,14 @@
 #include <sourcemeta/core/test.h>
 #include <sourcemeta/core/uri.h>
 
-#include <array>      // std::array
-#include <chrono>     // std::chrono::sys_seconds, std::chrono::seconds
-#include <cstddef>    // std::byte, std::size_t
-#include <cstdint>    // std::uint32_t
-#include <cstdlib>    // setenv
-#include <cstring>    // std::memcpy
-#include <filesystem> // std::filesystem::path
-#include <fstream>    // std::ofstream, std::fstream, std::ifstream
-#include <iostream>
+#include <array>       // std::array
+#include <chrono>      // std::chrono::sys_seconds, std::chrono::seconds
+#include <cstddef>     // std::byte, std::size_t
+#include <cstdint>     // std::uint32_t
+#include <cstdlib>     // setenv
+#include <cstring>     // std::memcpy
+#include <filesystem>  // std::filesystem::path
+#include <fstream>     // std::ofstream, std::fstream, std::ifstream
 #include <iterator>    // std::istreambuf_iterator
 #include <map>         // std::map
 #include <memory>      // std::shared_ptr, std::make_shared
@@ -414,13 +413,13 @@ inline auto instance(const std::string &name,
 
 // What a login handed the browser: the sealed value it must bring back, and the
 // state the provider is expected to echo beside it
-struct Started {
+struct TestStarted {
   std::string sealed;
   std::string state;
 };
 
 inline auto start(const sourcemeta::one::Authentication &authentication)
-    -> Started {
+    -> TestStarted {
   const auto outcome{
       authentication.login("okta", INSTANCE, REDIRECT, false, "")};
   EXPECT_EQ(outcome.result,
@@ -450,19 +449,29 @@ struct Presented {
 // Whether the callback read the value as the transaction it names. Anything it
 // cannot open is refused before the provider is consulted at all, and anything
 // it opens gets one step further, to a provider that named no token endpoint
-inline auto opens(const sourcemeta::one::Authentication &authentication,
-                  const Started &started, const std::string_view sealed,
+inline auto OPENS(const sourcemeta::one::Authentication &authentication,
+                  const TestStarted &started, const std::string_view sealed,
                   const Presented &given = {}) -> bool {
   std::string carried{given.cookie};
   carried += '=';
   carried += sealed;
-  const std::array<std::string_view, 1> fields{{carried}};
+  std::string shadowed{given.cookie};
+  shadowed += '=';
+  shadowed += given.shadow;
+  std::vector<std::string_view> fields;
+  if (!given.shadow.empty()) {
+    fields.push_back(shadowed);
+  }
+
+  if (given.carried) {
+    fields.push_back(carried);
+  }
+
   const auto outcome{authentication.callback(
       given.policy, INSTANCE, given.redirect,
       {.state = given.state.empty() ? started.state : given.state,
        .code = "an-authorization-code"},
-      {.cookies = given.carried ? std::span<const std::string_view>{fields}
-                                : std::span<const std::string_view>{}})};
+      {.cookies = fields})};
   return outcome.result !=
          sourcemeta::one::Authentication::Outcome::Result::Invalid;
 }

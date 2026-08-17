@@ -11,6 +11,9 @@ static constexpr std::string_view CLAIMS_ONCALL_GROUP{
       }
     })JSON"};
 
+// A table compiled in this process reads every section from the bytes it holds
+// rather than from a mapping it does not have, so it answers a credential the
+// same way one read back from a file does
 TEST(a_compiled_table_reads_a_policy_without_a_mapping) {
   setenv("ONE_TEST_COMPILED_KEY", "compiled-secret", 1);
   const std::array<std::string_view, 1> paths{{"/private"}};
@@ -37,11 +40,6 @@ TEST(a_compiled_table_reads_a_policy_without_a_mapping) {
   EXPECT_EQ(authentication.caller({.bearer = "compiled-secret"}).view(),
             "guard");
 }
-
-// A route nobody governs is reached by anybody, so an audience requirement on
-// it narrows nothing. Refusing a caller there for presenting a token issued
-// elsewhere would refuse them for holding a credential they did not need, at a
-// route they could have reached by presenting nothing at all
 
 TEST(a_caller_presenting_nothing_is_served_the_anonymous_view) {
   setenv("ONE_TEST_VIEW_ANONYMOUS_KEY", "machine-secret", 1);
@@ -341,10 +339,6 @@ TEST(a_session_places_its_caller_in_the_policy_that_established_it) {
           .view(),
       sourcemeta::one::VIEW_PUBLIC);
 }
-
-// A table compiled in this process reads every section from the bytes it holds
-// rather than from a mapping it does not have, so it answers a credential the
-// same way one read back from a file does
 
 TEST(save_writes_the_largest_table_a_configuration_can_declare) {
   constexpr std::size_t groups{4};

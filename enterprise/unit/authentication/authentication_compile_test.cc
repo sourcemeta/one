@@ -124,6 +124,8 @@ TEST(save_rejects_a_policy_named_as_a_combination_of_others) {
   }
 }
 
+// A ceiling and a missing secret are refusals a caller earns the same way, and
+// both used to answer with an error naming no policy at all
 TEST(save_rejects_more_policies_than_a_set_can_name) {
   std::vector<std::vector<std::string_view>> paths;
   std::vector<std::vector<std::string_view>> keys;

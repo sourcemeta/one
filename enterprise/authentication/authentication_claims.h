@@ -193,8 +193,11 @@ inline auto scope_accepts(const sourcemeta::core::JSON &payload,
     return false;
   }
 
+  // A rule is only read here because the policy named one, so a rule that is
+  // not a rule at all is unreadable rather than absent, and the comment above
+  // decides which way that falls
   if (!request.is_object()) {
-    return true;
+    return false;
   }
 
   const auto *single{request.try_at("value")};

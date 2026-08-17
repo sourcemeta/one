@@ -4,6 +4,16 @@
 // Every case builds a broken or missing artifact and asks the same thing,
 // which is that nothing is reached rather than everything
 
+// The artifact header is twelve 32 bit fields, and a file shorter than that is
+// refused for its size alone. These have to match what the writer emits, or a
+// case meaning to exercise a later check never reaches it
+static constexpr std::size_t HEADER_BYTES{48};
+static constexpr char ARTIFACT_VERSION{14};
+
+// Where the node section offset sits within that header, which is the field
+// these corrupt rather than the policy offset before it
+static constexpr std::streamoff NODES_OFFSET_FIELD{28};
+
 TEST(missing_artifact_denies_everything) {
   const sourcemeta::one::Authentication authentication{
       sourcemeta::one::Authentication::Table{
@@ -36,12 +46,12 @@ TEST(structurally_corrupt_artifact_denies_everything) {
   const auto path{TEST_PATH("corrupt.bin")};
   std::ofstream stream{path, std::ios::binary};
   // A valid header over an empty node table
-  std::array<char, 40> header{};
+  std::array<char, HEADER_BYTES> header{};
   header[0] = 'A';
   header[1] = 'U';
   header[2] = 'T';
   header[3] = 'H';
-  header[4] = 4;
+  header[4] = ARTIFACT_VERSION;
   stream.write(header.data(), header.size());
   stream.close();
 
@@ -57,12 +67,12 @@ TEST(artifact_exceeding_the_policy_ceiling_denies_everything) {
   const auto path{TEST_PATH("too-many-policies.bin")};
   std::ofstream stream{path, std::ios::binary};
   // A valid header declaring a policy count past the supported maximum
-  std::array<char, 40> header{};
+  std::array<char, HEADER_BYTES> header{};
   header[0] = 'A';
   header[1] = 'U';
   header[2] = 'T';
   header[3] = 'H';
-  header[4] = 4;
+  header[4] = ARTIFACT_VERSION;
   // One past what a 64 bit mask has room to name
   header[8] = static_cast<char>(65);
   header[12] = 1;
@@ -90,7 +100,7 @@ TEST(corrupted_section_offset_denies_everything) {
 
   // Overwrite the node section offset with a value that aliases the header
   std::fstream stream{path, std::ios::binary | std::ios::in | std::ios::out};
-  stream.seekp(24);
+  stream.seekp(NODES_OFFSET_FIELD);
   const std::array<char, 4> aliased{};
   stream.write(aliased.data(), aliased.size());
   stream.close();

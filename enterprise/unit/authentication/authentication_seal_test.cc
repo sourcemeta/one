@@ -76,7 +76,7 @@ static auto disturb(const std::string_view value, const Field field)
 TEST(session_round_trips_what_a_login_sealed) {
   const auto authentication{instance("seal_roundtrip", SEAL_SECRETS)};
   const auto started{start(authentication)};
-  EXPECT_TRUE(opens(authentication, started, started.sealed));
+  EXPECT_TRUE(OPENS(authentication, started, started.sealed));
 }
 
 TEST(session_value_is_cookie_safe) {
@@ -99,56 +99,56 @@ TEST(session_denies_a_tampered_version) {
   const auto authentication{instance("seal_version", SEAL_SECRETS)};
   const auto started{start(authentication)};
   // The control is the value it was made from, which opens
-  EXPECT_TRUE(opens(authentication, started, started.sealed));
+  EXPECT_TRUE(OPENS(authentication, started, started.sealed));
   EXPECT_FALSE(
-      opens(authentication, started, disturb(started.sealed, Field::Version)));
+      OPENS(authentication, started, disturb(started.sealed, Field::Version)));
 }
 
 TEST(session_denies_a_tampered_issuance) {
   const auto authentication{instance("seal_issuance", SEAL_SECRETS)};
   const auto started{start(authentication)};
-  EXPECT_TRUE(opens(authentication, started, started.sealed));
+  EXPECT_TRUE(OPENS(authentication, started, started.sealed));
   EXPECT_FALSE(
-      opens(authentication, started, disturb(started.sealed, Field::Issued)));
+      OPENS(authentication, started, disturb(started.sealed, Field::Issued)));
 }
 
 TEST(session_denies_a_tampered_expiry) {
   const auto authentication{instance("seal_expiry", SEAL_SECRETS)};
   const auto started{start(authentication)};
-  EXPECT_TRUE(opens(authentication, started, started.sealed));
+  EXPECT_TRUE(OPENS(authentication, started, started.sealed));
   EXPECT_FALSE(
-      opens(authentication, started, disturb(started.sealed, Field::Expiry)));
+      OPENS(authentication, started, disturb(started.sealed, Field::Expiry)));
 }
 
 TEST(session_denies_a_tampered_payload) {
   const auto authentication{instance("seal_payload", SEAL_SECRETS)};
   const auto started{start(authentication)};
-  EXPECT_TRUE(opens(authentication, started, started.sealed));
+  EXPECT_TRUE(OPENS(authentication, started, started.sealed));
   EXPECT_FALSE(
-      opens(authentication, started, disturb(started.sealed, Field::Payload)));
+      OPENS(authentication, started, disturb(started.sealed, Field::Payload)));
 }
 
 TEST(session_denies_a_tampered_signature) {
   const auto authentication{instance("seal_signature", SEAL_SECRETS)};
   const auto started{start(authentication)};
-  EXPECT_TRUE(opens(authentication, started, started.sealed));
-  EXPECT_FALSE(opens(authentication, started,
+  EXPECT_TRUE(OPENS(authentication, started, started.sealed));
+  EXPECT_FALSE(OPENS(authentication, started,
                      disturb(started.sealed, Field::Signature)));
 }
 
 TEST(session_denies_a_truncated_signature) {
   const auto authentication{instance("seal_truncated", SEAL_SECRETS)};
   const auto started{start(authentication)};
-  EXPECT_TRUE(opens(authentication, started, started.sealed));
-  EXPECT_FALSE(opens(authentication, started,
+  EXPECT_TRUE(OPENS(authentication, started, started.sealed));
+  EXPECT_FALSE(OPENS(authentication, started,
                      started.sealed.substr(0, started.sealed.size() - 1)));
 }
 
 TEST(session_denies_a_lengthened_signature) {
   const auto authentication{instance("seal_lengthened", SEAL_SECRETS)};
   const auto started{start(authentication)};
-  EXPECT_TRUE(opens(authentication, started, started.sealed));
-  EXPECT_FALSE(opens(authentication, started, started.sealed + "a"));
+  EXPECT_TRUE(OPENS(authentication, started, started.sealed));
+  EXPECT_FALSE(OPENS(authentication, started, started.sealed + "a"));
 }
 
 TEST(session_denies_a_transplanted_signature) {
@@ -161,19 +161,19 @@ TEST(session_denies_a_transplanted_signature) {
   std::string spliced{
       first.sealed.substr(0, field_start(first.sealed, Field::Signature))};
   spliced += second.sealed.substr(field_start(second.sealed, Field::Signature));
-  EXPECT_TRUE(opens(authentication, first, first.sealed));
-  EXPECT_FALSE(opens(authentication, first, spliced));
+  EXPECT_TRUE(OPENS(authentication, first, first.sealed));
+  EXPECT_FALSE(OPENS(authentication, first, spliced));
 }
 
 TEST(session_denies_malformed_values) {
   const auto authentication{instance("seal_malformed", SEAL_SECRETS)};
   const auto started{start(authentication)};
-  EXPECT_TRUE(opens(authentication, started, started.sealed));
-  EXPECT_FALSE(opens(authentication, started, ""));
-  EXPECT_FALSE(opens(authentication, started, "1"));
-  EXPECT_FALSE(opens(authentication, started, "1.2.3.4"));
-  EXPECT_FALSE(opens(authentication, started, "not-a-sealed-value"));
-  EXPECT_FALSE(opens(authentication, started, "1....."));
+  EXPECT_TRUE(OPENS(authentication, started, started.sealed));
+  EXPECT_FALSE(OPENS(authentication, started, ""));
+  EXPECT_FALSE(OPENS(authentication, started, "1"));
+  EXPECT_FALSE(OPENS(authentication, started, "1.2.3.4"));
+  EXPECT_FALSE(OPENS(authentication, started, "not-a-sealed-value"));
+  EXPECT_FALSE(OPENS(authentication, started, "1....."));
 }
 
 TEST(session_denies_a_signature_that_is_not_base64url) {
@@ -182,8 +182,8 @@ TEST(session_denies_a_signature_that_is_not_base64url) {
   std::string altered{
       started.sealed.substr(0, field_start(started.sealed, Field::Signature))};
   altered += "!!!!";
-  EXPECT_TRUE(opens(authentication, started, started.sealed));
-  EXPECT_FALSE(opens(authentication, started, altered));
+  EXPECT_TRUE(OPENS(authentication, started, started.sealed));
+  EXPECT_FALSE(OPENS(authentication, started, altered));
 }
 
 TEST(session_denies_a_wrong_secret) {
@@ -198,12 +198,12 @@ TEST(session_denies_a_wrong_secret) {
   // Both are read against the state the reader's own login sealed, so the
   // control and the case differ in the secret and in nothing else
   const auto theirs{start(reading)};
-  EXPECT_TRUE(opens(reading, theirs, theirs.sealed));
-  EXPECT_FALSE(opens(reading, theirs, started.sealed));
+  EXPECT_TRUE(OPENS(reading, theirs, theirs.sealed));
+  EXPECT_FALSE(OPENS(reading, theirs, started.sealed));
 
   // And the same value opens where the secret is held, which is what shows the
   // refusal above came from the secret rather than from anything else about it
-  EXPECT_TRUE(opens(minting, started, started.sealed));
+  EXPECT_TRUE(OPENS(minting, started, started.sealed));
 }
 
 TEST(session_admits_a_value_sealed_under_an_older_secret) {
@@ -213,28 +213,28 @@ TEST(session_admits_a_value_sealed_under_an_older_secret) {
   // The newest secret leads and the one that sealed this follows, which is what
   // lets a secret be replaced without ending what it signed
   const auto rotated{instance("seal_new", SEAL_SECRETS_ROTATED)};
-  EXPECT_TRUE(opens(rotated, started, started.sealed));
+  EXPECT_TRUE(OPENS(rotated, started, started.sealed));
 }
 
 TEST(session_denies_a_value_sealed_under_another_policy_name) {
   const auto authentication{instance("seal_policy", SEAL_SECRETS)};
   const auto started{start(authentication)};
-  EXPECT_TRUE(opens(authentication, started, started.sealed));
+  EXPECT_TRUE(OPENS(authentication, started, started.sealed));
 
   // The same value offered under a name it was not sealed for, which is what a
   // key derived per policy has to refuse
   EXPECT_FALSE(
-      opens(authentication, started, started.sealed, {.policy = "unknown"}));
+      OPENS(authentication, started, started.sealed, {.policy = "unknown"}));
 }
 
 TEST(session_denies_a_state_the_provider_did_not_echo) {
   const auto authentication{instance("seal_state", SEAL_SECRETS)};
   const auto started{start(authentication)};
-  EXPECT_TRUE(opens(authentication, started, started.sealed));
+  EXPECT_TRUE(OPENS(authentication, started, started.sealed));
 
   // The value opens, and is still refused, since what it sealed and what came
   // back do not agree. That is what stops a callback assembled elsewhere
-  EXPECT_FALSE(opens(authentication, started, started.sealed,
+  EXPECT_FALSE(OPENS(authentication, started, started.sealed,
                      {.state = "not-the-state-it-sealed"}));
 }
 
@@ -242,7 +242,7 @@ TEST(session_denies_a_callback_carrying_no_transaction) {
   const auto authentication{instance("seal_absent", SEAL_SECRETS)};
   const auto started{start(authentication)};
   EXPECT_FALSE(
-      opens(authentication, started, started.sealed, {.carried = false}));
+      OPENS(authentication, started, started.sealed, {.carried = false}));
 }
 
 TEST(session_reads_every_value_a_request_carried) {
@@ -253,20 +253,16 @@ TEST(session_reads_every_value_a_request_carried) {
   // header nor the order says which is which, so every value is tried rather
   // than the first. Letting whoever set the other one decide would turn the
   // cookie from a defence into the way past it
-  EXPECT_TRUE(opens(authentication, started, started.sealed,
+  EXPECT_TRUE(OPENS(authentication, started, started.sealed,
                     {.shadow = "somebody-elses-value"}));
 }
 
-// A login tells the provider where to come back to, and the transaction it
-// seals carries that. A callback naming somewhere else is completing a
-// different login, so it is refused before a code is redeemed rather than left
-// for the provider to catch on the exchange
 TEST(session_denies_a_callback_naming_another_return_address) {
   const auto authentication{instance("seal_redirect", SEAL_SECRETS)};
   const auto started{start(authentication)};
-  EXPECT_FALSE(opens(authentication, started, started.sealed,
+  EXPECT_FALSE(OPENS(authentication, started, started.sealed,
                      {.redirect = "https://registry.test/somewhere/else"}));
 
   // The control differs in that alone
-  EXPECT_TRUE(opens(authentication, started, started.sealed));
+  EXPECT_TRUE(OPENS(authentication, started, started.sealed));
 }

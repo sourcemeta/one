@@ -4,16 +4,16 @@
 #include <sourcemeta/one/authentication.h>
 
 #include <sourcemeta/core/crypto.h>
-
-#include <algorithm> // std::max
-#include <array>     // std::array
-#include <charconv>  // std::from_chars, std::errc
-#include <chrono>    // std::chrono::sys_seconds, std::chrono::seconds
-#include <cstddef>   // std::size_t
-#include <cstdint>   // std::int64_t, std::uint64_t, std::uint8_t
-#include <limits>    // std::numeric_limits
-#include <optional>  // std::optional, std::nullopt
 #include <sourcemeta/core/jose.h>
+
+#include <algorithm>   // std::max
+#include <array>       // std::array
+#include <charconv>    // std::from_chars, std::errc
+#include <chrono>      // std::chrono::sys_seconds, std::chrono::seconds
+#include <cstddef>     // std::size_t
+#include <cstdint>     // std::int64_t, std::uint64_t, std::uint8_t
+#include <limits>      // std::numeric_limits
+#include <optional>    // std::optional, std::nullopt
 #include <span>        // std::span
 #include <string>      // std::string, std::to_string
 #include <string_view> // std::string_view

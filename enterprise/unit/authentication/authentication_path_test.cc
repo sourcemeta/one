@@ -134,9 +134,6 @@ TEST(a_url_on_another_origin_names_nowhere_here) {
   EXPECT_FALSE(parse("http://localhost:9999/private/secret").has_value());
 }
 
-// Each of the spellings below was a gate bypass attempt. Every one has to name
-// the governed location rather than something a policy would miss
-
 TEST(a_repeated_leading_separator_with_upper_case_names_the_location) {
   EXPECT_EQ(value("//PRIVATE/secret"), "private/secret");
 }

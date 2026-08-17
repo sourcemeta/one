@@ -44,6 +44,9 @@ TEST(apikey_with_multiple_keys_admits_any) {
 }
 
 TEST(apikey_with_unset_variable_denies) {
+  // The case is about a variable that holds nothing, so it says so rather than
+  // trusting that nothing else in the environment set it
+  unsetenv("ONE_TEST_KEY_UNSET");
   const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_UNSET"}};
   const std::array<std::string_view, 1> paths{{"/internal"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
@@ -253,9 +256,6 @@ TEST(mixed_apikey_and_jwt_policies_admit_either_credential) {
   EXPECT_FALSE(authentication.permits(
       AT("/both/x"), authentication.caller({.bearer = "wrong"})));
 }
-
-// A policy naming no rule admits whoever its provider vouched for, so signing
-// in is the whole of it
 
 TEST(admission_by_an_apikey_policy_identifies_the_principal) {
   setenv("ONE_TEST_KEY_PRINCIPAL", "principal-secret", 1);
