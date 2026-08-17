@@ -12,6 +12,8 @@ This product includes third-party software:
   * cmark-gfm (BSD-2-Clause), https://github.com/github/cmark-gfm
   * Unicode character data from unicodetools (Unicode-3.0),
     https://github.com/unicode-org/unicodetools
+  * mimalloc (MIT), https://github.com/microsoft/mimalloc, linked in as the
+    memory allocator
   * OpenSSL (Apache-2.0) and libcurl (curl license), linked at runtime in the
     Enterprise image
 
