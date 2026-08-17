@@ -1179,6 +1179,7 @@ struct Authentication::Impl {
   // cookie from a defence against a forged callback into the way to mount one
   [[nodiscard]] auto transaction(const std::string_view policy_name,
                                  const std::string_view state,
+                                 const std::string_view redirect_uri,
                                  const Credentials &credentials) const
       -> std::optional<sourcemeta::core::JSON> {
     if (state.empty()) {
@@ -1205,12 +1206,15 @@ struct Authentication::Impl {
 
       const auto *sealed_policy{document.value().try_at("policy")};
       const auto *sealed_state{document.value().try_at("state")};
+      const auto *sealed_redirect{document.value().try_at("redirect_uri")};
       const auto *nonce{document.value().try_at("nonce")};
       const auto *verifier{document.value().try_at("verifier")};
       if (sealed_policy == nullptr || !sealed_policy->is_string() ||
           sealed_policy->to_string() != policy_name ||
           sealed_state == nullptr || !sealed_state->is_string() ||
-          sealed_state->to_string() != state || nonce == nullptr ||
+          sealed_state->to_string() != state || sealed_redirect == nullptr ||
+          !sealed_redirect->is_string() ||
+          sealed_redirect->to_string() != redirect_uri || nonce == nullptr ||
           !nonce->is_string() || nonce->to_string().empty() ||
           verifier == nullptr || !verifier->is_string() ||
           verifier->to_string().empty()) {
@@ -2556,6 +2560,11 @@ auto Authentication::login(const std::string_view policy_name,
   payload.assign_assume_new("state", sourcemeta::core::JSON{state});
   payload.assign_assume_new("nonce", sourcemeta::core::JSON{nonce});
   payload.assign_assume_new("verifier", sourcemeta::core::JSON{verifier});
+  // Sealed so that a callback completing this login has to name the same place
+  // the provider was told to come back to. The provider checks it too, and this
+  // is what lets the check hold before a code is ever redeemed
+  payload.assign_assume_new("redirect_uri",
+                            sourcemeta::core::JSON{std::string{redirect_uri}});
 
   // Where the browser goes once this completes. What the request asked for
   // wins, and what the policy governs stands in where it asked for nothing
@@ -2690,8 +2699,8 @@ auto Authentication::callback(const std::string_view policy_name,
   // provider echoes back. This runs before either the success or the decline is
   // honoured, so a cross-site callback cannot even trigger an error on a
   // person's behalf, per RFC 6749 Section 4.1.2.1
-  const auto transaction{
-      this->impl_->transaction(policy_name, incoming.state, credentials)};
+  const auto transaction{this->impl_->transaction(policy_name, incoming.state,
+                                                  redirect_uri, credentials)};
   if (!transaction.has_value()) {
     return result;
   }

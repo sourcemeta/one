@@ -5988,3 +5988,48 @@ TEST(an_ungoverned_route_ignores_the_audience_it_requires) {
       at("/elsewhere/x"),
       authentication.caller({.bearer = "elsewhere-secret"})));
 }
+
+// The other direction of the same separation. A session is what somebody holds
+// once they are signed in, and a transaction is what anybody may obtain without
+// holding anything, so reading either as the other is what the purposes exist
+// to stop. Both are sealed under one policy secret, so nothing but the purpose
+// tells them apart
+TEST(a_session_never_opens_as_a_transaction) {
+  setenv("ONE_TEST_PURPOSE_BACK", "confidential", 1);
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
+  Provider provider;
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .name = "okta",
+        .credential = sourcemeta::one::Authentication::Policy::Interactive{
+            .issuer = provider.issuer,
+            .client_id = "client",
+            .client_secret_variable = "ONE_TEST_PURPOSE_BACK",
+            .session_secrets = SESSION_SECRETS}}}};
+  const sourcemeta::one::Authentication authentication{
+      sourcemeta::one::Authentication::compile(
+          policies, test_path("purpose_back"), anywhere),
+      provider.fetcher()};
+
+  // A session this instance established, obtained the way anybody obtains one
+  const auto established{session_for("okta", SESSION_SECRETS, "jane")};
+
+  // Presented where a callback looks for the transaction it is completing. It
+  // cannot open there, so the callback is refused before the provider is
+  // consulted at all
+  const auto carried{"sourcemeta_one_transaction=" + established};
+  const std::array<std::string_view, 1> presented{{carried}};
+  const auto outcome{authentication.callback(
+      "okta", "https://registry.test", "https://registry.test/callback",
+      {.state = "any-state", .code = "a-code"}, {.cookies = presented})};
+  EXPECT_EQ(outcome.result,
+            sourcemeta::one::Authentication::Outcome::Result::Invalid);
+
+  // And the control: the same value read as what it is does open, so the
+  // refusal above came from the purpose rather than from the value
+  const auto as_a_session{"sourcemeta_one_session=" + established};
+  EXPECT_TRUE(authentication.permits(
+      at("/portal/x"),
+      authentication.caller({.cookies = fields(as_a_session)})));
+}

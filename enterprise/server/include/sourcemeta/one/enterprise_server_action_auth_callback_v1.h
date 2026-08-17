@@ -126,7 +126,7 @@ public:
          .issuer = request.query("iss")},
         {.cookies = cookies})};
     for (const auto &message : outcome.log) {
-      sourcemeta::one::HTTP_LOG("Callback", message);
+      sourcemeta::one::HTTP_LOG(message, matches.front());
     }
 
     using Result = sourcemeta::one::Authentication::Outcome::Result;

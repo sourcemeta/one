@@ -156,10 +156,6 @@ public:
       // two policies admitting the same callers carry identical bytes. Empty
       // where a policy names no rule
       std::string_view claims{};
-      // The email domains that admit a person, beyond whatever the claims
-      // require. A domain cannot be written as a claim value, since it matches
-      // the part of an address after its last separator rather than the whole
-      std::span<const std::string_view> email_domains{};
     };
 
     // A person who signs in through an identity provider, which is the only

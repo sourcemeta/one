@@ -232,11 +232,7 @@ public:
         // handler
         // NOLINTNEXTLINE(bugprone-exception-escape)
         [response_schema, error_schema, schema_uri = std::move(schema_uri),
-         &self, request_schema,
-         bearer = std::string{sourcemeta::core::http_parse_bearer(
-             request.header("authorization"))},
-         cookies = sourcemeta::one::owned_cookies(request),
-         perform = std::move(perform)](
+         &self, request_schema, perform = std::move(perform)](
             sourcemeta::one::HTTPRequest &callback_request,
             sourcemeta::one::HTTPResponse &callback_response,
             std::string &&body, bool too_big) -> void {

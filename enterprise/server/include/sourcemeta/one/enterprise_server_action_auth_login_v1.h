@@ -126,7 +126,7 @@ public:
         matches.front(), this->server_uri(), redirect_uri,
         !request.query("silent").empty(), return_to)};
     for (const auto &message : outcome.log) {
-      sourcemeta::one::HTTP_LOG("Login", message);
+      sourcemeta::one::HTTP_LOG(message, matches.front());
     }
 
     if (outcome.result ==

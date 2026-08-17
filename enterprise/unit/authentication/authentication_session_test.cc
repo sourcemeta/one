@@ -70,12 +70,17 @@ static const std::array<std::string_view, 1> SESSION_SECRETS{
     {"ONE_TEST_SEAL_SECRET"}};
 static const std::array<std::string_view, 2> ROTATED_SECRETS{
     {"ONE_TEST_SEAL_ROTATED", "ONE_TEST_SEAL_SECRET"}};
+// Shares nothing with the set a value is minted under, so a reader holding it
+// holds no secret that value was sealed with
+static const std::array<std::string_view, 1> FOREIGN_SECRETS{
+    {"ONE_TEST_SEAL_FOREIGN"}};
 
 static auto instance(const std::string &name,
                      const std::span<const std::string_view> secrets)
     -> sourcemeta::one::Authentication {
   setenv("ONE_TEST_SEAL_SECRET", "session-secret", 1);
   setenv("ONE_TEST_SEAL_ROTATED", "rotated-secret", 1);
+  setenv("ONE_TEST_SEAL_FOREIGN", "foreign-secret", 1);
   setenv("ONE_TEST_SEAL_CLIENT", "confidential", 1);
   const std::array<std::string_view, 1> paths{{"/portal"}};
   const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
@@ -164,12 +169,23 @@ static auto field_start(const std::string_view value, const Field field)
 }
 
 // Change one character of one field, which is the smallest disturbance that
-// should cost a value its signature
+// should cost a value its signature.
+//
+// A digit is changed to another digit rather than to a letter, because the
+// instants are read as numbers before anything is verified: a field that
+// stopped being a number is refused for that alone, which would leave the
+// signature covering it untested and the case passing without meaning anything
 static auto disturb(const std::string_view value, const Field field)
     -> std::string {
   std::string result{value};
   const auto position{field_start(value, field)};
-  result[position] = (result[position] == 'a' ? 'b' : 'a');
+  auto &character{result[position]};
+  if (character >= '0' && character <= '9') {
+    character = (character == '9' ? '8' : static_cast<char>(character + 1));
+  } else {
+    character = (character == 'a' ? 'b' : 'a');
+  }
+
   return result;
 }
 
@@ -290,12 +306,20 @@ TEST(session_denies_a_wrong_secret) {
   const auto minting{instance("seal_wrong_minting", SESSION_SECRETS)};
   const auto started{start(minting)};
 
-  // The same policy under a different secret, so the value differs from one it
-  // would accept in exactly that
-  const auto reading{instance("seal_wrong_reading", ROTATED_SECRETS)};
+  // A reader holding no secret the value was sealed under, which is the one
+  // thing that differs. Its secret set shares nothing with the minting one, so
+  // that accepting the value could only ever mean the signature went unchecked
+  const auto reading{instance("seal_wrong_reading", FOREIGN_SECRETS)};
+
+  // Both are read against the state the reader's own login sealed, so the
+  // control and the case differ in the secret and in nothing else
   const auto theirs{start(reading)};
   EXPECT_TRUE(opens(reading, theirs, theirs.sealed));
   EXPECT_FALSE(opens(reading, theirs, started.sealed));
+
+  // And the same value opens where the secret is held, which is what shows the
+  // refusal above came from the secret rather than from anything else about it
+  EXPECT_TRUE(opens(minting, started, started.sealed));
 }
 
 TEST(session_admits_a_value_sealed_under_an_older_secret) {
@@ -306,22 +330,6 @@ TEST(session_admits_a_value_sealed_under_an_older_secret) {
   // lets a secret be replaced without ending what it signed
   const auto rotated{instance("seal_new", ROTATED_SECRETS)};
   EXPECT_TRUE(opens(rotated, started, started.sealed));
-}
-
-TEST(session_denies_a_value_sealed_for_another_purpose) {
-  const auto authentication{instance("seal_purpose", SESSION_SECRETS)};
-  const auto started{start(authentication)};
-
-  // A session is sealed for a different purpose than a transaction, and only a
-  // transaction opens here. Anybody may obtain the value a login hands out
-  // without holding any credential, so reading one as the other is what would
-  // turn starting a login into being signed in
-  const auto carried{field(started.sealed)};
-  const std::array<std::string_view, 1> presented{{carried}};
-  const auto session{
-      authentication.logout({.cookies = presented}, INSTANCE, "/")};
-  EXPECT_EQ(session.cookies.size(), 3);
-  EXPECT_TRUE(opens(authentication, started, started.sealed));
 }
 
 TEST(session_denies_a_value_sealed_under_another_policy_name) {
@@ -385,4 +393,25 @@ TEST(session_reads_every_value_a_request_carried) {
       {.cookies = both})};
   EXPECT_NE(outcome.result,
             sourcemeta::one::Authentication::Outcome::Result::Invalid);
+}
+
+// A login tells the provider where to come back to, and the transaction it
+// seals carries that. A callback naming somewhere else is completing a
+// different login, so it is refused before a code is redeemed rather than left
+// for the provider to catch on the exchange
+TEST(session_denies_a_callback_naming_another_return_address) {
+  const auto authentication{instance("seal_redirect", SESSION_SECRETS)};
+  const auto started{start(authentication)};
+  const auto carried{field(started.sealed)};
+  const std::array<std::string_view, 1> presented{{carried}};
+
+  const auto elsewhere{authentication.callback(
+      "okta", INSTANCE, "https://registry.test/somewhere/else",
+      {.state = started.state, .code = "an-authorization-code"},
+      {.cookies = presented})};
+  EXPECT_EQ(elsewhere.result,
+            sourcemeta::one::Authentication::Outcome::Result::Invalid);
+
+  // The control differs in that alone
+  EXPECT_TRUE(opens(authentication, started, started.sealed));
 }
