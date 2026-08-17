@@ -17,10 +17,14 @@ Provided you comply with this notice, and without a Commercial License, you may:
 
   (a) view and audit these files;
   (b) copy them only as incidental to cloning or mirroring the repository;
-  (c) build and run the Enterprise edition solely for local development, testing,
-      evaluation, or demonstration, on a machine you control or in an automated
-      build or continuous-integration environment acting on your behalf, in each
-      case not serving other users and not processing real production data; and
+  (c) build and run the Enterprise edition for development, testing, evaluation,
+      or demonstration, on infrastructure you control or in an automated build or
+      continuous-integration environment acting on your behalf. This includes
+      evaluating it within your organisation with your own schemas, and making
+      that evaluation available to your employees, your affiliates under common
+      control with you, and contractors acting on your behalf, provided it is not
+      made available to anyone else and is not relied upon in the ordinary course
+      of your business; and
   (d) create and distribute modifications solely to propose them to Sourcemeta as
       a contribution, for example in a public fork opened as a pull request.
 
