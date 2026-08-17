@@ -27,11 +27,15 @@ WRITE one.json UNTIL EOF
 }
 EOF
 
-RUN one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
-DROP LINES MATCHING '^' IN log_1.txt
-WRITE silent.txt UNTIL EOF
+RUN one.json output STDIN /dev/null IN . INTO unchecked_1.txt EXPECTING 0
+// This build sets the scene for what comes later and its log is
+// not what this test is about. Every observation has to be read,
+// so the log is thrown away outright rather than dressed up as an
+// assertion that could never fail
+DROP LINES MATCHING '^' IN unchecked_1.txt
+WRITE nothing.txt UNTIL EOF
 EOF
-COMPARE log_1.txt AGAINST silent.txt
+COMPARE unchecked_1.txt AGAINST nothing.txt
 
 TREE output INTO manifest.txt
 DROP LINES MATCHING '^\./schemas/self(/.*)?$' IN manifest.txt

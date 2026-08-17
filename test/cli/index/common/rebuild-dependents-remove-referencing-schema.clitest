@@ -38,13 +38,15 @@ WRITE schemas/b.json UNTIL EOF
 EOF
 
 // Run 1: full build from scratch
-RUN --skip-banner --deterministic one.json output --concurrency 1 STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
-DROP LINES MATCHING '^' IN log_1.txt
-WRITE silent.txt UNTIL EOF
+RUN --skip-banner --deterministic one.json output --concurrency 1 STDIN /dev/null IN . INTO unchecked_1.txt EXPECTING 0
+// This build sets the scene for what comes later and its log is
+// not what this test is about. Every observation has to be read,
+// so the log is thrown away outright rather than dressed up as an
+// assertion that could never fail
+DROP LINES MATCHING '^' IN unchecked_1.txt
+WRITE nothing.txt UNTIL EOF
 EOF
-REPLACE $CWD WITH '[CWD]' IN log_1.txt
-REPLACE $ONE_PREFIX WITH '[PREFIX]' IN log_1.txt
-COMPARE log_1.txt AGAINST silent.txt
+COMPARE unchecked_1.txt AGAINST nothing.txt
 
 // Run 2: remove schema B (which references A)
 REMOVE schemas/b.json
