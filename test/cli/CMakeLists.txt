@@ -3,6 +3,12 @@
 # cannot express is the program not being the only thing it needs
 macro(sourcemeta_one_test_cli directory program name)
   if(UNIX)
+    # Parsing and checking the script without running anything, which rejects a
+    # script that produces something it never asserts on
+    add_test(NAME one.${program}.${directory}.${name}.check COMMAND
+      "$<TARGET_FILE:sourcemeta_core_clitest>"
+      "${CMAKE_CURRENT_SOURCE_DIR}/${program}/${directory}/${name}.clitest"
+      --check)
     add_test(NAME one.${program}.${directory}.${name} COMMAND
       "$<TARGET_FILE:sourcemeta_core_clitest>"
       "${CMAKE_CURRENT_SOURCE_DIR}/${program}/${directory}/${name}.clitest"
@@ -11,15 +17,11 @@ macro(sourcemeta_one_test_cli directory program name)
       --environment "PROGRAM=$<TARGET_FILE_NAME:sourcemeta_one_${program}>"
       --environment "EDITION=${ONE_EDITION}"
       --environment "VERSION=${ONE_VERSION}")
-    list(APPEND ONE_CLITEST_SCRIPTS
-      "${CMAKE_CURRENT_SOURCE_DIR}/${program}/${directory}/${name}.clitest")
+    set_tests_properties(one.${program}.${directory}.${name} PROPERTIES
+      DEPENDS one.${program}.${directory}.${name}.check)
   endif()
 endmacro()
 
-# The handful of cases the language above cannot express: a second program, a
-# background process and a signal, a tool that inspects the binary rather than
-# running it, printable strings pulled out of a binary artifact, a file patched
-# byte by byte, and a subtree made unreadable
 macro(sourcemeta_one_test_cli_shell directory program name)
   if(UNIX)
     if("${program}" STREQUAL "server")
@@ -247,12 +249,4 @@ if(ONE_SERVER AND ONE_INDEX)
   sourcemeta_one_test_cli(common server fail-port-trailing-garbage)
   sourcemeta_one_test_cli(common server fail-port-zero)
   sourcemeta_one_test_cli_shell(common server graceful-shutdown)
-endif()
-
-# Every script is parsed and checked without running any of them, which catches
-# a script that produces something it never asserts on before a suite that takes
-# minutes gets anywhere near it
-if(ONE_CLITEST_SCRIPTS)
-  add_test(NAME one.cli.check COMMAND
-    "$<TARGET_FILE:sourcemeta_core_clitest>" ${ONE_CLITEST_SCRIPTS} --check)
 endif()
