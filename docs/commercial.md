@@ -30,7 +30,7 @@ Sourcemeta One is available in two editions:
   self-hosting under the [Business Source License
   1.1](https://github.com/sourcemeta/one/blob/main/LICENSE), with certain
   restrictions. Four years after each release, that release transitions to
-  AGPL-3.0-or-later.
+  `AGPL-3.0-or-later`.
 
 - **Enterprise**: Adds the [Standard
   Library](https://github.com/sourcemeta/std), the capabilities described
