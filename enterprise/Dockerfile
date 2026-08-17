@@ -143,6 +143,54 @@ COPY enterprise/LICENSE /usr/share/doc/sourcemeta-one/LICENSE.enterprise
 COPY LICENSE-COMMERCIAL /usr/share/doc/sourcemeta-one/LICENSE-COMMERCIAL
 COPY NOTICE /usr/share/doc/sourcemeta-one/NOTICE
 
+# Third-party license texts, as required by their respective licenses. See
+# NOTICE for the component list. System packages such as OpenSSL and libcurl
+# carry their own texts under /usr/share/doc and /usr/share/common-licenses
+COPY vendor/uwebsockets/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/uwebsockets
+COPY vendor/uwebsockets/uSockets/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/usockets
+COPY vendor/bootstrap/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/bootstrap
+COPY vendor/bootstrap-icons/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/bootstrap-icons
+COPY vendor/core/vendor/pcre2/LICENCE.md \
+  /usr/share/doc/sourcemeta-one/licenses/pcre2
+COPY vendor/core/vendor/libdeflate/COPYING \
+  /usr/share/doc/sourcemeta-one/licenses/libdeflate
+COPY vendor/core/vendor/cmark-gfm/COPYING \
+  /usr/share/doc/sourcemeta-one/licenses/cmark-gfm
+COPY vendor/core/vendor/unicodetools/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/unicodetools
+COPY vendor/jsonschema/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/jsonschema
+COPY --from=builder /source/node_modules/@codemirror/commands/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/codemirror-commands
+COPY --from=builder /source/node_modules/@codemirror/lang-json/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/codemirror-lang-json
+COPY --from=builder /source/node_modules/@codemirror/language/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/codemirror-language
+COPY --from=builder /source/node_modules/@codemirror/state/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/codemirror-state
+COPY --from=builder /source/node_modules/@codemirror/view/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/codemirror-view
+COPY --from=builder /source/node_modules/@lezer/common/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/lezer-common
+COPY --from=builder /source/node_modules/@lezer/highlight/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/lezer-highlight
+COPY --from=builder /source/node_modules/@lezer/json/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/lezer-json
+COPY --from=builder /source/node_modules/@lezer/lr/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/lezer-lr
+COPY --from=builder /source/node_modules/@marijn/find-cluster-break/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/marijn-find-cluster-break
+COPY --from=builder /source/node_modules/crelt/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/crelt
+COPY --from=builder /source/node_modules/style-mod/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/style-mod
+COPY --from=builder /source/node_modules/w3c-keyname/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/w3c-keyname
+
 # For debugging purposes
 RUN ldd /usr/bin/sourcemeta-one-index
 RUN ldd /usr/bin/sourcemeta-one-server

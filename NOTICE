@@ -5,8 +5,8 @@ This product includes third-party software:
 
   * uWebSockets and uSockets (Apache-2.0), https://github.com/uNetworking/uWebSockets
   * Bootstrap and Bootstrap Icons (MIT), https://github.com/twbs
-  * CodeMirror (MIT), https://github.com/codemirror, bundled into the web
-    interface assets
+  * CodeMirror and its dependencies (MIT), https://github.com/codemirror,
+    bundled into the web interface assets
   * PCRE2 (BSD-3-Clause WITH PCRE2-exception), https://github.com/PCRE2Project/pcre2
   * libdeflate (MIT), https://github.com/ebiggers/libdeflate
   * cmark-gfm (BSD-2-Clause), https://github.com/github/cmark-gfm
@@ -14,14 +14,21 @@ This product includes third-party software:
     https://github.com/unicode-org/unicodetools
   * OpenSSL (Apache-2.0) and libcurl (curl license), linked at runtime in the
     Enterprise image
-  * The jsonschema binary bundled in these images is Sourcemeta's own work,
-    published under AGPL-3.0-or-later or a commercial license.
+
+The JSON Schema CLI bundled in these images is not third-party software. It is
+Sourcemeta's own work, which Sourcemeta also publishes on its own under
+AGPL-3.0-or-later or a commercial license.
 
 Each such component is licensed under its own terms by its respective owner.
 For the complete set of dependencies built into a given image, see the SPDX
-SBOMs published with each Enterprise-edition release. The full license text of
-each component above is available in the source repository, alongside that
-component under vendor/, or under node_modules/ for those installed with npm.
-OpenSSL and libcurl are not vendored: they are system packages, and carry their
-license texts under /usr/share/doc/ in the image. The container image ships the
-Sourcemeta One license files under /usr/share/doc/sourcemeta-one/.
+SBOMs published with each Enterprise-edition release.
+
+The container images ship license texts under
+/usr/share/doc/sourcemeta-one/licenses/, and the Sourcemeta One license files
+under /usr/share/doc/sourcemeta-one/. Components provided by system packages
+are not duplicated there: their license texts are in the usual system
+locations, under /usr/share/doc/ and /usr/share/common-licenses/.
+
+In the source repository, vendored components carry their license text
+alongside them under vendor/, and components installed with NPM under
+node_modules/.
