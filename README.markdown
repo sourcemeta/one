@@ -40,19 +40,27 @@ open-core split that
 [SigNoz](https://github.com/SigNoz/signoz/blob/main/ee/LICENSE) apply through
 their own `ee/` directories.
 
-The Community edition (everything outside `enterprise/`) is under the [Business
-Source License 1.1](https://github.com/sourcemeta/one/blob/main/LICENSE), which
-grants production use as if under AGPL-3.0 except that you may not offer it to
-third parties as a hosted or managed service or bundle it into something you
-provide to them for a fee, may not reimplement the Enterprise edition, and may
-not remove the edition, version, and licensor notice. Each release converts to
-AGPL-3.0-or-later four years later.
+The Community edition is under the [Business Source License
+1.1](https://github.com/sourcemeta/one/blob/main/LICENSE), which permits
+production use subject to the conditions it sets out. What requires a
+commercial license is offering Sourcemeta One to third parties as a hosted or
+managed service, or including it in something you provide them for a fee. Each
+release converts to AGPL-3.0-or-later four years later.
 
 The Enterprise edition (`enterprise/`) is commercial. Its source is published
 for transparency and audit, and
 [enterprise/LICENSE](https://github.com/sourcemeta/one/blob/main/enterprise/LICENSE)
-permits building and running it for development, testing, evaluation,
-demonstration, and contribution, but any other use needs a commercial license.
+lets you build and run it to evaluate it and to contribute back, but any other
+use needs a commercial license.
+
+The paragraphs above say when a commercial license is needed. They are not a
+summary of what the licenses condition:
+[LICENSE](https://github.com/sourcemeta/one/blob/main/LICENSE) and
+[enterprise/LICENSE](https://github.com/sourcemeta/one/blob/main/enterprise/LICENSE)
+govern. Vendored third-party components under `vendor/` keep their own licenses
+in either edition, as listed in
+[NOTICE](https://github.com/sourcemeta/one/blob/main/NOTICE).
+
 See
 [LICENSE-COMMERCIAL](https://github.com/sourcemeta/one/blob/main/LICENSE-COMMERCIAL)
 and reach out to [hello@sourcemeta.com](mailto:hello@sourcemeta.com) to discuss
