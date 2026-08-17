@@ -5,8 +5,8 @@ This product includes third-party software:
 
   * uWebSockets and uSockets (Apache-2.0), https://github.com/uNetworking/uWebSockets
   * Bootstrap and Bootstrap Icons (MIT), https://github.com/twbs
-  * CodeMirror (MIT), https://github.com/codemirror, bundled into the web
-    interface assets
+  * CodeMirror and its dependencies (MIT), https://github.com/codemirror,
+    bundled into the web interface assets
   * PCRE2 (BSD-3-Clause WITH PCRE2-exception), https://github.com/PCRE2Project/pcre2
   * libdeflate (MIT), https://github.com/ebiggers/libdeflate
   * cmark-gfm (BSD-2-Clause), https://github.com/github/cmark-gfm

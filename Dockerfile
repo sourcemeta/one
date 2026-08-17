@@ -111,10 +111,32 @@ COPY vendor/core/vendor/unicodetools/LICENSE \
   /usr/share/doc/sourcemeta-one/licenses/unicodetools
 COPY vendor/jsonschema/LICENSE \
   /usr/share/doc/sourcemeta-one/licenses/jsonschema
+COPY --from=builder /source/node_modules/@codemirror/commands/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/codemirror-commands
+COPY --from=builder /source/node_modules/@codemirror/lang-json/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/codemirror-lang-json
+COPY --from=builder /source/node_modules/@codemirror/language/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/codemirror-language
+COPY --from=builder /source/node_modules/@codemirror/state/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/codemirror-state
 COPY --from=builder /source/node_modules/@codemirror/view/LICENSE \
-  /usr/share/doc/sourcemeta-one/licenses/codemirror
-COPY --from=builder /source/node_modules/@codemirror/highlight/LICENSE \
-  /usr/share/doc/sourcemeta-one/licenses/codemirror-highlight
+  /usr/share/doc/sourcemeta-one/licenses/codemirror-view
+COPY --from=builder /source/node_modules/@lezer/common/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/lezer-common
+COPY --from=builder /source/node_modules/@lezer/highlight/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/lezer-highlight
+COPY --from=builder /source/node_modules/@lezer/json/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/lezer-json
+COPY --from=builder /source/node_modules/@lezer/lr/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/lezer-lr
+COPY --from=builder /source/node_modules/@marijn/find-cluster-break/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/marijn-find-cluster-break
+COPY --from=builder /source/node_modules/crelt/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/crelt
+COPY --from=builder /source/node_modules/style-mod/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/style-mod
+COPY --from=builder /source/node_modules/w3c-keyname/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/w3c-keyname
 
 # For debugging purposes
 RUN ldd /usr/bin/sourcemeta-one-index
