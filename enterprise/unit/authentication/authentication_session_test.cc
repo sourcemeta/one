@@ -5,8 +5,8 @@
 #include <array>       // std::array
 #include <cstddef>     // std::size_t
 #include <filesystem>  // std::filesystem::path
-#include <map>         // std::map
 #include <optional>    // std::optional
+#include <span>        // std::span
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
@@ -168,18 +168,29 @@ static auto field_start(const std::string_view value, const Field field)
   return position;
 }
 
+static auto field_end(const std::string_view value, const Field field)
+    -> std::size_t {
+  const auto end{value.find('.', field_start(value, field))};
+  return end == std::string_view::npos ? value.size() : end;
+}
+
 // Change one character of one field, which is the smallest disturbance that
 // should cost a value its signature.
 //
-// A digit is changed to another digit rather than to a letter, because the
-// instants are read as numbers before anything is verified: a field that
-// stopped being a number is refused for that alone, which would leave the
-// signature covering it untested and the case passing without meaning anything
+// The two instants are read as numbers, and the interval they name is bounded
+// against the clock, before any signature is verified. So a disturbance that
+// leaves one of them unreadable, or moves one of them by the decades that its
+// leading digit is worth, is refused for naming an interval nothing could have
+// minted, and the signature covering that field goes untested while the case
+// still passes. Their last digit is the one that leaves the value as readable
+// and as temporally sound as it was, so that the signature is all that is left
+// to refuse it
 static auto disturb(const std::string_view value, const Field field)
     -> std::string {
+  const auto instant{field == Field::Issued || field == Field::Expiry};
   std::string result{value};
-  const auto position{field_start(value, field)};
-  auto &character{result[position]};
+  auto &character{result[instant ? field_end(value, field) - 1
+                                 : field_start(value, field)]};
   if (character >= '0' && character <= '9') {
     character = (character == '9' ? '8' : static_cast<char>(character + 1));
   } else {
