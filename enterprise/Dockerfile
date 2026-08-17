@@ -162,6 +162,8 @@ COPY vendor/core/vendor/cmark-gfm/COPYING \
   /usr/share/doc/sourcemeta-one/licenses/cmark-gfm
 COPY vendor/core/vendor/unicodetools/LICENSE \
   /usr/share/doc/sourcemeta-one/licenses/unicodetools
+COPY vendor/core/vendor/mimalloc/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/mimalloc
 COPY vendor/jsonschema/LICENSE \
   /usr/share/doc/sourcemeta-one/licenses/jsonschema
 COPY --from=builder /source/node_modules/@codemirror/commands/LICENSE \
