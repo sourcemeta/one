@@ -18,6 +18,8 @@ This product includes third-party software:
 Each such component is licensed under its own terms by its respective owner.
 For the complete set of dependencies built into a given image, see the SPDX
 SBOMs published with each Enterprise-edition release. The full license text of
-each component above is available in the source repository, alongside that
-component under vendor/. The container image ships the Sourcemeta One license
-files under /usr/share/doc/sourcemeta-one/.
+each vendored component above is available in the source repository, alongside
+that component under vendor/. OpenSSL and libcurl are not vendored: they are
+system packages, and carry their license texts under /usr/share/doc/ in the
+image. The container image ships the Sourcemeta One license files under
+/usr/share/doc/sourcemeta-one/.
