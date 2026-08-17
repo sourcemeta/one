@@ -31,40 +31,26 @@ catalogs with enterprise-grade governance capabilities.
 
 ## :page_facing_up: License
 
-Sourcemeta One is source-available, not open source. The Community edition is
-free to self-host, while the Enterprise edition's source is published for audit
-but requires a commercial license to run in production. This is the same
-open-core split that
-[GitLab](https://gitlab.com/gitlab-org/gitlab/-/blob/master/ee/LICENSE),
+Sourcemeta One is source-available, not open source: the same open-core split
+that [GitLab](https://gitlab.com/gitlab-org/gitlab/-/blob/master/ee/LICENSE),
 [PostHog](https://github.com/PostHog/posthog/blob/master/ee/LICENSE), and
 [SigNoz](https://github.com/SigNoz/signoz/blob/main/ee/LICENSE) apply through
 their own `ee/` directories.
 
-The Community edition is under the [Business Source License
-1.1](https://github.com/sourcemeta/one/blob/main/LICENSE), which permits
-production use subject to the conditions it sets out. What requires a
-commercial license is offering Sourcemeta One to third parties as a hosted or
-managed service, or including it in something you provide them for a fee. Each
-release converts to AGPL-3.0-or-later four years later.
+- **Community**: [BUSL-1.1](LICENSE), converting to AGPL-3.0-or-later four
+  years after each release.
+- **Enterprise** (`enterprise/`): commercial per
+  [`enterprise/LICENSE`](enterprise/LICENSE), free to build and run for
+  evaluation and contribution.
 
-The Enterprise edition (`enterprise/`) is commercial. Its source is published
-for transparency and audit, and
-[enterprise/LICENSE](https://github.com/sourcemeta/one/blob/main/enterprise/LICENSE)
-lets you build and run it to evaluate it and to contribute back, but any other
-use needs a commercial license.
+A [commercial license](LICENSE-COMMERCIAL) is what you need to offer Sourcemeta
+One to third parties as a hosted or managed service, to bundle it into
+something you sell, to build Enterprise functionality into the Community
+edition, or to put the Enterprise edition to any other use. Write to
+[hello@sourcemeta.com](mailto:hello@sourcemeta.com) to discuss one.
 
-The paragraphs above say when a commercial license is needed. They are not a
-summary of what the licenses condition:
-[LICENSE](https://github.com/sourcemeta/one/blob/main/LICENSE) and
-[enterprise/LICENSE](https://github.com/sourcemeta/one/blob/main/enterprise/LICENSE)
-govern. Vendored third-party components under `vendor/` keep their own licenses
-in either edition, as listed in
-[NOTICE](https://github.com/sourcemeta/one/blob/main/NOTICE).
-
-See
-[LICENSE-COMMERCIAL](https://github.com/sourcemeta/one/blob/main/LICENSE-COMMERCIAL)
-and reach out to [hello@sourcemeta.com](mailto:hello@sourcemeta.com) to discuss
-commercial licensing.
+Read the respective licenses for the specific conditions and other details, and
+[NOTICE](NOTICE) for the licenses of vendored dependencies.
 
 ## :handshake: Contributing
 

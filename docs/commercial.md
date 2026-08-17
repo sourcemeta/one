@@ -26,29 +26,22 @@ their own `ee/` directories.
 
 Sourcemeta One is available in two editions:
 
-- **Community**: Licensed under the [Business Source License
-  1.1](https://github.com/sourcemeta/one/blob/main/LICENSE), which permits
-  production use subject to the conditions it sets out. What requires a
-  commercial license is offering Sourcemeta One to third parties as a hosted or
-  managed service, or including it in something you provide them for a fee.
-  Four years after each release, that release transitions to
+- **Community**: The free edition, offering a subset of the functionality for
+  self-hosting under the [Business Source License
+  1.1](https://github.com/sourcemeta/one/blob/main/LICENSE), with certain
+  restrictions. Four years after each release, that release transitions to
   AGPL-3.0-or-later.
 
-- **Enterprise**: Includes the [Standard
-  Library](https://github.com/sourcemeta/std), additional features, and supply
-  chain security capabilities not available in the Community edition. Its
-  source is published for transparency and audit under
-  [`enterprise/LICENSE`](https://github.com/sourcemeta/one/blob/main/enterprise/LICENSE),
-  which lets you build and run it to evaluate it and to contribute back. Every
-  other use, including any production use, requires a [commercial
-  license](https://github.com/sourcemeta/one/blob/main/LICENSE-COMMERCIAL) from
-  Sourcemeta.
+- **Enterprise**: Adds the [Standard
+  Library](https://github.com/sourcemeta/std), the capabilities described
+  below, and supply chain security features. Its source is published for
+  transparency and audit, but it is commercial software, governed by
+  [`enterprise/LICENSE`](https://github.com/sourcemeta/one/blob/main/enterprise/LICENSE)
+  and the [commercial
+  license](https://github.com/sourcemeta/one/blob/main/LICENSE-COMMERCIAL).
 
-These bullets describe when a commercial license is needed. They are not a
-summary of either license's conditions.
-[`LICENSE`](https://github.com/sourcemeta/one/blob/main/LICENSE) and
-[`enterprise/LICENSE`](https://github.com/sourcemeta/one/blob/main/enterprise/LICENSE)
-govern, and are the only authoritative statement of what each edition permits.
+Read the respective licenses for the specific conditions of each edition and
+other details.
 
 ## Model Context Protocol
 
