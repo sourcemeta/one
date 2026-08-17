@@ -185,10 +185,10 @@ auto encode_jwt_metadata(
 
 namespace sourcemeta::one {
 
-auto Authentication::compile(std::span<const Authentication::Policy> policies,
-                             const std::filesystem::path &configuration,
-                             const Authentication::PathGuard &gateable)
-    -> std::vector<std::byte> {
+auto Authentication::Table::compile(
+    std::span<const Authentication::Policy> policies,
+    const std::filesystem::path &configuration,
+    const Authentication::PathGuard &gateable) -> std::vector<std::byte> {
   assert(gateable);
   // Each policy occupies one bit of the node masks, so exceeding the ceiling
   // would shift past the width of a PolicySet
@@ -204,24 +204,6 @@ auto Authentication::compile(std::span<const Authentication::Policy> policies,
       if (!gateable(policy_path)) {
         throw AuthenticationUnknownPathError(configuration,
                                              std::string{policy_path});
-      }
-    }
-  }
-
-  // A view is spelled from the names of the policies it comprises, so a policy
-  // without one, or sharing one, or taking the name every caller holding
-  // nothing is served under, yields a view that names somewhere else or
-  // nowhere. The configuration refuses all three long before this is reached,
-  // and this is what makes that a guarantee rather than a convention
-  for (std::size_t index{0}; index < policies.size(); index += 1) {
-    const auto name{policies[index].name};
-    if (name.empty() || name == VIEW_PUBLIC) {
-      throw AuthenticationPolicyNameError(configuration, std::string{name});
-    }
-
-    for (std::size_t other{0}; other < index; other += 1) {
-      if (policies[other].name == name) {
-        throw AuthenticationPolicyNameError(configuration, std::string{name});
       }
     }
   }
@@ -258,7 +240,7 @@ auto Authentication::compile(std::span<const Authentication::Policy> policies,
 
   // The table is computed once here, so that the naming rule is applied where
   // the policies are read rather than by every server that later serves them
-  const auto table{Authentication::views(policies)};
+  const auto table{Authentication::Table::enumerate(policies)};
 
   // Distinct policy names do not by themselves make distinct view names, since
   // a view naming several is spelled by joining theirs, which a single policy
@@ -442,8 +424,9 @@ auto Authentication::compile(std::span<const Authentication::Policy> policies,
   return buffer;
 }
 
-auto Authentication::write(const std::span<const std::byte> bytes,
-                           const std::filesystem::path &destination) -> void {
+auto Authentication::Table::write(const std::span<const std::byte> bytes,
+                                  const std::filesystem::path &destination)
+    -> void {
   sourcemeta::core::write_file(destination, bytes);
 }
 

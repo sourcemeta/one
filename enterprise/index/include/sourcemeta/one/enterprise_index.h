@@ -50,7 +50,7 @@ auto mcp_resource_identifier(
 // untouched when no policy can honestly answer that
 // https://datatracker.ietf.org/doc/html/rfc9728
 auto generate_protected_resource_metadata(
-    const sourcemeta::one::Authentication &authentication,
+    const sourcemeta::one::Authentication::Table &authentication,
     const sourcemeta::one::Configuration &configuration,
     std::string_view endpoint, sourcemeta::core::JSON &result) -> void;
 

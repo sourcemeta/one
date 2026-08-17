@@ -67,7 +67,9 @@ Router::Router(const std::filesystem::path &base,
       // NOLINTNEXTLINE(modernize-avoid-c-arrays)
       slots_{std::make_unique<Slot[]>(router.size() + 1)},
       slots_size_{router.size() + 1},
-      authentication_{base / "authentication.bin", provider_fetcher()} {
+      authentication_{
+          sourcemeta::one::Authentication::Table{base / "authentication.bin"},
+          provider_fetcher()} {
   router.arguments(0, [this](const auto &key, const auto &value) -> void {
     if (key == "errorSchema") {
       this->default_error_schema_ = std::get<std::string_view>(value);

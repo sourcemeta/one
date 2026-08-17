@@ -92,8 +92,9 @@ static auto instance(const std::string &name,
             .client_secret_variable = "ONE_TEST_SEAL_CLIENT",
             .session_secrets = secrets}}}};
   return sourcemeta::one::Authentication{
-      sourcemeta::one::Authentication::compile(policies, test_path(name),
-                                               anywhere),
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, test_path(name), anywhere)},
       provider()};
 }
 

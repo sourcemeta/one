@@ -29,9 +29,9 @@ save(const std::span<const sourcemeta::one::Authentication::Policy> policies,
      const std::filesystem::path &configuration,
      const std::filesystem::path &destination,
      const sourcemeta::one::Authentication::PathGuard &gateable) -> void {
-  sourcemeta::one::Authentication::write(
-      sourcemeta::one::Authentication::compile(policies, configuration,
-                                               gateable),
+  sourcemeta::one::Authentication::Table::write(
+      sourcemeta::one::Authentication::Table::compile(policies, configuration,
+                                                      gateable),
       destination);
 }
 
@@ -41,7 +41,9 @@ static auto test_path(const std::string &name) -> std::filesystem::path {
 
 TEST(admits_every_path_without_a_credential) {
   const sourcemeta::one::Authentication authentication{
-      std::filesystem::path{"/no/such/authentication.bin"}, {}};
+      sourcemeta::one::Authentication::Table{
+          std::filesystem::path{"/no/such/authentication.bin"}},
+      {}};
   EXPECT_TRUE(
       authentication.permits(at("/"), authentication.caller({.bearer = ""})));
   EXPECT_TRUE(
@@ -52,7 +54,9 @@ TEST(admits_every_path_without_a_credential) {
 
 TEST(admits_every_path_with_any_credential) {
   const sourcemeta::one::Authentication authentication{
-      std::filesystem::path{"/no/such/authentication.bin"}, {}};
+      sourcemeta::one::Authentication::Table{
+          std::filesystem::path{"/no/such/authentication.bin"}},
+      {}};
   EXPECT_TRUE(authentication.permits(
       at("/internal"), authentication.caller({.bearer = "anything"})));
   EXPECT_TRUE(authentication.permits(
@@ -66,7 +70,8 @@ TEST(save_emits_an_empty_artifact_that_admits_everything) {
   EXPECT_TRUE(std::filesystem::exists(path));
   EXPECT_EQ(std::filesystem::file_size(path), 0);
 
-  const sourcemeta::one::Authentication authentication{path, {}};
+  const sourcemeta::one::Authentication authentication{
+      sourcemeta::one::Authentication::Table{path}, {}};
   EXPECT_TRUE(
       authentication.permits(at("/"), authentication.caller({.bearer = ""})));
   EXPECT_TRUE(authentication.permits(at("/internal/foo"),
@@ -97,45 +102,51 @@ TEST(save_rejects_any_policy) {
 }
 
 TEST(permits_every_reference) {
-  const sourcemeta::one::Authentication authentication{
-      std::filesystem::path{"/no/such/authentication.bin"}, {}};
-  EXPECT_TRUE(authentication.reference_permitted(at("/one"), at("/two")));
-  EXPECT_TRUE(authentication.reference_permitted(at("/public/one"),
-                                                 at("/private/two")));
-  EXPECT_TRUE(
-      authentication.reference_permitted(at("/internal/a"), at("/internal/a")));
+  const sourcemeta::one::Authentication::Table gate{
+      std::filesystem::path{"/no/such/authentication.bin"}};
+  EXPECT_TRUE(gate.reference_permitted(at("/one"), at("/two")));
+  EXPECT_TRUE(gate.reference_permitted(at("/public/one"), at("/private/two")));
+  EXPECT_TRUE(gate.reference_permitted(at("/internal/a"), at("/internal/a")));
 }
 
 TEST(records_the_anonymous_view_alone) {
-  const sourcemeta::one::Authentication authentication{
-      std::filesystem::path{"/no/such/authentication.bin"}, {}};
-  EXPECT_EQ(authentication.view_count(), std::size_t{1});
-  EXPECT_EQ(authentication.view_at(0).name, "public");
-  EXPECT_EQ(authentication.view_at(0).policies,
+  const sourcemeta::one::Authentication::Table gate{
+      std::filesystem::path{"/no/such/authentication.bin"}};
+  const auto table{gate.views()};
+  EXPECT_EQ(table.size(), std::size_t{1});
+  EXPECT_EQ(table.at(0).name, "public");
+  EXPECT_EQ(table.at(0).policies,
             sourcemeta::one::Authentication::PolicySet{0});
 }
 
 TEST(shows_every_path_in_its_only_view) {
-  const sourcemeta::one::Authentication authentication{
-      std::filesystem::path{"/no/such/authentication.bin"}, {}};
-  EXPECT_TRUE(authentication.visible(at("/"), 0));
-  EXPECT_TRUE(authentication.visible(at(""), 0));
-  EXPECT_TRUE(authentication.visible(at("/internal/foo"), 0));
+  const sourcemeta::one::Authentication::Table gate{
+      std::filesystem::path{"/no/such/authentication.bin"}};
+  const auto anonymous{gate.view("public")};
+  EXPECT_TRUE(gate.visible(at("/"), anonymous));
+  EXPECT_TRUE(gate.visible(at(""), anonymous));
+  EXPECT_TRUE(gate.visible(at("/internal/foo"), anonymous));
 }
 
-TEST(shows_nothing_under_an_index_naming_no_view) {
-  const sourcemeta::one::Authentication authentication{
-      std::filesystem::path{"/no/such/authentication.bin"}, {}};
-  EXPECT_EQ(authentication.view_count(), std::size_t{1});
-  EXPECT_FALSE(authentication.visible(at("/"), 1));
-  EXPECT_FALSE(authentication.visible(at("/internal/foo"), 1));
+TEST(serves_a_name_no_view_holds_as_the_anonymous_one) {
+  const sourcemeta::one::Authentication::Table gate{
+      std::filesystem::path{"/no/such/authentication.bin"}};
+  const auto withdrawn{gate.view("retired")};
+  EXPECT_EQ(withdrawn.name, "public");
+  EXPECT_EQ(withdrawn.policies, sourcemeta::one::Authentication::PolicySet{0});
+  // Nothing is governed here, so the one view shows every location whichever
+  // name it was asked for
+  EXPECT_TRUE(gate.visible(at("/"), withdrawn));
+  EXPECT_TRUE(gate.visible(at("/internal/foo"), withdrawn));
 }
 
 TEST(serves_every_caller_the_anonymous_view) {
   const std::array<std::string_view, 1> cookies{
       {"sourcemeta_one_session=whatever"}};
   const sourcemeta::one::Authentication authentication{
-      std::filesystem::path{"/no/such/authentication.bin"}, {}};
+      sourcemeta::one::Authentication::Table{
+          std::filesystem::path{"/no/such/authentication.bin"}},
+      {}};
   EXPECT_EQ(authentication.caller({.bearer = ""}).view(), "public");
   EXPECT_EQ(authentication.caller({.bearer = "anything"}).view(), "public");
   EXPECT_EQ(authentication.caller({.bearer = "", .cookies = cookies}).view(),
@@ -146,7 +157,9 @@ TEST(serves_every_caller_the_anonymous_view) {
 // everywhere, which is the same answer they get for presenting nothing
 TEST(admits_a_caller_presenting_nothing_everywhere) {
   const sourcemeta::one::Authentication authentication{
-      std::filesystem::path{"/no/such/authentication.bin"}, {}};
+      sourcemeta::one::Authentication::Table{
+          std::filesystem::path{"/no/such/authentication.bin"}},
+      {}};
   EXPECT_TRUE(authentication.permits(at("/"), authentication.caller({})));
   EXPECT_TRUE(
       authentication.permits(at("/internal/foo"), authentication.caller({})));
@@ -156,7 +169,9 @@ TEST(admits_a_caller_presenting_a_credential_everywhere) {
   const std::array<std::string_view, 1> cookies{
       {"sourcemeta_one_session=whatever"}};
   const sourcemeta::one::Authentication authentication{
-      std::filesystem::path{"/no/such/authentication.bin"}, {}};
+      sourcemeta::one::Authentication::Table{
+          std::filesystem::path{"/no/such/authentication.bin"}},
+      {}};
   EXPECT_TRUE(authentication.permits(
       at("/internal/foo"), authentication.caller({.bearer = "anything"})));
   EXPECT_TRUE(authentication.permits(
@@ -168,7 +183,7 @@ TEST(admits_a_caller_presenting_a_credential_everywhere) {
 }
 
 TEST(views_of_nothing_are_the_public_one_alone) {
-  const auto views{sourcemeta::one::Authentication::views({})};
+  const auto views{sourcemeta::one::Authentication::Table::enumerate({})};
   EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
                        {.name = "public", .policies = {}}}));
 }
@@ -182,7 +197,7 @@ TEST(views_of_a_static_key_policy_are_the_public_one_alone) {
         .credential =
             sourcemeta::one::Authentication::Policy::ApiKey{.keys = keys}}}};
 
-  const auto views{sourcemeta::one::Authentication::views(policies)};
+  const auto views{sourcemeta::one::Authentication::Table::enumerate(policies)};
   EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
                        {.name = "public", .policies = {}}}));
 }
@@ -201,7 +216,7 @@ TEST(views_of_several_policies_are_the_public_one_alone) {
         .credential = sourcemeta::one::Authentication::Policy::Token{
             .issuer = "https://idp.example.com/realms/staff"}}}};
 
-  const auto views{sourcemeta::one::Authentication::views(policies)};
+  const auto views{sourcemeta::one::Authentication::Table::enumerate(policies)};
   EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
                        {.name = "public", .policies = {}}}));
 }

@@ -311,8 +311,8 @@ struct GENERATE_DEPENDENCIES {
     assert(result.unique());
 
     if (result.size() > 0) {
-      const sourcemeta::one::Authentication authentication{
-          action.dependencies.at(1), {}};
+      const sourcemeta::one::Authentication::Table authentication{
+          action.dependencies.at(1)};
       for (const auto &edge : result.as_array()) {
         const auto &referrer_uri{edge.at("from").to_string()};
         const auto &referent_uri{edge.at("to").to_string()};
@@ -1117,8 +1117,8 @@ struct GENERATE_AUTHENTICATION {
     // begins rather than at some expansion of it: a scope reaching into a
     // template would be honoured where the route is matched literally and
     // nowhere else, which is a gate that holds on one surface and not the next
-    sourcemeta::one::Authentication::write(
-        sourcemeta::one::Authentication::compile(
+    sourcemeta::one::Authentication::Table::write(
+        sourcemeta::one::Authentication::Table::compile(
             policies, configuration.path,
             [&routes, &configuration](const std::string_view path) {
               for (std::size_t index{0}; index < routes.size(); index++) {

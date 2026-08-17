@@ -88,8 +88,7 @@ public:
     // credential is known, which is the origin a preflight is checked against
     // and the metadata a refusal points at
     const auto &authentication{dispatcher.authentication()};
-    for (std::size_t index{0}; index < authentication.view_count(); index++) {
-      const auto recorded{authentication.view_at(index)};
+    for (const auto &recorded : authentication.table().views()) {
       const auto path{this->artifact_resolve_path_unauthenticated(
           recorded.name, "", Tree::Explorer, "mcp")};
       if (!path.has_value()) {

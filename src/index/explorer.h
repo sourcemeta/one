@@ -116,9 +116,9 @@ static auto child_registry_path(const std::string &directory_registry_path,
          "/" + name;
 }
 
-static auto make_private(const sourcemeta::one::Authentication &authentication,
-                         const std::string &registry_path)
-    -> sourcemeta::core::JSON {
+static auto
+make_private(const sourcemeta::one::Authentication::Table &authentication,
+             const std::string &registry_path) -> sourcemeta::core::JSON {
   // Whether a policy governs the path, declared on it or inherited from above.
   // Every surface that says so reads this, so none of them can disagree about
   // what private means. The indexer composes the path from the content tree,
@@ -492,8 +492,8 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
     result.assign("breadcrumb",
                   make_breadcrumb(resolver_entry.relative_path, false));
 
-    const sourcemeta::one::Authentication authentication{
-        action.dependencies.back(), {}};
+    const sourcemeta::one::Authentication::Table authentication{
+        action.dependencies.back()};
     result.assign("private",
                   make_private(authentication, result.at("path").to_string()));
 
@@ -818,25 +818,12 @@ struct GENERATE_MCP {
     {
       const sourcemeta::core::URITemplateRouterView router_view{
           action.dependencies.at(2)};
-      const sourcemeta::one::Authentication authentication{
-          action.dependencies.back(), {}};
+      const sourcemeta::one::Authentication::Table authentication{
+          action.dependencies.back()};
 
       // The artifact is written once per view and names the view it is for, so
-      // what it offers is settled here rather than worked out again per
-      // request. A name the table does not hold cannot happen, since both come
-      // from the same enumeration, and the anonymous view standing first is
-      // what a build would fall back to: it holds no policy, so it reaches
-      // only what nobody governs
-      std::size_t view{0};
-      assert(authentication.view_count() > 0);
-      assert(authentication.view_at(0).name == sourcemeta::one::VIEW_PUBLIC);
-      for (std::size_t candidate{0}; candidate < authentication.view_count();
-           candidate++) {
-        if (authentication.view_at(candidate).name == action.view) {
-          view = candidate;
-          break;
-        }
-      }
+      // what it offers is settled here rather than worked out again per request
+      const auto view{authentication.view(action.view)};
 
       sourcemeta::one::generate_mcp_tools(
           router_view,
@@ -999,8 +986,8 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
       current = current.parent_path();
     }
 
-    const sourcemeta::one::Authentication authentication{
-        action.dependencies.back(), {}};
+    const sourcemeta::one::Authentication::Table authentication{
+        action.dependencies.back()};
     const std::string directory_registry_path{
         relative_path == "." ? std::string{"/"}
                              : "/" + relative_path.generic_string()};

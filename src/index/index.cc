@@ -105,17 +105,22 @@ static constexpr std::array<BuildHandlerFunction, sourcemeta::one::ACTION_COUNT>
 // before anything is planned, because what a build emits depends on it, and the
 // build writes it again with the path validation this skips: an invalid scope
 // still refuses the build, one step later than it would have
-static auto view_filter_from(const sourcemeta::one::Authentication &gate)
+static auto view_filter_from(
+    const sourcemeta::one::Authentication::Table &gate,
+    const std::span<const sourcemeta::one::Authentication::RecordedView> table)
     -> sourcemeta::one::ViewFilter {
-  return
-      [&gate](const std::size_t view, const std::string_view relative) -> bool {
-        std::string path;
-        path.reserve(relative.size() + 1);
-        path.push_back('/');
-        path.append(relative);
-        return gate.visible(
-            sourcemeta::one::Authentication::Path::relative(path), view);
-      };
+  return [&gate, table](const std::size_t view,
+                        const std::string_view relative) -> bool {
+    // A build names its views by position in the table it was handed, which is
+    // a fact about this build rather than about who governs what
+    assert(view < table.size());
+    std::string path;
+    path.reserve(relative.size() + 1);
+    path.push_back('/');
+    path.append(relative);
+    return gate.visible(sourcemeta::one::Authentication::Path::relative(path),
+                        table[view]);
+  };
 }
 
 static auto parse_numeric_option(const sourcemeta::core::Options &app,
@@ -634,10 +639,9 @@ static auto index_main(const std::string_view &program,
   }
   const sourcemeta::one::LeafSet leaves{leaves_storage};
 
-  // The views this build writes for, enumerated from what the configuration
-  // declares. The artifact records the same table for the server to read, so
-  // this is the naming rule applied a second time at index time rather than a
-  // second rule, and the two are the same function of the same policies
+  // The views this build writes for, read below from the table it compiles, so
+  // that the naming rule is applied once and a build and the server it feeds
+  // cannot come to different answers about what the views are
   std::vector<std::vector<std::string_view>> view_policy_paths;
   std::vector<std::vector<std::string_view>> view_policy_keys;
   std::vector<std::vector<std::string_view>> view_policy_session_secrets;
@@ -648,22 +652,23 @@ static auto index_main(const std::string_view &program,
           configuration, view_policy_paths, view_policy_keys,
           view_policy_session_secrets, view_policy_claims,
           view_policy_email_domains)};
-  const auto view_table{sourcemeta::one::Authentication::views(view_policies)};
+  const auto authentication_path{canonical_output / "authentication.bin"};
+  // The table this build just compiled is what the plan is filtered against, so
+  // it is read from memory rather than through the file it is also written to
+  const auto compiled{sourcemeta::one::Authentication::Table::compile(
+      view_policies, configuration.path,
+      [](const std::string_view) { return true; })};
+  sourcemeta::one::Authentication::Table::write(compiled, authentication_path);
+  const sourcemeta::one::Authentication::Table gate{compiled};
+
+  const auto view_table{gate.views()};
   std::vector<std::string_view> views;
   views.reserve(view_table.size());
   for (const auto &view : view_table) {
     views.push_back(view.name);
   }
 
-  const auto authentication_path{canonical_output / "authentication.bin"};
-  // The table this build just compiled is what the plan is filtered against, so
-  // it is read from memory rather than through the file it is also written to
-  const auto compiled{sourcemeta::one::Authentication::compile(
-      view_policies, configuration.path,
-      [](const std::string_view) { return true; })};
-  sourcemeta::one::Authentication::write(compiled, authentication_path);
-  const sourcemeta::one::Authentication gate{compiled, {}};
-  const auto visible{view_filter_from(gate)};
+  const auto visible{view_filter_from(gate, view_table)};
 
   auto produce_plan{sourcemeta::one::delta<sourcemeta::one::INDEX_RULES>(
       sourcemeta::one::BuildPhase::Produce, build_type, entries,
@@ -860,10 +865,6 @@ auto main(int argc, char *argv[]) noexcept -> int {
   } catch (const sourcemeta::one::AuthenticationTooManyViewsError &error) {
     std::print(stdout, "error: {}\n  at issuer {}\n  at count {}\n",
                error.what(), error.issuer(), error.count());
-    return EXIT_FAILURE;
-  } catch (const sourcemeta::one::AuthenticationPolicyNameError &error) {
-    std::print(stdout, "error: {}\n  at name {}\n  at path {}\n", error.what(),
-               error.name(), error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::AuthenticationViewNameCollisionError &error) {
     std::print(stdout, "error: {}\n  at name {}\n  at path {}\n", error.what(),
