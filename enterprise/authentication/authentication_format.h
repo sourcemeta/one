@@ -7,6 +7,18 @@
 
 namespace sourcemeta::one {
 
+// What a policy authenticates, stored as one byte per entry, so these values
+// are the artifact's rather than a matter of taste
+enum class AuthenticationPolicyType : std::uint8_t {
+  ApiKey = 0,
+  JWT = 1,
+  OIDC = 2
+};
+
+// How many policies one artifact can name. Each occupies a bit of the node
+// masks, so this is what a mask has room for rather than a matter of taste
+constexpr std::size_t AUTHENTICATION_MAXIMUM_POLICIES{64};
+
 constexpr std::uint32_t AUTHENTICATION_MAGIC{0x48545541};
 constexpr std::uint32_t AUTHENTICATION_VERSION{14};
 

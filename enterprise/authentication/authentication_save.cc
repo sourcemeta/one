@@ -41,6 +41,18 @@ auto find_or_create_child(std::vector<BuildNode> &nodes,
   return child;
 }
 
+auto policy_type(const sourcemeta::one::Authentication::Policy &policy)
+    -> sourcemeta::one::AuthenticationPolicyType {
+  switch (policy.credential.index()) {
+    case 1:
+      return sourcemeta::one::AuthenticationPolicyType::JWT;
+    case 2:
+      return sourcemeta::one::AuthenticationPolicyType::OIDC;
+    default:
+      return sourcemeta::one::AuthenticationPolicyType::ApiKey;
+  }
+}
+
 auto align_to_word(const std::uint32_t offset) -> std::uint32_t {
   return (offset + 7U) & ~static_cast<std::uint32_t>(7U);
 }
@@ -191,7 +203,7 @@ auto Authentication::Table::compile(
   assert(gateable);
   // Each policy occupies one bit of the node masks, so exceeding the ceiling
   // would shift past the width of a PolicySet
-  if (policies.size() > Authentication::MAXIMUM_POLICIES) {
+  if (policies.size() > AUTHENTICATION_MAXIMUM_POLICIES) {
     throw AuthenticationTooManyPoliciesError(configuration, policies.size());
   }
 
@@ -400,7 +412,7 @@ auto Authentication::Table::compile(
     entry.name_offset = policy_names[index].first;
     entry.name_length = policy_names[index].second;
     entry.algorithm = static_cast<std::uint8_t>(algorithm);
-    entry.type = static_cast<std::uint8_t>(policy.type());
+    entry.type = static_cast<std::uint8_t>(policy_type(policy));
     policy_table.push_back(entry);
     metadata.insert(metadata.end(), policy_metadata.begin(),
                     policy_metadata.end());

@@ -345,7 +345,7 @@ auto structurally_valid(const std::span<const std::byte> bytes) noexcept
   // shift past the width of a PolicySet, which is undefined behavior
   if (header->magic != AUTHENTICATION_MAGIC ||
       header->version != AUTHENTICATION_VERSION || header->node_count == 0 ||
-      header->policy_count > Authentication::MAXIMUM_POLICIES) {
+      header->policy_count > AUTHENTICATION_MAXIMUM_POLICIES) {
     return false;
   }
 
@@ -401,7 +401,7 @@ auto structurally_valid(const std::span<const std::byte> bytes) noexcept
 
     // A view naming a policy the artifact does not carry could never be
     // resolved to, and on a full mask would shift past the width of a set
-    if (header->policy_count < Authentication::MAXIMUM_POLICIES &&
+    if (header->policy_count < AUTHENTICATION_MAXIMUM_POLICIES &&
         (entry.policies >> header->policy_count) != 0) {
       return false;
     }
@@ -434,7 +434,8 @@ auto structurally_valid(const std::span<const std::byte> bytes) noexcept
           entry.name_length > strings_length - entry.name_offset ||
           entry.algorithm >
               static_cast<std::uint8_t>(Authentication::Algorithm::Sha256) ||
-          entry.type > static_cast<std::uint8_t>(Authentication::Type::OIDC)) {
+          entry.type >
+              static_cast<std::uint8_t>(AuthenticationPolicyType::OIDC)) {
         return false;
       }
 
@@ -1121,9 +1122,9 @@ struct Authentication::Table::Impl {
         at_offset<AuthenticationPolicyEntry>(bytes, header->policies_offset)};
     for (std::uint32_t index{0}; index < header->policy_count; index += 1) {
       const auto &entry{policies[index]};
-      const auto type{static_cast<Authentication::Type>(entry.type)};
-      if ((type != Authentication::Type::JWT &&
-           type != Authentication::Type::OIDC) ||
+      const auto type{static_cast<AuthenticationPolicyType>(entry.type)};
+      if ((type != AuthenticationPolicyType::JWT &&
+           type != AuthenticationPolicyType::OIDC) ||
           entry.metadata_length == 0) {
         continue;
       }
@@ -1132,7 +1133,7 @@ struct Authentication::Table::Impl {
           at_offset<std::byte>(bytes, entry.metadata_offset),
           entry.metadata_length};
       std::string_view serialized;
-      if (type == Authentication::Type::JWT) {
+      if (type == AuthenticationPolicyType::JWT) {
         if (!read_jwt_claims(metadata, serialized)) {
           return false;
         }
@@ -1207,8 +1208,7 @@ struct Authentication::Table::Impl {
     }
 
     for (const auto sealed : candidates) {
-      auto opened{this->open(policy_name, Authentication::Purpose::Transaction,
-                             sealed)};
+      auto opened{this->open(policy_name, SealPurpose::Transaction, sealed)};
       if (!opened.has_value()) {
         continue;
       }
@@ -1263,7 +1263,7 @@ struct Authentication::Table::Impl {
 
     std::ostringstream payload_text;
     sourcemeta::core::stringify(payload, payload_text);
-    const auto sealed{this->seal(policy_name, Authentication::Purpose::Session,
+    const auto sealed{this->seal(policy_name, SealPurpose::Session,
                                  payload_text.str(), expiry)};
     if (!sealed.has_value()) {
       log.emplace_back("No session secret is set for the policy");
@@ -1414,8 +1414,8 @@ struct Authentication::Table::Impl {
                   entry.metadata_length};
     }
 
-    const auto type{static_cast<Authentication::Type>(entry.type)};
-    if (type == Authentication::Type::JWT) {
+    const auto type{static_cast<AuthenticationPolicyType>(entry.type)};
+    if (type == AuthenticationPolicyType::JWT) {
       return token.has_value() &&
              this->admits_jwt(metadata, token.value(), required_audience,
                               this->claims_[index]);
@@ -1425,7 +1425,7 @@ struct Authentication::Table::Impl {
     // browser login established, never a presented credential. A request that
     // presented one is asking to be read as that credential, so its session is
     // not consulted at all rather than quietly widening what it reaches
-    if (type == Authentication::Type::OIDC) {
+    if (type == AuthenticationPolicyType::OIDC) {
       return credential.empty() && this->admits_session(metadata, cookies);
     }
 
@@ -1457,8 +1457,8 @@ struct Authentication::Table::Impl {
 
       // Only token policies combine, so anything else stands for the caller on
       // its own and the first one reached is the one read
-      if (static_cast<Authentication::Type>(policies[index].type) !=
-          Authentication::Type::JWT) {
+      if (static_cast<AuthenticationPolicyType>(policies[index].type) !=
+          AuthenticationPolicyType::JWT) {
         if (result == 0) {
           return Authentication::PolicySet{1} << index;
         }
@@ -1573,8 +1573,8 @@ struct Authentication::Table::Impl {
       sourcemeta::core::http_cookie_values(field, SESSION_COOKIE, candidates);
     }
     for (const auto sealed : candidates) {
-      const auto payload{this->session_open(
-          decoded.session_secrets, Authentication::Purpose::Session, sealed)};
+      const auto payload{this->session_open(decoded.session_secrets,
+                                            SealPurpose::Session, sealed)};
       if (!payload.has_value()) {
         continue;
       }
@@ -1616,8 +1616,8 @@ struct Authentication::Table::Impl {
         static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
     for (std::uint32_t index{0}; index < this->policy_count_; index += 1) {
       const auto &entry{policies[index]};
-      if (static_cast<Authentication::Type>(entry.type) !=
-              Authentication::Type::OIDC ||
+      if (static_cast<AuthenticationPolicyType>(entry.type) !=
+              AuthenticationPolicyType::OIDC ||
           entry.metadata_length == 0) {
         continue;
       }
@@ -1630,8 +1630,8 @@ struct Authentication::Table::Impl {
         continue;
       }
 
-      const auto payload{this->session_open(
-          decoded.session_secrets, Authentication::Purpose::Session, value)};
+      const auto payload{this->session_open(decoded.session_secrets,
+                                            SealPurpose::Session, value)};
       if (!payload.has_value()) {
         continue;
       }
@@ -1666,8 +1666,8 @@ struct Authentication::Table::Impl {
         static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
     for (std::uint32_t index{0}; index < this->policy_count_; index += 1) {
       const auto &entry{policies[index]};
-      if (static_cast<Authentication::Type>(entry.type) !=
-              Authentication::Type::OIDC ||
+      if (static_cast<AuthenticationPolicyType>(entry.type) !=
+              AuthenticationPolicyType::OIDC ||
           entry.metadata_length == 0) {
         continue;
       }
@@ -1702,8 +1702,8 @@ struct Authentication::Table::Impl {
         static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
     for (std::uint32_t index{0}; index < this->policy_count_; index += 1) {
       const auto &entry{policies[index]};
-      if (static_cast<Authentication::Type>(entry.type) !=
-              Authentication::Type::OIDC ||
+      if (static_cast<AuthenticationPolicyType>(entry.type) !=
+              AuthenticationPolicyType::OIDC ||
           entry.metadata_length == 0) {
         continue;
       }
@@ -1750,8 +1750,8 @@ struct Authentication::Table::Impl {
         static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
     for (std::uint32_t index{0}; index < this->policy_count_; index += 1) {
       const auto &entry{policies[index]};
-      if (static_cast<Authentication::Type>(entry.type) !=
-              Authentication::Type::OIDC ||
+      if (static_cast<AuthenticationPolicyType>(entry.type) !=
+              AuthenticationPolicyType::OIDC ||
           entry.metadata_length == 0) {
         continue;
       }
@@ -1810,8 +1810,8 @@ struct Authentication::Table::Impl {
       }
 
       const auto &entry{policies[index]};
-      if (static_cast<Authentication::Type>(entry.type) !=
-              Authentication::Type::OIDC ||
+      if (static_cast<AuthenticationPolicyType>(entry.type) !=
+              AuthenticationPolicyType::OIDC ||
           entry.metadata_length == 0) {
         continue;
       }
@@ -1861,7 +1861,7 @@ struct Authentication::Table::Impl {
   // so a secret can be replaced by putting the new one first and dropping the
   // old once every value signed under it has expired
   [[nodiscard]] auto session_seal(const std::span<const std::byte> variables,
-                                  const Authentication::Purpose purpose,
+                                  const SealPurpose purpose,
                                   const std::string_view payload,
                                   const std::chrono::sys_seconds expiry) const
       -> std::optional<std::string> {
@@ -1876,7 +1876,7 @@ struct Authentication::Table::Impl {
   }
 
   [[nodiscard]] auto session_open(const std::span<const std::byte> variables,
-                                  const Authentication::Purpose purpose,
+                                  const SealPurpose purpose,
                                   const std::string_view value) const
       -> std::optional<std::string> {
     const auto resolved{session_secrets(variables)};
@@ -1897,7 +1897,7 @@ struct Authentication::Table::Impl {
   }
 
   [[nodiscard]] auto seal(const std::string_view policy,
-                          const Authentication::Purpose purpose,
+                          const SealPurpose purpose,
                           const std::string_view payload,
                           const std::chrono::sys_seconds expiry) const
       -> std::optional<std::string> {
@@ -1911,7 +1911,7 @@ struct Authentication::Table::Impl {
   }
 
   [[nodiscard]] auto open(const std::string_view policy,
-                          const Authentication::Purpose purpose,
+                          const SealPurpose purpose,
                           const std::string_view value) const
       -> std::optional<std::string> {
     OIDCPolicyMetadata decoded;
@@ -2129,10 +2129,10 @@ struct Authentication::Table::Impl {
         const std::span<const std::byte> metadata{
             at_offset<std::byte>(this->bytes_, entry.metadata_offset),
             entry.metadata_length};
-        const auto type{static_cast<Authentication::Type>(entry.type)};
-        if (type == Authentication::Type::JWT) {
+        const auto type{static_cast<AuthenticationPolicyType>(entry.type)};
+        if (type == AuthenticationPolicyType::JWT) {
           collect_jwt_identifiers(metadata, result.keys);
-        } else if (type == Authentication::Type::OIDC) {
+        } else if (type == AuthenticationPolicyType::OIDC) {
           collect_oidc_identifiers(metadata, result.keys);
         } else {
           collect_keys(metadata, result.keys);
@@ -2314,8 +2314,8 @@ auto view_name(const std::span<const Authentication::Policy> policies,
 
 auto Authentication::Table::enumerate(
     const std::span<const Authentication::Policy> policies)
-    -> std::vector<Authentication::View> {
-  std::vector<Authentication::View> result;
+    -> std::vector<Authentication::Table::View> {
+  std::vector<Authentication::Table::View> result;
   // Always present, and the only entry when nothing is declared. A registry
   // whose every path is governed still has one, since it is what a caller
   // holding nothing is shown and what a lookup falls back to
@@ -2340,7 +2340,7 @@ auto Authentication::Table::enumerate(
 
   std::vector<std::string_view> issuers;
   std::vector<std::vector<std::size_t>> groups;
-  std::vector<Authentication::View> named;
+  std::vector<Authentication::Table::View> named;
 
   for (std::size_t index{0}; index < policies.size(); index++) {
     const auto &policy{policies[index]};
@@ -2623,8 +2623,7 @@ auto Authentication::login(const std::string_view policy_name,
                         std::chrono::system_clock::now()) +
                     TRANSACTION_LIFETIME};
   const auto sealed{this->table_.impl_->seal(
-      policy_name, Authentication::Purpose::Transaction, payload_text.str(),
-      expiry)};
+      policy_name, SealPurpose::Transaction, payload_text.str(), expiry)};
   if (!sealed.has_value()) {
     result.log.emplace_back("No session secret is set for the policy");
     return result;
@@ -3119,7 +3118,7 @@ auto Authentication::Table::visible(
   // this answers rather than whoever asks. Otherwise what nobody governs would
   // be shown by an instance knowing nothing about who governs what, which is
   // the one way this could disclose more than the gate admits
-  return this->impl_->permits(path.value(), view.policies());
+  return this->impl_->permits(path.value(), view.policies_);
 }
 
 auto Authentication::Table::governing(const Authentication::Path &path) const

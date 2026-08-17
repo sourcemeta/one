@@ -24,8 +24,8 @@ struct Authentication::Table::Impl {};
 // rather than implied, which keeps the output one shape across editions
 auto Authentication::Table::enumerate(
     const std::span<const Authentication::Policy>)
-    -> std::vector<Authentication::View> {
-  std::vector<Authentication::View> result;
+    -> std::vector<Authentication::Table::View> {
+  std::vector<Authentication::Table::View> result;
   result.push_back({.name = std::string{VIEW_PUBLIC}, .policies = {}});
   return result;
 }

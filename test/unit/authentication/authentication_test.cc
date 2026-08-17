@@ -35,6 +35,19 @@ save(const std::span<const sourcemeta::one::Authentication::Policy> policies,
       destination);
 }
 
+// The names a table serves, which is what the naming rule below decides. What
+// each name stands for is read from what its view reaches rather than from the
+// set behind it, since that set is the artifact's own business
+static auto view_names(const sourcemeta::one::Authentication::Table &table)
+    -> std::vector<std::string_view> {
+  std::vector<std::string_view> result;
+  for (const auto &view : table.views()) {
+    result.push_back(view.name());
+  }
+
+  return result;
+}
+
 static auto test_path(const std::string &name) -> std::filesystem::path {
   return std::filesystem::path{AUTHENTICATION_TEST_DIRECTORY} / name;
 }
@@ -115,8 +128,8 @@ TEST(records_the_anonymous_view_alone) {
   const auto table{gate.views()};
   EXPECT_EQ(table.size(), std::size_t{1});
   EXPECT_EQ(table.at(0).name(), "public");
-  EXPECT_EQ(table.at(0).policies(),
-            sourcemeta::one::Authentication::PolicySet{0});
+  // And it holds nothing, which is what it reaching every location shows
+  EXPECT_TRUE(gate.visible(at("/internal/foo"), table.at(0)));
 }
 
 TEST(shows_every_path_in_its_only_view) {
@@ -133,8 +146,6 @@ TEST(serves_a_name_no_view_holds_as_the_anonymous_one) {
       std::filesystem::path{"/no/such/authentication.bin"}};
   const auto withdrawn{gate.view("retired")};
   EXPECT_EQ(withdrawn.name(), "public");
-  EXPECT_EQ(withdrawn.policies(),
-            sourcemeta::one::Authentication::PolicySet{0});
   // Nothing is governed here, so the one view shows every location whichever
   // name it was asked for
   EXPECT_TRUE(gate.visible(at("/"), withdrawn));
@@ -184,40 +195,9 @@ TEST(admits_a_caller_presenting_a_credential_everywhere) {
 }
 
 TEST(views_of_nothing_are_the_public_one_alone) {
-  const auto views{sourcemeta::one::Authentication::Table::enumerate({})};
-  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
-                       {.name = "public", .policies = {}}}));
-}
-
-TEST(views_of_a_static_key_policy_are_the_public_one_alone) {
-  const std::array<std::string_view, 1> paths{{"/private"}};
-  const std::array<std::string_view, 1> keys{{"secret"}};
-  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
-      {{.paths = paths,
-        .name = "vault",
-        .credential =
-            sourcemeta::one::Authentication::Policy::ApiKey{.keys = keys}}}};
-
-  const auto views{sourcemeta::one::Authentication::Table::enumerate(policies)};
-  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
-                       {.name = "public", .policies = {}}}));
-}
-
-TEST(views_of_several_policies_are_the_public_one_alone) {
-  const std::array<std::string_view, 1> first_paths{{"/legal"}};
-  const std::array<std::string_view, 1> second_paths{{"/tech"}};
-  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
-      {{.paths = first_paths,
-        .name = "legal",
-        .credential =
-            sourcemeta::one::Authentication::Policy::Token{
-                .issuer = "https://idp.example.com/realms/staff"}},
-       {.paths = second_paths,
-        .name = "tech",
-        .credential = sourcemeta::one::Authentication::Policy::Token{
-            .issuer = "https://idp.example.com/realms/staff"}}}};
-
-  const auto views{sourcemeta::one::Authentication::Table::enumerate(policies)};
-  EXPECT_EQ(views, (std::vector<sourcemeta::one::Authentication::View>{
-                       {.name = "public", .policies = {}}}));
+  const auto path{test_path("views_of_nothing_are_the_public_one_alone.bin")};
+  save(std::span<const sourcemeta::one::Authentication::Policy>{}, path, path,
+       anywhere);
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_EQ(view_names(gate), (std::vector<std::string_view>{"public"}));
 }

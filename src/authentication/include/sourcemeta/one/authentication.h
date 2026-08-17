@@ -33,13 +33,12 @@ namespace sourcemeta::one {
 inline constexpr std::string_view VIEW_PUBLIC{"public"};
 
 class SOURCEMETA_ONE_AUTHENTICATION_EXPORT Authentication {
-public:
-  static constexpr std::size_t MAXIMUM_POLICIES{64};
-
+private:
   // A set of policies, one bit per declaration index, which is why there can
   // only ever be as many policies as this has bits
   using PolicySet = std::uint64_t;
 
+public:
   /// Where a resource lives within an instance, in the single spelling every
   /// part of the system agrees on: no leading or trailing separator, no empty
   /// or relative segments, and lowercase throughout. The instance root is the
@@ -108,13 +107,6 @@ public:
   // Identity stores the key verbatim, every other algorithm stores it hashed
   enum class Algorithm : std::uint8_t { Identity = 0, Sha256 = 1 };
 
-  enum class Type : std::uint8_t { ApiKey = 0, JWT = 1, OIDC = 2 };
-
-  // What a sealed value is for. A value is only ever opened for the purpose it
-  // was sealed under, because the two derive different keys from the policy's
-  // secret, so one kind of value cannot be presented as the other
-  enum class Purpose : std::uint8_t { Session = 0, Transaction = 1 };
-
   // A policy gates a set of path prefixes. A path covered by no policy is
   // public.
   //
@@ -171,19 +163,6 @@ public:
     // that a view can be named after what it comprises
     std::string_view name{};
     std::variant<ApiKey, Token, Interactive> credential{ApiKey{}};
-
-    // Which of the three this is, which the artifact records so that reading a
-    // policy back does not depend on reading its parameters first
-    [[nodiscard]] auto type() const noexcept -> Type {
-      switch (this->credential.index()) {
-        case 1:
-          return Type::JWT;
-        case 2:
-          return Type::OIDC;
-        default:
-          return Type::ApiKey;
-      }
-    }
   };
 
   // What this asks a provider for. Every outbound call goes through one of
@@ -286,16 +265,6 @@ public:
   // knows what this instance serves
   using PathGuard = std::function<bool(std::string_view)>;
 
-  // One way the registry looks to somebody: the name its artifacts live under
-  // and the policies a caller of it satisfies. The anonymous view comprises
-  // none, which is what makes it the base every other view adds to
-  struct View {
-    std::string name;
-    std::vector<std::size_t> policies;
-
-    [[nodiscard]] auto operator==(const View &other) const -> bool = default;
-  };
-
   class Table;
 
   // One view as the artifact records it: the directory its artifacts live
@@ -310,10 +279,6 @@ public:
   public:
     [[nodiscard]] auto name() const noexcept -> std::string_view {
       return this->name_;
-    }
-
-    [[nodiscard]] auto policies() const noexcept -> PolicySet {
-      return this->policies_;
     }
 
   private:
@@ -342,39 +307,6 @@ public:
     // Persist what was compiled, so that a later process can map it back
     static auto write(const std::span<const std::byte> bytes,
                       const std::filesystem::path &destination) -> void;
-
-    // How many policies may name one issuer. The combinations over a group
-    // double with every policy added to it, so where to stop is a choice rather
-    // than a discovery: this sits far above anything a configuration has reason
-    // to declare and far below where enumerating them becomes a burden. Raising
-    // it is a decision about what a build should attempt, bounded only in that
-    // it can never reach the ceiling on policies, where the enumeration stops
-    // being expressible at all. What a number of views costs is decided where
-    // they are built rather than where they are named
-    static constexpr std::size_t MAXIMUM_COMBINABLE_POLICIES{16};
-
-    /// Every view over a registry declaring these policies, which is what
-    /// segments its output. A pure function of what was declared: the anonymous
-    /// view first, then the rest ordered by name.
-    ///
-    /// A credential carries one issuer and is checked against it before any
-    /// rule, so only token policies declared against the same issuer can be
-    /// satisfied together, and only those combine. Every other policy stands
-    /// alone, since a caller presents one key or holds one session.
-    ///
-    /// The count is one, plus one per policy that stands alone, plus two to the
-    /// power of each issuer group's size less one.
-    ///
-    /// Whether that many views is affordable is not decided here, since what
-    /// they cost is known where they are built rather than where they are
-    /// named. What is decided here is only that an enumeration doubling with
-    /// every policy has to stop somewhere, which the ceiling below picks a
-    /// point for.
-    ///
-    /// Every policy name must be distinct, which is what keeps one view from
-    /// taking another's name.
-    [[nodiscard]] static auto enumerate(const std::span<const Policy> policies)
-        -> std::vector<View>;
 
     /// Map a table a build wrote. A missing, unreadable or malformed artifact
     /// yields a table that governs nothing it could answer for, rather than one
@@ -427,6 +359,50 @@ public:
 
   private:
     friend Authentication;
+
+    // One way the registry looks to somebody: the name its artifacts live under
+    // and the policies a caller of it satisfies. The anonymous view comprises
+    // none, which is what makes it the base every other view adds to
+    struct View {
+      std::string name;
+      std::vector<std::size_t> policies;
+
+      [[nodiscard]] auto operator==(const View &other) const -> bool = default;
+    };
+
+    // How many policies may name one issuer. The combinations over a group
+    // double with every policy added to it, so where to stop is a choice rather
+    // than a discovery: this sits far above anything a configuration has reason
+    // to declare and far below where enumerating them becomes a burden. Raising
+    // it is a decision about what a build should attempt, bounded only in that
+    // it can never reach the ceiling on policies, where the enumeration stops
+    // being expressible at all. What a number of views costs is decided where
+    // they are built rather than where they are named
+    static constexpr std::size_t MAXIMUM_COMBINABLE_POLICIES{16};
+
+    /// Every view over a registry declaring these policies, which is what
+    /// segments its output. A pure function of what was declared: the anonymous
+    /// view first, then the rest ordered by name.
+    ///
+    /// A credential carries one issuer and is checked against it before any
+    /// rule, so only token policies declared against the same issuer can be
+    /// satisfied together, and only those combine. Every other policy stands
+    /// alone, since a caller presents one key or holds one session.
+    ///
+    /// The count is one, plus one per policy that stands alone, plus two to the
+    /// power of each issuer group's size less one.
+    ///
+    /// Whether that many views is affordable is not decided here, since what
+    /// they cost is known where they are built rather than where they are
+    /// named. What is decided here is only that an enumeration doubling with
+    /// every policy has to stop somewhere, which the ceiling below picks a
+    /// point for.
+    ///
+    /// Every policy name must be distinct, which is what keeps one view from
+    /// taking another's name.
+    [[nodiscard]] static auto enumerate(const std::span<const Policy> policies)
+        -> std::vector<View>;
+
     // The implementation differs by edition and owns the memory-mapped
     // artifact, so it is hidden behind a pointer to keep the binary format out
     // of the shared interface
