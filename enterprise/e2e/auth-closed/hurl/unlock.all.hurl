@@ -98,13 +98,18 @@ HTTP 200
 [Asserts]
 jsonpath "$.valid" == true
 
-# The static web UI assets are served with the key, with their immutable caching
+# The static web UI assets are served with the key. A policy governs this tree
+# here, so the answer is one admitted caller's rather than everybody's, and the
+# year it may be held for is theirs alone
 GET {{base}}/self/v1/static/style.min.css
 Authorization: Bearer full-secret-key
 HTTP 200
+Cache-Control: private, max-age=31536000, immutable
 Content-Type: text/css
+Vary: Accept-Encoding
 [Asserts]
 header "ETag" exists
+header "Last-Modified" exists
 
 # The MCP endpoint answers with the key
 POST {{base}}/self/v1/mcp
