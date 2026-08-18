@@ -42,6 +42,42 @@ RUN -h -s STDIN /dev/null IN . INTO output.txt EXPECTING 0
 REPLACE $PROGRAM WITH '[PROGRAM]' IN output.txt
 COMPARE output.txt AGAINST expected.txt
 
+WRITE expected-usage.txt UNTIL EOF
+2> Usage: [PROGRAM] <one.json> <path/to/output/directory>
+2>
+2> Global Options:
+2>
+2>    --help, -h                     Print this help information and quit
+2>    --configuration, -g            Print the resolved configuration and quit
+2>    --resolve-schema, -r <uri>     Resolve a URI to its schema path and quit
+2>    --skip-banner, -s              Skip the startup banner
+2>
+2> Index Options:
+2>
+2>    --verbose, -v                  Enable verbose output
+2>    --deterministic, -d            Stable (but slower) log output across platforms
+2>    --concurrency, -c <number>     Set the number of concurrent threads
+2>    --profile, -p                  Output information about slowest steps
+2>    --time, -t                     Output high-level timing information
+2>    --comment, -m <text>           Attach a comment to the build
+2>
+2> Advanced Options:
+2>
+2>    --maximum-direct-directory-entries <number>
+2>
+2>      Set the maximum number of direct entries in a directory listing
+2>
+2> Output Directory:
+2>
+2>    The output directory is owned by the indexer. Do NOT:
+2>
+2>    - Manually modify, add, or delete any file inside it
+2>    - Sync content into it or partially restore it from a backup
+2>    - Run concurrent indexer invocations over the same output
+2>
+2> For more documentation, visit https://one.sourcemeta.com
+EOF
+
 RUN --skip-banner STDIN /dev/null IN . INTO output.txt EXPECTING 1
 REPLACE $PROGRAM WITH '[PROGRAM]' IN output.txt
-COMPARE output.txt AGAINST expected.txt
+COMPARE output.txt AGAINST expected-usage.txt

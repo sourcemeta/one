@@ -27,28 +27,28 @@ EOF
 RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
 
 WRITE expected.txt UNTIL EOF
-1> error: Invalid configuration
-1>   at path [CWD]/one.json
-1> The object value was expected to only define properties "algorithm", "keys", "name", "paths", and "type"
-1>   at instance location "/authentication/0"
-1>   at evaluate path "/properties/authentication/items/anyOf/0/required"
-1> The value was expected to be an object that defines properties "algorithms", "audience", "issuer", "name", "paths", and "type"
-1>   at instance location "/authentication/0"
-1>   at evaluate path "/properties/authentication/items/anyOf/1/required"
-1> The value was expected to be an object that defines properties "clientId", "clientSecret", "issuer", "name", "paths", "sessionSecrets", and "type"
-1>   at instance location "/authentication/0"
-1>   at evaluate path "/properties/authentication/items/anyOf/2/required"
-1> The object value was expected to validate against at least one of the 3 given subschemas
-1>   at instance location "/authentication/0"
-1>   at evaluate path "/properties/authentication/items/anyOf"
-1> Every item in the array value was expected to validate against the given subschema
-1>   at instance location "/authentication"
-1>   at evaluate path "/properties/authentication/items"
-1> The object value was expected to validate against the 6 defined properties subschemas
-1>   at instance location ""
-1>   at evaluate path "/properties"
 2> Writing output to: [CWD]/output
 2> Using configuration: [CWD]/one.json
+2> error: Invalid configuration
+2>   at path [CWD]/one.json
+2> The object value was expected to only define properties "algorithm", "keys", "name", "paths", and "type"
+2>   at instance location "/authentication/0"
+2>   at evaluate path "/properties/authentication/items/anyOf/0/required"
+2> The value was expected to be an object that defines properties "algorithms", "audience", "issuer", "name", "paths", and "type"
+2>   at instance location "/authentication/0"
+2>   at evaluate path "/properties/authentication/items/anyOf/1/required"
+2> The value was expected to be an object that defines properties "clientId", "clientSecret", "issuer", "name", "paths", "sessionSecrets", and "type"
+2>   at instance location "/authentication/0"
+2>   at evaluate path "/properties/authentication/items/anyOf/2/required"
+2> The object value was expected to validate against at least one of the 3 given subschemas
+2>   at instance location "/authentication/0"
+2>   at evaluate path "/properties/authentication/items/anyOf"
+2> Every item in the array value was expected to validate against the given subschema
+2>   at instance location "/authentication"
+2>   at evaluate path "/properties/authentication/items"
+2> The object value was expected to validate against the 6 defined properties subschemas
+2>   at instance location ""
+2>   at evaluate path "/properties"
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt

@@ -302,13 +302,13 @@ static auto index_main(const std::string_view &program,
 
   if (app.positional().size() != 2) {
     if (!app.contains("skip-banner")) {
-      std::println("Sourcemeta One {} v{}\n", sourcemeta::one::edition(),
-                   sourcemeta::one::version());
+      std::println(stderr, "Sourcemeta One {} v{}\n",
+                   sourcemeta::one::edition(), sourcemeta::one::version());
     }
 
-    std::println("Usage: {} <one.json> <path/to/output/directory>",
+    std::println(stderr, "Usage: {} <one.json> <path/to/output/directory>",
                  std::filesystem::path{program}.filename().string());
-    std::print("{}", USAGE_DETAILS);
+    std::print(stderr, "{}", USAGE_DETAILS);
     return EXIT_FAILURE;
   }
 
@@ -771,7 +771,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
 
     return index_main(program, app);
   } catch (const sourcemeta::one::ConfigurationCyclicReferenceError &error) {
-    std::print(stdout,
+    std::print(stderr,
                "error: {}\n  from path {}\n  at location \"{}\"\n"
                "  to path {}\n",
                error.what(), error.from().string(),
@@ -779,7 +779,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
                error.target().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ConfigurationReadError &error) {
-    std::print(stdout,
+    std::print(stderr,
                "error: {}\n  from path {}\n  at location \"{}\"\n"
                "  to path {}\n",
                error.what(), error.from().string(),
@@ -787,186 +787,186 @@ auto main(int argc, char *argv[]) noexcept -> int {
                error.target().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::OptionInvalidNumericValueError &error) {
-    std::print(stdout, "error: {}\n  at option {}\n  with value {}\n",
+    std::print(stderr, "error: {}\n  at option {}\n  with value {}\n",
                error.what(), error.option(), error.value());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::OptionInvalidURIValueError &error) {
-    std::print(stdout, "error: {}\n  at option {}\n  with value {}\n",
+    std::print(stderr, "error: {}\n  at option {}\n  with value {}\n",
                error.what(), error.option(), error.value());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::OptionsUnexpectedValueFlagError &error) {
-    std::print(stdout, "error: {}\n  at option {}\n", error.what(),
+    std::print(stderr, "error: {}\n  at option {}\n", error.what(),
                error.option());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::OptionsMissingOptionValueError &error) {
-    std::print(stdout, "error: {}\n  at option {}\n", error.what(),
+    std::print(stderr, "error: {}\n  at option {}\n", error.what(),
                error.option());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::OptionsUnknownOptionError &error) {
-    std::print(stdout, "error: {}\n  at option {}\n", error.what(),
+    std::print(stderr, "error: {}\n  at option {}\n", error.what(),
                error.option());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ConfigurationValidationError &error) {
-    std::print(stdout, "error: {}\n  at path {}\n{}", error.what(),
+    std::print(stderr, "error: {}\n  at path {}\n{}", error.what(),
                error.path().string(), error.stacktrace());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ConfigurationDuplicateAuthenticationNameError
                &error) {
-    std::print(stdout, "error: {}\n  at name {}\n  at path {}\n", error.what(),
+    std::print(stderr, "error: {}\n  at name {}\n  at path {}\n", error.what(),
                error.name(), error.path().string());
     return EXIT_FAILURE;
   } catch (
       const sourcemeta::one::ConfigurationSharedAuthenticationKeyError &error) {
     std::print(
-        stdout, "error: {}\n  at variable {}\n  at name {}\n  at path {}\n",
+        stderr, "error: {}\n  at variable {}\n  at name {}\n  at path {}\n",
         error.what(), error.variable(), error.name(), error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ConfigurationInvalidAuthenticationIssuerError
                &error) {
     std::print(
-        stdout, "error: {}\n  at issuer {}\n  at name {}\n  at path {}\n",
+        stderr, "error: {}\n  at issuer {}\n  at name {}\n  at path {}\n",
         error.what(), error.issuer(), error.name(), error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ConfigurationInstancePathError &error) {
-    std::print(stdout, "error: {}\n  at url {}\n  at path {}\n", error.what(),
+    std::print(stderr, "error: {}\n  at url {}\n  at path {}\n", error.what(),
                error.url(), error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ConfigurationInstanceOriginError &error) {
-    std::print(stdout, "error: {}\n  at url {}\n  at path {}\n", error.what(),
+    std::print(stderr, "error: {}\n  at url {}\n  at path {}\n", error.what(),
                error.url(), error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ConfigurationInsecureAuthenticationURLError
                &error) {
-    std::print(stdout, "error: {}\n  at url {}\n  at name {}\n  at path {}\n",
+    std::print(stderr, "error: {}\n  at url {}\n  at name {}\n  at path {}\n",
                error.what(), error.url(), error.name(), error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ConfigurationReservedAuthenticationNameError
                &error) {
-    std::print(stdout, "error: {}\n  at name {}\n  at path {}\n", error.what(),
+    std::print(stderr, "error: {}\n  at name {}\n  at path {}\n", error.what(),
                error.name(), error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::MetaschemaError &error) {
-    std::print(stdout, "error: {}\n{}", error.what(), error.stacktrace());
+    std::print(stderr, "error: {}\n{}", error.what(), error.stacktrace());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::EnterpriseOnlyFeatureError &error) {
-    std::print(stdout, "error: {}\n  at path {}\n", error.what(),
+    std::print(stderr, "error: {}\n  at path {}\n", error.what(),
                error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::CrossPolicyReferenceError &error) {
-    std::print(stdout,
+    std::print(stderr,
                "error: {}\n  at schema {}\n  with reference {}\n  at path {}\n",
                error.what(), error.referrer(), error.referent(),
                error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::AuthenticationUnknownPathError &error) {
-    std::print(stdout, "error: {}\n  at scope {}\n  at path {}\n", error.what(),
+    std::print(stderr, "error: {}\n  at scope {}\n  at path {}\n", error.what(),
                error.scope(), error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::AuthenticationTooManyViewsError &error) {
-    std::print(stdout, "error: {}\n  at issuer {}\n  at count {}\n",
+    std::print(stderr, "error: {}\n  at issuer {}\n  at count {}\n",
                error.what(), error.issuer(), error.count());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::AuthenticationPolicyNameError &error) {
-    std::print(stdout, "error: {}\n  at name {}\n  at path {}\n", error.what(),
+    std::print(stderr, "error: {}\n  at name {}\n  at path {}\n", error.what(),
                error.name(), error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::AuthenticationTooManyPoliciesError &error) {
-    std::print(stdout, "error: {}\n  at count {}\n  at path {}\n", error.what(),
+    std::print(stderr, "error: {}\n  at count {}\n  at path {}\n", error.what(),
                error.count(), error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::AuthenticationMissingSecretError &error) {
-    std::print(stdout, "error: {}\n  at name {}\n  at path {}\n", error.what(),
+    std::print(stderr, "error: {}\n  at name {}\n  at path {}\n", error.what(),
                error.name(), error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::AuthenticationViewNameCollisionError &error) {
-    std::print(stdout, "error: {}\n  at name {}\n  at path {}\n", error.what(),
+    std::print(stderr, "error: {}\n  at name {}\n  at path {}\n", error.what(),
                error.name(), error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::blaze::SchemaRuleInvalidNamePatternError> &error) {
-    std::print(stdout,
+    std::print(stderr,
                "error: The schema rule name must match {}\n"
                "  at path {}\n  at name {}\n",
                error.regex(), error.path().string(), error.identifier());
     return EXIT_FAILURE;
   } catch (const sourcemeta::blaze::SchemaRuleInvalidNamePatternError &error) {
-    std::print(stdout,
+    std::print(stderr,
                "error: The schema rule name must match {}\n  at name {}\n",
                error.regex(), error.identifier());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::blaze::SchemaRuleInvalidNameError> &error) {
-    std::print(stdout, "error: {}\n  at path {}\n  at name {}\n", error.what(),
+    std::print(stderr, "error: {}\n  at path {}\n  at name {}\n", error.what(),
                error.path().string(), error.identifier());
     return EXIT_FAILURE;
   } catch (const sourcemeta::blaze::SchemaRuleInvalidNameError &error) {
-    std::print(stdout, "error: {}\n  at name {}\n", error.what(),
+    std::print(stderr, "error: {}\n  at name {}\n", error.what(),
                error.identifier());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::blaze::SchemaRuleMissingNameError> &error) {
-    std::print(stdout, "error: {}\n  at path {}\n", error.what(),
+    std::print(stderr, "error: {}\n  at path {}\n", error.what(),
                error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::blaze::SchemaRuleMissingNameError &error) {
-    std::println(stdout, "error: {}", error.what());
+    std::println(stderr, "error: {}", error.what());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::blaze::SchemaVocabularyError> &error) {
-    std::print(stdout, "error: {}\n  at vocabulary {}\n  at path {}\n",
+    std::print(stderr, "error: {}\n  at vocabulary {}\n  at path {}\n",
                error.what(), error.uri(), error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::blaze::SchemaUnknownBaseDialectError> &error) {
-    std::print(stdout, "error: {}\n  at path {}\n", error.what(),
+    std::print(stderr, "error: {}\n  at path {}\n", error.what(),
                error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::blaze::SchemaUnknownBaseDialectError &error) {
-    std::println(stdout, "error: {}", error.what());
+    std::println(stderr, "error: {}", error.what());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::blaze::SchemaUnknownDialectError> &error) {
-    std::print(stdout, "error: {}\n  at path {}\n", error.what(),
+    std::print(stderr, "error: {}\n  at path {}\n", error.what(),
                error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::BuildTooManyDirectoryEntriesError &error) {
-    std::print(stdout, "error: {}\n  at path {}\n  with count {}\n",
+    std::print(stderr, "error: {}\n  at path {}\n  with count {}\n",
                error.what(), error.path().string(), error.count());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ResolverMissingCachedArtifactError &error) {
-    std::print(stdout,
+    std::print(stderr,
                "error: {}\n  at path {}\n\n"
                "Something other than the indexer modified the output "
                "directory, so delete it and index again from scratch\n",
                error.what(), error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ResolverNotASchemaError &error) {
-    std::print(stdout, "error: {}\n  at path {}\n", error.what(),
+    std::print(stderr, "error: {}\n  at path {}\n", error.what(),
                error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ResolverOutsideBaseError &error) {
-    std::print(stdout,
+    std::print(stderr,
                "error: {}\n  at path {}\n  at identifier {}\n  with base {}\n",
                error.what(), error.path().string(), error.uri(), error.base());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::blaze::SchemaReferenceObjectResourceError> &error) {
-    std::print(stdout, "error: {}\n  at path {}\n  at identifier {}\n",
+    std::print(stderr, "error: {}\n  at path {}\n  at identifier {}\n",
                error.what(), error.path().string(), error.identifier());
     return EXIT_FAILURE;
   } catch (const sourcemeta::blaze::SchemaReferenceObjectResourceError &error) {
-    std::print(stdout, "error: {}\n  at identifier {}\n", error.what(),
+    std::print(stderr, "error: {}\n  at identifier {}\n", error.what(),
                error.identifier());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::blaze::SchemaResolutionError> &error) {
-    std::print(stdout,
+    std::print(stderr,
                "error: {}\n  at identifier {}\n  at path {}\n\n"
                "Did you forget to register a schema with such URI?\n",
                error.what(), error.identifier(), error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::blaze::SchemaResolutionError &error) {
-    std::print(stdout,
+    std::print(stderr,
                "error: {}\n  at identifier {}\n\n"
                "Did you forget to register a schema with such URI?\n",
                error.what(), error.identifier());
@@ -974,32 +974,32 @@ auto main(int argc, char *argv[]) noexcept -> int {
   } catch (
       const sourcemeta::core::FileError<sourcemeta::blaze::SchemaReferenceError>
           &error) {
-    std::print(stdout,
+    std::print(stderr,
                "error: {}\n  to identifier {}\n  at path {}\n"
                "  at location \"{}\"\n",
                error.what(), error.identifier(), error.path().string(),
                sourcemeta::core::to_string(error.location()));
     return EXIT_FAILURE;
   } catch (const sourcemeta::blaze::SchemaReferenceError &error) {
-    std::print(stdout, "error: {}\n  to identifier {}\n  at location \"{}\"\n",
+    std::print(stderr, "error: {}\n  to identifier {}\n  at location \"{}\"\n",
                error.what(), error.identifier(),
                sourcemeta::core::to_string(error.location()));
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::JSONFileParseError &error) {
     std::print(
-        stdout, "error: {}\n  at path {}\n  at line {}\n  at column {}\n",
+        stderr, "error: {}\n  at path {}\n  at line {}\n  at column {}\n",
         error.what(), error.path().string(), error.line(), error.column());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<sourcemeta::core::YAMLParseError>
                &error) {
     std::print(
-        stdout, "error: {}\n  at path {}\n  at line {}\n  at column {}\n",
+        stderr, "error: {}\n  at path {}\n  at line {}\n  at column {}\n",
         error.what(), error.path().string(), error.line(), error.column());
     return EXIT_FAILURE;
   } catch (
       const sourcemeta::core::FileError<sourcemeta::blaze::SchemaKeywordError>
           &error) {
-    std::print(stdout,
+    std::print(stderr,
                "error: {}\n  at path {}\n  at keyword {}\n"
                "  at value {}\n",
                error.what(), error.path().string(), error.keyword(),
@@ -1008,29 +1008,29 @@ auto main(int argc, char *argv[]) noexcept -> int {
   } catch (
       const sourcemeta::core::FileError<sourcemeta::blaze::SchemaFrameError>
           &error) {
-    std::print(stdout, "error: {}\n  at path {}\n  at identifier {}\n",
+    std::print(stderr, "error: {}\n  at path {}\n  at identifier {}\n",
                error.what(), error.path().string(), error.identifier());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::IOFileAlreadyExistsError &error) {
-    std::print(stdout,
+    std::print(stderr,
                "error: File already exists and is not a directory\n"
                "  at path {}\n",
                error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::IONotADirectoryError &error) {
-    std::print(stdout,
+    std::print(stderr,
                "error: File already exists and is not a directory\n"
                "  at path {}\n",
                error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::IOFileNotFoundError &error) {
-    std::print(stdout,
+    std::print(stderr,
                "error: Could not locate the requested file\n  at path {}\n",
                error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::blaze::CompilerInvalidRegexError> &error) {
-    std::println(stdout,
+    std::println(stderr,
                  "error: Invalid regular expression\n"
                  "  pattern \"{}\"\n"
                  "  at path {}\n"
@@ -1040,10 +1040,10 @@ auto main(int argc, char *argv[]) noexcept -> int {
                  sourcemeta::core::to_string(error.location()));
     return EXIT_FAILURE;
   } catch (const std::filesystem::filesystem_error &error) {
-    std::println(stdout, "{}", error.what());
+    std::println(stderr, "{}", error.what());
     return EXIT_FAILURE;
   } catch (const std::exception &error) {
-    std::println(stdout, "unexpected error: {}", error.what());
+    std::println(stderr, "unexpected error: {}", error.what());
     return EXIT_FAILURE;
   }
 }

@@ -62,7 +62,7 @@ static auto dispatch(sourcemeta::one::Router &actions,
 
 SOURCEMETA_FORCEINLINE inline auto print_usage(const std::string_view program)
     -> void {
-  std::println("Usage: {} <path/to/output/directory> <port>", program);
+  std::println(stderr, "Usage: {} <path/to/output/directory> <port>", program);
 }
 
 // We try to keep this function as straight to the point as possible
@@ -81,7 +81,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
   try {
     const auto program{std::filesystem::path{argv[0]}.filename().string()};
 
-    std::println("Sourcemeta One {} v{}", sourcemeta::one::edition(),
+    std::println(stderr, "Sourcemeta One {} v{}", sourcemeta::one::edition(),
                  sourcemeta::one::version());
 
     if (argc != 3) [[unlikely]] {
@@ -93,7 +93,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
     const auto parsed_port{sourcemeta::core::to_uint16_t(port_argument)};
     if (!parsed_port.has_value() || parsed_port.value() == 0) [[unlikely]] {
       print_usage(program);
-      std::println("error: The port must be a valid TCP port");
+      std::println(stderr, "error: The port must be a valid TCP port");
       return EXIT_FAILURE;
     }
 
@@ -104,7 +104,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
     const std::filesystem::path base{argv[1]};
     if (!base.is_absolute()) [[unlikely]] {
       print_usage(program);
-      std::println("error: The output directory path must be absolute");
+      std::println(stderr, "error: The output directory path must be absolute");
       return EXIT_FAILURE;
     }
 

@@ -9,12 +9,12 @@ EOF
 RUN --skip-banner a.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
 
 WRITE expected.txt UNTIL EOF
-1> error: Circular reference detected in configuration
-1>   from path [CWD]/b.json
-1>   at location "/extends/extends"
-1>   to path [CWD]/a.json
 2> Writing output to: [CWD]/output
 2> Using configuration: [CWD]/a.json
+2> error: Circular reference detected in configuration
+2>   from path [CWD]/b.json
+2>   at location "/extends/extends"
+2>   to path [CWD]/a.json
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt

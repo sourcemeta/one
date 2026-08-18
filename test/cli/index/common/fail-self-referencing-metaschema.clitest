@@ -31,14 +31,14 @@ WRITE schemas/my-metaschema.json UNTIL EOF
 EOF
 
 RUN --skip-banner --deterministic one.json output --concurrency 1 STDIN /dev/null IN . INTO output.txt EXPECTING 1
-DROP LINES MATCHING '^2>' IN output.txt
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
 
 WRITE expected.txt UNTIL EOF
-1> error: Could not resolve the metaschema of the schema
-1>   at identifier https://sourcemeta.com/example/schemas/my-metaschema
-1>   at path [CWD]/schemas/my-metaschema.json
-1>
-1> Did you forget to register a schema with such URI?
+2> error: Could not resolve the metaschema of the schema
+2>   at identifier https://sourcemeta.com/example/schemas/my-metaschema
+2>   at path [CWD]/schemas/my-metaschema.json
+2>
+2> Did you forget to register a schema with such URI?
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt

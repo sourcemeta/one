@@ -21,11 +21,11 @@ EOF
 RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
 
 WRITE expected.txt UNTIL EOF
-1> error: The instance URL must contain no path
-1>   at url http://localhost:8000/v1/catalog
-1>   at path [CWD]/one.json
 2> Writing output to: [CWD]/output
 2> Using configuration: [CWD]/one.json
+2> error: The instance URL must contain no path
+2>   at url http://localhost:8000/v1/catalog
+2>   at path [CWD]/one.json
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt

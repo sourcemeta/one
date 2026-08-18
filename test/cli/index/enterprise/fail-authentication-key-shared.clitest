@@ -44,12 +44,12 @@ EOF
 RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
 
 WRITE expected.txt UNTIL EOF
-1> error: An authentication policy key is used more than once
-1>   at variable ONE_TEST_KEY_SHARED
-1>   at name beta
-1>   at path [CWD]/one.json
 2> Writing output to: [CWD]/output
 2> Using configuration: [CWD]/one.json
+2> error: An authentication policy key is used more than once
+2>   at variable ONE_TEST_KEY_SHARED
+2>   at name beta
+2>   at path [CWD]/one.json
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt

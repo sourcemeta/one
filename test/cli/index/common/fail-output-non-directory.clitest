@@ -29,8 +29,8 @@ EOF
 RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
 
 WRITE expected.txt UNTIL EOF
-1> error: File already exists and is not a directory
-1>   at path [CWD]/output
+2> error: File already exists and is not a directory
+2>   at path [CWD]/output
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt

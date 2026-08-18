@@ -13,43 +13,43 @@ EOF
 RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
 
 WRITE expected.txt UNTIL EOF
-1> error: Invalid configuration
-1>   at path [CWD]/one.json
-1> The value was expected to be an object that defines the property "include"
-1>   at instance location "/contents/example"
-1>   at evaluate path "/properties/contents/$ref/additionalProperties/anyOf/0/required"
-1> The object value was not expected to define the property "extends"
-1>   at instance location "/contents/example/extends"
-1>   at evaluate path "/properties/contents/$ref/additionalProperties/anyOf/1/$ref/additionalProperties"
-1> The object value was not expected to define additional properties
-1>   at instance location "/contents/example"
-1>   at evaluate path "/properties/contents/$ref/additionalProperties/anyOf/1/$ref/additionalProperties"
-1> The object value was expected to validate against the referenced schema
-1>   at instance location "/contents/example"
-1>   at evaluate path "/properties/contents/$ref/additionalProperties/anyOf/1/$ref"
-1> The object value was not expected to define the property "extends"
-1>   at instance location "/contents/example/extends"
-1>   at evaluate path "/properties/contents/$ref/additionalProperties/anyOf/2/$ref/additionalProperties"
-1> The object value was not expected to define additional properties
-1>   at instance location "/contents/example"
-1>   at evaluate path "/properties/contents/$ref/additionalProperties/anyOf/2/$ref/additionalProperties"
-1> The object value was expected to validate against the referenced schema
-1>   at instance location "/contents/example"
-1>   at evaluate path "/properties/contents/$ref/additionalProperties/anyOf/2/$ref"
-1> The object value was expected to validate against at least one of the 3 given subschemas
-1>   at instance location "/contents/example"
-1>   at evaluate path "/properties/contents/$ref/additionalProperties/anyOf"
-1> The object properties not covered by other adjacent object keywords were expected to validate against this subschema
-1>   at instance location "/contents"
-1>   at evaluate path "/properties/contents/$ref/additionalProperties"
-1> The object value was expected to validate against the referenced schema
-1>   at instance location "/contents"
-1>   at evaluate path "/properties/contents/$ref"
-1> The object value was expected to validate against the 6 defined properties subschemas
-1>   at instance location ""
-1>   at evaluate path "/properties"
 2> Writing output to: [CWD]/output
 2> Using configuration: [CWD]/one.json
+2> error: Invalid configuration
+2>   at path [CWD]/one.json
+2> The value was expected to be an object that defines the property "include"
+2>   at instance location "/contents/example"
+2>   at evaluate path "/properties/contents/$ref/additionalProperties/anyOf/0/required"
+2> The object value was not expected to define the property "extends"
+2>   at instance location "/contents/example/extends"
+2>   at evaluate path "/properties/contents/$ref/additionalProperties/anyOf/1/$ref/additionalProperties"
+2> The object value was not expected to define additional properties
+2>   at instance location "/contents/example"
+2>   at evaluate path "/properties/contents/$ref/additionalProperties/anyOf/1/$ref/additionalProperties"
+2> The object value was expected to validate against the referenced schema
+2>   at instance location "/contents/example"
+2>   at evaluate path "/properties/contents/$ref/additionalProperties/anyOf/1/$ref"
+2> The object value was not expected to define the property "extends"
+2>   at instance location "/contents/example/extends"
+2>   at evaluate path "/properties/contents/$ref/additionalProperties/anyOf/2/$ref/additionalProperties"
+2> The object value was not expected to define additional properties
+2>   at instance location "/contents/example"
+2>   at evaluate path "/properties/contents/$ref/additionalProperties/anyOf/2/$ref/additionalProperties"
+2> The object value was expected to validate against the referenced schema
+2>   at instance location "/contents/example"
+2>   at evaluate path "/properties/contents/$ref/additionalProperties/anyOf/2/$ref"
+2> The object value was expected to validate against at least one of the 3 given subschemas
+2>   at instance location "/contents/example"
+2>   at evaluate path "/properties/contents/$ref/additionalProperties/anyOf"
+2> The object properties not covered by other adjacent object keywords were expected to validate against this subschema
+2>   at instance location "/contents"
+2>   at evaluate path "/properties/contents/$ref/additionalProperties"
+2> The object value was expected to validate against the referenced schema
+2>   at instance location "/contents"
+2>   at evaluate path "/properties/contents/$ref"
+2> The object value was expected to validate against the 6 defined properties subschemas
+2>   at instance location ""
+2>   at evaluate path "/properties"
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt

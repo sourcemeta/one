@@ -21,11 +21,11 @@ EOF
 RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
 
 WRITE expected.txt UNTIL EOF
-1> error: The instance URL must contain no credentials, query, or fragment
-1>   at url http://localhost:8000?foo=bar
-1>   at path [CWD]/one.json
 2> Writing output to: [CWD]/output
 2> Using configuration: [CWD]/one.json
+2> error: The instance URL must contain no credentials, query, or fragment
+2>   at url http://localhost:8000?foo=bar
+2>   at path [CWD]/one.json
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt
