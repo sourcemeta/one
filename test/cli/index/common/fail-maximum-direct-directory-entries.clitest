@@ -55,11 +55,16 @@ COMPARE output.txt AGAINST expected.txt
 REMOVE output
 RUN --skip-banner one.json output STDIN /dev/null IN . INTO log_2.txt EXPECTING 0
 DROP LINES MATCHING '^[12]> \([ 0-9]+%\) ' IN log_2.txt
-DROP LINES MATCHING '^[12]> Detecting: ' IN log_2.txt
+DROP LINES CONTAINING $ONE_PREFIX IN log_2.txt
+REPLACE MATCHING ' \(#[0-9]+\)' WITH '' IN log_2.txt
 REPLACE $CWD WITH '[CWD]' IN log_2.txt
+SORT log_2.txt
 WRITE expected_log_2.txt UNTIL EOF
-2> Writing output to: [CWD]/output
+2> Detecting: [CWD]/schemas/bar.json
+2> Detecting: [CWD]/schemas/baz.json
+2> Detecting: [CWD]/schemas/foo.json
 2> Using configuration: [CWD]/one.json
+2> Writing output to: [CWD]/output
 EOF
 COMPARE log_2.txt AGAINST expected_log_2.txt
 
@@ -95,10 +100,15 @@ EOF
 
 RUN --skip-banner one.json output --maximum-direct-directory-entries 15 STDIN /dev/null IN . INTO log_3.txt EXPECTING 0
 DROP LINES MATCHING '^[12]> \([ 0-9]+%\) ' IN log_3.txt
-DROP LINES MATCHING '^[12]> Detecting: ' IN log_3.txt
+DROP LINES CONTAINING $ONE_PREFIX IN log_3.txt
+REPLACE MATCHING ' \(#[0-9]+\)' WITH '' IN log_3.txt
 REPLACE $CWD WITH '[CWD]' IN log_3.txt
+SORT log_3.txt
 WRITE expected_log_3.txt UNTIL EOF
-2> Writing output to: [CWD]/output
+2> Detecting: [CWD]/schemas/a/one.json
+2> Detecting: [CWD]/schemas/a/two.json
+2> Detecting: [CWD]/schemas/b/three.json
 2> Using configuration: [CWD]/one.json
+2> Writing output to: [CWD]/output
 EOF
 COMPARE log_3.txt AGAINST expected_log_3.txt

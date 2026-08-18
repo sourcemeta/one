@@ -47,11 +47,14 @@ EOF
 
 RUN --skip-banner --deterministic --concurrency 1 one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
 DROP LINES MATCHING '^[12]> \([ 0-9]+%\) ' IN log_1.txt
-DROP LINES MATCHING '^[12]> Detecting: ' IN log_1.txt
+DROP LINES CONTAINING $ONE_PREFIX IN log_1.txt
+REPLACE MATCHING ' \(#[0-9]+\)' WITH '' IN log_1.txt
 REPLACE $CWD WITH '[CWD]' IN log_1.txt
+SORT log_1.txt
 WRITE expected_log_1.txt UNTIL EOF
-2> Writing output to: [CWD]/output
+2> Detecting: [CWD]/schemas/a.json
 2> Using configuration: [CWD]/one.json
+2> Writing output to: [CWD]/output
 EOF
 COMPARE log_1.txt AGAINST expected_log_1.txt
 
@@ -132,11 +135,14 @@ EOF
 
 RUN --skip-banner --deterministic --concurrency 1 one.json output STDIN /dev/null IN . INTO log_2.txt EXPECTING 0
 DROP LINES MATCHING '^[12]> \([ 0-9]+%\) ' IN log_2.txt
-DROP LINES MATCHING '^[12]> Detecting: ' IN log_2.txt
+DROP LINES CONTAINING $ONE_PREFIX IN log_2.txt
+REPLACE MATCHING ' \(#[0-9]+\)' WITH '' IN log_2.txt
 REPLACE $CWD WITH '[CWD]' IN log_2.txt
+SORT log_2.txt
 WRITE expected_log_2.txt UNTIL EOF
-2> Writing output to: [CWD]/output
+2> Detecting: [CWD]/schemas/a.json
 2> Using configuration: [CWD]/one.json
+2> Writing output to: [CWD]/output
 EOF
 COMPARE log_2.txt AGAINST expected_log_2.txt
 

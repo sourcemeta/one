@@ -66,11 +66,17 @@ EOF
 // Run 1: index four schemas across four directories
 RUN --skip-banner one.json output --concurrency 1 STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
 DROP LINES MATCHING '^[12]> \([ 0-9]+%\) ' IN log_1.txt
-DROP LINES MATCHING '^[12]> Detecting: ' IN log_1.txt
+DROP LINES CONTAINING $ONE_PREFIX IN log_1.txt
+REPLACE MATCHING ' \(#[0-9]+\)' WITH '' IN log_1.txt
 REPLACE $CWD WITH '[CWD]' IN log_1.txt
+SORT log_1.txt
 WRITE expected_log_1.txt UNTIL EOF
-2> Writing output to: [CWD]/output
+2> Detecting: [CWD]/schemas-left-a/s1.json
+2> Detecting: [CWD]/schemas-left-b/s2.json
+2> Detecting: [CWD]/schemas-right-a/s3.json
+2> Detecting: [CWD]/schemas-right-b/s4.json
 2> Using configuration: [CWD]/one.json
+2> Writing output to: [CWD]/output
 EOF
 COMPARE log_1.txt AGAINST expected_log_1.txt
 
