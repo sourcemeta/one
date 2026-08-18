@@ -9,7 +9,7 @@
 
 #include <sourcemeta/one/http_request.h>
 #include <sourcemeta/one/http_response.h>
-#include <sourcemeta/one/shared_uri.h>
+#include <sourcemeta/one/shared.h>
 
 #include <algorithm>   // std::ranges::equal
 #include <cassert>     // assert

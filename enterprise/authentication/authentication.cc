@@ -1,5 +1,5 @@
 #include <sourcemeta/one/authentication.h>
-#include <sourcemeta/one/shared_uri.h>
+#include <sourcemeta/one/shared.h>
 
 #include <sourcemeta/core/crypto.h>
 #include <sourcemeta/core/http.h>
