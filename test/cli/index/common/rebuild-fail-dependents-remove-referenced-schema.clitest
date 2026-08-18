@@ -54,14 +54,14 @@ COMPARE log_1.txt AGAINST expected_log_1.txt
 // Run 2: remove schema A (which is referenced by B)
 REMOVE schemas/a.json
 RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
-DROP LINES MATCHING '^2>' IN output.txt
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
 
 WRITE expected.txt UNTIL EOF
-1> error: Could not resolve the reference to an external schema
-1>   at identifier https://sourcemeta.com/example/schemas/a
-1>   at path [CWD]/schemas/b.json
-1>
-1> Did you forget to register a schema with such URI?
+2> error: Could not resolve the reference to an external schema
+2>   at identifier https://sourcemeta.com/example/schemas/a
+2>   at path [CWD]/schemas/b.json
+2>
+2> Did you forget to register a schema with such URI?
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt

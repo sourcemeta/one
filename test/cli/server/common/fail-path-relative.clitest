@@ -1,9 +1,9 @@
 RUN ./output 8000 STDIN /dev/null IN . INTO output.txt EXPECTING 1
 
 WRITE expected.txt UNTIL EOF
-1> Sourcemeta One [EDITION] v[VERSION]
-1> Usage: [PROGRAM] <path/to/output/directory> <port>
-1> error: The output directory path must be absolute
+2> Sourcemeta One [EDITION] v[VERSION]
+2> Usage: [PROGRAM] <path/to/output/directory> <port>
+2> error: The output directory path must be absolute
 EOF
 
 REPLACE $PROGRAM WITH '[PROGRAM]' IN output.txt

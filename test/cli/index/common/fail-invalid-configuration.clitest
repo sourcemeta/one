@@ -13,13 +13,13 @@ EOF
 RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
 
 WRITE expected.txt UNTIL EOF
-1> error: Invalid configuration
-1>   at path [CWD]/one.json
-1> The value was expected to be an object that defines the property "url"
-1>   at instance location ""
-1>   at evaluate path "/required"
 2> Writing output to: [CWD]/output
 2> Using configuration: [CWD]/one.json
+2> error: Invalid configuration
+2>   at path [CWD]/one.json
+2> The value was expected to be an object that defines the property "url"
+2>   at instance location ""
+2>   at evaluate path "/required"
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt

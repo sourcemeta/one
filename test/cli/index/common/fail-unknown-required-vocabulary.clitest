@@ -40,12 +40,12 @@ WRITE schemas/test.json UNTIL EOF
 EOF
 
 RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
-DROP LINES MATCHING '^2>' IN output.txt
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
 
 WRITE expected.txt UNTIL EOF
-1> error: The metaschema requires an unrecognised vocabulary
-1>   at vocabulary https://example.com/vocab/totally-unknown
-1>   at path [CWD]/schemas/custom-meta.json
+2> error: The metaschema requires an unrecognised vocabulary
+2>   at vocabulary https://example.com/vocab/totally-unknown
+2>   at path [CWD]/schemas/custom-meta.json
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt

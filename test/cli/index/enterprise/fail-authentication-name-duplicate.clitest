@@ -44,11 +44,11 @@ EOF
 RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
 
 WRITE expected.txt UNTIL EOF
-1> error: An authentication policy name is used more than once
-1>   at name data-team
-1>   at path [CWD]/one.json
 2> Writing output to: [CWD]/output
 2> Using configuration: [CWD]/one.json
+2> error: An authentication policy name is used more than once
+2>   at name data-team
+2>   at path [CWD]/one.json
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt

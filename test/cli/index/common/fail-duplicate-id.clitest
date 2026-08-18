@@ -31,13 +31,16 @@ WRITE schemas/b.json UNTIL EOF
 EOF
 
 RUN --deterministic --concurrency 1 one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
-DROP LINES MATCHING '^2>' IN output.txt
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
 
 WRITE expected.txt UNTIL EOF
-1> error: Cannot register the same identifier twice
-1>   at path [CWD]/schemas/b.json
-1>   at identifier https://sourcemeta.com/example/schemas/test
+2> Sourcemeta One [EDITION] v[VERSION]
+2> error: Cannot register the same identifier twice
+2>   at path [CWD]/schemas/b.json
+2>   at identifier https://sourcemeta.com/example/schemas/test
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt
+REPLACE $EDITION WITH '[EDITION]' IN output.txt
+REPLACE $VERSION WITH '[VERSION]' IN output.txt
 COMPARE output.txt AGAINST expected.txt

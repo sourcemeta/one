@@ -24,12 +24,12 @@ WRITE schemas/test.json UNTIL EOF
 EOF
 
 RUN --skip-banner one.json output --maximum-direct-directory-entries abc STDIN /dev/null IN . INTO output.txt EXPECTING 1
-DROP LINES MATCHING '^2>' IN output.txt
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
 
 WRITE expected.txt UNTIL EOF
-1> error: Expected a valid numeric value for option
-1>   at option maximum-direct-directory-entries
-1>   with value abc
+2> error: Expected a valid numeric value for option
+2>   at option maximum-direct-directory-entries
+2>   with value abc
 EOF
 
 COMPARE output.txt AGAINST expected.txt

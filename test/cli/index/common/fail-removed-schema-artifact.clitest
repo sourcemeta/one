@@ -38,13 +38,13 @@ COMPARE log_1.txt AGAINST expected_log_1.txt
 REMOVE output/schemas/schemas/a/%/schema.metapack
 
 RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
-DROP LINES MATCHING '^2>' IN output.txt
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
 
 WRITE expected.txt UNTIL EOF
-1> error: The build state references an artifact that no longer exists on disk
-1>   at path [CWD]/output/schemas/schemas/a/%/schema.metapack
-1>
-1> Something other than the indexer modified the output directory, so delete it and index again from scratch
+2> error: The build state references an artifact that no longer exists on disk
+2>   at path [CWD]/output/schemas/schemas/a/%/schema.metapack
+2>
+2> Something other than the indexer modified the output directory, so delete it and index again from scratch
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt

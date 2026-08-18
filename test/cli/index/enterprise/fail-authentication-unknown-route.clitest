@@ -26,12 +26,12 @@ WRITE one.json UNTIL EOF
 EOF
 
 RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
-DROP LINES MATCHING '^2>' IN output.txt
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
 
 WRITE expected.txt UNTIL EOF
-1> error: An authentication policy matches no known collection, page, or route
-1>   at scope /self/v1/mpc
-1>   at path [CWD]/one.json
+2> error: An authentication policy matches no known collection, page, or route
+2>   at scope /self/v1/mpc
+2>   at path [CWD]/one.json
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt

@@ -24,13 +24,13 @@ WRITE schemas/test.json UNTIL EOF
 EOF
 
 RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
-DROP LINES MATCHING '^2>' IN output.txt
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
 
 WRITE expected.txt UNTIL EOF
-1> error: The schema identifier is not relative to the corresponding base
-1>   at path [CWD]/schemas/test.json
-1>   at identifier https://other.com/test
-1>   with base https://example.com/
+2> error: The schema identifier is not relative to the corresponding base
+2>   at path [CWD]/schemas/test.json
+2>   at identifier https://other.com/test
+2>   with base https://example.com/
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt

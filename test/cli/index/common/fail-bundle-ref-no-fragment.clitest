@@ -25,13 +25,13 @@ WRITE schemas/test.json UNTIL EOF
 EOF
 
 RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
-DROP LINES MATCHING '^2>' IN output.txt
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
 
 WRITE expected.txt UNTIL EOF
-1> error: Could not resolve schema reference
-1>   to identifier https://sourcemeta.com/example/schemas/test#foo
-1>   at path [CWD]/schemas/test.json
-1>   at location "/allOf/0/$ref"
+2> error: Could not resolve schema reference
+2>   to identifier https://sourcemeta.com/example/schemas/test#foo
+2>   at path [CWD]/schemas/test.json
+2>   at location "/allOf/0/$ref"
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt

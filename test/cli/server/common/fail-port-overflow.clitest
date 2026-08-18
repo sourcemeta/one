@@ -1,9 +1,9 @@
 RUN /tmp 65536 STDIN /dev/null IN . INTO output.txt EXPECTING 1
 
 WRITE expected.txt UNTIL EOF
-1> Sourcemeta One [EDITION] v[VERSION]
-1> Usage: [PROGRAM] <path/to/output/directory> <port>
-1> error: The port must be a valid TCP port
+2> Sourcemeta One [EDITION] v[VERSION]
+2> Usage: [PROGRAM] <path/to/output/directory> <port>
+2> error: The port must be a valid TCP port
 EOF
 
 REPLACE $PROGRAM WITH '[PROGRAM]' IN output.txt

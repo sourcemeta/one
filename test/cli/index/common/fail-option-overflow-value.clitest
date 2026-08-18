@@ -5,11 +5,11 @@ EOF
 RUN --skip-banner one.json output --concurrency 99999999999999999999999 STDIN /dev/null IN . INTO output.txt EXPECTING 1
 
 WRITE expected.txt UNTIL EOF
-1> error: Expected a valid numeric value for option
-1>   at option concurrency
-1>   with value 99999999999999999999999
 2> Writing output to: [CWD]/output
 2> Using configuration: [CWD]/one.json
+2> error: Expected a valid numeric value for option
+2>   at option concurrency
+2>   with value 99999999999999999999999
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt
