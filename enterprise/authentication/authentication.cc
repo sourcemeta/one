@@ -1,4 +1,5 @@
 #include <sourcemeta/one/authentication.h>
+#include <sourcemeta/one/shared.h>
 
 #include <sourcemeta/core/crypto.h>
 #include <sourcemeta/core/http.h>
@@ -176,27 +177,6 @@ auto Authentication::Table::enumerate(
 }
 
 namespace {
-
-// Whether a value is somewhere on this instance rather than somewhere else, so
-// that what a login sealed cannot become a redirect to another origin
-auto is_local_path(const std::string_view value) -> bool {
-  if (value.empty() || value.front() != '/') {
-    return false;
-  }
-
-  if (value.size() >= 2 && (value[1] == '/' || value[1] == '\\')) {
-    return false;
-  }
-
-  for (const auto character : value) {
-    const auto code{static_cast<unsigned char>(character)};
-    if (code <= 0x20 || code == 0x7f || character == '\\') {
-      return false;
-    }
-  }
-
-  return true;
-}
 
 // What redeeming an authorization code yields, of which only the identity token
 // decides anything. The access token comes along solely so that a claim missing

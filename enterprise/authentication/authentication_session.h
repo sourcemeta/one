@@ -5,10 +5,10 @@
 
 #include <sourcemeta/core/crypto.h>
 #include <sourcemeta/core/jose.h>
+#include <sourcemeta/core/numeric.h>
 
 #include <algorithm>   // std::max
 #include <array>       // std::array
-#include <charconv>    // std::from_chars, std::errc
 #include <chrono>      // std::chrono::sys_seconds, std::chrono::seconds
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::int64_t, std::uint64_t, std::uint8_t
@@ -162,22 +162,18 @@ inline auto digest_view(const std::array<std::uint8_t, 32> &digest)
 
 inline auto parse_expiry(const std::string_view input)
     -> std::optional<std::chrono::sys_seconds> {
-  if (input.empty()) {
-    return std::nullopt;
-  }
-
-  std::uint64_t count{0};
-  const auto *begin{input.data()};
-  const auto *end{input.data() + input.size()};
-  const auto result{std::from_chars(begin, end, count)};
-  if (result.ec != std::errc{} || result.ptr != end ||
-      count > static_cast<std::uint64_t>(
-                  std::numeric_limits<std::int64_t>::max())) {
+  // Seconds are held exactly rather than through a instant built from a
+  // floating point count, which stops representing every second well before
+  // the range a signed count covers
+  const auto count{sourcemeta::core::to_uint64_t(input)};
+  if (!count.has_value() ||
+      count.value() > static_cast<std::uint64_t>(
+                          std::numeric_limits<std::int64_t>::max())) {
     return std::nullopt;
   }
 
   return std::chrono::sys_seconds{
-      std::chrono::seconds{static_cast<std::int64_t>(count)}};
+      std::chrono::seconds{static_cast<std::int64_t>(count.value())}};
 }
 
 inline auto seal_value(const std::string_view payload,
