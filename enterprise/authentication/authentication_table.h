@@ -560,28 +560,13 @@ struct Authentication::Table::Impl {
     for (const auto field : cookies) {
       sourcemeta::core::http_cookie_values(field, SESSION_COOKIE, candidates);
     }
+    // Every policy governing this location reads the one session the browser
+    // holds, so what the payload names is what keeps a session established
+    // under one policy from admitting its holder under another. A value that
+    // is not for this policy is passed over rather than ending the search
     for (const auto sealed : candidates) {
-      const auto payload{this->session_open(decoded.session_secrets,
-                                            SealPurpose::Session, sealed)};
-      if (!payload.has_value()) {
-        continue;
-      }
-
-      const auto document{sourcemeta::core::try_parse_json(payload.value())};
-      if (!document.has_value() || !document.value().is_object()) {
-        continue;
-      }
-
-      // Every policy governing this location reads the one session the browser
-      // holds, so this is what keeps a session established under one policy
-      // from admitting its holder under another. Two policies may share a
-      // session secret, in which case a value minted elsewhere opens cleanly
-      // here and nothing but the payload tells them apart. It is the control,
-      // not a belt on top of one, and a value that is not for this policy is
-      // passed over rather than ending the search
-      const auto *minted_for{document.value().try_at("policy")};
-      if (minted_for != nullptr && minted_for->is_string() &&
-          minted_for->to_string() == policy_name) {
+      if (this->seal_names_policy(decoded.session_secrets, SealPurpose::Session,
+                                  sealed, policy_name)) {
         return true;
       }
     }
@@ -782,6 +767,49 @@ struct Authentication::Table::Impl {
     return Admission::Refused;
   }
 
+  // Which interactive policy governing this location sealed this marker. The
+  // marker is opened rather than read, so naming a policy is not by itself a
+  // way to learn whether that policy governs anywhere: only a browser this
+  // instance signed in holds one that opens
+  [[nodiscard]] auto renewal_marker(const std::string_view path,
+                                    const std::string_view value) const
+      -> std::optional<std::string_view> {
+    const auto mask{this->match(path)};
+    if (mask == 0 || this->policy_count_ == 0 || value.empty()) {
+      return std::nullopt;
+    }
+
+    const auto *policies{
+        static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
+    for (std::uint32_t index{0}; index < this->policy_count_; index += 1) {
+      if ((mask & (PolicySet{1} << index)) == 0) {
+        continue;
+      }
+
+      const auto &entry{policies[index]};
+      if (static_cast<AuthenticationPolicyType>(entry.type) !=
+              AuthenticationPolicyType::OIDC ||
+          entry.metadata_length == 0) {
+        continue;
+      }
+
+      const std::span<const std::byte> metadata{
+          at_offset<std::byte>(this->bytes_, entry.metadata_offset),
+          entry.metadata_length};
+      OIDCPolicyMetadata decoded;
+      if (!decode_oidc_metadata(metadata, decoded) || decoded.name.empty()) {
+        continue;
+      }
+
+      if (this->seal_names_policy(decoded.session_secrets, SealPurpose::Renewal,
+                                  value, decoded.name)) {
+        return decoded.name;
+      }
+    }
+
+    return std::nullopt;
+  }
+
   [[nodiscard]] auto interactive(const std::string_view path,
                                  const std::string_view name) const
       -> std::optional<InteractivePolicy> {
@@ -861,6 +889,31 @@ struct Authentication::Table::Impl {
     const auto issued{std::chrono::time_point_cast<std::chrono::seconds>(
         std::chrono::system_clock::now())};
     return seal_value(payload, purpose, resolved.front(), issued, expiry);
+  }
+
+  // Whether a sealed value opens under these secrets for this purpose and
+  // names this policy. Two policies may share a secret, in which case a value
+  // minted elsewhere opens cleanly here and nothing but the payload tells them
+  // apart. It is the control rather than a belt on top of one, so every kind
+  // of sealed value asks it the same way
+  [[nodiscard]] auto seal_names_policy(const std::span<const std::byte> secrets,
+                                       const SealPurpose purpose,
+                                       const std::string_view value,
+                                       const std::string_view name) const
+      -> bool {
+    const auto payload{this->session_open(secrets, purpose, value)};
+    if (!payload.has_value()) {
+      return false;
+    }
+
+    const auto document{sourcemeta::core::try_parse_json(payload.value())};
+    if (!document.has_value() || !document.value().is_object()) {
+      return false;
+    }
+
+    const auto *minted_for{document.value().try_at("policy")};
+    return minted_for != nullptr && minted_for->is_string() &&
+           minted_for->to_string() == name;
   }
 
   [[nodiscard]] auto session_open(const std::span<const std::byte> variables,
@@ -1147,6 +1200,14 @@ struct Authentication::Table::Impl {
 
     const auto referrer{this->audience(referrer_path)};
     if (referrer.is_public) {
+      return false;
+    }
+
+    // A governed location whose policies name nothing admits nobody, so the
+    // subset below would hold for want of anything to compare rather than
+    // because the referent is as reachable as the referrer. That is the one
+    // direction this must not fail in, so an empty set refuses here instead
+    if (referrer.keys.empty()) {
       return false;
     }
 

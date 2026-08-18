@@ -79,12 +79,17 @@ inline auto request_body_too_large(const HTTPRequest &request) -> bool {
   return declared.has_value() && declared.value() > MAX_REQUEST_BODY_BYTES;
 }
 
+// Answering can be the last thing that happens on a connection, and a request
+// read asynchronously is held by the very handler that goes away with it. So
+// what is said about a request is taken while it is certainly still there,
+// which costs nothing, as the line was built either way
 inline auto send_response(const sourcemeta::core::HTTPStatus &status,
                           const HTTPRequest &request, HTTPResponse &response)
     -> void {
+  const auto line{
+      std::format("{} {} {}", status.wire, request.method(), request.path())};
   response.send_without_content();
-  HTTP_LOG(
-      std::format("{} {} {}", status.wire, request.method(), request.path()));
+  HTTP_LOG(line);
 }
 
 inline auto send_response(
@@ -93,10 +98,11 @@ inline auto send_response(
     const Encoding current_encoding,
     const std::optional<std::size_t> precomputed_compressed_size = std::nullopt)
     -> void {
+  const auto line{
+      std::format("{} {} {}", status.wire, request.method(), request.path())};
   response.send(request, message, current_encoding,
                 precomputed_compressed_size);
-  HTTP_LOG(
-      std::format("{} {} {}", status.wire, request.method(), request.path()));
+  HTTP_LOG(line);
 }
 
 // RFC 9110 §9.3.7: OPTIONS responses describe communication options

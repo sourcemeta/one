@@ -456,7 +456,11 @@ auto Authentication::Table::compile(
 auto Authentication::Table::write(const std::span<const std::byte> bytes,
                                   const std::filesystem::path &destination)
     -> void {
-  sourcemeta::core::write_file(destination, bytes);
+  // A server maps this file and holds the mapping for as long as it runs, so
+  // rewriting it in place changes bytes underneath a reader that has already
+  // proved them sound. Replacing it as a whole leaves that reader on the file
+  // it validated until it is restarted
+  sourcemeta::core::atomic_write_file(destination, bytes);
 }
 
 } // namespace sourcemeta::one

@@ -90,10 +90,22 @@ public:
     // them under a versioned URL), so a year-long `max-age` with the
     // `immutable` extension lets browsers skip the conditional GET
     // entirely.
-    this->artifact_serve(
-        resolution.path.value(), sourcemeta::core::HTTP_STATUS_OK, false, {},
-        {}, {}, request, response, this->error_schema_,
-        "public, max-age=31536000, immutable", "Accept-Encoding");
+    //
+    // A policy may gate this tree like any other, and a gated answer is one
+    // caller's rather than everybody's, so the year only applies where the
+    // location is open to all. That is asked of the route as the router
+    // matched it, and of nobody in particular, since what a shared cache may
+    // hand to the next caller is what anybody would have been given
+    const auto &authentication{this->dispatcher().authentication()};
+    const auto is_public{authentication.permits(
+        sourcemeta::one::Authentication::RouteTarget{request.path()},
+        authentication.caller({}))};
+    this->artifact_serve(resolution.path.value(),
+                         sourcemeta::core::HTTP_STATUS_OK, false, {}, {}, {},
+                         request, response, this->error_schema_,
+                         is_public ? "public, max-age=31536000, immutable"
+                                   : "private, max-age=31536000, immutable",
+                         "Accept-Encoding");
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,

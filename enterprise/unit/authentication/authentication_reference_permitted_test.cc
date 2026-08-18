@@ -667,3 +667,30 @@ TEST(reference_across_swapped_jwt_key_set_locations_is_rejected) {
   EXPECT_FALSE(gate.reference_permitted(AT("/alpha/one"), AT("/beta/two")));
   EXPECT_FALSE(gate.reference_permitted(AT("/beta/two"), AT("/alpha/one")));
 }
+
+// A policy that names no key admits nobody, so a location it governs is
+// reachable by nobody. Reading that as "everybody who reaches the referrer also
+// reaches the referent" would let a gated schema be inlined into one gated
+// differently, on the strength of there being nothing to compare
+TEST(reference_from_a_location_whose_audience_is_nobody_is_rejected) {
+  setenv("ONE_TEST_REF_NOBODY", "held", 1);
+  const std::array<std::string_view, 1> nobody_paths{{"/nobody"}};
+  const std::array<std::string_view, 1> held_paths{{"/held"}};
+  const std::array<std::string_view, 1> held_keys{{"ONE_TEST_REF_NOBODY"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 2> policies{
+      {{.paths = nobody_paths,
+        .name = "nobody",
+        .credential = sourcemeta::one::Authentication::Policy::ApiKey{}},
+       {.paths = held_paths,
+        .name = "held",
+        .credential = sourcemeta::one::Authentication::Policy::ApiKey{
+            .keys = held_keys}}}};
+  const auto gate{TABLE(policies)};
+
+  // The control: a location whose audience can be named compares normally
+  EXPECT_TRUE(gate.reference_permitted(AT("/held/one"), AT("/held/two")));
+
+  // And one whose audience is nobody is refused rather than waved through
+  EXPECT_FALSE(gate.reference_permitted(AT("/nobody/one"), AT("/held/two")));
+  EXPECT_FALSE(gate.reference_permitted(AT("/nobody/one"), AT("/nobody/two")));
+}

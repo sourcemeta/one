@@ -165,3 +165,43 @@ TEST(jwt_without_a_transport_denies_rather_than_crashes) {
   EXPECT_FALSE(authentication.permits(
       AT("/secure/x"), authentication.caller({.bearer = SIGNED_TOKEN})));
 }
+
+// A node mask names the policies governing a location. A bit naming a policy
+// the artifact does not carry resolves to none of them, so the location would
+// come back governed by nobody rather than by somebody, and everything derived
+// from that answer would read it as ungoverned
+TEST(artifact_whose_node_names_a_policy_it_lacks_denies_everything) {
+  setenv("ONE_TEST_KEY_WIDE_MASK", "held", 1);
+  const std::array<std::string_view, 1> paths{{"/internal"}};
+  const std::array<std::string_view, 1> keys{{"ONE_TEST_KEY_WIDE_MASK"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .name = "policy",
+        .credential =
+            sourcemeta::one::Authentication::Policy::ApiKey{.keys = keys}}}};
+  const auto path{TEST_PATH("wide_node_mask.bin")};
+  SAVE(policies, path, path, ANYWHERE);
+
+  // The control, which reads the artifact as written
+  {
+    const sourcemeta::one::Authentication::Table gate{path};
+    EXPECT_FALSE(gate.views().empty());
+  }
+
+  // Every node carries a mask, and the root is the first of them. Setting a bit
+  // past the one policy this artifact declares is the whole disturbance
+  std::fstream stream{path, std::ios::binary | std::ios::in | std::ios::out};
+  std::array<char, sizeof(std::uint32_t)> located{};
+  stream.seekg(NODES_OFFSET_FIELD);
+  stream.read(located.data(), located.size());
+  std::uint32_t nodes_offset{0};
+  std::memcpy(&nodes_offset, located.data(), located.size());
+  stream.seekp(static_cast<std::streamoff>(nodes_offset));
+  const std::array<char, 8> wide{{0, 0, 0, 0, 0, 0, 0, 8}};
+  stream.write(wide.data(), wide.size());
+  stream.close();
+
+  const sourcemeta::one::Authentication::Table gate{path};
+  EXPECT_TRUE(gate.views().empty());
+  EXPECT_FALSE(gate.visible(AT("/anywhere"), gate.view("public")));
+}

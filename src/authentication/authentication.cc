@@ -143,8 +143,8 @@ auto Authentication::Table::visible(const Authentication::Path &,
 }
 
 auto Authentication::Table::governing(const Authentication::Path &) const
-    -> std::vector<std::string_view> {
-  return {};
+    -> std::optional<std::vector<std::string_view>> {
+  return std::vector<std::string_view>{};
 }
 
 auto Authentication::Table::reference_permitted(

@@ -123,11 +123,12 @@ make_private(const sourcemeta::one::Authentication::Table &authentication,
   // Every surface that says so reads this, so none of them can disagree about
   // what private means. The indexer composes the path from the content tree,
   // so it is already relative to the instance root
-  return sourcemeta::core::JSON{
-      !authentication
-           .governing(
-               sourcemeta::one::Authentication::Path::relative(registry_path))
-           .empty()};
+  // A table that could not be read knows nothing about who governs what, so
+  // every location is described as private rather than as open to everybody
+  const auto governing{authentication.governing(
+      sourcemeta::one::Authentication::Path::relative(registry_path))};
+  return sourcemeta::core::JSON{!governing.has_value() ||
+                                !governing.value().empty()};
 }
 
 namespace sourcemeta::one {

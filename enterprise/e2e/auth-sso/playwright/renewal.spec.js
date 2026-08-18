@@ -32,6 +32,17 @@ async function expireSession(context) {
   await context.addCookies(kept);
 }
 
+// A browser holding a marker and nothing else, neither a session here nor one
+// at the provider. The marker has to be a real one, since only signing in
+// produces something that opens
+async function keepOnlyMarker(context) {
+  const kept = (await context.cookies()).filter(
+    (entry) => entry.name === MARKER
+  );
+  await context.clearCookies();
+  await context.addCookies(kept);
+}
+
 test.describe('Silent session renewal', () => {
   test('signing in leaves the marker that makes renewal possible', async ({
     page,
@@ -42,8 +53,10 @@ test.describe('Silent session renewal', () => {
 
     const marker = await cookieNamed(context, MARKER);
     expect(marker).toBeDefined();
-    expect(marker.value).toBe('keycloak');
     expect(marker.httpOnly).toBe(true);
+    // Sealed rather than the name of the policy written down, so holding one
+    // that opens is something only signing in achieves
+    expect(marker.value).not.toBe('keycloak');
     // It is only of use once the session has expired, so it has to outlive it
     const session = await cookieNamed(context, SESSION);
     expect(marker.expires).toBeGreaterThan(session.expires);
@@ -87,18 +100,14 @@ test.describe('Silent session renewal', () => {
     page,
     context
   }) => {
-    // A browser that never signed in at the provider, carrying only the
-    // marker. The provider is asked and says it cannot answer without
-    // interaction, which is the ordinary end of a silent attempt rather than a
-    // failure, so the person is left where they were and told what anybody
-    // else would be told
-    await context.addCookies([
-      {
-        name: MARKER,
-        value: 'keycloak',
-        url: process.env.PLAYWRIGHT_BASE_URL
-      }
-    ]);
+    // A browser no longer known to the provider, carrying only the marker. The
+    // provider is asked and says it cannot answer without interaction, which
+    // is the ordinary end of a silent attempt rather than a failure, so the
+    // person is left where they were and told what anybody else would be told
+    await signIn(page);
+    await keepOnlyMarker(context);
+    expect(await cookieNamed(context, MARKER)).toBeDefined();
+    expect(await cookieNamed(context, SESSION)).toBeUndefined();
 
     await page.goto('/private/');
     await expect(page).toHaveTitle('Not Found');
@@ -111,13 +120,8 @@ test.describe('Silent session renewal', () => {
   });
 
   test('a failed renewal does not repeat itself', async ({ page, context }) => {
-    await context.addCookies([
-      {
-        name: MARKER,
-        value: 'keycloak',
-        url: process.env.PLAYWRIGHT_BASE_URL
-      }
-    ]);
+    await signIn(page);
+    await keepOnlyMarker(context);
 
     await page.goto('/private/');
     await expect(page).toHaveTitle('Not Found');
