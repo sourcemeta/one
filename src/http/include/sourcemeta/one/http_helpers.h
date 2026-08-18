@@ -200,13 +200,15 @@ inline auto json_error(const HTTPRequest &request, HTTPResponse &response,
   if (status == sourcemeta::core::HTTP_STATUS_UNAUTHORIZED) {
     // The extension arrives as a written out auth-param list, quotes included,
     // and is spliced in as it stands. A control character in it would end the
-    // header early or leave a value RFC 9110 Section 11.6.1 does not admit
+    // header early or leave a value RFC 9110 Section 5.6.4 does not admit
     // inside a quoted-string, so an unusable extension is dropped rather than
-    // sent
+    // sent. Horizontal tab is not one of those: Section 5.5 lets it sit in a
+    // field value wherever a space may, and it can close neither a header nor
+    // a quoted string
     if (challenge.empty() ||
         std::ranges::any_of(challenge, [](const char character) -> bool {
           const auto code{static_cast<unsigned char>(character)};
-          return code < 0x20 || code == 0x7f;
+          return (code < 0x20 && character != '\t') || code == 0x7f;
         })) {
       response.write_header("WWW-Authenticate", "Bearer realm=\"registry\"");
     } else {
