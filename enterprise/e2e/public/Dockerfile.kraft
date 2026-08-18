@@ -1,4 +1,4 @@
-FROM ghcr.io/sourcemeta/sourcemeta-schemas:main AS builder
+FROM ghcr.io/sourcemeta/sourcemeta-schemas-enterprise:main AS builder
 FROM scratch
 COPY --from=builder /usr/bin/sourcemeta-one-server \
   /usr/bin/sourcemeta-one-server
