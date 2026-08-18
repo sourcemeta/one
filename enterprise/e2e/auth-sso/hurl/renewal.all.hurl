@@ -1,25 +1,89 @@
 # A session lasts an hour, and asking somebody to click their provider again
 # every hour is the cost of that. A browser that has signed in before carries a
-# marker naming the policy it used, so a navigation that gets nowhere can ask
-# the provider whether that sign-in still stands instead of asking the person.
-# The provider answers without showing anything when it can, so the hour passes
-# unnoticed.
+# marker, so a navigation that gets nowhere can ask the provider whether that
+# sign-in still stands instead of asking the person. The provider answers
+# without showing anything when it can, so the hour passes unnoticed.
 #
-# The marker is not a credential. It names a policy and nothing else, and
-# whoever holds it can only start a login they were free to start anyway.
+# The marker is sealed by the policy that minted it, so only a browser this
+# instance signed in holds one that opens. Anybody may write the name of a
+# policy into a cookie, and doing so must reach nothing, since the answer
+# differs by whether the path is there and gated
 
-# A browser navigation that gets nowhere while carrying the marker is sent to
-# its provider rather than answered. The page it was asking for travels along,
-# so the renewal lands where the person already was
+# Signing in is what earns a marker, so one is earned here rather than written
+GET {{base}}/self/v1/auth/login/keycloak
+HTTP 303
+[Captures]
+authorize_url: header "Location"
+
+GET {{authorize_url}}
+HTTP 200
+[Captures]
+login_action: xpath "string(//form[@id='kc-form-login']/@action)"
+
+POST {{login_action}}
+[FormParams]
+username: jane
+password: jane-password
+HTTP 302
+[Captures]
+callback_url: header "Location"
+
+GET {{callback_url}}
+HTTP 303
+Cache-Control: no-store
+[Captures]
+marker: cookie "sourcemeta_one_renewal"
+[Asserts]
+cookie "sourcemeta_one_session" exists
+cookie "sourcemeta_one_renewal" exists
+cookie "sourcemeta_one_renewal[HttpOnly]" exists
+
+# Signing out takes the session and the marker with it, which leaves the marker
+# above as the only one in hand and nothing else alongside it
+POST {{base}}/self/v1/auth/logout
+HTTP 303
+Cache-Control: no-store
+[Asserts]
+cookie "sourcemeta_one_session[Max-Age]" == 0
+cookie "sourcemeta_one_renewal[Max-Age]" == 0
+
+# A browser navigation that gets nowhere while carrying the marker it was given
+# is sent to its provider rather than answered. The page it was asking for
+# travels along, so the renewal lands where the person already was
 GET {{base}}/private/
 Accept: text/html
-Cookie: sourcemeta_one_renewal=keycloak
+Cookie: sourcemeta_one_renewal={{marker}}
 HTTP 303
 Cache-Control: no-store
 [Asserts]
 header "Location" == "/self/v1/auth/login/keycloak?silent=1&to=%2Fprivate%2F"
 header "Set-Cookie" not exists
 header "WWW-Authenticate" not exists
+
+# The name of a policy is not a marker. Anybody can write one, and honouring it
+# would answer a stranger differently for a path that is there and gated than
+# for one that was never here, which is the whole of what the gate hides
+GET {{base}}/private/
+Accept: text/html
+Cookie: sourcemeta_one_renewal=keycloak
+HTTP 404
+Cache-Control: no-store
+Content-Type: text/html; charset=utf-8
+[Asserts]
+header "Location" not exists
+xpath "string(//title)" == "Not Found"
+
+# Nor is a marker something to be assembled out of one that opens. Every part
+# of it is under the seal, so changing any of them leaves nothing that opens
+GET {{base}}/private/
+Accept: text/html
+Cookie: sourcemeta_one_renewal={{marker}}x
+HTTP 404
+Cache-Control: no-store
+Content-Type: text/html; charset=utf-8
+[Asserts]
+header "Location" not exists
+xpath "string(//title)" == "Not Found"
 
 # The same navigation without the marker is told there is nothing there, which
 # is what anybody who cannot see it is told. A stranger is never sent to a
@@ -36,20 +100,7 @@ header "WWW-Authenticate" not exists
 xpath "string(//title)" == "Not Found"
 xpath "count(//a[@data-sourcemeta-ui-login])" == 0
 
-# A marker naming a policy that gates somewhere else is ignored. Honouring it
-# would send somebody to a provider whose answer cannot admit them here, which
-# would leave them exactly where they started and go round again
-GET {{base}}/private/
-Accept: text/html
-Cookie: sourcemeta_one_renewal=cleartext
-HTTP 404
-Cache-Control: no-store
-Content-Type: text/html; charset=utf-8
-[Asserts]
-header "Location" not exists
-xpath "string(//title)" == "Not Found"
-
-# A marker naming nothing this instance serves is ignored the same way
+# A value naming nothing this instance serves reaches nothing either
 GET {{base}}/private/
 Accept: text/html
 Cookie: sourcemeta_one_renewal=not-a-policy
@@ -65,7 +116,7 @@ xpath "string(//title)" == "Not Found"
 # turn an answer it can handle into a redirect chain it cannot
 GET {{base}}/private/secret.json
 Accept: application/json
-Cookie: sourcemeta_one_renewal=keycloak
+Cookie: sourcemeta_one_renewal={{marker}}
 HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -95,7 +146,7 @@ jsonpath "$.valid" == true
 # A page that is really there is no dead end, so the marker changes nothing
 GET {{base}}/public/
 Accept: text/html
-Cookie: sourcemeta_one_renewal=keycloak
+Cookie: sourcemeta_one_renewal={{marker}}
 HTTP 200
 Content-Type: text/html; charset=utf-8
 [Asserts]
@@ -140,7 +191,7 @@ cookie "sourcemeta_one_transaction" exists
 # answered as one, and the marker changes nothing about what a method reaches
 POST {{base}}/private/
 Accept: text/html
-Cookie: sourcemeta_one_renewal=keycloak
+Cookie: sourcemeta_one_renewal={{marker}}
 HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json

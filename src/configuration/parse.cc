@@ -328,6 +328,7 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
   // array on a listing already means public
   std::set<std::string_view> authentication_names;
   std::set<std::string_view> authentication_keys;
+  std::set<std::string_view> authentication_secrets;
   for (const auto &entry : result.authentication) {
     if (entry.name == "public") {
       throw ConfigurationReservedAuthenticationNameError(configuration_path,
@@ -340,12 +341,37 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
     }
 
     // A key opening more than one policy makes a caller belong to several at
-    // once, which no single view names
+    // once, which no single view names.
+    //
+    // A variable naming both a credential callers present and a secret the
+    // instance signs with is worse than that: whoever holds the credential can
+    // derive the key sessions are sealed under, and mint one naming whichever
+    // policy they please. Secrets alone may repeat, as several policies
+    // fronting the same provider is ordinary
     for (const auto &key : entry.keys) {
-      if (!authentication_keys.emplace(key).second) {
+      if (authentication_secrets.contains(key) ||
+          !authentication_keys.emplace(key).second) {
         throw ConfigurationSharedAuthenticationKeyError(configuration_path,
                                                         entry.name, key);
       }
+    }
+
+    if (!entry.client_secret_variable.empty()) {
+      if (authentication_keys.contains(entry.client_secret_variable)) {
+        throw ConfigurationSharedAuthenticationKeyError(
+            configuration_path, entry.name, entry.client_secret_variable);
+      }
+
+      authentication_secrets.emplace(entry.client_secret_variable);
+    }
+
+    for (const auto &secret : entry.session_secret_variables) {
+      if (authentication_keys.contains(secret)) {
+        throw ConfigurationSharedAuthenticationKeyError(configuration_path,
+                                                        entry.name, secret);
+      }
+
+      authentication_secrets.emplace(secret);
     }
   }
 

@@ -755,3 +755,42 @@ TEST(a_session_never_opens_as_a_transaction) {
       AT("/portal/x"),
       authentication.caller({.cookies = FIELDS(as_a_session)})));
 }
+
+// The renewal marker says a browser signed in under a policy once, and only a
+// browser this instance signed in holds one. A marker anybody could write down
+// would answer whether the policy it names governs the location asked about,
+// which is a question the rest of this surface refuses to answer
+TEST(a_renewal_marker_nobody_minted_names_no_policy) {
+  setenv("ONE_TEST_OIDC_MARKER", "confidential", 1);
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .name = "okta",
+        .credential = sourcemeta::one::Authentication::Policy::Interactive{
+            .issuer = "acme",
+            .client_id = "client",
+            .client_secret_variable = "ONE_TEST_OIDC_MARKER",
+            .session_secrets = SESSION_SECRETS}}}};
+  const sourcemeta::one::Authentication authentication{
+      TABLE(policies), STUB_FETCHER({}, nullptr)};
+
+  // Naming the policy correctly buys nothing, so the answer cannot be read as
+  // telling the caller whether that policy governs here
+  const std::string named{"sourcemeta_one_renewal=okta"};
+  EXPECT_FALSE(
+      authentication.renewal(AT("/portal/x"), {.cookies = FIELDS(named)})
+          .has_value());
+
+  // Nor does naming one that does not exist, so the two are indistinguishable
+  const std::string absent{"sourcemeta_one_renewal=nowhere"};
+  EXPECT_FALSE(
+      authentication.renewal(AT("/portal/x"), {.cookies = FIELDS(absent)})
+          .has_value());
+
+  // And a value shaped like a seal but minted elsewhere is refused too
+  const std::string forged{"sourcemeta_one_renewal=1.1.2..signature"};
+  EXPECT_FALSE(
+      authentication.renewal(AT("/portal/x"), {.cookies = FIELDS(forged)})
+          .has_value());
+}

@@ -302,6 +302,15 @@ inline auto structurally_valid(const std::span<const std::byte> bytes) noexcept
         node.first_edge > header->edge_count - node.edge_count) {
       return false;
     }
+
+    // The same constraint the view masks carry. A bit naming a policy this
+    // artifact does not hold could never be resolved to one, so a location it
+    // governs would come back governed by nobody rather than by somebody, and
+    // an audience of nobody is what a reference into it is compared against
+    if (header->policy_count < AUTHENTICATION_MAXIMUM_POLICIES &&
+        (node.mask >> header->policy_count) != 0) {
+      return false;
+    }
   }
 
   if (header->edge_count > 0) {

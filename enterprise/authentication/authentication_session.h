@@ -28,7 +28,11 @@ namespace sourcemeta::one {
 // What a sealed value is for. A value is only ever opened for the purpose it
 // was sealed under, because the two derive different keys from the policy's
 // secret, so one kind of value cannot be presented as the other
-enum class SealPurpose : std::uint8_t { Session = 0, Transaction = 1 };
+enum class SealPurpose : std::uint8_t {
+  Session = 0,
+  Transaction = 1,
+  Renewal = 2
+};
 
 // The artifact is produced by a trusted indexer, but on-disk truncation or
 // corruption could leave a header whose magic and version still match while
@@ -138,6 +142,8 @@ inline auto purpose_label(const SealPurpose purpose) -> std::string_view {
       return "sourcemeta/one/session";
     case SealPurpose::Transaction:
       return "sourcemeta/one/transaction";
+    case SealPurpose::Renewal:
+      return "sourcemeta/one/renewal";
   }
 
   std::unreachable();

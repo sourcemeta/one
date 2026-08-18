@@ -232,8 +232,15 @@ auto generate_protected_resource_metadata(
   // client reading them learns what to ask its provider for, rather than
   // discovering it by being refused
   std::vector<std::string_view> scopes;
-  for (const auto name : authentication.governing(
-           sourcemeta::one::Authentication::Path::relative(endpoint))) {
+  // A table that could not be read names no policy, and advertising none is
+  // the conservative answer where the alternative is advertising the wrong one
+  const auto governing{authentication.governing(
+      sourcemeta::one::Authentication::Path::relative(endpoint))};
+  if (!governing.has_value()) {
+    return;
+  }
+
+  for (const auto name : governing.value()) {
     // What a policy declares is read from the configuration that declared it,
     // which is where the claim rules are already parsed, and the name is what
     // the two agree on

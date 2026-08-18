@@ -508,9 +508,9 @@ auto Authentication::renewal(const Authentication::Path &path,
   }
 
   for (const auto candidate : candidates) {
-    const auto policy{this->table_.impl_->interactive(path.value(), candidate)};
+    auto policy{this->table_.impl_->renewal_marker(path.value(), candidate)};
     if (policy.has_value()) {
-      return candidate;
+      return policy;
     }
   }
 
@@ -728,9 +728,23 @@ auto Authentication::callback(const std::string_view policy_name,
   // Signing in is what earns a browser a silent renewal later, and the marker
   // outlives the session it accompanies because it is only of use once that
   // session has expired
+  auto marker{sourcemeta::core::JSON::make_object()};
+  marker.assign_assume_new("policy",
+                           sourcemeta::core::JSON{std::string{policy_name}});
+  std::ostringstream marker_text;
+  sourcemeta::core::stringify(marker, marker_text);
+  const auto marker_expiry{std::chrono::time_point_cast<std::chrono::seconds>(
+                               std::chrono::system_clock::now()) +
+                           RENEWAL_LIFETIME};
+  const auto sealed_marker{this->table_.impl_->seal(
+      policy_name, SealPurpose::Renewal, marker_text.str(), marker_expiry)};
+  if (!sealed_marker.has_value()) {
+    return abandon(Authentication::Outcome::Result::Incomplete);
+  }
+
   auto renewal{sourcemeta::core::http_serialize_cookie(
       {.name = RENEWAL_COOKIE,
-       .value = policy_name,
+       .value = sealed_marker.value(),
        .path = COOKIE_PATH,
        .max_age = RENEWAL_LIFETIME,
        .http_only = true,
@@ -917,8 +931,13 @@ auto Authentication::Table::visible(
 }
 
 auto Authentication::Table::governing(const Authentication::Path &path) const
-    -> std::vector<std::string_view> {
-  auto mask{this->impl_->match(path.value())};
+    -> std::optional<std::vector<std::string_view>> {
+  const auto governing{this->impl_->governing_mask(path.value())};
+  if (!governing.has_value()) {
+    return std::nullopt;
+  }
+
+  auto mask{governing.value()};
   std::vector<std::string_view> result;
   while (mask != 0) {
     // A policy standing on its own is a view, and the table names every one, so

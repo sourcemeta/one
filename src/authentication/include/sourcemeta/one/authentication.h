@@ -349,8 +349,13 @@ public:
     /// agree on, so a caller holding the configuration can find what it
     /// declared without depending on the order it declared it in. The names
     /// point into the artifact and stay valid for the lifetime of this table.
+    ///
+    /// A table that could not be read answers nothing at all, which is a
+    /// different thing from answering that nobody governs the path. Whoever
+    /// asks has to tell the two apart, since reading one as the other is how a
+    /// broken artifact comes to describe everything as ungoverned.
     [[nodiscard]] auto governing(const Path &path) const
-        -> std::vector<std::string_view>;
+        -> std::optional<std::vector<std::string_view>>;
 
     /// Whether a schema at one path may reference a schema at another, which is
     /// whether the second is reachable by everybody the first is.
