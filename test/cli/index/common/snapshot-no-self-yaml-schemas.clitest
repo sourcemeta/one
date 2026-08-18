@@ -1,0 +1,101 @@
+MAKE DIRECTORY schemas
+
+WRITE schemas/yaml.yaml UNTIL EOF
+$schema: 'https://json-schema.org/draft/2020-12/schema'
+$id: https://example.com/yaml.yaml
+type: string
+EOF
+
+WRITE schemas/yml.yml UNTIL EOF
+$schema: 'https://json-schema.org/draft/2020-12/schema'
+$id: https://example.com/yml.yml
+type: string
+EOF
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "example": {
+      "baseUri": "https://example.com",
+      "path": "./schemas"
+    }
+  }
+}
+EOF
+
+RUN one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+DROP LINES MATCHING '^[12]> \([ 0-9]+%\) ' IN log_1.txt
+DROP LINES CONTAINING $ONE_PREFIX IN log_1.txt
+REPLACE MATCHING ' \(#[0-9]+\)' WITH '' IN log_1.txt
+REPLACE $CWD WITH '[CWD]' IN log_1.txt
+REPLACE $EDITION WITH '[EDITION]' IN log_1.txt
+REPLACE $VERSION WITH '[VERSION]' IN log_1.txt
+SORT log_1.txt
+WRITE expected_log_1.txt UNTIL EOF
+2> Detecting: [CWD]/schemas/yaml.yaml
+2> Detecting: [CWD]/schemas/yml.yml
+2> Sourcemeta One [EDITION] v[VERSION]
+2> Using configuration: [CWD]/one.json
+2> Writing output to: [CWD]/output
+EOF
+COMPARE log_1.txt AGAINST expected_log_1.txt
+
+TREE output INTO manifest.txt
+DROP LINES MATCHING '^\./schemas/self(/.*)?$' IN manifest.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN manifest.txt
+
+WRITE expected.txt UNTIL EOF
+./authentication.bin
+./configuration.json
+./explorer
+./explorer/public
+./explorer/public/%
+./explorer/public/%/directory.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/example
+./explorer/public/example/%
+./explorer/public/example/%/directory.metapack
+./explorer/public/example/yaml
+./explorer/public/example/yaml/%
+./explorer/public/example/yaml/%/dependents.metapack
+./explorer/public/example/yaml/%/schema.metapack
+./explorer/public/example/yml
+./explorer/public/example/yml/%
+./explorer/public/example/yml/%/dependents.metapack
+./explorer/public/example/yml/%/schema.metapack
+./routes.bin
+./schemas
+./schemas/example
+./schemas/example/yaml
+./schemas/example/yaml/%
+./schemas/example/yaml/%/blaze-exhaustive.metapack
+./schemas/example/yaml/%/blaze-fast.metapack
+./schemas/example/yaml/%/bundle.metapack
+./schemas/example/yaml/%/dependencies.metapack
+./schemas/example/yaml/%/editor.metapack
+./schemas/example/yaml/%/health.metapack
+./schemas/example/yaml/%/locations.metapack
+./schemas/example/yaml/%/positions.metapack
+./schemas/example/yaml/%/schema.metapack
+./schemas/example/yaml/%/stats.metapack
+./schemas/example/yml
+./schemas/example/yml/%
+./schemas/example/yml/%/blaze-exhaustive.metapack
+./schemas/example/yml/%/blaze-fast.metapack
+./schemas/example/yml/%/bundle.metapack
+./schemas/example/yml/%/dependencies.metapack
+./schemas/example/yml/%/editor.metapack
+./schemas/example/yml/%/health.metapack
+./schemas/example/yml/%/locations.metapack
+./schemas/example/yml/%/positions.metapack
+./schemas/example/yml/%/schema.metapack
+./schemas/example/yml/%/stats.metapack
+./state.bin
+./version.json
+EOF
+
+COMPARE manifest.txt AGAINST expected.txt

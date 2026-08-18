@@ -1,0 +1,88 @@
+MAKE DIRECTORY schemas/bar
+
+WRITE schemas/bar/test.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "http://localhost:8000/bar/test",
+  "type": "string"
+}
+EOF
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "contents": {
+    "bar": {
+      "path": "./schemas/bar"
+    }
+  }
+}
+EOF
+
+RUN one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+DROP LINES MATCHING '^[12]> \([ 0-9]+%\) ' IN log_1.txt
+DROP LINES CONTAINING $ONE_PREFIX IN log_1.txt
+REPLACE MATCHING ' \(#[0-9]+\)' WITH '' IN log_1.txt
+REPLACE $CWD WITH '[CWD]' IN log_1.txt
+REPLACE $EDITION WITH '[EDITION]' IN log_1.txt
+REPLACE $VERSION WITH '[VERSION]' IN log_1.txt
+SORT log_1.txt
+WRITE expected_log_1.txt UNTIL EOF
+2> Detecting: [CWD]/schemas/bar/test.json
+2> Sourcemeta One [EDITION] v[VERSION]
+2> Using configuration: [CWD]/one.json
+2> Writing output to: [CWD]/output
+EOF
+COMPARE log_1.txt AGAINST expected_log_1.txt
+
+TREE output INTO manifest.txt
+DROP LINES MATCHING '^\./schemas/self(/.*)?$' IN manifest.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN manifest.txt
+
+WRITE expected.txt UNTIL EOF
+./authentication.bin
+./configuration.json
+./explorer
+./explorer/public
+./explorer/public/%
+./explorer/public/%/404.metapack
+./explorer/public/%/directory-html.metapack
+./explorer/public/%/directory.metapack
+./explorer/public/%/login-html.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/bar
+./explorer/public/bar/%
+./explorer/public/bar/%/directory-html.metapack
+./explorer/public/bar/%/directory.metapack
+./explorer/public/bar/bar
+./explorer/public/bar/bar/%
+./explorer/public/bar/bar/%/directory-html.metapack
+./explorer/public/bar/bar/%/directory.metapack
+./explorer/public/bar/bar/test
+./explorer/public/bar/bar/test/%
+./explorer/public/bar/bar/test/%/dependents.metapack
+./explorer/public/bar/bar/test/%/schema-html.metapack
+./explorer/public/bar/bar/test/%/schema.metapack
+./routes.bin
+./schemas
+./schemas/bar
+./schemas/bar/bar
+./schemas/bar/bar/test
+./schemas/bar/bar/test/%
+./schemas/bar/bar/test/%/blaze-exhaustive.metapack
+./schemas/bar/bar/test/%/blaze-fast.metapack
+./schemas/bar/bar/test/%/bundle.metapack
+./schemas/bar/bar/test/%/dependencies.metapack
+./schemas/bar/bar/test/%/editor.metapack
+./schemas/bar/bar/test/%/health.metapack
+./schemas/bar/bar/test/%/locations.metapack
+./schemas/bar/bar/test/%/positions.metapack
+./schemas/bar/bar/test/%/schema.metapack
+./schemas/bar/bar/test/%/stats.metapack
+./state.bin
+./version.json
+EOF
+
+COMPARE manifest.txt AGAINST expected.txt

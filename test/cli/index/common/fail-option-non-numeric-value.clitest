@@ -1,0 +1,16 @@
+WRITE one.json UNTIL EOF
+{ "url": "https://sourcemeta.com" }
+EOF
+
+RUN --skip-banner one.json output --concurrency abc STDIN /dev/null IN . INTO output.txt EXPECTING 1
+
+WRITE expected.txt UNTIL EOF
+1> error: Expected a valid numeric value for option
+1>   at option concurrency
+1>   with value abc
+2> Writing output to: [CWD]/output
+2> Using configuration: [CWD]/one.json
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected.txt

@@ -1,0 +1,51 @@
+// The build state records that a build materialised a schema, and an
+// incremental build trusts it. The output directory belongs to the indexer, so
+// a recorded artifact that is gone from disk means something else modified the
+// directory, and the build must refuse loudly instead of continuing over a
+// record it cannot honour
+
+WRITE one.json UNTIL EOF
+{
+  "url": "https://example.com",
+  "contents": {
+    "schemas": { "baseUri": "https://example.com/", "path": "./schemas" }
+  }
+}
+EOF
+
+MAKE DIRECTORY schemas
+
+WRITE schemas/a.json UNTIL EOF
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/a"
+}
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+DROP LINES MATCHING '^[12]> \([ 0-9]+%\) ' IN log_1.txt
+DROP LINES CONTAINING $ONE_PREFIX IN log_1.txt
+REPLACE MATCHING ' \(#[0-9]+\)' WITH '' IN log_1.txt
+REPLACE $CWD WITH '[CWD]' IN log_1.txt
+SORT log_1.txt
+WRITE expected_log_1.txt UNTIL EOF
+2> Detecting: [CWD]/schemas/a.json
+2> Using configuration: [CWD]/one.json
+2> Writing output to: [CWD]/output
+EOF
+COMPARE log_1.txt AGAINST expected_log_1.txt
+
+REMOVE output/schemas/schemas/a/%/schema.metapack
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+DROP LINES MATCHING '^2>' IN output.txt
+
+WRITE expected.txt UNTIL EOF
+1> error: The build state references an artifact that no longer exists on disk
+1>   at path [CWD]/output/schemas/schemas/a/%/schema.metapack
+1>
+1> Something other than the indexer modified the output directory, so delete it and index again from scratch
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected.txt

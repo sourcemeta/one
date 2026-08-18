@@ -1,0 +1,48 @@
+MAKE DIRECTORY meta
+MAKE DIRECTORY schemas
+
+WRITE meta/target.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string"
+}
+EOF
+
+WRITE schemas/sample.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$ref": "urn:example:target"
+}
+EOF
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "meta": {
+      "path": "./meta"
+    },
+    "example": {
+      "path": "./schemas",
+      "resolve": {
+        "urn:example:target": "https://other.example.com/meta/target.json"
+      }
+    }
+  }
+}
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+DROP LINES MATCHING '^2>' IN output.txt
+
+WRITE expected.txt UNTIL EOF
+1> error: Could not resolve the reference to an external schema
+1>   at identifier https://other.example.com/meta/target
+1>   at path [CWD]/schemas/sample.json
+1>
+1> Did you forget to register a schema with such URI?
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected.txt

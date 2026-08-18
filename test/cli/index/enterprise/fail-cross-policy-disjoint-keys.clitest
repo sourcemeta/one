@@ -1,0 +1,55 @@
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "authentication": [
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "name": "alpha",
+      "paths": [ "/alpha" ],
+      "keys": [ { "environmentVariable": "ONE_TEST_KEY_ALPHA" } ]
+    },
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "name": "beta",
+      "paths": [ "/beta" ],
+      "keys": [ { "environmentVariable": "ONE_TEST_KEY_BETA" } ]
+    }
+  ],
+  "contents": {
+    "alpha": { "path": "./alpha" },
+    "beta": { "path": "./beta" }
+  }
+}
+EOF
+
+MAKE DIRECTORY alpha
+MAKE DIRECTORY beta
+
+WRITE beta/two.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object"
+}
+EOF
+
+WRITE alpha/one.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": { "other": { "$ref": "../beta/two" } }
+}
+EOF
+
+RUN --skip-banner --concurrency 1 one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+DROP LINES MATCHING '^2>' IN output.txt
+
+WRITE expected.txt UNTIL EOF
+1> error: A schema cannot reference a schema behind a stricter authentication policy
+1>   at schema http://localhost:8000/alpha/one
+1>   with reference http://localhost:8000/beta/two
+1>   at path [CWD]/one.json
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected.txt

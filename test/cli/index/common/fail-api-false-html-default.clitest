@@ -1,0 +1,30 @@
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "api": false
+}
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+
+WRITE expected.txt UNTIL EOF
+1> error: Invalid configuration
+1>   at path [CWD]/one.json
+1> The object value {"name":"Sourcemeta","description":"The next-generation JSON Schema platform"} was expected to equal the boolean constant false
+1>   at instance location "/html"
+1>   at evaluate path "/dependentSchemas/api/then/properties/html/const"
+1> The object value was expected to validate against the single defined property subschema
+1>   at instance location ""
+1>   at evaluate path "/dependentSchemas/api/then/properties"
+1> The object value defined the property "api"
+1>   at instance location ""
+1>   at evaluate path "/dependentSchemas"
+1> Because the object value defined the property "api", it was also expected to validate against the corresponding subschema
+1>   at instance location ""
+1>   at evaluate path "/dependentSchemas"
+2> Writing output to: [CWD]/output
+2> Using configuration: [CWD]/one.json
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected.txt

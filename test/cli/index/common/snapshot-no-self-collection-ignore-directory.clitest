@@ -1,0 +1,97 @@
+MAKE DIRECTORY schemas/keep
+MAKE DIRECTORY schemas/skip
+
+WRITE schemas/keep/foo.json UNTIL EOF
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/keep/foo",
+  "type": "object"
+}
+EOF
+
+WRITE schemas/skip/bar.json UNTIL EOF
+{
+  "id": "not-a-schema-bar"
+}
+EOF
+
+WRITE schemas/skip/baz.json UNTIL EOF
+[1, 2, 3]
+EOF
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "example": {
+      "baseUri": "https://example.com",
+      "path": "./schemas",
+      "ignore": [
+        "./schemas/skip"
+      ]
+    }
+  }
+}
+EOF
+RUN one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+DROP LINES MATCHING '^[12]> \([ 0-9]+%\) ' IN log_1.txt
+DROP LINES CONTAINING $ONE_PREFIX IN log_1.txt
+REPLACE MATCHING ' \(#[0-9]+\)' WITH '' IN log_1.txt
+REPLACE $CWD WITH '[CWD]' IN log_1.txt
+REPLACE $EDITION WITH '[EDITION]' IN log_1.txt
+REPLACE $VERSION WITH '[VERSION]' IN log_1.txt
+SORT log_1.txt
+WRITE expected_log_1.txt UNTIL EOF
+2> Detecting: [CWD]/schemas/keep/foo.json
+2> Sourcemeta One [EDITION] v[VERSION]
+2> Using configuration: [CWD]/one.json
+2> Writing output to: [CWD]/output
+EOF
+COMPARE log_1.txt AGAINST expected_log_1.txt
+
+TREE output INTO manifest.txt
+DROP LINES MATCHING '^\./schemas/self(/.*)?$' IN manifest.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN manifest.txt
+
+WRITE expected.txt UNTIL EOF
+./authentication.bin
+./configuration.json
+./explorer
+./explorer/public
+./explorer/public/%
+./explorer/public/%/directory.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/example
+./explorer/public/example/%
+./explorer/public/example/%/directory.metapack
+./explorer/public/example/keep
+./explorer/public/example/keep/%
+./explorer/public/example/keep/%/directory.metapack
+./explorer/public/example/keep/foo
+./explorer/public/example/keep/foo/%
+./explorer/public/example/keep/foo/%/dependents.metapack
+./explorer/public/example/keep/foo/%/schema.metapack
+./routes.bin
+./schemas
+./schemas/example
+./schemas/example/keep
+./schemas/example/keep/foo
+./schemas/example/keep/foo/%
+./schemas/example/keep/foo/%/blaze-exhaustive.metapack
+./schemas/example/keep/foo/%/blaze-fast.metapack
+./schemas/example/keep/foo/%/bundle.metapack
+./schemas/example/keep/foo/%/dependencies.metapack
+./schemas/example/keep/foo/%/editor.metapack
+./schemas/example/keep/foo/%/health.metapack
+./schemas/example/keep/foo/%/locations.metapack
+./schemas/example/keep/foo/%/positions.metapack
+./schemas/example/keep/foo/%/schema.metapack
+./schemas/example/keep/foo/%/stats.metapack
+./state.bin
+./version.json
+EOF
+
+COMPARE manifest.txt AGAINST expected.txt

@@ -1,0 +1,83 @@
+MAKE DIRECTORY data
+
+WRITE data/foo.json UNTIL EOF
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object"
+}
+EOF
+
+WRITE data/jsonschema.json UNTIL EOF
+{
+  "title": "Example"
+}
+EOF
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "example": {
+      "include": "./data"
+    }
+  }
+}
+EOF
+RUN one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+DROP LINES MATCHING '^[12]> \([ 0-9]+%\) ' IN log_1.txt
+DROP LINES CONTAINING $ONE_PREFIX IN log_1.txt
+REPLACE MATCHING ' \(#[0-9]+\)' WITH '' IN log_1.txt
+REPLACE $CWD WITH '[CWD]' IN log_1.txt
+REPLACE $EDITION WITH '[EDITION]' IN log_1.txt
+REPLACE $VERSION WITH '[VERSION]' IN log_1.txt
+SORT log_1.txt
+WRITE expected_log_1.txt UNTIL EOF
+2> Detecting: [CWD]/data/foo.json
+2> Sourcemeta One [EDITION] v[VERSION]
+2> Using configuration: [CWD]/one.json
+2> Writing output to: [CWD]/output
+EOF
+COMPARE log_1.txt AGAINST expected_log_1.txt
+
+TREE output INTO manifest.txt
+DROP LINES MATCHING '^\./schemas/self(/.*)?$' IN manifest.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN manifest.txt
+
+WRITE expected.txt UNTIL EOF
+./authentication.bin
+./configuration.json
+./explorer
+./explorer/public
+./explorer/public/%
+./explorer/public/%/directory.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/example
+./explorer/public/example/%
+./explorer/public/example/%/directory.metapack
+./explorer/public/example/foo
+./explorer/public/example/foo/%
+./explorer/public/example/foo/%/dependents.metapack
+./explorer/public/example/foo/%/schema.metapack
+./routes.bin
+./schemas
+./schemas/example
+./schemas/example/foo
+./schemas/example/foo/%
+./schemas/example/foo/%/blaze-exhaustive.metapack
+./schemas/example/foo/%/blaze-fast.metapack
+./schemas/example/foo/%/bundle.metapack
+./schemas/example/foo/%/dependencies.metapack
+./schemas/example/foo/%/editor.metapack
+./schemas/example/foo/%/health.metapack
+./schemas/example/foo/%/locations.metapack
+./schemas/example/foo/%/positions.metapack
+./schemas/example/foo/%/schema.metapack
+./schemas/example/foo/%/stats.metapack
+./state.bin
+./version.json
+EOF
+
+COMPARE manifest.txt AGAINST expected.txt

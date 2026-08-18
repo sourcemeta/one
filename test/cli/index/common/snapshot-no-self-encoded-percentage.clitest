@@ -1,0 +1,83 @@
+MAKE DIRECTORY schemas
+
+WRITE schemas/test.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/%25/test"
+}
+EOF
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "example": {
+      "baseUri": "https://example.com",
+      "path": "./schemas"
+    }
+  }
+}
+EOF
+
+RUN one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+DROP LINES MATCHING '^[12]> \([ 0-9]+%\) ' IN log_1.txt
+DROP LINES CONTAINING $ONE_PREFIX IN log_1.txt
+REPLACE MATCHING ' \(#[0-9]+\)' WITH '' IN log_1.txt
+REPLACE $CWD WITH '[CWD]' IN log_1.txt
+REPLACE $EDITION WITH '[EDITION]' IN log_1.txt
+REPLACE $VERSION WITH '[VERSION]' IN log_1.txt
+SORT log_1.txt
+WRITE expected_log_1.txt UNTIL EOF
+2> Detecting: [CWD]/schemas/test.json
+2> Sourcemeta One [EDITION] v[VERSION]
+2> Using configuration: [CWD]/one.json
+2> Writing output to: [CWD]/output
+EOF
+COMPARE log_1.txt AGAINST expected_log_1.txt
+
+TREE output INTO manifest.txt
+DROP LINES MATCHING '^\./schemas/self(/.*)?$' IN manifest.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN manifest.txt
+
+WRITE expected.txt UNTIL EOF
+./authentication.bin
+./configuration.json
+./explorer
+./explorer/public
+./explorer/public/%
+./explorer/public/%/directory.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/example
+./explorer/public/example/%
+./explorer/public/example/%/directory.metapack
+./explorer/public/example/%25
+./explorer/public/example/%25/%
+./explorer/public/example/%25/%/directory.metapack
+./explorer/public/example/%25/test
+./explorer/public/example/%25/test/%
+./explorer/public/example/%25/test/%/dependents.metapack
+./explorer/public/example/%25/test/%/schema.metapack
+./routes.bin
+./schemas
+./schemas/example
+./schemas/example/%25
+./schemas/example/%25/test
+./schemas/example/%25/test/%
+./schemas/example/%25/test/%/blaze-exhaustive.metapack
+./schemas/example/%25/test/%/blaze-fast.metapack
+./schemas/example/%25/test/%/bundle.metapack
+./schemas/example/%25/test/%/dependencies.metapack
+./schemas/example/%25/test/%/editor.metapack
+./schemas/example/%25/test/%/health.metapack
+./schemas/example/%25/test/%/locations.metapack
+./schemas/example/%25/test/%/positions.metapack
+./schemas/example/%25/test/%/schema.metapack
+./schemas/example/%25/test/%/stats.metapack
+./state.bin
+./version.json
+EOF
+
+COMPARE manifest.txt AGAINST expected.txt

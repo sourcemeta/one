@@ -1,0 +1,117 @@
+MAKE DIRECTORY meta
+MAKE DIRECTORY schemas
+
+WRITE meta/custom.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$vocabulary": {
+    "https://json-schema.org/draft/2020-12/vocab/core": true,
+    "https://json-schema.org/draft/2020-12/vocab/applicator": true,
+    "https://json-schema.org/draft/2020-12/vocab/validation": true
+  },
+  "$dynamicAnchor": "meta"
+}
+EOF
+
+WRITE schemas/sample.json UNTIL EOF
+{
+  "type": "string"
+}
+EOF
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "meta": {
+      "path": "./meta"
+    },
+    "example": {
+      "path": "./schemas",
+      "defaultDialect": "urn:example:custom-meta",
+      "resolve": {
+        "urn:example:custom-meta": "/meta/custom.json"
+      }
+    }
+  }
+}
+EOF
+RUN one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+DROP LINES MATCHING '^[12]> \([ 0-9]+%\) ' IN log_1.txt
+DROP LINES CONTAINING $ONE_PREFIX IN log_1.txt
+REPLACE MATCHING ' \(#[0-9]+\)' WITH '' IN log_1.txt
+REPLACE $CWD WITH '[CWD]' IN log_1.txt
+REPLACE $EDITION WITH '[EDITION]' IN log_1.txt
+REPLACE $VERSION WITH '[VERSION]' IN log_1.txt
+SORT log_1.txt
+WRITE expected_log_1.txt UNTIL EOF
+2> Detecting: [CWD]/meta/custom.json
+2> Detecting: [CWD]/schemas/sample.json
+2> Sourcemeta One [EDITION] v[VERSION]
+2> Using configuration: [CWD]/one.json
+2> Writing output to: [CWD]/output
+EOF
+COMPARE log_1.txt AGAINST expected_log_1.txt
+
+TREE output INTO manifest.txt
+DROP LINES MATCHING '^\./schemas/self(/.*)?$' IN manifest.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN manifest.txt
+
+WRITE expected.txt UNTIL EOF
+./authentication.bin
+./configuration.json
+./explorer
+./explorer/public
+./explorer/public/%
+./explorer/public/%/directory.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/example
+./explorer/public/example/%
+./explorer/public/example/%/directory.metapack
+./explorer/public/example/sample
+./explorer/public/example/sample/%
+./explorer/public/example/sample/%/dependents.metapack
+./explorer/public/example/sample/%/schema.metapack
+./explorer/public/meta
+./explorer/public/meta/%
+./explorer/public/meta/%/directory.metapack
+./explorer/public/meta/custom
+./explorer/public/meta/custom/%
+./explorer/public/meta/custom/%/dependents.metapack
+./explorer/public/meta/custom/%/schema.metapack
+./routes.bin
+./schemas
+./schemas/example
+./schemas/example/sample
+./schemas/example/sample/%
+./schemas/example/sample/%/blaze-exhaustive.metapack
+./schemas/example/sample/%/blaze-fast.metapack
+./schemas/example/sample/%/bundle.metapack
+./schemas/example/sample/%/dependencies.metapack
+./schemas/example/sample/%/editor.metapack
+./schemas/example/sample/%/health.metapack
+./schemas/example/sample/%/locations.metapack
+./schemas/example/sample/%/positions.metapack
+./schemas/example/sample/%/schema.metapack
+./schemas/example/sample/%/stats.metapack
+./schemas/meta
+./schemas/meta/custom
+./schemas/meta/custom/%
+./schemas/meta/custom/%/blaze-exhaustive.metapack
+./schemas/meta/custom/%/blaze-fast.metapack
+./schemas/meta/custom/%/bundle.metapack
+./schemas/meta/custom/%/dependencies.metapack
+./schemas/meta/custom/%/editor.metapack
+./schemas/meta/custom/%/health.metapack
+./schemas/meta/custom/%/locations.metapack
+./schemas/meta/custom/%/positions.metapack
+./schemas/meta/custom/%/schema.metapack
+./schemas/meta/custom/%/stats.metapack
+./state.bin
+./version.json
+EOF
+
+COMPARE manifest.txt AGAINST expected.txt

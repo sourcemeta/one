@@ -1,4 +1,28 @@
+# A test written in the CLI test language that Sourcemeta Core ships an
+# interpreter for. The interpreter runs the program itself, so what a script
+# cannot express is the program not being the only thing it needs
 macro(sourcemeta_one_test_cli directory program name)
+  if(UNIX)
+    # Parsing and checking the script without running anything, which rejects a
+    # script that produces something it never asserts on
+    add_test(NAME one.${program}.${directory}.${name}.check COMMAND
+      "$<TARGET_FILE:sourcemeta_core_clitest>"
+      "${CMAKE_CURRENT_SOURCE_DIR}/${program}/${directory}/${name}.clitest"
+      --check)
+    add_test(NAME one.${program}.${directory}.${name} COMMAND
+      "$<TARGET_FILE:sourcemeta_core_clitest>"
+      "${CMAKE_CURRENT_SOURCE_DIR}/${program}/${directory}/${name}.clitest"
+      --binary "$<TARGET_FILE:sourcemeta_one_${program}>"
+      --environment "ONE_PREFIX=${ONE_PREFIX}"
+      --environment "PROGRAM=$<TARGET_FILE_NAME:sourcemeta_one_${program}>"
+      --environment "EDITION=${ONE_EDITION}"
+      --environment "VERSION=${ONE_VERSION}")
+    set_tests_properties(one.${program}.${directory}.${name} PROPERTIES
+      DEPENDS one.${program}.${directory}.${name}.check)
+  endif()
+endmacro()
+
+macro(sourcemeta_one_test_cli_shell directory program name)
   if(UNIX)
     if("${program}" STREQUAL "server")
       add_test(NAME one.${program}.${directory}.${name} COMMAND
@@ -87,7 +111,7 @@ if(ONE_INDEX)
   sourcemeta_one_test_cli(common index fail-unknown-required-vocabulary-standalone)
   sourcemeta_one_test_cli(common index fail-vocabulary-not-object)
 
-  sourcemeta_one_test_cli(common index other-debug-symbols)
+  sourcemeta_one_test_cli_shell(common index other-debug-symbols)
 
   sourcemeta_one_test_cli(common index output-configuration-long)
   sourcemeta_one_test_cli(common index output-configuration-short)
@@ -101,11 +125,11 @@ if(ONE_INDEX)
   sourcemeta_one_test_cli(common index rebuild-cache)
   sourcemeta_one_test_cli(common index rebuild-cache-config-change)
   sourcemeta_one_test_cli(common index rebuild-comment-removed)
-  sourcemeta_one_test_cli(common index rebuild-corrupt-state)
+  sourcemeta_one_test_cli_shell(common index rebuild-corrupt-state)
   sourcemeta_one_test_cli(common index rebuild-comment-updated)
   sourcemeta_one_test_cli(common index rebuild-deleted-deps)
   sourcemeta_one_test_cli(common index rebuild-dependents-add-schema)
-  sourcemeta_one_test_cli(common index rebuild-dependents-many)
+  sourcemeta_one_test_cli_shell(common index rebuild-dependents-many)
   sourcemeta_one_test_cli(common index rebuild-dependents-modify-add-ref)
   sourcemeta_one_test_cli(common index rebuild-dependents-modify-direct)
   sourcemeta_one_test_cli(common index rebuild-dependents-modify-transitive)
@@ -116,7 +140,7 @@ if(ONE_INDEX)
   sourcemeta_one_test_cli(common index rebuild-modify-cache)
   sourcemeta_one_test_cli(common index rebuild-nested-directories)
   sourcemeta_one_test_cli(common index rebuild-one-to-zero)
-  sourcemeta_one_test_cli(common index rebuild-search-index-nested)
+  sourcemeta_one_test_cli_shell(common index rebuild-search-index-nested)
   sourcemeta_one_test_cli(common index rebuild-to-empty)
   sourcemeta_one_test_cli(common index rebuild-two-to-three)
   sourcemeta_one_test_cli(common index rebuild-two-to-three-with-ref)
@@ -137,7 +161,7 @@ if(ONE_INDEX)
   sourcemeta_one_test_cli(common index snapshot-no-self-collection-ignore-multiple)
   sourcemeta_one_test_cli(common index snapshot-no-self-collection-ignore-nonexistent)
   sourcemeta_one_test_cli(common index snapshot-no-self-collection-ignore-prefix-match)
-  sourcemeta_one_test_cli(common index snapshot-no-self-collection-ignore-unreadable-subtree)
+  sourcemeta_one_test_cli_shell(common index snapshot-no-self-collection-ignore-unreadable-subtree)
   sourcemeta_one_test_cli(common index snapshot-no-self-collection-include-default-path)
   sourcemeta_one_test_cli(common index snapshot-no-self-directory-schema-same-name)
   sourcemeta_one_test_cli(common index snapshot-no-self-draft4-ignore-vocabulary)
@@ -183,6 +207,11 @@ if(ONE_INDEX)
     sourcemeta_one_test_cli(enterprise index fail-authentication-unknown-path)
     sourcemeta_one_test_cli(enterprise index fail-authentication-unknown-route)
     sourcemeta_one_test_cli(enterprise index fail-authentication-route-templated-suffix)
+    sourcemeta_one_test_cli(enterprise index fail-authentication-name-missing)
+    sourcemeta_one_test_cli(enterprise index fail-authentication-name-empty)
+    sourcemeta_one_test_cli(enterprise index fail-authentication-name-invalid)
+    sourcemeta_one_test_cli(enterprise index fail-authentication-name-duplicate)
+    sourcemeta_one_test_cli(enterprise index fail-authentication-name-reserved)
     sourcemeta_one_test_cli(enterprise index snapshot-authentication-route-scope)
     sourcemeta_one_test_cli(enterprise index fail-authentication-issuer-cleartext)
     sourcemeta_one_test_cli(enterprise index fail-authentication-insecure-url)
@@ -194,7 +223,7 @@ if(ONE_INDEX)
     sourcemeta_one_test_cli(enterprise index fail-lint-rule-no-dialect)
     sourcemeta_one_test_cli(enterprise index fail-lint-rule-no-title)
     sourcemeta_one_test_cli(enterprise index fail-lint-rule-not-found)
-    sourcemeta_one_test_cli(enterprise index rebuild-interrupted-configuration-anchor)
+    sourcemeta_one_test_cli_shell(enterprise index rebuild-interrupted-configuration-anchor)
     sourcemeta_one_test_cli(enterprise index rebuild-removed-global-artifact)
     sourcemeta_one_test_cli(enterprise index fail-no-options)
     sourcemeta_one_test_cli(enterprise index fail-no-output)
@@ -212,12 +241,12 @@ if(ONE_INDEX)
 endif()
 
 if(ONE_SERVER AND ONE_INDEX)
-  sourcemeta_one_test_cli(common server debug-symbols)
+  sourcemeta_one_test_cli_shell(common server debug-symbols)
   sourcemeta_one_test_cli(common server fail-no-arguments)
   sourcemeta_one_test_cli(common server fail-path-relative)
   sourcemeta_one_test_cli(common server fail-port-negative)
   sourcemeta_one_test_cli(common server fail-port-overflow)
   sourcemeta_one_test_cli(common server fail-port-trailing-garbage)
   sourcemeta_one_test_cli(common server fail-port-zero)
-  sourcemeta_one_test_cli(common server graceful-shutdown)
+  sourcemeta_one_test_cli_shell(common server graceful-shutdown)
 endif()
