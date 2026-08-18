@@ -15,6 +15,8 @@ else()
     SOURCES authentication.cc path.cc)
 endif()
 
+target_link_libraries(sourcemeta_one_authentication PRIVATE sourcemeta::one::shared)
+
 # Paths are the key the policy trie is built from and looked up by, so
 # canonicalising them belongs to this module in both editions
 target_link_libraries(sourcemeta_one_authentication PRIVATE sourcemeta::core::text)
