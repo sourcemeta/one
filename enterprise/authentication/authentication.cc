@@ -451,18 +451,15 @@ auto Authentication::login(const std::string_view policy_name,
        .http_only = true,
        .secure = sourcemeta::core::URI{std::string{instance_url}}.is_https(),
        .same_site = sourcemeta::core::HTTPCookieSameSite::Lax})};
-  if (!cookie.has_value()) {
-    result.log.emplace_back(
-        "The login transaction could not be put in a cookie, for the policy");
-    return result;
-  }
 
   // Where the browser was going to be sent back to is carried in the sealed
   // transaction, and whoever asked for the login chose it, so this can be made
   // to outgrow what a browser will keep. A cookie the browser discards would
   // send somebody to their provider and refuse them on the way back, with
-  // nothing anywhere to explain it, so it is refused before the redirect
-  if (cookie.value().size() > MAXIMUM_COOKIE_LENGTH) {
+  // nothing anywhere to explain it, so it is refused before the redirect. The
+  // name and the attributes are fixed, so a cookie that cannot be built at all
+  // is the same transaction refused one step earlier
+  if (!cookie.has_value() || cookie.value().size() > MAXIMUM_COOKIE_LENGTH) {
     result.log.emplace_back(
         "The login transaction is larger than a cookie can hold, for the "
         "policy");
@@ -684,7 +681,7 @@ auto Authentication::callback(const std::string_view policy_name,
   auto session{this->table_.impl_->session_cookie(
       policy_name, identity.value().subject, grant.value().id_token, expiry,
       secure, result.log)};
-  if (session.has_value() && session.value().size() > MAXIMUM_COOKIE_LENGTH) {
+  if (!session.has_value() || session.value().size() > MAXIMUM_COOKIE_LENGTH) {
     session = this->table_.impl_->session_cookie(
         policy_name, identity.value().subject, "", expiry, secure, result.log);
   }
@@ -695,11 +692,8 @@ auto Authentication::callback(const std::string_view policy_name,
   // browser discards, which would look like signing in and then not being
   // signed in, with nothing anywhere to explain it
   if (!session.has_value() || session.value().size() > MAXIMUM_COOKIE_LENGTH) {
-    if (session.has_value()) {
-      result.log.emplace_back("The provider returned more than a session can "
-                              "hold, for the policy");
-    }
-
+    result.log.emplace_back("The provider returned more than a session can "
+                            "hold, for the policy");
     return abandon(Authentication::Outcome::Result::Incomplete);
   }
 
