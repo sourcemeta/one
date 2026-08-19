@@ -215,15 +215,14 @@ public:
     // is whatever the caller's view holds, so only the anonymous one
     // answers the same to everybody and may enter a shared cache
     response.write_header("Cache-Control",
-                          caller.view() == sourcemeta::one::VIEW_PUBLIC
-                              ? "public, max-age=60"
-                              : "private, max-age=60");
+                          sourcemeta::one::cache_control_search(
+                              caller.view() == sourcemeta::one::VIEW_PUBLIC));
     // RFC 9110 §12.5.5: the gzip negotiation axis applies, and so does whatever
     // places a caller in a view, since one URL answers differently per view.
     // Every other content surface revalidates on each hit, which re-resolves
     // the view at the origin. This one may be stored without revalidating, so
     // the axes that select the representation have to be named here instead
-    response.write_header("Vary", "Accept-Encoding, Authorization, Cookie");
+    response.write_header("Vary", sourcemeta::one::vary_caller_and_encoding());
     sourcemeta::one::write_link_header(response, this->response_schema_);
     std::ostringstream output;
     sourcemeta::core::prettify(result, output);

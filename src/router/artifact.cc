@@ -318,7 +318,7 @@ auto RouterAction::artifact_serve(
   // the challenge to the status keeps it correct by construction.
   // https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.2
   if (status == sourcemeta::core::HTTP_STATUS_UNAUTHORIZED) {
-    response.write_header("WWW-Authenticate", "Bearer realm=\"registry\"");
+    sourcemeta::one::write_challenge(response, {});
   }
 
   // To support requests from web browsers

@@ -200,7 +200,8 @@ auto RouterAction::serve_renewal(sourcemeta::one::HTTPRequest &request,
   sourcemeta::core::URI::escape(request.path(), location);
   response.write_status(sourcemeta::core::HTTP_STATUS_SEE_OTHER);
   response.write_header("Location", location);
-  response.write_header("Cache-Control", "no-store");
+  response.write_header("Cache-Control",
+                        sourcemeta::one::cache_control_no_store());
   sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_SEE_OTHER,
                                  request, response);
   return true;

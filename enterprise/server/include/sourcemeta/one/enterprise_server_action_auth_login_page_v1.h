@@ -86,7 +86,8 @@ public:
       this->artifact_serve(
           this->page_.value(), sourcemeta::core::HTTP_STATUS_OK, false, {}, {},
           HTML_BROWSER_SECURITY, request, response, this->error_schema_,
-          "public, max-age=0, must-revalidate", "Accept, Accept-Encoding");
+          sourcemeta::one::cache_control_content(true),
+          sourcemeta::one::vary_type_and_encoding());
       return;
     }
 
@@ -103,7 +104,8 @@ public:
     this->artifact_serve(
         this->document_.value(), sourcemeta::core::HTTP_STATUS_OK, true, {},
         this->response_schema_, {}, request, response, this->error_schema_,
-        "public, max-age=0, must-revalidate", "Accept, Accept-Encoding");
+        sourcemeta::one::cache_control_content(true),
+        sourcemeta::one::vary_type_and_encoding());
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,

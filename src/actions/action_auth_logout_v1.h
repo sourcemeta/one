@@ -49,7 +49,8 @@ public:
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
       response.write_status(sourcemeta::core::HTTP_STATUS_NO_CONTENT);
-      response.write_header("Cache-Control", "no-store");
+      response.write_header("Cache-Control",
+                            sourcemeta::one::cache_control_no_store());
       response.write_header("Allow", "POST, OPTIONS");
       sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_NO_CONTENT,
                                      request, response);

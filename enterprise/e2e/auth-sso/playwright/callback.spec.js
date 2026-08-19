@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { createHmac } from 'node:crypto';
+import { createHmac, hkdfSync } from 'node:crypto';
 
 // The sandbox's session signing secret, from its environment file. Knowing it
 // lets these tests mint correctly signed transaction cookies whose payloads
@@ -11,6 +11,9 @@ const SESSION_SECRET = 'a-session-signing-secret-for-the-sso-sandbox';
 // value is for, so forging one means naming its purpose too. That is what
 // stops a transaction from being presented as a session.
 const TRANSACTION_LABEL = 'sourcemeta/one/transaction';
+// The key comes from the secret through HKDF, under a fixed salt and that
+// label, which is what version 2 of the format says
+const SESSION_SALT = 'sourcemeta/one/seal';
 
 const STATE = 'e2e-forged-state-value-for-callback-tests-1';
 const NONCE = 'e2e-forged-nonce-value-for-callback-tests-1';
@@ -29,10 +32,10 @@ function sealTransaction(payload) {
   const issued = Math.floor(Date.now() / 1000);
   const expiry = issued + 600;
   const encoded = Buffer.from(JSON.stringify(payload)).toString('base64url');
-  const prefix = `1.${issued}.${expiry}.${encoded}`;
-  const key = createHmac('sha256', SESSION_SECRET)
-    .update(TRANSACTION_LABEL)
-    .digest();
+  const prefix = `2.${issued}.${expiry}.${encoded}`;
+  const key = Buffer.from(
+    hkdfSync('sha256', SESSION_SECRET, SESSION_SALT, TRANSACTION_LABEL, 32)
+  );
   const signature = createHmac('sha256', key).update(prefix).digest('base64url');
   return `${prefix}.${signature}`;
 }

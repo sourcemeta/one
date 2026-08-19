@@ -110,10 +110,20 @@ inline constexpr std::size_t MAXIMUM_COOKIE_LENGTH{4000};
 inline constexpr std::chrono::seconds JWT_CLOCK_SKEW{60};
 
 // The version prefix lets the sealed format evolve without a value produced
-// under one format ever verifying under another
-inline constexpr std::string_view SESSION_VERSION{"1"};
+// under one format ever verifying under another. Version 2 derives its key
+// through HKDF, so nothing sealed under version 1 opens here
+inline constexpr std::string_view SESSION_VERSION{"2"};
+
+// RFC 5869 Section 3.1 asks for a salt, which is not a secret and is fixed
+// here so that every replica derives the same key from the same secret
+inline constexpr std::string_view SESSION_SALT{"sourcemeta/one/seal"};
 
 inline constexpr std::size_t SESSION_SIGNATURE_LENGTH{32};
+
+// RFC 2104 Section 3 has HMAC take a key of any length and reduce one longer
+// than the hash block size, so a key the size of the digest is the largest
+// that adds anything
+inline constexpr std::size_t SESSION_KEY_LENGTH{32};
 
 // A sealed value carries the instant it was minted alongside the instant it
 // stops being honoured, so a lifetime is a fact about the value rather than
@@ -149,9 +159,15 @@ inline auto purpose_label(const SealPurpose purpose) -> std::string_view {
   std::unreachable();
 }
 
+// One secret yields a key per purpose, which is what stops a value sealed for
+// one purpose from verifying under another (RFC 5869 Section 2). Expanding
+// asks for a single digest of material, well inside what that section permits,
+// so this only ever answers with a key
 inline auto derive_key(const std::string_view secret, const SealPurpose purpose)
-    -> std::array<std::uint8_t, 32> {
-  return sourcemeta::core::hmac_sha256_digest(secret, purpose_label(purpose));
+    -> std::string {
+  return sourcemeta::core::hkdf_sha256(
+             secret, SESSION_SALT, purpose_label(purpose), SESSION_KEY_LENGTH)
+      .value();
 }
 
 inline auto digest_view(const std::array<std::uint8_t, 32> &digest)
@@ -192,8 +208,7 @@ inline auto seal_value(const std::string_view payload,
                                     expiry.time_since_epoch().count()));
   result += '.';
   result += sourcemeta::core::base64url_encode(payload);
-  const auto digest{
-      sourcemeta::core::hmac_sha256_digest(digest_view(key), result)};
+  const auto digest{sourcemeta::core::hmac_sha256_digest(key, result)};
   result += '.';
   result += sourcemeta::core::base64url_encode(digest_view(digest));
   return result;
@@ -209,43 +224,27 @@ inline auto open_value(const std::string_view value, const SealPurpose purpose,
     return std::nullopt;
   }
 
-  const auto version_end{value.find('.')};
-  if (version_end == std::string_view::npos) {
+  // The version, the two instants, the payload and the signature, which a
+  // value carries in that order and nowhere else, so anything with a segment
+  // too few or too many is not one of ours
+  const auto segments{sourcemeta::core::jose_compact_segments<5>(value)};
+  if (!segments.has_value()) {
     return std::nullopt;
   }
 
-  const auto issued_end{value.find('.', version_end + 1)};
-  if (issued_end == std::string_view::npos) {
+  const auto version{segments.value()[0]};
+  const auto payload{segments.value()[3]};
+  const auto signature{segments.value()[4]};
+  if (version != SESSION_VERSION) {
     return std::nullopt;
   }
 
-  const auto expiry_end{value.find('.', issued_end + 1)};
-  if (expiry_end == std::string_view::npos) {
-    return std::nullopt;
-  }
-
-  const auto payload_end{value.find('.', expiry_end + 1)};
-  if (payload_end == std::string_view::npos) {
-    return std::nullopt;
-  }
-
-  const auto signature{value.substr(payload_end + 1)};
-  if (signature.find('.') != std::string_view::npos) {
-    return std::nullopt;
-  }
-
-  if (value.substr(0, version_end) != SESSION_VERSION) {
-    return std::nullopt;
-  }
-
-  const auto issued{parse_expiry(
-      value.substr(version_end + 1, issued_end - version_end - 1))};
+  const auto issued{parse_expiry(segments.value()[1])};
   if (!issued.has_value()) {
     return std::nullopt;
   }
 
-  const auto expiry{
-      parse_expiry(value.substr(issued_end + 1, expiry_end - issued_end - 1))};
+  const auto expiry{parse_expiry(segments.value()[2])};
   if (!expiry.has_value()) {
     return std::nullopt;
   }
@@ -274,12 +273,12 @@ inline auto open_value(const std::string_view value, const SealPurpose purpose,
 
   // The signature covers everything before it, so the expiry and the payload
   // are bound together and neither can be transplanted from another value
-  const auto signing_input{value.substr(0, payload_end)};
+  const auto signing_input{
+      value.substr(0, value.size() - signature.size() - 1)};
   auto authentic{false};
   for (const auto secret : secrets) {
     const auto key{derive_key(secret, purpose)};
-    const auto digest{
-        sourcemeta::core::hmac_sha256_digest(digest_view(key), signing_input)};
+    const auto digest{sourcemeta::core::hmac_sha256_digest(key, signing_input)};
     if (sourcemeta::core::secure_equals(digest_view(digest),
                                         presented.value())) {
       authentic = true;
@@ -296,8 +295,7 @@ inline auto open_value(const std::string_view value, const SealPurpose purpose,
     return std::nullopt;
   }
 
-  return sourcemeta::core::base64url_decode(
-      value.substr(expiry_end + 1, payload_end - expiry_end - 1));
+  return sourcemeta::core::base64url_decode(payload);
 }
 
 } // namespace sourcemeta::one

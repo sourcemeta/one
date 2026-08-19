@@ -12,6 +12,7 @@
 #include <sourcemeta/one/shared.h>
 
 #include <algorithm>   // std::ranges::equal
+#include <array>       // std::array
 #include <cassert>     // assert
 #include <chrono>      // std::chrono::system_clock
 #include <cstddef>     // std::size_t
@@ -19,12 +20,124 @@
 #include <mutex>       // std::mutex, std::scoped_lock
 #include <optional>    // std::optional
 #include <print>       // std::print
+#include <span>        // std::span
 #include <sstream>     // std::ostringstream
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <thread>      // std::this_thread
+#include <utility>     // std::pair
+#include <vector>      // std::vector
 
 namespace sourcemeta::one {
+
+// Which request fields a cache must key a stored response on (RFC 9110 Section
+// 12.5.5), composed once each rather than written out at each site. Content is
+// negotiated on the encoding everywhere, and an answer that differs by who
+// asked names whatever placed them in their view alongside it, since a cache
+// keyed on less would hand one caller's answer to the next
+
+[[nodiscard]] inline auto vary_encoding() -> std::string_view {
+  static const std::array<std::string_view, 1> FIELDS{{"Accept-Encoding"}};
+  static const std::string VALUE{
+      sourcemeta::core::http_format_vary(FIELDS).value()};
+  return VALUE;
+}
+
+[[nodiscard]] inline auto vary_type_and_encoding() -> std::string_view {
+  static const std::array<std::string_view, 2> FIELDS{
+      {"Accept", "Accept-Encoding"}};
+  static const std::string VALUE{
+      sourcemeta::core::http_format_vary(FIELDS).value()};
+  return VALUE;
+}
+
+[[nodiscard]] inline auto vary_client_and_encoding() -> std::string_view {
+  static const std::array<std::string_view, 2> FIELDS{
+      {"User-Agent", "Accept-Encoding"}};
+  static const std::string VALUE{
+      sourcemeta::core::http_format_vary(FIELDS).value()};
+  return VALUE;
+}
+
+[[nodiscard]] inline auto vary_caller_and_encoding() -> std::string_view {
+  static const std::array<std::string_view, 3> FIELDS{
+      {"Accept-Encoding", "Authorization", "Cookie"}};
+  static const std::string VALUE{
+      sourcemeta::core::http_format_vary(FIELDS).value()};
+  return VALUE;
+}
+
+[[nodiscard]] inline auto vary_origin() -> std::string_view {
+  static const std::array<std::string_view, 1> FIELDS{{"Origin"}};
+  static const std::string VALUE{
+      sourcemeta::core::http_format_vary(FIELDS).value()};
+  return VALUE;
+}
+
+// Every caching directive this server sends, spelled through the type RFC 9111
+// defines them in rather than as a literal at each site. Each is fixed, so
+// each is spelled once and handed out as a view from then on
+
+// RFC 9111 Section 5.2.2.5: no cache may store any part of the exchange, which
+// is what an answer computed for one request and one caller says
+[[nodiscard]] inline auto cache_control_no_store() -> std::string_view {
+  static const std::string DIRECTIVES{
+      sourcemeta::core::http_serialize_cache_control({.no_store = true})
+          .value()};
+  return DIRECTIVES;
+}
+
+// The same directives under each visibility, since which caches may store a
+// response follows from who was admitted to it: one served only to a caller
+// carrying a credential must never be handed by a shared cache to the next
+class CacheControlPair {
+public:
+  explicit CacheControlPair(sourcemeta::core::HTTPCacheControl directives) {
+    directives.visibility = sourcemeta::core::HTTPCacheVisibility::Public;
+    this->shared_ =
+        sourcemeta::core::http_serialize_cache_control(directives).value();
+    directives.visibility = sourcemeta::core::HTTPCacheVisibility::Private;
+    this->personal_ =
+        sourcemeta::core::http_serialize_cache_control(directives).value();
+  }
+
+  [[nodiscard]] auto of(const bool is_public) const noexcept
+      -> std::string_view {
+    return is_public ? this->shared_ : this->personal_;
+  }
+
+private:
+  std::string shared_;
+  std::string personal_;
+};
+
+// Served registry content, which a cache may hold but never reuse without
+// asking again, so that a change reaches a caller on their next request
+[[nodiscard]] inline auto cache_control_content(const bool is_public)
+    -> std::string_view {
+  static const CacheControlPair DIRECTIVES{
+      {.max_age = std::chrono::seconds{0}, .must_revalidate = true}};
+  return DIRECTIVES.of(is_public);
+}
+
+// Search results, where a freshness window amortises the full-text cost across
+// the bursts of typing into a search box without serving a stale ranking for
+// long
+[[nodiscard]] inline auto cache_control_search(const bool is_public)
+    -> std::string_view {
+  static const CacheControlPair DIRECTIVES{
+      {.max_age = std::chrono::seconds{60}}};
+  return DIRECTIVES.of(is_public);
+}
+
+// A static asset carrying its build in its own name, which is why RFC 8246
+// lets a cache keep it for a year without ever asking again
+[[nodiscard]] inline auto cache_control_immutable(const bool is_public)
+    -> std::string_view {
+  static const CacheControlPair DIRECTIVES{
+      {.max_age = std::chrono::seconds{31536000}, .immutable = true}};
+  return DIRECTIVES.of(is_public);
+}
 
 // A line about something that happened, optionally naming the one value it
 // happened to, such as the policy a failure concerns. Keeping the value apart
@@ -130,32 +243,64 @@ inline auto cors_preflight(const HTTPRequest &request, HTTPResponse &response,
   response.write_header("Access-Control-Max-Age", "3600");
   // Browser preflight cache is governed by `Access-Control-Max-Age`;
   // `no-store` keeps shared HTTP caches from storing this response.
-  response.write_header("Cache-Control", "no-store");
+  response.write_header("Cache-Control", cache_control_no_store());
   // RFC 9110 §9.3.7: OPTIONS responses SHOULD include Allow. Different
   // audience than Access-Control-Allow-Methods (HTTP vs CORS preflight).
   response.write_header("Allow", allow_methods);
   send_response(sourcemeta::core::HTTP_STATUS_NO_CONTENT, request, response);
 }
 
+// RFC 6750 Section 3 has the Bearer scheme carry at least one parameter, and
+// the realm is the conventional one every denial on this surface names
+inline constexpr std::string_view CHALLENGE_SCHEME{"Bearer"};
+inline constexpr std::array<std::pair<std::string_view, std::string_view>, 1>
+    CHALLENGE_REALM{{{"realm", "registry"}}};
+
+// RFC 9110 Section 15.5.2: a 401 response MUST carry `WWW-Authenticate`. A
+// route may name parameters of its own beyond the realm, and one that cannot
+// be spelled as a challenge is dropped rather than sent, since the header is
+// required whatever the route wanted to add
+inline auto write_challenge(
+    HTTPResponse &response,
+    const std::span<const std::pair<std::string_view, std::string_view>>
+        extension) -> void {
+  std::string value;
+  if (!extension.empty()) {
+    std::vector<std::pair<std::string_view, std::string_view>> parameters{
+        CHALLENGE_REALM.cbegin(), CHALLENGE_REALM.cend()};
+    parameters.insert(parameters.cend(), extension.begin(), extension.end());
+    // A refusal leaves nothing behind, so the realm alone answers below
+    sourcemeta::core::http_serialize_challenge(
+        {.scheme = CHALLENGE_SCHEME, .parameters = parameters}, value);
+  }
+
+  if (value.empty()) {
+    sourcemeta::core::http_serialize_challenge(
+        {.scheme = CHALLENGE_SCHEME, .parameters = CHALLENGE_REALM}, value);
+  }
+
+  response.write_header("WWW-Authenticate", value);
+}
+
 // CORS scope is required at every error site. No default for `origin` so a
 // caller cannot silently widen a restricted-origin handler to wildcard. An
 // empty origin means the route is CORS-disabled and no Allow-Origin or
 // Expose-Headers should appear on the error response.
-inline auto json_error(const HTTPRequest &request, HTTPResponse &response,
-                       const sourcemeta::core::HTTPStatus &status,
-                       const std::string_view type,
-                       const std::string_view detail,
-                       const std::string_view schema,
-                       const std::string_view origin,
-                       const std::string_view allow = {},
-                       const std::string_view challenge = {}) -> void {
+inline auto
+json_error(const HTTPRequest &request, HTTPResponse &response,
+           const sourcemeta::core::HTTPStatus &status,
+           const std::string_view type, const std::string_view detail,
+           const std::string_view schema, const std::string_view origin,
+           const std::string_view allow = {},
+           const std::span<const std::pair<std::string_view, std::string_view>>
+               challenge = {}) -> void {
   // Header values are written to the wire verbatim. CR/LF would split
   // headers, enabling response header injection or CORS widening. Today's
   // callers pass string literals, but the asserts catch future untrusted
-  // forwards.
+  // forwards. The challenge is spelled by a serialiser that refuses whatever
+  // a header cannot carry, so it needs no guard of its own
   assert(origin.find_first_of("\r\n") == std::string_view::npos);
   assert(allow.find_first_of("\r\n") == std::string_view::npos);
-  assert(challenge.find_first_of("\r\n") == std::string_view::npos);
   const auto body{sourcemeta::core::http_make_problem_details(
       {.status = status, .type = type, .detail = detail})};
 
@@ -166,7 +311,7 @@ inline auto json_error(const HTTPRequest &request, HTTPResponse &response,
   // (the request shape, server state, the moment) and a 500 cached
   // even briefly turns a transient hiccup into a sticky outage.
   // Apply uniformly across every error envelope.
-  response.write_header("Cache-Control", "no-store");
+  response.write_header("Cache-Control", cache_control_no_store());
   if (!origin.empty()) {
     response.write_header("Access-Control-Allow-Origin", origin);
     // A challenge a browser cannot read is a challenge it cannot answer, so
@@ -181,7 +326,7 @@ inline auto json_error(const HTTPRequest &request, HTTPResponse &response,
     // origin B.
     // https://datatracker.ietf.org/doc/html/rfc9110#section-12.5.5
     if (origin != "*") {
-      response.write_header("Vary", "Origin");
+      response.write_header("Vary", vary_origin());
     }
   }
   // RFC 9110 §15.5.6: 405 responses MUST carry Allow listing supported methods.
@@ -190,32 +335,12 @@ inline auto json_error(const HTTPRequest &request, HTTPResponse &response,
       status == sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED) {
     response.write_header("Allow", allow);
   }
-  // RFC 9110 §15.5.2: a 401 response MUST carry WWW-Authenticate. The
-  // machine surface authenticates with bearer credentials only, so the
-  // challenge is constant. RFC 6750 §3 additionally requires the scheme
-  // to be followed by at least one auth-param, and `realm` is the
-  // conventional one.
+  // The machine surface authenticates with bearer credentials only, so the
+  // scheme is constant and only the parameters a route names vary
   // https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.2
   // https://datatracker.ietf.org/doc/html/rfc6750#section-3
   if (status == sourcemeta::core::HTTP_STATUS_UNAUTHORIZED) {
-    // The extension arrives as a written out auth-param list, quotes included,
-    // and is spliced in as it stands. A control character in it would end the
-    // header early or leave a value RFC 9110 Section 5.6.4 does not admit
-    // inside a quoted-string, so an unusable extension is dropped rather than
-    // sent. Horizontal tab is not one of those: Section 5.5 lets it sit in a
-    // field value wherever a space may, and it can close neither a header nor
-    // a quoted string
-    if (challenge.empty() ||
-        std::ranges::any_of(challenge, [](const char character) -> bool {
-          const auto code{static_cast<unsigned char>(character)};
-          return (code < 0x20 && character != '\t') || code == 0x7f;
-        })) {
-      response.write_header("WWW-Authenticate", "Bearer realm=\"registry\"");
-    } else {
-      std::string value{"Bearer realm=\"registry\", "};
-      value.append(challenge);
-      response.write_header("WWW-Authenticate", value);
-    }
+    write_challenge(response, challenge);
   }
   if (!schema.empty()) {
     write_link_header(response, schema);
@@ -237,12 +362,11 @@ inline auto json_error(const HTTPRequest &request, HTTPResponse &response,
 
 // The single shape of an authentication denial on the HTTP surface, so
 // every protected resource answers identically
-inline auto json_error_unauthorized(const HTTPRequest &request,
-                                    HTTPResponse &response,
-                                    const std::string_view schema,
-                                    const std::string_view origin,
-                                    const std::string_view challenge = {})
-    -> void {
+inline auto json_error_unauthorized(
+    const HTTPRequest &request, HTTPResponse &response,
+    const std::string_view schema, const std::string_view origin,
+    const std::span<const std::pair<std::string_view, std::string_view>>
+        challenge = {}) -> void {
   json_error(request, response, sourcemeta::core::HTTP_STATUS_UNAUTHORIZED,
              "urn:sourcemeta:one:authentication-required",
              "This resource requires authentication", schema, origin, {},

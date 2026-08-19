@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { createHmac } from 'node:crypto';
+import { createHmac, hkdfSync } from 'node:crypto';
 
 // This instance is gated at the root by all three policy types at once, so
 // every path is covered, including the `/self` schemas the MCP endpoint reads
@@ -14,13 +14,19 @@ import { createHmac } from 'node:crypto';
 
 const SESSION_SECRET = 'a-session-signing-secret-for-the-auth-closed-sandbox';
 const SESSION_LABEL = 'sourcemeta/one/session';
+// A key is derived from the secret through HKDF, under a fixed salt and the
+// label naming what the value is for, which is what version 2 of the format
+// says. Version 1 derived it with a single HMAC and opens nowhere any more
+const SESSION_SALT = 'sourcemeta/one/seal';
 
 function sealSession(payload, secret = SESSION_SECRET) {
   const issued = Math.floor(Date.now() / 1000);
   const expiry = issued + 3600;
   const encoded = Buffer.from(JSON.stringify(payload)).toString('base64url');
-  const prefix = `1.${issued}.${expiry}.${encoded}`;
-  const key = createHmac('sha256', secret).update(SESSION_LABEL).digest();
+  const prefix = `2.${issued}.${expiry}.${encoded}`;
+  const key = Buffer.from(
+    hkdfSync('sha256', secret, SESSION_SALT, SESSION_LABEL, 32)
+  );
   const signature = createHmac('sha256', key).update(prefix).digest('base64url');
   return `${prefix}.${signature}`;
 }

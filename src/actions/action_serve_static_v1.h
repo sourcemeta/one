@@ -103,9 +103,8 @@ public:
     this->artifact_serve(resolution.path.value(),
                          sourcemeta::core::HTTP_STATUS_OK, false, {}, {}, {},
                          request, response, this->error_schema_,
-                         is_public ? "public, max-age=31536000, immutable"
-                                   : "private, max-age=31536000, immutable",
-                         "Accept-Encoding");
+                         sourcemeta::one::cache_control_immutable(is_public),
+                         sourcemeta::one::vary_encoding());
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,

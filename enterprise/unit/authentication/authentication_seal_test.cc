@@ -92,7 +92,7 @@ TEST(session_value_has_the_shape_the_tests_below_assume) {
   const auto authentication{instance("seal_shape", SEAL_SECRETS)};
   const auto started{start(authentication)};
   EXPECT_EQ(std::ranges::count(started.sealed, '.'), 4);
-  EXPECT_EQ(started.sealed.front(), '1');
+  EXPECT_EQ(started.sealed.front(), '2');
 }
 
 TEST(session_denies_a_tampered_version) {
@@ -170,10 +170,10 @@ TEST(session_denies_malformed_values) {
   const auto started{start(authentication)};
   EXPECT_TRUE(OPENS(authentication, started, started.sealed));
   EXPECT_FALSE(OPENS(authentication, started, ""));
-  EXPECT_FALSE(OPENS(authentication, started, "1"));
-  EXPECT_FALSE(OPENS(authentication, started, "1.2.3.4"));
+  EXPECT_FALSE(OPENS(authentication, started, "2"));
+  EXPECT_FALSE(OPENS(authentication, started, "2.2.3.4"));
   EXPECT_FALSE(OPENS(authentication, started, "not-a-sealed-value"));
-  EXPECT_FALSE(OPENS(authentication, started, "1....."));
+  EXPECT_FALSE(OPENS(authentication, started, "2....."));
 }
 
 TEST(session_denies_a_signature_that_is_not_base64url) {
@@ -265,4 +265,26 @@ TEST(session_denies_a_callback_naming_another_return_address) {
 
   // The control differs in that alone
   EXPECT_TRUE(OPENS(authentication, started, started.sealed));
+}
+
+// A secret yields a key per purpose, so a value minted for one purpose is not
+// a value another reads. The transaction a login just handed out is the
+// closest thing to a session there is, minted under the same policy, from the
+// same secret, at the same instant, and apart in nothing but its purpose
+TEST(session_denies_a_value_sealed_for_another_purpose) {
+  const auto authentication{instance("seal_purpose", SEAL_SECRETS)};
+  const auto started{start(authentication)};
+
+  const std::string transaction{"sourcemeta_one_session=" + started.sealed};
+  EXPECT_FALSE(authentication.permits(
+      AT("/portal/x"),
+      authentication.caller({.bearer = "", .cookies = FIELDS(transaction)})));
+
+  // The control, a value minted for the purpose it is presented under, which
+  // opens the very path the one above did not
+  const std::string session{"sourcemeta_one_session=" +
+                            SESSION_FOR("okta", SEAL_SECRETS, "jane")};
+  EXPECT_TRUE(authentication.permits(
+      AT("/portal/x"),
+      authentication.caller({.bearer = "", .cookies = FIELDS(session)})));
 }

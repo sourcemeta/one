@@ -50,7 +50,8 @@ public:
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
       response.write_status(sourcemeta::core::HTTP_STATUS_NO_CONTENT);
-      response.write_header("Cache-Control", "no-store");
+      response.write_header("Cache-Control",
+                            sourcemeta::one::cache_control_no_store());
       // RFC 9110 §9.3.7: OPTIONS responses SHOULD include Allow
       response.write_header("Allow", "POST, OPTIONS");
       sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_NO_CONTENT,
@@ -87,7 +88,8 @@ public:
     }
 
     response.write_header("Location", outcome.location);
-    response.write_header("Cache-Control", "no-store");
+    response.write_header("Cache-Control",
+                          sourcemeta::one::cache_control_no_store());
     sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_SEE_OTHER,
                                    request, response);
   }

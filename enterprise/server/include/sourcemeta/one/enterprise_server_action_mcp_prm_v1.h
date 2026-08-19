@@ -98,9 +98,8 @@ public:
     // Public because it is served to anybody, and revalidated because a stale
     // copy would name an authorization server this instance has stopped
     // accepting, sending a client to obtain a token that would be refused
-    response.write_header(
-        "Cache-Control",
-        sourcemeta::one::RouterAction::content_cache_control(true));
+    response.write_header("Cache-Control",
+                          sourcemeta::one::cache_control_content(true));
     // A browser-based client fetches this from its own origin, so it has to be
     // readable across origins to be worth publishing at all
     response.write_header("Access-Control-Allow-Origin", "*");

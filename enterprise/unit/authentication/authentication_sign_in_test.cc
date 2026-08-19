@@ -10,10 +10,11 @@
 static auto SIGN_IN(const sourcemeta::one::Authentication &authentication,
                     const TestProvider &provider, const std::string_view policy,
                     const std::string_view client_id,
-                    const std::string_view asserted)
+                    const std::string_view asserted,
+                    const std::string_view return_to = "")
     -> sourcemeta::one::Authentication::Outcome {
-  auto started{
-      authentication.login(policy, INSTANCE_URL, REDIRECT_URI, false, "")};
+  auto started{authentication.login(policy, INSTANCE_URL, REDIRECT_URI, false,
+                                    return_to)};
   if (started.result !=
       sourcemeta::one::Authentication::Outcome::Result::Redirect) {
     return started;
@@ -248,6 +249,65 @@ TEST(an_address_the_provider_will_not_vouch_for_is_refused) {
                     R"JSON({ "sub": "a1b2" })JSON")
                 .result,
             sourcemeta::one::Authentication::Outcome::Result::Redirect);
+}
+
+// Which domain an address sits at is read by parsing the address, since RFC
+// 5321 Section 4.1.2 lets a quoted local part carry a separator of its own.
+// An address the grammar does not admit names no domain, and a rule compares
+// against domains rather than against whatever follows a separator, so such an
+// address matches nothing
+TEST(an_address_that_is_no_mailbox_sits_at_no_domain) {
+  setenv("ONE_TEST_ADMIT_MAILBOX", "confidential", 1);
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
+  const TestProvider provider;
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<std::string_view, 1> domains{{"acme.test"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .name = "okta",
+        .credential = sourcemeta::one::Authentication::Policy::Interactive{
+            .issuer = provider.issuer,
+            .client_id = "client",
+            .client_secret_variable = "ONE_TEST_ADMIT_MAILBOX",
+            .email_domains = domains,
+            .session_secrets = SESSION_SECRETS}}}};
+  const sourcemeta::one::Authentication authentication{
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, TEST_PATH("one_test_admit_mailbox"), ANYWHERE)},
+      provider.fetcher()};
+
+  // The control, an ordinary address at a domain the policy admits
+  EXPECT_EQ(SIGN_IN(authentication, provider, "okta", "client",
+                    R"JSON({ "sub": "a1b2", "email": "jane@acme.test",
+                             "email_verified": true })JSON")
+                .result,
+            sourcemeta::one::Authentication::Outcome::Result::Redirect);
+
+  // A quoted local part may carry a separator, and what it carries is part of
+  // the name rather than a domain
+  EXPECT_EQ(SIGN_IN(authentication, provider, "okta", "client",
+                    R"JSON({ "sub": "a1b2",
+                             "email": "\"jane@elsewhere.test\"@acme.test",
+                             "email_verified": true })JSON")
+                .result,
+            sourcemeta::one::Authentication::Outcome::Result::Redirect);
+
+  // An address with nothing after the separator sits nowhere
+  EXPECT_EQ(SIGN_IN(authentication, provider, "okta", "client",
+                    R"JSON({ "sub": "a1b2", "email": "jane@",
+                             "email_verified": true })JSON")
+                .result,
+            sourcemeta::one::Authentication::Outcome::Result::NotAdmitted);
+
+  // An internationalized address is outside the grammar a mailbox is read
+  // under, so it names no domain even where what follows its separator reads
+  // like one the policy admits
+  EXPECT_EQ(SIGN_IN(authentication, provider, "okta", "client",
+                    R"JSON({ "sub": "a1b2", "email": "jan\u00e9@acme.test",
+                             "email_verified": true })JSON")
+                .result,
+            sourcemeta::one::Authentication::Outcome::Result::NotAdmitted);
 }
 
 // The token wins wherever both answers speak, since it arrives signed and
@@ -695,4 +755,62 @@ TEST(a_token_larger_than_a_session_holds_signs_in_without_it) {
       authentication.logout({.cookies = FIELDS(without)}, INSTANCE_URL, "/")};
   EXPECT_TRUE(finished.location.starts_with("https://provider.test/logout"));
   EXPECT_TRUE(finished.location.find("id_token_hint=") == std::string::npos);
+}
+
+// Where a completed sign-in left the browser. Every case below is about the
+// target rather than about the login carrying it, and a login that ended
+// anywhere but a redirect leaves the same empty location a refused target
+// does, so what these cases are not about is asserted here, once
+static auto RETURNED_TO(const sourcemeta::one::Authentication &authentication,
+                        const TestProvider &provider,
+                        const std::string_view return_to) -> std::string {
+  const auto outcome{SIGN_IN(authentication, provider, "okta", "client",
+                             R"JSON({ "sub": "a1b2" })JSON", return_to)};
+  EXPECT_EQ(outcome.result,
+            sourcemeta::one::Authentication::Outcome::Result::Redirect);
+  return outcome.location;
+}
+
+// Where a browser lands once a login completes is chosen by whoever asked for
+// the login, so a target naming another origin would make one an open
+// redirect. It travelled sealed under this instance's own signature and is
+// still read again as a same-origin path before anybody is sent there, since
+// what was asked for was never this instance's to trust
+TEST(a_login_returning_to_another_origin_lands_nowhere_instead) {
+  setenv("ONE_TEST_SIGN_IN_RETURN", "confidential", 1);
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
+  const TestProvider provider;
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .name = "okta",
+        .credential = sourcemeta::one::Authentication::Policy::Interactive{
+            .issuer = provider.issuer,
+            .client_id = "client",
+            .client_secret_variable = "ONE_TEST_SIGN_IN_RETURN",
+            .session_secrets = SESSION_SECRETS}}}};
+  const sourcemeta::one::Authentication authentication{
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, TEST_PATH("sign_in_return_to"), ANYWHERE)},
+      provider.fetcher()};
+
+  // The control, a rooted path carrying a query and a fragment, which is the
+  // whole of what a return target may be
+  EXPECT_EQ(RETURNED_TO(authentication, provider, "/portal/page?tab=two#top"),
+            "/portal/page?tab=two#top");
+
+  // A second slash opens an authority of its own, and a browser folds the
+  // backslash into one, so both name somewhere else entirely
+  EXPECT_EQ(RETURNED_TO(authentication, provider, "//evil.test"), "");
+  EXPECT_EQ(RETURNED_TO(authentication, provider, "/\\evil.test"), "");
+  EXPECT_EQ(RETURNED_TO(authentication, provider, "https://evil.test"), "");
+
+  // Every octet outside the path grammar is refused, an unfinished escape
+  // included, so nothing that would have to be encoded to be sent reaches a
+  // Location header as it stands
+  EXPECT_EQ(RETURNED_TO(authentication, provider, "/portal page"), "");
+  EXPECT_EQ(RETURNED_TO(authentication, provider, "/portal%zz"), "");
+  EXPECT_EQ(RETURNED_TO(authentication, provider, "/portal<x>"), "");
+  EXPECT_EQ(RETURNED_TO(authentication, provider, "/portal\n"), "");
 }

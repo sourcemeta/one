@@ -61,7 +61,8 @@ public:
     // A cached health probe response defeats the point of the probe:
     // load balancers / orchestrators must observe live state on every
     // hit, not the last frozen success from a now-failing instance.
-    response.write_header("Cache-Control", "no-store");
+    response.write_header("Cache-Control",
+                          sourcemeta::one::cache_control_no_store());
     sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_OK, request,
                                    response);
   }
