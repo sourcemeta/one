@@ -231,7 +231,9 @@ struct Authentication::Table::Impl {
 
   // The session cookie for a login, carrying the identity token when one is
   // given. Building it is separated out so the caller can measure the result
-  // and ask for a smaller one
+  // and ask for a smaller one. The name and the attributes are fixed, so a
+  // cookie that cannot be built at all is a session too large for one, which
+  // is what a caller measuring the result is looking for anyway
   [[nodiscard]] auto session_cookie(const std::string_view policy_name,
                                     const std::string_view subject,
                                     const std::string_view id_token,
@@ -258,20 +260,14 @@ struct Authentication::Table::Impl {
       return std::nullopt;
     }
 
-    auto cookie{sourcemeta::core::http_serialize_cookie(
+    return sourcemeta::core::http_serialize_cookie(
         {.name = SESSION_COOKIE,
          .value = sealed.value(),
          .path = COOKIE_PATH,
          .max_age = SESSION_LIFETIME,
          .http_only = true,
          .secure = secure,
-         .same_site = sourcemeta::core::HTTPCookieSameSite::Lax})};
-    if (!cookie.has_value()) {
-      log.emplace_back("The session could not be put in a cookie, for the "
-                       "policy");
-    }
-
-    return cookie;
+         .same_site = sourcemeta::core::HTTPCookieSameSite::Lax});
   }
 
   // A rule compared against a claim carrying objects is compared on the `value`

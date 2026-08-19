@@ -639,3 +639,60 @@ TEST(a_login_asking_for_nowhere_returns_to_what_the_policy_governs) {
             sourcemeta::one::Authentication::Outcome::Result::Redirect);
   EXPECT_EQ(completed.location, "/portal");
 }
+
+// What a provider asserts about somebody is chosen there, so the identity token
+// it mints can outgrow what a browser will keep once a session carries it. The
+// token is only what signing out proves whose session it is ending, so it is
+// what gives way: the session is minted without it, and the confirmation page
+// at the provider is the whole of the cost
+TEST(a_token_larger_than_a_session_holds_signs_in_without_it) {
+  setenv("ONE_TEST_SIGN_IN_LARGE", "confidential", 1);
+  setenv(SESSION_SECRET_VARIABLE, "session-secret", 1);
+  TestProvider provider;
+  provider.advertises =
+      R"JSON({ "end_session_endpoint": "https://provider.test/logout" })JSON";
+  const std::array<std::string_view, 1> paths{{"/portal"}};
+  const std::array<sourcemeta::one::Authentication::Policy, 1> policies{
+      {{.paths = paths,
+        .name = "okta",
+        .credential = sourcemeta::one::Authentication::Policy::Interactive{
+            .issuer = provider.issuer,
+            .client_id = "client",
+            .client_secret_variable = "ONE_TEST_SIGN_IN_LARGE",
+            .session_secrets = SESSION_SECRETS}}}};
+  const sourcemeta::one::Authentication authentication{
+      sourcemeta::one::Authentication::Table{
+          sourcemeta::one::Authentication::Table::compile(
+              policies, TEST_PATH("sign_in_large_token"), ANYWHERE)},
+      provider.fetcher()};
+
+  // The control, which differs in the size of what the provider asserted and in
+  // nothing else. Its session carries the token, which is what signing out
+  // hands back to the provider
+  const auto ordinary{SIGN_IN(authentication, provider, "okta", "client",
+                              R"JSON({ "sub": "a1b2" })JSON")};
+  EXPECT_EQ(ordinary.result,
+            sourcemeta::one::Authentication::Outcome::Result::Redirect);
+  EXPECT_EQ(ordinary.cookies.size(), 3);
+  const auto kept{"sourcemeta_one_session=" +
+                  COOKIE_VALUE(ordinary.cookies.front())};
+  const auto ended{
+      authentication.logout({.cookies = FIELDS(kept)}, INSTANCE_URL, "/")};
+  EXPECT_TRUE(ended.location.starts_with("https://provider.test/logout"));
+  EXPECT_TRUE(ended.location.find("id_token_hint=") != std::string::npos);
+
+  const std::string enormous{R"JSON({ "sub": "a1b2", "picture": ")JSON" +
+                             std::string(4000, 'a') + R"JSON(" })JSON"};
+  const auto outcome{
+      SIGN_IN(authentication, provider, "okta", "client", enormous)};
+  EXPECT_EQ(outcome.result,
+            sourcemeta::one::Authentication::Outcome::Result::Redirect);
+  EXPECT_EQ(outcome.cookies.size(), 3);
+  EXPECT_FALSE(REPORTED(outcome, "more than a session can hold"));
+  const auto without{"sourcemeta_one_session=" +
+                     COOKIE_VALUE(outcome.cookies.front())};
+  const auto finished{
+      authentication.logout({.cookies = FIELDS(without)}, INSTANCE_URL, "/")};
+  EXPECT_TRUE(finished.location.starts_with("https://provider.test/logout"));
+  EXPECT_TRUE(finished.location.find("id_token_hint=") == std::string::npos);
+}
