@@ -679,11 +679,6 @@ Back-Channel Logout, since acting on one means keeping a record of which
 sessions are dead and consulting it on every request, which is the round trip
 statelessness avoids.
 
-Upgrading the instance can end every session as well, since a release is free
-to change the format a sealed value takes and a value in an older format opens
-nowhere. Everybody signs in once more, and a login that was in flight when the
-instance restarted is refused at the callback and can simply be started again.
-
 !!! warning
 
     The instance's own `url` must be an origin a browser treats as trustworthy,

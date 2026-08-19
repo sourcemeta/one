@@ -757,6 +757,20 @@ TEST(a_token_larger_than_a_session_holds_signs_in_without_it) {
   EXPECT_TRUE(finished.location.find("id_token_hint=") == std::string::npos);
 }
 
+// Where a completed sign-in left the browser. Every case below is about the
+// target rather than about the login carrying it, and a login that ended
+// anywhere but a redirect leaves the same empty location a refused target
+// does, so what these cases are not about is asserted here, once
+static auto RETURNED_TO(const sourcemeta::one::Authentication &authentication,
+                        const TestProvider &provider,
+                        const std::string_view return_to) -> std::string {
+  const auto outcome{SIGN_IN(authentication, provider, "okta", "client",
+                             R"JSON({ "sub": "a1b2" })JSON", return_to)};
+  EXPECT_EQ(outcome.result,
+            sourcemeta::one::Authentication::Outcome::Result::Redirect);
+  return outcome.location;
+}
+
 // Where a browser lands once a login completes is chosen by whoever asked for
 // the login, so a target naming another origin would make one an open
 // redirect. It travelled sealed under this instance's own signature and is
@@ -781,48 +795,22 @@ TEST(a_login_returning_to_another_origin_lands_nowhere_instead) {
               policies, TEST_PATH("sign_in_return_to"), ANYWHERE)},
       provider.fetcher()};
 
-  constexpr std::string_view ASSERTED{R"JSON({ "sub": "a1b2" })JSON"};
-
   // The control, a rooted path carrying a query and a fragment, which is the
   // whole of what a return target may be
-  const auto rooted{SIGN_IN(authentication, provider, "okta", "client",
-                            ASSERTED, "/portal/page?tab=two#top")};
-  EXPECT_EQ(rooted.result,
-            sourcemeta::one::Authentication::Outcome::Result::Redirect);
-  EXPECT_EQ(rooted.location, "/portal/page?tab=two#top");
+  EXPECT_EQ(RETURNED_TO(authentication, provider, "/portal/page?tab=two#top"),
+            "/portal/page?tab=two#top");
 
   // A second slash opens an authority of its own, and a browser folds the
   // backslash into one, so both name somewhere else entirely
-  EXPECT_EQ(SIGN_IN(authentication, provider, "okta", "client", ASSERTED,
-                    "//evil.test")
-                .location,
-            "");
-  EXPECT_EQ(SIGN_IN(authentication, provider, "okta", "client", ASSERTED,
-                    "/\\evil.test")
-                .location,
-            "");
-  EXPECT_EQ(SIGN_IN(authentication, provider, "okta", "client", ASSERTED,
-                    "https://evil.test")
-                .location,
-            "");
+  EXPECT_EQ(RETURNED_TO(authentication, provider, "//evil.test"), "");
+  EXPECT_EQ(RETURNED_TO(authentication, provider, "/\\evil.test"), "");
+  EXPECT_EQ(RETURNED_TO(authentication, provider, "https://evil.test"), "");
 
   // Every octet outside the path grammar is refused, an unfinished escape
   // included, so nothing that would have to be encoded to be sent reaches a
   // Location header as it stands
-  EXPECT_EQ(SIGN_IN(authentication, provider, "okta", "client", ASSERTED,
-                    "/portal page")
-                .location,
-            "");
-  EXPECT_EQ(SIGN_IN(authentication, provider, "okta", "client", ASSERTED,
-                    "/portal%zz")
-                .location,
-            "");
-  EXPECT_EQ(SIGN_IN(authentication, provider, "okta", "client", ASSERTED,
-                    "/portal<x>")
-                .location,
-            "");
-  EXPECT_EQ(
-      SIGN_IN(authentication, provider, "okta", "client", ASSERTED, "/portal\n")
-          .location,
-      "");
+  EXPECT_EQ(RETURNED_TO(authentication, provider, "/portal page"), "");
+  EXPECT_EQ(RETURNED_TO(authentication, provider, "/portal%zz"), "");
+  EXPECT_EQ(RETURNED_TO(authentication, provider, "/portal<x>"), "");
+  EXPECT_EQ(RETURNED_TO(authentication, provider, "/portal\n"), "");
 }
