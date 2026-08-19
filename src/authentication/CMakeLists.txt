@@ -7,6 +7,7 @@ if(ONE_ENTERPRISE)
       "${PROJECT_SOURCE_DIR}/enterprise/authentication/authentication_save.cc")
   target_compile_definitions(sourcemeta_one_authentication PUBLIC SOURCEMETA_ONE_ENTERPRISE)
   target_link_libraries(sourcemeta_one_authentication PRIVATE sourcemeta::core::crypto)
+  target_link_libraries(sourcemeta_one_authentication PRIVATE sourcemeta::core::email)
   target_link_libraries(sourcemeta_one_authentication PRIVATE sourcemeta::core::http)
   target_link_libraries(sourcemeta_one_authentication PRIVATE sourcemeta::core::oidc)
 else()
@@ -14,8 +15,6 @@ else()
     PRIVATE_HEADERS error.h
     SOURCES authentication.cc path.cc)
 endif()
-
-target_link_libraries(sourcemeta_one_authentication PRIVATE sourcemeta::one::shared)
 
 # Paths are the key the policy trie is built from and looked up by, so
 # canonicalising them belongs to this module in both editions

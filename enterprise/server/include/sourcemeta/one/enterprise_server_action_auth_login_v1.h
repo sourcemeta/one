@@ -67,7 +67,8 @@ public:
             sourcemeta::one::HTTPResponse &response) -> void override {
     if (request.method() == "options") {
       response.write_status(sourcemeta::core::HTTP_STATUS_NO_CONTENT);
-      response.write_header("Cache-Control", "no-store");
+      response.write_header("Cache-Control",
+                            sourcemeta::one::cache_control_no_store());
       // RFC 9110 §9.3.7: OPTIONS responses SHOULD include Allow
       response.write_header("Allow", "GET, HEAD, OPTIONS");
       sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_NO_CONTENT,
@@ -101,12 +102,13 @@ public:
     // holds the policy rather than here
     std::string return_to;
     const auto destination{request.query("to")};
-    if (!destination.empty() && sourcemeta::one::is_local_path(destination)) {
+    if (!destination.empty() &&
+        sourcemeta::core::URI::is_absolute_path_reference(destination)) {
       return_to = destination;
     } else if (const auto referer{request.header("referer")};
                referer.starts_with(this->server_uri())) {
       std::string candidate{referer.substr(this->server_uri().size())};
-      if (sourcemeta::one::is_local_path(candidate)) {
+      if (sourcemeta::core::URI::is_absolute_path_reference(candidate)) {
         return_to = std::move(candidate);
       }
     }
@@ -160,7 +162,8 @@ public:
     }
 
     response.write_header("Location", outcome.location);
-    response.write_header("Cache-Control", "no-store");
+    response.write_header("Cache-Control",
+                          sourcemeta::one::cache_control_no_store());
     sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_SEE_OTHER,
                                    request, response);
   }

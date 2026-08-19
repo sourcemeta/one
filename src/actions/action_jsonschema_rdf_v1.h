@@ -59,7 +59,8 @@ public:
       response.write_header("Access-Control-Max-Age", "3600");
       // Browser preflight cache is governed by `Access-Control-Max-Age`;
       // `no-store` keeps shared HTTP caches from storing this response.
-      response.write_header("Cache-Control", "no-store");
+      response.write_header("Cache-Control",
+                            sourcemeta::one::cache_control_no_store());
       // RFC 9110 §9.3.7: OPTIONS responses SHOULD include Allow. Different
       // audience than Access-Control-Allow-Methods (HTTP vs CORS preflight).
       // https://datatracker.ietf.org/doc/html/rfc9110#section-9.3.7

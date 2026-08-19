@@ -73,7 +73,8 @@ public:
     this->artifact_serve(
         resolution.path.value(), sourcemeta::core::HTTP_STATUS_OK, true, {},
         this->response_schema_, {}, request, response, this->error_schema_,
-        this->content_cache_control(resolution.is_public), "Accept-Encoding");
+        sourcemeta::one::cache_control_content(resolution.is_public),
+        sourcemeta::one::vary_encoding());
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion version,

@@ -26,7 +26,8 @@
 #include <string>        // std::string
 #include <string_view>   // std::string_view
 #include <unordered_map> // std::unordered_map
-#include <utility>       // std::move
+#include <utility>       // std::move, std::pair
+#include <vector>        // std::vector
 
 class ActionMCP_v1 : public sourcemeta::one::RouterAction {
 public:
@@ -76,10 +77,9 @@ public:
     // identifier anyway, but only after being refused once. It is named here
     // only when there is a document to find
     if (this->mcp_metadata_.defines("protectedResourceMetadata")) {
-      this->challenge_.append("resource_metadata=\"");
-      this->challenge_.append(this->server_uri());
-      this->challenge_.append(this->metadata_path_);
-      this->challenge_.append("\"");
+      this->metadata_url_.append(this->server_uri());
+      this->metadata_url_.append(this->metadata_path_);
+      this->challenge_.emplace_back("resource_metadata", this->metadata_url_);
     }
 
     // What a caller is told this endpoint offers follows from their view, so
@@ -113,8 +113,8 @@ public:
                                                  : match->second;
   }
 
-  [[nodiscard]] auto authentication_challenge() const noexcept
-      -> std::string_view override {
+  [[nodiscard]] auto authentication_challenge() const noexcept -> std::span<
+      const std::pair<std::string_view, std::string_view>> override {
     return this->challenge_;
   }
 
@@ -168,7 +168,8 @@ public:
       response.write_header("Access-Control-Max-Age", "3600");
       // Browser preflight cache is governed by `Access-Control-Max-Age`;
       // `no-store` keeps shared HTTP caches from storing this response.
-      response.write_header("Cache-Control", "no-store");
+      response.write_header("Cache-Control",
+                            sourcemeta::one::cache_control_no_store());
       // RFC 9110 §9.3.7: OPTIONS responses SHOULD include Allow. Different
       // audience than Access-Control-Allow-Methods (HTTP vs CORS preflight).
       // https://datatracker.ietf.org/doc/html/rfc9110#section-9.3.7
@@ -343,7 +344,8 @@ private:
     // The envelope embeds the echoed JSON-RPC id from the request, so
     // the response is request-specific and never a sound cache hit
     // for any other request.
-    response.write_header("Cache-Control", "no-store");
+    response.write_header("Cache-Control",
+                          sourcemeta::one::cache_control_no_store());
     // RFC 9110 §15.5.6: 405 responses MUST carry Allow listing supported
     // methods. The MCP endpoint accepts POST and OPTIONS only.
     // https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.6
@@ -643,7 +645,8 @@ private:
         response.write_header("Access-Control-Allow-Origin",
                               this->allowed_origin_);
         response.write_header("Access-Control-Expose-Headers", "Link, ETag");
-        response.write_header("Cache-Control", "no-store");
+        response.write_header("Cache-Control",
+                              sourcemeta::one::cache_control_no_store());
         response.write_header(
             "MCP-Protocol-Version",
             sourcemeta::core::mcp_protocol_version_string(version));
@@ -666,7 +669,8 @@ private:
     response.write_status(sourcemeta::core::HTTP_STATUS_ACCEPTED);
     response.write_header("Access-Control-Allow-Origin", this->allowed_origin_);
     response.write_header("Access-Control-Expose-Headers", "Link, ETag");
-    response.write_header("Cache-Control", "no-store");
+    response.write_header("Cache-Control",
+                          sourcemeta::one::cache_control_no_store());
     response.write_header(
         "MCP-Protocol-Version",
         sourcemeta::core::mcp_protocol_version_string(version));
@@ -730,7 +734,10 @@ private:
   std::string_view metadata_path_;
   sourcemeta::core::JSON mcp_metadata_{nullptr};
   std::unordered_map<std::string_view, sourcemeta::core::JSON> metadata_views_;
-  std::string challenge_;
+  // The parameter points into the URL beside it, which is composed once and
+  // never moves again
+  std::string metadata_url_;
+  std::vector<std::pair<std::string_view, std::string_view>> challenge_;
   std::string resource_identifier_;
 };
 

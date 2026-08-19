@@ -156,7 +156,7 @@ public:
   // says where that is here, so a denial is actionable rather than a dead end.
   // The default adds nothing
   [[nodiscard]] virtual auto authentication_challenge() const noexcept
-      -> std::string_view {
+      -> std::span<const std::pair<std::string_view, std::string_view>> {
     return {};
   }
 
@@ -250,15 +250,6 @@ public:
   [[nodiscard]] auto
   caller_from(const Authentication::Credentials &credentials) const
       -> Authentication::Caller;
-
-  // The caching directive for served registry content. A response admitted
-  // only via a credential must not be stored by shared caches, so it is
-  // marked private rather than public
-  [[nodiscard]] static auto content_cache_control(const bool is_public) noexcept
-      -> std::string_view {
-    return is_public ? "public, max-age=0, must-revalidate"
-                     : "private, max-age=0, must-revalidate";
-  }
 
   [[nodiscard]] auto artifact_read_json(const ResolvedArtifact &artifact) const
       -> std::optional<sourcemeta::core::JSON>;

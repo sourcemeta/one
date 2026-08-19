@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { createHmac } from 'node:crypto';
+import { createHmac, hkdfSync } from 'node:crypto';
 
 // A policy names one environment variable per secret it accepts, newest first.
 // The sandbox gates /rotated with two, so a session signed under either is
@@ -14,13 +14,18 @@ const OLD_SECRET = 'the-session-secret-it-replaced-but-honours';
 const FOREIGN_SECRET = 'a-secret-belonging-to-nobody-in-this-test';
 
 const SESSION_LABEL = 'sourcemeta/one/session';
+// The key comes from the secret through HKDF, under a fixed salt and that
+// label, which is what version 2 of the format says
+const SESSION_SALT = 'sourcemeta/one/seal';
 
 function sealSession(secret, payload, lifetime = 3600) {
   const issued = Math.floor(Date.now() / 1000);
   const expiry = issued + lifetime;
   const encoded = Buffer.from(JSON.stringify(payload)).toString('base64url');
-  const prefix = `1.${issued}.${expiry}.${encoded}`;
-  const key = createHmac('sha256', secret).update(SESSION_LABEL).digest();
+  const prefix = `2.${issued}.${expiry}.${encoded}`;
+  const key = Buffer.from(
+    hkdfSync('sha256', secret, SESSION_SALT, SESSION_LABEL, 32)
+  );
   const signature = createHmac('sha256', key).update(prefix).digest('base64url');
   return `${prefix}.${signature}`;
 }

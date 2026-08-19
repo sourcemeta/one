@@ -80,7 +80,8 @@ public:
       response.write_header("Access-Control-Max-Age", "3600");
       // Browser preflight cache is governed by `Access-Control-Max-Age`;
       // `no-store` keeps shared HTTP caches from storing this response.
-      response.write_header("Cache-Control", "no-store");
+      response.write_header("Cache-Control",
+                            sourcemeta::one::cache_control_no_store());
       // RFC 9110 §9.3.7: OPTIONS responses SHOULD include Allow. Different
       // audience than Access-Control-Allow-Methods (HTTP vs CORS preflight).
       // https://datatracker.ietf.org/doc/html/rfc9110#section-9.3.7
@@ -270,7 +271,8 @@ public:
                                              this->allowed_origin_);
               callback_response.write_header("Access-Control-Expose-Headers",
                                              "Link, ETag");
-              callback_response.write_header("Cache-Control", "no-store");
+              callback_response.write_header(
+                  "Cache-Control", sourcemeta::one::cache_control_no_store());
               callback_response.write_header(
                   "MCP-Protocol-Version",
                   sourcemeta::core::mcp_protocol_version_string(version));
@@ -297,7 +299,8 @@ public:
                                          this->allowed_origin_);
           callback_response.write_header("Access-Control-Expose-Headers",
                                          "Link, ETag");
-          callback_response.write_header("Cache-Control", "no-store");
+          callback_response.write_header(
+              "Cache-Control", sourcemeta::one::cache_control_no_store());
           callback_response.write_header(
               "MCP-Protocol-Version",
               sourcemeta::core::mcp_protocol_version_string(version));
@@ -342,7 +345,8 @@ private:
     // The envelope embeds the echoed JSON-RPC id from the request, so
     // the response is request-specific and never a sound cache hit
     // for any other request.
-    response.write_header("Cache-Control", "no-store");
+    response.write_header("Cache-Control",
+                          sourcemeta::one::cache_control_no_store());
     // RFC 9110 §15.5.6: 405 responses MUST carry Allow listing supported
     // methods. The MCP endpoint accepts POST and OPTIONS only.
     // https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.6

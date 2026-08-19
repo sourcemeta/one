@@ -82,8 +82,8 @@ public:
         this->artifact_serve(
             root_html.path.value(), sourcemeta::core::HTTP_STATUS_OK, false, {},
             {}, HTML_BROWSER_SECURITY, request, response, this->error_schema_,
-            this->content_cache_control(root_html.is_public),
-            "Accept, Accept-Encoding");
+            sourcemeta::one::cache_control_content(root_html.is_public),
+            sourcemeta::one::vary_type_and_encoding());
       } else if (serve_html) {
         this->serve_missing_html(caller.view(), request, response);
       } else {
@@ -114,15 +114,15 @@ public:
               schema_html.path.value(), sourcemeta::core::HTTP_STATUS_OK, false,
               {}, {}, HTML_BROWSER_SECURITY, request, response,
               this->error_schema_,
-              this->content_cache_control(schema_html.is_public),
-              "Accept, Accept-Encoding");
+              sourcemeta::one::cache_control_content(schema_html.is_public),
+              sourcemeta::one::vary_type_and_encoding());
         } else if (directory_html.path.has_value()) {
           this->artifact_serve(
               directory_html.path.value(), sourcemeta::core::HTTP_STATUS_OK,
               false, {}, {}, HTML_BROWSER_SECURITY, request, response,
               this->error_schema_,
-              this->content_cache_control(directory_html.is_public),
-              "Accept, Accept-Encoding");
+              sourcemeta::one::cache_control_content(directory_html.is_public),
+              sourcemeta::one::vary_type_and_encoding());
         } else {
           this->serve_missing_html(caller.view(), request, response);
         }
@@ -188,7 +188,8 @@ private:
       this->artifact_serve(
           not_found.value(), sourcemeta::core::HTTP_STATUS_NOT_FOUND, false, {},
           {}, HTML_BROWSER_SECURITY, request, response, this->error_schema_,
-          "no-store", "Accept, Accept-Encoding");
+          sourcemeta::one::cache_control_no_store(),
+          sourcemeta::one::vary_type_and_encoding());
       return;
     }
 

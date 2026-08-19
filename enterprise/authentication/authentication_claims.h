@@ -4,6 +4,7 @@
 #include <sourcemeta/one/authentication.h>
 
 #include <sourcemeta/core/crypto.h>
+#include <sourcemeta/core/email.h>
 #include <sourcemeta/core/jose.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/oauth.h>
@@ -143,96 +144,17 @@ inline auto read_jwt_claims(const std::span<const std::byte> metadata,
   return read_string(metadata, cursor, result);
 }
 
-// A single claim value, already reduced from whatever container held it. RFC
-// 9068 Section 2.2.3.1 gives group, role, and entitlement claims the shape RFC
-// 7643 Section 4.1.2 defines, where a member is an object whose `value` is the
-// identifier and whose `display` is a label that is neither unique nor stable,
-// so only the identifier is ever compared. Admitting on a label would let
-// whoever can rename a group grant access
-inline auto claim_scalar_accepts(const sourcemeta::core::JSON &request,
-                                 const sourcemeta::core::JSON &value) -> bool {
-  if (value.is_string()) {
-    return sourcemeta::core::oidc_claim_request_accepts(request, value);
-  }
-
-  if (value.is_object()) {
-    const auto *identifier{value.try_at("value")};
-    return identifier != nullptr && identifier->is_string() &&
-           sourcemeta::core::oidc_claim_request_accepts(request, *identifier);
-  }
-
-  return false;
-}
-
-// An array carries a set the caller belongs to, so any one member satisfying
-// the rule satisfies it
-inline auto claim_accepts(const sourcemeta::core::JSON &request,
-                          const sourcemeta::core::JSON &value) -> bool {
-  if (value.is_array()) {
-    return std::ranges::any_of(value.as_array(),
-                               [&request](const auto &entry) -> bool {
-                                 return claim_scalar_accepts(request, entry);
-                               });
-  }
-
-  return claim_scalar_accepts(request, value);
-}
-
-// The one claim whose value is a set rather than a value. RFC 6749 Section 3.3
-// makes it a space-delimited, case-sensitive, unordered list, so a rule naming
-// values is satisfied by any one of them being granted, while a rule
-// constraining nothing asks only that a scope be carried at all.
+// The one claim whose value is a set rather than a value, which RFC 6749
+// Section 3.3 makes a space-delimited, case-sensitive, unordered list.
 //
-// A constraint this cannot read denies rather than being passed over. Passing
-// over one would widen the rule to every token carrying any scope, so the
-// nearer a rule is to unreadable the more it would admit
+// A rule this cannot read denies rather than being passed over, which is a
+// policy choice rather than anything the specifications settle. Passing one
+// over would widen the rule to every token carrying any scope, so the nearer a
+// rule is to unreadable the more it would admit
 inline auto scope_accepts(const sourcemeta::core::JSON &payload,
                           const sourcemeta::core::JSON &request) -> bool {
-  const auto *granted{payload.try_at("scope")};
-  if (granted == nullptr || !granted->is_string()) {
-    return false;
-  }
-
-  // A rule is only read here because the policy named one, so a rule that is
-  // not a rule at all is unreadable rather than absent, and the comment above
-  // decides which way that falls
-  if (!request.is_object()) {
-    return false;
-  }
-
-  const auto *single{request.try_at("value")};
-  const auto *values{request.try_at("values")};
-  if (single == nullptr && values == nullptr) {
-    return true;
-  }
-
-  if (single != nullptr) {
-    if (!single->is_string()) {
-      return false;
-    }
-
-    if (sourcemeta::core::oauth_has_scope(payload, single->to_string())) {
-      return true;
-    }
-  }
-
-  if (values != nullptr) {
-    if (!values->is_array()) {
-      return false;
-    }
-
-    for (const auto &entry : values->as_array()) {
-      if (!entry.is_string()) {
-        return false;
-      }
-
-      if (sourcemeta::core::oauth_has_scope(payload, entry.to_string())) {
-        return true;
-      }
-    }
-  }
-
-  return false;
+  return sourcemeta::core::oauth_scope_request_accepts(payload, request) ==
+         sourcemeta::core::OAuthScopeDecision::Accepted;
 }
 
 // Whether a claim arrived carrying objects rather than the strings a rule
@@ -278,9 +200,11 @@ inline auto admits_claims(const sourcemeta::core::JSON &payload,
       continue;
     }
 
-    const auto accepted{rule.first == "scope"
-                            ? scope_accepts(payload, rule.second)
-                            : claim_accepts(rule.second, *value)};
+    const auto accepted{
+        rule.first == "scope"
+            ? scope_accepts(payload, rule.second)
+            : sourcemeta::core::oidc_claim_request_accepts_multi_valued(
+                  rule.second, *value)};
     if (!accepted) {
       return Admission::Refused;
     }
@@ -294,9 +218,12 @@ inline auto admits_claims(const sourcemeta::core::JSON &payload,
 // verified ownership of an address only when `email_verified` is true, so
 // without that the address is whatever its holder typed and proves nothing.
 //
-// The comparison takes the last separator, since a quoted local part may
-// legally carry one, and the domain names a host, so it is compared without
-// regard to case against domains the artifact already holds in lower case
+// The address is parsed rather than split on a separator, since RFC 5321
+// Section 4.1.2 admits an at sign inside a quoted local part and Section 4.1.3
+// admits one inside an address literal. An address that is no mailbox at all
+// names no domain and so matches none, and a domain names a host, so it is
+// compared without regard to case against domains the artifact already holds
+// in lower case
 inline auto admits_email_domain(const sourcemeta::core::JSON &claims,
                                 const std::span<const std::byte> domains)
     -> Admission {
@@ -319,13 +246,12 @@ inline auto admits_email_domain(const sourcemeta::core::JSON &claims,
     return Admission::Incomplete;
   }
 
-  const auto &value{address->to_string()};
-  const auto separator{value.rfind('@')};
-  if (separator == std::string::npos || separator + 1 >= value.size()) {
+  const auto asserted{sourcemeta::core::email_domain(address->to_string())};
+  if (asserted.empty()) {
     return Admission::Refused;
   }
 
-  std::string domain{value.substr(separator + 1)};
+  std::string domain{asserted};
   sourcemeta::core::to_lowercase(domain);
   bool admitted{false};
   if (!each_counted_string(domains,

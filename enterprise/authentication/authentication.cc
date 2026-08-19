@@ -1,5 +1,4 @@
 #include <sourcemeta/one/authentication.h>
-#include <sourcemeta/one/shared.h>
 
 #include <sourcemeta/core/crypto.h>
 #include <sourcemeta/core/http.h>
@@ -281,9 +280,8 @@ auto userinfo(const sourcemeta::one::Authentication::Fetcher &fetcher,
     return std::nullopt;
   }
 
-  const auto *asserted{document.value().try_at("sub")};
-  if (asserted == nullptr || !asserted->is_string() ||
-      asserted->to_string() != subject) {
+  if (!sourcemeta::core::oidc_userinfo_matches_subject(document.value(),
+                                                       subject)) {
     log.emplace_back("The UserInfo endpoint answered about a different subject "
                      "than the identity token did");
     return std::nullopt;
@@ -301,18 +299,16 @@ auto id_token_keys(std::string location,
 }
 
 // Expire a cookie under the attributes it was minted with, so the browser
-
 // replaces it rather than keeping a second one of the same name beside it
 auto expired_cookie(const std::string_view name, const bool secure)
     -> std::optional<std::string> {
   return sourcemeta::core::http_serialize_cookie(
-      {.name = name,
-       .value = "",
-       .path = COOKIE_PATH,
-       .max_age = std::chrono::seconds{0},
-       .http_only = true,
-       .secure = secure,
-       .same_site = sourcemeta::core::HTTPCookieSameSite::Lax});
+      sourcemeta::core::http_expire_cookie(
+          {.name = name,
+           .path = COOKIE_PATH,
+           .http_only = true,
+           .secure = secure,
+           .same_site = sourcemeta::core::HTTPCookieSameSite::Lax}));
 }
 
 } // namespace
@@ -539,7 +535,8 @@ auto Authentication::callback(const std::string_view policy_name,
     result.location = "";
     const auto *sealed{transaction.value().try_at("to")};
     if (sealed != nullptr && sealed->is_string() &&
-        is_local_path(sealed->to_string())) {
+        sourcemeta::core::URI::is_absolute_path_reference(
+            sealed->to_string())) {
       result.location = sealed->to_string();
     }
 
@@ -648,9 +645,12 @@ auto Authentication::callback(const std::string_view policy_name,
         this->table_.impl_->fetcher(), endpoints.value().userinfo,
         grant.value().access_token, identity.value().subject, result.log)};
     if (extra.has_value()) {
-      combined = combine_claims(token.value().payload(), extra.value());
-      admission =
-          this->table_.impl_->admits_identity(policy_name, combined.value());
+      combined = sourcemeta::core::oidc_merge_claims(token.value().payload(),
+                                                     extra.value());
+      if (combined.has_value()) {
+        admission =
+            this->table_.impl_->admits_identity(policy_name, combined.value());
+      }
     }
   }
 
@@ -741,7 +741,8 @@ auto Authentication::callback(const std::string_view policy_name,
   result.location = "";
   const auto *sealed_destination{transaction.value().try_at("to")};
   if (sealed_destination != nullptr && sealed_destination->is_string() &&
-      is_local_path(sealed_destination->to_string())) {
+      sourcemeta::core::URI::is_absolute_path_reference(
+          sealed_destination->to_string())) {
     result.location = sealed_destination->to_string();
   }
 

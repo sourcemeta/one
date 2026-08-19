@@ -147,7 +147,8 @@ public:
       response.write_header("Access-Control-Max-Age", "3600");
       // Browser preflight cache is governed by `Access-Control-Max-Age`;
       // `no-store` keeps shared HTTP caches from storing this response.
-      response.write_header("Cache-Control", "no-store");
+      response.write_header("Cache-Control",
+                            sourcemeta::one::cache_control_no_store());
       // RFC 9110 §9.3.7: OPTIONS responses SHOULD include Allow. Different
       // audience than Access-Control-Allow-Methods (HTTP vs CORS preflight).
       // https://datatracker.ietf.org/doc/html/rfc9110#section-9.3.7
@@ -287,7 +288,8 @@ public:
             // The response is fully determined by the POST body. A
             // shared cache cannot use this for any other request, so
             // skip caching altogether.
-            callback_response.write_header("Cache-Control", "no-store");
+            callback_response.write_header(
+                "Cache-Control", sourcemeta::one::cache_control_no_store());
             sourcemeta::one::write_link_header(callback_response,
                                                response_schema);
             std::ostringstream payload;
