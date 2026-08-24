@@ -9,3 +9,19 @@ services:
       - SOURCEMETA_ONE_PORT=8001
     ports:
       - "${PORT}:8001"
+
+  # A real scraper rather than a reader of our own making, so what this
+  # instance publishes is judged by the software it claims to speak to
+  prometheus:
+    image: prom/prometheus:v3.1.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=1h
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9099:9090"
+    depends_on:
+      sandbox:
+        condition: service_started

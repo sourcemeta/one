@@ -12,6 +12,7 @@ namespace sourcemeta::one {
 #define SOURCEMETA_ONE_FOR_EACH_ACTION(X)                                      \
   X(DEFAULT_V1, ActionDefault_v1)                                              \
   X(HEALTH_CHECK_V1, ActionHealthCheck_v1)                                     \
+  X(METRICS_V1, ActionMetrics_v1)                                              \
   X(NOT_FOUND_V1, ActionNotFound_v1)                                           \
   X(SCHEMA_ARTIFACT_V1, ActionServeSchemaArtifact_v1)                          \
   X(EXPLORER_ARTIFACT_V1, ActionServeExplorerArtifact_v1)                      \
@@ -44,6 +45,16 @@ enum : std::uint8_t {
 };
 
 #undef SOURCEMETA_ONE_DEFINE_ACTION_TYPE
+
+#define SOURCEMETA_ONE_DEFINE_ACTION_NAME(Name, Class) std::string_view{#Name},
+
+// What an action is called wherever one has to be named to somebody outside
+// this program, taken from the same list the handlers themselves come from so
+// that neither can name an action the other does not have
+inline constexpr std::array<std::string_view, ACTION_TYPE_COUNT> ACTION_NAMES{
+    {SOURCEMETA_ONE_FOR_EACH_ACTION(SOURCEMETA_ONE_DEFINE_ACTION_NAME)}};
+
+#undef SOURCEMETA_ONE_DEFINE_ACTION_NAME
 
 extern const std::array<RouterActionConstructor, ACTION_TYPE_COUNT>
     CONSTRUCTORS;

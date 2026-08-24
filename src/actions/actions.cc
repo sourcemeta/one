@@ -23,6 +23,7 @@
 #include "action_list_directory_v1.h"
 #include "action_mcp_prm_v1.h"
 #include "action_mcp_v1.h"
+#include "action_metrics_v1.h"
 #include "action_not_found_v1.h"
 #include "action_schema_search_v1.h"
 #include "action_serve_explorer_artifact_v1.h"

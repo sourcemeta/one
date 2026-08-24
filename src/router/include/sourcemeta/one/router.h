@@ -11,6 +11,7 @@
 #include <sourcemeta/one/authentication.h>
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/router_lru.h>
+#include <sourcemeta/one/router_metrics.h>
 
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t
@@ -397,6 +398,10 @@ public:
     return this->authentication_;
   }
 
+  [[nodiscard]] auto metrics() const noexcept -> RouterMetrics & {
+    return this->metrics_;
+  }
+
 private:
   static constexpr std::size_t TEMPLATE_CACHE_CAPACITY{50};
 
@@ -417,6 +422,7 @@ private:
   RouterLRU<std::filesystem::path, sourcemeta::blaze::Template> template_cache_{
       TEMPLATE_CACHE_CAPACITY};
   Authentication authentication_;
+  mutable RouterMetrics metrics_;
 };
 
 } // namespace sourcemeta::one

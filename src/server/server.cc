@@ -24,6 +24,7 @@ static auto dispatch(sourcemeta::one::Router &actions,
                      sourcemeta::one::HTTPRequest &request,
                      sourcemeta::one::HTTPResponse &response) noexcept -> void {
   try {
+    request.observe_from(std::chrono::steady_clock::now());
     request.negotiate();
     if (request.satisfiable_encoding()) {
       thread_local std::array<
@@ -111,6 +112,18 @@ auto main(int argc, char *argv[]) noexcept -> int {
     const sourcemeta::core::URITemplateRouterView router{base / "routes.bin"};
     sourcemeta::one::Router actions{base, router,
                                     sourcemeta::one::CONSTRUCTORS};
+
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
+    actions.metrics().resize(sourcemeta::one::ACTION_TYPE_COUNT);
+    sourcemeta::one::RESPONSE_OBSERVER =
+        [&actions](const std::uint8_t action, const std::uint16_t status,
+                   const std::chrono::steady_clock::time_point from) -> void {
+      actions.metrics().observe(
+          action, status,
+          std::chrono::duration<double>{std::chrono::steady_clock::now() - from}
+              .count());
+    };
+#endif
 
     const sourcemeta::one::HTTPServer server{
         port,

@@ -14,9 +14,11 @@
 #include <algorithm>   // std::ranges::equal
 #include <array>       // std::array
 #include <cassert>     // assert
-#include <chrono>      // std::chrono::system_clock
+#include <chrono>      // std::chrono::system_clock, std::chrono::steady_clock
 #include <cstddef>     // std::size_t
+#include <cstdint>     // std::uint8_t, std::uint16_t
 #include <format>      // std::format
+#include <functional>  // std::function
 #include <mutex>       // std::mutex, std::scoped_lock
 #include <optional>    // std::optional
 #include <print>       // std::print
@@ -193,6 +195,22 @@ inline auto request_body_too_large(const HTTPRequest &request) -> bool {
   return declared.has_value() && declared.value() > MAX_REQUEST_BODY_BYTES;
 }
 
+// What is said about a request once it has been answered. Whoever stands the
+// server up decides whether anything listens and what it does with what it
+// hears, so this module never learns what an answer is counted for
+using ResponseObserver = std::function<void(
+    std::uint8_t, std::uint16_t, std::chrono::steady_clock::time_point)>;
+
+inline ResponseObserver RESPONSE_OBSERVER{};
+
+inline auto observe_response(const sourcemeta::core::HTTPStatus &status,
+                             const HTTPRequest &request) -> void {
+  if (RESPONSE_OBSERVER) [[unlikely]] {
+    RESPONSE_OBSERVER(request.observed_as(), status.code,
+                      request.observed_from());
+  }
+}
+
 // Answering can be the last thing that happens on a connection, and a request
 // read asynchronously is held by the very handler that goes away with it. So
 // what is said about a request is taken while it is certainly still there,
@@ -204,6 +222,7 @@ inline auto send_response(const sourcemeta::core::HTTPStatus &status,
       std::format("{} {} {}", status.wire, request.method(), request.path())};
   response.send_without_content();
   HTTP_LOG(line);
+  observe_response(status, request);
 }
 
 inline auto send_response(
@@ -217,6 +236,7 @@ inline auto send_response(
   response.send(request, message, current_encoding,
                 precomputed_compressed_size);
   HTTP_LOG(line);
+  observe_response(status, request);
 }
 
 // RFC 9110 §9.3.7: OPTIONS responses describe communication options

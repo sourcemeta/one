@@ -51,6 +51,46 @@ GET /self/v1/health
 
     The HTTP method is not `GET` or `HEAD`.
 
+### Metrics
+
+!!! success "Enterprise"
+
+    This endpoint is only available in the [Enterprise](commercial.md)
+    edition. Learn more about [commercial licensing](commercial.md).
+
+*This endpoint reports instance telemetry in the [Prometheus exposition
+format](https://prometheus.io/docs/instrumenting/exposition_formats/).*
+
+```
+GET /self/v1/metrics
+```
+
+Any Prometheus-compatible scraper reads this without configuration beyond the
+path. Request behaviour follows the
+[RED](https://grafana.com/blog/2018/08/02/the-red-method-how-to-instrument-your-services/)
+method, meaning rate, errors and duration, reported per action and status code.
+Alongside it are the standard `process_*` metrics and an instance information
+metric. The response documents itself through its `# HELP` and `# TYPE` lines.
+This endpoint is not exempt from [authentication](#authentication), so a policy
+covering its path gates it like any other route.
+
+Metric and label names are part of the public interface, as alerting rules and
+dashboards are written against them. New metrics may appear in a minor release,
+while renaming or removing one, changing its type or unit, or changing
+histogram bucket boundaries are breaking changes.
+
+=== "200"
+
+    The metrics in the Prometheus exposition format.
+
+=== "403"
+
+    The instance is running the Community edition.
+
+=== "405"
+
+    The HTTP method is not `GET` or `HEAD`.
+
 ### List
 
 *This endpoint lists the contents of a directory at the specified `{path}`

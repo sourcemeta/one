@@ -1,0 +1,13 @@
+# A scrape interval this short is unreasonable for a real deployment and
+# exactly right here, where the point is for a series to exist before the
+# assertions that read it run
+global:
+  scrape_interval: 1s
+  evaluation_interval: 1s
+
+scrape_configs:
+  - job_name: sourcemeta-one
+    metrics_path: /self/v1/metrics
+    static_configs:
+      - targets:
+          - "sandbox:8001"

@@ -7,10 +7,12 @@
 #include <sourcemeta/one/http_response.h>
 #include <sourcemeta/one/http_uwebsockets.h>
 
-#include <chrono>      // std::chrono::system_clock
+#include <chrono>      // std::chrono::system_clock, std::chrono::steady_clock
 #include <concepts>    // std::invocable
 #include <cstddef>     // std::size_t
+#include <cstdint>     // std::uint8_t
 #include <exception>   // std::exception_ptr, std::current_exception
+#include <limits>      // std::numeric_limits
 #include <memory>      // std::shared_ptr, std::make_shared
 #include <optional>    // std::optional
 #include <string>      // std::string
@@ -24,6 +26,11 @@ namespace sourcemeta::one {
 // 9110 §15.5.14 maps oversize bodies to 413 Content Too Large.
 inline constexpr std::size_t MAX_REQUEST_BODY_BYTES{
     static_cast<std::size_t>(4) * 1024 * 1024};
+
+// A request answered before any handler was chosen, which is every refusal
+// that happens ahead of routing
+inline constexpr std::uint8_t OBSERVATION_UNROUTED{
+    std::numeric_limits<std::uint8_t>::max()};
 
 class HTTPRequest {
 public:
@@ -51,6 +58,28 @@ public:
         chosen.value() == sourcemeta::core::HTTPContentEncoding::GZIP
             ? sourcemeta::one::Encoding::GZIP
             : sourcemeta::one::Encoding::Identity;
+  }
+
+  // When this request reached a handler and which handler it reached, kept
+  // so that whoever answers can say both without asking the router again. The
+  // action is a value no handler owns until one is chosen, so a request
+  // answered before routing carries none
+  auto observe_from(const std::chrono::steady_clock::time_point value) noexcept
+      -> void {
+    this->observed_from_ = value;
+  }
+
+  [[nodiscard]] auto observed_from() const noexcept
+      -> std::chrono::steady_clock::time_point {
+    return this->observed_from_;
+  }
+
+  auto observe_as(const std::uint8_t value) noexcept -> void {
+    this->observed_as_ = value;
+  }
+
+  [[nodiscard]] auto observed_as() const noexcept -> std::uint8_t {
+    return this->observed_as_;
   }
 
   [[nodiscard]] auto method() const noexcept -> std::string_view {
@@ -150,6 +179,8 @@ public:
     auto snapshot = std::make_shared<HTTPRequest>(
         std::string{this->method()}, std::string{this->path()},
         this->response_encoding_, raw_response);
+    snapshot->observe_from(this->observed_from_);
+    snapshot->observe_as(this->observed_as_);
     auto buffer = std::make_shared<std::string>();
     auto completed = std::make_shared<bool>(false);
 
@@ -204,6 +235,8 @@ private:
   bool satisfiable_encoding_{true};
   sourcemeta::one::Encoding response_encoding_{
       sourcemeta::one::Encoding::Identity};
+  std::chrono::steady_clock::time_point observed_from_{};
+  std::uint8_t observed_as_{OBSERVATION_UNROUTED};
 };
 
 } // namespace sourcemeta::one

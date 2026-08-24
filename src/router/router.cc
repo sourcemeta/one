@@ -4,6 +4,7 @@
 #include <sourcemeta/one/router.h>
 
 #include <chrono>      // std::chrono::seconds
+#include <cstdint>     // std::uint8_t
 #include <memory>      // std::make_unique
 #include <mutex>       // std::call_once
 #include <optional>    // std::optional, std::nullopt
@@ -119,6 +120,8 @@ auto Router::dispatch(
     const std::span<std::string_view> matches,
     sourcemeta::one::HTTPRequest &request,
     sourcemeta::one::HTTPResponse &response) -> void {
+  request.observe_as(static_cast<std::uint8_t>(context));
+  this->metrics_.enter();
   auto *instance{this->action(identifier, context)};
   if (instance == nullptr) [[unlikely]] {
     this->error(request, response,
