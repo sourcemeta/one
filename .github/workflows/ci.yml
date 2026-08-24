@@ -156,6 +156,12 @@ jobs:
           path: enterprise/e2e/auth-sso
           edition: ${{ matrix.edition.name }}
         if: matrix.edition.name == 'enterprise'
+      - name: E2E (enterprise/auth-github)
+        uses: ./.github/actions/e2e
+        with:
+          path: enterprise/e2e/auth-github
+          edition: ${{ matrix.edition.name }}
+        if: matrix.edition.name == 'enterprise'
 
       - name: Benchmark
         run: |

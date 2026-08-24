@@ -59,7 +59,7 @@ struct Configuration {
 
   struct AuthenticationEntry {
     // What a policy authenticates against
-    enum class Type : std::uint8_t { ApiKey, JWT, OIDC };
+    enum class Type : std::uint8_t { ApiKey, JWT, OIDC, GitHub };
 
     // How a presented credential is compared against the keys
     enum class Algorithm : std::uint8_t { Identity, Sha256 };
@@ -93,6 +93,18 @@ struct Configuration {
     // newest first. Several coexist so that a secret can be replaced while
     // values signed under the one it replaces are still honoured
     std::vector<sourcemeta::core::JSON::String> session_secret_variables;
+    // Where the deployment a policy signs people in against is served, as an
+    // origin
+    sourcemeta::core::JSON::String host;
+    // The accounts that admit a person, lowercased and sorted, since an
+    // account names a handle and the order says nothing about who is admitted
+    std::vector<sourcemeta::core::JSON::String> users;
+    // The organisations whose members this admits, under the same spelling
+    // rule as the accounts above
+    std::vector<sourcemeta::core::JSON::String> organizations;
+    // The teams whose members this admits, each named alongside the
+    // organisation that holds it, under the same spelling rule as above
+    std::vector<sourcemeta::core::JSON::String> teams;
   };
 
   std::vector<AuthenticationEntry> authentication;
@@ -149,7 +161,8 @@ struct Configuration {
 // both what the login endpoint offers and whether the bar offers a way to it
 [[nodiscard]] inline auto
 is_interactive(const Configuration::AuthenticationEntry &policy) -> bool {
-  return policy.type == Configuration::AuthenticationEntry::Type::OIDC;
+  return policy.type == Configuration::AuthenticationEntry::Type::OIDC ||
+         policy.type == Configuration::AuthenticationEntry::Type::GitHub;
 }
 
 } // namespace sourcemeta::one

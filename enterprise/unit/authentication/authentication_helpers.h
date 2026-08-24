@@ -290,6 +290,97 @@ struct TestProvider {
   }
 };
 
+// A GitHub deployment a case has control of. It publishes nothing to discover
+// and asserts nothing in a token, so what it answers at each of its endpoints
+// is what a case sets, and what a case reads back is what was made of it.
+// Nothing here reaches a network
+struct TestGitHub {
+  std::string_view host{"https://github.test"};
+  // What redeeming an authorization code answers with. A deployment answers
+  // every outcome with a 200, so a case that is about a failure says so in the
+  // body rather than in a status
+  std::string token{
+      R"JSON({ "access_token": "an-access-token", "token_type": "bearer" })JSON"};
+  std::string user{
+      R"JSON({ "login": "octocat", "id": 583231, "email": null })JSON"};
+  std::string emails{"[]"};
+  std::string organizations{"[]"};
+  std::string teams{"[]"};
+  // Every URL that was asked for, in order, which is how a case reads both what
+  // was called and how often
+  std::shared_ptr<std::vector<std::string>> asked{
+      std::make_shared<std::vector<std::string>>()};
+  // Whether every call carried what the deployment requires of one, which is a
+  // user agent on all of them and a request for JSON on the token endpoint
+  std::shared_ptr<bool> named_agent{std::make_shared<bool>(true)};
+  std::shared_ptr<bool> asked_for_json{std::make_shared<bool>(false)};
+
+  [[nodiscard]] auto api() const -> std::string {
+    return this->host == "https://github.com"
+               ? "https://api.github.com"
+               : std::string{this->host} + "/api/v3";
+  }
+
+  [[nodiscard]] auto fetcher() const
+      -> sourcemeta::one::Authentication::Fetcher {
+    return [host = std::string{this->host}, api = this->api(),
+            token = this->token, user = this->user, emails = this->emails,
+            organizations = this->organizations, teams = this->teams,
+            asked = this->asked, named_agent = this->named_agent,
+            asked_for_json = this->asked_for_json](
+               sourcemeta::one::Authentication::ProviderRequest &&request)
+               -> std::optional<
+                   sourcemeta::one::Authentication::ProviderResponse> {
+      asked->emplace_back(request.url);
+      const auto header{
+          [&request](const std::string_view name) -> std::string_view {
+            for (const auto &entry : request.headers) {
+              if (entry.first == name) {
+                return entry.second;
+              }
+            }
+
+            return {};
+          }};
+
+      if (request.url == host + "/login/oauth/access_token") {
+        *asked_for_json = header("accept") == "application/json";
+        return sourcemeta::one::Authentication::ProviderResponse{.status = 200,
+                                                                 .body = token};
+      }
+
+      *named_agent = *named_agent && !header("user-agent").empty();
+      // A listing is asked for one page at a time, so what a case declared is
+      // answered on the first and nothing is answered after it
+      const auto question{request.url.find('?')};
+      const std::string_view location{request.url.substr(0, question)};
+      const auto first{question == std::string_view::npos ||
+                       request.url.ends_with("&page=1")};
+      if (location == api + "/user") {
+        return sourcemeta::one::Authentication::ProviderResponse{.status = 200,
+                                                                 .body = user};
+      }
+
+      if (location == api + "/user/emails") {
+        return sourcemeta::one::Authentication::ProviderResponse{
+            .status = 200, .body = first ? emails : "[]"};
+      }
+
+      if (location == api + "/user/orgs") {
+        return sourcemeta::one::Authentication::ProviderResponse{
+            .status = 200, .body = first ? organizations : "[]"};
+      }
+
+      if (location == api + "/user/teams") {
+        return sourcemeta::one::Authentication::ProviderResponse{
+            .status = 200, .body = first ? teams : "[]"};
+      }
+
+      return std::nullopt;
+    };
+  }
+};
+
 inline constexpr std::string_view INSTANCE_URL{"https://registry.test"};
 inline constexpr std::string_view REDIRECT_URI{
     "https://registry.test/self/v1/auth/callback/okta"};

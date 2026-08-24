@@ -13,6 +13,7 @@
 
 #include "authentication_format.h"
 
+#include <algorithm>   // std::ranges::find
 #include <cstddef>     // std::size_t
 #include <cstdlib>     // std::getenv
 #include <optional>    // std::optional, std::nullopt
@@ -225,7 +226,7 @@ inline auto admits_claims(const sourcemeta::core::JSON &payload,
 // compared without regard to case against domains the artifact already holds
 // in lower case
 inline auto admits_email_domain(const sourcemeta::core::JSON &claims,
-                                const std::span<const std::byte> domains)
+                                const std::span<const std::string_view> domains)
     -> Admission {
   const auto *verified{claims.try_at("email_verified")};
   const auto *address{claims.try_at("email")};
@@ -253,15 +254,25 @@ inline auto admits_email_domain(const sourcemeta::core::JSON &claims,
 
   std::string domain{asserted};
   sourcemeta::core::to_lowercase(domain);
-  bool admitted{false};
-  if (!each_counted_string(domains,
-                           [&admitted, &domain](const auto candidate) -> void {
-                             admitted = admitted || candidate == domain;
-                           })) {
+  return std::ranges::find(domains, domain) == domains.end()
+             ? Admission::Refused
+             : Admission::Admitted;
+}
+
+// The same question asked of the domains as the artifact stores them. A run
+// this cannot read to its end says nothing about which domains a policy
+// admits, so none of it is trusted rather than the part read before it
+inline auto admits_email_domain(const sourcemeta::core::JSON &claims,
+                                const std::span<const std::byte> domains)
+    -> Admission {
+  std::vector<std::string_view> decoded;
+  if (!each_counted_string(domains, [&decoded](const auto domain) -> void {
+        decoded.push_back(domain);
+      })) {
     return Admission::Refused;
   }
 
-  return admitted ? Admission::Admitted : Admission::Refused;
+  return admits_email_domain(claims, decoded);
 }
 
 } // namespace sourcemeta::one

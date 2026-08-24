@@ -355,13 +355,14 @@ contains the schema collections they own.
     Authentication is only available in the [Enterprise](commercial.md)
     edition. Learn more about [commercial licensing](commercial.md).
 
-Authentication supports three policy types. An `apiKey` policy grants access to a
+Authentication supports four policy types. An `apiKey` policy grants access to a
 consumer that presents a pre-shared key, a `jwt` policy grants access to a
 consumer that presents a signed JSON Web Token, verified against the issuer's
-published key set, and an `oidc` policy grants access to a user who signs in
-through their identity provider in the browser. The first two admit machines that
-present a credential on every request, while the third authenticates a user once
-and then rides a session the instance establishes. Anything not covered by a
+published key set, an `oidc` policy grants access to a user who signs in
+through their identity provider in the browser, and a `github` policy grants
+access to a user who signs in through GitHub. The first two admit machines that
+present a credential on every request, while the last two authenticate a user
+once and then ride a session the instance establishes. Anything not covered by a
 policy stays public, so the configuration only ever describes what to protect,
 never what to expose. When a path is governed by more than one policy, the
 policies are unioned, so a single collection can admit both a machine presenting a
@@ -382,8 +383,8 @@ others. Public key material is still fetched from an issuer and cached, which
 is a lookup of what an issuer publishes rather than of who is signed in. That
 is what lets an instance scale horizontally, and it is why taking access away
 works differently for each policy type, described under each below. Sessions
-belong to `oidc` alone: a `jwt` policy has no session and no cookie, whether or
-not it names the same provider.
+belong to `oidc` and `github` alone: a `jwt` policy has no session and no
+cookie, whether or not it names the same provider.
 
 A policy governs a [Collection](#collections) or [Page](#pages), or a namespace
 above them (the instance root governs everything). It cannot gate an individual
@@ -397,7 +398,7 @@ regardless of type:
 
 | Property        | Type | Required | Default | Description |
 |-----------------|------|----------|---------|-------------|
-| `/type`         | String  | :red_circle: **Yes** | N/A | The policy type, one of `apiKey`, `jwt`, or `oidc` |
+| `/type`         | String  | :red_circle: **Yes** | N/A | The policy type, one of `apiKey`, `jwt`, `oidc`, or `github` |
 | `/name`         | String  | :red_circle: **Yes** | N/A | The policy name, surfaced in directory listings. Must consist of lowercase letters, digits, and hyphens. The name `public` is reserved |
 | `/paths`        | Array   | :red_circle: **Yes** | N/A | The registry paths this policy governs, each rooted at `/`. Every path must be `/` itself (governing the whole instance) or name a known collection, page, or route |
 
@@ -592,11 +593,12 @@ browser at all, exactly as a page that never existed is not.
 Signing in is therefore somewhere a person goes rather than something a page
 they were refused hands them. The web explorer's bar carries a sign-in control
 on every page an anonymous reader is served, pointing at one login page for the
-whole instance that names every `oidc` policy declared. Once a session exists,
-the bar offers signing out in its place. Neither control appears where it would
-lead nowhere: an instance declaring no `oidc` policy has no login page and no
-sign-in control however much of it is gated, and a page served to a machine
-credential offers no way out, since there is no session to end.
+whole instance that names every `oidc` and `github` policy declared. Once a
+session exists, the bar offers signing out in its place. Neither control appears
+where it would lead nowhere: an instance declaring no policy that signs a person
+in has no login page and no sign-in control however much of it is gated, and a
+page served to a machine credential offers no way out, since there is no session
+to end.
 
 The instance registers with the provider as a client, identified by its
 `clientId` and the client secret shared with it. It trusts the `issuer` both as
@@ -631,8 +633,8 @@ follows is signed with a secret of the instance's own, unrelated to the provider
     policy declares. The order of `paths` therefore decides where signing in
     leaves somebody, though it never changes what the policy gates.
 
-A browser holds one session per instance, whichever interactive policy
-established it, so signing in with a second one ends the first. A session lasts
+A browser holds one session per instance, whichever policy that signs a person
+in established it, so signing in with a second one ends the first. A session lasts
 an hour and renews without anybody noticing, by sending the browser back to the
 provider, which answers without displaying anything where the sign-in still
 stands. Only a navigation renews: a script calling the API with an expired
@@ -729,6 +731,128 @@ sign in through their identity provider to reach it:
     alongside an `apiKey` or `jwt` policy on the same path. The collection then
     admits both a machine that presents a credential and a user who signs in, so
     one endpoint can serve continuous integration and users at once.
+
+### GitHub
+
+A `github` policy grants access to a user who signs in through GitHub. It
+establishes the same session an [`oidc`](#oidc) policy does, under the same
+cookie, with the same lifetime and the same rotation, and everything above about
+sessions applies to it unchanged. What differs is how the person is identified,
+and that difference is worth reading before choosing this over `oidc`.
+
+GitHub is an OAuth 2.0 authorization server rather than an OpenID Connect
+provider. It publishes no discovery document, issues no identity token, and
+asserts no claims, so **nothing in this flow is signed**. Who somebody is, and
+what they belong to, is read from GitHub's REST API over TLS after the
+authorization code is redeemed. That is what every other project integrating
+with GitHub does, and it is a real reduction in assurance next to an `oidc`
+policy, where the provider signs an assertion this instance verifies against a
+published key set. Prefer `oidc` where a provider offers it.
+
+Two further differences are visible to the person signing in. There is no way to
+ask GitHub whether a sign-in still stands without showing them its own pages, so
+a `github` session is **never renewed silently**: it lasts an hour and then the
+person signs in again. And GitHub offers nowhere to end its own session, so
+signing out of the registry leaves the GitHub session alone, and the next
+sign-in is one click.
+
+| Property        | Type | Required | Default | Description |
+|-----------------|------|----------|---------|-------------|
+| `/title`        | String  | No | The policy name | A human readable version of the policy name |
+| `/clientId`     | String  | :red_circle: **Yes** | N/A | The client identifier of the OAuth App registered for this instance |
+| `/clientSecret` | Object  | :red_circle: **Yes** | N/A | The client secret of that OAuth App, read from an environment variable so that it never lives in the configuration file |
+| `/clientSecret/environmentVariable` | String | :red_circle: **Yes** | N/A | The name of the environment variable that holds the client secret |
+| `/sessionSecrets` | Array | :red_circle: **Yes** | N/A | The secrets used to sign the session cookies this instance mints, newest first, read exactly as on an [`oidc`](#oidc) policy |
+| `/sessionSecrets/*` | Object | :red_circle: **Yes** | N/A | A single session signing secret |
+| `/sessionSecrets/*/environmentVariable` | String | :red_circle: **Yes** | N/A | The name of the environment variable that holds the session signing secret. Generate it at random, with at least 32 characters, as with `openssl rand -base64 32` |
+| `/host`         | String  | No | `https://github.com` | The origin of the GitHub deployment to sign people in against, for GitHub Enterprise Server. The public service answers its API at `https://api.github.com`, and every other deployment answers it below its own origin at `/api/v3` |
+| `/users`        | Array   | No | An account handle is not consulted | The account handles admitted, compared without regard to case. A handle can be changed and then taken by somebody else, so this admits and nothing more: the session is keyed off the numeric account identifier, which is the account |
+| `/organizations` | Array  | No | An organisation is not consulted | The organisations whose members are admitted, named by handle and compared without regard to case |
+| `/teams`        | Array   | No | A team is not consulted | The teams whose members are admitted, each named as `organisation/team-slug`. A slug is what appears in a URL and survives a change of display name, though not a rename |
+| `/emailDomains` | Array   | No | An address is not consulted | The domains an admitted address sits at, read exactly as on an [`oidc`](#oidc) policy. The address on a GitHub account is the public one and is frequently unset, so this is answered against the account's primary address, and only where GitHub marks it verified |
+
+Values within a rule are alternatives, and separate rules all have to hold,
+exactly as on an `oidc` policy. A rule is answered when somebody signs in rather
+than on every request afterwards, for the same reasons and with the same
+consequences.
+
+```json title="one.json"
+{
+  "type": "github",
+  "name": "engineering",
+  "title": "GitHub",
+  "paths": [ "/internal" ],
+  "clientId": "Iv1.0123456789abcdef",
+  "clientSecret": { "environmentVariable": "ONE_GITHUB_CLIENT_SECRET" },
+  "sessionSecrets": [ { "environmentVariable": "ONE_GITHUB_SESSION_SECRET" } ],
+  "organizations": [ "acme" ],
+  "teams": [ "acme/platform" ]
+}
+```
+
+!!! warning "Register an OAuth App, not a GitHub App"
+
+    GitHub's own advice prefers GitHub Apps for most integrations. This is the
+    exception, and the reason is checkable rather than a matter of taste: a
+    GitHub App's user access token reads `GET /user/orgs` as **a 200 carrying an
+    empty list** rather than as an error. A policy naming `organizations` would
+    therefore refuse everybody, successfully, with nothing anywhere saying why.
+    `teams` is only marginally better, since a fine-grained token sees the teams
+    of a single organisation. Only an OAuth App reads both correctly.
+
+What the operator does, in full:
+
+1. Create an OAuth App at `github.com/settings/developers`, under a personal
+   account or under an organisation they administer.
+2. Set its **Authorization callback URL** to
+   `{url}/self/v1/auth/callback/{name}`, derived from the instance's `url` and
+   the policy's name. One app accepts several, so one app can serve several
+   policies or several environments.
+3. Generate a client secret. Put the client identifier in `one.json` and the
+   secret in the environment variable the policy names.
+4. **Only if the policy names `organizations` or `teams`**: have an owner of
+   each organisation approve the app under that organisation's third-party
+   access settings. Without that approval GitHub refuses the app its private
+   organisation data, and the rule denies everybody who is genuinely a member.
+
+The login asks for the least its rules need: `read:org` where the policy names
+`organizations` or `teams`, `user:email` where it names `emailDomains`, and
+nothing at all where it names only `users`.
+
+!!! note
+
+    A GitHub personal access token, and a GitHub App installation token, are not
+    supported as credentials. Both are opaque, so validating one means asking
+    GitHub on every request, against a third party with a rate limit, inside the
+    request path. That contradicts the property the rest of this section rests
+    on: any replica verifies any credential on its own. An
+    [`apiKey`](#api-key) policy is the answer for a machine consumer.
+
+!!! tip "GitHub Actions"
+
+    Authenticating a **workflow** rather than a person needs no `github` policy
+    at all. GitHub Actions issues OpenID Connect tokens against a real issuer
+    with a published key set, so a [`jwt`](#jwt) policy covers it:
+
+    ```json title="one.json"
+    {
+      "type": "jwt",
+      "name": "ci",
+      "paths": [ "/internal" ],
+      "issuer": "https://token.actions.githubusercontent.com",
+      "audience": "https://github.com/acme",
+      "algorithms": [ "RS256" ],
+      "claims": {
+        "repository_owner": [ "acme" ],
+        "repository": [ "acme/schemas" ]
+      }
+    }
+    ```
+
+    Write rules against `repository` and `repository_owner` rather than against
+    `sub`. GitHub changed the `sub` format for repositories created after
+    2026-07-15, so a fleet holding repositories of both vintages has two
+    spellings of it while the other two claims stay stable.
 
 ## Extends
 

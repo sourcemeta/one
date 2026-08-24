@@ -642,16 +642,10 @@ static auto index_main(const std::string_view &program,
   // The views this build writes for, read below from the table it compiles, so
   // that the naming rule is applied once and a build and the server it feeds
   // cannot come to different answers about what the views are
-  std::vector<std::vector<std::string_view>> view_policy_paths;
-  std::vector<std::vector<std::string_view>> view_policy_keys;
-  std::vector<std::vector<std::string_view>> view_policy_session_secrets;
-  std::vector<std::string> view_policy_claims;
-  std::vector<std::vector<std::string_view>> view_policy_email_domains;
+  sourcemeta::one::GENERATE_AUTHENTICATION::PolicyStorage view_policy_storage;
   const auto view_policies{
       sourcemeta::one::GENERATE_AUTHENTICATION::make_policies(
-          configuration, view_policy_paths, view_policy_keys,
-          view_policy_session_secrets, view_policy_claims,
-          view_policy_email_domains)};
+          configuration, view_policy_storage)};
   const auto authentication_path{canonical_output / "authentication.bin"};
   // The table this build just compiled is what the plan is filtered against, so
   // it is read from memory rather than through the file it is also written to

@@ -2,6 +2,7 @@ sourcemeta_test(NAMESPACE sourcemeta PROJECT one NAME enterprise_authentication
   SOURCES
     authentication_caller_test.cc
     authentication_compile_test.cc
+    authentication_github_test.cc
     authentication_governing_test.cc
     authentication_login_test.cc
     authentication_logout_test.cc

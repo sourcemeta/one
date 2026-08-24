@@ -21,8 +21,18 @@ namespace sourcemeta::one {
 enum class AuthenticationPolicyType : std::uint8_t {
   ApiKey = 0,
   JWT = 1,
-  OIDC = 2
+  OIDC = 2,
+  GitHub = 3
 };
+
+// Whether a policy of this kind signs a person in and holds a session, which is
+// what the parts that only care that a session exists ask rather than naming
+// each kind that establishes one
+inline auto is_interactive_type(const AuthenticationPolicyType type) noexcept
+    -> bool {
+  return type == AuthenticationPolicyType::OIDC ||
+         type == AuthenticationPolicyType::GitHub;
+}
 
 // How many policies one artifact can name. Each occupies a bit of the node
 // masks, so this is what a mask has room for rather than a matter of taste
@@ -40,7 +50,7 @@ inline auto at_offset(const std::span<const std::byte> bytes,
 }
 
 constexpr std::uint32_t AUTHENTICATION_MAGIC{0x48545541};
-constexpr std::uint32_t AUTHENTICATION_VERSION{14};
+constexpr std::uint32_t AUTHENTICATION_VERSION{15};
 
 // The artifact begins with this header. Every variable-length section is
 // located through an absolute byte offset so the matcher can address it
@@ -154,6 +164,31 @@ struct OIDCPolicyMetadata {
   std::string_view name;
   // The variables holding this policy's session secrets, kept as the bytes
   // they occupy so that reading a policy costs nothing until one is wanted
+  std::span<const std::byte> session_secrets;
+  std::string_view default_path;
+};
+
+struct GitHubPolicyMetadata {
+  std::string_view host;
+  std::string_view client_id;
+  // Each of these is kept as the bytes it occupies so that reading a policy
+  // costs nothing until one of them is wanted
+  std::span<const std::byte> users;
+  std::span<const std::byte> organizations;
+  std::span<const std::byte> teams;
+  std::span<const std::byte> email_domains;
+  std::string_view client_secret_variable;
+  std::string_view name;
+  std::span<const std::byte> session_secrets;
+  std::string_view default_path;
+};
+
+// What every policy holding a session carries, whichever kind it is. Reading it
+// through one shape is what keeps the answer to whether a browser holds a
+// session from being given once per kind
+struct SessionPolicyMetadata {
+  std::string_view client_secret_variable;
+  std::string_view name;
   std::span<const std::byte> session_secrets;
   std::string_view default_path;
 };
@@ -287,7 +322,7 @@ inline auto structurally_valid(const std::span<const std::byte> bytes) noexcept
           entry.algorithm >
               static_cast<std::uint8_t>(Authentication::Algorithm::Sha256) ||
           entry.type >
-              static_cast<std::uint8_t>(AuthenticationPolicyType::OIDC)) {
+              static_cast<std::uint8_t>(AuthenticationPolicyType::GitHub)) {
         return false;
       }
 
@@ -541,6 +576,86 @@ inline auto decode_oidc_metadata(const std::span<const std::byte> metadata,
   result.session_secrets =
       metadata.subspan(secrets_start, cursor - secrets_start);
   return read_string(metadata, cursor, result.default_path);
+}
+
+inline auto decode_github_metadata(const std::span<const std::byte> metadata,
+                                   GitHubPolicyMetadata &result) -> bool {
+  std::size_t cursor{0};
+  if (!read_string(metadata, cursor, result.host) ||
+      !read_string(metadata, cursor, result.client_id) ||
+      !read_counted_strings(metadata, cursor, result.users) ||
+      !read_counted_strings(metadata, cursor, result.organizations) ||
+      !read_counted_strings(metadata, cursor, result.teams) ||
+      !read_counted_strings(metadata, cursor, result.email_domains) ||
+      !read_string(metadata, cursor, result.client_secret_variable) ||
+      !read_string(metadata, cursor, result.name) ||
+      !read_counted_strings(metadata, cursor, result.session_secrets)) {
+    return false;
+  }
+
+  return read_string(metadata, cursor, result.default_path);
+}
+
+// What a policy holding a session carries, read through whichever layout its
+// kind is stored in. A kind that establishes no session has none of this, so it
+// answers that it could not be read rather than answering with nothing
+inline auto decode_session_metadata(const AuthenticationPolicyType type,
+                                    const std::span<const std::byte> metadata,
+                                    SessionPolicyMetadata &result) -> bool {
+  if (type == AuthenticationPolicyType::OIDC) {
+    OIDCPolicyMetadata decoded;
+    if (!decode_oidc_metadata(metadata, decoded)) {
+      return false;
+    }
+
+    result.client_secret_variable = decoded.client_secret_variable;
+    result.name = decoded.name;
+    result.session_secrets = decoded.session_secrets;
+    result.default_path = decoded.default_path;
+    return true;
+  }
+
+  if (type == AuthenticationPolicyType::GitHub) {
+    GitHubPolicyMetadata decoded;
+    if (!decode_github_metadata(metadata, decoded)) {
+      return false;
+    }
+
+    result.client_secret_variable = decoded.client_secret_variable;
+    result.name = decoded.name;
+    result.session_secrets = decoded.session_secrets;
+    result.default_path = decoded.default_path;
+    return true;
+  }
+
+  return false;
+}
+
+// The reference check treats two GitHub policies as the same scope only when
+// they admit the same people, exactly as it does for the interactive policies
+// below, so the deployment, the client identifier and every rule narrowing who
+// is let in count as one indivisible identity
+inline auto
+collect_github_identifiers(const std::span<const std::byte> metadata,
+                           std::unordered_set<std::string_view> &keys) -> void {
+  std::size_t cursor{0};
+  std::string_view host;
+  std::string_view client_id;
+  std::span<const std::byte> users;
+  std::span<const std::byte> organizations;
+  std::span<const std::byte> teams;
+  std::span<const std::byte> email_domains;
+  if (!read_string(metadata, cursor, host) ||
+      !read_string(metadata, cursor, client_id) ||
+      !read_counted_strings(metadata, cursor, users) ||
+      !read_counted_strings(metadata, cursor, organizations) ||
+      !read_counted_strings(metadata, cursor, teams) ||
+      !read_counted_strings(metadata, cursor, email_domains)) {
+    return;
+  }
+
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  keys.emplace(reinterpret_cast<const char *>(metadata.data()), cursor);
 }
 
 // The reference check treats two interactive policies as the same scope only
