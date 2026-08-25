@@ -3,6 +3,8 @@ HURL ?= hurl
 NPM ?= npm
 NPX ?= npx
 ROOT := $(dir $(lastword $(MAKEFILE_LIST)))../..
+# Where this suite lives, which is what a measurement it takes is named after
+SUITE := $(patsubst $(abspath $(ROOT))/%,%,$(CURDIR))
 
 COMPOSE = compose.yml
 BASE ?= http://localhost
@@ -16,7 +18,7 @@ export EDITION
 all:
 	$(MAKE) down
 	$(MAKE) up
-	$(MAKE) test-hurl test-playwright; \
+	$(MAKE) test-benchmark test-hurl test-playwright; \
 		status=$$?; $(MAKE) down; exit $$status
 
 .PHONY: up
@@ -31,6 +33,22 @@ test-hurl:
 	$(HURL) $(HURL_FLAGS) --repeat 10 --test --variable base=$(BASE):$(PORT) --variable port=$(PORT) \
 		$(wildcard hurl/*.all.hurl) \
 		$(wildcard hurl/*.$(EDITION).hurl)
+
+# A suite that carries a script saying what it wants measured is measured
+# before its tests run, so what is timed is an instance warmed deliberately
+# rather than one that has just served a whole test suite. Nothing is measured
+# unless somewhere to put the answer was named, so an ordinary run pays nothing
+.PHONY: test-benchmark
+test-benchmark:
+ifneq ($(wildcard benchmark.sh),)
+ifneq ($(BENCHMARK_OUTPUT),)
+	if [ -f environment ]; then set -a; . ./environment; set +a; fi; \
+		./benchmark.sh $(BASE):$(PORT) > $(BENCHMARK_OUTPUT).part
+	jq --arg suite "$(SUITE)" 'map(.name |= "\($$suite): \(.)")' \
+		< $(BENCHMARK_OUTPUT).part > $(BENCHMARK_OUTPUT)
+	rm -f $(BENCHMARK_OUTPUT).part
+endif
+endif
 
 .PHONY: test-playwright
 test-playwright:

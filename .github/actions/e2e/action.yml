@@ -16,8 +16,11 @@ runs:
       shell: bash
 
     - name: E2E (${{ inputs.path }})
-      run: >
-        make -C ${{ inputs.path }}
-        EDITION=${{ inputs.edition }}
-        HURL='docker run --rm --network=host --volume $$(pwd):/workspace --workdir /workspace ghcr.io/orange-opensource/hurl:8.0.1'
+      run: |
+        mkdir -p "$GITHUB_WORKSPACE/benchmark-results"
+        SLUG="$(printf '%s' '${{ inputs.path }}' | tr '/' '-')"
+        make -C ${{ inputs.path }} \
+          EDITION=${{ inputs.edition }} \
+          BENCHMARK_OUTPUT="$GITHUB_WORKSPACE/benchmark-results/$SLUG.json" \
+          HURL='docker run --rm --network=host --volume $$(pwd):/workspace --workdir /workspace ghcr.io/orange-opensource/hurl:8.0.1'
       shell: bash
