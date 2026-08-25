@@ -9,35 +9,49 @@
 
 namespace sourcemeta::one {
 
+// The third column is what an action is called to anybody outside this
+// program, which is a name this project promises rather than one it happens to
+// use. It is written down rather than derived from the first, so that renaming
+// a handler is an internal matter and renaming what an operator sees is a
+// deliberate act
 #define SOURCEMETA_ONE_FOR_EACH_ACTION(X)                                      \
-  X(DEFAULT_V1, ActionDefault_v1)                                              \
-  X(HEALTH_CHECK_V1, ActionHealthCheck_v1)                                     \
-  X(METRICS_V1, ActionMetrics_v1)                                              \
-  X(NOT_FOUND_V1, ActionNotFound_v1)                                           \
-  X(SCHEMA_ARTIFACT_V1, ActionServeSchemaArtifact_v1)                          \
-  X(EXPLORER_ARTIFACT_V1, ActionServeExplorerArtifact_v1)                      \
-  X(GET_SCHEMA_HEALTH_V1, ActionGetSchemaHealth_v1)                            \
-  X(GET_SCHEMA_LOCATIONS_V1, ActionGetSchemaLocations_v1)                      \
-  X(GET_SCHEMA_POSITIONS_V1, ActionGetSchemaPositions_v1)                      \
-  X(GET_SCHEMA_STATS_V1, ActionGetSchemaStats_v1)                              \
-  X(GET_SCHEMA_METADATA_V1, ActionGetSchemaMetadata_v1)                        \
-  X(LIST_DIRECTORY_V1, ActionListDirectory_v1)                                 \
-  X(DEPENDENCY_TREE_V1, ActionDependencyTree_v1)                               \
-  X(GET_SCHEMA_DEPENDENCIES_V1, ActionGetSchemaDependencies_v1)                \
-  X(GET_SCHEMA_DEPENDENTS_V1, ActionGetSchemaDependents_v1)                    \
-  X(JSONSCHEMA_EVALUATE_V1, ActionJSONSchemaEvaluate_v1)                       \
-  X(JSONSCHEMA_RDF_V1, ActionJSONSchemaRDF_v1)                                 \
-  X(JSONSCHEMA_TRACE_V1, ActionJSONSchemaTrace_v1)                             \
-  X(SCHEMA_SEARCH_V1, ActionSchemaSearch_v1)                                   \
-  X(SERVE_STATIC_V1, ActionServeStatic_v1)                                     \
-  X(MCP_V1, ActionMCP_v1)                                                      \
-  X(AUTH_LOGOUT_V1, ActionAuthLogout_v1)                                       \
-  X(AUTH_LOGIN_V1, ActionAuthLogin_v1)                                         \
-  X(AUTH_LOGIN_PAGE_V1, ActionAuthLoginPage_v1)                                \
-  X(AUTH_CALLBACK_V1, ActionAuthCallback_v1)                                   \
-  X(MCP_PROTECTED_RESOURCE_METADATA_V1, ActionMCPProtectedResourceMetadata_v1)
+  X(DEFAULT_V1, ActionDefault_v1, "default_v1")                                \
+  X(HEALTH_CHECK_V1, ActionHealthCheck_v1, "health_check_v1")                  \
+  X(METRICS_V1, ActionMetrics_v1, "metrics_v1")                                \
+  X(NOT_FOUND_V1, ActionNotFound_v1, "not_found_v1")                           \
+  X(SCHEMA_ARTIFACT_V1, ActionServeSchemaArtifact_v1, "schema_artifact_v1")    \
+  X(EXPLORER_ARTIFACT_V1, ActionServeExplorerArtifact_v1,                      \
+    "explorer_artifact_v1")                                                    \
+  X(GET_SCHEMA_HEALTH_V1, ActionGetSchemaHealth_v1, "get_schema_health_v1")    \
+  X(GET_SCHEMA_LOCATIONS_V1, ActionGetSchemaLocations_v1,                      \
+    "get_schema_locations_v1")                                                 \
+  X(GET_SCHEMA_POSITIONS_V1, ActionGetSchemaPositions_v1,                      \
+    "get_schema_positions_v1")                                                 \
+  X(GET_SCHEMA_STATS_V1, ActionGetSchemaStats_v1, "get_schema_stats_v1")       \
+  X(GET_SCHEMA_METADATA_V1, ActionGetSchemaMetadata_v1,                        \
+    "get_schema_metadata_v1")                                                  \
+  X(LIST_DIRECTORY_V1, ActionListDirectory_v1, "list_directory_v1")            \
+  X(DEPENDENCY_TREE_V1, ActionDependencyTree_v1, "dependency_tree_v1")         \
+  X(GET_SCHEMA_DEPENDENCIES_V1, ActionGetSchemaDependencies_v1,                \
+    "get_schema_dependencies_v1")                                              \
+  X(GET_SCHEMA_DEPENDENTS_V1, ActionGetSchemaDependents_v1,                    \
+    "get_schema_dependents_v1")                                                \
+  X(JSONSCHEMA_EVALUATE_V1, ActionJSONSchemaEvaluate_v1,                       \
+    "jsonschema_evaluate_v1")                                                  \
+  X(JSONSCHEMA_RDF_V1, ActionJSONSchemaRDF_v1, "jsonschema_rdf_v1")            \
+  X(JSONSCHEMA_TRACE_V1, ActionJSONSchemaTrace_v1, "jsonschema_trace_v1")      \
+  X(SCHEMA_SEARCH_V1, ActionSchemaSearch_v1, "schema_search_v1")               \
+  X(SERVE_STATIC_V1, ActionServeStatic_v1, "serve_static_v1")                  \
+  X(MCP_V1, ActionMCP_v1, "mcp_v1")                                            \
+  X(AUTH_LOGOUT_V1, ActionAuthLogout_v1, "auth_logout_v1")                     \
+  X(AUTH_LOGIN_V1, ActionAuthLogin_v1, "auth_login_v1")                        \
+  X(AUTH_LOGIN_PAGE_V1, ActionAuthLoginPage_v1, "auth_login_page_v1")          \
+  X(AUTH_CALLBACK_V1, ActionAuthCallback_v1, "auth_callback_v1")               \
+  X(MCP_PROTECTED_RESOURCE_METADATA_V1, ActionMCPProtectedResourceMetadata_v1, \
+    "mcp_protected_resource_metadata_v1")
 
-#define SOURCEMETA_ONE_DEFINE_ACTION_TYPE(Name, Class) ACTION_TYPE_##Name,
+#define SOURCEMETA_ONE_DEFINE_ACTION_TYPE(Name, Class, Label)                  \
+  ACTION_TYPE_##Name,
 
 enum : std::uint8_t {
   SOURCEMETA_ONE_FOR_EACH_ACTION(SOURCEMETA_ONE_DEFINE_ACTION_TYPE)
@@ -46,11 +60,11 @@ enum : std::uint8_t {
 
 #undef SOURCEMETA_ONE_DEFINE_ACTION_TYPE
 
-#define SOURCEMETA_ONE_DEFINE_ACTION_NAME(Name, Class) std::string_view{#Name},
+#define SOURCEMETA_ONE_DEFINE_ACTION_NAME(Name, Class, Label)                  \
+  std::string_view{Label},
 
-// What an action is called wherever one has to be named to somebody outside
-// this program, taken from the same list the handlers themselves come from so
-// that neither can name an action the other does not have
+// Indexed by the same values the enum above defines, since both come from the
+// one list and neither can name an action the other does not have
 inline constexpr std::array<std::string_view, ACTION_TYPE_COUNT> ACTION_NAMES{
     {SOURCEMETA_ONE_FOR_EACH_ACTION(SOURCEMETA_ONE_DEFINE_ACTION_NAME)}};
 

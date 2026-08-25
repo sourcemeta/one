@@ -64,18 +64,6 @@ public:
             this->error_schema_ = std::get<std::string_view>(value);
           }
         });
-
-    // A label value never changes for the life of an instance, so it is
-    // spelled once here rather than on every scrape
-    this->actions_.reserve(sourcemeta::one::ACTION_NAMES.size());
-    for (const auto &name : sourcemeta::one::ACTION_NAMES) {
-      std::string lowered{name};
-      std::ranges::transform(lowered, lowered.begin(),
-                             [](const char character) -> char {
-                               return sourcemeta::core::to_lowercase(character);
-                             });
-      this->actions_.push_back(std::move(lowered));
-    }
   }
 
   auto rest(const std::span<std::string_view>,
@@ -295,11 +283,12 @@ private:
     family(output, "sourcemeta_one_http_requests_total",
            "Total HTTP requests handled", "counter");
     for (const auto &[key, count] : state.requests) {
-      output += std::format(
-          "sourcemeta_one_http_requests_total{{action=\"{}\","
-          "code=\"{}\"}} {}\n",
-          this->actions_.at(sourcemeta::one::RouterMetrics::action_of(key)),
-          sourcemeta::one::RouterMetrics::status_of(key), count);
+      output +=
+          std::format("sourcemeta_one_http_requests_total{{action=\"{}\","
+                      "code=\"{}\"}} {}\n",
+                      sourcemeta::one::ACTION_NAMES.at(
+                          sourcemeta::one::RouterMetrics::action_of(key)),
+                      sourcemeta::one::RouterMetrics::status_of(key), count);
     }
 
     output += "\n";
@@ -316,7 +305,7 @@ private:
       }
 
       cumulative = 0;
-      const auto &name{this->actions_.at(action)};
+      const auto &name{sourcemeta::one::ACTION_NAMES.at(action)};
       for (std::size_t bucket = 0;
            bucket < sourcemeta::one::RouterMetrics::BUCKET_COUNT; bucket++) {
         cumulative += state.buckets[action][bucket];
@@ -343,7 +332,6 @@ private:
   }
 
   std::string_view error_schema_;
-  std::vector<std::string> actions_;
 };
 
 #endif

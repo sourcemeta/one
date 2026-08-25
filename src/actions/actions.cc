@@ -40,7 +40,7 @@ struct ActionMetadata {
   bool open_world;
 };
 
-#define SOURCEMETA_ONE_DEFINE_METADATA(Name, Class)                            \
+#define SOURCEMETA_ONE_DEFINE_METADATA(Name, Class, Label)                     \
   ActionMetadata{Class::DESCRIPTION, Class::READ_ONLY, Class::DESTRUCTIVE,     \
                  Class::IDEMPOTENT, Class::OPEN_WORLD},
 
@@ -53,7 +53,7 @@ const std::array<ActionMetadata, sourcemeta::one::ACTION_TYPE_COUNT> METADATA{
 
 namespace sourcemeta::one {
 
-#define SOURCEMETA_ONE_MAKE_CONSTRUCTOR_ENTRY(Name, Class)                     \
+#define SOURCEMETA_ONE_MAKE_CONSTRUCTOR_ENTRY(Name, Class, Label)              \
   table[ACTION_TYPE_##Name] = &make_router_action<Class>;
 
 const std::array<RouterActionConstructor, ACTION_TYPE_COUNT> CONSTRUCTORS{
