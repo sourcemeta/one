@@ -16,12 +16,13 @@
 #include <algorithm>   // std::ranges::transform
 #include <array>       // std::array
 #include <chrono>      // std::chrono::duration
+#include <cstddef>     // std::size_t
+#include <cstdint>     // std::uint64_t
 #include <filesystem>  // std::filesystem::path
 #include <format>      // std::format
 #include <span>        // std::span
 #include <string>      // std::string
 #include <string_view> // std::string_view
-#include <vector>      // std::vector
 
 class ActionMetrics_v1 : public sourcemeta::one::RouterAction {
 public:
