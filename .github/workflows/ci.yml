@@ -171,7 +171,12 @@ jobs:
       - uses: benchmark-action/github-action-benchmark@v1
         if: github.event.pull_request.head.repo.fork == false
         with:
-          name: Benchmark (${{ matrix.edition.name }})
+          # TODO: Rename to `Benchmark (<edition>)`, as this now carries
+          # server measurements too. The name keys the series stored on
+          # `gh-pages`, and only pushes to `main` write there, so renaming
+          # starts an empty series and suppresses the comparison comment until
+          # the first push after the rename lands
+          name: Benchmark Index (${{ matrix.edition.name }})
           tool: customSmallerIsBetter
           output-file-path: benchmark.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
