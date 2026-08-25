@@ -157,36 +157,28 @@ jobs:
           edition: ${{ matrix.edition.name }}
         if: matrix.edition.name == 'enterprise'
 
+      # The suites measured themselves as they ran, so what is left is to take
+      # the indexer's own measurements and say all of it at once. This action
+      # keeps a checkout of the branch it records into, so it is called exactly
+      # once per job rather than once per kind of measurement
       - name: Benchmark
         run: |
           make docker-benchmark PRESET=Release ${{ matrix.edition.options }}
-          docker run --rm one-benchmark > benchmark.json
+          mkdir -p benchmark-results
+          docker run --rm one-benchmark > benchmark-results/index.json
+          ./benchmark/merge.sh benchmark-results > benchmark.json
+          cat benchmark.json
       - uses: benchmark-action/github-action-benchmark@v1
         if: github.event.pull_request.head.repo.fork == false
         with:
-          name: Benchmark Index (${{ matrix.edition.name }})
+          name: Benchmark (${{ matrix.edition.name }})
           tool: customSmallerIsBetter
           output-file-path: benchmark.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: ${{ github.event_name != 'pull_request' }}
           benchmark-data-dir-path: benchmark/${{ matrix.edition.name }}/index
-          alert-threshold: '5%'
-          comment-always: true
-          fail-on-alert: false
-
-      - name: Benchmark (server)
-        run: ./benchmark/merge.sh benchmark-results > benchmark-server.json
-      - uses: benchmark-action/github-action-benchmark@v1
-        if: github.event.pull_request.head.repo.fork == false
-        with:
-          name: Benchmark Server (${{ matrix.edition.name }})
-          tool: customSmallerIsBetter
-          output-file-path: benchmark-server.json
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          auto-push: ${{ github.event_name != 'pull_request' }}
-          benchmark-data-dir-path: benchmark/${{ matrix.edition.name }}/server
-          # Latency on a shared runner moves far more than an index does, so
-          # this is wide enough that only a real regression is heard
+          # Latency on a shared runner moves far more than an index does, and
+          # one threshold now covers both
           alert-threshold: '25%'
           comment-always: true
           fail-on-alert: false
