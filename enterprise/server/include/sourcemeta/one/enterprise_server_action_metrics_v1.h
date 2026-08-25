@@ -195,14 +195,19 @@ private:
       }
     }
 
+    // Reading the list takes a descriptor of its own, which the list then
+    // includes, so what is counted is one more than what was open
     std::error_code error;
     const std::filesystem::directory_iterator descriptors{"/proc/self/fd",
                                                           error};
     if (!error) {
+      std::uint64_t listed{0};
       for (const auto &entry : descriptors) {
         static_cast<void>(entry);
-        sample.open_descriptors += 1;
+        listed += 1;
       }
+
+      sample.open_descriptors = listed > 0 ? listed - 1 : 0;
     }
 
     sample.maximum_descriptors = descriptor_limit();

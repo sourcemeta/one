@@ -78,6 +78,13 @@ public:
     this->entered_.fetch_add(1, std::memory_order_relaxed);
   }
 
+  // A request has gone without ever being answered, which a caller that hung
+  // up mid-upload does. Nothing is counted against a handler, since nothing
+  // was served, but the in-flight count comes back down all the same
+  auto abandon() noexcept -> void {
+    this->answered_.fetch_add(1, std::memory_order_relaxed);
+  }
+
   // A request has been answered, which is both what is counted and what brings
   // the in-flight count back down. A request answered before any handler was
   // chosen carries none, and is counted as served without being attributed

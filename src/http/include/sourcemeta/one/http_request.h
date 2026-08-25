@@ -34,12 +34,32 @@ inline constexpr std::size_t MAX_REQUEST_BODY_BYTES{
 struct Observation {
   std::chrono::steady_clock::time_point started{};
   std::uint8_t handler{std::numeric_limits<std::uint8_t>::max()};
+  // A request arrives once and leaves once, but there is more than one way for
+  // it to leave and more than one place that notices. Settling here rather
+  // than at each of them is what keeps the in-flight count honest
+  mutable bool settled{false};
 
   auto record(const std::uint16_t status) const -> void {
+    if (this->settled) {
+      return;
+    }
+
+    this->settled = true;
     http_metrics().observe(this->handler, status,
                            std::chrono::duration<double>{
                                std::chrono::steady_clock::now() - this->started}
                                .count());
+  }
+
+  // Nothing was served, so nothing is counted against a handler, but the
+  // in-flight count comes back down all the same
+  auto abandon() const -> void {
+    if (this->settled) {
+      return;
+    }
+
+    this->settled = true;
+    http_metrics().abandon();
   }
 };
 
@@ -183,8 +203,10 @@ public:
     auto buffer = std::make_shared<std::string>();
     auto completed = std::make_shared<bool>(false);
 
-    raw_response->onAborted(
-        [completed]() mutable -> void { *completed = true; });
+    raw_response->onAborted([completed, snapshot]() mutable -> void {
+      *completed = true;
+      snapshot->observation_.abandon();
+    });
 
     raw_response->onData(
         // NOLINTNEXTLINE(bugprone-exception-escape)

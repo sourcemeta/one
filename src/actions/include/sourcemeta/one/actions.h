@@ -9,6 +9,10 @@
 
 namespace sourcemeta::one {
 
+// New entries are appended rather than inserted, since the position of an
+// entry is the identifier a built router records for it, and an identifier
+// that moves points an already-built router at the wrong handler.
+//
 // The third column is what an action is called to anybody outside this
 // program, which is a name this project promises rather than one it happens to
 // use. It is written down rather than derived from the first, so that renaming
@@ -17,7 +21,6 @@ namespace sourcemeta::one {
 #define SOURCEMETA_ONE_FOR_EACH_ACTION(X)                                      \
   X(DEFAULT_V1, ActionDefault_v1, "default_v1")                                \
   X(HEALTH_CHECK_V1, ActionHealthCheck_v1, "health_check_v1")                  \
-  X(METRICS_V1, ActionMetrics_v1, "metrics_v1")                                \
   X(NOT_FOUND_V1, ActionNotFound_v1, "not_found_v1")                           \
   X(SCHEMA_ARTIFACT_V1, ActionServeSchemaArtifact_v1, "schema_artifact_v1")    \
   X(EXPLORER_ARTIFACT_V1, ActionServeExplorerArtifact_v1,                      \
@@ -48,7 +51,8 @@ namespace sourcemeta::one {
   X(AUTH_LOGIN_PAGE_V1, ActionAuthLoginPage_v1, "auth_login_page_v1")          \
   X(AUTH_CALLBACK_V1, ActionAuthCallback_v1, "auth_callback_v1")               \
   X(MCP_PROTECTED_RESOURCE_METADATA_V1, ActionMCPProtectedResourceMetadata_v1, \
-    "mcp_protected_resource_metadata_v1")
+    "mcp_protected_resource_metadata_v1")                                      \
+  X(METRICS_V1, ActionMetrics_v1, "metrics_v1")
 
 #define SOURCEMETA_ONE_DEFINE_ACTION_TYPE(Name, Class, Label)                  \
   ACTION_TYPE_##Name,

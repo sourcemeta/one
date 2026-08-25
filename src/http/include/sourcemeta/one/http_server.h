@@ -111,6 +111,9 @@ public:
                     response.write_status(
                         sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR);
                     response.send_without_content();
+                    request.observation().record(
+                        sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR
+                            .code);
                   }
                 });
 

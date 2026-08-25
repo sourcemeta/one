@@ -68,7 +68,8 @@ GET /self/v1/metrics
 Any Prometheus-compatible scraper reads this without configuration beyond the
 path. Request behaviour follows the
 [RED](https://grafana.com/blog/2018/08/02/the-red-method-how-to-instrument-your-services/)
-method, meaning rate, errors and duration, reported per action and status code.
+method, with request and error counts reported per action and status code, and
+duration reported per action.
 This endpoint is not exempt from [authentication](#authentication), so a policy
 covering its path gates it like any other route.
 
