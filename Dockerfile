@@ -1,6 +1,6 @@
 FROM debian:trixie AS builder
 
-RUN apt-get --yes update && apt-get install --yes --no-install-recommends \
+RUN apt-get --yes -o Acquire::Retries=3 update && apt-get install --yes --no-install-recommends \
   build-essential ca-certificates cmake ninja-build sassc esbuild shellcheck nodejs npm ccache \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 

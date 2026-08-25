@@ -6,7 +6,7 @@ FROM debian:trixie AS builder
 # the checksums that release publishes, which is the integrity that signing
 # the repository was there to provide
 ARG NODE_VERSION=22.23.1
-RUN apt-get --yes update && apt-get install --yes --no-install-recommends \
+RUN apt-get --yes -o Acquire::Retries=3 update && apt-get install --yes --no-install-recommends \
   build-essential ca-certificates cmake ninja-build sassc esbuild shellcheck curl ccache \
   openssl libssl-dev openssl-provider-fips libcurl4-openssl-dev \
   && apt-get clean && rm -rf /var/lib/apt/lists/* \
@@ -104,7 +104,7 @@ RUN mkdir -p /usr/share/sourcemeta/one \
 
 FROM debian:trixie-slim
 
-RUN apt-get --yes update && apt-get install --yes --no-install-recommends \
+RUN apt-get --yes -o Acquire::Retries=3 update && apt-get install --yes --no-install-recommends \
   openssl-provider-fips libcurl4t64 ca-certificates \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /etc/ssl/openssl.cnf /etc/ssl/openssl.cnf
@@ -211,7 +211,7 @@ RUN test -f /usr/lib/*/ossl-modules/fips.so
 # sed because update-ca-certificates needs it, so images that extend this one
 # can install custom certificate authorities
 RUN cp /bin/mount /bin/umount /tmp/ \
-  && apt-get --yes update \
+  && apt-get --yes -o Acquire::Retries=3 update \
   && apt-get --yes purge --allow-remove-essential \
     adduser \
     e2fsprogs gzip hostname init-system-helpers \
