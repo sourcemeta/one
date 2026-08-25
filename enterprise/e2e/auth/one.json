@@ -32,6 +32,13 @@
     {
       "type": "apiKey",
       "algorithm": "identity",
+      "name": "metrics",
+      "paths": [ "/self/v1/metrics" ],
+      "keys": [ { "environmentVariable": "ONE_E2E_KEY_METRICS" } ]
+    },
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
       "name": "mixed-plain",
       "paths": [ "/mixed" ],
       "keys": [ { "environmentVariable": "ONE_E2E_KEY_MIXED_PLAIN" } ]

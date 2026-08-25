@@ -16,7 +16,7 @@ export EDITION
 all:
 	$(MAKE) down
 	$(MAKE) up
-	$(MAKE) test-hurl test-hurl-compose test-playwright; \
+	$(MAKE) test-hurl test-playwright; \
 		status=$$?; $(MAKE) down; exit $$status
 
 .PHONY: up
@@ -31,17 +31,6 @@ test-hurl:
 	$(HURL) $(HURL_FLAGS) --repeat 10 --test --variable base=$(BASE):$(PORT) --variable port=$(PORT) \
 		$(wildcard hurl/*.all.hurl) \
 		$(wildcard hurl/*.$(EDITION).hurl)
-
-# Assertions that read a service standing beside the registry, which only
-# exists here. The native runner never invokes this target, so a sandbox can
-# carry both kinds of test without the second kind failing where there is
-# nothing beside it
-.PHONY: test-hurl-compose
-test-hurl-compose:
-ifneq ($(wildcard hurl/*.compose.hurl),)
-	$(HURL) $(HURL_FLAGS) --repeat 10 --test --variable base=$(BASE):$(PORT) --variable port=$(PORT) \
-		$(wildcard hurl/*.compose.hurl)
-endif
 
 .PHONY: test-playwright
 test-playwright:

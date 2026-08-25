@@ -8,6 +8,11 @@ global:
 scrape_configs:
   - job_name: sourcemeta-one
     metrics_path: /self/v1/metrics
+    # The path is governed by a policy, so the scraper presents a credential
+    # like any other caller
+    authorization:
+      type: Bearer
+      credentials: metrics-secret-key
     static_configs:
       - targets:
           - "sandbox:8001"
