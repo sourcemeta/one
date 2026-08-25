@@ -282,15 +282,31 @@ jobs:
           run: |
             set -o errexit
             set -o nounset
+            # An unset secret reaches here as an empty string rather than as
+            # nothing, which `nounset` does not catch, so it is said outright
+            test -n "$SOURCEMETA_ONE_METRICS_TOKEN"
+            # The instance is given the digest of the metrics key rather than
+            # the key, so what it holds cannot be presented as a credential
+            METRICS_DIGEST="$(printf '%s' "$SOURCEMETA_ONE_METRICS_TOKEN" | sha256sum | cut -d' ' -f1)"
             kraft cloud service create --name schemas --domain ${{ env.SERVICE_DOMAIN }} 443:8000 || true
             kraft cloud deploy --memory 4096 --rollout remove --image schemas --service schemas \
+              --env "SOURCEMETA_ONE_METRICS_KEY=$METRICS_DIGEST" \
               --kraftfile enterprise/e2e/public/Kraftfile --restart on-failure --replicas 4 ./enterprise/e2e/public
             kraft cloud service get schemas
             kraft cloud service get schemas --output json
             kraft cloud instance logs "$(kraft cloud service get schemas --output json | jq --raw-output '.data.service_groups[0].instances[0].name')"
             curl --location --header "Accept: text/html" --retry 10 --retry-all-errors --fail https://${{ env.SERVICE_DOMAIN }}
+            # The gate is live, so an anonymous scrape is refused
+            curl --silent --output /dev/null --retry 10 --retry-all-errors \
+              --write-out '%{http_code}' https://${{ env.SERVICE_DOMAIN }}/self/v1/metrics | grep --quiet '^401$'
+            # And the digest reached the instance intact, so the real scraper
+            # will be admitted rather than silently refused forever
+            curl --silent --fail --retry 10 --retry-all-errors \
+              --header "Authorization: Bearer $SOURCEMETA_ONE_METRICS_TOKEN" \
+              https://${{ env.SERVICE_DOMAIN }}/self/v1/metrics | grep --quiet '^# TYPE sourcemeta_one_build_info gauge$'
         env:
           KRAFTCLOUD_TOKEN: ${{ secrets.KRAFTCLOUD_TOKEN }}
+          SOURCEMETA_ONE_METRICS_TOKEN: ${{ secrets.SOURCEMETA_ONE_METRICS_TOKEN }}
 
       # Update deployment status
       - if: ${{ steps.deploy.outcome == 'success' }}

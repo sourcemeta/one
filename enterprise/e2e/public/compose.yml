@@ -7,5 +7,7 @@ services:
         SOURCEMETA_ONE: one
     environment:
       - SOURCEMETA_ONE_PORT=8001
+    env_file:
+      - environment
     ports:
       - "${PORT}:8001"
