@@ -130,7 +130,9 @@ sourcemeta_target_clang_format(SOURCES
   enterprise/*.h enterprise/*.cc)
 sourcemeta_target_shellcheck(SOURCES
   release.sh
+  contrib/*.sh
   test/*.sh
+  test/e2e/*/*.sh
   docker/*.sh
   enterprise/scripts/*.sh
   enterprise/e2e/*/*.sh
