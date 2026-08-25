@@ -223,7 +223,7 @@ private:
   }
 
   [[nodiscard]] auto serialize() const -> std::string {
-    const auto &metrics{this->dispatcher().metrics()};
+    const auto &metrics{sourcemeta::one::http_metrics()};
     const auto state{metrics.snapshot()};
     const auto process{read_process()};
 
@@ -285,7 +285,7 @@ private:
     for (const auto &entry : state.requests) {
       output += std::format("sourcemeta_one_http_requests_total{{action=\"{}\","
                             "code=\"{}\"}} {}\n",
-                            sourcemeta::one::ACTION_NAMES.at(entry.action),
+                            sourcemeta::one::ACTION_NAMES.at(entry.handler),
                             entry.status, entry.count);
     }
 

@@ -18,7 +18,6 @@
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t, std::uint16_t
 #include <format>      // std::format
-#include <functional>  // std::function
 #include <mutex>       // std::mutex, std::scoped_lock
 #include <optional>    // std::optional
 #include <print>       // std::print

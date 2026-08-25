@@ -397,10 +397,6 @@ public:
     return this->authentication_;
   }
 
-  [[nodiscard]] auto metrics() const noexcept -> HTTPMetrics & {
-    return this->metrics_;
-  }
-
 private:
   static constexpr std::size_t TEMPLATE_CACHE_CAPACITY{50};
 
@@ -421,7 +417,6 @@ private:
   RouterLRU<std::filesystem::path, sourcemeta::blaze::Template> template_cache_{
       TEMPLATE_CACHE_CAPACITY};
   Authentication authentication_;
-  mutable HTTPMetrics metrics_;
 };
 
 } // namespace sourcemeta::one

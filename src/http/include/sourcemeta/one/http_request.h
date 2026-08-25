@@ -11,8 +11,9 @@
 #include <chrono>      // std::chrono::system_clock, std::chrono::steady_clock
 #include <concepts>    // std::invocable
 #include <cstddef>     // std::size_t
-#include <cstdint>     // std::uint8_t
+#include <cstdint>     // std::uint8_t, std::uint16_t
 #include <exception>   // std::exception_ptr, std::current_exception
+#include <limits>      // std::numeric_limits
 #include <memory>      // std::shared_ptr, std::make_shared
 #include <optional>    // std::optional
 #include <string>      // std::string
@@ -28,20 +29,14 @@ inline constexpr std::size_t MAX_REQUEST_BODY_BYTES{
     static_cast<std::size_t>(4) * 1024 * 1024};
 
 // What is remembered about a request so that whoever answers it can say what
-// it cost without asking the router again. Nothing is counted until a handler
-// is chosen, so a request refused ahead of routing carries no destination and
-// is never counted
+// it cost. Which handler answered is a value nothing owns until one is chosen,
+// so a request refused ahead of routing carries none and goes unattributed
 struct Observation {
   std::chrono::steady_clock::time_point started{};
-  HTTPMetrics *metrics{nullptr};
-  std::uint8_t action{0};
+  std::uint8_t handler{std::numeric_limits<std::uint8_t>::max()};
 
   auto record(const std::uint16_t status) const -> void {
-    if (this->metrics == nullptr) {
-      return;
-    }
-
-    this->metrics->observe(this->action, status,
+    http_metrics().observe(this->handler, status,
                            std::chrono::duration<double>{
                                std::chrono::steady_clock::now() - this->started}
                                .count());
@@ -53,7 +48,10 @@ public:
   // Primary constructor from raw uWebSockets pointers
   HTTPRequest(uWS::HttpRequest *request,
               uWS::HttpResponse<true> *response) noexcept
-      : request_{request}, response_{response} {}
+      : request_{request}, response_{response} {
+    this->observation_.started = std::chrono::steady_clock::now();
+    http_metrics().enter();
+  }
 
   // Snapshot constructor for async contexts where uWS::HttpRequest is gone
   HTTPRequest(std::string method, std::string path,
