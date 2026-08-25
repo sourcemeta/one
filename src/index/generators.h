@@ -900,6 +900,11 @@ struct GENERATE_URITEMPLATE_ROUTES {
                  next_id++, sourcemeta::one::ACTION_TYPE_HEALTH_CHECK_V1,
                  health_check_arguments);
 
+      const sourcemeta::core::URITemplateRouter::Argument metrics_arguments[] =
+          {{"errorSchema", std::string_view{error_schema}}};
+      router.add(sourcemeta::one::ENDPOINT_METRICS, "server_metrics", next_id++,
+                 sourcemeta::one::ACTION_TYPE_METRICS_V1, metrics_arguments);
+
       const sourcemeta::core::URITemplateRouter::Argument
           auth_logout_arguments[] = {
               {"errorSchema", std::string_view{error_schema}}};

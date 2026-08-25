@@ -4,13 +4,16 @@
 #include <sourcemeta/core/http.h>
 #include <sourcemeta/core/uri.h>
 
+#include <sourcemeta/one/http_metrics.h>
 #include <sourcemeta/one/http_response.h>
 #include <sourcemeta/one/http_uwebsockets.h>
 
-#include <chrono>      // std::chrono::system_clock
+#include <chrono>      // std::chrono::system_clock, std::chrono::steady_clock
 #include <concepts>    // std::invocable
 #include <cstddef>     // std::size_t
+#include <cstdint>     // std::uint8_t, std::uint16_t
 #include <exception>   // std::exception_ptr, std::current_exception
+#include <limits>      // std::numeric_limits
 #include <memory>      // std::shared_ptr, std::make_shared
 #include <optional>    // std::optional
 #include <string>      // std::string
@@ -25,12 +28,50 @@ namespace sourcemeta::one {
 inline constexpr std::size_t MAX_REQUEST_BODY_BYTES{
     static_cast<std::size_t>(4) * 1024 * 1024};
 
+// What is remembered about a request so that whoever answers it can say what
+// it cost. Which handler answered is a value nothing owns until one is chosen,
+// so a request refused ahead of routing carries none and goes unattributed
+struct Observation {
+  std::chrono::steady_clock::time_point started{};
+  std::uint8_t handler{std::numeric_limits<std::uint8_t>::max()};
+  // A request arrives once and leaves once, but there is more than one way for
+  // it to leave and more than one place that notices. Settling here rather
+  // than at each of them is what keeps the in-flight count honest
+  mutable bool settled{false};
+
+  auto record(const std::uint16_t status) const -> void {
+    if (this->settled) {
+      return;
+    }
+
+    this->settled = true;
+    http_metrics().observe(this->handler, status,
+                           std::chrono::duration<double>{
+                               std::chrono::steady_clock::now() - this->started}
+                               .count());
+  }
+
+  // Nothing was served, so nothing is counted against a handler, but the
+  // in-flight count comes back down all the same
+  auto abandon() const -> void {
+    if (this->settled) {
+      return;
+    }
+
+    this->settled = true;
+    http_metrics().abandon();
+  }
+};
+
 class HTTPRequest {
 public:
   // Primary constructor from raw uWebSockets pointers
   HTTPRequest(uWS::HttpRequest *request,
               uWS::HttpResponse<true> *response) noexcept
-      : request_{request}, response_{response} {}
+      : request_{request}, response_{response} {
+    this->observation_.started = std::chrono::steady_clock::now();
+    http_metrics().enter();
+  }
 
   // Snapshot constructor for async contexts where uWS::HttpRequest is gone
   HTTPRequest(std::string method, std::string path,
@@ -51,6 +92,14 @@ public:
         chosen.value() == sourcemeta::core::HTTPContentEncoding::GZIP
             ? sourcemeta::one::Encoding::GZIP
             : sourcemeta::one::Encoding::Identity;
+  }
+
+  [[nodiscard]] auto observation() noexcept -> Observation & {
+    return this->observation_;
+  }
+
+  [[nodiscard]] auto observation() const noexcept -> const Observation & {
+    return this->observation_;
   }
 
   [[nodiscard]] auto method() const noexcept -> std::string_view {
@@ -150,11 +199,14 @@ public:
     auto snapshot = std::make_shared<HTTPRequest>(
         std::string{this->method()}, std::string{this->path()},
         this->response_encoding_, raw_response);
+    snapshot->observation_ = this->observation_;
     auto buffer = std::make_shared<std::string>();
     auto completed = std::make_shared<bool>(false);
 
-    raw_response->onAborted(
-        [completed]() mutable -> void { *completed = true; });
+    raw_response->onAborted([completed, snapshot]() mutable -> void {
+      *completed = true;
+      snapshot->observation_.abandon();
+    });
 
     raw_response->onData(
         // NOLINTNEXTLINE(bugprone-exception-escape)
@@ -204,6 +256,7 @@ private:
   bool satisfiable_encoding_{true};
   sourcemeta::one::Encoding response_encoding_{
       sourcemeta::one::Encoding::Identity};
+  Observation observation_{};
 };
 
 } // namespace sourcemeta::one

@@ -14,8 +14,9 @@
 #include <algorithm>   // std::ranges::equal
 #include <array>       // std::array
 #include <cassert>     // assert
-#include <chrono>      // std::chrono::system_clock
+#include <chrono>      // std::chrono::system_clock, std::chrono::steady_clock
 #include <cstddef>     // std::size_t
+#include <cstdint>     // std::uint8_t, std::uint16_t
 #include <format>      // std::format
 #include <mutex>       // std::mutex, std::scoped_lock
 #include <optional>    // std::optional
@@ -204,6 +205,7 @@ inline auto send_response(const sourcemeta::core::HTTPStatus &status,
       std::format("{} {} {}", status.wire, request.method(), request.path())};
   response.send_without_content();
   HTTP_LOG(line);
+  request.observation().record(status.code);
 }
 
 inline auto send_response(
@@ -217,6 +219,7 @@ inline auto send_response(
   response.send(request, message, current_encoding,
                 precomputed_compressed_size);
   HTTP_LOG(line);
+  request.observation().record(status.code);
 }
 
 // RFC 9110 §9.3.7: OPTIONS responses describe communication options

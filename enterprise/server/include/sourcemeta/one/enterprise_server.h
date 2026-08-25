@@ -8,5 +8,6 @@
 #include <sourcemeta/one/enterprise_server_action_jsonschema_rdf_v1.h>
 #include <sourcemeta/one/enterprise_server_action_mcp_prm_v1.h>
 #include <sourcemeta/one/enterprise_server_action_mcp_v1.h>
+#include <sourcemeta/one/enterprise_server_action_metrics_v1.h>
 
 #endif

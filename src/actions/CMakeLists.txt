@@ -4,6 +4,7 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME actions
     action_default_v1.h
     action_dependency_tree_v1.h
     action_health_check_v1.h
+    action_metrics_v1.h
     action_jsonschema_evaluate_v1.h
     action_jsonschema_rdf_v1.h
     action_jsonschema_serve_v1.h

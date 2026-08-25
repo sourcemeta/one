@@ -4,6 +4,7 @@
 #include <sourcemeta/one/router.h>
 
 #include <chrono>      // std::chrono::seconds
+#include <cstdint>     // std::uint8_t
 #include <memory>      // std::make_unique
 #include <mutex>       // std::call_once
 #include <optional>    // std::optional, std::nullopt
@@ -70,6 +71,8 @@ Router::Router(const std::filesystem::path &base,
       authentication_{
           sourcemeta::one::Authentication::Table{base / "authentication.bin"},
           provider_fetcher()} {
+  // Only whoever holds the handler table knows how many there can be
+  sourcemeta::one::http_metrics().start(constructors.size());
   router.arguments(0, [this](const auto &key, const auto &value) -> void {
     if (key == "errorSchema") {
       this->default_error_schema_ = std::get<std::string_view>(value);
@@ -119,6 +122,10 @@ auto Router::dispatch(
     const std::span<std::string_view> matches,
     sourcemeta::one::HTTPRequest &request,
     sourcemeta::one::HTTPResponse &response) -> void {
+  // Which handler answers is the one thing about a request that only routing
+  // knows, so it is the one thing said here
+  request.observation().handler = static_cast<std::uint8_t>(context);
+
   auto *instance{this->action(identifier, context)};
   if (instance == nullptr) [[unlikely]] {
     this->error(request, response,
