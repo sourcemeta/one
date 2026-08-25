@@ -69,15 +69,8 @@ Any Prometheus-compatible scraper reads this without configuration beyond the
 path. Request behaviour follows the
 [RED](https://grafana.com/blog/2018/08/02/the-red-method-how-to-instrument-your-services/)
 method, meaning rate, errors and duration, reported per action and status code.
-Alongside it are the standard `process_*` metrics and an instance information
-metric. The response documents itself through its `# HELP` and `# TYPE` lines.
 This endpoint is not exempt from [authentication](#authentication), so a policy
 covering its path gates it like any other route.
-
-Metric and label names are part of the public interface, as alerting rules and
-dashboards are written against them. New metrics may appear in a minor release,
-while renaming or removing one, changing its type or unit, or changing
-histogram bucket boundaries are breaking changes.
 
 === "200"
 
