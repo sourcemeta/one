@@ -3,7 +3,7 @@
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/one/router.h>
 
-#include <chrono>      // std::chrono::seconds
+#include <chrono>      // std::chrono::seconds, std::chrono::steady_clock
 #include <cstdint>     // std::uint8_t
 #include <memory>      // std::make_unique
 #include <mutex>       // std::call_once
@@ -70,7 +70,8 @@ Router::Router(const std::filesystem::path &base,
       slots_size_{router.size() + 1},
       authentication_{
           sourcemeta::one::Authentication::Table{base / "authentication.bin"},
-          provider_fetcher()} {
+          provider_fetcher()},
+      metrics_{constructors.size()} {
   router.arguments(0, [this](const auto &key, const auto &value) -> void {
     if (key == "errorSchema") {
       this->default_error_schema_ = std::get<std::string_view>(value);
@@ -120,8 +121,16 @@ auto Router::dispatch(
     const std::span<std::string_view> matches,
     sourcemeta::one::HTTPRequest &request,
     sourcemeta::one::HTTPResponse &response) -> void {
-  request.observe_as(static_cast<std::uint8_t>(context));
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
+  // Everything an answer is counted against is known here and nowhere earlier,
+  // so it is taken here rather than gathered along the way
+  auto &observation{request.observation()};
+  observation.started = std::chrono::steady_clock::now();
+  observation.action = static_cast<std::uint8_t>(context);
+  observation.metrics = &this->metrics_;
   this->metrics_.enter();
+#endif
+
   auto *instance{this->action(identifier, context)};
   if (instance == nullptr) [[unlikely]] {
     this->error(request, response,

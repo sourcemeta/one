@@ -48,7 +48,7 @@ public:
   // it is decided here rather than by whatever a formatter does with the same
   // number on a given platform
   static constexpr std::array<std::string_view,
-                              sourcemeta::one::RouterMetrics::BUCKET_COUNT>
+                              sourcemeta::one::HTTPMetrics::BUCKET_COUNT>
       BOUNDARIES{{"0.0001", "0.00025", "0.0005", "0.001", "0.0025", "0.005",
                   "0.01", "0.05", "0.25", "1.0"}};
 
@@ -282,13 +282,11 @@ private:
 
     family(output, "sourcemeta_one_http_requests_total",
            "Total HTTP requests handled", "counter");
-    for (const auto &[key, count] : state.requests) {
-      output +=
-          std::format("sourcemeta_one_http_requests_total{{action=\"{}\","
-                      "code=\"{}\"}} {}\n",
-                      sourcemeta::one::ACTION_NAMES.at(
-                          sourcemeta::one::RouterMetrics::action_of(key)),
-                      sourcemeta::one::RouterMetrics::status_of(key), count);
+    for (const auto &entry : state.requests) {
+      output += std::format("sourcemeta_one_http_requests_total{{action=\"{}\","
+                            "code=\"{}\"}} {}\n",
+                            sourcemeta::one::ACTION_NAMES.at(entry.action),
+                            entry.status, entry.count);
     }
 
     output += "\n";
@@ -307,7 +305,7 @@ private:
       cumulative = 0;
       const auto &name{sourcemeta::one::ACTION_NAMES.at(action)};
       for (std::size_t bucket = 0;
-           bucket < sourcemeta::one::RouterMetrics::BUCKET_COUNT; bucket++) {
+           bucket < sourcemeta::one::HTTPMetrics::BUCKET_COUNT; bucket++) {
         cumulative += state.buckets[action][bucket];
         output += std::format("sourcemeta_one_http_request_duration_seconds_"
                               "bucket{{action=\"{}\",le=\"{}\"}} {}\n",
@@ -315,7 +313,7 @@ private:
       }
 
       cumulative +=
-          state.buckets[action][sourcemeta::one::RouterMetrics::BUCKET_COUNT];
+          state.buckets[action][sourcemeta::one::HTTPMetrics::BUCKET_COUNT];
       output += std::format("sourcemeta_one_http_request_duration_seconds_"
                             "bucket{{action=\"{}\",le=\"+Inf\"}} {}\n",
                             name, cumulative);
