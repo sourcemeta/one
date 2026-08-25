@@ -4,7 +4,6 @@
 #include <algorithm> // std::ranges::lower_bound
 #include <array>     // std::array
 #include <atomic>    // std::atomic
-#include <chrono>    // std::chrono::system_clock, std::chrono::duration
 #include <cstddef>   // std::size_t
 #include <cstdint>  // std::uint8_t, std::uint16_t, std::uint32_t, std::uint64_t
 #include <iterator> // std::distance
@@ -61,10 +60,6 @@ public:
   // counted before this is said
   auto start(const std::size_t handlers) -> void {
     this->handlers_ = handlers;
-    this->started_ =
-        std::chrono::duration<double>{
-            std::chrono::system_clock::now().time_since_epoch()}
-            .count();
     for (auto &shard : this->shards_) {
       const std::scoped_lock guard{shard.mutex};
       shard.buckets.assign(handlers, {});
@@ -150,11 +145,6 @@ public:
     return result;
   }
 
-  // When this server began, as seconds since the Unix epoch
-  [[nodiscard]] auto started() const noexcept -> double {
-    return this->started_;
-  }
-
 private:
   // A series is named by what answered and what it answered together, so
   // neither alone identifies one
@@ -194,7 +184,6 @@ private:
   std::atomic<std::uint64_t> entered_{0};
   std::atomic<std::uint64_t> answered_{0};
   std::atomic<std::uint64_t> dropped_{0};
-  double started_{0};
 };
 
 // What this process has served, which there is one of because there is one

@@ -24,4 +24,5 @@ target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::one
 target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::blaze::output)
 target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::core::jsonld)
 target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::core::numeric)
+target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::core::process)
 target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::core::http)

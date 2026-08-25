@@ -4,6 +4,7 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
+#include <sourcemeta/core/process.h>
 #include <sourcemeta/core/text.h>
 #include <sourcemeta/core/uritemplate.h>
 
@@ -14,26 +15,13 @@
 
 #include <algorithm>   // std::ranges::transform
 #include <array>       // std::array
-#include <cstdint>     // std::uint64_t
+#include <chrono>      // std::chrono::duration
 #include <filesystem>  // std::filesystem::path
 #include <format>      // std::format
 #include <span>        // std::span
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <vector>      // std::vector
-
-#if defined(__APPLE__)
-#include <libproc.h>      // proc_pidinfo, PROC_PIDLISTFDS, PROC_PIDLISTFD_SIZE
-#include <mach/mach.h>    // mach_task_self, task_info, MACH_TASK_BASIC_INFO
-#include <sys/resource.h> // getrusage, getrlimit, RUSAGE_SELF, RLIMIT_NOFILE
-#include <unistd.h>       // getpid
-#elif defined(__linux__)
-#include <fstream>        // std::ifstream
-#include <sstream>        // std::istringstream
-#include <sys/resource.h> // getrlimit, RLIMIT_NOFILE
-#include <system_error>   // std::error_code
-#include <unistd.h>       // sysconf, _SC_CLK_TCK, _SC_PAGESIZE
-#endif
 
 class ActionMetrics_v1 : public sourcemeta::one::RouterAction {
 public:
@@ -108,118 +96,6 @@ public:
   }
 
 private:
-  // What a process says about itself, which the platform answers rather than
-  // this program keeping count of. Anything a platform cannot cheaply say is
-  // left out rather than guessed at
-  struct Process {
-    double cpu_seconds{0};
-    std::uint64_t resident_bytes{0};
-    std::uint64_t virtual_bytes{0};
-    std::uint64_t open_descriptors{0};
-    std::uint64_t maximum_descriptors{0};
-  };
-
-  [[nodiscard]] static auto descriptor_limit() -> std::uint64_t {
-    rlimit limit{};
-    if (getrlimit(RLIMIT_NOFILE, &limit) != 0) {
-      return 0;
-    }
-
-    return static_cast<std::uint64_t>(limit.rlim_cur);
-  }
-
-#if defined(__APPLE__)
-
-  [[nodiscard]] static auto read_process() -> Process {
-    Process sample;
-
-    rusage usage{};
-    if (getrusage(RUSAGE_SELF, &usage) == 0) {
-      sample.cpu_seconds =
-          static_cast<double>(usage.ru_utime.tv_sec) +
-          static_cast<double>(usage.ru_utime.tv_usec) / 1000000.0 +
-          static_cast<double>(usage.ru_stime.tv_sec) +
-          static_cast<double>(usage.ru_stime.tv_usec) / 1000000.0;
-    }
-
-    mach_task_basic_info info{};
-    mach_msg_type_number_t count{MACH_TASK_BASIC_INFO_COUNT};
-    if (task_info(mach_task_self(), MACH_TASK_BASIC_INFO,
-                  reinterpret_cast<task_info_t>(&info),
-                  &count) == KERN_SUCCESS) {
-      sample.resident_bytes = info.resident_size;
-      sample.virtual_bytes = info.virtual_size;
-    }
-
-    const auto descriptors{
-        proc_pidinfo(getpid(), PROC_PIDLISTFDS, 0, nullptr, 0)};
-    if (descriptors > 0) {
-      sample.open_descriptors =
-          static_cast<std::uint64_t>(descriptors) / PROC_PIDLISTFD_SIZE;
-    }
-
-    sample.maximum_descriptors = descriptor_limit();
-    return sample;
-  }
-
-#elif defined(__linux__)
-
-  // The second field is a command name in parentheses that may itself contain
-  // spaces, so what follows it is found from the last parenthesis rather than
-  // by counting separators from the beginning
-  [[nodiscard]] static auto read_process() -> Process {
-    Process sample;
-
-    std::ifstream stream{"/proc/self/stat"};
-    if (stream.is_open()) {
-      std::string line;
-      std::getline(stream, line);
-      const auto comm{line.rfind(')')};
-      if (comm != std::string::npos) {
-        std::istringstream fields{line.substr(comm + 1)};
-        std::vector<std::string> tokens;
-        std::string token;
-        while (fields >> token) {
-          tokens.push_back(token);
-        }
-
-        const auto ticks{static_cast<double>(sysconf(_SC_CLK_TCK))};
-        if (tokens.size() > 21 && ticks > 0) {
-          sample.cpu_seconds =
-              (std::stod(tokens.at(11)) + std::stod(tokens.at(12))) / ticks;
-          sample.virtual_bytes = std::stoull(tokens.at(20));
-          sample.resident_bytes =
-              std::stoull(tokens.at(21)) *
-              static_cast<std::uint64_t>(sysconf(_SC_PAGESIZE));
-        }
-      }
-    }
-
-    // Reading the list takes a descriptor of its own, which the list then
-    // includes, so what is counted is one more than what was open
-    std::error_code error;
-    const std::filesystem::directory_iterator descriptors{"/proc/self/fd",
-                                                          error};
-    if (!error) {
-      std::uint64_t listed{0};
-      for (const auto &entry : descriptors) {
-        static_cast<void>(entry);
-        listed += 1;
-      }
-
-      sample.open_descriptors = listed > 0 ? listed - 1 : 0;
-    }
-
-    sample.maximum_descriptors = descriptor_limit();
-    return sample;
-  }
-
-#else
-
-  [[nodiscard]] static auto read_process() -> Process { return {}; }
-
-#endif
-
   static auto family(std::string &output, const std::string_view name,
                      const std::string_view help, const std::string_view type)
       -> void {
@@ -230,7 +106,9 @@ private:
   [[nodiscard]] auto serialize() const -> std::string {
     const auto &metrics{sourcemeta::one::http_metrics()};
     const auto state{metrics.snapshot()};
-    const auto process{read_process()};
+    const auto usage{sourcemeta::core::process_usage()};
+    const auto descriptors{sourcemeta::core::process_descriptors()};
+    const auto started{sourcemeta::core::process_start_time()};
 
     std::string edition{sourcemeta::one::edition()};
     std::ranges::transform(edition, edition.begin(),
@@ -246,34 +124,52 @@ private:
         "sourcemeta_one_build_info{{version=\"{}\",edition=\"{}\"}} 1\n\n",
         sourcemeta::one::version(), edition);
 
-    family(output, "process_start_time_seconds",
-           "Start time of the process since the Unix epoch", "gauge");
-    output +=
-        std::format("process_start_time_seconds {}\n\n", metrics.started());
+    // A platform that cannot answer is not made to. A series nobody receives
+    // is one nobody plots a flat zero for
+    if (started.has_value()) {
+      family(output, "process_start_time_seconds",
+             "Start time of the process since the Unix epoch", "gauge");
+      output += std::format(
+          "process_start_time_seconds {}\n\n",
+          std::chrono::duration<double>{started.value().time_since_epoch()}
+              .count());
+    }
 
-    family(output, "process_cpu_seconds_total",
-           "Total user and system CPU time spent", "counter");
-    output +=
-        std::format("process_cpu_seconds_total {}\n\n", process.cpu_seconds);
+    if (usage.cpu_time.has_value()) {
+      family(output, "process_cpu_seconds_total",
+             "Total user and system CPU time spent", "counter");
+      output += std::format(
+          "process_cpu_seconds_total {}\n\n",
+          std::chrono::duration<double>{usage.cpu_time.value()}.count());
+    }
 
-    family(output, "process_resident_memory_bytes", "Resident memory size",
-           "gauge");
-    output += std::format("process_resident_memory_bytes {}\n\n",
-                          process.resident_bytes);
+    if (usage.resident_bytes.has_value()) {
+      family(output, "process_resident_memory_bytes", "Resident memory size",
+             "gauge");
+      output += std::format("process_resident_memory_bytes {}\n\n",
+                            usage.resident_bytes.value());
+    }
 
-    family(output, "process_virtual_memory_bytes", "Virtual memory size",
-           "gauge");
-    output += std::format("process_virtual_memory_bytes {}\n\n",
-                          process.virtual_bytes);
+    if (usage.virtual_bytes.has_value()) {
+      family(output, "process_virtual_memory_bytes", "Virtual memory size",
+             "gauge");
+      output += std::format("process_virtual_memory_bytes {}\n\n",
+                            usage.virtual_bytes.value());
+    }
 
-    family(output, "process_open_fds", "Number of open file descriptors",
-           "gauge");
-    output += std::format("process_open_fds {}\n\n", process.open_descriptors);
+    if (descriptors.open.has_value()) {
+      family(output, "process_open_fds", "Number of open file descriptors",
+             "gauge");
+      output +=
+          std::format("process_open_fds {}\n\n", descriptors.open.value());
+    }
 
-    family(output, "process_max_fds", "Maximum number of open file descriptors",
-           "gauge");
-    output +=
-        std::format("process_max_fds {}\n\n", process.maximum_descriptors);
+    if (descriptors.maximum.has_value()) {
+      family(output, "process_max_fds",
+             "Maximum number of open file descriptors", "gauge");
+      output +=
+          std::format("process_max_fds {}\n\n", descriptors.maximum.value());
+    }
 
     family(output, "sourcemeta_one_http_requests_in_flight",
            "Requests currently being served", "gauge");
