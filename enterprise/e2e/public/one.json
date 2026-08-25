@@ -11,6 +11,15 @@
       "icon": "github"
     }
   },
+  "authentication": [
+    {
+      "type": "apiKey",
+      "algorithm": "sha256",
+      "name": "metrics",
+      "paths": [ "/self/v1/metrics" ],
+      "keys": [ { "environmentVariable": "SOURCEMETA_ONE_METRICS_KEY" } ]
+    }
+  ],
   "contents": {
     "sourcemeta": {
       "title": "Sourcemeta",
