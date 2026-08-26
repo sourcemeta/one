@@ -181,7 +181,12 @@ struct GENERATE_MATERIALISED_SCHEMA {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     auto schema{resolver(action.data)};
     assert(schema.has_value());
-    const auto dialect_identifier{sourcemeta::blaze::dialect(schema.value())};
+    const auto *declared_dialect{schema->is_object() ? schema->try_at("$schema")
+                                                     : nullptr};
+    const std::string_view dialect_identifier{
+        declared_dialect != nullptr && declared_dialect->is_string()
+            ? std::string_view{declared_dialect->to_string()}
+            : std::string_view{}};
     assert(!dialect_identifier.empty());
     const auto metaschema{resolver(dialect_identifier, callback)};
     assert(metaschema.has_value());
@@ -542,7 +547,12 @@ struct GENERATE_BUNDLE {
           return resolver(identifier, callback);
         },
         sourcemeta::blaze::BundleMode::References);
-    const auto dialect_identifier{sourcemeta::blaze::dialect(schema)};
+    const auto *declared_dialect{schema.is_object() ? schema.try_at("$schema")
+                                                    : nullptr};
+    const std::string_view dialect_identifier{
+        declared_dialect != nullptr && declared_dialect->is_string()
+            ? std::string_view{declared_dialect->to_string()}
+            : std::string_view{}};
     assert(!dialect_identifier.empty());
     sourcemeta::blaze::format(
         schema, sourcemeta::blaze::schema_walker,
@@ -579,7 +589,12 @@ struct GENERATE_EDITOR {
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         });
-    const auto dialect_identifier{sourcemeta::blaze::dialect(schema)};
+    const auto *declared_dialect{schema.is_object() ? schema.try_at("$schema")
+                                                    : nullptr};
+    const std::string_view dialect_identifier{
+        declared_dialect != nullptr && declared_dialect->is_string()
+            ? std::string_view{declared_dialect->to_string()}
+            : std::string_view{}};
     assert(!dialect_identifier.empty());
     sourcemeta::blaze::format(
         schema, sourcemeta::blaze::schema_walker,

@@ -225,7 +225,7 @@ auto Resolver::operator()(
         sourcemeta::one::metapack_read_json(cached_path.value())};
     assert(schema_option.has_value());
     auto schema{std::move(schema_option.value())};
-    assert(sourcemeta::blaze::is_schema(schema));
+    assert(schema.is_object() || schema.is_boolean());
     if (callback) {
       callback(cached_path.value());
     }
@@ -239,7 +239,7 @@ auto Resolver::operator()(
   /////////////////////////////////////////////////////////////////////////////
 
   auto schema{sourcemeta::core::read_yaml_or_json(view->path)};
-  assert(sourcemeta::blaze::is_schema(schema));
+  assert(schema.is_object() || schema.is_boolean());
   if (callback) {
     callback(view->path);
   }
@@ -392,7 +392,7 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
   assert(path.is_absolute());
   try {
     const auto schema{sourcemeta::core::read_yaml_or_json(path)};
-    if (!sourcemeta::blaze::is_schema(schema)) {
+    if (!schema.is_object() && !schema.is_boolean()) {
       throw ResolverNotASchemaError(path);
     }
 
@@ -456,8 +456,12 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
     // (4) Determine the dialect of the schema, which we also need to make sure
     // we rebase according to the one base URI, etc
     /////////////////////////////////////////////////////////////////////////////
-    std::string raw_dialect{
-        sourcemeta::blaze::dialect(schema, default_dialect_str)};
+    const auto *declared_dialect{schema.is_object() ? schema.try_at("$schema")
+                                                    : nullptr};
+    std::string raw_dialect{declared_dialect != nullptr &&
+                                    declared_dialect->is_string()
+                                ? declared_dialect->to_string()
+                                : default_dialect_str};
     if (raw_dialect.empty()) {
       throw sourcemeta::blaze::SchemaUnknownDialectError();
     }
@@ -473,12 +477,12 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
           sourcemeta::core::URI{raw_dialect}.has_same_authority(
               this->server_uri);
     }
-    const auto is_official_dialect{
+    const auto is_known_dialect{
         !resolved_to_instance &&
         sourcemeta::blaze::is_known_schema(raw_dialect)};
     auto current_dialect{
         resolved_to_instance ? normalise_identifier(raw_dialect)
-        : is_official_dialect
+        : is_known_dialect
             ? raw_dialect
             : rebase(collection, normalise_identifier(raw_dialect),
                      this->server_uri, collection_relative_path)};
