@@ -21,6 +21,6 @@ runs:
         SLUG="$(printf '%s' '${{ inputs.path }}' | tr '/' '-')"
         make -C ${{ inputs.path }} \
           EDITION=${{ inputs.edition }} \
-          BENCHMARK_OUTPUT="$GITHUB_WORKSPACE/benchmark-results/$SLUG.json" \
+          BENCHMARK_OUTPUT="$GITHUB_WORKSPACE/benchmark-results/server-$SLUG.json" \
           HURL='docker run --rm --network=host --volume $$(pwd):/workspace --workdir /workspace ghcr.io/orange-opensource/hurl:8.0.1'
       shell: bash
