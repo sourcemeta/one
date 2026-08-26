@@ -19,4 +19,4 @@ then
   find /results -maxdepth 1 -name '*.json' -exec cp {} "$RESULTS/" \;
 fi
 
-/benchmark/merge.sh "$RESULTS"
+jq --slurp 'add' "$RESULTS"/*.json
