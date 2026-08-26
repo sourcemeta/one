@@ -67,6 +67,65 @@ static auto make_dialect_extension(const std::string_view dialect)
   return result;
 }
 
+// A metaschema that insists on a vocabulary this build does not implement is
+// one it cannot honour, so saying so is better than quietly ignoring half of
+// what the metaschema asks for.
+//
+// Only these dialects give `$vocabulary` that meaning. Anywhere else it is an
+// ordinary keyword that happens to share the name, which is why the dialect is
+// established before the declaration is read at all
+static auto throw_if_unknown_required_vocabulary(
+    const sourcemeta::core::JSON &schema,
+    const sourcemeta::blaze::SchemaResolver &resolver,
+    const std::string_view dialect) -> void {
+  const auto base{sourcemeta::blaze::base_dialect(schema, resolver, dialect)};
+  if (!base.has_value()) {
+    return;
+  }
+
+  if (base.value() !=
+          sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2020_12 &&
+      base.value() !=
+          sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2020_12_Hyper &&
+      base.value() !=
+          sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2019_09 &&
+      base.value() !=
+          sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2019_09_Hyper) {
+    return;
+  }
+
+  const auto *declared{schema.try_at("$vocabulary")};
+  if (declared == nullptr || !declared->is_object()) {
+    return;
+  }
+
+  // A declaration that is not shaped like one says nothing here, as what a
+  // malformed metaschema is worth was already decided against the metaschema
+  // it declares itself against
+  for (const auto &entry : declared->as_object()) {
+    if (!entry.second.is_boolean()) {
+      return;
+    }
+  }
+
+  for (const auto &entry : declared->as_object()) {
+    // Not implementing an optional vocabulary is what optional means
+    if (!entry.second.to_boolean()) {
+      continue;
+    }
+
+    // Whether a vocabulary is one this build knows is a question only the set
+    // that holds them can answer, so it is asked one vocabulary at a time in
+    // order to name the one that could not be honoured
+    sourcemeta::blaze::Vocabularies vocabulary;
+    vocabulary.insert(entry.first, true);
+    if (vocabulary.has_unknown()) {
+      throw sourcemeta::blaze::SchemaVocabularyError(
+          entry.first, "The metaschema requires an unrecognised vocabulary");
+    }
+  }
+}
+
 struct GENERATE_VERSION {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
@@ -141,16 +200,12 @@ struct GENERATE_MATERIALISED_SCHEMA {
     // heuristic to avoid the cost of resolving the base dialect
     // on most of them
     if (schema->is_object() && schema->defines("$vocabulary")) {
-      const auto declared_vocabularies{sourcemeta::blaze::parse_vocabularies(
+      throw_if_unknown_required_vocabulary(
           schema.value(),
           [&callback, &resolver](const auto identifier) {
             return resolver(identifier, callback);
           },
-          dialect_identifier)};
-      if (declared_vocabularies.has_value()) {
-        declared_vocabularies.value().throw_if_any_unknown_required(
-            "The metaschema requires an unrecognised vocabulary");
-      }
+          dialect_identifier);
     }
 
     sourcemeta::blaze::format(
