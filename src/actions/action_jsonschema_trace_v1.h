@@ -18,14 +18,15 @@
 
 #include "action_jsonschema_evaluate_v1.h"
 
-#include <cassert>       // assert
-#include <filesystem>    // std::filesystem::path
-#include <span>          // std::span
-#include <stdexcept>     // std::runtime_error
-#include <string>        // std::string
-#include <string_view>   // std::string_view
-#include <unordered_map> // std::unordered_map
-#include <utility>       // std::move, std::to_underlying
+#include <filesystem>  // std::filesystem::path
+#include <functional>  // std::cref, std::less, std::ref, std::reference_wrapper
+#include <map>         // std::map
+#include <optional>    // std::optional
+#include <span>        // std::span
+#include <stdexcept>   // std::runtime_error
+#include <string>      // std::string
+#include <string_view> // std::string_view
+#include <utility>     // std::move
 
 class ActionJSONSchemaTrace_v1 : public sourcemeta::one::RouterAction {
 public:
@@ -141,70 +142,6 @@ public:
   }
 
 private:
-  auto
-  resolve_vocabulary(const sourcemeta::one::Authentication::Caller &caller,
-                     const std::string_view keyword_location,
-                     const sourcemeta::core::WeakPointer &evaluate_path,
-                     const sourcemeta::core::JSON &static_locations,
-                     std::unordered_map<std::string, sourcemeta::core::JSON>
-                         &referenced_locations) -> sourcemeta::core::JSON {
-    const std::string keyword_location_string{keyword_location};
-    const sourcemeta::core::JSON *location{nullptr};
-    if (static_locations.defines(keyword_location_string)) {
-      location = &static_locations.at(keyword_location_string);
-    } else {
-      const auto fragment_position{keyword_location_string.find('#')};
-      const std::string schema_uri{
-          keyword_location_string.substr(0, fragment_position)};
-
-      auto cached{referenced_locations.find(schema_uri)};
-      if (cached == referenced_locations.end()) {
-        const auto locations_resolution{this->artifact_resolve_path(
-            caller, keyword_location_string, Tree::Schemas, "locations")};
-        if (locations_resolution.path.has_value()) {
-          auto locations{
-              this->artifact_read_json(locations_resolution.path.value())};
-          if (locations.has_value() && locations.value().is_object() &&
-              locations.value().defines("static")) {
-            cached = referenced_locations
-                         .emplace(schema_uri, std::move(locations).value())
-                         .first;
-          }
-        }
-      }
-
-      if (cached != referenced_locations.end()) {
-        const auto &ref_static{cached->second.at("static")};
-        if (ref_static.defines(keyword_location_string)) {
-          location = &ref_static.at(keyword_location_string);
-        }
-      }
-    }
-
-    if (location == nullptr || !location->is_object() ||
-        !location->defines("baseDialect") || !location->defines("dialect")) {
-      return sourcemeta::core::JSON{nullptr};
-    }
-
-    const auto base_dialect{sourcemeta::blaze::to_base_dialect(
-        location->at("baseDialect").to_string())};
-    if (!base_dialect.has_value()) {
-      return sourcemeta::core::JSON{nullptr};
-    }
-
-    const auto vocabularies{sourcemeta::blaze::vocabularies(
-        sourcemeta::blaze::schema_resolver, base_dialect.value(),
-        location->at("dialect").to_string())};
-    const auto &walker_result{sourcemeta::blaze::schema_walker(
-        evaluate_path.back().to_property(), vocabularies)};
-    if (walker_result.vocabulary.has_value()) {
-      return sourcemeta::core::to_json(
-          sourcemeta::blaze::to_string(walker_result.vocabulary.value()));
-    }
-
-    return sourcemeta::core::JSON{nullptr};
-  }
-
   auto trace(const sourcemeta::one::Authentication::Caller &caller,
              const std::string_view schema_uri,
              const sourcemeta::core::JSON &instance_json,
@@ -218,60 +155,41 @@ private:
     if (!locations_resolution.path.has_value()) {
       throw std::runtime_error{"Failed to read schema locations metadata"};
     }
-    const auto locations_option{
-        this->artifact_read_json(locations_resolution.path.value())};
-    if (!locations_option.has_value()) {
-      throw std::runtime_error{"Failed to read schema locations metadata"};
-    }
-    const auto &locations{locations_option.value()};
-    if (!locations.is_object() || !locations.defines("static")) {
-      throw std::runtime_error{"Failed to read schema locations metadata"};
-    }
-    const auto &static_locations{locations.at("static")};
 
     // When tracing through $ref, keyword locations may point into referenced
     // schemas whose locations are in separate metapack files. This map holds
-    // lazily loaded locations for referenced schemas, keyed by schema URI.
+    // lazily loaded locations, keyed by schema URI, and hands out references
+    // that stay valid for as long as the evaluation runs
     // TODO: Cache loaded locations across trace requests for performance
-    std::unordered_map<std::string, sourcemeta::core::JSON>
-        referenced_locations;
+    std::map<std::string, sourcemeta::core::JSON, std::less<>> locations;
 
-    const auto result{this->schema_evaluate_with_tracing(
-        caller, schema_uri, instance_json,
-        [this, &caller, &steps, tracker, &instance_prefix, &static_locations,
-         &instance_json, &referenced_locations](
-            const sourcemeta::blaze::EvaluationType type, const bool valid,
-            const sourcemeta::blaze::Instruction &instruction,
-            const sourcemeta::blaze::InstructionExtra &extra,
-            const sourcemeta::core::WeakPointer &evaluate_path,
-            const sourcemeta::core::WeakPointer &instance_location,
-            const sourcemeta::core::JSON &annotation) -> void {
+    sourcemeta::blaze::TraceOutput output{
+        sourcemeta::blaze::schema_walker, sourcemeta::blaze::schema_resolver,
+        [&steps, tracker, &instance_prefix, &instance_json](
+            const sourcemeta::blaze::TraceOutput::Entry &entry) -> void {
           auto step{sourcemeta::core::JSON::make_object()};
 
-          if (type == sourcemeta::blaze::EvaluationType::Pre) {
+          if (entry.type == sourcemeta::blaze::TraceOutput::EntryType::Push) {
             step.assign("type", sourcemeta::core::JSON{"push"});
-          } else if (valid) {
-            step.assign("type", sourcemeta::core::JSON{"pass"});
-          } else {
+          } else if (entry.type ==
+                     sourcemeta::blaze::TraceOutput::EntryType::Fail) {
             step.assign("type", sourcemeta::core::JSON{"fail"});
+          } else {
+            step.assign("type", sourcemeta::core::JSON{"pass"});
           }
 
-          step.assign(
-              "name",
-              sourcemeta::core::JSON{
-                  sourcemeta::blaze::InstructionNames[std::to_underlying(
-                      instruction.type)]});
+          step.assign("name", sourcemeta::core::JSON{entry.name});
           step.assign("evaluatePath",
                       sourcemeta::core::JSON{
-                          sourcemeta::core::to_string(evaluate_path)});
+                          sourcemeta::core::to_string(entry.evaluate_path)});
           step.assign("instanceLocation",
-                      sourcemeta::core::JSON{
-                          sourcemeta::core::to_string(instance_location)});
+                      sourcemeta::core::JSON{sourcemeta::core::to_string(
+                          entry.instance_location)});
           if (tracker != nullptr) {
             auto instance_positions{tracker->get(instance_prefix.concat(
                 // TODO: Can we avoid converting the weak pointer into a pointer
                 // here?
-                sourcemeta::core::to_pointer(instance_location)))};
+                sourcemeta::core::to_pointer(entry.instance_location)))};
             if (!instance_positions.has_value()) {
               throw std::runtime_error{"Failed to resolve instance positions"};
             }
@@ -280,25 +198,57 @@ private:
                             std::move(instance_positions).value()));
           }
           step.assign("keywordLocation",
-                      sourcemeta::core::JSON{extra.keyword_location});
-          step.assign("annotation", annotation);
+                      sourcemeta::core::JSON{entry.keyword_location});
+          step.assign("annotation", entry.annotation);
 
-          if (type == sourcemeta::blaze::EvaluationType::Pre) {
+          if (entry.type == sourcemeta::blaze::TraceOutput::EntryType::Push) {
             step.assign("message", sourcemeta::core::JSON{nullptr});
           } else {
-            step.assign("message",
-                        sourcemeta::core::JSON{sourcemeta::blaze::describe(
-                            valid, instruction, evaluate_path,
-                            instance_location, instance_json, annotation)});
+            step.assign(
+                "message",
+                sourcemeta::core::JSON{sourcemeta::blaze::describe(
+                    entry.type !=
+                        sourcemeta::blaze::TraceOutput::EntryType::Fail,
+                    entry.step, entry.evaluate_path, entry.instance_location,
+                    instance_json, entry.annotation)});
           }
 
-          step.assign("vocabulary",
-                      this->resolve_vocabulary(caller, extra.keyword_location,
-                                               evaluate_path, static_locations,
-                                               referenced_locations));
+          if (entry.vocabulary.second.has_value()) {
+            step.assign("vocabulary",
+                        sourcemeta::core::JSON{sourcemeta::blaze::to_string(
+                            entry.vocabulary.second.value())});
+          } else {
+            step.assign("vocabulary", sourcemeta::core::JSON{nullptr});
+          }
 
           steps.push_back(std::move(step));
-        })};
+        },
+        sourcemeta::core::EMPTY_WEAK_POINTER,
+        [this, &caller, &locations](const std::string_view uri)
+            -> std::optional<
+                std::reference_wrapper<const sourcemeta::core::JSON>> {
+          const auto match{locations.find(uri)};
+          if (match != locations.cend()) {
+            return std::cref(match->second);
+          }
+
+          const auto resolution{this->artifact_resolve_path(
+              caller, uri, Tree::Schemas, "locations")};
+          if (!resolution.path.has_value()) {
+            return std::nullopt;
+          }
+
+          auto entry{this->artifact_read_json(resolution.path.value())};
+          if (!entry.has_value()) {
+            return std::nullopt;
+          }
+
+          return std::cref(
+              locations.emplace(uri, std::move(entry).value()).first->second);
+        }};
+
+    const auto result{this->schema_evaluate_with_tracing(
+        caller, schema_uri, instance_json, std::ref(output))};
 
     auto document{sourcemeta::core::JSON::make_object()};
     document.assign("valid", sourcemeta::core::JSON{result});
