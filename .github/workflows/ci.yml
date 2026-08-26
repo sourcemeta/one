@@ -157,11 +157,6 @@ jobs:
           edition: ${{ matrix.edition.name }}
         if: matrix.edition.name == 'enterprise'
 
-      # The suites measured themselves as they ran, leaving what they measured
-      # under `build/benchmark`, so what is left is to take the indexer's own
-      # measurements and say all of it at once. This action keeps a checkout of
-      # the branch it records into, so it is called exactly once per job rather
-      # than once per kind of measurement
       - name: Benchmark
         run: |
           make docker-benchmark PRESET=Release ${{ matrix.edition.options }}
@@ -171,17 +166,12 @@ jobs:
       - uses: benchmark-action/github-action-benchmark@v1
         if: github.event.pull_request.head.repo.fork == false
         with:
-          # TODO: Rename to `Benchmark (<edition>)`, as this now carries
-          # server measurements too. The name keys the series stored on
-          # `gh-pages`, and only pushes to `main` write there, so renaming
-          # starts an empty series and suppresses the comparison comment until
-          # the first push after the rename lands
-          name: Benchmark Index (${{ matrix.edition.name }})
+          name: Benchmark (${{ matrix.edition.name }})
           tool: customSmallerIsBetter
           output-file-path: build/benchmark.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: ${{ github.event_name != 'pull_request' }}
-          benchmark-data-dir-path: benchmark/${{ matrix.edition.name }}/index
+          benchmark-data-dir-path: benchmark/${{ matrix.edition.name }}
           alert-threshold: '5%'
           comment-always: true
           fail-on-alert: false
