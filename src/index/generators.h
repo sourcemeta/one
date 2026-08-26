@@ -44,6 +44,7 @@
 #include <string>       // std::string
 #include <string_view>  // std::string_view
 #include <unordered_map> // std::unordered_map
+#include <unordered_set> // std::unordered_set
 #include <utility>       // std::move
 #include <vector>        // std::vector
 
@@ -65,6 +66,65 @@ static auto make_dialect_extension(const std::string_view dialect)
   std::memcpy(result.data(), &header, sizeof(header));
   std::memcpy(result.data() + sizeof(header), dialect.data(), dialect.size());
   return result;
+}
+
+// A metaschema that insists on a vocabulary this build does not implement is
+// one it cannot honour, so saying so is better than quietly ignoring half of
+// what the metaschema asks for.
+//
+// Only these dialects give `$vocabulary` that meaning. Anywhere else it is an
+// ordinary keyword that happens to share the name, which is why the dialect is
+// established before the declaration is read at all
+static auto throw_if_unknown_required_vocabulary(
+    const sourcemeta::core::JSON &schema,
+    const sourcemeta::blaze::SchemaResolver &resolver,
+    const std::string_view dialect) -> void {
+  const auto base{sourcemeta::blaze::base_dialect(schema, resolver, dialect)};
+  if (!base.has_value()) {
+    return;
+  }
+
+  if (base.value() !=
+          sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2020_12 &&
+      base.value() !=
+          sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2020_12_Hyper &&
+      base.value() !=
+          sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2019_09 &&
+      base.value() !=
+          sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2019_09_Hyper) {
+    return;
+  }
+
+  const auto *declared{schema.try_at("$vocabulary")};
+  if (declared == nullptr || !declared->is_object()) {
+    return;
+  }
+
+  // A declaration that is not shaped like one says nothing here, as what a
+  // malformed metaschema is worth was already decided against the metaschema
+  // it declares itself against
+  for (const auto &entry : declared->as_object()) {
+    if (!entry.second.is_boolean()) {
+      return;
+    }
+  }
+
+  for (const auto &entry : declared->as_object()) {
+    // Not implementing an optional vocabulary is what optional means
+    if (!entry.second.to_boolean()) {
+      continue;
+    }
+
+    // Whether a vocabulary is one this build knows is a question only the set
+    // that holds them can answer, so it is asked one vocabulary at a time in
+    // order to name the one that could not be honoured
+    sourcemeta::blaze::Vocabularies vocabulary;
+    vocabulary.insert(entry.first, true);
+    if (vocabulary.has_unknown()) {
+      throw sourcemeta::blaze::SchemaVocabularyError(
+          entry.first, "The metaschema requires an unrecognised vocabulary");
+    }
+  }
 }
 
 struct GENERATE_VERSION {
@@ -141,16 +201,12 @@ struct GENERATE_MATERIALISED_SCHEMA {
     // heuristic to avoid the cost of resolving the base dialect
     // on most of them
     if (schema->is_object() && schema->defines("$vocabulary")) {
-      const auto declared_vocabularies{sourcemeta::blaze::parse_vocabularies(
+      throw_if_unknown_required_vocabulary(
           schema.value(),
           [&callback, &resolver](const auto identifier) {
             return resolver(identifier, callback);
           },
-          dialect_identifier)};
-      if (declared_vocabularies.has_value()) {
-        declared_vocabularies.value().throw_if_any_unknown_required(
-            "The metaschema requires an unrecognised vocabulary");
-      }
+          dialect_identifier);
     }
 
     sourcemeta::blaze::format(
@@ -614,18 +670,44 @@ struct GENERATE_STATS {
     std::map<sourcemeta::core::JSON::String,
              std::map<sourcemeta::core::JSON::String, std::uint64_t>>
         result;
-    for (const auto &entry : sourcemeta::blaze::SchemaIterator{
-             schema, sourcemeta::blaze::schema_walker,
-             [&callback, &resolver](const auto identifier) {
-               return resolver(identifier, callback);
-             }}) {
-      if (!entry.subschema.get().is_object()) {
+    const sourcemeta::blaze::SchemaResolver schema_resolver{
+        [&callback, &resolver](const auto identifier) {
+          return resolver(identifier, callback);
+        }};
+    sourcemeta::blaze::SchemaFrame frame{
+        sourcemeta::blaze::SchemaFrame::Mode::Locations};
+    frame.analyse(schema, sourcemeta::blaze::schema_walker, schema_resolver);
+
+    // A subschema is located once for every URI that reaches it, and what is
+    // counted here is the keywords it holds rather than the names it answers
+    // to, so each one is counted once however many ways there are to ask for it
+    std::unordered_set<sourcemeta::core::Pointer,
+                       sourcemeta::core::Pointer::Hasher>
+        visited;
+    for (const auto &entry : frame.locations()) {
+      if (entry.second.type !=
+              sourcemeta::blaze::SchemaFrame::LocationType::Resource &&
+          entry.second.type !=
+              sourcemeta::blaze::SchemaFrame::LocationType::Subschema) {
         continue;
       }
 
-      for (const auto &property : entry.subschema.get().as_object()) {
-        const auto &walker_result{sourcemeta::blaze::schema_walker(
-            property.first, entry.vocabularies)};
+      const auto [pointer, inserted]{
+          visited.insert(sourcemeta::core::to_pointer(entry.second.pointer))};
+      if (!inserted) {
+        continue;
+      }
+
+      const auto &subschema{sourcemeta::core::get(schema, *pointer)};
+      if (!subschema.is_object()) {
+        continue;
+      }
+
+      const auto &vocabularies{
+          frame.vocabularies(entry.second, schema_resolver)};
+      for (const auto &property : subschema.as_object()) {
+        const auto &walker_result{
+            sourcemeta::blaze::schema_walker(property.first, vocabularies)};
         if (walker_result.vocabulary.has_value()) {
           result[std::string{sourcemeta::blaze::to_string(
               walker_result.vocabulary.value())}][property.first] += 1;
