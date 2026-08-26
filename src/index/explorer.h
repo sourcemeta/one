@@ -11,6 +11,7 @@
 #include <sourcemeta/one/shared.h>
 
 #include <sourcemeta/blaze/foundation.h>
+#include <sourcemeta/blaze/frame.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/semver.h>
@@ -399,11 +400,14 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
     assert(schema_data_option.has_value());
     const auto &schema_data{schema_data_option.value()};
-    const auto id{sourcemeta::blaze::identify(
-        schema_data, [&callback, &resolver](const auto identifier) {
-          return resolver(identifier, callback);
-        })};
-    assert(!id.empty());
+    sourcemeta::blaze::SchemaFrame frame{
+        sourcemeta::blaze::SchemaFrame::Mode::Root};
+    frame.analyse(schema_data, sourcemeta::blaze::schema_walker,
+                  [&callback, &resolver](const auto identifier) {
+                    return resolver(identifier, callback);
+                  });
+    assert(!frame.root().empty());
+    const auto &schema_location{frame.root_location().value().get()};
     auto result{sourcemeta::core::JSON::make_object()};
 
     result.assign("bytes", sourcemeta::core::JSON{static_cast<std::size_t>(
@@ -411,20 +415,13 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
     result.assign("bytesBundled",
                   sourcemeta::core::JSON{
                       static_cast<std::size_t>(bundle_info.content_bytes)});
-    result.assign("identifier", sourcemeta::core::JSON{id});
+    result.assign("identifier", sourcemeta::core::JSON{frame.root()});
     result.assign("path", sourcemeta::core::JSON{
                               "/" + resolver_entry.relative_path.string()});
-    const auto base_dialect{sourcemeta::blaze::base_dialect(
-        schema_data, [&callback, &resolver](const auto identifier) {
-          return resolver(identifier, callback);
-        })};
-    assert(base_dialect.has_value());
     result.assign("baseDialect",
-                  sourcemeta::core::JSON{
-                      sourcemeta::blaze::to_string(base_dialect.value())});
-    const auto dialect{sourcemeta::blaze::dialect(schema_data)};
-    assert(!dialect.empty());
-    result.assign("dialect", sourcemeta::core::JSON{dialect});
+                  sourcemeta::core::JSON{sourcemeta::blaze::to_string(
+                      schema_location.base_dialect)});
+    result.assign("dialect", sourcemeta::core::JSON{schema_location.dialect});
 
     if (schema_data.is_object()) {
       const auto title{schema_data.try_at("title")};
@@ -440,11 +437,10 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
       auto examples_array{sourcemeta::core::JSON::make_array()};
       const auto *examples{schema_data.try_at("examples")};
       if (examples && examples->is_array() && !examples->empty()) {
-        const auto vocabularies{sourcemeta::blaze::vocabularies(
-            [&callback, &resolver](const auto identifier) {
+        const auto &vocabularies{frame.vocabularies(
+            schema_location, [&callback, &resolver](const auto identifier) {
               return resolver(identifier, callback);
-            },
-            base_dialect.value(), dialect)};
+            })};
         const auto &walker_result{
             sourcemeta::blaze::schema_walker("examples", vocabularies)};
         if (walker_result.type ==
