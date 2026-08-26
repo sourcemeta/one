@@ -263,23 +263,14 @@ auto Resolver::operator()(
 
   sourcemeta::blaze::SchemaFrame frame{
       sourcemeta::blaze::SchemaFrame::Mode::Locations};
-  const auto identifier_result{sourcemeta::blaze::identify(
-      schema,
-      [this](
-          const auto subidentifier) -> std::optional<sourcemeta::core::JSON> {
-        return this->operator()(subidentifier);
-      },
-      view->dialect)};
-  const auto has_identifier{!identifier_result.empty()};
   frame.analyse(
       schema, sourcemeta::blaze::schema_walker,
       [this](
           const auto subidentifier) -> std::optional<sourcemeta::core::JSON> {
         return this->operator()(subidentifier);
       },
-      view->dialect,
-      // Otherwise we will loop over all locations twice
-      has_identifier ? std::string_view{} : view->original_identifier);
+      view->dialect, view->original_identifier,
+      sourcemeta::blaze::SchemaFrame::IdentifierMode::Fallback);
 
   const auto ref_hash{schema.as_object().hash("$ref")};
   const auto dynamic_ref_hash{schema.as_object().hash("$dynamicRef")};
