@@ -5,7 +5,8 @@
 A suite declares what it wants measured by importing `run` from here and
 naming the requests. Where the suite lives and where the instance is listening
 arrive as arguments, so a declaration says what to measure and nothing about
-where it is being measured from.
+where it is being measured from. Headers a suite cannot write down, such as a
+credential it has to go and get, are named as a function to call instead.
 
 The connection is opened once and kept, so what is timed is answering a
 request rather than establishing a conversation. Requests are made one after
@@ -32,12 +33,16 @@ def measure(suite, base, name, path, method="GET", headers=None, body=None):
     host, _, port = authority.partition(":")
     target = "/" + prefix + path if prefix else path
 
+    # A credential that has to be asked for is asked for here rather than when
+    # the run began, as what it grants may not outlast the measurements queued
+    # ahead of this one
+    headers = headers() if callable(headers) else headers or {}
     payload = body.encode() if body else None
     connection = http.client.HTTPConnection(host, int(port or 80))
     connection.connect()
 
     def once():
-        connection.request(method, target, body=payload, headers=headers or {})
+        connection.request(method, target, body=payload, headers=headers)
         response = connection.getresponse()
         response.read()
         return response.status

@@ -46,8 +46,7 @@ test-hurl:
 test-benchmark:
 ifneq ($(wildcard benchmark.py),)
 	mkdir -p $(dir $(BENCHMARK_RESULT))
-	if [ -f environment ]; then set -a; . ./environment; set +a; fi; \
-		PYTHONPATH=$(abspath $(ROOT))/benchmark \
+	PYTHONPATH=$(abspath $(ROOT))/benchmark \
 		$(PYTHON) ./benchmark.py $(SUITE) $(BASE):$(PORT) \
 		> $(BENCHMARK_RESULT).part
 	mv $(BENCHMARK_RESULT).part $(BENCHMARK_RESULT)
