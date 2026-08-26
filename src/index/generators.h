@@ -44,6 +44,7 @@
 #include <string>       // std::string
 #include <string_view>  // std::string_view
 #include <unordered_map> // std::unordered_map
+#include <unordered_set> // std::unordered_set
 #include <utility>       // std::move
 #include <vector>        // std::vector
 
@@ -669,18 +670,44 @@ struct GENERATE_STATS {
     std::map<sourcemeta::core::JSON::String,
              std::map<sourcemeta::core::JSON::String, std::uint64_t>>
         result;
-    for (const auto &entry : sourcemeta::blaze::SchemaIterator{
-             schema, sourcemeta::blaze::schema_walker,
-             [&callback, &resolver](const auto identifier) {
-               return resolver(identifier, callback);
-             }}) {
-      if (!entry.subschema.get().is_object()) {
+    const sourcemeta::blaze::SchemaResolver schema_resolver{
+        [&callback, &resolver](const auto identifier) {
+          return resolver(identifier, callback);
+        }};
+    sourcemeta::blaze::SchemaFrame frame{
+        sourcemeta::blaze::SchemaFrame::Mode::Locations};
+    frame.analyse(schema, sourcemeta::blaze::schema_walker, schema_resolver);
+
+    // A subschema is located once for every URI that reaches it, and what is
+    // counted here is the keywords it holds rather than the names it answers
+    // to, so each one is counted once however many ways there are to ask for it
+    std::unordered_set<sourcemeta::core::Pointer,
+                       sourcemeta::core::Pointer::Hasher>
+        visited;
+    for (const auto &entry : frame.locations()) {
+      if (entry.second.type !=
+              sourcemeta::blaze::SchemaFrame::LocationType::Resource &&
+          entry.second.type !=
+              sourcemeta::blaze::SchemaFrame::LocationType::Subschema) {
         continue;
       }
 
-      for (const auto &property : entry.subschema.get().as_object()) {
-        const auto &walker_result{sourcemeta::blaze::schema_walker(
-            property.first, entry.vocabularies)};
+      const auto [pointer, inserted]{
+          visited.insert(sourcemeta::core::to_pointer(entry.second.pointer))};
+      if (!inserted) {
+        continue;
+      }
+
+      const auto &subschema{sourcemeta::core::get(schema, *pointer)};
+      if (!subschema.is_object()) {
+        continue;
+      }
+
+      const auto &vocabularies{
+          frame.vocabularies(entry.second, schema_resolver)};
+      for (const auto &property : subschema.as_object()) {
+        const auto &walker_result{
+            sourcemeta::blaze::schema_walker(property.first, vocabularies)};
         if (walker_result.vocabulary.has_value()) {
           result[std::string{sourcemeta::blaze::to_string(
               walker_result.vocabulary.value())}][property.first] += 1;
