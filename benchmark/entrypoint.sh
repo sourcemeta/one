@@ -8,15 +8,14 @@ set -o nounset
 # mounted rather than built in, since it could only be taken with a server up.
 # Both are said at once, with the indexer first, so the answer reads as one
 # group after another
-RESULTS="$(mktemp -d)"
-clean() { rm -rf "$RESULTS"; }
-trap clean EXIT
+set -- /benchmark.json
 
-cp /benchmark.json "$RESULTS/index.json"
+for RESULT in /results/*.json
+do
+  if [ -f "$RESULT" ]
+  then
+    set -- "$@" "$RESULT"
+  fi
+done
 
-if [ -d /results ]
-then
-  find /results -maxdepth 1 -name '*.json' -exec cp {} "$RESULTS/" \;
-fi
-
-jq --slurp 'add' "$RESULTS"/*.json
+jq --slurp 'add' "$@"

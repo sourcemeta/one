@@ -39,9 +39,9 @@ test-hurl:
 
 # A suite that carries a script saying what it wants measured is measured
 # before its tests run, so what is timed is an instance warmed deliberately
-# rather than one that has just served a whole test suite. A run that stops
-# part way through leaves nothing behind, as a partial answer that reads like a
-# complete one is worse than no answer at all
+# rather than one that has just served a whole test suite. What a run writes is
+# named apart until it is complete, so a run that stops part way through cannot
+# leave behind a partial answer that reads like a whole one
 .PHONY: test-benchmark
 test-benchmark:
 ifneq ($(wildcard benchmark.py),)
