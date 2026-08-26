@@ -40,13 +40,13 @@ test-hurl:
 # unless somewhere to put the answer was named, so an ordinary run pays nothing
 .PHONY: test-benchmark
 test-benchmark:
-ifneq ($(wildcard benchmark.sh),)
+ifneq ($(wildcard benchmark.py),)
 ifneq ($(BENCHMARK_OUTPUT),)
 	if [ -f environment ]; then set -a; . ./environment; set +a; fi; \
-		./benchmark.sh $(BASE):$(PORT) > $(BENCHMARK_OUTPUT).part
-	jq --arg suite "$(SUITE)" 'map(.name |= "\($$suite): \(.)")' \
-		< $(BENCHMARK_OUTPUT).part > $(BENCHMARK_OUTPUT)
-	rm -f $(BENCHMARK_OUTPUT).part
+		PYTHONPATH=$(abspath $(ROOT))/benchmark \
+		python3 ./benchmark.py $(SUITE) $(BASE):$(PORT) \
+		> $(BENCHMARK_OUTPUT).part
+	mv $(BENCHMARK_OUTPUT).part $(BENCHMARK_OUTPUT)
 endif
 endif
 

@@ -6,5 +6,8 @@ COPY benchmark/index-add-update-rebuild.sh /benchmark/index-add-update-rebuild.s
 COPY benchmark/index-custom-meta-schema.sh /benchmark/index-custom-meta-schema.sh
 COPY benchmark/index-n.sh /benchmark/index-n.sh
 COPY benchmark/index-ref-fanout.sh /benchmark/index-ref-fanout.sh
+COPY benchmark/merge.sh /benchmark/merge.sh
+COPY benchmark/entrypoint.sh /benchmark/entrypoint.sh
 RUN /benchmark/index.sh /usr/bin/sourcemeta-one-index > /benchmark.json
-ENTRYPOINT [ "cat", "/benchmark.json" ]
+# Mount whatever the suites measured at /results to have it merged in
+ENTRYPOINT [ "/benchmark/entrypoint.sh" ]

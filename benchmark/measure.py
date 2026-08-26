@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 
-"""Measure how long one endpoint takes to answer.
+"""Measure how long endpoints take to answer.
+
+A suite declares what it wants measured by importing `run` from here and
+naming the requests. Where the suite lives and where the instance is listening
+arrive as arguments, so a declaration says what to measure and nothing about
+where it is being measured from.
 
 The connection is opened once and kept, so what is timed is answering a
 request rather than establishing a conversation. Requests are made one after
@@ -8,84 +13,72 @@ another, which measures latency rather than throughput: what this answers is
 how long one caller waits, not how many callers can be served at once.
 """
 
-import argparse
 import http.client
 import json
 import sys
 import time
 
+WARMUP = 1000
+COUNT = 20000
 
-def percentile(samples, fraction):
+
+def _percentile(samples, fraction):
     return samples[min(int(len(samples) * fraction), len(samples) - 1)]
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--name", required=True)
-    parser.add_argument("--url", required=True)
-    parser.add_argument("--method", default="GET")
-    parser.add_argument("--header", action="append", default=[])
-    parser.add_argument("--body", default=None)
-    parser.add_argument("--count", type=int, default=20000)
-    parser.add_argument("--warmup", type=int, default=1000)
-    options = parser.parse_args()
-
-    _, _, rest = options.url.partition("//")
-    authority, _, path = rest.partition("/")
+def measure(suite, base, name, path, method="GET", headers=None, body=None):
+    _, _, rest = base.partition("//")
+    authority, _, prefix = rest.partition("/")
     host, _, port = authority.partition(":")
-    path = "/" + path
+    target = "/" + prefix + path if prefix else path
 
-    headers = {}
-    for header in options.header:
-        key, _, value = header.partition(":")
-        headers[key.strip()] = value.strip()
-
-    body = options.body.encode() if options.body else None
+    payload = body.encode() if body else None
     connection = http.client.HTTPConnection(host, int(port or 80))
     connection.connect()
 
     def once():
-        connection.request(options.method, path, body=body, headers=headers)
+        connection.request(method, target, body=payload, headers=headers or {})
         response = connection.getresponse()
         response.read()
         return response.status
 
     # Answering the first time builds what answering afterwards reuses, so
     # what is measured is a warm instance rather than a cold one
-    for _ in range(options.warmup):
+    for _ in range(WARMUP):
         status = once()
         if status >= 400:
-            sys.exit(f"{options.name}: warm up got HTTP {status}")
+            sys.exit(f"{suite}: {name}: warm up got HTTP {status}")
 
     samples = []
-    for _ in range(options.count):
+    for _ in range(COUNT):
         start = time.perf_counter_ns()
         status = once()
         samples.append((time.perf_counter_ns() - start) / 1000.0)
         # A run that was refused measured something other than what it set out
         # to, so it stops rather than reporting a number nobody can trust
         if status >= 400:
-            sys.exit(f"{options.name}: got HTTP {status}")
+            sys.exit(f"{suite}: {name}: got HTTP {status}")
 
+    connection.close()
     samples.sort()
-    json.dump(
-        [
-            {
-                "name": f"{options.name} (p50)",
-                "unit": "us",
-                "value": round(percentile(samples, 0.50)),
-            },
-            {
-                "name": f"{options.name} (p99)",
-                "unit": "us",
-                "value": round(percentile(samples, 0.99)),
-            },
-        ],
-        sys.stdout,
-        indent=2,
-    )
+    return [
+        {
+            "name": f"{suite}: {name} ({label})",
+            "unit": "us",
+            "value": round(_percentile(samples, fraction)),
+        }
+        for label, fraction in (("p50", 0.50), ("p99", 0.99))
+    ]
+
+
+def run(measurements):
+    if len(sys.argv) != 3:
+        sys.exit(f"Usage: {sys.argv[0]} <suite> <base-url>")
+
+    suite, base = sys.argv[1], sys.argv[2]
+    entries = []
+    for measurement in measurements:
+        entries.extend(measure(suite, base, **measurement))
+
+    json.dump(entries, sys.stdout, indent=2)
     sys.stdout.write("\n")
-
-
-if __name__ == "__main__":
-    main()

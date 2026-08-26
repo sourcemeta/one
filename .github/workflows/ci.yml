@@ -165,8 +165,8 @@ jobs:
         run: |
           make docker-benchmark PRESET=Release ${{ matrix.edition.options }}
           mkdir -p benchmark-results
-          docker run --rm one-benchmark > benchmark-results/index.json
-          ./benchmark/merge.sh benchmark-results > benchmark.json
+          docker run --rm --volume "$PWD/benchmark-results:/results:ro" \
+            one-benchmark > benchmark.json
           cat benchmark.json
       - uses: benchmark-action/github-action-benchmark@v1
         if: github.event.pull_request.head.repo.fork == false
