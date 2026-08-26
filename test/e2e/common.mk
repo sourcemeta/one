@@ -2,9 +2,12 @@ DOCKER ?= docker
 HURL ?= hurl
 NPM ?= npm
 NPX ?= npx
+PYTHON ?= python3
 ROOT := $(dir $(lastword $(MAKEFILE_LIST)))../..
 # Where this suite lives, which is what a measurement it takes is named after
 SUITE := $(patsubst $(abspath $(ROOT))/%,%,$(CURDIR))
+# Where a measurement this suite takes is left for whoever collects them
+BENCHMARK_RESULT := $(abspath $(ROOT))/build/benchmark/$(subst /,-,$(SUITE)).json
 
 COMPOSE = compose.yml
 BASE ?= http://localhost
@@ -36,18 +39,18 @@ test-hurl:
 
 # A suite that carries a script saying what it wants measured is measured
 # before its tests run, so what is timed is an instance warmed deliberately
-# rather than one that has just served a whole test suite. Nothing is measured
-# unless somewhere to put the answer was named, so an ordinary run pays nothing
+# rather than one that has just served a whole test suite. A run that stops
+# part way through leaves nothing behind, as a partial answer that reads like a
+# complete one is worse than no answer at all
 .PHONY: test-benchmark
 test-benchmark:
 ifneq ($(wildcard benchmark.py),)
-ifneq ($(BENCHMARK_OUTPUT),)
+	mkdir -p $(dir $(BENCHMARK_RESULT))
 	if [ -f environment ]; then set -a; . ./environment; set +a; fi; \
 		PYTHONPATH=$(abspath $(ROOT))/benchmark \
-		python3 ./benchmark.py $(SUITE) $(BASE):$(PORT) \
-		> $(BENCHMARK_OUTPUT).part
-	mv $(BENCHMARK_OUTPUT).part $(BENCHMARK_OUTPUT)
-endif
+		$(PYTHON) ./benchmark.py $(SUITE) $(BASE):$(PORT) \
+		> $(BENCHMARK_RESULT).part
+	mv $(BENCHMARK_RESULT).part $(BENCHMARK_RESULT)
 endif
 
 .PHONY: test-playwright
