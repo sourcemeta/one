@@ -11,7 +11,6 @@
 #include <sourcemeta/one/shared.h>
 
 #include <sourcemeta/blaze/foundation.h>
-#include <sourcemeta/blaze/frame.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/semver.h>
@@ -29,6 +28,7 @@
 #include <cmath>         // std::lround
 #include <cstring>       // std::memcpy
 #include <filesystem>    // std::filesystem
+#include <format>        // std::format
 #include <limits>        // std::numeric_limits
 #include <numeric>       // std::accumulate
 #include <optional>      // std::optional
@@ -418,9 +418,8 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
     result.assign("identifier", sourcemeta::core::JSON{frame.root()});
     result.assign("path", sourcemeta::core::JSON{
                               "/" + resolver_entry.relative_path.string()});
-    result.assign("baseDialect",
-                  sourcemeta::core::JSON{sourcemeta::blaze::to_string(
-                      schema_location.base_dialect)});
+    result.assign("baseDialect", sourcemeta::core::JSON{std::format(
+                                     "{}", schema_location.base_dialect)});
     result.assign("dialect", sourcemeta::core::JSON{schema_location.dialect});
 
     if (schema_data.is_object()) {

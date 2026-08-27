@@ -13,8 +13,6 @@ target_link_libraries(sourcemeta_one_resolver PRIVATE
 target_link_libraries(sourcemeta_one_resolver PRIVATE
   sourcemeta::blaze::foundation)
 target_link_libraries(sourcemeta_one_resolver PRIVATE
-  sourcemeta::blaze::frame)
-target_link_libraries(sourcemeta_one_resolver PRIVATE
   sourcemeta::core::yaml)
 target_link_libraries(sourcemeta_one_resolver PRIVATE
   sourcemeta::core::text)

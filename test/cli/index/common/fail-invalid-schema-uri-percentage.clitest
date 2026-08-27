@@ -27,10 +27,10 @@ RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING
 DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
 
 WRITE expected.txt UNTIL EOF
-2> error: The schema identifier is not a valid URI
+2> error: The identifier is not a valid URI
 2>   at path [CWD]/schemas/test.json
 2>   at keyword $id
-2>   at value "https://example.com/foo/%/bar.json"
+2>   at value https://example.com/foo/%/bar.json
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt

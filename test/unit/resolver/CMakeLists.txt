@@ -7,8 +7,6 @@ target_link_libraries(sourcemeta_one_resolver_unit
   PRIVATE sourcemeta::one::resolver)
 target_link_libraries(sourcemeta_one_resolver_unit
   PRIVATE sourcemeta::blaze::foundation)
-target_link_libraries(sourcemeta_one_resolver_unit
-  PRIVATE sourcemeta::blaze::frame)
 target_compile_definitions(sourcemeta_one_resolver_unit
   PRIVATE SCHEMAS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/schemas")
 target_compile_definitions(sourcemeta_one_resolver_unit
