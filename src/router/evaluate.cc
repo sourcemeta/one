@@ -6,6 +6,7 @@
 #include <sourcemeta/one/router.h>
 
 #include <cassert>     // assert
+#include <functional>  // std::ref
 #include <memory>      // std::make_shared, std::shared_ptr
 #include <string_view> // std::string_view
 #include <utility>     // std::move, std::pair
@@ -103,11 +104,12 @@ auto RouterAction::schema_evaluate(const Authentication::Caller &caller,
 auto RouterAction::schema_evaluate_with_tracing(
     const Authentication::Caller &caller, const std::string_view schema_uri,
     const sourcemeta::core::JSON &instance,
-    const sourcemeta::blaze::Callback &callback) const -> bool {
+    const sourcemeta::blaze::TraceOutput::Callback &callback) const -> bool {
   const auto schema_template{this->blaze_template(
       caller, schema_uri, sourcemeta::blaze::Mode::Exhaustive)};
+  sourcemeta::blaze::TraceOutput output{*schema_template, callback};
   sourcemeta::blaze::Evaluator evaluator;
-  return evaluator.validate(*schema_template, instance, callback);
+  return evaluator.validate(*schema_template, instance, std::ref(output));
 }
 
 } // namespace sourcemeta::one

@@ -16,8 +16,6 @@
 #include <sourcemeta/blaze/editor.h>
 #include <sourcemeta/blaze/format.h>
 #include <sourcemeta/blaze/foundation.h>
-#include <sourcemeta/blaze/frame.h>
-#include <sourcemeta/blaze/frame_error.h>
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonpointer.h>
@@ -34,6 +32,7 @@
 #include <cassert>      // assert
 #include <cstring>      // std::memcpy
 #include <filesystem>   // std::filesystem
+#include <format>       // std::format
 #include <limits>       // std::numeric_limits
 #include <memory>       // std::unique_ptr, std::make_unique
 #include <mutex>        // std::once_flag, std::call_once
@@ -79,19 +78,15 @@ static auto throw_if_unknown_required_vocabulary(
     const sourcemeta::core::JSON &schema,
     const sourcemeta::blaze::SchemaResolver &resolver,
     const std::string_view dialect) -> void {
-  const auto base{sourcemeta::blaze::base_dialect(schema, resolver, dialect)};
-  if (!base.has_value()) {
-    return;
-  }
+  sourcemeta::blaze::SchemaFrame frame{
+      sourcemeta::blaze::SchemaFrame::Mode::Root};
+  frame.analyse(schema, sourcemeta::blaze::schema_walker, resolver, dialect);
+  const auto base{frame.root_location().value().get().base_dialect};
 
-  if (base.value() !=
-          sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2020_12 &&
-      base.value() !=
-          sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2020_12_Hyper &&
-      base.value() !=
-          sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2019_09 &&
-      base.value() !=
-          sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2019_09_Hyper) {
+  if (base != sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2020_12 &&
+      base != sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2020_12_Hyper &&
+      base != sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2019_09 &&
+      base != sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2019_09_Hyper) {
     return;
   }
 
@@ -118,7 +113,7 @@ static auto throw_if_unknown_required_vocabulary(
     // Whether a vocabulary is one this build knows is a question only the set
     // that holds them can answer, so it is asked one vocabulary at a time in
     // order to name the one that could not be honoured
-    sourcemeta::blaze::Vocabularies vocabulary;
+    sourcemeta::blaze::SchemaVocabularies vocabulary;
     vocabulary.insert(entry.first, true);
     if (vocabulary.has_unknown()) {
       throw sourcemeta::blaze::SchemaVocabularyError(
@@ -724,8 +719,8 @@ struct GENERATE_STATS {
         const auto &walker_result{
             sourcemeta::blaze::schema_walker(property.first, vocabularies)};
         if (walker_result.vocabulary.has_value()) {
-          result[std::string{sourcemeta::blaze::to_string(
-              walker_result.vocabulary.value())}][property.first] += 1;
+          result[std::format("{}", walker_result.vocabulary.value())]
+                [property.first] += 1;
         } else {
           result["unknown"][property.first] += 1;
         }

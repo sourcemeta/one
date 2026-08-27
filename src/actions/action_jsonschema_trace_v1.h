@@ -19,9 +19,6 @@
 #include "action_jsonschema_evaluate_v1.h"
 
 #include <filesystem>  // std::filesystem::path
-#include <functional>  // std::cref, std::less, std::ref, std::reference_wrapper
-#include <map>         // std::map
-#include <optional>    // std::optional
 #include <span>        // std::span
 #include <stdexcept>   // std::runtime_error
 #include <string>      // std::string
@@ -150,21 +147,8 @@ private:
       -> sourcemeta::core::JSON {
     auto steps{sourcemeta::core::JSON::make_array()};
 
-    const auto locations_resolution{this->artifact_resolve_path(
-        caller, schema_uri, Tree::Schemas, "locations")};
-    if (!locations_resolution.path.has_value()) {
-      throw std::runtime_error{"Failed to read schema locations metadata"};
-    }
-
-    // When tracing through $ref, keyword locations may point into referenced
-    // schemas whose locations are in separate metapack files. This map holds
-    // lazily loaded locations, keyed by schema URI, and hands out references
-    // that stay valid for as long as the evaluation runs
-    // TODO: Cache loaded locations across trace requests for performance
-    std::map<std::string, sourcemeta::core::JSON, std::less<>> locations;
-
-    sourcemeta::blaze::TraceOutput output{
-        sourcemeta::blaze::schema_walker, sourcemeta::blaze::schema_resolver,
+    const auto result{this->schema_evaluate_with_tracing(
+        caller, schema_uri, instance_json,
         [&steps, tracker, &instance_prefix, &instance_json](
             const sourcemeta::blaze::TraceOutput::Entry &entry) -> void {
           auto step{sourcemeta::core::JSON::make_object()};
@@ -213,42 +197,15 @@ private:
                     instance_json, entry.annotation)});
           }
 
-          if (entry.vocabulary.second.has_value()) {
+          if (entry.vocabulary.has_value()) {
             step.assign("vocabulary",
-                        sourcemeta::core::JSON{sourcemeta::blaze::to_string(
-                            entry.vocabulary.second.value())});
+                        sourcemeta::core::JSON{entry.vocabulary.value()});
           } else {
             step.assign("vocabulary", sourcemeta::core::JSON{nullptr});
           }
 
           steps.push_back(std::move(step));
-        },
-        sourcemeta::core::EMPTY_WEAK_POINTER,
-        [this, &caller, &locations](const std::string_view uri)
-            -> std::optional<
-                std::reference_wrapper<const sourcemeta::core::JSON>> {
-          const auto match{locations.find(uri)};
-          if (match != locations.cend()) {
-            return std::cref(match->second);
-          }
-
-          const auto resolution{this->artifact_resolve_path(
-              caller, uri, Tree::Schemas, "locations")};
-          if (!resolution.path.has_value()) {
-            return std::nullopt;
-          }
-
-          auto entry{this->artifact_read_json(resolution.path.value())};
-          if (!entry.has_value()) {
-            return std::nullopt;
-          }
-
-          return std::cref(
-              locations.emplace(uri, std::move(entry).value()).first->second);
-        }};
-
-    const auto result{this->schema_evaluate_with_tracing(
-        caller, schema_uri, instance_json, std::ref(output))};
+        })};
 
     auto document{sourcemeta::core::JSON::make_object()};
     document.assign("valid", sourcemeta::core::JSON{result});

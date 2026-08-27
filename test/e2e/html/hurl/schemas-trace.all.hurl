@@ -412,7 +412,7 @@ jsonpath "$.steps[2].instancePositions" count == 4
 jsonpath "$.steps[2].keywordLocation" == "http://json-schema.org/draft-07/schema#/properties"
 jsonpath "$.steps[2].annotation" == null
 jsonpath "$.steps[2].message" == null
-jsonpath "$.steps[2].vocabulary" == null
+jsonpath "$.steps[2].vocabulary" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.steps[3].type" == "pass"
 jsonpath "$.steps[3].name" == "LoopPropertiesMatch"
 jsonpath "$.steps[3].evaluatePath" == "/properties/bar/$ref/properties"
@@ -421,7 +421,7 @@ jsonpath "$.steps[3].instancePositions" count == 4
 jsonpath "$.steps[3].keywordLocation" == "http://json-schema.org/draft-07/schema#/properties"
 jsonpath "$.steps[3].annotation" == null
 jsonpath "$.steps[3].message" == "The object value was expected to validate against the 46 defined properties subschemas"
-jsonpath "$.steps[3].vocabulary" == null
+jsonpath "$.steps[3].vocabulary" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.steps[4].type" == "push"
 jsonpath "$.steps[4].name" == "AssertionTypeAny"
 jsonpath "$.steps[4].evaluatePath" == "/properties/bar/$ref/type"
@@ -430,7 +430,7 @@ jsonpath "$.steps[4].instancePositions" count == 4
 jsonpath "$.steps[4].keywordLocation" == "http://json-schema.org/draft-07/schema#/type"
 jsonpath "$.steps[4].annotation" == null
 jsonpath "$.steps[4].message" == null
-jsonpath "$.steps[4].vocabulary" == null
+jsonpath "$.steps[4].vocabulary" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.steps[5].type" == "pass"
 jsonpath "$.steps[5].name" == "AssertionTypeAny"
 jsonpath "$.steps[5].evaluatePath" == "/properties/bar/$ref/type"
@@ -439,7 +439,7 @@ jsonpath "$.steps[5].instancePositions" count == 4
 jsonpath "$.steps[5].keywordLocation" == "http://json-schema.org/draft-07/schema#/type"
 jsonpath "$.steps[5].annotation" == null
 jsonpath "$.steps[5].message" == "The value was expected to be of type boolean, or object and it was of type object"
-jsonpath "$.steps[5].vocabulary" == null
+jsonpath "$.steps[5].vocabulary" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.steps[6].type" == "pass"
 jsonpath "$.steps[6].name" == "ControlJump"
 jsonpath "$.steps[6].evaluatePath" == "/properties/bar/$ref"

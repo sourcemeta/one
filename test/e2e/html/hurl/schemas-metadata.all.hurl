@@ -262,7 +262,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$.bytes" == 269
-jsonpath "$.bytesBundled" == 6411
+jsonpath "$.bytesBundled" == 6409
 jsonpath "$.baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.health" == 67
 jsonpath "$.priority" == 50

@@ -3,6 +3,7 @@
 
 #include <sourcemeta/blaze/compiler.h>
 #include <sourcemeta/blaze/evaluator.h>
+#include <sourcemeta/blaze/output.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
@@ -294,7 +295,7 @@ public:
   [[nodiscard]] auto schema_evaluate_with_tracing(
       const Authentication::Caller &caller, std::string_view schema_uri,
       const sourcemeta::core::JSON &instance,
-      const sourcemeta::blaze::Callback &callback) const -> bool;
+      const sourcemeta::blaze::TraceOutput::Callback &callback) const -> bool;
 
   // Where a request points within this instance, in the one spelling the gate
   // and the artifact tree both read, or nothing when it points outside

@@ -3,8 +3,6 @@
 #include <sourcemeta/one/shared.h>
 
 #include <sourcemeta/blaze/foundation.h>
-#include <sourcemeta/blaze/frame.h>
-#include <sourcemeta/blaze/frame_error.h>
 #include <sourcemeta/core/error.h>
 #include <sourcemeta/core/text.h>
 #include <sourcemeta/core/uri.h>
@@ -65,6 +63,31 @@ static auto rebase(const sourcemeta::one::Configuration::Collection &collection,
       .append_path(suffix.value())
       .canonicalize()
       .recompose();
+}
+
+// The identifier a schema declares, or the given default when it declares
+// none. A schema whose dialect cannot be determined or resolved also takes the
+// default, as what such a schema is worth is settled further along, where the
+// file it came from is still at hand
+static auto
+declared_identifier(const sourcemeta::core::JSON &schema,
+                    const sourcemeta::blaze::SchemaResolver &resolver,
+                    const std::string_view default_dialect,
+                    const std::string_view default_identifier)
+    -> sourcemeta::core::JSON::String {
+  sourcemeta::blaze::SchemaFrame frame{
+      sourcemeta::blaze::SchemaFrame::Mode::Root};
+  try {
+    frame.analyse(schema, sourcemeta::blaze::schema_walker, resolver,
+                  default_dialect, default_identifier,
+                  sourcemeta::blaze::SchemaFrame::IdentifierMode::Fallback);
+  } catch (const sourcemeta::blaze::SchemaUnknownBaseDialectError &) {
+    return sourcemeta::core::JSON::String{default_identifier};
+  } catch (const sourcemeta::blaze::SchemaResolutionError &) {
+    return sourcemeta::core::JSON::String{default_identifier};
+  }
+
+  return frame.root();
 }
 
 static auto normalise_identifier(const std::string_view identifier)
@@ -311,7 +334,7 @@ auto Resolver::operator()(
   // (6) Assign the new final identifier to the schema
   /////////////////////////////////////////////////////////////////////////////
 
-  sourcemeta::blaze::reidentify(
+  sourcemeta::blaze::schema_reidentify(
       schema, *new_identifier,
       [this](
           const auto subidentifier) -> std::optional<sourcemeta::core::JSON> {
@@ -328,7 +351,7 @@ auto Resolver::track_dialect(const sourcemeta::core::JSON::String &dialect)
   // Official dialects are resolved through the static fallback resolver
   // rather than through this resolver, so we never get the chance to cache
   // them anyway
-  if (sourcemeta::blaze::is_known_schema(dialect)) {
+  if (sourcemeta::blaze::schema_is_known(dialect)) {
     return;
   }
 
@@ -411,7 +434,7 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
             .canonicalize()
             .recompose()};
     sourcemeta::core::URI identifier_uri{
-        normalise_identifier(sourcemeta::blaze::identify(
+        normalise_identifier(declared_identifier(
             schema,
             [this, &collection](const auto subidentifier)
                 -> std::optional<sourcemeta::core::JSON> {
@@ -479,7 +502,7 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
     }
     const auto is_known_dialect{
         !resolved_to_instance &&
-        sourcemeta::blaze::is_known_schema(raw_dialect)};
+        sourcemeta::blaze::schema_is_known(raw_dialect)};
     auto current_dialect{
         resolved_to_instance ? normalise_identifier(raw_dialect)
         : is_known_dialect

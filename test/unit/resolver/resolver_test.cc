@@ -1,5 +1,4 @@
 #include <sourcemeta/blaze/foundation.h>
-#include <sourcemeta/blaze/frame_error.h>
 #include <sourcemeta/core/test.h>
 #include <sourcemeta/one/configuration.h>
 #include <sourcemeta/one/resolver.h>
