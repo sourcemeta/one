@@ -40,6 +40,7 @@ issue() {
 
 issue keycloak
 issue registry
+issue github
 
 install_into() {
   SANDBOX="$1"
@@ -60,3 +61,6 @@ install_into() {
 install_into auth keycloak
 install_into auth-sso keycloak
 install_into auth-closed keycloak registry
+# The GitHub sandbox serves one deployment under one name, which fronts the
+# identity provider beside it as well as the API it emulates
+install_into auth-github github

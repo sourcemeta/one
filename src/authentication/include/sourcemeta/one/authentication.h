@@ -20,7 +20,7 @@
 #include <span>        // std::span
 #include <string>      // std::string
 #include <string_view> // std::string_view
-#include <utility>     // std::move
+#include <utility>     // std::move, std::pair
 #include <variant>     // std::variant, std::get_if, std::holds_alternative
 #include <vector>      // std::vector
 
@@ -157,12 +157,36 @@ public:
       std::span<const std::string_view> session_secrets{};
     };
 
+    // A person who signs in through a GitHub deployment. It is an OAuth 2.0
+    // authorization server rather than an OpenID Connect provider, so it
+    // publishes nothing to discover, returns no identity token, and asserts no
+    // claims. Who somebody is and what they belong to is asked of its API
+    // instead, which is why nothing here is shaped like the above
+    struct GitHub {
+      // Where the deployment is served, as an origin
+      std::string_view host{};
+      std::string_view client_id{};
+      // The environment variable name holding the client secret
+      std::string_view client_secret_variable{};
+      // The accounts that admit a person
+      std::span<const std::string_view> users{};
+      // The organisations whose members this admits
+      std::span<const std::string_view> organizations{};
+      // The teams whose members this admits, each named alongside the
+      // organisation that holds it
+      std::span<const std::string_view> teams{};
+      std::span<const std::string_view> email_domains{};
+      // The environment variable names holding the secrets that sign this
+      // policy's session and transaction cookies, newest first
+      std::span<const std::string_view> session_secrets{};
+    };
+
     std::span<const std::string_view> paths{};
     // The policy name, which interactive policies carry so their session
     // cookies can be recognised at the gate, and which every policy carries so
     // that a view can be named after what it comprises
     std::string_view name{};
-    std::variant<ApiKey, Token, Interactive> credential{ApiKey{}};
+    std::variant<ApiKey, Token, Interactive, GitHub> credential{ApiKey{}};
   };
 
   // What this asks a provider for. Every outbound call goes through one of
@@ -175,6 +199,11 @@ public:
     sourcemeta::core::SecureString body{};
     // Empty where the request authenticates by other means, or not at all
     sourcemeta::core::SecureString authorization{};
+    // Whatever else a provider requires of a request beyond what the protocol
+    // implies. None of it is a secret, so unlike the authorization above these
+    // are borrowed rather than held in wiping storage, and must outlive the
+    // request
+    std::span<const std::pair<std::string_view, std::string_view>> headers{};
   };
 
   struct ProviderResponse {

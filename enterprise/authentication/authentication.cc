@@ -321,9 +321,17 @@ auto Authentication::login(const std::string_view policy_name,
     -> Authentication::Outcome {
   Authentication::Outcome result;
 
+  // A GitHub deployment publishes nothing to discover, issues no identity
+  // token and asserts no claims, so where a login begins and what it asks for
+  // is composed here rather than fetched. Everything after that is the login
+  // any policy that signs a person in performs
+  const auto github{this->table_.impl_->github(policy_name)};
+  const auto interactive{github.has_value()
+                             ? std::optional<InteractivePolicy>{std::nullopt}
+                             : this->table_.impl_->interactive(policy_name)};
+
   // An unknown or non-interactive policy name reveals nothing
-  const auto policy{this->table_.impl_->interactive(policy_name)};
-  if (!policy.has_value()) {
+  if (!github.has_value() && !interactive.has_value()) {
     result.result = Authentication::Outcome::Result::Missing;
     return result;
   }
@@ -335,29 +343,77 @@ auto Authentication::login(const std::string_view policy_name,
     return result;
   }
 
-  const auto endpoints{this->table_.impl_->endpoints(policy_name)};
-  if (!endpoints.has_value() || endpoints.value().authorization.empty()) {
-    result.log.emplace_back("The provider named no authorization endpoint, or "
-                            "could not be reached, for the policy");
-    return result;
+  std::string authorization_endpoint;
+  std::string scope_request;
+  std::string claims_parameter;
+  if (github.has_value()) {
+    authorization_endpoint = github_authorization_endpoint(github->host);
+    // Ask for the least that answers the rules the policy names, since every
+    // scope beyond them is access nobody here has a use for
+    scope_request = github_scope(github.value());
+  } else {
+    const auto endpoints{this->table_.impl_->endpoints(policy_name)};
+    if (!endpoints.has_value() || endpoints.value().authorization.empty()) {
+      result.log.emplace_back("The provider named no authorization endpoint, "
+                              "or could not be reached, for the policy");
+      return result;
+    }
+
+    authorization_endpoint = endpoints.value().authorization;
+
+    // A provider sends only the claims a request asks for, so a policy whose
+    // rules name any is asked for them here. The standard way is the claims
+    // request parameter, and where a provider does not honour that, the scopes
+    // that carry the standard claims are the fallback. A claim no standard
+    // scope carries is then arranged at the provider instead, since inventing a
+    // scope name risks a request refused outright.
+    // The rules outlive every request built from them, since a claim request
+    // names its claim by pointing into them rather than copying
+    const auto rules{
+        interactive->claims.empty()
+            ? std::optional<sourcemeta::core::JSON>{std::nullopt}
+            : sourcemeta::core::try_parse_json(interactive->claims)};
+    const auto wanted{wanted_claims(interactive.value(), rules)};
+    if (endpoints.value().claims_parameter_supported && !wanted.empty()) {
+      std::ostringstream text;
+      sourcemeta::core::stringify(
+          sourcemeta::core::oidc_build_claims_parameter({}, wanted), text);
+      claims_parameter = text.str();
+    }
+
+    requested_scope(wanted, scope_request);
+    report_unadvertised_claims(wanted, endpoints.value(), policy_name,
+                               result.log);
   }
 
   const auto secrets{sourcemeta::core::oauth_transaction_mint()};
   const std::string_view state{secrets.state.data(), secrets.state.size()};
   const std::string_view verifier{secrets.code_verifier.data(),
                                   secrets.code_verifier.size()};
-  const auto nonce_token{sourcemeta::core::oidc_nonce()};
-  const std::string_view nonce{nonce_token.data(), nonce_token.size()};
 
   auto payload{sourcemeta::core::JSON::make_object()};
   payload.assign_assume_new("policy",
                             sourcemeta::core::JSON{std::string{policy_name}});
-  if (silent) {
+
+  // A silent attempt asks a provider whether a sign-in still stands without
+  // showing the person anything. A GitHub deployment offers no way to ask, and
+  // the attempt is a navigation rather than something hidden, so one against it
+  // would land somebody on its sign-in page in the middle of browsing here
+  if (silent && !github.has_value()) {
     payload.assign_assume_new("silent", sourcemeta::core::JSON{true});
   }
 
   payload.assign_assume_new("state", sourcemeta::core::JSON{state});
-  payload.assign_assume_new("nonce", sourcemeta::core::JSON{nonce});
+
+  // A nonce binds an identity token to the login that asked for it, so only a
+  // login that will receive one carries it
+  if (!github.has_value()) {
+    const auto nonce_token{sourcemeta::core::oidc_nonce()};
+    payload.assign_assume_new(
+        "nonce", sourcemeta::core::JSON{
+                     std::string_view{nonce_token.data(), nonce_token.size()}});
+  }
+
   payload.assign_assume_new("verifier", sourcemeta::core::JSON{verifier});
   // Sealed so that a callback completing this login has to name the same place
   // the provider was told to come back to. The provider checks it too, and this
@@ -367,12 +423,14 @@ auto Authentication::login(const std::string_view policy_name,
 
   // Where the browser goes once this completes. What the request asked for
   // wins, and what the policy governs stands in where it asked for nothing
+  const auto default_path{github.has_value() ? github->default_path
+                                             : interactive->default_path};
   if (!return_to.empty()) {
     payload.assign_assume_new("to",
                               sourcemeta::core::JSON{std::string{return_to}});
-  } else if (!policy->default_path.empty()) {
+  } else if (!default_path.empty()) {
     payload.assign_assume_new(
-        "to", sourcemeta::core::JSON{std::string{policy->default_path}});
+        "to", sourcemeta::core::JSON{std::string{default_path}});
   }
 
   std::ostringstream payload_text;
@@ -388,53 +446,44 @@ auto Authentication::login(const std::string_view policy_name,
     return result;
   }
 
-  // A provider sends only the claims a request asks for, so a policy whose
-  // rules name any is asked for them here. The standard way is the claims
-  // request parameter, and where a provider does not honour that, the scopes
-  // that carry the standard claims are the fallback. A claim no standard scope
-  // carries is then arranged at the provider instead, since inventing a scope
-  // name risks a request refused outright.
-  // The rules outlive every request built from them, since a claim request
-  // names its claim by pointing into them rather than copying
-  const auto rules{policy->claims.empty()
-                       ? std::optional<sourcemeta::core::JSON>{std::nullopt}
-                       : sourcemeta::core::try_parse_json(policy->claims)};
-  const auto wanted{wanted_claims(policy.value(), rules)};
-  std::string scope_request;
-  std::string claims_parameter;
-  if (endpoints.value().claims_parameter_supported && !wanted.empty()) {
-    std::ostringstream text;
-    sourcemeta::core::stringify(
-        sourcemeta::core::oidc_build_claims_parameter({}, wanted), text);
-    claims_parameter = text.str();
-  }
-
-  requested_scope(wanted, scope_request);
-  report_unadvertised_claims(wanted, endpoints.value(), policy_name,
-                             result.log);
-
   const auto challenge{sourcemeta::core::oauth_pkce_challenge(verifier)};
-  sourcemeta::core::OIDCAuthenticationRequest authentication_request{};
-  authentication_request.client_id = policy->client_id;
-  authentication_request.redirect_uri = redirect_uri;
-  authentication_request.scope = scope_request;
-  authentication_request.claims = claims_parameter;
-  authentication_request.response_type = "code";
-  authentication_request.state = state;
-  authentication_request.code_challenge = {challenge.data(), challenge.size()};
-  authentication_request.code_challenge_method = "S256";
-  authentication_request.nonce = nonce;
-  if (silent) {
-    authentication_request.prompt = "none";
-  }
-
   std::string authorization_url;
-  if (!sourcemeta::core::oidc_build_authentication_url(
-          endpoints.value().authorization, authentication_request,
-          authorization_url)) {
-    result.log.emplace_back("The authorization endpoint is not a URL a request "
-                            "can be built against, for the policy");
-    return result;
+  if (github.has_value()) {
+    sourcemeta::core::OAuthAuthorizationRequest authorization_request{};
+    authorization_request.client_id = github->client_id;
+    authorization_request.redirect_uri = redirect_uri;
+    authorization_request.scope = scope_request;
+    authorization_request.response_type = "code";
+    authorization_request.state = state;
+    authorization_request.code_challenge = {challenge.data(), challenge.size()};
+    authorization_request.code_challenge_method = "S256";
+    sourcemeta::core::oauth_build_authorization_url(
+        authorization_endpoint, authorization_request, authorization_url);
+  } else {
+    sourcemeta::core::OIDCAuthenticationRequest authentication_request{};
+    authentication_request.client_id = interactive->client_id;
+    authentication_request.redirect_uri = redirect_uri;
+    authentication_request.scope = scope_request;
+    authentication_request.claims = claims_parameter;
+    authentication_request.response_type = "code";
+    authentication_request.state = state;
+    authentication_request.code_challenge = {challenge.data(),
+                                             challenge.size()};
+    authentication_request.code_challenge_method = "S256";
+    const auto *nonce{payload.try_at("nonce")};
+    assert(nonce != nullptr && nonce->is_string());
+    authentication_request.nonce = nonce->to_string();
+    if (silent) {
+      authentication_request.prompt = "none";
+    }
+
+    if (!sourcemeta::core::oidc_build_authentication_url(authorization_endpoint,
+                                                         authentication_request,
+                                                         authorization_url)) {
+      result.log.emplace_back("The authorization endpoint is not a URL a "
+                              "request can be built against, for the policy");
+      return result;
+    }
   }
 
   // A redirect without the transaction cookie could never complete at the
@@ -553,8 +602,18 @@ auto Authentication::callback(const std::string_view policy_name,
 
   // Which policy a callback belongs to is settled by opening its transaction,
   // so nothing reaching here names one this instance does not serve
-  const auto policy{this->table_.impl_->interactive(policy_name)};
-  if (!policy.has_value()) {
+  const auto github{this->table_.impl_->github(policy_name)};
+  const auto interactive{github.has_value()
+                             ? std::optional<InteractivePolicy>{std::nullopt}
+                             : this->table_.impl_->interactive(policy_name)};
+  if (!github.has_value() && !interactive.has_value()) {
+    return abandon(Authentication::Outcome::Result::Invalid);
+  }
+
+  // Only a login that will receive an identity token sealed a nonce to bind it
+  // to, so one arriving without it belongs to no login this instance started
+  if (!github.has_value() &&
+      (nonce == nullptr || !nonce->is_string() || nonce->to_string().empty())) {
     return abandon(Authentication::Outcome::Result::Invalid);
   }
 
@@ -563,7 +622,8 @@ auto Authentication::callback(const std::string_view policy_name,
   // answer relayed from somewhere else. A provider naming none cannot be
   // checked that way, so this runs only when one arrives, and it runs ahead of
   // the outcome so that no answer is acted on before it is placed
-  if (incoming.has_issuer && incoming.issuer != policy->issuer) {
+  if (!github.has_value() && incoming.has_issuer &&
+      incoming.issuer != interactive->issuer) {
     return abandon(Authentication::Outcome::Result::Invalid);
   }
 
@@ -589,82 +649,128 @@ auto Authentication::callback(const std::string_view policy_name,
     return abandon(Authentication::Outcome::Result::Incomplete);
   }
 
-  const auto endpoints{this->table_.impl_->endpoints(policy_name)};
-  if (!endpoints.has_value() || endpoints.value().token.empty()) {
-    result.log.emplace_back("The provider named no token endpoint, or could "
-                            "not be reached, for the policy");
-    return abandon(Authentication::Outcome::Result::Incomplete);
-  }
+  // Who signed in, and what the policy makes of them. A GitHub deployment
+  // asserts nothing, so both come from its API, while a provider asserts both
+  // in a token it signed. This is the whole of what parts the two, and what
+  // follows is the session either of them ends in
+  std::string subject;
+  std::string id_token;
+  if (github.has_value()) {
+    const auto access_token{github_exchange(
+        this->table_.impl_->fetcher(), github_token_endpoint(github->host),
+        github->client_id, client_secret.value(), redirect_uri, incoming.code,
+        verifier->to_string(), result.log)};
+    if (!access_token.has_value()) {
+      result.log.emplace_back(
+          "The authorization code could not be redeemed for the policy");
+      return abandon(Authentication::Outcome::Result::Incomplete);
+    }
 
-  const auto grant{exchange(
-      this->table_.impl_->fetcher(), endpoints.value().token, policy->client_id,
-      client_secret.value(), redirect_uri, incoming.code, verifier->to_string(),
-      endpoints.value().token_endpoint_basic_auth)};
-  if (!grant.has_value()) {
-    result.log.emplace_back(
-        "The authorization code could not be redeemed for the policy");
-    return abandon(Authentication::Outcome::Result::Incomplete);
-  }
+    const auto identity{github_identity(this->table_.impl_->fetcher(),
+                                        github->host, access_token.value())};
+    if (!identity.has_value()) {
+      result.log.emplace_back("The deployment did not say who the access token "
+                              "was issued for, for the policy");
+      return abandon(Authentication::Outcome::Result::Incomplete);
+    }
 
-  const auto token{sourcemeta::core::JWT::from(grant.value().id_token)};
-  if (!token.has_value()) {
-    result.log.emplace_back("The provider returned an identity token that "
-                            "could not be read, for the policy");
-    return abandon(Authentication::Outcome::Result::Incomplete);
-  }
+    // A policy's rules are answered here rather than at the gate, for the same
+    // reason a provider's claims are: a session only ever exists for somebody
+    // the policy admits. The access token is spent answering them and then
+    // discarded, since it is a live credential against the person's own
+    // repositories rather than an assertion about who they are
+    if (github_admits(this->table_.impl_->fetcher(), github.value(),
+                      identity.value(), access_token.value(),
+                      result.log) != Admission::Admitted) {
+      result.log.emplace_back("The deployment authenticated somebody the "
+                              "policy does not admit, for the policy");
+      return abandon(Authentication::Outcome::Result::NotAdmitted);
+    }
 
-  auto provider{id_token_keys(endpoints.value().jwks_uri,
-                              this->table_.impl_->key_fetcher())};
-  sourcemeta::core::OIDCValidationOptions options;
-  options.nonce = nonce->to_string();
-  const auto identity{sourcemeta::core::oidc_validate_id_token(
-      provider, token.value(), ID_TOKEN_ALGORITHMS, policy->issuer,
-      policy->client_id, options)};
-  if (!identity.has_value()) {
-    result.log.emplace_back("The identity token did not validate for the "
-                            "policy");
-    return abandon(Authentication::Outcome::Result::Incomplete);
-  }
+    subject = identity.value().subject;
+  } else {
+    const auto endpoints{this->table_.impl_->endpoints(policy_name)};
+    if (!endpoints.has_value() || endpoints.value().token.empty()) {
+      result.log.emplace_back("The provider named no token endpoint, or could "
+                              "not be reached, for the policy");
+      return abandon(Authentication::Outcome::Result::Incomplete);
+    }
 
-  // A policy's rules are answered here rather than at the gate, so that a
-  // session only ever exists for somebody the policy admits. Answering it
-  // afterwards would leave a valid session denied on every request, and a
-  // denial asks the provider again, which is a loop rather than an answer
-  std::optional<sourcemeta::core::JSON> combined;
-  auto admission{this->table_.impl_->admits_identity(policy_name,
-                                                     token.value().payload())};
+    const auto grant{exchange(this->table_.impl_->fetcher(),
+                              endpoints.value().token, interactive->client_id,
+                              client_secret.value(), redirect_uri,
+                              incoming.code, verifier->to_string(),
+                              endpoints.value().token_endpoint_basic_auth)};
+    if (!grant.has_value()) {
+      result.log.emplace_back(
+          "The authorization code could not be redeemed for the policy");
+      return abandon(Authentication::Outcome::Result::Incomplete);
+    }
 
-  // OpenID Connect Core Section 5.4 has a provider answer for the claims a
-  // scope requested at its UserInfo endpoint rather than in the token, by
-  // default, under the flow this is completing. So a rule naming a claim the
-  // token does not carry is asked there before it is refused, and only then,
-  // since a token carrying everything needed spares the round trip
-  if (admission == Admission::Incomplete &&
-      !endpoints.value().userinfo.empty()) {
-    const auto extra{userinfo(
-        this->table_.impl_->fetcher(), endpoints.value().userinfo,
-        grant.value().access_token, identity.value().subject, result.log)};
-    if (extra.has_value()) {
-      combined = sourcemeta::core::oidc_merge_claims(token.value().payload(),
-                                                     extra.value());
-      if (combined.has_value()) {
-        admission =
-            this->table_.impl_->admits_identity(policy_name, combined.value());
+    const auto token{sourcemeta::core::JWT::from(grant.value().id_token)};
+    if (!token.has_value()) {
+      result.log.emplace_back("The provider returned an identity token that "
+                              "could not be read, for the policy");
+      return abandon(Authentication::Outcome::Result::Incomplete);
+    }
+
+    auto provider{id_token_keys(endpoints.value().jwks_uri,
+                                this->table_.impl_->key_fetcher())};
+    sourcemeta::core::OIDCValidationOptions options;
+    options.nonce = nonce->to_string();
+    const auto identity{sourcemeta::core::oidc_validate_id_token(
+        provider, token.value(), ID_TOKEN_ALGORITHMS, interactive->issuer,
+        interactive->client_id, options)};
+    if (!identity.has_value()) {
+      result.log.emplace_back("The identity token did not validate for the "
+                              "policy");
+      return abandon(Authentication::Outcome::Result::Incomplete);
+    }
+
+    // A policy's rules are answered here rather than at the gate, so that a
+    // session only ever exists for somebody the policy admits. Answering it
+    // afterwards would leave a valid session denied on every request, and a
+    // denial asks the provider again, which is a loop rather than an answer
+    std::optional<sourcemeta::core::JSON> combined;
+    auto admission{this->table_.impl_->admits_identity(
+        policy_name, token.value().payload())};
+
+    // OpenID Connect Core Section 5.4 has a provider answer for the claims a
+    // scope requested at its UserInfo endpoint rather than in the token, by
+    // default, under the flow this is completing. So a rule naming a claim the
+    // token does not carry is asked there before it is refused, and only then,
+    // since a token carrying everything needed spares the round trip
+    if (admission == Admission::Incomplete &&
+        !endpoints.value().userinfo.empty()) {
+      const auto extra{userinfo(
+          this->table_.impl_->fetcher(), endpoints.value().userinfo,
+          grant.value().access_token, identity.value().subject, result.log)};
+      if (extra.has_value()) {
+        combined = sourcemeta::core::oidc_merge_claims(token.value().payload(),
+                                                       extra.value());
+        if (combined.has_value()) {
+          admission = this->table_.impl_->admits_identity(policy_name,
+                                                          combined.value());
+        }
       }
     }
-  }
 
-  if (admission != Admission::Admitted) {
-    result.log.emplace_back("The provider authenticated somebody the policy "
-                            "does not admit, for the policy");
-    // Whatever the decision was actually made against, which is the pair taken
-    // together once a second answer arrived. Explaining a refusal against the
-    // token alone would miss a claim the UserInfo endpoint supplied
-    const auto &asserted{combined.has_value() ? combined.value()
-                                              : token.value().payload()};
-    this->table_.impl_->report_object_shaped_claims(policy_name, asserted,
-                                                    result.log);
-    return abandon(Authentication::Outcome::Result::NotAdmitted);
+    if (admission != Admission::Admitted) {
+      result.log.emplace_back("The provider authenticated somebody the policy "
+                              "does not admit, for the policy");
+      // Whatever the decision was actually made against, which is the pair
+      // taken together once a second answer arrived. Explaining a refusal
+      // against the token alone would miss a claim the UserInfo endpoint
+      // supplied
+      const auto &asserted{combined.has_value() ? combined.value()
+                                                : token.value().payload()};
+      this->table_.impl_->report_object_shaped_claims(policy_name, asserted,
+                                                      result.log);
+      return abandon(Authentication::Outcome::Result::NotAdmitted);
+    }
+
+    subject = identity.value().subject;
+    id_token = grant.value().id_token;
   }
 
   const auto expiry{std::chrono::time_point_cast<std::chrono::seconds>(
@@ -679,11 +785,10 @@ auto Authentication::callback(const std::string_view policy_name,
   // signed in. So the whole cookie is measured, and the token is left out when
   // it does not fit, which costs the confirmation page and nothing else
   auto session{this->table_.impl_->session_cookie(
-      policy_name, identity.value().subject, grant.value().id_token, expiry,
-      secure, result.log)};
+      policy_name, subject, id_token, expiry, secure, result.log)};
   if (!session.has_value() || session.value().size() > MAXIMUM_COOKIE_LENGTH) {
-    session = this->table_.impl_->session_cookie(
-        policy_name, identity.value().subject, "", expiry, secure, result.log);
+    session = this->table_.impl_->session_cookie(policy_name, subject, "",
+                                                 expiry, secure, result.log);
   }
 
   // Without the token there is very little left, so exceeding the limit here
@@ -701,31 +806,35 @@ auto Authentication::callback(const std::string_view policy_name,
 
   // Signing in is what earns a browser a silent renewal later, and the marker
   // outlives the session it accompanies because it is only of use once that
-  // session has expired
-  auto marker{sourcemeta::core::JSON::make_object()};
-  marker.assign_assume_new("policy",
-                           sourcemeta::core::JSON{std::string{policy_name}});
-  std::ostringstream marker_text;
-  sourcemeta::core::stringify(marker, marker_text);
-  const auto marker_expiry{std::chrono::time_point_cast<std::chrono::seconds>(
-                               std::chrono::system_clock::now()) +
-                           RENEWAL_LIFETIME};
-  const auto sealed_marker{this->table_.impl_->seal(
-      policy_name, SealPurpose::Renewal, marker_text.str(), marker_expiry)};
-  if (!sealed_marker.has_value()) {
-    return abandon(Authentication::Outcome::Result::Incomplete);
-  }
+  // session has expired. A GitHub deployment cannot be asked whether a sign-in
+  // still stands without showing the person its own pages, so a browser signed
+  // in through one is left no marker at all
+  if (!github.has_value()) {
+    auto marker{sourcemeta::core::JSON::make_object()};
+    marker.assign_assume_new("policy",
+                             sourcemeta::core::JSON{std::string{policy_name}});
+    std::ostringstream marker_text;
+    sourcemeta::core::stringify(marker, marker_text);
+    const auto marker_expiry{std::chrono::time_point_cast<std::chrono::seconds>(
+                                 std::chrono::system_clock::now()) +
+                             RENEWAL_LIFETIME};
+    const auto sealed_marker{this->table_.impl_->seal(
+        policy_name, SealPurpose::Renewal, marker_text.str(), marker_expiry)};
+    if (!sealed_marker.has_value()) {
+      return abandon(Authentication::Outcome::Result::Incomplete);
+    }
 
-  auto renewal{sourcemeta::core::http_serialize_cookie(
-      {.name = RENEWAL_COOKIE,
-       .value = sealed_marker.value(),
-       .path = COOKIE_PATH,
-       .max_age = RENEWAL_LIFETIME,
-       .http_only = true,
-       .secure = secure,
-       .same_site = sourcemeta::core::HTTPCookieSameSite::Lax})};
-  if (renewal.has_value()) {
-    result.cookies.push_back(std::move(renewal).value());
+    auto renewal{sourcemeta::core::http_serialize_cookie(
+        {.name = RENEWAL_COOKIE,
+         .value = sealed_marker.value(),
+         .path = COOKIE_PATH,
+         .max_age = RENEWAL_LIFETIME,
+         .http_only = true,
+         .secure = secure,
+         .same_site = sourcemeta::core::HTTPCookieSameSite::Lax})};
+    if (renewal.has_value()) {
+      result.cookies.push_back(std::move(renewal).value());
+    }
   }
 
   // The single-use transaction has served its purpose, so it is expired

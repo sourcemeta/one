@@ -1,0 +1,134 @@
+{
+  "url": "http://localhost:8000",
+  "html": {
+    "name": "GitHub Sandbox",
+    "description": "A registry whose private catalogs are gated by policies that sign people in through a GitHub deployment"
+  },
+  "authentication": [
+    {
+      "type": "github",
+      "name": "engineering",
+      "title": "GitHub",
+      "paths": [
+        "/private",
+        "/archive"
+      ],
+      "host": "https://github:9443",
+      "clientId": "registry",
+      "clientSecret": {
+        "environmentVariable": "ONE_E2E_GITHUB_CLIENT_SECRET"
+      },
+      "sessionSecrets": [
+        {
+          "environmentVariable": "ONE_E2E_GITHUB_SESSION_SECRET"
+        }
+      ],
+      "organizations": [
+        "acme"
+      ]
+    },
+    {
+      "type": "github",
+      "name": "platform",
+      "paths": [
+        "/team"
+      ],
+      "host": "https://github:9443",
+      "clientId": "registry",
+      "clientSecret": {
+        "environmentVariable": "ONE_E2E_GITHUB_CLIENT_SECRET"
+      },
+      "sessionSecrets": [
+        {
+          "environmentVariable": "ONE_E2E_GITHUB_SESSION_SECRET"
+        }
+      ],
+      "teams": [
+        "acme/platform"
+      ]
+    },
+    {
+      "type": "github",
+      "name": "personal",
+      "paths": [
+        "/desk"
+      ],
+      "host": "https://github:9443",
+      "clientId": "registry",
+      "clientSecret": {
+        "environmentVariable": "ONE_E2E_GITHUB_CLIENT_SECRET"
+      },
+      "sessionSecrets": [
+        {
+          "environmentVariable": "ONE_E2E_GITHUB_SESSION_SECRET"
+        }
+      ],
+      "users": [
+        "octocat"
+      ]
+    },
+    {
+      "type": "github",
+      "name": "corp",
+      "paths": [
+        "/corp"
+      ],
+      "host": "https://github:9443",
+      "clientId": "registry",
+      "clientSecret": {
+        "environmentVariable": "ONE_E2E_GITHUB_CLIENT_SECRET"
+      },
+      "sessionSecrets": [
+        {
+          "environmentVariable": "ONE_E2E_GITHUB_SESSION_SECRET"
+        }
+      ],
+      "emailDomains": [
+        "acme.test"
+      ]
+    },
+    {
+      "type": "github",
+      "name": "no-client-secret",
+      "paths": [
+        "/unavailable"
+      ],
+      "host": "https://github:9443",
+      "clientId": "registry",
+      "clientSecret": {
+        "environmentVariable": "ONE_E2E_GITHUB_ABSENT_CLIENT_SECRET"
+      },
+      "sessionSecrets": [
+        {
+          "environmentVariable": "ONE_E2E_GITHUB_SESSION_SECRET"
+        }
+      ],
+      "users": [
+        "octocat"
+      ]
+    }
+  ],
+  "contents": {
+    "public": {
+      "path": "./schemas/public"
+    },
+    "private": {
+      "path": "./schemas/private"
+    },
+    "archive": {
+      "path": "./schemas/archive"
+    },
+    "team": {
+      "path": "./schemas/team"
+    },
+    "desk": {
+      "path": "./schemas/desk"
+    },
+    "corp": {
+      "path": "./schemas/corp"
+    },
+    "unavailable": {
+      "path": "./schemas/unavailable"
+    }
+  }
+}

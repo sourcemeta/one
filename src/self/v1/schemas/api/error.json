@@ -203,6 +203,14 @@
     },
     {
       "const": {
+        "type": "urn:sourcemeta:one:auth-not-admitted",
+        "title": "Forbidden",
+        "status": 403,
+        "detail": "This account is not admitted here"
+      }
+    },
+    {
+      "const": {
         "type": "urn:sourcemeta:one:auth-invalid-callback",
         "title": "Bad Request",
         "status": 400,

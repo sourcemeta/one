@@ -1,0 +1,4 @@
+ONE_E2E_GITHUB_CLIENT_SECRET=registry-client-secret
+ONE_E2E_GITHUB_SESSION_SECRET=a-session-signing-secret-for-the-github-sandbox
+# The policy gating /unavailable names a variable nothing sets, so a login it
+# could never complete is refused before the browser is sent anywhere

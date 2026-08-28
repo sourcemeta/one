@@ -1085,26 +1085,35 @@ struct GENERATE_URITEMPLATE_ROUTES {
 };
 
 struct GENERATE_AUTHENTICATION {
-  // The policies borrow the paths, keys and session secrets they are declared
-  // with, so the vectors that hold those must outlive the policies that point
-  // into them
-  static auto make_policies(
-      const sourcemeta::one::Configuration &configuration,
-      std::vector<std::vector<std::string_view>> &policy_paths,
-      std::vector<std::vector<std::string_view>> &policy_keys,
-      std::vector<std::vector<std::string_view>> &policy_session_secrets,
-      std::vector<std::string> &policy_claims,
-      std::vector<std::vector<std::string_view>> &policy_email_domains)
+  // What the policies borrow from, since every one of them points at a run
+  // declared elsewhere rather than holding it. Whatever this is is handed to
+  // must outlive the policies made against it
+  struct PolicyStorage {
+    std::vector<std::vector<std::string_view>> paths;
+    std::vector<std::vector<std::string_view>> keys;
+    std::vector<std::vector<std::string_view>> session_secrets;
+    std::vector<std::string> claims;
+    std::vector<std::vector<std::string_view>> email_domains;
+    std::vector<std::vector<std::string_view>> users;
+    std::vector<std::vector<std::string_view>> organizations;
+    std::vector<std::vector<std::string_view>> teams;
+  };
+
+  static auto make_policies(const sourcemeta::one::Configuration &configuration,
+                            PolicyStorage &storage)
       -> std::vector<sourcemeta::one::Authentication::Policy> {
     std::vector<sourcemeta::one::Authentication::Policy> policies;
     policies.reserve(configuration.authentication.size());
-    policy_paths.reserve(configuration.authentication.size());
-    policy_keys.reserve(configuration.authentication.size());
-    policy_session_secrets.reserve(configuration.authentication.size());
-    // The views a policy carries point into here, so this must not grow while
-    // one is held
-    policy_claims.reserve(configuration.authentication.size());
-    policy_email_domains.reserve(configuration.authentication.size());
+    // The views a policy carries point into these, so none of them may grow
+    // while one is held
+    storage.paths.reserve(configuration.authentication.size());
+    storage.keys.reserve(configuration.authentication.size());
+    storage.session_secrets.reserve(configuration.authentication.size());
+    storage.claims.reserve(configuration.authentication.size());
+    storage.email_domains.reserve(configuration.authentication.size());
+    storage.users.reserve(configuration.authentication.size());
+    storage.organizations.reserve(configuration.authentication.size());
+    storage.teams.reserve(configuration.authentication.size());
     for (const auto &entry : configuration.authentication) {
       std::vector<std::string_view> paths;
       paths.reserve(entry.paths.size());
@@ -1112,7 +1121,7 @@ struct GENERATE_AUTHENTICATION {
         paths.push_back(path);
       }
 
-      policy_paths.push_back(std::move(paths));
+      storage.paths.push_back(std::move(paths));
 
       using Entry = sourcemeta::one::Configuration::AuthenticationEntry;
       if (entry.type == Entry::Type::JWT) {
@@ -1123,9 +1132,9 @@ struct GENERATE_AUTHENTICATION {
           sourcemeta::core::stringify(entry.claims, claims);
         }
 
-        policy_claims.push_back(claims.str());
+        storage.claims.push_back(claims.str());
         policies.push_back(
-            {.paths = policy_paths.back(),
+            {.paths = storage.paths.back(),
              .name = entry.name,
              .credential = sourcemeta::one::Authentication::Policy::Token{
                  .issuer = entry.issuer,
@@ -1135,7 +1144,7 @@ struct GENERATE_AUTHENTICATION {
                                  : std::string_view{},
                  .algorithms = entry.algorithms,
                  .token_type = entry.token_type,
-                 .claims = policy_claims.back()}});
+                 .claims = storage.claims.back()}});
       } else if (entry.type == Entry::Type::OIDC) {
         std::vector<std::string_view> session_secrets;
         session_secrets.reserve(entry.session_secret_variables.size());
@@ -1143,14 +1152,14 @@ struct GENERATE_AUTHENTICATION {
           session_secrets.push_back(variable);
         }
 
-        policy_session_secrets.push_back(std::move(session_secrets));
+        storage.session_secrets.push_back(std::move(session_secrets));
 
         std::ostringstream claims;
         if (!entry.claims.is_null()) {
           sourcemeta::core::stringify(entry.claims, claims);
         }
 
-        policy_claims.push_back(claims.str());
+        storage.claims.push_back(claims.str());
 
         std::vector<std::string_view> domains;
         domains.reserve(entry.email_domains.size());
@@ -1158,17 +1167,69 @@ struct GENERATE_AUTHENTICATION {
           domains.push_back(domain);
         }
 
-        policy_email_domains.push_back(std::move(domains));
+        storage.email_domains.push_back(std::move(domains));
         policies.push_back(
-            {.paths = policy_paths.back(),
+            {.paths = storage.paths.back(),
              .name = entry.name,
              .credential = sourcemeta::one::Authentication::Policy::Interactive{
                  .issuer = entry.issuer,
                  .client_id = entry.client_id,
                  .client_secret_variable = entry.client_secret_variable,
-                 .claims = policy_claims.back(),
-                 .email_domains = policy_email_domains.back(),
-                 .session_secrets = policy_session_secrets.back()}});
+                 .claims = storage.claims.back(),
+                 .email_domains = storage.email_domains.back(),
+                 .session_secrets = storage.session_secrets.back()}});
+      } else if (entry.type == Entry::Type::GitHub) {
+        std::vector<std::string_view> session_secrets;
+        session_secrets.reserve(entry.session_secret_variables.size());
+        for (const auto &variable : entry.session_secret_variables) {
+          session_secrets.push_back(variable);
+        }
+
+        storage.session_secrets.push_back(std::move(session_secrets));
+
+        std::vector<std::string_view> domains;
+        domains.reserve(entry.email_domains.size());
+        for (const auto &domain : entry.email_domains) {
+          domains.push_back(domain);
+        }
+
+        storage.email_domains.push_back(std::move(domains));
+
+        std::vector<std::string_view> users;
+        users.reserve(entry.users.size());
+        for (const auto &user : entry.users) {
+          users.push_back(user);
+        }
+
+        storage.users.push_back(std::move(users));
+
+        std::vector<std::string_view> organizations;
+        organizations.reserve(entry.organizations.size());
+        for (const auto &organization : entry.organizations) {
+          organizations.push_back(organization);
+        }
+
+        storage.organizations.push_back(std::move(organizations));
+
+        std::vector<std::string_view> teams;
+        teams.reserve(entry.teams.size());
+        for (const auto &team : entry.teams) {
+          teams.push_back(team);
+        }
+
+        storage.teams.push_back(std::move(teams));
+        policies.push_back(
+            {.paths = storage.paths.back(),
+             .name = entry.name,
+             .credential = sourcemeta::one::Authentication::Policy::GitHub{
+                 .host = entry.host,
+                 .client_id = entry.client_id,
+                 .client_secret_variable = entry.client_secret_variable,
+                 .users = storage.users.back(),
+                 .organizations = storage.organizations.back(),
+                 .teams = storage.teams.back(),
+                 .email_domains = storage.email_domains.back(),
+                 .session_secrets = storage.session_secrets.back()}});
       } else {
         std::vector<std::string_view> keys;
         keys.reserve(entry.keys.size());
@@ -1176,16 +1237,16 @@ struct GENERATE_AUTHENTICATION {
           keys.push_back(key);
         }
 
-        policy_keys.push_back(std::move(keys));
+        storage.keys.push_back(std::move(keys));
         const auto algorithm{
             entry.algorithm == Entry::Algorithm::Sha256
                 ? sourcemeta::one::Authentication::Algorithm::Sha256
                 : sourcemeta::one::Authentication::Algorithm::Identity};
         policies.push_back(
-            {.paths = policy_paths.back(),
+            {.paths = storage.paths.back(),
              .name = entry.name,
              .credential = sourcemeta::one::Authentication::Policy::ApiKey{
-                 .keys = policy_keys.back(), .algorithm = algorithm}});
+                 .keys = storage.keys.back(), .algorithm = algorithm}});
       }
     }
 
@@ -1200,14 +1261,8 @@ struct GENERATE_AUTHENTICATION {
                       const sourcemeta::core::JSON &) -> void {
     const sourcemeta::core::URITemplateRouterView routes{
         action.dependencies.at(0)};
-    std::vector<std::vector<std::string_view>> policy_paths;
-    std::vector<std::vector<std::string_view>> policy_keys;
-    std::vector<std::vector<std::string_view>> policy_session_secrets;
-    std::vector<std::string> policy_claims;
-    std::vector<std::vector<std::string_view>> policy_email_domains;
-    const auto policies{make_policies(configuration, policy_paths, policy_keys,
-                                      policy_session_secrets, policy_claims,
-                                      policy_email_domains)};
+    PolicyStorage storage;
+    const auto policies{make_policies(configuration, storage)};
 
     // A policy gates a route or a declared collection or page (or a namespace
     // above one), never a path inside a collection. A route is named where it

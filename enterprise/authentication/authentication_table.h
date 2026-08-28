@@ -12,6 +12,7 @@
 
 #include "authentication_claims.h"
 #include "authentication_format.h"
+#include "authentication_github.h"
 #include "authentication_provider.h"
 #include "authentication_session.h"
 
@@ -120,6 +121,19 @@ struct Authentication::Table::Impl {
 
         continue;
       }
+      // A GitHub policy asserts no claims, since its provider publishes none,
+      // so what is read here is only that the policy can be read at all. One
+      // that cannot leaves the whole artifact denying everything, exactly as a
+      // malformed header does
+      if (type == AuthenticationPolicyType::GitHub) {
+        GitHubPolicyMetadata decoded;
+        if (!decode_github_metadata(metadata, decoded)) {
+          return false;
+        }
+
+        continue;
+      }
+
       std::string_view serialized;
       if (type == AuthenticationPolicyType::JWT) {
         if (!read_jwt_claims(metadata, serialized)) {
@@ -209,17 +223,17 @@ struct Authentication::Table::Impl {
       const auto *sealed_policy{document.value().try_at("policy")};
       const auto *sealed_state{document.value().try_at("state")};
       const auto *sealed_redirect{document.value().try_at("redirect_uri")};
-      const auto *nonce{document.value().try_at("nonce")};
       const auto *verifier{document.value().try_at("verifier")};
+      // A nonce is not asked for here, since only a login that will receive an
+      // identity token seals one. Whoever completes such a login requires it,
+      // where this requires what every login carries
       if (sealed_policy == nullptr || !sealed_policy->is_string() ||
           sealed_policy->to_string() != policy_name ||
           sealed_state == nullptr || !sealed_state->is_string() ||
           sealed_state->to_string() != state || sealed_redirect == nullptr ||
           !sealed_redirect->is_string() ||
-          sealed_redirect->to_string() != redirect_uri || nonce == nullptr ||
-          !nonce->is_string() || nonce->to_string().empty() ||
-          verifier == nullptr || !verifier->is_string() ||
-          verifier->to_string().empty()) {
+          sealed_redirect->to_string() != redirect_uri || verifier == nullptr ||
+          !verifier->is_string() || verifier->to_string().empty()) {
         continue;
       }
 
@@ -409,8 +423,9 @@ struct Authentication::Table::Impl {
     // browser login established, never a presented credential. A request that
     // presented one is asking to be read as that credential, so its session is
     // not consulted at all rather than quietly widening what it reaches
-    if (type == AuthenticationPolicyType::OIDC) {
-      return credential.empty() && this->admits_session(metadata, cookies);
+    if (is_interactive_type(type)) {
+      return credential.empty() &&
+             this->admits_session(type, metadata, cookies);
     }
 
     return admits_apikey(
@@ -533,15 +548,17 @@ struct Authentication::Table::Impl {
   }
 
   [[nodiscard]] auto
-  admits_session(const std::span<const std::byte> metadata,
+  admits_session(const AuthenticationPolicyType type,
+                 const std::span<const std::byte> metadata,
                  const std::span<const std::string_view> cookies) const
       -> bool {
     if (cookies.empty()) {
       return false;
     }
 
-    OIDCPolicyMetadata decoded;
-    if (!decode_oidc_metadata(metadata, decoded) || decoded.name.empty()) {
+    SessionPolicyMetadata decoded;
+    if (!decode_session_metadata(type, metadata, decoded) ||
+        decoded.name.empty()) {
       return false;
     }
     const auto policy_name{decoded.name};
@@ -585,17 +602,17 @@ struct Authentication::Table::Impl {
         static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
     for (std::uint32_t index{0}; index < this->policy_count_; index += 1) {
       const auto &entry{policies[index]};
-      if (static_cast<AuthenticationPolicyType>(entry.type) !=
-              AuthenticationPolicyType::OIDC ||
-          entry.metadata_length == 0) {
+      const auto type{static_cast<AuthenticationPolicyType>(entry.type)};
+      if (!is_interactive_type(type) || entry.metadata_length == 0) {
         continue;
       }
 
       const std::span<const std::byte> metadata{
           at_offset<std::byte>(this->bytes_, entry.metadata_offset),
           entry.metadata_length};
-      OIDCPolicyMetadata decoded;
-      if (!decode_oidc_metadata(metadata, decoded) || decoded.name.empty()) {
+      SessionPolicyMetadata decoded;
+      if (!decode_session_metadata(type, metadata, decoded) ||
+          decoded.name.empty()) {
         continue;
       }
 
@@ -650,6 +667,75 @@ struct Authentication::Table::Impl {
     }
 
     return false;
+  }
+
+  // What the policy declared under a name carries about the session it holds,
+  // whichever kind establishes it. Sealing, opening and reading a client secret
+  // ask this rather than each kind in turn
+  [[nodiscard]] auto find_session(const std::string_view name,
+                                  SessionPolicyMetadata &result) const -> bool {
+    if (this->policy_count_ == 0 || name.empty()) {
+      return false;
+    }
+
+    const auto *policies{
+        static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
+    for (std::uint32_t index{0}; index < this->policy_count_; index += 1) {
+      const auto &entry{policies[index]};
+      const auto type{static_cast<AuthenticationPolicyType>(entry.type)};
+      if (!is_interactive_type(type) || entry.metadata_length == 0) {
+        continue;
+      }
+
+      const std::span<const std::byte> metadata{
+          at_offset<std::byte>(this->bytes_, entry.metadata_offset),
+          entry.metadata_length};
+      if (decode_session_metadata(type, metadata, result) &&
+          result.name == name) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  // The decoded metadata of the GitHub policy declared under the given name,
+  // scanned out of the artifact
+  [[nodiscard]] auto find_github(const std::string_view name,
+                                 GitHubPolicyMetadata &result) const -> bool {
+    if (this->policy_count_ == 0 || name.empty()) {
+      return false;
+    }
+
+    const auto *policies{
+        static_cast<const AuthenticationPolicyEntry *>(this->policies_)};
+    for (std::uint32_t index{0}; index < this->policy_count_; index += 1) {
+      const auto &entry{policies[index]};
+      if (static_cast<AuthenticationPolicyType>(entry.type) !=
+              AuthenticationPolicyType::GitHub ||
+          entry.metadata_length == 0) {
+        continue;
+      }
+
+      const std::span<const std::byte> metadata{
+          at_offset<std::byte>(this->bytes_, entry.metadata_offset),
+          entry.metadata_length};
+      if (decode_github_metadata(metadata, result) && result.name == name) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  [[nodiscard]] auto github(const std::string_view name) const
+      -> std::optional<GitHubPolicy> {
+    GitHubPolicyMetadata decoded;
+    if (!this->find_github(name, decoded)) {
+      return std::nullopt;
+    }
+
+    return github_policy(decoded);
   }
 
   [[nodiscard]] auto interactive(const std::string_view name) const
@@ -782,6 +868,10 @@ struct Authentication::Table::Impl {
         continue;
       }
 
+      // Only a policy whose provider can be asked whether a sign-in still
+      // stands without showing the person anything is named here, which a
+      // GitHub deployment cannot be, so a browser signed in through one is
+      // never sent back to it on its own
       const auto &entry{policies[index]};
       if (static_cast<AuthenticationPolicyType>(entry.type) !=
               AuthenticationPolicyType::OIDC ||
@@ -842,8 +932,8 @@ struct Authentication::Table::Impl {
 
   [[nodiscard]] auto client_secret(const std::string_view policy) const
       -> std::optional<sourcemeta::core::SecureString> {
-    OIDCPolicyMetadata decoded;
-    if (!this->find_interactive(policy, decoded)) {
+    SessionPolicyMetadata decoded;
+    if (!this->find_session(policy, decoded)) {
       return std::nullopt;
     }
 
@@ -938,8 +1028,8 @@ struct Authentication::Table::Impl {
                           const std::string_view payload,
                           const std::chrono::sys_seconds expiry) const
       -> std::optional<std::string> {
-    OIDCPolicyMetadata decoded;
-    if (!this->find_interactive(policy, decoded)) {
+    SessionPolicyMetadata decoded;
+    if (!this->find_session(policy, decoded)) {
       return std::nullopt;
     }
 
@@ -951,8 +1041,8 @@ struct Authentication::Table::Impl {
                           const SealPurpose purpose,
                           const std::string_view value) const
       -> std::optional<std::string> {
-    OIDCPolicyMetadata decoded;
-    if (!this->find_interactive(policy, decoded)) {
+    SessionPolicyMetadata decoded;
+    if (!this->find_session(policy, decoded)) {
       return std::nullopt;
     }
 
@@ -1171,6 +1261,8 @@ struct Authentication::Table::Impl {
           collect_jwt_identifiers(metadata, result.keys);
         } else if (type == AuthenticationPolicyType::OIDC) {
           collect_oidc_identifiers(metadata, result.keys);
+        } else if (type == AuthenticationPolicyType::GitHub) {
+          collect_github_identifiers(metadata, result.keys);
         } else {
           collect_keys(metadata, result.keys);
         }

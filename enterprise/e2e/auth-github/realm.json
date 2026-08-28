@@ -1,0 +1,197 @@
+{
+  "realm": "main",
+  "enabled": true,
+  "sslRequired": "none",
+  "groups": [
+    {
+      "name": "acme",
+      "subGroups": [
+        {
+          "name": "platform"
+        }
+      ]
+    },
+    {
+      "name": "contoso"
+    }
+  ],
+  "clientScopes": [
+    {
+      "name": "account",
+      "description": "The handle the deployment knows an account by",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "false",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "username",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "username",
+            "claim.name": "preferred_username",
+            "jsonType.label": "String",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "read:org",
+      "description": "Read the organisations and teams an account belongs to",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "groups",
+            "full.path": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "user:email",
+      "description": "Read the addresses an account holds",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "email",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "email",
+            "claim.name": "email",
+            "jsonType.label": "String",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "email verified",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "emailVerified",
+            "claim.name": "email_verified",
+            "jsonType.label": "boolean",
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "registry",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "registry-client-secret",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:8000/self/v1/auth/callback/engineering",
+        "http://localhost:8000/self/v1/auth/callback/platform",
+        "http://localhost:8000/self/v1/auth/callback/personal",
+        "http://localhost:8000/self/v1/auth/callback/corp"
+      ],
+      "fullScopeAllowed": false,
+      "defaultClientScopes": [
+        "basic",
+        "account"
+      ],
+      "optionalClientScopes": [
+        "read:org",
+        "user:email"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "octocat",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "octocat@acme.test",
+      "firstName": "Octo",
+      "lastName": "Cat",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "octocat-password",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/acme",
+        "/acme/platform"
+      ]
+    },
+    {
+      "username": "mona",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "mona@acme.test",
+      "firstName": "Mona",
+      "lastName": "Lisa",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "mona-password",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/acme"
+      ]
+    },
+    {
+      "username": "hubot",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "hubot@other.test",
+      "firstName": "Hu",
+      "lastName": "Bot",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "hubot-password",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/contoso"
+      ]
+    }
+  ]
+}

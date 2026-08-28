@@ -194,9 +194,10 @@ For an [`apiKey`](configuration.md#api-key) policy that credential is one of
 the keys the policy declares. For a [`jwt`](configuration.md#jwt) policy it is
 an access token from the issuer the policy trusts.
 
-An [`oidc`](configuration.md#oidc) policy signs a person in at their provider
-instead, through the three endpoints below, leaving the browser holding a
-session cookie that admits it exactly as a credential would. That cookie is
+An [`oidc`](configuration.md#oidc) or [`github`](configuration.md#github)
+policy signs a person in at their provider instead, through the three endpoints
+below, leaving the browser holding a session cookie that admits it exactly as a
+credential would. That cookie is
 `HttpOnly`, `SameSite=Lax`, scoped to the instance rather than to the whole
 host, and `Secure` whenever the instance URL is `https`. It carries its own
 expiry and the signature that proves this instance minted it, so no session is
@@ -204,9 +205,11 @@ kept in memory and every replica of an instance accepts the sessions the others
 mint.
 
 A signed-in browser also holds a short-lived transaction cookie during a login,
-and a renewal marker naming the policy it signed in under, which is what lets an
-expired session be renewed against the provider without asking the person again.
-The marker carries no credential.
+and, where the policy was an `oidc` one, a renewal marker naming the policy it
+signed in under, which is what lets an expired session be renewed against the
+provider without asking the person again. The marker carries no credential. A
+`github` policy leaves none, since GitHub cannot be asked whether a sign-in
+still stands without showing the person its own pages.
 
 ### Providers
 
@@ -217,9 +220,10 @@ browser and as data for anything else.*
 GET /self/v1/auth/login
 ```
 
-Only [`oidc`](configuration.md#oidc) policies appear here. A policy that admits
-a program has nowhere to send a person, so naming it would offer a way in that
-does not exist.
+Only policies that sign a person in appear here, which is
+[`oidc`](configuration.md#oidc) and [`github`](configuration.md#github). A
+policy that admits a program has nowhere to send a person, so naming it would
+offer a way in that does not exist.
 
 === "200"
 
@@ -248,10 +252,12 @@ provider.*
 GET /self/v1/auth/login/{policy}[?to={redirect-location}]
 ```
 
-The response redirects the browser to the provider's authorization endpoint,
-discovered from the policy's issuer, and sets a short-lived transaction cookie
-that binds the login to this browser. That cookie is what the callback checks
-before it acts on anything the provider says.
+The response redirects the browser to the provider's authorization endpoint, and
+sets a short-lived transaction cookie that binds the login to this browser. That
+cookie is what the callback checks before it acts on anything the provider says.
+An [`oidc`](configuration.md#oidc) policy discovers that endpoint from its
+issuer, while a [`github`](configuration.md#github) policy composes it from the
+deployment origin it names, since GitHub publishes nothing to discover.
 
 `to` names where to land once the login completes, and is honoured only when it
 is a path on this instance, so the endpoint cannot be turned into an open
@@ -265,8 +271,9 @@ page, and then to the first path the policy declares.
 
 === "404"
 
-    No `oidc` policy carries that name. A policy of another type answers the
-    same way, so the endpoint discloses nothing about what is configured.
+    No policy that signs a person in carries that name. A policy of another
+    type answers the same way, so the endpoint discloses nothing about what is
+    configured.
 
 === "405"
 
@@ -313,8 +320,10 @@ behalf.
 
 === "403"
 
-    The provider declined the login, in a callback that does belong to a login
-    this instance started.
+    Either the provider declined the login, or it authenticated somebody the
+    policy does not admit. Both arrive in a callback that does belong to a login
+    this instance started, and the two are told apart, since a person the policy
+    will never admit is better told so than left to try again.
 
 === "405"
 
@@ -325,8 +334,9 @@ behalf.
     The callback belongs to a login this instance started, but no session came
     of it. Every cause answers this way, among them a client secret or session
     secret absent from the environment, a provider that could not be reached or
-    that refused the authorization code, and an identity token that does not
-    validate or that no session cookie can hold. Anybody can start a login and
+    that refused the authorization code, an identity token that does not
+    validate or that no session cookie can hold, and a deployment that would not
+    say who an access token was issued for. Anybody can start a login and
     return with a code of their own invention, so reaching this says nothing
     about who is asking, and nothing distinguishes the causes. The cause goes
     to the server log.

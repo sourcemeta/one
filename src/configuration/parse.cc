@@ -72,6 +72,41 @@ auto claims_from_json(const sourcemeta::core::JSON &input)
   return result;
 }
 
+// Where the public GitHub service is served, which every policy that does not
+// name an Enterprise Server of its own signs people in against
+constexpr std::string_view GITHUB_HOST{"https://github.com"};
+
+// The origin a URL names, which is all a policy pointing at a deployment can
+// mean. Anything below it would compose endpoints that name no resource
+auto origin_of(const std::string_view url) -> std::string {
+  sourcemeta::core::URI parsed{std::string{url}};
+  parsed.canonicalize();
+  parsed.path("");
+  parsed.userinfo("");
+  parsed.query("");
+  parsed.fragment("");
+  parsed.canonicalize();
+  return parsed.recompose();
+}
+
+// A handle names an account rather than a phrase, so it is compared without
+// regard to case, and the order a policy was written in says nothing about who
+// it admits
+auto handles_from_json(const sourcemeta::core::JSON *input,
+                       std::vector<sourcemeta::core::JSON::String> &sink)
+    -> void {
+  if (input == nullptr) {
+    return;
+  }
+
+  for (const auto &handle : input->as_array()) {
+    sink.push_back(handle.to_string());
+    sourcemeta::core::to_lowercase(sink.back());
+  }
+
+  std::ranges::sort(sink);
+}
+
 auto page_from_json(const sourcemeta::core::JSON &input)
     -> sourcemeta::one::Configuration::Page {
   sourcemeta::one::Configuration::Page result;
@@ -274,6 +309,38 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
 
           std::ranges::sort(parsed.email_domains);
         }
+      } else if (entry.at("type").to_string() == "github") {
+        parsed.type = Configuration::AuthenticationEntry::Type::GitHub;
+        parsed.client_id = entry.at("clientId").to_string();
+        parsed.client_secret_variable =
+            entry.at("clientSecret").at("environmentVariable").to_string();
+        for (const auto &secret : entry.at("sessionSecrets").as_array()) {
+          parsed.session_secret_variables.push_back(
+              secret.at("environmentVariable").to_string());
+        }
+
+        const auto *title{entry.try_at("title")};
+        if (title != nullptr) {
+          parsed.title = title->to_string();
+        }
+
+        const auto *host{entry.try_at("host")};
+        parsed.host =
+            origin_of(host == nullptr ? GITHUB_HOST : host->to_string());
+
+        const auto *domains{entry.try_at("emailDomains")};
+        if (domains != nullptr) {
+          for (const auto &domain : domains->as_array()) {
+            parsed.email_domains.push_back(domain.to_string());
+            sourcemeta::core::to_lowercase(parsed.email_domains.back());
+          }
+
+          std::ranges::sort(parsed.email_domains);
+        }
+
+        handles_from_json(entry.try_at("users"), parsed.users);
+        handles_from_json(entry.try_at("organizations"), parsed.organizations);
+        handles_from_json(entry.try_at("teams"), parsed.teams);
       } else {
         parsed.type = Configuration::AuthenticationEntry::Type::ApiKey;
         parsed.algorithm =
@@ -316,9 +383,13 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
       throw ConfigurationInvalidAuthenticationIssuerError(
           configuration_path, entry.name, entry.issuer);
     }
+  }
 
-    if (entry.type == Configuration::AuthenticationEntry::Type::OIDC &&
-        !serves_securely(result.url)) {
+  // Every interactive policy mints the same session cookie, whether or not it
+  // ever fetches a discovery document, so the requirement on where the instance
+  // is served belongs to all of them rather than to the ones that discover
+  for (const auto &entry : result.authentication) {
+    if (is_interactive(entry) && !serves_securely(result.url)) {
       throw ConfigurationInsecureAuthenticationURLError(configuration_path,
                                                         entry.name, result.url);
     }

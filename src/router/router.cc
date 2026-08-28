@@ -36,6 +36,10 @@ auto provider_fetcher() -> Authentication::Fetcher {
         request.header("authorization", std::move(incoming.authorization));
       }
 
+      for (const auto &header : incoming.headers) {
+        request.header(std::string{header.first}, std::string{header.second});
+      }
+
       if (posting) {
         request.body(std::move(incoming.body),
                      "application/x-www-form-urlencoded");

@@ -48,6 +48,8 @@ auto policy_type(const sourcemeta::one::Authentication::Policy &policy)
       return sourcemeta::one::AuthenticationPolicyType::JWT;
     case 2:
       return sourcemeta::one::AuthenticationPolicyType::OIDC;
+    case 3:
+      return sourcemeta::one::AuthenticationPolicyType::GitHub;
     default:
       return sourcemeta::one::AuthenticationPolicyType::ApiKey;
   }
@@ -122,6 +124,60 @@ auto encode_oidc_metadata(
     append_string(result, domain);
   }
 
+  append_string(result, client_secret_variable);
+  append_string(result, name);
+  append_u32(result,
+             static_cast<std::uint32_t>(session_secret_variables.size()));
+  for (const auto variable : session_secret_variables) {
+    append_string(result, variable);
+  }
+
+  append_string(result, default_path);
+  return result;
+}
+
+// A handle names an account rather than a phrase, so it is compared without
+// regard to case, and the order rules were written in says nothing about who
+// they admit. Both are reduced here to the single spelling the artifact
+// carries, so that two policies admitting the same people serialise identically
+auto append_handles(std::vector<std::byte> &output,
+                    const std::span<const std::string_view> handles) -> void {
+  std::vector<std::string> canonical;
+  canonical.reserve(handles.size());
+  for (const auto handle : handles) {
+    canonical.emplace_back(handle);
+    sourcemeta::core::to_lowercase(canonical.back());
+  }
+
+  std::ranges::sort(canonical);
+  const auto repeated{std::ranges::unique(canonical)};
+  canonical.erase(repeated.begin(), repeated.end());
+  append_u32(output, static_cast<std::uint32_t>(canonical.size()));
+  for (const auto &handle : canonical) {
+    append_string(output, handle);
+  }
+}
+
+// The same layout rule the interactive metadata above follows: everything
+// deciding who a policy admits leads, so those bytes keep spanning exactly the
+// audience it denotes, and every run is counted so the field after it is found
+// whatever its number
+auto encode_github_metadata(
+    const std::string_view host, const std::string_view client_id,
+    const std::span<const std::string_view> users,
+    const std::span<const std::string_view> organizations,
+    const std::span<const std::string_view> teams,
+    const std::span<const std::string_view> email_domains,
+    const std::string_view client_secret_variable, const std::string_view name,
+    const std::span<const std::string_view> session_secret_variables,
+    const std::string_view default_path) -> std::vector<std::byte> {
+  std::vector<std::byte> result;
+  append_string(result, host);
+  append_string(result, client_id);
+  append_handles(result, users);
+  append_handles(result, organizations);
+  append_handles(result, teams);
+  append_handles(result, email_domains);
   append_string(result, client_secret_variable);
   append_string(result, name);
   append_u32(result,
@@ -395,6 +451,20 @@ auto Authentication::Table::compile(
           interactive->issuer, interactive->client_id, interactive->claims,
           interactive->email_domains, interactive->client_secret_variable,
           policy.name, interactive->session_secrets,
+          policy.paths.empty() ? std::string_view{} : policy.paths.front());
+    } else if (const auto *github{std::get_if<Authentication::Policy::GitHub>(
+                   &policy.credential)}) {
+      // The same requirement an interactive policy carries, for the same
+      // reason: one without a session secret could never mint or verify one
+      if (github->session_secrets.empty()) {
+        throw AuthenticationMissingSecretError(configuration,
+                                               std::string{policy.name});
+      }
+
+      policy_metadata = encode_github_metadata(
+          github->host, github->client_id, github->users, github->organizations,
+          github->teams, github->email_domains, github->client_secret_variable,
+          policy.name, github->session_secrets,
           policy.paths.empty() ? std::string_view{} : policy.paths.front());
     } else {
       const auto &key{

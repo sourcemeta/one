@@ -44,7 +44,10 @@ WRITE expected.txt UNTIL EOF
 2> The value was expected to be an object that defines properties "clientId", "clientSecret", "issuer", "name", "paths", "sessionSecrets", and "type"
 2>   at instance location "/authentication/0"
 2>   at evaluate path "/properties/authentication/items/anyOf/2/required"
-2> The object value was expected to validate against at least one of the 3 given subschemas
+2> The value was expected to be an object that defines properties "clientId", "clientSecret", "name", "paths", "sessionSecrets", and "type"
+2>   at instance location "/authentication/0"
+2>   at evaluate path "/properties/authentication/items/anyOf/3/required"
+2> The object value was expected to validate against at least one of the 4 given subschemas
 2>   at instance location "/authentication/0"
 2>   at evaluate path "/properties/authentication/items/anyOf"
 2> Every item in the array value was expected to validate against the given subschema

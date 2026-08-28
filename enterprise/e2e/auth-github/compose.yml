@@ -1,0 +1,58 @@
+services:
+  # The identity provider the deployment in front of it authenticates people
+  # against. It is never reached directly: it advertises itself under the
+  # deployment's name, so every page a person sees comes from there
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.6
+    command: start-dev --import-realm
+    environment:
+      - KC_HEALTH_ENABLED=true
+      - KC_HOSTNAME=https://github:9443
+      - KC_PROXY_HEADERS=xforwarded
+    volumes:
+      - ./realm.json:/opt/keycloak/data/import/realm.json:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.1\r\nHost: 127.0.0.1:9000\r\nConnection: close\r\n\r\n' >&3 && grep -q '200 OK' <&3" ]
+      interval: 2s
+      timeout: 5s
+      retries: 60
+
+  # The deployment itself, serving real TLS under this sandbox's committed
+  # authority so that the registry reaches it exactly as it would reach the
+  # real one
+  github:
+    build:
+      context: ./github
+      dockerfile: Dockerfile
+    environment:
+      - GITHUB_PORT=9443
+      - GITHUB_PROVIDER=http://keycloak:8080
+      - GITHUB_PUBLIC_ORIGIN=https://github:9443
+    volumes:
+      - ./tls:/etc/github/tls:ro
+    ports:
+      - "9443:9443"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "node", "-e", "require('node:https').get({host:'127.0.0.1',port:9443,path:'/api/v3/user',rejectUnauthorized:false},()=>process.exit(0)).on('error',()=>process.exit(1))" ]
+      interval: 2s
+      timeout: 5s
+      retries: 60
+
+  sandbox:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SOURCEMETA_ONE_SANDBOX_EDITION: ${EDITION}
+    environment:
+      - SOURCEMETA_ONE_PORT=8001
+    env_file:
+      - environment
+    depends_on:
+      github:
+        condition: service_healthy
+    ports:
+      - "${PORT}:8001"
