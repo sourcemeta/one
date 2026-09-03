@@ -1,5 +1,5 @@
 /*
- * Authored by Alex Hultman, 2018-2024.
+ * Authored by Alex Hultman, 2018-2026.
  * Intellectual property of third-party.
 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -110,6 +110,17 @@ public:
     /* If you do not want to handle this route */
     void setYield(bool yield) {
         didYield = yield;
+    }
+
+    bool areIdentical(std::string_view lowerCasedHeader, std::string_view expectedValue) {
+        for (Header *h = headers; (++h)->key.length(); ) {
+            if (h->key.length() == lowerCasedHeader.length() && !strncmp(h->key.data(), lowerCasedHeader.data(), lowerCasedHeader.length())) {
+                if (expectedValue != h->value) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     std::string_view getHeader(std::string_view lowerCasedHeader) {
@@ -385,8 +396,8 @@ private:
         /* The request line is different from the field names / field values */
         if ((char *) 2 > (postPaddedBuffer = consumeRequestLine(postPaddedBuffer, end, headers[0]))) {
             /* Error - invalid request line */
-            /* Assuming it is 505 HTTP Version Not Supported */
-            err = postPaddedBuffer ? HTTP_ERROR_505_HTTP_VERSION_NOT_SUPPORTED : 0;
+            /* Assuming it is 400 Bad Request */
+            err = postPaddedBuffer ? HTTP_ERROR_400_BAD_REQUEST : 0;
             return 0;
         }
         headers++;
@@ -398,7 +409,8 @@ private:
             headers->key = std::string_view(preliminaryKey, (size_t) (postPaddedBuffer - preliminaryKey));
 
             /* We should not accept whitespace between key and colon, so colon must foloow immediately */
-            if (postPaddedBuffer[0] != ':') {
+            /* We also cannot accept empty strings as keys */
+            if (postPaddedBuffer[0] != ':' || preliminaryKey == postPaddedBuffer) {
                 /* If we stand at the end, we are fragmented */
                 if (postPaddedBuffer == end) {
                     return 0;
@@ -465,10 +477,20 @@ private:
             }
         }
         /* We ran out of header space, too large request */
-        err = HTTP_ERROR_431_REQUEST_HEADER_FIELDS_TOO_LARGE;
+        err = HTTP_ERROR_400_BAD_REQUEST;//HTTP_ERROR_431_REQUEST_HEADER_FIELDS_TOO_LARGE;
         return 0;
     }
 
+    bool isInvalidHost(std::string_view host) {
+        for (char c : host) {
+            unsigned char uc = static_cast<unsigned char>(c);
+            if (uc < 33 || c == ',' || c == '@') {
+                return true; // Invalid character found
+            }
+        }
+        return false;
+    }
+    
     /* This is the only caller of getHeaders and is thus the deepest part of the parser.
      * From here we return either [consumed, user] for "keep going",
       * or [consumed, nullptr] for "break; I am closed or upgraded to websocket"
@@ -492,7 +514,7 @@ private:
 
             /* Even if we could parse it, check for length here as well */
             if (consumed > MAX_FALLBACK_SIZE) {
-                return {HTTP_ERROR_431_REQUEST_HEADER_FIELDS_TOO_LARGE, FULLPTR};
+                return {HTTP_ERROR_400_BAD_REQUEST /*HTTP_ERROR_431_REQUEST_HEADER_FIELDS_TOO_LARGE*/, FULLPTR};
             }
 
             /* Store HTTP version (ancient 1.0 or 1.1) */
@@ -510,8 +532,13 @@ private:
                 req->bf.add(h->key);
             }
             
-            /* Break if no host header (but we can have empty string which is different from nullptr) */
-            if (!req->getHeader("host").data()) {
+            /* Break if no host header or empty string */
+            if (!req->getHeader("host").length()) {
+                return {HTTP_ERROR_400_BAD_REQUEST, FULLPTR};
+            }
+
+            /* Break if invalid host */
+            if (isInvalidHost(req->getHeader("host"))) {
                 return {HTTP_ERROR_400_BAD_REQUEST, FULLPTR};
             }
 
@@ -522,7 +549,7 @@ private:
             * ought to be handled as an error. */
             std::string_view transferEncodingString = req->getHeader("transfer-encoding");
             std::string_view contentLengthString = req->getHeader("content-length");
-            if (transferEncodingString.length() && contentLengthString.length()) {
+            if (transferEncodingString.data() != nullptr && contentLengthString.data() != nullptr) {
                 /* Returning fullptr is the same as calling the errorHandler */
                 /* We could be smart and set an error in the context along with this, to indicate what 
                  * http error response we might want to return */
@@ -551,7 +578,12 @@ private:
             /* RFC 9112 6.3
              * If a message is received with both a Transfer-Encoding and a Content-Length header field,
              * the Transfer-Encoding overrides the Content-Length. */
-            if (transferEncodingString.length()) {
+            if (transferEncodingString.data() != nullptr) {
+
+                /* We only support chunked */
+                if (transferEncodingString != "chunked") {
+                    return {HTTP_ERROR_400_BAD_REQUEST, FULLPTR};
+                }
 
                 /* If a proxy sent us the transfer-encoding header that 100% means it must be chunked or else the proxy is
                  * not RFC 9112 compliant. Therefore it is always better to assume this is the case, since that entirely eliminates 
@@ -581,9 +613,15 @@ private:
                     length = (unsigned int) dataToConsume.length();
                     consumedTotal += consumed;
                 }
-            } else if (contentLengthString.length()) {
+            } else if (contentLengthString.data() != nullptr) {
+
+                /* Content-Length must be the same */
+                if (!req->areIdentical("content-length", contentLengthString)) {
+                    return {HTTP_ERROR_400_BAD_REQUEST, FULLPTR};
+                }
+                
                 remainingStreamingBytes = toUnsignedInteger(contentLengthString);
-                if (remainingStreamingBytes == UINT64_MAX) {
+                if (remainingStreamingBytes == UINT64_MAX || contentLengthString.length() == 0) {
                     /* Parser error */
                     return {HTTP_ERROR_400_BAD_REQUEST, FULLPTR};
                 }
@@ -715,7 +753,7 @@ public:
 
             } else {
                 if (fallback.length() == MAX_FALLBACK_SIZE) {
-                    return {HTTP_ERROR_431_REQUEST_HEADER_FIELDS_TOO_LARGE, FULLPTR};
+                    return {HTTP_ERROR_400_BAD_REQUEST /*HTTP_ERROR_431_REQUEST_HEADER_FIELDS_TOO_LARGE*/, FULLPTR};
                 }
                 return {0, user};
             }
@@ -733,7 +771,7 @@ public:
             if (length < MAX_FALLBACK_SIZE) {
                 fallback.append(data, length);
             } else {
-                return {HTTP_ERROR_431_REQUEST_HEADER_FIELDS_TOO_LARGE, FULLPTR};
+                return {HTTP_ERROR_400_BAD_REQUEST /*HTTP_ERROR_431_REQUEST_HEADER_FIELDS_TOO_LARGE*/, FULLPTR};
             }
         }
 
