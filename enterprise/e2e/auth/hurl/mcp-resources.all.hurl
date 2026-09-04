@@ -92,7 +92,7 @@ jsonpath "$.result.resources[10].uri" == "{{base}}/self/v1/schemas/api/schemas/l
 jsonpath "$.result.resources[10].name" == "Sourcemeta One Schema Locations API Response"
 jsonpath "$.result.resources[10].description" == "The response format for the schema frame locations API endpoint"
 jsonpath "$.result.resources[10].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[10].size" == 2402
+jsonpath "$.result.resources[10].size" == 2391
 jsonpath "$.result.resources[10].annotations.priority" == 0
 jsonpath "$.result.resources[11].uri" == "{{base}}/self/v1/schemas/api/schemas/metadata/response"
 jsonpath "$.result.resources[11].name" == "Sourcemeta One Schema Metadata API Response"
@@ -540,7 +540,7 @@ jsonpath "$.result.resources[13].uri" == "{{base}}/self/v1/schemas/api/schemas/l
 jsonpath "$.result.resources[13].name" == "Sourcemeta One Schema Locations API Response"
 jsonpath "$.result.resources[13].description" == "The response format for the schema frame locations API endpoint"
 jsonpath "$.result.resources[13].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[13].size" == 2402
+jsonpath "$.result.resources[13].size" == 2391
 jsonpath "$.result.resources[13].annotations.priority" == 0
 jsonpath "$.result.resources[14].uri" == "{{base}}/self/v1/schemas/api/schemas/metadata/response"
 jsonpath "$.result.resources[14].name" == "Sourcemeta One Schema Metadata API Response"
@@ -971,7 +971,7 @@ jsonpath "$.result.resources[11].uri" == "{{base}}/self/v1/schemas/api/schemas/l
 jsonpath "$.result.resources[11].name" == "Sourcemeta One Schema Locations API Response"
 jsonpath "$.result.resources[11].description" == "The response format for the schema frame locations API endpoint"
 jsonpath "$.result.resources[11].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[11].size" == 2402
+jsonpath "$.result.resources[11].size" == 2391
 jsonpath "$.result.resources[11].annotations.priority" == 0
 jsonpath "$.result.resources[12].uri" == "{{base}}/self/v1/schemas/api/schemas/metadata/response"
 jsonpath "$.result.resources[12].name" == "Sourcemeta One Schema Metadata API Response"

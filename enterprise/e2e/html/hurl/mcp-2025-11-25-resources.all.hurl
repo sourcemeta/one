@@ -532,7 +532,7 @@ jsonpath "$.result.resources[35].uri" == "{{base}}/self/v1/schemas/api/schemas/l
 jsonpath "$.result.resources[35].name" == "Sourcemeta One Schema Locations API Response"
 jsonpath "$.result.resources[35].description" == "The response format for the schema frame locations API endpoint"
 jsonpath "$.result.resources[35].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[35].size" == 2402
+jsonpath "$.result.resources[35].size" == 2391
 jsonpath "$.result.resources[35].annotations.priority" == 0
 jsonpath "$.result.resources[36].uri" == "{{base}}/self/v1/schemas/api/schemas/metadata/response"
 jsonpath "$.result.resources[36].name" == "Sourcemeta One Schema Metadata API Response"
@@ -1299,7 +1299,7 @@ jsonpath "$.result.resources[35].uri" == "{{base}}/self/v1/schemas/api/schemas/l
 jsonpath "$.result.resources[35].name" == "Sourcemeta One Schema Locations API Response"
 jsonpath "$.result.resources[35].description" == "The response format for the schema frame locations API endpoint"
 jsonpath "$.result.resources[35].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[35].size" == 2402
+jsonpath "$.result.resources[35].size" == 2391
 jsonpath "$.result.resources[35].annotations.priority" == 0
 jsonpath "$.result.resources[36].uri" == "{{base}}/self/v1/schemas/api/schemas/metadata/response"
 jsonpath "$.result.resources[36].name" == "Sourcemeta One Schema Metadata API Response"

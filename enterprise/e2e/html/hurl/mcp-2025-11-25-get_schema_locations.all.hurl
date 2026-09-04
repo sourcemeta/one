@@ -77,12 +77,12 @@ jsonpath "$.result.structuredContent.static['{{base}}/test/bare/01'].dialect" ==
 variable "text" jsonpath "$.static['{{base}}/test/bare/01'].dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.static['{{base}}/test/bare/01'].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.static['{{base}}/test/bare/01'].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.static['{{base}}/test/bare/01#/$id'].type" == "pointer"
-variable "text" jsonpath "$.static['{{base}}/test/bare/01#/$id'].type" == "pointer"
-jsonpath "$.result.structuredContent.static['{{base}}/test/bare/01#/$schema'].type" == "pointer"
-variable "text" jsonpath "$.static['{{base}}/test/bare/01#/$schema'].type" == "pointer"
-jsonpath "$.result.structuredContent.static['{{base}}/test/bare/01#/type'].type" == "pointer"
-variable "text" jsonpath "$.static['{{base}}/test/bare/01#/type'].type" == "pointer"
+jsonpath "$.result.structuredContent.static['{{base}}/test/bare/01#/$id']" not exists
+variable "text" jsonpath "$.static['{{base}}/test/bare/01#/$id']" not exists
+jsonpath "$.result.structuredContent.static['{{base}}/test/bare/01#/$schema']" not exists
+variable "text" jsonpath "$.static['{{base}}/test/bare/01#/$schema']" not exists
+jsonpath "$.result.structuredContent.static['{{base}}/test/bare/01#/type']" not exists
+variable "text" jsonpath "$.static['{{base}}/test/bare/01#/type']" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -152,10 +152,10 @@ jsonpath "$.result.structuredContent.dynamic" exists
 variable "text" jsonpath "$.dynamic" exists
 jsonpath "$.result.structuredContent.static['{{base}}/test/object'].type" == "resource"
 variable "text" jsonpath "$.static['{{base}}/test/object'].type" == "resource"
-jsonpath "$.result.structuredContent.static['{{base}}/test/object#/title'].type" == "pointer"
-variable "text" jsonpath "$.static['{{base}}/test/object#/title'].type" == "pointer"
-jsonpath "$.result.structuredContent.static['{{base}}/test/object#/description'].type" == "pointer"
-variable "text" jsonpath "$.static['{{base}}/test/object#/description'].type" == "pointer"
+jsonpath "$.result.structuredContent.static['{{base}}/test/object#/title']" not exists
+variable "text" jsonpath "$.static['{{base}}/test/object#/title']" not exists
+jsonpath "$.result.structuredContent.static['{{base}}/test/object#/description']" not exists
+variable "text" jsonpath "$.static['{{base}}/test/object#/description']" not exists
 jsonpath "$.result.structuredContent.static['{{base}}/test/object#/properties/foo'].type" == "subschema"
 variable "text" jsonpath "$.static['{{base}}/test/object#/properties/foo'].type" == "subschema"
 

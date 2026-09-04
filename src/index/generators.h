@@ -366,7 +366,7 @@ struct GenerateFrameLocations {
           return resolver(identifier, callback);
         }};
     const sourcemeta::blaze::SchemaFrame frame{
-        sourcemeta::blaze::SchemaFrame::Mode::Pointers, contents,
+        sourcemeta::blaze::SchemaFrame::Mode::Locations, contents,
         sourcemeta::blaze::schema_walker, schema_resolver};
     auto result{sourcemeta::core::JSON::make_object()};
     result.assign("static", sourcemeta::core::JSON::make_object());
