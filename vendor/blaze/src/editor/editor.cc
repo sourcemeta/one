@@ -6,7 +6,6 @@
 
 #include <cassert> // assert
 #include <format>  // std::format
-#include <map>     // std::map
 
 namespace {
 
@@ -22,9 +21,7 @@ auto top_dynamic_anchor_location(
     -> std::optional<
         std::reference_wrapper<const sourcemeta::core::WeakPointer>> {
   // Get the location object of where we are at the moment
-  const auto uri{frame.uri(current)};
-  assert(uri.has_value());
-  const auto match{frame.traverse(uri.value().get())};
+  const auto match{frame.traverse(current)};
   assert(match.has_value());
   const auto &location{match.value().get()};
 
@@ -87,117 +84,109 @@ auto for_editor(sourcemeta::core::JSON &schema,
 
   {
     sourcemeta::blaze::SchemaFrame frame{
-        sourcemeta::blaze::SchemaFrame::Mode::References};
-    frame.analyse(schema, walker, resolver, default_dialect);
+        sourcemeta::blaze::SchemaFrame::Mode::References, schema, walker,
+        resolver, default_dialect};
 
     // Otherwise the input is not bundled
     assert(frame.standalone());
 
-    // Note that `std::unordered_map` is slower here due to high collision rates
-    // from the simple pointer hashes
-    std::map<sourcemeta::core::WeakPointer,
-             std::reference_wrapper<const sourcemeta::core::JSON::String>>
-        pointer_to_uri;
-    for (const auto &entry : frame.locations()) {
-      pointer_to_uri.emplace(entry.second.pointer,
-                             std::cref(entry.first.second));
-    }
-
     // Collect reference changes
-    for (const auto &[key, reference] : frame.references()) {
-      assert(!key.second.empty());
-      assert(key.second.back().is_property());
-      const auto &keyword{key.second.back().to_property()};
+    frame.for_each_reference(
+        [&](const sourcemeta::blaze::SchemaReferenceType type,
+            const sourcemeta::core::WeakPointer &origin,
+            const sourcemeta::blaze::SchemaFrame::Reference &reference)
+            -> void {
+          assert(!origin.empty());
+          assert(origin.back().is_property());
+          const auto &keyword{origin.back().to_property()};
 
-      if (key.first == sourcemeta::blaze::SchemaReferenceType::Dynamic) {
-        if (reference.fragment.has_value()) {
-          const auto destination{top_dynamic_anchor_location(
-              frame, key.second, reference.fragment.value(),
-              reference.destination)};
-          if (!destination.has_value()) {
-            continue;
+          if (type == sourcemeta::blaze::SchemaReferenceType::Dynamic) {
+            if (reference.fragment.has_value()) {
+              // A reference is a keyword of the subschema that declares it,
+              // which is the resource scope the search has to start from
+              const auto destination{top_dynamic_anchor_location(
+                  frame, origin.initial(), reference.fragment.value(),
+                  reference.destination)};
+              if (!destination.has_value()) {
+                return;
+              }
+
+              reference_changes.push_back(
+                  {.pointer = sourcemeta::core::to_pointer(origin),
+                   .new_value =
+                       sourcemeta::core::to_uri(destination.value().get())
+                           .recompose(),
+                   .keyword = keyword,
+                   .rename_to_ref = true});
+            } else {
+              reference_changes.push_back(
+                  {.pointer = sourcemeta::core::to_pointer(origin),
+                   .new_value = "",
+                   .keyword = keyword,
+                   .rename_to_ref = true});
+            }
+          } else {
+            if (keyword == "$schema") {
+              // A meta-schema reference is a keyword of the subschema that
+              // declares it, so the base dialect to report is the one in force
+              // at that subschema
+              const auto location{frame.traverse(origin.initial())};
+              assert(location.has_value());
+              reference_changes.push_back(
+                  {.pointer = sourcemeta::core::to_pointer(origin),
+                   .new_value =
+                       std::format("{}", location.value().get().base_dialect),
+                   .keyword = keyword,
+                   .rename_to_ref = false});
+              return;
+            }
+
+            const auto result{frame.traverse(reference.destination)};
+            if (result.has_value()) {
+              const bool should_rename =
+                  keyword == "$dynamicRef" || keyword == "$recursiveRef";
+              reference_changes.push_back(
+                  {.pointer = sourcemeta::core::to_pointer(origin),
+                   .new_value =
+                       sourcemeta::core::to_uri(result.value().get().pointer)
+                           .recompose(),
+                   .keyword = keyword,
+                   .rename_to_ref = should_rename});
+            } else {
+              reference_changes.push_back(
+                  {.pointer = sourcemeta::core::to_pointer(origin),
+                   .new_value = reference.destination,
+                   .keyword = keyword,
+                   .rename_to_ref = false});
+            }
           }
-
-          reference_changes.push_back(
-              {.pointer = sourcemeta::core::to_pointer(key.second),
-               .new_value = sourcemeta::core::to_uri(destination.value().get())
-                                .recompose(),
-               .keyword = keyword,
-               .rename_to_ref = true});
-        } else {
-          reference_changes.push_back(
-              {.pointer = sourcemeta::core::to_pointer(key.second),
-               .new_value = "",
-               .keyword = keyword,
-               .rename_to_ref = true});
-        }
-      } else {
-        if (keyword == "$schema") {
-          // Use pre-built index instead of O(n) frame.uri() scan
-          const auto uri_it{pointer_to_uri.find(key.second)};
-          assert(uri_it != pointer_to_uri.end());
-          const auto origin{frame.traverse(uri_it->second.get())};
-          assert(origin.has_value());
-          reference_changes.push_back(
-              {.pointer = sourcemeta::core::to_pointer(key.second),
-               .new_value =
-                   std::format("{}", origin.value().get().base_dialect),
-               .keyword = keyword,
-               .rename_to_ref = false});
-          continue;
-        }
-
-        const auto result{frame.traverse(reference.destination)};
-        if (result.has_value()) {
-          const bool should_rename =
-              keyword == "$dynamicRef" || keyword == "$recursiveRef";
-          reference_changes.push_back(
-              {.pointer = sourcemeta::core::to_pointer(key.second),
-               .new_value =
-                   sourcemeta::core::to_uri(result.value().get().pointer)
-                       .recompose(),
-               .keyword = keyword,
-               .rename_to_ref = should_rename});
-        } else {
-          reference_changes.push_back(
-              {.pointer = sourcemeta::core::to_pointer(key.second),
-               .new_value = reference.destination,
-               .keyword = keyword,
-               .rename_to_ref = false});
-        }
-      }
-    }
+        });
 
     // Collect subschema changes
-    for (const auto &entry : frame.locations()) {
-      if (entry.second.type !=
-              sourcemeta::blaze::SchemaFrame::LocationType::Resource &&
-          entry.second.type !=
-              sourcemeta::blaze::SchemaFrame::LocationType::Subschema) {
-        continue;
-      }
+    frame.for_each_subschema(
 
-      const auto &subschema{
-          sourcemeta::core::get(schema, entry.second.pointer)};
-      if (subschema.is_boolean()) {
-        continue;
-      }
+        [&](const sourcemeta::blaze::SchemaFrame::Location &location) -> void {
+          const auto &subschema{
+              sourcemeta::core::get(schema, location.pointer)};
+          if (subschema.is_boolean()) {
+            return;
+          }
 
-      const bool add_schema =
-          entry.second.pointer.empty() && !subschema.defines("$schema");
-      const auto &vocabularies{frame.vocabularies(entry.second, resolver)};
+          const bool add_schema =
+              location.pointer.empty() && !subschema.defines("$schema");
+          const auto &vocabularies{frame.vocabularies(location, resolver)};
 
-      subschema_changes.push_back(
-          {.pointer = sourcemeta::core::to_pointer(entry.second.pointer),
-           .base_dialect = entry.second.base_dialect,
-           .add_schema_declaration = add_schema,
-           .erase_2020_12_keywords =
-               vocabularies.contains(sourcemeta::blaze::SchemaVocabularies::
-                                         Known::JSON_Schema_2020_12_Core),
-           .erase_2019_09_keywords =
-               vocabularies.contains(sourcemeta::blaze::SchemaVocabularies::
-                                         Known::JSON_Schema_2019_09_Core)});
-    }
+          subschema_changes.push_back(
+              {.pointer = sourcemeta::core::to_pointer(location.pointer),
+               .base_dialect = location.base_dialect,
+               .add_schema_declaration = add_schema,
+               .erase_2020_12_keywords =
+                   vocabularies.contains(sourcemeta::blaze::SchemaVocabularies::
+                                             Known::JSON_Schema_2020_12_Core),
+               .erase_2019_09_keywords =
+                   vocabularies.contains(sourcemeta::blaze::SchemaVocabularies::
+                                             Known::JSON_Schema_2019_09_Core)});
+        });
   }
 
   // (2) Apply reference changes

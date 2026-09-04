@@ -26,9 +26,6 @@ enum class StandardOutput : std::uint8_t {
   // TODO: Implement the "detailed" and "verbose" output formats
 };
 
-// TODO: Integrate with
-// https://github.com/json-schema-org/JSON-Schema-Test-Suite/tree/main/output-tests
-
 /// @ingroup output
 /// Perform JSON Schema evaluation using Standard Output formats. For example:
 ///
@@ -67,8 +64,7 @@ enum class StandardOutput : std::uint8_t {
 /// assert(result.at("valid").is_boolean());
 /// assert(result.at("valid").to_boolean());
 ///
-/// sourcemeta::core::prettify(result,
-///   std::cout, sourcemeta::blaze::standard_output_compare);
+/// sourcemeta::core::prettify(result, std::cout);
 /// std::cout << "\n";
 /// ```
 ///

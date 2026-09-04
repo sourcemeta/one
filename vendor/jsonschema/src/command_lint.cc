@@ -5,16 +5,16 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonpointer.h>
 
-#include <sourcemeta/blaze/alterschema.h>
 #include <sourcemeta/blaze/compiler.h>
 
-#include <cstdlib>    // EXIT_SUCCESS
-#include <filesystem> // std::filesystem::current_path
-#include <iostream>   // std::cerr, std::cout
-#include <numeric>    // std::accumulate
-#include <optional>   // std::optional
-#include <ostream>    // std::ostream
-#include <sstream>    // std::ostringstream
+#include <cstdlib>     // EXIT_SUCCESS
+#include <filesystem>  // std::filesystem::current_path
+#include <iostream>    // std::cerr, std::cout
+#include <numeric>     // std::accumulate
+#include <optional>    // std::optional
+#include <ostream>     // std::ostream
+#include <sstream>     // std::ostringstream
+#include <string_view> // std::string_view
 
 #include "command.h"
 #include "configuration.h"
@@ -24,7 +24,7 @@
 #include "resolver.h"
 #include "utils.h"
 
-static const sourcemeta::core::JSON::String EXCLUDE_KEYWORD{"x-lint-exclude"};
+constexpr std::string_view EXCLUDE_KEYWORD{"x-lint-exclude"};
 
 template <typename Options, typename Iterator>
 static auto disable_lint_rules(sourcemeta::blaze::SchemaTransformer &bundle,
@@ -213,7 +213,7 @@ load_rules_from_options(sourcemeta::blaze::SchemaTransformer &bundle,
     sourcemeta::jsonschema::LOG_VERBOSE(options)
         << "Loading custom rule: " << rule_path.generic_string() << "\n";
     const auto configuration_path{
-        sourcemeta::jsonschema::find_configuration(rule_path)};
+        sourcemeta::jsonschema::find_configuration(options, rule_path)};
     const auto &configuration{sourcemeta::jsonschema::read_configuration(
         options, configuration_path, rule_path)};
     const auto dialect{
@@ -255,7 +255,7 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
   }
 
   for (const auto &input_path : input_paths) {
-    const auto configuration_path{find_configuration(input_path)};
+    const auto configuration_path{find_configuration(options, input_path)};
     if (!configuration_path.has_value()) {
       continue;
     }
@@ -386,7 +386,8 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
     const auto entries = for_each_json(options);
 
     for (const auto &entry : entries) {
-      const auto configuration_path{find_configuration(entry.resolution_base)};
+      const auto configuration_path{
+          find_configuration(options, entry.resolution_base)};
       const auto &configuration{read_configuration(options, configuration_path,
                                                    entry.resolution_base)};
       const auto dialect{default_dialect(options, configuration)};
@@ -411,7 +412,7 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
                   get_lint_callback(errors_array, entry, output_json, true,
                                     printed_progress),
                   dialect, sourcemeta::jsonschema::default_id(entry),
-                  EXCLUDE_KEYWORD);
+                  sourcemeta::core::JSON::String{EXCLUDE_KEYWORD});
               if (printed_progress) {
                 std::cerr << "\n";
               }
@@ -449,6 +450,23 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
               throw sourcemeta::core::FileError<
                   sourcemeta::blaze::CompilerInvalidRegexError>(
                   entry.resolution_base, error);
+            } catch (const sourcemeta::blaze::CompilerError &error) {
+              if (printed_progress) {
+                std::cerr << "\n";
+              }
+
+              const auto position{entry.positions.get(error.location())};
+              if (position.has_value()) {
+                throw PositionError<sourcemeta::core::FileError<
+                    sourcemeta::blaze::CompilerError>>(
+                    std::get<0>(position.value()),
+                    std::get<1>(position.value()), entry.resolution_base,
+                    error);
+              }
+
+              throw sourcemeta::core::FileError<
+                  sourcemeta::blaze::CompilerError>(entry.resolution_base,
+                                                    error);
             } catch (
                 const sourcemeta::blaze::CompilerReferenceTargetNotSchemaError
                     &error) {
@@ -581,7 +599,8 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
     }
   } else {
     for (const auto &entry : for_each_json(options)) {
-      const auto configuration_path{find_configuration(entry.resolution_base)};
+      const auto configuration_path{
+          find_configuration(options, entry.resolution_base)};
       const auto &configuration{read_configuration(options, configuration_path,
                                                    entry.resolution_base)};
       const auto dialect{default_dialect(options, configuration)};
@@ -599,19 +618,32 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
                   get_lint_callback(errors_array, entry, output_json, false,
                                     printed_progress),
                   dialect, sourcemeta::jsonschema::default_id(entry),
-                  EXCLUDE_KEYWORD);
+                  sourcemeta::core::JSON::String{EXCLUDE_KEYWORD});
               scores.emplace_back(subresult.second);
               if (subresult.first) {
                 return EXIT_SUCCESS;
-              } else {
-                // Return 2 for logical lint failures
-                return EXIT_EXPECTED_FAILURE;
               }
+
+              // Return 2 for logical lint failures
+              return EXIT_EXPECTED_FAILURE;
             } catch (
                 const sourcemeta::blaze::CompilerInvalidRegexError &error) {
               throw sourcemeta::core::FileError<
                   sourcemeta::blaze::CompilerInvalidRegexError>(
                   entry.resolution_base, error);
+            } catch (const sourcemeta::blaze::CompilerError &error) {
+              const auto position{entry.positions.get(error.location())};
+              if (position.has_value()) {
+                throw PositionError<sourcemeta::core::FileError<
+                    sourcemeta::blaze::CompilerError>>(
+                    std::get<0>(position.value()),
+                    std::get<1>(position.value()), entry.resolution_base,
+                    error);
+              }
+
+              throw sourcemeta::core::FileError<
+                  sourcemeta::blaze::CompilerError>(entry.resolution_base,
+                                                    error);
             } catch (
                 const sourcemeta::blaze::CompilerReferenceTargetNotSchemaError
                     &error) {

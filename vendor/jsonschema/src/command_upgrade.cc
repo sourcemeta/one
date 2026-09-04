@@ -30,13 +30,21 @@ auto parse_target_dialect(const std::string_view value)
     -> std::optional<sourcemeta::blaze::AlterSchemaMode> {
   if (value == "draft4") {
     return sourcemeta::blaze::AlterSchemaMode::UpgradeDraft4;
-  } else if (value == "draft6") {
+  }
+
+  if (value == "draft6") {
     return sourcemeta::blaze::AlterSchemaMode::UpgradeDraft6;
-  } else if (value == "draft7") {
+  }
+
+  if (value == "draft7") {
     return sourcemeta::blaze::AlterSchemaMode::UpgradeDraft7;
-  } else if (value == "2019-09") {
+  }
+
+  if (value == "2019-09") {
     return sourcemeta::blaze::AlterSchemaMode::Upgrade201909;
-  } else if (value == "2020-12") {
+  }
+
+  if (value == "2020-12") {
     return sourcemeta::blaze::AlterSchemaMode::Upgrade202012;
   }
 
@@ -46,55 +54,18 @@ auto parse_target_dialect(const std::string_view value)
       {"draft4", "draft6", "draft7", "2019-09", "2020-12"}};
 }
 
-} // namespace
-
-auto sourcemeta::jsonschema::upgrade(const sourcemeta::core::Options &options)
-    -> void {
-  if (options.positional().size() < 1) {
-    throw PositionalArgumentError{"This command expects a path to a schema",
-                                  "jsonschema upgrade path/to/schema.json"};
-  }
-
-  const auto target_value{options.contains("to") ? options.at("to").front()
-                                                 : std::string_view{"2020-12"}};
-  const auto target_dialect_mode{parse_target_dialect(target_value)};
-
-  const std::filesystem::path schema_path{options.positional().front()};
-  const bool schema_from_stdin = (schema_path == "-");
-
-  if (!schema_from_stdin && std::filesystem::is_directory(schema_path)) {
-    throw sourcemeta::core::IOIsADirectoryError{schema_path};
-  }
-
-  const auto schema_config_base{
-      schema_from_stdin ? std::filesystem::current_path() : schema_path};
-  const auto schema_display_path{schema_from_stdin ? stdin_path()
-                                                   : schema_path};
-
-  const auto configuration_path{find_configuration(schema_config_base)};
-  const auto &configuration{
-      read_configuration(options, configuration_path, schema_config_base)};
-  const auto dialect{default_dialect(options, configuration)};
-  auto parsed_schema{schema_from_stdin ? read_from_stdin()
-                                       : read_file(schema_path)};
-
-  if (!parsed_schema.document.is_object() &&
-      !parsed_schema.document.is_boolean()) {
-    throw NotSchemaError{schema_display_path};
-  }
-
-  auto &schema{parsed_schema.document};
-
-  const auto &custom_resolver{
-      resolver(options, options.contains("http"), dialect, configuration)};
-
-  sourcemeta::blaze::SchemaFrame frame{
-      sourcemeta::blaze::SchemaFrame::Mode::Locations};
+auto assert_upgradable(
+    const sourcemeta::core::JSON &schema,
+    const sourcemeta::blaze::SchemaResolver &resolver,
+    const std::string &dialect, const std::string &default_id,
+    const std::filesystem::path &schema_display_path,
+    const sourcemeta::core::PointerPositionTracker &positions) -> void {
+  std::optional<sourcemeta::blaze::SchemaFrame> frame;
 
   try {
-    frame.analyse(
-        schema, sourcemeta::blaze::schema_walker, custom_resolver, dialect,
-        sourcemeta::jsonschema::default_id(schema_path, schema_from_stdin));
+    frame.emplace(sourcemeta::blaze::SchemaFrame::Mode::Locations, schema,
+                  sourcemeta::blaze::schema_walker, resolver, dialect,
+                  default_id);
   } catch (const sourcemeta::blaze::SchemaKeywordError &error) {
     throw sourcemeta::core::FileError<sourcemeta::blaze::SchemaKeywordError>(
         schema_display_path, error);
@@ -102,9 +73,9 @@ auto sourcemeta::jsonschema::upgrade(const sourcemeta::core::Options &options)
     throw sourcemeta::core::FileError<sourcemeta::blaze::SchemaFrameError>(
         schema_display_path, error);
   } catch (const sourcemeta::blaze::SchemaAnchorCollisionError &error) {
-    const auto position{parsed_schema.positions.get(error.location())};
+    const auto position{positions.get(error.location())};
     if (position.has_value()) {
-      throw PositionError<sourcemeta::core::FileError<
+      throw sourcemeta::jsonschema::PositionError<sourcemeta::core::FileError<
           sourcemeta::blaze::SchemaAnchorCollisionError>>(
           std::get<0>(position.value()), std::get<1>(position.value()),
           schema_display_path, error);
@@ -136,62 +107,119 @@ auto sourcemeta::jsonschema::upgrade(const sourcemeta::core::Options &options)
         schema_display_path, error.what());
   }
 
-  for (const auto &entry : frame.locations()) {
-    switch (entry.second.base_dialect) {
-      case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2020_12:
-      case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2020_12_Hyper:
-      case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2019_09:
-      case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2019_09_Hyper:
-      case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_Draft_7:
-      case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_Draft_7_Hyper:
-      case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_Draft_6:
-      case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_Draft_6_Hyper:
-      case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_Draft_4:
-      case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_Draft_4_Hyper:
-      case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_Draft_3:
-      case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_Draft_3_Hyper:
-        continue;
-      default:
-        break;
-    }
+  frame.value().for_each_location(
+      [&schema_display_path, &positions](
+          const sourcemeta::blaze::SchemaReferenceType, const std::string_view,
+          const sourcemeta::blaze::SchemaFrame::Location &location) -> void {
+        switch (location.base_dialect) {
+          case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2020_12:
+          case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2020_12_Hyper:
+          case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2019_09:
+          case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2019_09_Hyper:
+          case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_Draft_7:
+          case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_Draft_7_Hyper:
+          case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_Draft_6:
+          case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_Draft_6_Hyper:
+          case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_Draft_4:
+          case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_Draft_4_Hyper:
+          case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_Draft_3:
+          case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_Draft_3_Hyper:
+            return;
+          default:
+            break;
+        }
 
-    const auto unsupported_location_pointer{
-        sourcemeta::core::to_pointer(entry.second.pointer)};
-    auto unsupported_dialect{std::string{entry.second.dialect}};
-    const auto unsupported_position{
-        parsed_schema.positions.get(unsupported_location_pointer)};
-    if (unsupported_position.has_value()) {
-      throw PositionError<UnsupportedDialectUpgradeError>{
-          std::get<0>(unsupported_position.value()),
-          std::get<1>(unsupported_position.value()), schema_display_path,
-          unsupported_location_pointer, std::move(unsupported_dialect)};
-    }
+        const auto unsupported_location_pointer{
+            sourcemeta::core::to_pointer(location.pointer)};
+        auto unsupported_dialect{std::string{location.dialect}};
+        const auto unsupported_position{
+            positions.get(unsupported_location_pointer)};
+        if (unsupported_position.has_value()) {
+          throw sourcemeta::jsonschema::PositionError<
+              sourcemeta::jsonschema::UnsupportedDialectUpgradeError>{
+              std::get<0>(unsupported_position.value()),
+              std::get<1>(unsupported_position.value()), schema_display_path,
+              unsupported_location_pointer, std::move(unsupported_dialect)};
+        }
 
-    throw UnsupportedDialectUpgradeError{schema_display_path,
-                                         unsupported_location_pointer,
-                                         std::move(unsupported_dialect)};
+        throw sourcemeta::jsonschema::UnsupportedDialectUpgradeError{
+            schema_display_path, unsupported_location_pointer,
+            std::move(unsupported_dialect)};
+      });
+
+  frame.value().for_each_location(
+      [&schema_display_path, &positions](
+          const sourcemeta::blaze::SchemaReferenceType, const std::string_view,
+          const sourcemeta::blaze::SchemaFrame::Location &location) -> void {
+        if (sourcemeta::blaze::schema_is_known(location.dialect)) {
+          return;
+        }
+
+        const auto custom_location_pointer{
+            sourcemeta::core::to_pointer(location.pointer)};
+        auto custom_dialect{std::string{location.dialect}};
+        const auto position{positions.get(custom_location_pointer)};
+        if (position.has_value()) {
+          throw sourcemeta::jsonschema::PositionError<
+              sourcemeta::jsonschema::CustomMetaschemaUpgradeError>{
+              std::get<0>(position.value()), std::get<1>(position.value()),
+              schema_display_path, custom_location_pointer,
+              std::move(custom_dialect)};
+        }
+
+        throw sourcemeta::jsonschema::CustomMetaschemaUpgradeError{
+            schema_display_path, custom_location_pointer,
+            std::move(custom_dialect)};
+      });
+}
+
+} // namespace
+
+auto sourcemeta::jsonschema::upgrade(const sourcemeta::core::Options &options)
+    -> void {
+  if (options.positional().empty()) {
+    throw PositionalArgumentError{"This command expects a path to a schema",
+                                  "jsonschema upgrade path/to/schema.json"};
   }
 
-  for (const auto &entry : frame.locations()) {
-    if (sourcemeta::blaze::schema_is_known(entry.second.dialect)) {
-      continue;
-    }
+  const auto target_value{options.contains("to") ? options.at("to").front()
+                                                 : std::string_view{"2020-12"}};
+  const auto target_dialect_mode{parse_target_dialect(target_value)};
 
-    const auto custom_location_pointer{
-        sourcemeta::core::to_pointer(entry.second.pointer)};
-    auto custom_dialect{std::string{entry.second.dialect}};
-    const auto position{parsed_schema.positions.get(custom_location_pointer)};
-    if (position.has_value()) {
-      throw PositionError<CustomMetaschemaUpgradeError>{
-          std::get<0>(position.value()), std::get<1>(position.value()),
-          schema_display_path, custom_location_pointer,
-          std::move(custom_dialect)};
-    }
+  const std::filesystem::path schema_path{options.positional().front()};
+  const bool schema_from_stdin = (schema_path == "-");
 
-    throw CustomMetaschemaUpgradeError{schema_display_path,
-                                       custom_location_pointer,
-                                       std::move(custom_dialect)};
+  if (!schema_from_stdin && std::filesystem::is_directory(schema_path)) {
+    throw sourcemeta::core::IOIsADirectoryError{schema_path};
   }
+
+  const auto schema_config_base{
+      schema_from_stdin ? std::filesystem::current_path() : schema_path};
+  const auto schema_display_path{schema_from_stdin ? stdin_path()
+                                                   : schema_path};
+
+  const auto configuration_path{
+      find_configuration(options, schema_config_base)};
+  const auto &configuration{
+      read_configuration(options, configuration_path, schema_config_base)};
+  const auto dialect{default_dialect(options, configuration)};
+  auto parsed_schema{schema_from_stdin ? read_from_stdin()
+                                       : read_file(schema_path)};
+
+  if (!parsed_schema.document.is_object() &&
+      !parsed_schema.document.is_boolean()) {
+    throw NotSchemaError{schema_display_path};
+  }
+
+  auto &schema{parsed_schema.document};
+
+  const auto &custom_resolver{
+      resolver(options, options.contains("http"), dialect, configuration)};
+
+  assert_upgradable(
+      schema, custom_resolver, dialect,
+      sourcemeta::jsonschema::default_id(schema_path, schema_from_stdin),
+      schema_display_path, parsed_schema.positions);
 
   if (target_dialect_mode.has_value()) {
     sourcemeta::blaze::SchemaTransformer transformer;

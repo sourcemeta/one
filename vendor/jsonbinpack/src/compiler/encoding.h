@@ -11,19 +11,20 @@ constexpr auto ENCODING_V1{"tag:sourcemeta.com,2024:jsonbinpack/encoding/v1"};
 inline auto make_resolver(const sourcemeta::blaze::SchemaResolver &fallback)
     -> auto {
   return [&fallback](std::string_view identifier)
-             -> std::optional<sourcemeta::core::JSON> {
+             -> sourcemeta::blaze::SchemaResolverResult {
     if (identifier == ENCODING_V1) {
-      return sourcemeta::core::parse_json(R"JSON({
+      static const auto SCHEMA{sourcemeta::core::parse_json(R"JSON({
         "$id": "tag:sourcemeta.com,2024:jsonbinpack/encoding/v1",
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "$vocabulary": {
           "https://json-schema.org/draft/2020-12/vocab/core": true,
           "tag:sourcemeta.com,2024:jsonbinpack/encoding/v1": true
         }
-      })JSON");
-    } else {
-      return fallback(identifier);
+      })JSON")};
+      return SCHEMA;
     }
+
+    return fallback(identifier);
   };
 }
 

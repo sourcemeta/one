@@ -47,6 +47,78 @@ inline auto IS_KNOWN_TYPE_FORM(const sourcemeta::core::JSON &type,
   });
 }
 
+// The schema that no instance can ever satisfy. Draft 3 and Draft 4 have no
+// boolean schemas, so each of them has to spell it out with the negation
+// keyword it offers, applied to the schema that every instance satisfies
+inline auto UNSATISFIABLE_SCHEMA(const SchemaVocabularies &vocabularies)
+    -> sourcemeta::core::JSON {
+  if (vocabularies.contains_any(
+          {SchemaVocabularies::Known::JSON_Schema_Draft_4,
+           SchemaVocabularies::Known::JSON_Schema_Draft_4_Hyper})) {
+    auto result{sourcemeta::core::JSON::make_object()};
+    result.assign("not", sourcemeta::core::JSON::make_object());
+    return result;
+  }
+
+  if (vocabularies.contains_any(
+          {SchemaVocabularies::Known::JSON_Schema_Draft_3,
+           SchemaVocabularies::Known::JSON_Schema_Draft_3_Hyper})) {
+    auto branches{sourcemeta::core::JSON::make_array()};
+    branches.push_back(sourcemeta::core::JSON::make_object());
+    auto result{sourcemeta::core::JSON::make_object()};
+    result.assign("disallow", std::move(branches));
+    return result;
+  }
+
+  // Draft 2 and earlier have no boolean schemas either, and their negation
+  // keyword takes type names rather than schemas, so the name to rule out is
+  // the wildcard that every instance answers to
+  if (vocabularies.contains_any(
+          {SchemaVocabularies::Known::JSON_Schema_Draft_0,
+           SchemaVocabularies::Known::JSON_Schema_Draft_0_Hyper,
+           SchemaVocabularies::Known::JSON_Schema_Draft_1,
+           SchemaVocabularies::Known::JSON_Schema_Draft_1_Hyper,
+           SchemaVocabularies::Known::JSON_Schema_Draft_2,
+           SchemaVocabularies::Known::JSON_Schema_Draft_2_Hyper})) {
+    auto types{sourcemeta::core::JSON::make_array()};
+    types.push_back(sourcemeta::core::JSON{"any"});
+    auto result{sourcemeta::core::JSON::make_object()};
+    result.assign("disallow", std::move(types));
+    return result;
+  }
+
+  return sourcemeta::core::JSON{false};
+}
+
+// Collapsing a schema to the unsatisfiable one throws away every keyword it
+// had, `$schema` included. A boolean cannot carry the dialect back, so the
+// caller is left to reset the frame, but an object both can and must. Rewrite
+// it in place rather than replacing it outright, so that the dialect the frame
+// still points to stays where it is
+inline auto INTO_UNSATISFIABLE(sourcemeta::core::JSON &schema,
+                               const sourcemeta::core::JSON &unsatisfiable)
+    -> void {
+  if (!unsatisfiable.is_object() || !schema.is_object()) {
+    schema.into(sourcemeta::core::JSON{unsatisfiable});
+    return;
+  }
+
+  std::vector<sourcemeta::core::JSON::String> superseded;
+  for (const auto &entry : schema.as_object()) {
+    if (entry.first != "$schema") {
+      superseded.push_back(entry.first);
+    }
+  }
+
+  for (const auto &keyword : superseded) {
+    schema.erase(keyword);
+  }
+
+  for (const auto &entry : unsatisfiable.as_object()) {
+    schema.assign(entry.first, entry.second);
+  }
+}
+
 template <typename TraversePredicate, typename MatchCallback>
 auto WALK_UP(const sourcemeta::core::JSON &root, const SchemaFrame &frame,
              const SchemaFrame::Location &location, const SchemaWalker &walker,
@@ -62,7 +134,7 @@ auto WALK_UP(const sourcemeta::core::JSON &root, const SchemaFrame &frame,
     const auto &parent_pointer{current_parent.value()};
     const auto relative_pointer{current_pointer.resolve_from(parent_pointer)};
     assert(!relative_pointer.empty() && relative_pointer.at(0).is_property());
-    const auto parent{frame.traverse(frame.uri(parent_pointer).value().get())};
+    const auto parent{frame.traverse(parent_pointer)};
     assert(parent.has_value());
     const auto &parent_vocabularies{
         frame.vocabularies(parent.value().get(), resolver)};

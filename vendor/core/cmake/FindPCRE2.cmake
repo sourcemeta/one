@@ -146,6 +146,7 @@ if(NOT PCRE2_FOUND)
     target_compile_options(pcre2 PRIVATE /sdl-)
     target_compile_options(pcre2 PRIVATE /wd4127)
     target_compile_options(pcre2 PRIVATE /wd4244)
+    target_compile_options(pcre2 PRIVATE /wd4267)
     target_compile_options(pcre2 PRIVATE /wd4389)
     target_compile_options(pcre2 PRIVATE /wd4701)
     target_compile_options(pcre2 PRIVATE /wd4702)
@@ -200,6 +201,7 @@ if(NOT PCRE2_FOUND)
         NAMELINK_COMPONENT sourcemeta_core_dev
       ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
         COMPONENT sourcemeta_core_dev)
+    sourcemeta_library_export_flatten(pcre2)
     install(EXPORT pcre2
       DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/pcre2"
       NAMESPACE PCRE2::
