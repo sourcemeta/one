@@ -722,7 +722,7 @@ GET /self/v1/api/schemas/health/{path}
 
 *This endpoint retrieves metadata about every URI associated with the JSON
 Schema located at the specified `{path}` parameter, including schema resources,
-subschemas, anchors, and more.*
+subschemas, and anchors.*
 
 ```
 GET /self/v1/api/schemas/locations/{path}

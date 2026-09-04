@@ -43,7 +43,7 @@
       ],
       "properties": {
         "type": {
-          "enum": [ "resource", "anchor", "pointer", "subschema" ]
+          "enum": [ "resource", "anchor", "subschema" ]
         },
         "base": {
           "x-format-assertion": true,
