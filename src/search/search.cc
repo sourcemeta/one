@@ -61,7 +61,7 @@ auto make_search(std::vector<SearchEntry> &&entries)
 
   // Compute total payload size
   std::size_t total_size{sizeof(SearchIndexHeader) +
-                         entry_count * sizeof(std::uint32_t)};
+                         (entry_count * sizeof(std::uint32_t))};
   for (const auto &entry : entries) {
     total_size += sizeof(SearchRecordHeader) + entry.path.size() +
                   entry.identifier.size() + entry.title.size() +
@@ -70,7 +70,7 @@ auto make_search(std::vector<SearchEntry> &&entries)
 
   std::vector<std::uint8_t> payload(total_size);
   const auto records_offset{static_cast<std::uint32_t>(
-      sizeof(SearchIndexHeader) + entry_count * sizeof(std::uint32_t))};
+      sizeof(SearchIndexHeader) + (entry_count * sizeof(std::uint32_t)))};
 
   // Write header
   SearchIndexHeader header{.entry_count = entry_count,
@@ -85,7 +85,7 @@ auto make_search(std::vector<SearchEntry> &&entries)
 
     // Write this record's offset into the table
     const auto record_offset{static_cast<std::uint32_t>(record_position)};
-    std::memcpy(offset_table + entry_index * sizeof(std::uint32_t),
+    std::memcpy(offset_table + (entry_index * sizeof(std::uint32_t)),
                 &record_offset, sizeof(std::uint32_t));
 
     // Write record header
@@ -145,8 +145,8 @@ static auto maximum_offset_table_entries(const std::size_t payload_size)
 auto search(const std::uint8_t *payload, const std::size_t payload_size,
             const std::string_view query, const std::size_t limit,
             const std::uint8_t scope) -> sourcemeta::core::JSON {
-  assert((scope &
-          ~(SearchScopePath | SearchScopeTitle | SearchScopeDescription)) == 0);
+  assert((scope & ~(SEARCH_SCOPE_PATH | SEARCH_SCOPE_TITLE |
+                    SEARCH_SCOPE_DESCRIPTION)) == 0);
   auto result{sourcemeta::core::JSON::make_array()};
   if (limit == 0 || payload == nullptr ||
       payload_size < sizeof(SearchIndexHeader)) {
@@ -211,15 +211,15 @@ auto search(const std::uint8_t *payload, const std::size_t payload_size,
 
     bool matched{false};
 
-    if (!matched && (scope & SearchScopePath) != 0) {
+    if (!matched && (scope & SEARCH_SCOPE_PATH) != 0) {
       matched = case_insensitive_contains(path, query);
     }
 
-    if (!matched && (scope & SearchScopeTitle) != 0) {
+    if (!matched && (scope & SEARCH_SCOPE_TITLE) != 0) {
       matched = case_insensitive_contains(title, query);
     }
 
-    if (!matched && (scope & SearchScopeDescription) != 0) {
+    if (!matched && (scope & SEARCH_SCOPE_DESCRIPTION) != 0) {
       matched = case_insensitive_contains(description, query);
     }
 

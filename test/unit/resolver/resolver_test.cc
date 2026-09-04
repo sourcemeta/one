@@ -7,13 +7,13 @@
 
 namespace {
 auto shared_configuration() -> const sourcemeta::one::Configuration & {
-  static const sourcemeta::one::Configuration configuration{
+  static const sourcemeta::one::Configuration CONFIGURATION{
       sourcemeta::one::Configuration::parse(
           sourcemeta::one::Configuration::read(CONFIGURATION_PATH,
                                                SELF_DIRECTORY),
           std::filesystem::path{CONFIGURATION_PATH},
           std::filesystem::path{CONFIGURATION_PATH}.parent_path())};
-  return configuration;
+  return CONFIGURATION;
 }
 } // namespace
 
@@ -142,11 +142,12 @@ TEST(case_insensitive_lookup) {
 
 TEST(example_official_2020_12_meta) {
   sourcemeta::one::Resolver resolver{shared_configuration().url};
-  EXPECT_TRUE(
-      resolver("https://json-schema.org/draft/2020-12/schema").has_value());
-  EXPECT_EQ(resolver("https://json-schema.org/draft/2020-12/schema"),
-            sourcemeta::blaze::schema_resolver(
-                "https://json-schema.org/draft/2020-12/schema"));
+  const auto resolved{resolver("https://json-schema.org/draft/2020-12/schema")};
+  EXPECT_TRUE(resolved.has_value());
+  const auto official{sourcemeta::blaze::schema_resolver(
+      "https://json-schema.org/draft/2020-12/schema")};
+  EXPECT_TRUE(official.has_value());
+  EXPECT_EQ(resolved.value(), official.value());
 }
 
 TEST(example_2020_12_with_id) {

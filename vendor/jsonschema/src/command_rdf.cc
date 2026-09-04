@@ -8,6 +8,7 @@
 #include <sourcemeta/core/jsonld.h>
 #include <sourcemeta/core/jsonpointer.h>
 
+#include <cassert>       // assert
 #include <filesystem>    // std::filesystem
 #include <iostream>      // std::cout, std::cerr
 #include <string>        // std::string
@@ -28,9 +29,9 @@ namespace {
 auto assert_annotations_support(
     const sourcemeta::blaze::SchemaFrame &frame,
     const std::filesystem::path &schema_resolution_base) -> void {
-  const auto &root_location{frame.locations().at(
-      {sourcemeta::blaze::SchemaReferenceType::Static, frame.root()})};
-  switch (root_location.base_dialect) {
+  const auto root_location{frame.root_location()};
+  assert(root_location.has_value());
+  switch (root_location.value().get().base_dialect) {
     case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2020_12:
     case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2020_12_Hyper:
     case sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2019_09:
@@ -38,7 +39,8 @@ auto assert_annotations_support(
       return;
     default:
       throw sourcemeta::jsonschema::UnsupportedDialectRdfError{
-          schema_resolution_base, std::string{root_location.dialect}};
+          schema_resolution_base,
+          std::string{root_location.value().get().dialect}};
   }
 }
 
@@ -77,7 +79,8 @@ auto sourcemeta::jsonschema::rdf(const sourcemeta::core::Options &options)
   const auto schema_resolution_base{
       schema_from_stdin ? stdin_path() : std::filesystem::path(schema_path)};
 
-  const auto configuration_path{find_configuration(schema_config_base)};
+  const auto configuration_path{
+      find_configuration(options, schema_config_base)};
   const auto &configuration{
       read_configuration(options, configuration_path, schema_config_base)};
   const auto dialect{default_dialect(options, configuration)};
@@ -102,11 +105,9 @@ auto sourcemeta::jsonschema::rdf(const sourcemeta::core::Options &options)
       bundle_for_evaluation(schema, custom_resolver, dialect, schema_default_id,
                             schema_resolution_base, parsed_schema.positions)};
 
-  sourcemeta::blaze::SchemaFrame frame{
-      sourcemeta::blaze::SchemaFrame::Mode::References};
-  frame_for_evaluation(frame, bundled, custom_resolver, dialect,
-                       schema_default_id, schema_resolution_base,
-                       parsed_schema.positions);
+  const auto frame{
+      frame_for_evaluation(bundled, custom_resolver, dialect, schema_default_id,
+                           schema_resolution_base, parsed_schema.positions)};
 
   assert_annotations_support(frame, schema_resolution_base);
 
@@ -160,7 +161,7 @@ auto sourcemeta::jsonschema::rdf(const sourcemeta::core::Options &options)
       throw PositionError<RdfResolutionError>{
           std::get<0>(position.value()),
           std::get<1>(position.value()),
-          std::move(error.message),
+          error.message,
           std::string{facet_name(error.facet)},
           std::move(error.instance_location),
           std::move(error.schema_location),
@@ -169,7 +170,7 @@ auto sourcemeta::jsonschema::rdf(const sourcemeta::core::Options &options)
           instance_from_stdin ? stdin_path() : instance_path};
     }
 
-    throw RdfResolutionError{std::move(error.message),
+    throw RdfResolutionError{error.message,
                              std::string{facet_name(error.facet)},
                              std::move(error.instance_location),
                              std::move(error.schema_location),

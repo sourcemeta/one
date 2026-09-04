@@ -89,7 +89,7 @@ public:
 
 private:
   using entry_list = std::list<std::pair<Key, value_handle>>;
-  using entry_iterator = typename entry_list::iterator;
+  using entry_iterator = entry_list::iterator;
 
   std::size_t capacity_;
   entry_list entries_;

@@ -14,7 +14,7 @@
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
-class ActionNotFound_v1 : public sourcemeta::one::RouterAction {
+class ActionNotFoundV1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
       "Return a 404 Not Found response"};
@@ -23,7 +23,7 @@ public:
   static constexpr bool IDEMPOTENT{true};
   static constexpr bool OPEN_WORLD{false};
 
-  ActionNotFound_v1(
+  ActionNotFoundV1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
@@ -48,10 +48,11 @@ public:
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
-           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
+           const sourcemeta::core::JSON &request_id,
+           const sourcemeta::core::JSON &,
            const sourcemeta::one::Authentication::Caller &)
       -> sourcemeta::core::JSON override {
-    return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
+    return sourcemeta::core::jsonrpc_make_error_method_not_found(request_id);
   }
 
 private:

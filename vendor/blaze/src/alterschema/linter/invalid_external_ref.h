@@ -70,8 +70,13 @@ public:
     }
 
     auto remote{resolver(reference_base)};
+    std::optional<sourcemeta::core::JSON> owned;
+    if (remote.has_value()) {
+      owned = std::move(remote).to_owned();
+    }
+
     const auto &[entry,
-                 _]{this->resolver_cache_.emplace(base_key, std::move(remote))};
+                 _]{this->resolver_cache_.emplace(base_key, std::move(owned))};
     if (!entry->second.has_value()) {
       return APPLIES_TO_KEYWORDS(KEYWORD);
     }
@@ -94,17 +99,30 @@ private:
       frame_cache_;
 
   [[nodiscard]] auto
-  is_fragment_invalid(const SchemaFrame::ReferencesEntry &reference_entry,
+  is_fragment_invalid(const SchemaFrame::Reference &reference_entry,
                       const std::optional<JSON> &remote,
                       const JSON::String &base_key, const SchemaWalker &walker,
                       const SchemaResolver &resolver,
                       const SchemaFrame::Location &location) const -> bool {
+    // A pointer fragment names a place of the document, and the document can
+    // answer for that on its own without paying to frame it
+    const auto fragment_pointer{sourcemeta::core::fragment_to_pointer(
+        sourcemeta::core::URI{reference_entry.destination})};
+    if (fragment_pointer.has_value() &&
+        sourcemeta::core::try_get(remote.value(), fragment_pointer.value()) !=
+            nullptr) {
+      return false;
+    }
+
+    // An anchor is not a place of the document, and the drafts that spell
+    // identifiers as `id` let one look just like a pointer, so a miss above
+    // still has to ask the frame. Only the anchors of the remote matter here,
+    // rather than every pointer of it
     auto frame_iterator{this->frame_cache_.find(base_key)};
     if (frame_iterator == this->frame_cache_.end()) {
-      auto remote_frame{
-          std::make_unique<SchemaFrame>(SchemaFrame::Mode::Locations)};
-      remote_frame->analyse(remote.value(), walker, resolver, location.dialect,
-                            base_key);
+      auto remote_frame{std::make_unique<SchemaFrame>(
+          SchemaFrame::Mode::Locations, remote.value(), walker, resolver,
+          location.dialect, base_key)};
       frame_iterator =
           this->frame_cache_.emplace(base_key, std::move(remote_frame)).first;
     }

@@ -291,35 +291,35 @@ TEST(a_session_places_its_caller_in_the_policy_that_established_it) {
 }
 
 TEST(save_writes_the_largest_table_a_configuration_can_declare) {
-  constexpr std::size_t groups{4};
-  constexpr auto per_group{COMBINABLE_CEILING};
-  constexpr auto total{groups * per_group};
+  constexpr std::size_t GROUPS{4};
+  constexpr auto PER_GROUP{COMBINABLE_CEILING};
+  constexpr auto TOTAL{GROUPS * PER_GROUP};
   std::vector<std::string> path_storage;
   std::vector<std::string> name_storage;
   std::vector<std::string> issuer_storage;
   std::vector<std::string> claims_storage;
-  path_storage.reserve(total);
-  name_storage.reserve(total);
-  issuer_storage.reserve(total);
-  claims_storage.reserve(total);
-  for (std::size_t index{0}; index < total; index += 1) {
+  path_storage.reserve(TOTAL);
+  name_storage.reserve(TOTAL);
+  issuer_storage.reserve(TOTAL);
+  claims_storage.reserve(TOTAL);
+  for (std::size_t index{0}; index < TOTAL; index += 1) {
     path_storage.push_back("/p" + std::to_string(index));
     name_storage.push_back("p" + std::to_string(index));
     // The first group answers to the tokens these tests mint, so that a caller
     // reaches into the table rather than only past it. The rest name issuers of
     // their own, which is what keeps the groups apart and the table at its
     // largest
-    issuer_storage.push_back(index < per_group
+    issuer_storage.push_back(index < PER_GROUP
                                  ? "acme"
                                  : "https://idp.test/" +
-                                       std::to_string(index / per_group));
+                                       std::to_string(index / PER_GROUP));
     claims_storage.push_back(
         R"JSON({ "groups": { "essential": true, "values": [ "g)JSON" +
         std::to_string(index) + R"JSON(" ] } })JSON");
   }
 
   std::vector<std::string_view> path_views;
-  path_views.reserve(total);
+  path_views.reserve(TOTAL);
   for (const auto &value : path_storage) {
     path_views.push_back(value);
   }
@@ -327,8 +327,8 @@ TEST(save_writes_the_largest_table_a_configuration_can_declare) {
   const std::array<sourcemeta::core::JWSAlgorithm, 1> algorithms{
       {sourcemeta::core::JWSAlgorithm::ES256}};
   std::vector<sourcemeta::one::Authentication::Policy> policies;
-  policies.reserve(total);
-  for (std::size_t index{0}; index < total; index += 1) {
+  policies.reserve(TOTAL);
+  for (std::size_t index{0}; index < TOTAL; index += 1) {
     policies.push_back(
         {.paths = std::span<const std::string_view>{&path_views[index], 1},
          .name = name_storage[index],

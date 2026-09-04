@@ -19,7 +19,7 @@
 #include <cstddef>   // std::size_t
 #include <exception> // std::exception_ptr, std::current_exception, std::rethrow_exception
 #include <iostream>    // std::cout
-#include <mutex>       // std::mutex, std::lock_guard
+#include <mutex>       // std::mutex, std::scoped_lock
 #include <optional>    // std::optional
 #include <sstream>     // std::ostringstream
 #include <string>      // std::string
@@ -133,6 +133,11 @@ auto parse_test_suite(const sourcemeta::jsonschema::InputJSON &entry,
     throw sourcemeta::core::FileError<
         sourcemeta::blaze::CompilerReferenceTargetNotSchemaError>{
         entry.resolution_base, error};
+  } catch (const sourcemeta::blaze::CompilerError &error) {
+    // No position, as what compiles here is the schema the document targets
+    // while the positions on hand describe the test document itself
+    throw sourcemeta::core::FileError<sourcemeta::blaze::CompilerError>{
+        entry.resolution_base, error};
   } catch (
       const sourcemeta::blaze::SchemaRelativeMetaschemaResolutionError &error) {
     throw sourcemeta::core::FileError<
@@ -152,14 +157,8 @@ auto parse_test_suite(const sourcemeta::jsonschema::InputJSON &entry,
     throw sourcemeta::core::FileError<
         sourcemeta::blaze::SchemaUnknownDialectError>{entry.resolution_base};
   } catch (const sourcemeta::blaze::SchemaAnchorCollisionError &error) {
-    const auto position{entry.positions.get(error.location())};
-    if (position.has_value()) {
-      throw sourcemeta::jsonschema::PositionError<sourcemeta::core::FileError<
-          sourcemeta::blaze::SchemaAnchorCollisionError>>(
-          std::get<0>(position.value()), std::get<1>(position.value()),
-          entry.resolution_base, error);
-    }
-
+    // No position, as what compiles here is the schema the document targets
+    // while the positions on hand describe the test document itself
     throw sourcemeta::core::FileError<
         sourcemeta::blaze::SchemaAnchorCollisionError>{entry.resolution_base,
                                                        error};
@@ -170,8 +169,8 @@ auto warm_caches(const sourcemeta::core::Options &options,
                  const std::vector<sourcemeta::jsonschema::InputJSON> &entries)
     -> void {
   for (const auto &entry : entries) {
-    const auto configuration_path{
-        sourcemeta::jsonschema::find_configuration(entry.resolution_base)};
+    const auto configuration_path{sourcemeta::jsonschema::find_configuration(
+        options, entry.resolution_base)};
     const auto &configuration{sourcemeta::jsonschema::read_configuration(
         options, configuration_path)};
     const auto dialect{
@@ -196,8 +195,8 @@ auto run_suite_as_text(const sourcemeta::core::Options &options,
                        const sourcemeta::jsonschema::InputJSON &entry,
                        const bool verbose, std::ostream &stream)
     -> sourcemeta::blaze::TestSuite::Result {
-  const auto configuration_path{
-      sourcemeta::jsonschema::find_configuration(entry.resolution_base)};
+  const auto configuration_path{sourcemeta::jsonschema::find_configuration(
+      options, entry.resolution_base)};
   const auto &configuration{
       sourcemeta::jsonschema::read_configuration(options, configuration_path)};
   const auto dialect{
@@ -223,7 +222,7 @@ auto run_suite_as_text(const sourcemeta::core::Options &options,
           stream << "\n";
         }
 
-        const auto entry_indent{multi_target ? "    " : "  "};
+        const auto *const entry_indent{multi_target ? "    " : "  "};
 
         const auto &description{test_case.description.empty()
                                     ? "<no description>"
@@ -326,7 +325,7 @@ auto report_as_text(const sourcemeta::core::Options &options,
           const auto suite_result{
               run_suite_as_text(options, entry, verbose, buffer)};
 
-          const std::lock_guard<std::mutex> lock{output_mutex};
+          const std::scoped_lock<std::mutex> lock{output_mutex};
           std::cout << buffer.str();
 
           if (suite_result.passed != suite_result.total) {
@@ -337,7 +336,7 @@ auto report_as_text(const sourcemeta::core::Options &options,
             empty_test_suite = true;
           }
         } catch (...) {
-          const std::lock_guard<std::mutex> lock{output_mutex};
+          const std::scoped_lock<std::mutex> lock{output_mutex};
           if (!first_error) {
             first_error = std::current_exception();
             first_error_path = entry.first;
@@ -393,8 +392,8 @@ struct CtrfSuiteReport {
 auto run_suite_as_ctrf(const sourcemeta::core::Options &options,
                        const sourcemeta::jsonschema::InputJSON &entry,
                        CtrfSuiteReport &report) -> void {
-  const auto configuration_path{
-      sourcemeta::jsonschema::find_configuration(entry.resolution_base)};
+  const auto configuration_path{sourcemeta::jsonschema::find_configuration(
+      options, entry.resolution_base)};
   const auto &configuration{
       sourcemeta::jsonschema::read_configuration(options, configuration_path)};
   const auto dialect{
@@ -510,7 +509,7 @@ auto report_as_ctrf(const sourcemeta::core::Options &options,
               options, entry,
               reports[static_cast<std::size_t>(&entry - entries.data())]);
         } catch (...) {
-          const std::lock_guard<std::mutex> lock{error_mutex};
+          const std::scoped_lock<std::mutex> lock{error_mutex};
           if (!first_error) {
             first_error = std::current_exception();
             skip_remaining.store(true);

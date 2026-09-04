@@ -16,7 +16,7 @@
 #include <string_view> // std::string_view
 #include <utility>     // std::move
 
-class ActionServeSchemaArtifact_v1 : public sourcemeta::one::RouterAction {
+class ActionServeSchemaArtifactV1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
       "Look up a precomputed artifact about a specific schema by its "
@@ -26,7 +26,7 @@ public:
   static constexpr bool IDEMPOTENT{true};
   static constexpr bool OPEN_WORLD{false};
 
-  ActionServeSchemaArtifact_v1(
+  ActionServeSchemaArtifactV1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
@@ -126,7 +126,7 @@ public:
   }
 
 protected:
-  ActionServeSchemaArtifact_v1(
+  ActionServeSchemaArtifactV1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,

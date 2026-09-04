@@ -24,7 +24,7 @@
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
-class ActionMetrics_v1 : public sourcemeta::one::RouterAction {
+class ActionMetricsV1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
       "Report instance telemetry in the Prometheus exposition format"};
@@ -41,7 +41,7 @@ public:
       BOUNDARIES{{"0.0001", "0.00025", "0.0005", "0.001", "0.0025", "0.005",
                   "0.01", "0.05", "0.25", "1.0"}};
 
-  ActionMetrics_v1(
+  ActionMetricsV1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
@@ -90,10 +90,11 @@ public:
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
-           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
+           const sourcemeta::core::JSON &request_id,
+           const sourcemeta::core::JSON &,
            const sourcemeta::one::Authentication::Caller &)
       -> sourcemeta::core::JSON override {
-    return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
+    return sourcemeta::core::jsonrpc_make_error_method_not_found(request_id);
   }
 
 private:

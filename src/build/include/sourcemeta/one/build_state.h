@@ -195,15 +195,15 @@ public:
             std::string_view sentinel) -> void;
   auto save(const std::filesystem::path &path) const -> void;
 
-  [[nodiscard]] auto empty() const -> bool { return this->entry_count == 0; }
+  [[nodiscard]] auto empty() const -> bool { return this->entry_count_ == 0; }
 
   // Whether the state on disk was built from the same inputs this build is
   // applying, which is what makes anything derived from them reusable rather
   // than merely present
   [[nodiscard]] auto built_from_these_inputs() const -> bool {
-    return this->inputs_match;
+    return this->inputs_match_;
   }
-  [[nodiscard]] auto size() const -> std::size_t { return this->entry_count; }
+  [[nodiscard]] auto size() const -> std::size_t { return this->entry_count_; }
 
   [[nodiscard]] auto contains(std::string_view key) const -> bool;
   [[nodiscard]] auto entry(std::string_view key) const -> const Entry *;
@@ -274,58 +274,58 @@ private:
   auto parse_slot_resolver_entry(const std::uint8_t *slot) const
       -> const ResolverEntry &;
 
-  std::unique_ptr<sourcemeta::core::FileView> view;
-  const std::uint8_t *view_data{nullptr};
+  std::unique_ptr<sourcemeta::core::FileView> view_;
+  const std::uint8_t *view_data_{nullptr};
 
-  std::uint32_t table_capacity{0};
-  const std::uint8_t *table_slots{nullptr};
-  const std::uint8_t *string_pool{nullptr};
+  std::uint32_t table_capacity_{0};
+  const std::uint8_t *table_slots_{nullptr};
+  const std::uint8_t *string_pool_{nullptr};
 
   std::unordered_map<std::string, Entry, TransparentHash, TransparentEqual>
-      overlay;
-  std::unordered_set<std::string, TransparentHash, TransparentEqual> deleted;
+      overlay_;
+  std::unordered_set<std::string, TransparentHash, TransparentEqual> deleted_;
   mutable std::unordered_map<std::string, Entry, TransparentHash,
                              TransparentEqual>
-      lazy_cache;
+      lazy_cache_;
 
   std::unordered_map<std::string, ResolverEntry, TransparentHash,
                      TransparentEqual>
-      resolver_overlay;
+      resolver_overlay_;
   mutable std::unordered_map<std::string, ResolverEntry, TransparentHash,
                              TransparentEqual>
-      resolver_lazy_cache;
+      resolver_lazy_cache_;
 
   mutable std::mutex mutex_;
-  std::filesystem::path loaded_path;
-  std::size_t entry_count{0};
-  std::size_t resolver_entry_count{0};
-  bool dirty{false};
-  mutable bool keys_stale{true};
-  mutable std::vector<std::string_view> cached_keys;
-  mutable bool leaf_index_stale{true};
-  mutable std::string leaf_index_output;
+  std::filesystem::path loaded_path_;
+  std::size_t entry_count_{0};
+  std::size_t resolver_entry_count_{0};
+  bool dirty_{false};
+  mutable bool keys_stale_{true};
+  mutable std::vector<std::string_view> cached_keys_;
+  mutable bool leaf_index_stale_{true};
+  mutable std::string leaf_index_output_;
   mutable std::unordered_map<std::string, LeafStateEntry, TransparentHash,
                              TransparentEqual>
-      leaf_index_cache;
-  const std::uint8_t *persisted_leaf_table{nullptr};
-  std::uint32_t persisted_leaf_count{0};
+      leaf_index_cache_;
+  const std::uint8_t *persisted_leaf_table_{nullptr};
+  std::uint32_t persisted_leaf_count_{0};
 
-  std::span<const LeafRule> leaf_rules{};
+  std::span<const LeafRule> leaf_rules_{};
   // Where the trees live and which of them carry a view, so that a leaf is
   // identified the same way whichever tree an artifact of it sits in
-  std::span<const DirectoryRule> directories{};
-  std::uint32_t rules_fingerprint{0};
+  std::span<const DirectoryRule> directories_{};
+  std::uint32_t rules_fingerprint_{0};
   // The configuration and version the outputs beside this state were built
   // from. The state is written once a build has finished, so it is the only
   // honest record of what was actually applied. Both belong here because both
   // are recorded in files written before the outputs derived from them, so
   // neither file can vouch for itself
-  InputsFingerprint inputs_fingerprint{};
+  InputsFingerprint inputs_fingerprint_{};
   // Whether the state on disk was built from the same inputs. A run that died
   // partway leaves outputs derived from inputs it never finished applying,
   // while its state still describes the ones before
-  bool inputs_match{false};
-  std::string sentinel_separator{};
+  bool inputs_match_{false};
+  std::string sentinel_separator_{};
 };
 
 } // namespace sourcemeta::one

@@ -168,26 +168,27 @@ TEST(filesystem_path_key) {
 }
 
 TEST(concurrent_hits_on_prewarmed_cache) {
-  constexpr std::size_t capacity{32};
-  constexpr std::size_t thread_count{8};
-  constexpr std::size_t iterations{10000};
+  constexpr std::size_t CAPACITY{32};
+  constexpr std::size_t THREAD_COUNT{8};
+  constexpr std::size_t ITERATIONS{10000};
 
-  sourcemeta::one::RouterLRU<int, int> cache{capacity};
-  for (int key = 0; key < static_cast<int>(capacity); ++key) {
+  sourcemeta::one::RouterLRU<int, int> cache{CAPACITY};
+  for (std::size_t index = 0; index < CAPACITY; ++index) {
+    const auto key{static_cast<int>(index)};
     [[maybe_unused]] const auto prewarmed{
         cache.get_or_compute(key, [key] { return key * 100; })};
   }
 
-  std::latch start_gate{static_cast<std::ptrdiff_t>(thread_count)};
+  std::latch start_gate{static_cast<std::ptrdiff_t>(THREAD_COUNT)};
   std::atomic<bool> error{false};
   std::vector<std::thread> threads;
-  threads.reserve(thread_count);
-  for (std::size_t thread_index = 0; thread_index < thread_count;
+  threads.reserve(THREAD_COUNT);
+  for (std::size_t thread_index = 0; thread_index < THREAD_COUNT;
        ++thread_index) {
     threads.emplace_back([&cache, &error, &start_gate] {
       start_gate.arrive_and_wait();
-      for (std::size_t iteration = 0; iteration < iterations; ++iteration) {
-        const int key{static_cast<int>(iteration % capacity)};
+      for (std::size_t iteration = 0; iteration < ITERATIONS; ++iteration) {
+        const int key{static_cast<int>(iteration % CAPACITY)};
         const auto handle{cache.try_get(key)};
         if (!handle || *handle != key * 100) {
           error.store(true, std::memory_order_relaxed);
@@ -203,16 +204,16 @@ TEST(concurrent_hits_on_prewarmed_cache) {
 }
 
 TEST(concurrent_misses_for_same_key_converge) {
-  constexpr std::size_t thread_count{8};
+  constexpr std::size_t THREAD_COUNT{8};
   sourcemeta::one::RouterLRU<int, int> cache{8};
 
-  std::latch start_gate{static_cast<std::ptrdiff_t>(thread_count)};
+  std::latch start_gate{static_cast<std::ptrdiff_t>(THREAD_COUNT)};
   std::atomic<int> factory_calls{0};
-  std::vector<std::shared_ptr<const int>> results(thread_count);
+  std::vector<std::shared_ptr<const int>> results(THREAD_COUNT);
 
   std::vector<std::thread> threads;
-  threads.reserve(thread_count);
-  for (std::size_t thread_index = 0; thread_index < thread_count;
+  threads.reserve(THREAD_COUNT);
+  for (std::size_t thread_index = 0; thread_index < THREAD_COUNT;
        ++thread_index) {
     threads.emplace_back(
         [&cache, &factory_calls, &results, &start_gate, thread_index] {
@@ -247,24 +248,24 @@ TEST(concurrent_misses_for_same_key_converge) {
 }
 
 TEST(concurrent_mixed_traffic_bounded) {
-  constexpr std::size_t capacity{16};
-  constexpr int key_range{64};
-  constexpr std::size_t thread_count{16};
-  constexpr std::size_t iterations{5000};
+  constexpr std::size_t CAPACITY{16};
+  constexpr std::size_t KEY_RANGE{64};
+  constexpr std::size_t THREAD_COUNT{16};
+  constexpr std::size_t ITERATIONS{5000};
 
-  sourcemeta::one::RouterLRU<int, int> cache{capacity};
+  sourcemeta::one::RouterLRU<int, int> cache{CAPACITY};
 
-  std::latch start_gate{static_cast<std::ptrdiff_t>(thread_count)};
+  std::latch start_gate{static_cast<std::ptrdiff_t>(THREAD_COUNT)};
   std::atomic<bool> error{false};
   std::vector<std::thread> threads;
-  threads.reserve(thread_count);
-  for (std::size_t thread_index = 0; thread_index < thread_count;
+  threads.reserve(THREAD_COUNT);
+  for (std::size_t thread_index = 0; thread_index < THREAD_COUNT;
        ++thread_index) {
     threads.emplace_back([&cache, &error, &start_gate, thread_index] {
       start_gate.arrive_and_wait();
-      for (std::size_t iteration = 0; iteration < iterations; ++iteration) {
+      for (std::size_t iteration = 0; iteration < ITERATIONS; ++iteration) {
         const int key{
-            static_cast<int>((thread_index * 31 + iteration) % key_range)};
+            static_cast<int>(((thread_index * 31) + iteration) % KEY_RANGE)};
         const auto handle{cache.get_or_compute(key, [key] { return key * 7; })};
         if (!handle || *handle != key * 7) {
           error.store(true, std::memory_order_relaxed);
@@ -277,5 +278,5 @@ TEST(concurrent_mixed_traffic_bounded) {
     thread.join();
   }
   EXPECT_FALSE(error.load());
-  EXPECT_LE(cache.size(), capacity);
+  EXPECT_LE(cache.size(), CAPACITY);
 }

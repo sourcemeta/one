@@ -6,6 +6,9 @@
 // The names a table serves, which is what the naming rule below decides. What
 // each name stands for is read from what its view reaches rather than from the
 // set behind it, since that set is the artifact's own business
+// These read as the vocabulary the cases below are written in, so they keep
+// their casing rather than following the C++ naming convention
+// NOLINTBEGIN(readability-identifier-naming)
 static auto VIEW_NAMES(const sourcemeta::one::Authentication::Table &table)
     -> std::vector<std::string_view> {
   std::vector<std::string_view> result;
@@ -15,6 +18,7 @@ static auto VIEW_NAMES(const sourcemeta::one::Authentication::Table &table)
 
   return result;
 }
+// NOLINTEND(readability-identifier-naming)
 
 TEST(an_instance_that_read_no_artifact_shows_nothing) {
   const sourcemeta::one::Authentication authentication{

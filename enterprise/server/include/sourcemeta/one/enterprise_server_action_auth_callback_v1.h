@@ -30,7 +30,7 @@
 #include <utility>     // std::move
 #include <vector>      // std::vector
 
-class ActionAuthCallback_v1 : public sourcemeta::one::RouterAction {
+class ActionAuthCallbackV1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
       "Complete an interactive login by exchanging the provider's "
@@ -57,7 +57,7 @@ public:
   // serialised cookie is kept under it with room to spare
   static constexpr std::size_t MAXIMUM_COOKIE_LENGTH{4000};
 
-  ActionAuthCallback_v1(
+  ActionAuthCallbackV1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
@@ -127,7 +127,7 @@ public:
          .issuer = request.query("iss")},
         {.cookies = cookies})};
     for (const auto &message : outcome.log) {
-      sourcemeta::one::HTTP_LOG(message, matches.front());
+      sourcemeta::one::http_log(message, matches.front());
     }
 
     using Result = sourcemeta::one::Authentication::Outcome::Result;
@@ -181,10 +181,11 @@ public:
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
-           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
+           const sourcemeta::core::JSON &request_id,
+           const sourcemeta::core::JSON &,
            const sourcemeta::one::Authentication::Caller &)
       -> sourcemeta::core::JSON override {
-    return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
+    return sourcemeta::core::jsonrpc_make_error_method_not_found(request_id);
   }
 
 private:

@@ -6,7 +6,7 @@
 #include <filesystem>  // std::filesystem
 #include <string_view> // std::string_view
 
-class ActionGetSchemaMetadata_v1 : public ActionServeExplorerArtifact_v1 {
+class ActionGetSchemaMetadataV1 : public ActionServeExplorerArtifactV1 {
 public:
   static constexpr std::string_view DESCRIPTION{
       "Return navigation metadata for a schema in the catalog, including "
@@ -17,13 +17,13 @@ public:
   static constexpr bool IDEMPOTENT{true};
   static constexpr bool OPEN_WORLD{false};
 
-  ActionGetSchemaMetadata_v1(
+  ActionGetSchemaMetadataV1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
       sourcemeta::one::Router &dispatcher)
-      : ActionServeExplorerArtifact_v1{base, router, identifier, "schema",
-                                       dispatcher} {}
+      : ActionServeExplorerArtifactV1{base, router, identifier, "schema",
+                                      dispatcher} {}
 };
 
 #endif

@@ -28,7 +28,7 @@
 #include <utility>     // std::move
 #include <vector>      // std::vector
 
-class ActionAuthLogin_v1 : public sourcemeta::one::RouterAction {
+class ActionAuthLoginV1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
       "Start an interactive login by redirecting the browser to the identity "
@@ -42,7 +42,7 @@ public:
   // transaction expires
   static constexpr std::chrono::seconds TRANSACTION_LIFETIME{600};
 
-  ActionAuthLogin_v1(
+  ActionAuthLoginV1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
@@ -128,7 +128,7 @@ public:
         matches.front(), this->server_uri(), redirect_uri,
         !request.query("silent").empty(), return_to)};
     for (const auto &message : outcome.log) {
-      sourcemeta::one::HTTP_LOG(message, matches.front());
+      sourcemeta::one::http_log(message, matches.front());
     }
 
     if (outcome.result ==
@@ -169,10 +169,11 @@ public:
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
-           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
+           const sourcemeta::core::JSON &request_id,
+           const sourcemeta::core::JSON &,
            const sourcemeta::one::Authentication::Caller &)
       -> sourcemeta::core::JSON override {
-    return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
+    return sourcemeta::core::jsonrpc_make_error_method_not_found(request_id);
   }
 
 private:

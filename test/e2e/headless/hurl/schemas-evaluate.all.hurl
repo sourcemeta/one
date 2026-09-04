@@ -238,8 +238,7 @@ jsonpath "$.annotations" count == 1
 jsonpath "$.annotations[0].absoluteKeywordLocation" == "{{base}}/test/schemas/annotation#/title"
 jsonpath "$.annotations[0].instanceLocation" == ""
 jsonpath "$.annotations[0].keywordLocation" == "/title"
-jsonpath "$.annotations[0].annotation" count == 1
-jsonpath "$.annotations[0].annotation[0]" == "Annotation value"
+jsonpath "$.annotations[0].annotation" == "Annotation value"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

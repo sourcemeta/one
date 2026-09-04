@@ -6,7 +6,7 @@
 #include <filesystem>  // std::filesystem
 #include <string_view> // std::string_view
 
-class ActionGetSchemaLocations_v1 : public ActionServeSchemaArtifact_v1 {
+class ActionGetSchemaLocationsV1 : public ActionServeSchemaArtifactV1 {
 public:
   static constexpr std::string_view DESCRIPTION{
       "Return every URI exposed by a schema, including subschemas and "
@@ -18,13 +18,13 @@ public:
   static constexpr bool IDEMPOTENT{true};
   static constexpr bool OPEN_WORLD{false};
 
-  ActionGetSchemaLocations_v1(
+  ActionGetSchemaLocationsV1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
       sourcemeta::one::Router &dispatcher)
-      : ActionServeSchemaArtifact_v1{base, router, identifier, "locations",
-                                     dispatcher} {}
+      : ActionServeSchemaArtifactV1{base, router, identifier, "locations",
+                                    dispatcher} {}
 };
 
 #endif

@@ -10,7 +10,7 @@
 
 namespace sourcemeta::one {
 
-auto GENERATE_WEB_NOT_FOUND::handler(
+auto GenerateWebNotFound::handler(
     const sourcemeta::one::BuildState &,
     const sourcemeta::one::BuildPlan::Action &action,
     const sourcemeta::one::BuildDynamicCallback &, sourcemeta::one::Resolver &,

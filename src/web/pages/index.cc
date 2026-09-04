@@ -30,7 +30,7 @@ void make_hero(sourcemeta::core::HTMLWriter &writer,
 
 namespace sourcemeta::one {
 
-auto GENERATE_WEB_INDEX::handler(
+auto GenerateWebIndex::handler(
     const sourcemeta::one::BuildState &,
     const sourcemeta::one::BuildPlan::Action &action,
     const sourcemeta::one::BuildDynamicCallback &, sourcemeta::one::Resolver &,
@@ -46,14 +46,15 @@ auto GENERATE_WEB_INDEX::handler(
   const auto &description{configuration.html->description};
   sourcemeta::core::HTMLWriter writer;
   html::make_page(writer, configuration, action.view, canonical, title,
-                  description, [&](sourcemeta::core::HTMLWriter &w) -> void {
-                    make_hero(w, configuration);
+                  description, [&](sourcemeta::core::HTMLWriter &body) -> void {
+                    make_hero(body, configuration);
                     if (directory.at("private").to_boolean()) {
-                      w.div().attribute("class", "container-fluid px-4 pt-4");
-                      html::make_private_badge(w);
-                      w.close();
+                      body.div().attribute("class",
+                                           "container-fluid px-4 pt-4");
+                      html::make_private_badge(body);
+                      body.close();
                     }
-                    html::make_file_manager(w, directory);
+                    html::make_file_manager(body, directory);
                   });
 
   const auto timestamp_end{std::chrono::steady_clock::now()};

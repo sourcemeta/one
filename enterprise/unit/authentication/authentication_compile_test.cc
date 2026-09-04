@@ -131,15 +131,15 @@ TEST(save_rejects_more_policies_than_a_set_can_name) {
   std::vector<std::vector<std::string_view>> keys;
   std::vector<std::string> names;
   // One past what a 64 bit mask has room to name
-  constexpr std::size_t total{65};
-  for (std::size_t index{0}; index < total; index += 1) {
+  constexpr std::size_t TOTAL{65};
+  for (std::size_t index{0}; index < TOTAL; index += 1) {
     names.push_back("policy-" + std::to_string(index));
     paths.push_back({"/scope"});
     keys.push_back({"ONE_TEST_KEY_CEILING"});
   }
 
   std::vector<sourcemeta::one::Authentication::Policy> policies;
-  for (std::size_t index{0}; index < total; index += 1) {
+  for (std::size_t index{0}; index < TOTAL; index += 1) {
     policies.push_back(
         {.paths = paths[index],
          .name = names[index],
@@ -153,7 +153,7 @@ TEST(save_rejects_more_policies_than_a_set_can_name) {
     FAIL();
   } catch (const sourcemeta::one::AuthenticationTooManyPoliciesError &error) {
     EXPECT_STREQ(error.what(), "Too many authentication policies");
-    EXPECT_EQ(error.count(), total);
+    EXPECT_EQ(error.count(), TOTAL);
   }
 }
 

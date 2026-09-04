@@ -6,7 +6,7 @@
 #include <filesystem>  // std::filesystem
 #include <string_view> // std::string_view
 
-class ActionGetSchemaDependencies_v1 : public ActionDependencyTree_v1 {
+class ActionGetSchemaDependenciesV1 : public ActionDependencyTreeV1 {
 public:
   static constexpr std::string_view DESCRIPTION{
       "List the schemas this schema directly or transitively references, "
@@ -16,13 +16,13 @@ public:
   static constexpr bool IDEMPOTENT{true};
   static constexpr bool OPEN_WORLD{false};
 
-  ActionGetSchemaDependencies_v1(
+  ActionGetSchemaDependenciesV1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
       sourcemeta::one::Router &dispatcher)
-      : ActionDependencyTree_v1{base,           router,        identifier,
-                                "dependencies", Tree::Schemas, dispatcher} {}
+      : ActionDependencyTreeV1{base,           router,        identifier,
+                               "dependencies", Tree::Schemas, dispatcher} {}
 };
 
 #endif

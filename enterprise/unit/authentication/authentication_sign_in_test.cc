@@ -7,6 +7,9 @@
 // case says the provider asserted about the person. A login that does not get
 // as far as a redirect is returned as it is, since that is the answer a case
 // asking about one wants
+// These read as the vocabulary the cases below are written in, so they keep
+// their casing rather than following the C++ naming convention
+// NOLINTBEGIN(readability-identifier-naming)
 static auto SIGN_IN(const sourcemeta::one::Authentication &authentication,
                     const TestProvider &provider, const std::string_view policy,
                     const std::string_view client_id,
@@ -42,6 +45,7 @@ static auto SIGN_IN(const sourcemeta::one::Authentication &authentication,
       {.state = QUERY_OF(started.location, "state"), .code = "a-code"},
       {.cookies = presented});
 }
+// NOLINTEND(readability-identifier-naming)
 
 // A policy naming no rule admits whoever its provider vouched for, so signing
 // in is the whole of it
@@ -761,6 +765,9 @@ TEST(a_token_larger_than_a_session_holds_signs_in_without_it) {
 // target rather than about the login carrying it, and a login that ended
 // anywhere but a redirect leaves the same empty location a refused target
 // does, so what these cases are not about is asserted here, once
+// These read as the vocabulary the cases below are written in, so they keep
+// their casing rather than following the C++ naming convention
+// NOLINTBEGIN(readability-identifier-naming)
 static auto RETURNED_TO(const sourcemeta::one::Authentication &authentication,
                         const TestProvider &provider,
                         const std::string_view return_to) -> std::string {
@@ -770,6 +777,7 @@ static auto RETURNED_TO(const sourcemeta::one::Authentication &authentication,
             sourcemeta::one::Authentication::Outcome::Result::Redirect);
   return outcome.location;
 }
+// NOLINTEND(readability-identifier-naming)
 
 // Where a browser lands once a login completes is chosen by whoever asked for
 // the login, so a target naming another origin would make one an open

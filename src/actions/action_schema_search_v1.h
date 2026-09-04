@@ -25,7 +25,7 @@
 #include <unordered_map> // std::unordered_map
 #include <utility>       // std::move
 
-class ActionSchemaSearch_v1 : public sourcemeta::one::RouterAction {
+class ActionSchemaSearchV1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
       "Search for schemas by query term"};
@@ -34,7 +34,7 @@ public:
   static constexpr bool IDEMPOTENT{true};
   static constexpr bool OPEN_WORLD{false};
 
-  ActionSchemaSearch_v1(
+  ActionSchemaSearchV1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
@@ -154,9 +154,9 @@ public:
       limit = parsed_limit;
     }
 
-    std::uint8_t scope{sourcemeta::one::SearchScopePath |
-                       sourcemeta::one::SearchScopeTitle |
-                       sourcemeta::one::SearchScopeDescription};
+    std::uint8_t scope{sourcemeta::one::SEARCH_SCOPE_PATH |
+                       sourcemeta::one::SEARCH_SCOPE_TITLE |
+                       sourcemeta::one::SEARCH_SCOPE_DESCRIPTION};
     const auto scope_param{request.query("scope")};
     if (!scope_param.empty()) {
       scope = 0;
@@ -169,11 +169,11 @@ public:
         if (token.empty()) {
           // Skip empty tokens from trailing commas
         } else if (token == "path") {
-          scope |= sourcemeta::one::SearchScopePath;
+          scope |= sourcemeta::one::SEARCH_SCOPE_PATH;
         } else if (token == "title") {
-          scope |= sourcemeta::one::SearchScopeTitle;
+          scope |= sourcemeta::one::SEARCH_SCOPE_TITLE;
         } else if (token == "description") {
-          scope |= sourcemeta::one::SearchScopeDescription;
+          scope |= sourcemeta::one::SEARCH_SCOPE_DESCRIPTION;
         } else {
           sourcemeta::one::json_error(
               request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
@@ -257,16 +257,17 @@ public:
     }
 
     constexpr std::uint8_t DEFAULT_SCOPE{
-        sourcemeta::one::SearchScopePath | sourcemeta::one::SearchScopeTitle |
-        sourcemeta::one::SearchScopeDescription};
+        sourcemeta::one::SEARCH_SCOPE_PATH |
+        sourcemeta::one::SEARCH_SCOPE_TITLE |
+        sourcemeta::one::SEARCH_SCOPE_DESCRIPTION};
     std::uint8_t scope{DEFAULT_SCOPE};
     const auto add_scope_token{[&scope](const std::string_view token) -> bool {
       if (token == "path") {
-        scope |= sourcemeta::one::SearchScopePath;
+        scope |= sourcemeta::one::SEARCH_SCOPE_PATH;
       } else if (token == "title") {
-        scope |= sourcemeta::one::SearchScopeTitle;
+        scope |= sourcemeta::one::SEARCH_SCOPE_TITLE;
       } else if (token == "description") {
-        scope |= sourcemeta::one::SearchScopeDescription;
+        scope |= sourcemeta::one::SEARCH_SCOPE_DESCRIPTION;
       } else {
         return false;
       }

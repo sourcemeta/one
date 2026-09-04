@@ -18,7 +18,7 @@
 
 auto sourcemeta::jsonschema::codegen(const sourcemeta::core::Options &options)
     -> void {
-  if (options.positional().size() < 1) {
+  if (options.positional().empty()) {
     throw PositionalArgumentError{"This command expects a path to a schema",
                                   "jsonschema codegen path/to/schema.json "
                                   "--name MyType --target typescript"};
@@ -41,7 +41,7 @@ auto sourcemeta::jsonschema::codegen(const sourcemeta::core::Options &options)
   auto parsed_schema{read_file(schema_path)};
   const auto &schema{parsed_schema.document};
 
-  const auto configuration_path{find_configuration(schema_path)};
+  const auto configuration_path{find_configuration(options, schema_path)};
   const auto &configuration{
       read_configuration(options, configuration_path, schema_path)};
   const auto dialect{default_dialect(options, configuration)};
@@ -54,6 +54,17 @@ auto sourcemeta::jsonschema::codegen(const sourcemeta::core::Options &options)
         schema, sourcemeta::blaze::schema_walker, custom_resolver,
         sourcemeta::blaze::default_compiler, dialect,
         sourcemeta::jsonschema::default_id(schema_path, false));
+  } catch (const sourcemeta::blaze::CompilerError &error) {
+    const auto position{parsed_schema.positions.get(error.location())};
+    if (position.has_value()) {
+      throw PositionError<
+          sourcemeta::core::FileError<sourcemeta::blaze::CompilerError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          schema_path, error);
+    }
+
+    throw sourcemeta::core::FileError<sourcemeta::blaze::CompilerError>(
+        schema_path, error);
   } catch (const sourcemeta::blaze::SchemaKeywordError &error) {
     throw sourcemeta::core::FileError<sourcemeta::blaze::SchemaKeywordError>(
         schema_path, error);

@@ -54,9 +54,45 @@ private:
   std::uint64_t column_;
 };
 
+class SchemaIdentifierConflictError : public std::runtime_error {
+public:
+  SchemaIdentifierConflictError(std::string identifier,
+                                sourcemeta::core::Pointer location,
+                                std::filesystem::path other_path,
+                                sourcemeta::core::Pointer other)
+      : std::runtime_error{"Conflicting schemas for the same identifier"},
+        identifier_{std::move(identifier)}, location_{std::move(location)},
+        other_path_{std::move(other_path)}, other_{std::move(other)} {}
+
+  [[nodiscard]] auto identifier() const noexcept -> const std::string & {
+    return this->identifier_;
+  }
+
+  [[nodiscard]] auto location() const noexcept
+      -> const sourcemeta::core::Pointer & {
+    return this->location_;
+  }
+
+  [[nodiscard]] auto other_path() const noexcept
+      -> const std::filesystem::path & {
+    return this->other_path_;
+  }
+
+  [[nodiscard]] auto other() const noexcept
+      -> const sourcemeta::core::Pointer & {
+    return this->other_;
+  }
+
+private:
+  std::string identifier_;
+  sourcemeta::core::Pointer location_;
+  std::filesystem::path other_path_;
+  sourcemeta::core::Pointer other_;
+};
+
 class PositionalArgumentError : public std::runtime_error {
 public:
-  PositionalArgumentError(std::string message, std::string example)
+  PositionalArgumentError(const std::string &message, std::string example)
       : std::runtime_error{message}, example_{std::move(example)} {}
 
   [[nodiscard]] auto example() const noexcept -> const std::string & {
@@ -69,7 +105,8 @@ private:
 
 class InvalidOptionEnumerationValueError : public std::runtime_error {
 public:
-  InvalidOptionEnumerationValueError(std::string message, std::string option,
+  InvalidOptionEnumerationValueError(const std::string &message,
+                                     std::string option,
                                      std::initializer_list<std::string> values)
       : std::runtime_error{message}, option_{std::move(option)},
         values_{values} {}
@@ -120,8 +157,8 @@ private:
 
 class YAMLInputError : public std::runtime_error {
 public:
-  YAMLInputError(std::string message, std::filesystem::path path)
-      : std::runtime_error{std::move(message)}, path_{std::move(path)} {}
+  YAMLInputError(const std::string &message, std::filesystem::path path)
+      : std::runtime_error{message}, path_{std::move(path)} {}
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
     return this->path_;
@@ -133,14 +170,14 @@ private:
 
 class OptionConflictError : public std::runtime_error {
 public:
-  OptionConflictError(std::string message)
-      : std::runtime_error{std::move(message)} {}
+  OptionConflictError(const std::string &message)
+      : std::runtime_error{message} {}
 };
 
 class StdinError : public std::runtime_error {
 public:
-  explicit StdinError(std::string message)
-      : std::runtime_error{std::move(message)} {}
+  explicit StdinError(const std::string &message)
+      : std::runtime_error{message} {}
 };
 
 class InvalidJobsError : public std::runtime_error {
@@ -151,8 +188,8 @@ public:
 
 class InvalidLintRuleError : public std::runtime_error {
 public:
-  InvalidLintRuleError(std::string message, std::string rule)
-      : std::runtime_error{std::move(message)}, rule_{std::move(rule)} {}
+  InvalidLintRuleError(const std::string &message, std::string rule)
+      : std::runtime_error{message}, rule_{std::move(rule)} {}
 
   [[nodiscard]] auto rule() const noexcept -> const std::string & {
     return this->rule_;
@@ -193,9 +230,9 @@ private:
 
 class LintAutoFixError : public std::runtime_error {
 public:
-  LintAutoFixError(std::string message, std::filesystem::path path,
+  LintAutoFixError(const std::string &message, std::filesystem::path path,
                    sourcemeta::core::Pointer location)
-      : std::runtime_error{std::move(message)}, path_{std::move(path)},
+      : std::runtime_error{message}, path_{std::move(path)},
         location_{std::move(location)} {}
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
@@ -243,13 +280,13 @@ private:
 
 class RdfResolutionError : public std::runtime_error {
 public:
-  RdfResolutionError(std::string message, std::string facet,
+  RdfResolutionError(const std::string &message, std::string facet,
                      sourcemeta::core::Pointer instance_location,
                      std::string schema_location,
                      std::optional<std::string> conflicting_schema_location,
                      std::optional<std::string> inert_override_location,
                      std::filesystem::path path)
-      : std::runtime_error{std::move(message)}, facet_{std::move(facet)},
+      : std::runtime_error{message}, facet_{std::move(facet)},
         instance_location_{std::move(instance_location)},
         schema_location_{std::move(schema_location)},
         conflicting_schema_location_{std::move(conflicting_schema_location)},
@@ -369,6 +406,20 @@ private:
   std::filesystem::path path_;
 };
 
+class ConfigurationFileNotFoundError : public std::runtime_error {
+public:
+  ConfigurationFileNotFoundError(std::filesystem::path path)
+      : std::runtime_error{"The given configuration file does not exist"},
+        path_{std::move(path)} {}
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+private:
+  std::filesystem::path path_;
+};
+
 class LockNotFoundError : public std::runtime_error {
 public:
   LockNotFoundError(std::filesystem::path path)
@@ -397,8 +448,8 @@ private:
 
 class InstallError : public std::runtime_error {
 public:
-  InstallError(std::string message, std::string uri)
-      : std::runtime_error{std::move(message)}, uri_{std::move(uri)} {}
+  InstallError(const std::string &message, std::string uri)
+      : std::runtime_error{message}, uri_{std::move(uri)} {}
 
   [[nodiscard]] auto uri() const noexcept -> const std::string & {
     return this->uri_;
@@ -479,12 +530,13 @@ inline auto stdin_path() -> std::filesystem::path {
   return std::filesystem::path{STDIN_DEFAULT_ID};
 }
 
-inline auto stdin_path_string(const std::filesystem::path &p) -> std::string {
-  if (p == stdin_path()) {
+inline auto stdin_path_string(const std::filesystem::path &path)
+    -> std::string {
+  if (path == stdin_path()) {
     return std::string{STDIN_DEFAULT_ID};
   }
 
-  return sourcemeta::core::weakly_canonical(p).generic_string();
+  return sourcemeta::core::weakly_canonical(path).generic_string();
 }
 
 template <typename Exception>
@@ -510,13 +562,6 @@ inline auto print_exception(const bool is_json, const Exception &exception)
     } else {
       std::cerr << "error: The input was supposed to be a file but it is a "
                    "directory\n";
-    }
-  } else if constexpr (std::is_base_of_v<std::filesystem::filesystem_error,
-                                         Exception>) {
-    if (is_json) {
-      error_json.assign("error", sourcemeta::core::JSON{exception.what()});
-    } else {
-      std::cerr << "error: " << exception.what() << "\n";
     }
   } else {
     if (is_json) {
@@ -732,6 +777,19 @@ inline auto print_exception(const bool is_json, const Exception &exception)
 
   if constexpr (requires(const Exception &current) {
                   {
+                    current.other_path()
+                  } -> std::convertible_to<std::filesystem::path>;
+                }) {
+    const auto other_path_string{stdin_path_string(exception.other_path())};
+    if (is_json) {
+      error_json.assign("otherPath", sourcemeta::core::JSON{other_path_string});
+    } else {
+      std::cerr << "  at other path " << other_path_string << "\n";
+    }
+  }
+
+  if constexpr (requires(const Exception &current) {
+                  {
                     current.other()
                   } -> std::convertible_to<const sourcemeta::core::Pointer &>;
                 }) {
@@ -920,6 +978,10 @@ inline auto try_catch(const sourcemeta::core::Options &options,
     }
 
     return EXIT_OTHER_INPUT_ERROR;
+  } catch (const ConfigurationFileNotFoundError &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_OTHER_INPUT_ERROR;
   } catch (const LockNotFoundError &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
@@ -1104,6 +1166,26 @@ inline auto try_catch(const sourcemeta::core::Options &options,
     }
 
     return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const PositionError<sourcemeta::core::FileError<
+               sourcemeta::blaze::CompilerError>> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    if (!is_json) {
+      std::cerr << "\nUse the `metaschema` command to check the schema against "
+                   "its meta-schema\n";
+    }
+
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const sourcemeta::core::FileError<sourcemeta::blaze::CompilerError>
+               &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    if (!is_json) {
+      std::cerr << "\nUse the `metaschema` command to check the schema against "
+                   "its meta-schema\n";
+    }
+
+    return EXIT_SCHEMA_INPUT_ERROR;
   } catch (
       const sourcemeta::core::FileError<sourcemeta::blaze::SchemaReferenceError>
           &error) {
@@ -1189,6 +1271,16 @@ inline auto try_catch(const sourcemeta::core::Options &options,
                    "valid according to its meta-schema?\n";
     }
 
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const PositionError<
+           sourcemeta::core::FileError<SchemaIdentifierConflictError>> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (
+      const sourcemeta::core::FileError<SchemaIdentifierConflictError> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
     return EXIT_SCHEMA_INPUT_ERROR;
   } catch (const PositionError<sourcemeta::core::FileError<
                sourcemeta::blaze::SchemaAnchorCollisionError>> &error) {

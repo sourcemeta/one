@@ -30,7 +30,7 @@ auto Configuration::resolve_schema(const sourcemeta::core::URI &input) const
     const auto match{this->entries.find(candidate)};
     if (match != this->entries.cend()) {
       const auto *collection{std::get_if<Collection>(&match->second)};
-      if (collection) {
+      if (collection != nullptr) {
         auto result{(collection->absolute_path /
                      relative_path.lexically_relative(candidate))
                         .lexically_normal()};

@@ -2,6 +2,7 @@
 
 #include <array>       // std::array
 #include <cstddef>     // std::size_t
+#include <cstdint>     // std::uint8_t
 #include <filesystem>  // std::filesystem::path
 #include <optional>    // std::optional
 #include <span>        // std::span
@@ -13,7 +14,7 @@
 // A sealed value is version.issued.expiry.payload.signature. Every field is
 // covered by the signature, so a test that disturbs the wrong one still passes
 // and quietly stops testing what it names. These say which field they mean
-enum class Field : std::size_t {
+enum class Field : std::uint8_t {
   Version = 0,
   Issued = 1,
   Expiry = 2,
@@ -40,12 +41,12 @@ static auto field_end(const std::string_view value, const Field field)
 
 // Shares nothing with the set a value is minted under, so a reader holding it
 // holds no secret that value was sealed with
-static const std::array<std::string_view, 1> SEAL_SECRETS_FOREIGN{
+static constexpr std::array<std::string_view, 1> SEAL_SECRETS_FOREIGN{
     {"ONE_TEST_SEAL_FOREIGN"}};
 
-static const std::array<std::string_view, 2> SEAL_SECRETS_ROTATED{
+static constexpr std::array<std::string_view, 2> SEAL_SECRETS_ROTATED{
     {"ONE_TEST_SEAL_ROTATED", "ONE_TEST_SEAL_SECRET"}};
-static const std::array<std::string_view, 1> SEAL_SECRETS{
+static constexpr std::array<std::string_view, 1> SEAL_SECRETS{
     {"ONE_TEST_SEAL_SECRET"}};
 // Change one character of one field, which is the smallest disturbance that
 // should cost a value its signature.

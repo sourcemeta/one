@@ -40,10 +40,7 @@
                 "type": "string",
                 "format": "uri"
               },
-              "annotation": {
-                "type": "array",
-                "minItems": 1
-              },
+              "annotation": true,
               "instanceLocation": {
                 "x-format-assertion": true,
                 "type": "string",

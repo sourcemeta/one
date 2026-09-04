@@ -221,6 +221,10 @@ WRITE_GLOBAL_OUTPUTS(const std::filesystem::path &output) -> void {
   }
 }
 
+// Each body below is wrapped so that a use reads as a single statement wherever
+// it appears
+// NOLINTBEGIN(cppcoreguidelines-avoid-do-while)
+
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define EXPECT_CONSISTENT_PLAN(plan, entries, output, build_mode,              \
                                expected_waves, expected_size)                  \
@@ -302,5 +306,7 @@ WRITE_GLOBAL_OUTPUTS(const std::filesystem::path &output) -> void {
     const std::set<std::filesystem::path> total_files_expected{__VA_ARGS__};   \
     EXPECT_EQ(total_files_result, total_files_expected);                       \
   } while (false)
+
+// NOLINTEND(cppcoreguidelines-avoid-do-while)
 
 #endif

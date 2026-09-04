@@ -37,21 +37,19 @@ public:
             typename ErrorCallback>
   HTTPServer(const std::uint16_t port, RequestHandler on_request,
              ListenCallback on_listen, ErrorCallback on_error) {
-    HTTPServer::concurrency_ =
-        std::max(1u, std::thread::hardware_concurrency());
-    HTTPServer::round_robin_.store(0, std::memory_order_relaxed);
-    HTTPServer::should_stop_.store(false, std::memory_order_relaxed);
-    HTTPServer::workers_alive_.store(HTTPServer::concurrency_,
-                                     std::memory_order_relaxed);
+    HTTPServer::concurrency = std::max(1u, std::thread::hardware_concurrency());
+    HTTPServer::round_robin.store(0, std::memory_order_relaxed);
+    HTTPServer::should_stop.store(false, std::memory_order_relaxed);
+    HTTPServer::workers_alive.store(HTTPServer::concurrency,
+                                    std::memory_order_relaxed);
     // std::atomic is neither copyable nor movable, so std::vector
     // operations on it are awkward. A heap-allocated array sized
     // once at construction is the cleanest owning shape.
-    HTTPServer::apps_ =
+    HTTPServer::apps =
         // NOLINTNEXTLINE(modernize-avoid-c-arrays)
-        std::make_unique<std::atomic<uWS::SSLApp *>[]>(
-            HTTPServer::concurrency_);
-    for (unsigned int index{0}; index < HTTPServer::concurrency_; ++index) {
-      HTTPServer::apps_[index].store(nullptr, std::memory_order_relaxed);
+        std::make_unique<std::atomic<uWS::SSLApp *>[]>(HTTPServer::concurrency);
+    for (unsigned int index{0}; index < HTTPServer::concurrency; ++index) {
+      HTTPServer::apps[index].store(nullptr, std::memory_order_relaxed);
     }
 
     // Take ownership of SIGINT and SIGTERM for the lifetime of this
@@ -78,18 +76,18 @@ public:
     };
     const SignalGuard signal_guard;
 
-    // The latch starts at `concurrency_ + 1`: each worker arrives
-    // once after publishing its `apps_[index]` pointer, and this
+    // The latch starts at `concurrency + 1`: each worker arrives
+    // once after publishing its `apps[index]` pointer, and this
     // thread also arrives so it waits until every worker has reached
     // that point. Polling for shutdown only starts after that wait,
     // which guarantees the close sweep below sees every app.
     std::latch setup_barrier{
-        static_cast<std::ptrdiff_t>(HTTPServer::concurrency_ + 1)};
+        static_cast<std::ptrdiff_t>(HTTPServer::concurrency + 1)};
     std::mutex setup_mutex;
 
     std::vector<std::unique_ptr<std::thread>> threads;
-    threads.reserve(HTTPServer::concurrency_);
-    for (unsigned int index{0}; index < HTTPServer::concurrency_; ++index) {
+    threads.reserve(HTTPServer::concurrency);
+    for (unsigned int index{0}; index < HTTPServer::concurrency; ++index) {
       threads.emplace_back(std::make_unique<std::thread>(
           [index, port, &on_request, &on_listen, &on_error, &setup_barrier,
            &setup_mutex]() -> void {
@@ -144,23 +142,23 @@ public:
 
             // Publish this app and wait for all threads to finish
             // setup before entering the event loop
-            HTTPServer::apps_[index].store(app, std::memory_order_release);
+            HTTPServer::apps[index].store(app, std::memory_order_release);
             setup_barrier.arrive_and_wait();
 
             app->run();
             // Null out before deleting so preOpen never hits a freed
             // pointer. The acquire/release pair pairs with the load
             // in `load_balance`.
-            HTTPServer::apps_[index].store(nullptr, std::memory_order_release);
+            HTTPServer::apps[index].store(nullptr, std::memory_order_release);
             delete app;
-            HTTPServer::workers_alive_.fetch_sub(1, std::memory_order_release);
+            HTTPServer::workers_alive.fetch_sub(1, std::memory_order_release);
           }));
     }
 
     // Arrive on the setup barrier and wait until every worker has
     // published its app pointer before polling for shutdown. Without
     // this gate, a signal arriving during setup could let the close
-    // sweep run while some `apps_` slots are still nullptr, leaving
+    // sweep run while some `apps` slots are still nullptr, leaving
     // the corresponding `app->run()` loops without a deferred close
     // and the `thread->join()` below hanging forever.
     setup_barrier.arrive_and_wait();
@@ -170,22 +168,22 @@ public:
     // already exited on its own. The predicate is checked before
     // each sleep so the failure path does not pay a poll tick.
     while (true) {
-      if (HTTPServer::should_stop_.load(std::memory_order_acquire)) {
+      if (HTTPServer::should_stop.load(std::memory_order_acquire)) {
         break;
       }
-      if (HTTPServer::workers_alive_.load(std::memory_order_acquire) == 0) {
+      if (HTTPServer::workers_alive.load(std::memory_order_acquire) == 0) {
         break;
       }
       std::this_thread::sleep_for(std::chrono::milliseconds{50});
     }
 
-    if (HTTPServer::should_stop_.load(std::memory_order_acquire)) {
+    if (HTTPServer::should_stop.load(std::memory_order_acquire)) {
       this->stopped_gracefully_ = true;
       // Give any preOpen call already in flight time to finish
       // against the old listen sockets before they disappear.
       std::this_thread::sleep_for(std::chrono::milliseconds{50});
-      for (unsigned int index{0}; index < HTTPServer::concurrency_; ++index) {
-        auto *app{HTTPServer::apps_[index].load(std::memory_order_acquire)};
+      for (unsigned int index{0}; index < HTTPServer::concurrency; ++index) {
+        auto *app{HTTPServer::apps[index].load(std::memory_order_acquire)};
         if (app != nullptr) {
           // `us_socket_context_close` must run on the loop's thread.
           app->getLoop()->defer([app]() -> void { app->close(); });
@@ -210,40 +208,41 @@ private:
   // `write(2)` is on it, and an atomic store on a lock-free type is
   // safe in practice. No formatting, no allocation, no locks.
   static auto on_signal(int /* signal */) noexcept -> void {
-    constexpr std::string_view message{"Terminating on requested signal\n"};
-    (void)::write(STDERR_FILENO, message.data(), message.size());
-    HTTPServer::should_stop_.store(true, std::memory_order_release);
+    constexpr std::string_view MESSAGE{"Terminating on requested signal\n"};
+    (void)::write(STDERR_FILENO, MESSAGE.data(), MESSAGE.size());
+    HTTPServer::should_stop.store(true, std::memory_order_release);
   }
 
   static auto load_balance(struct us_socket_context_t *,
-                           LIBUS_SOCKET_DESCRIPTOR fd, char *, int)
+                           LIBUS_SOCKET_DESCRIPTOR descriptor, char *, int)
       -> LIBUS_SOCKET_DESCRIPTOR {
     // Drop new accepts once shutdown has been requested. The kernel
     // can hand us connections for a short window before listen
     // sockets actually close, and dispatching them to apps that are
     // about to disappear is wasted work.
-    if (HTTPServer::should_stop_.load(std::memory_order_acquire)) {
+    if (HTTPServer::should_stop.load(std::memory_order_acquire)) {
       return static_cast<LIBUS_SOCKET_DESCRIPTOR>(-1);
     }
     const auto target{
-        HTTPServer::round_robin_.fetch_add(1, std::memory_order_relaxed) %
-        HTTPServer::concurrency_};
+        HTTPServer::round_robin.fetch_add(1, std::memory_order_relaxed) %
+        HTTPServer::concurrency};
     auto *receiving_app{
-        HTTPServer::apps_[target].load(std::memory_order_acquire)};
-    if (receiving_app) {
-      receiving_app->getLoop()->defer(
-          [fd, receiving_app]() -> void { receiving_app->adoptSocket(fd); });
+        HTTPServer::apps[target].load(std::memory_order_acquire)};
+    if (receiving_app != nullptr) {
+      receiving_app->getLoop()->defer([descriptor, receiving_app]() -> void {
+        receiving_app->adoptSocket(descriptor);
+      });
     }
     return static_cast<LIBUS_SOCKET_DESCRIPTOR>(-1);
   }
 
   bool stopped_gracefully_{false};
   // NOLINTNEXTLINE(modernize-avoid-c-arrays)
-  static inline std::unique_ptr<std::atomic<uWS::SSLApp *>[]> apps_;
-  static inline std::atomic<unsigned int> round_robin_{0};
-  static inline std::atomic<unsigned int> workers_alive_{0};
-  static inline std::atomic<bool> should_stop_{false};
-  static inline unsigned int concurrency_{0};
+  static inline std::unique_ptr<std::atomic<uWS::SSLApp *>[]> apps;
+  static inline std::atomic<unsigned int> round_robin{0};
+  static inline std::atomic<unsigned int> workers_alive{0};
+  static inline std::atomic<bool> should_stop{false};
+  static inline unsigned int concurrency{0};
 };
 
 } // namespace sourcemeta::one

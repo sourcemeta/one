@@ -7,7 +7,7 @@
 
 namespace sourcemeta::one {
 
-struct GENERATE_WEB_DIRECTORY {
+struct GenerateWebDirectory {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
@@ -16,7 +16,7 @@ struct GENERATE_WEB_DIRECTORY {
                       const sourcemeta::core::JSON &) -> void;
 };
 
-struct GENERATE_WEB_NOT_FOUND {
+struct GenerateWebNotFound {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
@@ -25,7 +25,7 @@ struct GENERATE_WEB_NOT_FOUND {
                       const sourcemeta::core::JSON &) -> void;
 };
 
-struct GENERATE_WEB_LOGIN {
+struct GenerateWebLogin {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
@@ -34,7 +34,7 @@ struct GENERATE_WEB_LOGIN {
                       const sourcemeta::core::JSON &) -> void;
 };
 
-struct GENERATE_WEB_INDEX {
+struct GenerateWebIndex {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
@@ -43,7 +43,7 @@ struct GENERATE_WEB_INDEX {
                       const sourcemeta::core::JSON &) -> void;
 };
 
-struct GENERATE_WEB_SCHEMA {
+struct GenerateWebSchema {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,

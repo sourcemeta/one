@@ -29,7 +29,7 @@
 #include <utility>       // std::move, std::pair
 #include <vector>        // std::vector
 
-class ActionMCP_v1 : public sourcemeta::one::RouterAction {
+class ActionMCPV1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
       "Handle Model Context Protocol JSON-RPC requests"};
@@ -38,10 +38,10 @@ public:
   static constexpr bool IDEMPOTENT{true};
   static constexpr bool OPEN_WORLD{false};
 
-  ActionMCP_v1(const std::filesystem::path &base,
-               const sourcemeta::core::URITemplateRouterView &router,
-               const sourcemeta::core::URITemplateRouter::Identifier identifier,
-               sourcemeta::one::Router &dispatcher)
+  ActionMCPV1(const std::filesystem::path &base,
+              const sourcemeta::core::URITemplateRouterView &router,
+              const sourcemeta::core::URITemplateRouter::Identifier identifier,
+              sourcemeta::one::Router &dispatcher)
       : sourcemeta::one::RouterAction{base, router.base_url(), dispatcher} {
     router.arguments(
         identifier, [this](const auto &key, const auto &value) -> void {
@@ -319,10 +319,11 @@ public:
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
-           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
+           const sourcemeta::core::JSON &request_id,
+           const sourcemeta::core::JSON &,
            const sourcemeta::one::Authentication::Caller &)
       -> sourcemeta::core::JSON override {
-    return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
+    return sourcemeta::core::jsonrpc_make_error_method_not_found(request_id);
   }
 
 private:
@@ -371,7 +372,7 @@ private:
   auto on_resources_list(const sourcemeta::core::JSON &request_json,
                          const std::string_view view) const
       -> sourcemeta::core::JSON {
-    const auto &id{request_json.at("id")};
+    const auto &request_id{request_json.at("id")};
     const auto &metadata{this->metadata_for(view)};
     const auto &pages{metadata.at(sourcemeta::core::MCP_METHOD_RESOURCES_LIST)};
     // The pages were cut somewhere, and the artifact says where, so a cursor is
@@ -390,7 +391,7 @@ private:
         // names no page at all
         if (!parsed.has_value() || parsed.value() % page_size != 0) {
           return sourcemeta::core::jsonrpc_make_error(
-              &id, -32602, "Invalid resource list cursor",
+              &request_id, -32602, "Invalid resource list cursor",
               sourcemeta::core::JSON{
                   "Use the `nextCursor` returned by a prior resources/list "
                   "response, or omit it to start from the beginning"});
@@ -405,14 +406,14 @@ private:
     const auto index{offset / page_size};
     if (index >= pages.size()) {
       return sourcemeta::core::jsonrpc_make_error(
-          &id, -32602, "Invalid resource list cursor",
+          &request_id, -32602, "Invalid resource list cursor",
           sourcemeta::core::JSON{
               "Use the `nextCursor` returned by a prior resources/list "
               "response, or omit it to start from the beginning"});
     }
 
     return sourcemeta::core::jsonrpc_make_success(
-        id, pages.at(static_cast<std::size_t>(index)));
+        request_id, pages.at(static_cast<std::size_t>(index)));
   }
 
   auto on_initialize(const sourcemeta::core::JSON &request_json,
@@ -473,7 +474,7 @@ private:
   on_resources_read(const sourcemeta::core::JSON &request_json,
                     const sourcemeta::one::Authentication::Caller &caller) const
       -> sourcemeta::core::JSON {
-    const auto &id{request_json.at("id")};
+    const auto &request_id{request_json.at("id")};
     const auto &uri{request_json.at("params").at("uri").to_string()};
 
     bool bundle{false};
@@ -481,7 +482,7 @@ private:
       sourcemeta::core::URI request{uri};
       if (request.fragment().has_value()) {
         return sourcemeta::core::jsonrpc_make_error(
-            &id, -32602, "Invalid resource schema URI",
+            &request_id, -32602, "Invalid resource schema URI",
             sourcemeta::core::JSON{
                 "URIs accepted by resources/read must not contain a fragment "
                 "and may only carry an optional `bundle` query parameter"});
@@ -496,7 +497,7 @@ private:
             static_cast<std::ptrdiff_t>(query_view->at("bundle").has_value())};
         if (std::ranges::distance(*query_view) != expected_size) {
           return sourcemeta::core::jsonrpc_make_error(
-              &id, -32602, "Invalid resource schema URI",
+              &request_id, -32602, "Invalid resource schema URI",
               sourcemeta::core::JSON{
                   "URIs accepted by resources/read must not contain a "
                   "fragment "
@@ -506,7 +507,7 @@ private:
       request.relative_to(sourcemeta::core::URI{this->server_uri()});
       if (request.is_absolute()) {
         return sourcemeta::core::jsonrpc_make_error(
-            &id, -32007, "Foreign URI",
+            &request_id, -32007, "Foreign URI",
             sourcemeta::core::JSON{"This URI lies outside this catalog's "
                                    "namespace. Query the appropriate registry "
                                    "instead"});
@@ -515,7 +516,7 @@ private:
                request.query()->at("bundle").has_value();
     } catch (const std::exception &) {
       return sourcemeta::core::jsonrpc_make_error(
-          &id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
+          &request_id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
           "Resource not found");
     }
 
@@ -523,13 +524,13 @@ private:
         caller, uri, Tree::Schemas, bundle ? "bundle" : "schema")};
     if (!resolution.path.has_value()) {
       return sourcemeta::core::jsonrpc_make_error(
-          &id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
+          &request_id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
           "Resource not found");
     }
     const auto schema{this->artifact_read_json(resolution.path.value())};
     if (!schema.has_value()) {
       return sourcemeta::core::jsonrpc_make_error(
-          &id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
+          &request_id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
           "Resource not found");
     }
 
@@ -540,7 +541,7 @@ private:
     contents.push_back(sourcemeta::core::mcp_make_resource_text_content(
         uri, MCP_TEMPLATE_MIME_TYPE, payload.str()));
     return sourcemeta::core::jsonrpc_make_success(
-        id,
+        request_id,
         sourcemeta::core::mcp_make_resources_read_result(std::move(contents)));
   }
 
@@ -549,12 +550,12 @@ private:
                      const sourcemeta::one::Authentication::Caller &caller)
       -> sourcemeta::core::JSON {
     const auto view{caller.view()};
-    const auto &id{request_json.at("id")};
+    const auto &request_id{request_json.at("id")};
     const auto &name{request_json.at("params").at("name").to_string()};
     const auto &tool_routes{this->metadata_for(view).at("toolRoutes")};
     if (!tool_routes.defines(name)) {
       return sourcemeta::core::jsonrpc_make_error(
-          &id, -32602, "Invalid tool name",
+          &request_id, -32602, "Invalid tool name",
           sourcemeta::core::JSON{
               "Use `tools/list` to discover the available tools"});
     }
@@ -563,17 +564,17 @@ private:
             tool_routes.at(name).to_integer())};
     auto *instance{this->dispatcher().action(identifier)};
     if (instance == nullptr) [[unlikely]] {
-      return sourcemeta::core::jsonrpc_make_error_internal(&id);
+      return sourcemeta::core::jsonrpc_make_error_internal(&request_id);
     }
     const auto *arguments{
         sourcemeta::core::mcp_tool_call_arguments(request_json)};
     const auto empty_arguments{sourcemeta::core::JSON::make_object()};
     try {
-      return instance->mcp(version, id,
+      return instance->mcp(version, request_id,
                            arguments == nullptr ? empty_arguments : *arguments,
                            caller);
     } catch (const std::exception &error) {
-      return sourcemeta::core::mcp_make_tool_error(id, error.what());
+      return sourcemeta::core::mcp_make_tool_error(request_id, error.what());
     }
   }
 
@@ -689,11 +690,11 @@ private:
       return sourcemeta::core::jsonrpc_make_error_invalid_request(
           sourcemeta::core::jsonrpc_request_id(request_json));
     }
-    const auto *id{sourcemeta::core::jsonrpc_request_id(request_json)};
-    assert(id != nullptr);
+    const auto *request_id{sourcemeta::core::jsonrpc_request_id(request_json)};
+    assert(request_id != nullptr);
     const auto method{sourcemeta::core::jsonrpc_method(request_json)};
     if (!sourcemeta::core::mcp_is_request_method(method)) {
-      return sourcemeta::core::jsonrpc_make_error_method_not_found(*id);
+      return sourcemeta::core::jsonrpc_make_error_method_not_found(*request_id);
     }
     const auto view{caller.view()};
     // Schema validation enforces MCP's stricter rules on top of JSON-RPC 2.0.
@@ -702,7 +703,7 @@ private:
     // follows MCP's tighter rule and rejects null-id requests here.
     // https://www.jsonrpc.org/specification (§4)
     if (!this->structural_evaluate_fast(this->request_schema_, request_json)) {
-      return sourcemeta::core::jsonrpc_make_error_invalid_request(id);
+      return sourcemeta::core::jsonrpc_make_error_invalid_request(request_id);
     }
     // Resolved once here, since a request reaches one method and placing the
     // caller again inside each of them would repeat the reading
@@ -723,9 +724,9 @@ private:
     }
     if (this->metadata_for(view).defines(method)) {
       return sourcemeta::core::jsonrpc_make_success(
-          *id, this->metadata_for(view).at(method));
+          *request_id, this->metadata_for(view).at(method));
     }
-    return sourcemeta::core::jsonrpc_make_success_empty(*id);
+    return sourcemeta::core::jsonrpc_make_success_empty(*request_id);
   }
 
   std::string_view allowed_origin_;

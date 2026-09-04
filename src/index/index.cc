@@ -32,7 +32,7 @@
 #include <exception>     // std::exception
 #include <filesystem>    // std::filesystem
 #include <functional>    // std::reference_wrapper, std::cref
-#include <mutex>         // std::mutex, std::lock_guard
+#include <mutex>         // std::mutex, std::scoped_lock
 #include <print>         // std::print, std::println
 #include <sstream>       // std::ostringstream
 #include <string>        // std::string
@@ -69,32 +69,32 @@ using BuildHandlerFunction = auto (*)(
 // action added without one is the assertion where this is read
 static constexpr std::array<BuildHandlerFunction, sourcemeta::one::ACTION_COUNT>
     HANDLERS{{
-        &sourcemeta::one::GENERATE_MATERIALISED_SCHEMA::handler,
-        &sourcemeta::one::GENERATE_POINTER_POSITIONS::handler,
-        &sourcemeta::one::GENERATE_FRAME_LOCATIONS::handler,
-        &sourcemeta::one::GENERATE_DEPENDENCIES::handler,
-        &sourcemeta::one::GENERATE_STATS::handler,
-        &sourcemeta::one::GENERATE_HEALTH::handler,
-        &sourcemeta::one::GENERATE_BUNDLE::handler,
-        &sourcemeta::one::GENERATE_EDITOR::handler,
-        &sourcemeta::one::GENERATE_BLAZE_TEMPLATE_EXHAUSTIVE::handler,
-        &sourcemeta::one::GENERATE_BLAZE_TEMPLATE_FAST::handler,
-        &sourcemeta::one::GENERATE_EXPLORER_SCHEMA_METADATA::handler,
-        &sourcemeta::one::GENERATE_DEPENDENTS::handler,
-        &sourcemeta::one::GENERATE_EXPLORER_SEARCH_INDEX::handler,
-        &sourcemeta::one::GENERATE_MCP::handler,
-        &sourcemeta::one::GENERATE_EXPLORER_DIRECTORY_LIST::handler,
-        &sourcemeta::one::GENERATE_WEB_INDEX::handler,
-        &sourcemeta::one::GENERATE_WEB_NOT_FOUND::handler,
-        &sourcemeta::one::GENERATE_WEB_DIRECTORY::handler,
-        &sourcemeta::one::GENERATE_WEB_SCHEMA::handler,
-        &sourcemeta::one::GENERATE_COMMENT::handler,
-        &sourcemeta::one::GENERATE_CONFIGURATION::handler,
-        &sourcemeta::one::GENERATE_VERSION::handler,
-        &sourcemeta::one::GENERATE_URITEMPLATE_ROUTES::handler,
-        &sourcemeta::one::GENERATE_AUTHENTICATION::handler,
-        &sourcemeta::one::GENERATE_LOGIN::handler,
-        &sourcemeta::one::GENERATE_WEB_LOGIN::handler,
+        &sourcemeta::one::GenerateMaterialisedSchema::handler,
+        &sourcemeta::one::GeneratePointerPositions::handler,
+        &sourcemeta::one::GenerateFrameLocations::handler,
+        &sourcemeta::one::GenerateDependencies::handler,
+        &sourcemeta::one::GenerateStats::handler,
+        &sourcemeta::one::GenerateHealth::handler,
+        &sourcemeta::one::GenerateBundle::handler,
+        &sourcemeta::one::GenerateEditor::handler,
+        &sourcemeta::one::GenerateBlazeTemplateExhaustive::handler,
+        &sourcemeta::one::GenerateBlazeTemplateFast::handler,
+        &sourcemeta::one::GenerateExplorerSchemaMetadata::handler,
+        &sourcemeta::one::GenerateDependents::handler,
+        &sourcemeta::one::GenerateExplorerSearchIndex::handler,
+        &sourcemeta::one::GenerateMCP::handler,
+        &sourcemeta::one::GenerateExplorerDirectoryList::handler,
+        &sourcemeta::one::GenerateWebIndex::handler,
+        &sourcemeta::one::GenerateWebNotFound::handler,
+        &sourcemeta::one::GenerateWebDirectory::handler,
+        &sourcemeta::one::GenerateWebSchema::handler,
+        &sourcemeta::one::GenerateComment::handler,
+        &sourcemeta::one::GenerateConfiguration::handler,
+        &sourcemeta::one::GenerateVersion::handler,
+        &sourcemeta::one::GenerateURITemplateRoutes::handler,
+        &sourcemeta::one::GenerateAuthentication::handler,
+        &sourcemeta::one::GenerateLogin::handler,
+        &sourcemeta::one::GenerateWebLogin::handler,
         // Removal is done before anything is dispatched, so it is the one
         // action with nothing to call
         nullptr,
@@ -128,7 +128,7 @@ static auto parse_numeric_option(const sourcemeta::core::Options &app,
     -> unsigned long long {
   const auto &raw{app.at(option).front()};
   try {
-    return std::stoull(raw.data());
+    return std::stoull(std::string{raw});
   } catch (const std::invalid_argument &) {
     throw sourcemeta::one::OptionInvalidNumericValueError(std::string{option},
                                                           std::string{raw});
@@ -465,7 +465,7 @@ static auto index_main(const std::string_view &program,
   for (const auto &pair : configuration.entries) {
     const auto *collection{
         std::get_if<sourcemeta::one::Configuration::Collection>(&pair.second)};
-    if (!collection) {
+    if (collection == nullptr) {
       continue;
     }
 
@@ -513,8 +513,10 @@ static auto index_main(const std::string_view &program,
                      detected_schemas.size() + 1);
       }
 
-      detected_schemas.push_back({pair.first, std::cref(*collection),
-                                  entry.path(), entry.last_write_time()});
+      detected_schemas.push_back({.collection_relative_path = pair.first,
+                                  .collection = std::cref(*collection),
+                                  .path = entry.path(),
+                                  .mtime = entry.last_write_time()});
     }
   };
 
@@ -594,7 +596,7 @@ static auto index_main(const std::string_view &program,
 
         {
           const auto &resolved{result.second.get()};
-          std::lock_guard<std::mutex> lock{mutex};
+          const std::scoped_lock lock{mutex};
           entries.commit(detected.path.native(),
                          sourcemeta::one::BuildState::ResolverEntry{
                              .file_mark = detected.mtime,
@@ -606,7 +608,7 @@ static auto index_main(const std::string_view &program,
         }
 
         if (app.contains("verbose")) {
-          std::lock_guard<std::mutex> lock{mutex};
+          const std::scoped_lock lock{mutex};
           std::println(stderr, "{} => {}",
                        result.second.get().original_identifier,
                        result.first.get());
@@ -648,7 +650,7 @@ static auto index_main(const std::string_view &program,
   std::vector<std::string> view_policy_claims;
   std::vector<std::vector<std::string_view>> view_policy_email_domains;
   const auto view_policies{
-      sourcemeta::one::GENERATE_AUTHENTICATION::make_policies(
+      sourcemeta::one::GenerateAuthentication::make_policies(
           configuration, view_policy_paths, view_policy_keys,
           view_policy_session_secrets, view_policy_claims,
           view_policy_email_domains)};

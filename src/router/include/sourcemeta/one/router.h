@@ -139,7 +139,7 @@ public:
   // admitted by its session cookie and would otherwise pass the gate and then
   // be refused by whatever the tool resolves on its behalf
   virtual auto mcp(const sourcemeta::core::MCPProtocolVersion version,
-                   const sourcemeta::core::JSON &id,
+                   const sourcemeta::core::JSON &request_id,
                    const sourcemeta::core::JSON &arguments,
                    const Authentication::Caller &caller)
       -> sourcemeta::core::JSON = 0;

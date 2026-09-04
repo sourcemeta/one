@@ -103,18 +103,20 @@ public:
   }
 
   [[nodiscard]] auto method() const noexcept -> std::string_view {
-    return this->request_ ? this->request_->getMethod() : this->method_;
+    return this->request_ != nullptr ? this->request_->getMethod()
+                                     : this->method_;
   }
 
   [[nodiscard]] auto path() const noexcept -> std::string_view {
-    return this->request_ ? this->request_->getUrl() : this->path_;
+    return this->request_ != nullptr ? this->request_->getUrl() : this->path_;
   }
 
   // The full request target, the path together with the raw query string, as it
   // arrived on the wire. Unlike path(), it preserves any query so a caller can
   // reproduce the exact URL the client requested
   [[nodiscard]] auto target() const noexcept -> std::string_view {
-    return this->request_ ? this->request_->getFullUrl() : this->path_;
+    return this->request_ != nullptr ? this->request_->getFullUrl()
+                                     : this->path_;
   }
 
   // The first value of a field, which is all a field carrying one value has.
@@ -195,7 +197,7 @@ public:
   // NOLINTNEXTLINE(performance-unnecessary-value-param)
   auto body(Callback callback, ErrorCallback on_error,
             std::size_t max_size = MAX_REQUEST_BODY_BYTES) -> void {
-    auto raw_response = this->response_;
+    auto *raw_response = this->response_;
     auto snapshot = std::make_shared<HTTPRequest>(
         std::string{this->method()}, std::string{this->path()},
         this->response_encoding_, raw_response);

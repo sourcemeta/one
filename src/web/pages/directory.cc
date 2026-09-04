@@ -12,7 +12,7 @@
 
 namespace sourcemeta::one {
 
-auto GENERATE_WEB_DIRECTORY::handler(
+auto GenerateWebDirectory::handler(
     const sourcemeta::one::BuildState &,
     const sourcemeta::one::BuildPlan::Action &action,
     const sourcemeta::one::BuildDynamicCallback &, sourcemeta::one::Resolver &,
@@ -33,10 +33,10 @@ auto GENERATE_WEB_DIRECTORY::handler(
           : ("Schemas located at " + directory.at("path").to_string())};
   sourcemeta::core::HTMLWriter writer;
   html::make_page(writer, configuration, action.view, canonical, title,
-                  description, [&](sourcemeta::core::HTMLWriter &w) -> void {
-                    html::make_breadcrumb(w, directory.at("breadcrumb"));
-                    html::make_directory_header(w, directory);
-                    html::make_file_manager(w, directory);
+                  description, [&](sourcemeta::core::HTMLWriter &body) -> void {
+                    html::make_breadcrumb(body, directory.at("breadcrumb"));
+                    html::make_directory_header(body, directory);
+                    html::make_file_manager(body, directory);
                   });
 
   const auto timestamp_end{std::chrono::steady_clock::now()};

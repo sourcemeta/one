@@ -520,7 +520,7 @@ jsonpath "$.result.resources[33].uri" == "{{base}}/self/v1/schemas/api/schemas/e
 jsonpath "$.result.resources[33].name" == "Sourcemeta One Schema Evaluate API Response"
 jsonpath "$.result.resources[33].description" == "The response format for the schema evaluation API endpoint"
 jsonpath "$.result.resources[33].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[33].size" == 2214
+jsonpath "$.result.resources[33].size" == 2138
 jsonpath "$.result.resources[33].annotations.priority" == 0
 jsonpath "$.result.resources[34].uri" == "{{base}}/self/v1/schemas/api/schemas/health/response"
 jsonpath "$.result.resources[34].name" == "Sourcemeta One Schema Health API Response"
@@ -1287,7 +1287,7 @@ jsonpath "$.result.resources[33].uri" == "{{base}}/self/v1/schemas/api/schemas/e
 jsonpath "$.result.resources[33].name" == "Sourcemeta One Schema Evaluate API Response"
 jsonpath "$.result.resources[33].description" == "The response format for the schema evaluation API endpoint"
 jsonpath "$.result.resources[33].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[33].size" == 2214
+jsonpath "$.result.resources[33].size" == 2138
 jsonpath "$.result.resources[33].annotations.priority" == 0
 jsonpath "$.result.resources[34].uri" == "{{base}}/self/v1/schemas/api/schemas/health/response"
 jsonpath "$.result.resources[34].name" == "Sourcemeta One Schema Health API Response"

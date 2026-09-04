@@ -48,6 +48,22 @@ auto is_validation_subschema(
                                  resolver);
 }
 
+// The dialect a schema declares, falling back to the given default. Unlike the
+// equivalent helper in bundling, this one hands back a copy rather than a view,
+// as canonicalisation goes on to rewrite the very document it reads from
+auto declared_dialect(const sourcemeta::core::JSON &schema,
+                      const std::string_view default_dialect)
+    -> sourcemeta::core::JSON::String {
+  if (!schema.is_object()) {
+    return sourcemeta::core::JSON::String{default_dialect};
+  }
+
+  const auto *dialect{schema.try_at("$schema")};
+  return (dialect != nullptr && dialect->is_string())
+             ? dialect->to_string()
+             : sourcemeta::core::JSON::String{default_dialect};
+}
+
 } // anonymous namespace
 
 namespace sourcemeta::blaze {
@@ -70,7 +86,12 @@ auto compile(const sourcemeta::core::JSON &input,
   // (2) Canonicalize the schema for easier analysis
   // --------------------------------------------------------------------------
 
-  sourcemeta::blaze::canonicalize(schema, walker, resolver, default_dialect,
+  // Canonicalisation can collapse an unsatisfiable schema into a boolean,
+  // which has no room for the dialect the document declares, so hold on to
+  // that dialect for the framing that follows
+  const auto dialect{declared_dialect(schema, default_dialect)};
+
+  sourcemeta::blaze::canonicalize(schema, walker, resolver, dialect,
                                   default_id);
 
   // --------------------------------------------------------------------------
@@ -78,8 +99,12 @@ auto compile(const sourcemeta::core::JSON &input,
   // --------------------------------------------------------------------------
 
   sourcemeta::blaze::SchemaFrame frame{
-      sourcemeta::blaze::SchemaFrame::Mode::References};
-  frame.analyse(schema, walker, resolver, default_dialect, default_id);
+      sourcemeta::blaze::SchemaFrame::Mode::References,
+      schema,
+      walker,
+      resolver,
+      dialect,
+      default_id};
 
   // --------------------------------------------------------------------------
   // (4) Convert every subschema into a code generation object
@@ -90,30 +115,26 @@ auto compile(const sourcemeta::core::JSON &input,
                      sourcemeta::core::WeakPointer::Comparator>
       visited;
   CodegenIRResult result;
-  for (const auto &[key, location] : frame.locations()) {
-    if (location.type !=
-            sourcemeta::blaze::SchemaFrame::LocationType::Resource &&
-        location.type !=
-            sourcemeta::blaze::SchemaFrame::LocationType::Subschema) {
-      continue;
-    }
+  frame.for_each_subschema(
+      [&](const sourcemeta::blaze::SchemaFrame::Location &location) -> void {
+        // Framing may report resource twice or more given default identifiers
+        // and nested resources
+        const auto [visited_iterator, inserted] =
+            visited.insert(location.pointer);
+        if (!inserted) {
+          return;
+        }
 
-    // Framing may report resource twice or more given default identifiers and
-    // nested resources
-    const auto [visited_iterator, inserted] = visited.insert(location.pointer);
-    if (!inserted) {
-      continue;
-    }
+        // Skip subschemas under validation-only keywords that do not contribute
+        // to the type structure (like `contains`)
+        if (is_validation_subschema(frame, location, walker, resolver)) {
+          return;
+        }
 
-    // Skip subschemas under validation-only keywords that do not contribute
-    // to the type structure (like `contains`)
-    if (is_validation_subschema(frame, location, walker, resolver)) {
-      continue;
-    }
-
-    const auto &subschema{sourcemeta::core::get(schema, location.pointer)};
-    result.push_back(compiler(schema, frame, location, resolver, subschema));
-  }
+        const auto &subschema{sourcemeta::core::get(schema, location.pointer)};
+        result.push_back(
+            compiler(schema, frame, location, resolver, subschema));
+      });
 
   // --------------------------------------------------------------------------
   // (5) Sort entries so that dependencies come before dependents

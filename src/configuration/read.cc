@@ -32,9 +32,9 @@ auto resolve_path(const std::filesystem::path &base,
                   const std::filesystem::path &value) -> std::filesystem::path {
   if (value.is_absolute()) {
     return std::filesystem::weakly_canonical(value);
-  } else {
-    return std::filesystem::weakly_canonical(base / value);
   }
+
+  return std::filesystem::weakly_canonical(base / value);
 }
 
 auto maybe_suffix(const std::filesystem::path &path,
@@ -42,9 +42,9 @@ auto maybe_suffix(const std::filesystem::path &path,
     -> std::filesystem::path {
   if (std::filesystem::is_regular_file(path) || path.extension() == ".json") {
     return path;
-  } else {
-    return path / suffix;
   }
+
+  return path / suffix;
 }
 
 auto dereference(const std::filesystem::path &base,
@@ -56,10 +56,10 @@ auto dereference(const std::filesystem::path &base,
   assert(base.is_absolute());
   if (!input.is_object()) {
     return;
+  }
 
-    // Read extensions (only at the top level, not inside contents)
-  } else if (is_root && input.defines("extends") &&
-             input.at("extends").is_array()) {
+  // Read extensions (only at the top level, not inside contents)
+  if (is_root && input.defines("extends") && input.at("extends").is_array()) {
     auto accumulator{sourcemeta::core::JSON::make_object()};
     for (const auto &entry : input.at("extends").as_array()) {
       if (entry.is_string()) {

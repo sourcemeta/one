@@ -2,14 +2,16 @@
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json.h>
 
-#include <cassert>    // assert
-#include <cstdint>    // std::uint8_t
-#include <filesystem> // std::filesystem
-#include <iostream>   // std::cerr, std::cout
-#include <optional>   // std::optional
-#include <ostream>    // std::ostream
-#include <string>     // std::string
-#include <utility>    // std::move, std::to_underlying
+#include <array>       // std::to_array
+#include <cassert>     // assert
+#include <cstdint>     // std::uint8_t
+#include <filesystem>  // std::filesystem
+#include <iostream>    // std::cerr, std::cout
+#include <optional>    // std::optional
+#include <ostream>     // std::ostream
+#include <string>      // std::string
+#include <string_view> // std::string_view
+#include <utility>     // std::move, std::to_underlying
 
 #include "command.h"
 #include "configuration.h"
@@ -41,7 +43,7 @@ auto dependency_fetch(const sourcemeta::core::Options &options,
                       std::string_view uri) -> sourcemeta::core::JSON {
   auto result{sourcemeta::jsonschema::fetch_schema(options, uri, true, true)};
   if (result.has_value()) {
-    return std::move(result.value());
+    return std::move(result).to_owned();
   }
 
   throw sourcemeta::core::FileError<sourcemeta::blaze::SchemaResolutionError>(
@@ -51,7 +53,7 @@ auto dependency_fetch(const sourcemeta::core::Options &options,
 auto dependency_resolve(const sourcemeta::core::Options &options,
                         const sourcemeta::blaze::Configuration &configuration,
                         std::string_view identifier)
-    -> std::optional<sourcemeta::core::JSON> {
+    -> sourcemeta::blaze::SchemaResolverResult {
   const std::string string_identifier{identifier};
 
   const auto mapped{sourcemeta::jsonschema::resolve_map_uri(configuration,
@@ -64,6 +66,8 @@ auto dependency_resolve(const sourcemeta::core::Options &options,
         return result;
       }
     } catch (...) {
+      // Failing to fetch a mapped URI is expected to fall back to the
+      // remaining resolution strategies
     }
   }
 
@@ -90,15 +94,13 @@ auto emit_debug(const sourcemeta::core::Options &options,
   }
 
   using Type = sourcemeta::blaze::Configuration::FetchEvent::Type;
-  static const char *type_names[] = {
-      "fetch/start",   "fetch/end",    "bundle/start", "bundle/end",
-      "write/start",   "write/end",    "verify/start", "verify/end",
-      "up-to-date",    "file-missing", "orphaned",     "mismatched",
-      "path-mismatch", "untracked",    "error"};
-  static_assert(sizeof(type_names) / sizeof(type_names[0]) ==
-                std::to_underlying(Type::Error) + 1);
+  static constexpr auto TYPE_NAMES{std::to_array<std::string_view>(
+      {"fetch/start", "fetch/end", "bundle/start", "bundle/end", "write/start",
+       "write/end", "verify/start", "verify/end", "up-to-date", "file-missing",
+       "orphaned", "mismatched", "path-mismatch", "untracked", "error"})};
+  static_assert(TYPE_NAMES.size() == std::to_underlying(Type::Error) + 1);
   const auto type_index{std::to_underlying(event.type)};
-  std::cerr << "debug: " << type_names[type_index] << ": " << event.uri << " ("
+  std::cerr << "debug: " << TYPE_NAMES[type_index] << ": " << event.uri << " ("
             << (event.index + 1) << "/" << event.total << ")";
   if (!event.path.empty()) {
     std::cerr << " -> " << event.path.generic_string();
@@ -120,6 +122,21 @@ auto output_json(sourcemeta::core::JSON &events_array) -> void {
   result.assign("events", std::move(events_array));
   sourcemeta::core::prettify(result, std::cout);
   std::cout << "\n";
+}
+
+auto existing_configuration_path(
+    const std::optional<std::filesystem::path> &given)
+    -> std::optional<std::filesystem::path> {
+  if (!given.has_value()) {
+    return sourcemeta::blaze::Configuration::find(
+        std::filesystem::current_path());
+  }
+
+  if (std::filesystem::is_regular_file(given.value())) {
+    return given;
+  }
+
+  return std::nullopt;
 }
 
 enum class OrphanedBehavior : std::uint8_t { Delete, Error };
@@ -273,7 +290,7 @@ auto sourcemeta::jsonschema::install(const sourcemeta::core::Options &options)
   auto events_array{sourcemeta::core::JSON::make_array()};
 
   const auto &positional_arguments{options.positional()};
-  if (positional_arguments.size() != 0 && positional_arguments.size() != 2) {
+  if (!positional_arguments.empty() && positional_arguments.size() != 2) {
     throw PositionalArgumentError{
         "The install command takes either zero or two positional arguments",
         "jsonschema install https://example.com/schema ./vendor/schema.json"};
@@ -292,8 +309,10 @@ auto sourcemeta::jsonschema::install(const sourcemeta::core::Options &options)
 
   validate_http_headers(options);
 
+  const auto given_configuration_path{
+      sourcemeta::jsonschema::configuration_override(options)};
   auto configuration_path{
-      sourcemeta::blaze::Configuration::find(std::filesystem::current_path())};
+      existing_configuration_path(given_configuration_path)};
 
   if (positional_arguments.size() == 2) {
     const std::string dependency_uri{positional_arguments.at(0)};
@@ -315,13 +334,15 @@ auto sourcemeta::jsonschema::install(const sourcemeta::core::Options &options)
                                                    error);
       }
     } else {
-      configuration_path = std::filesystem::current_path() / "jsonschema.json";
-      add_configuration.absolute_path = std::filesystem::current_path();
-      add_configuration.base_path = std::filesystem::current_path();
+      configuration_path = given_configuration_path.value_or(
+          std::filesystem::current_path() / "jsonschema.json");
+      const auto configuration_base{configuration_path.value().parent_path()};
+      add_configuration.absolute_path = configuration_base;
+      add_configuration.base_path = configuration_base;
     }
 
     const auto absolute_target{std::filesystem::weakly_canonical(
-        std::filesystem::current_path() / input_path)};
+        add_configuration.base_path / input_path)};
     try {
       const sourcemeta::core::URI uri{dependency_uri};
       add_configuration.dependencies.erase(
@@ -344,9 +365,9 @@ auto sourcemeta::jsonschema::install(const sourcemeta::core::Options &options)
                        add_configuration.to_json().at("dependencies"));
     atomic_write_json(configuration_path.value(), config_json);
 
-    auto relative_target{std::filesystem::relative(
-                             absolute_target, add_configuration.absolute_path)
-                             .generic_string()};
+    auto relative_target{
+        std::filesystem::relative(absolute_target, add_configuration.base_path)
+            .generic_string()};
     if (!relative_target.starts_with("..")) {
       relative_target = "./" + relative_target;
     }
@@ -364,6 +385,10 @@ auto sourcemeta::jsonschema::install(const sourcemeta::core::Options &options)
   }
 
   if (!configuration_path.has_value()) {
+    if (given_configuration_path.has_value()) {
+      throw ConfigurationFileNotFoundError{given_configuration_path.value()};
+    }
+
     throw ConfigurationNotFoundError{std::filesystem::current_path()};
   }
 
@@ -436,7 +461,7 @@ auto sourcemeta::jsonschema::install(const sourcemeta::core::Options &options)
 
   const sourcemeta::blaze::SchemaResolver resolver{
       [&options, &configuration](std::string_view identifier)
-          -> std::optional<sourcemeta::core::JSON> {
+          -> sourcemeta::blaze::SchemaResolverResult {
         return dependency_resolve(options, configuration, identifier);
       }};
 

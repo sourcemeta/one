@@ -483,7 +483,8 @@ auto describe(const bool valid, const Instruction &step,
     return message.str();
   }
 
-  if (step.type == sourcemeta::blaze::InstructionIndex::AnnotationEmit) {
+  if (step.type == sourcemeta::blaze::InstructionIndex::AnnotationEmit ||
+      step.type == sourcemeta::blaze::InstructionIndex::AnnotationEmitWrapped) {
     if (keyword == "properties") {
       assert(annotation.is_string());
       std::ostringstream message;
@@ -1707,6 +1708,14 @@ auto describe(const bool valid, const Instruction &step,
 
   if (step.type ==
       sourcemeta::blaze::InstructionIndex::AssertionNotTypeStrictAny) {
+    // Draft 3 permits a negative `maxLength`, which we compile into a check
+    // that the value is not a string, as no string is that short. Saying so in
+    // terms of types would not explain the keyword the reader wrote
+    if (keyword == "maxLength") {
+      return "The value was expected to be of a type other than string, as no "
+             "string is short enough to satisfy a negative maximum length";
+    }
+
     std::ostringstream message;
     describe_not_types_check(valid, target.type(),
                              instruction_value<ValueTypes>(step), message);
