@@ -19,8 +19,14 @@ TEST(empty) {
 
 TEST(single_entry) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/foo/bar", "http://example.com/foo/bar", "My Title", "A description",
-       80, 100, 0, 0}};
+      {.path = "/foo/bar",
+       .identifier = "http://example.com/foo/bar",
+       .title = "My Title",
+       .description = "A description",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   EXPECT_FALSE(payload.empty());
   EXPECT_GE(payload.size(), sizeof(sourcemeta::one::SearchIndexHeader));
@@ -28,7 +34,14 @@ TEST(single_entry) {
 
 TEST(header_single_entry) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/foo", "http://example.com/foo", "Title", "Desc", 80, 100, 0, 0}};
+      {.path = "/foo",
+       .identifier = "http://example.com/foo",
+       .title = "Title",
+       .description = "Desc",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   sourcemeta::one::SearchIndexHeader header{};
@@ -41,9 +54,30 @@ TEST(header_single_entry) {
 
 TEST(header_multiple_entries) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/a", "http://example.com/a", "A", "Desc A", 80, 100, 0, 0},
-      {"/b", "http://example.com/b", "B", "Desc B", 80, 100, 0, 0},
-      {"/c", "http://example.com/c", "C", "Desc C", 80, 100, 0, 0}};
+      {.path = "/a",
+       .identifier = "http://example.com/a",
+       .title = "A",
+       .description = "Desc A",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0},
+      {.path = "/b",
+       .identifier = "http://example.com/b",
+       .title = "B",
+       .description = "Desc B",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0},
+      {.path = "/c",
+       .identifier = "http://example.com/c",
+       .title = "C",
+       .description = "Desc C",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   sourcemeta::one::SearchIndexHeader header{};
@@ -56,8 +90,22 @@ TEST(header_multiple_entries) {
 
 TEST(offset_table) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/a", "http://example.com/a", "A", "D", 80, 100, 0, 0},
-      {"/b", "http://example.com/b", "BB", "DD", 80, 100, 0, 0}};
+      {.path = "/a",
+       .identifier = "http://example.com/a",
+       .title = "A",
+       .description = "D",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0},
+      {.path = "/b",
+       .identifier = "http://example.com/b",
+       .title = "BB",
+       .description = "DD",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   sourcemeta::one::SearchIndexHeader header{};
@@ -84,8 +132,14 @@ TEST(offset_table) {
 
 TEST(record_fields) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/test/path", "http://example.com/test/path", "My Title",
-       "My Description", 80, 100, 4096, 8192}};
+      {.path = "/test/path",
+       .identifier = "http://example.com/test/path",
+       .title = "My Title",
+       .description = "My Description",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 4096,
+       .bytes_bundled = 8192}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   sourcemeta::one::SearchIndexHeader header{};
@@ -130,8 +184,22 @@ TEST(record_fields) {
 
 TEST(total_size) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/a", "http://example.com/a", "T", "D", 80, 100, 0, 0},
-      {"/bb", "http://example.com/bb", "TT", "DD", 80, 100, 0, 0}};
+      {.path = "/a",
+       .identifier = "http://example.com/a",
+       .title = "T",
+       .description = "D",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0},
+      {.path = "/bb",
+       .identifier = "http://example.com/bb",
+       .title = "TT",
+       .description = "DD",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   const auto first_fields{std::string{"/a"}.size() +
@@ -141,7 +209,7 @@ TEST(total_size) {
                            std::string{"http://example.com/bb"}.size() +
                            std::string{"TT"}.size() + std::string{"DD"}.size()};
   const auto expected_size{
-      sizeof(sourcemeta::one::SearchIndexHeader) + 2 * sizeof(std::uint32_t) +
+      sizeof(sourcemeta::one::SearchIndexHeader) + (2 * sizeof(std::uint32_t)) +
       sizeof(sourcemeta::one::SearchRecordHeader) + first_fields +
       sizeof(sourcemeta::one::SearchRecordHeader) + second_fields};
   EXPECT_EQ(payload.size(), expected_size);
@@ -150,10 +218,22 @@ TEST(total_size) {
 TEST(skips_entry_with_oversized_path) {
   const std::string oversized_path(70000, 'x');
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {oversized_path, "http://example.com/oversized", "Title", "Desc", 80, 100,
-       0, 0},
-      {"/normal", "http://example.com/normal", "Normal", "Desc", 80, 100, 0,
-       0}};
+      {.path = oversized_path,
+       .identifier = "http://example.com/oversized",
+       .title = "Title",
+       .description = "Desc",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0},
+      {.path = "/normal",
+       .identifier = "http://example.com/normal",
+       .title = "Normal",
+       .description = "Desc",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   sourcemeta::one::SearchIndexHeader header{};
@@ -165,9 +245,22 @@ TEST(skips_entry_with_oversized_path) {
 TEST(skips_entry_with_oversized_identifier) {
   const std::string oversized_identifier(70000, 'x');
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/foo", oversized_identifier, "Title", "Desc", 80, 100, 0, 0},
-      {"/normal", "http://example.com/normal", "Normal", "Desc", 80, 100, 0,
-       0}};
+      {.path = "/foo",
+       .identifier = oversized_identifier,
+       .title = "Title",
+       .description = "Desc",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0},
+      {.path = "/normal",
+       .identifier = "http://example.com/normal",
+       .title = "Normal",
+       .description = "Desc",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   sourcemeta::one::SearchIndexHeader header{};
@@ -179,8 +272,14 @@ TEST(skips_entry_with_oversized_identifier) {
 TEST(truncates_oversized_title_with_ellipsis) {
   const std::string oversized_title(70000, 'x');
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/foo", "http://example.com/foo", oversized_title, "Desc", 80, 100, 0,
-       0}};
+      {.path = "/foo",
+       .identifier = "http://example.com/foo",
+       .title = oversized_title,
+       .description = "Desc",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   sourcemeta::one::SearchIndexHeader header{};
@@ -188,9 +287,9 @@ TEST(truncates_oversized_title_with_ellipsis) {
               sizeof(sourcemeta::one::SearchIndexHeader));
   EXPECT_EQ(header.entry_count, 1);
 
-  const auto result{sourcemeta::one::search(payload.data(), payload.size(),
-                                            "foo", 10,
-                                            sourcemeta::one::SearchScopePath)};
+  const auto result{
+      sourcemeta::one::search(payload.data(), payload.size(), "foo", 10,
+                              sourcemeta::one::SEARCH_SCOPE_PATH)};
   EXPECT_EQ(result.size(), 1);
   const auto &title{result.at(0).at("title").to_string()};
   EXPECT_EQ(title.size(), 65535);
@@ -201,8 +300,14 @@ TEST(truncates_oversized_title_with_ellipsis) {
 TEST(truncates_oversized_description_with_ellipsis) {
   const std::string oversized_description(70000, 'x');
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/foo", "http://example.com/foo", "Title", oversized_description, 80,
-       100, 0, 0}};
+      {.path = "/foo",
+       .identifier = "http://example.com/foo",
+       .title = "Title",
+       .description = oversized_description,
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   sourcemeta::one::SearchIndexHeader header{};
@@ -210,9 +315,9 @@ TEST(truncates_oversized_description_with_ellipsis) {
               sizeof(sourcemeta::one::SearchIndexHeader));
   EXPECT_EQ(header.entry_count, 1);
 
-  const auto result{sourcemeta::one::search(payload.data(), payload.size(),
-                                            "foo", 10,
-                                            sourcemeta::one::SearchScopePath)};
+  const auto result{
+      sourcemeta::one::search(payload.data(), payload.size(), "foo", 10,
+                              sourcemeta::one::SEARCH_SCOPE_PATH)};
   EXPECT_EQ(result.size(), 1);
   const auto &description{result.at(0).at("description").to_string()};
   EXPECT_EQ(description.size(), 65535);
@@ -223,8 +328,14 @@ TEST(truncates_oversized_description_with_ellipsis) {
 TEST(all_entries_oversized_returns_empty) {
   const std::string oversized(70000, 'x');
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {oversized, "http://example.com/oversized", "Title", "Desc", 80, 100, 0,
-       0}};
+      {.path = oversized,
+       .identifier = "http://example.com/oversized",
+       .title = "Title",
+       .description = "Desc",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   EXPECT_TRUE(payload.empty());
 }
@@ -232,7 +343,14 @@ TEST(all_entries_oversized_returns_empty) {
 TEST(entry_at_exact_uint16_max_is_kept) {
   const std::string max_path(65535, 'a');
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {max_path, "http://example.com/x", "", "", 80, 100, 0, 0}};
+      {.path = max_path,
+       .identifier = "http://example.com/x",
+       .title = "",
+       .description = "",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   EXPECT_FALSE(payload.empty());
 
@@ -245,22 +363,48 @@ TEST(entry_at_exact_uint16_max_is_kept) {
 TEST(entry_at_uint16_max_plus_one_is_skipped) {
   const std::string too_long_path(65536, 'a');
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {too_long_path, "http://example.com/x", "", "", 80, 100, 0, 0}};
+      {.path = too_long_path,
+       .identifier = "http://example.com/x",
+       .title = "",
+       .description = "",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   EXPECT_TRUE(payload.empty());
 }
 
 TEST(priority_is_primary_sort_key) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/low/rich", "http://example.com/low/rich", "Rich Title", "Rich Desc",
-       100, 0, 0, 0},
-      {"/high/bare", "http://example.com/high/bare", "", "", 0, 100, 0, 0},
-      {"/mid/rich", "http://example.com/mid/rich", "Mid Title", "Mid Desc", 90,
-       50, 0, 0}};
+      {.path = "/low/rich",
+       .identifier = "http://example.com/low/rich",
+       .title = "Rich Title",
+       .description = "Rich Desc",
+       .health = 100,
+       .priority = 0,
+       .bytes_raw = 0,
+       .bytes_bundled = 0},
+      {.path = "/high/bare",
+       .identifier = "http://example.com/high/bare",
+       .title = "",
+       .description = "",
+       .health = 0,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0},
+      {.path = "/mid/rich",
+       .identifier = "http://example.com/mid/rich",
+       .title = "Mid Title",
+       .description = "Mid Desc",
+       .health = 90,
+       .priority = 50,
+       .bytes_raw = 0,
+       .bytes_bundled = 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
-  const auto result{sourcemeta::one::search(payload.data(), payload.size(), "/",
-                                            10,
-                                            sourcemeta::one::SearchScopePath)};
+  const auto result{
+      sourcemeta::one::search(payload.data(), payload.size(), "/", 10,
+                              sourcemeta::one::SEARCH_SCOPE_PATH)};
   EXPECT_EQ(result.size(), 3);
   EXPECT_EQ(result.at(0).at("path").to_string(), "/high/bare");
   EXPECT_EQ(result.at(1).at("path").to_string(), "/mid/rich");
@@ -269,11 +413,18 @@ TEST(priority_is_primary_sort_key) {
 
 TEST(priority_and_health_surface_in_search_output) {
   std::vector<sourcemeta::one::SearchEntry> entries{
-      {"/foo", "http://example.com/foo", "Title", "Desc", 80, 50, 0, 0}};
+      {.path = "/foo",
+       .identifier = "http://example.com/foo",
+       .title = "Title",
+       .description = "Desc",
+       .health = 80,
+       .priority = 50,
+       .bytes_raw = 0,
+       .bytes_bundled = 0}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
-  const auto result{sourcemeta::one::search(payload.data(), payload.size(),
-                                            "foo", 10,
-                                            sourcemeta::one::SearchScopePath)};
+  const auto result{
+      sourcemeta::one::search(payload.data(), payload.size(), "foo", 10,
+                              sourcemeta::one::SEARCH_SCOPE_PATH)};
   EXPECT_EQ(result.size(), 1);
   EXPECT_TRUE(result.at(0).defines("priority"));
   EXPECT_EQ(result.at(0).at("priority").to_integer(), 50);

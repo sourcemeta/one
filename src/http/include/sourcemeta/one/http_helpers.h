@@ -143,7 +143,7 @@ private:
 // A line about something that happened, optionally naming the one value it
 // happened to, such as the policy a failure concerns. Keeping the value apart
 // from the message means neither has to be built into a string to say both
-inline auto HTTP_LOG(const std::string_view message,
+inline auto http_log(const std::string_view message,
                      const std::string_view value = {}) -> void {
   static std::mutex log_mutex;
   std::scoped_lock guard{log_mutex};
@@ -204,7 +204,7 @@ inline auto send_response(const sourcemeta::core::HTTPStatus &status,
   const auto line{
       std::format("{} {} {}", status.wire, request.method(), request.path())};
   response.send_without_content();
-  HTTP_LOG(line);
+  http_log(line);
   request.observation().record(status.code);
 }
 
@@ -218,7 +218,7 @@ inline auto send_response(
       std::format("{} {} {}", status.wire, request.method(), request.path())};
   response.send(request, message, current_encoding,
                 precomputed_compressed_size);
-  HTTP_LOG(line);
+  http_log(line);
   request.observation().record(status.code);
 }
 

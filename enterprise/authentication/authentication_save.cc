@@ -348,21 +348,21 @@ auto Authentication::Table::compile(
   // directly, so pad past the byte-packed policy table
   header.nodes_offset = align_to_word(
       header.policies_offset +
-      header.policy_count *
-          static_cast<std::uint32_t>(sizeof(AuthenticationPolicyEntry)));
+      (header.policy_count *
+       static_cast<std::uint32_t>(sizeof(AuthenticationPolicyEntry))));
   // Both the node and the view arrays hold eight-byte-aligned entries of the
   // same width, so placing the views between the nodes and the byte-packed
   // edges keeps every section aligned without padding between them
-  header.views_offset =
-      header.nodes_offset + header.node_count * static_cast<std::uint32_t>(
-                                                    sizeof(AuthenticationNode));
+  header.views_offset = header.nodes_offset +
+                        (header.node_count * static_cast<std::uint32_t>(
+                                                 sizeof(AuthenticationNode)));
   header.edges_offset =
       header.views_offset +
-      header.view_count *
-          static_cast<std::uint32_t>(sizeof(AuthenticationViewEntry));
-  header.strings_offset =
-      header.edges_offset + header.edge_count * static_cast<std::uint32_t>(
-                                                    sizeof(AuthenticationEdge));
+      (header.view_count *
+       static_cast<std::uint32_t>(sizeof(AuthenticationViewEntry)));
+  header.strings_offset = header.edges_offset +
+                          (header.edge_count * static_cast<std::uint32_t>(
+                                                   sizeof(AuthenticationEdge)));
   header.strings_length = static_cast<std::uint32_t>(strings.size());
 
   // The per-policy metadata is appended after the string blob and located by

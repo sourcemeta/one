@@ -16,7 +16,7 @@
 #include <string_view> // std::string_view
 #include <utility>     // std::move
 
-class ActionAuthLoginPage_v1 : public sourcemeta::one::RouterAction {
+class ActionAuthLoginPageV1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
       "Show the ways of signing in to this instance"};
@@ -25,7 +25,7 @@ public:
   static constexpr bool IDEMPOTENT{true};
   static constexpr bool OPEN_WORLD{false};
 
-  ActionAuthLoginPage_v1(
+  ActionAuthLoginPageV1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
@@ -109,10 +109,11 @@ public:
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
-           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
+           const sourcemeta::core::JSON &request_id,
+           const sourcemeta::core::JSON &,
            const sourcemeta::one::Authentication::Caller &)
       -> sourcemeta::core::JSON override {
-    return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
+    return sourcemeta::core::jsonrpc_make_error_method_not_found(request_id);
   }
 
 private:

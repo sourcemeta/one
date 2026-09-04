@@ -62,11 +62,9 @@ struct SearchRecordHeader {
 // Result ranking is fixed and intentionally not configurable: higher-priority
 // schemas always come first, then entries with richer metadata, then
 // healthier schemas. The scope only narrows which fields are searched
-enum SearchScope : std::uint8_t {
-  SearchScopePath = 0b001,
-  SearchScopeTitle = 0b010,
-  SearchScopeDescription = 0b100
-};
+inline constexpr std::uint8_t SEARCH_SCOPE_PATH{0b001};
+inline constexpr std::uint8_t SEARCH_SCOPE_TITLE{0b010};
+inline constexpr std::uint8_t SEARCH_SCOPE_DESCRIPTION{0b100};
 
 SOURCEMETA_ONE_SEARCH_EXPORT
 auto make_search(std::vector<SearchEntry> &&entries)

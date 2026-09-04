@@ -4,13 +4,13 @@
 #include <string>        // std::string
 #include <unordered_set> // std::unordered_set
 
-auto replace_all(std::string &text, const std::string &from,
-                 const std::string &to) -> void {
-  assert(!from.empty());
+auto replace_all(std::string &text, const std::string &needle,
+                 const std::string &replacement) -> void {
+  assert(!needle.empty());
   std::size_t cursor{0};
-  while ((cursor = text.find(from, cursor)) != std::string::npos) {
-    text.replace(cursor, from.length(), to);
-    cursor += to.length();
+  while ((cursor = text.find(needle, cursor)) != std::string::npos) {
+    text.replace(cursor, needle.length(), replacement);
+    cursor += replacement.length();
   }
 }
 

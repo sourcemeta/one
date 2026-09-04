@@ -18,7 +18,7 @@
 #include <string_view> // std::string_view
 #include <utility>     // std::move
 
-class ActionDependencyTree_v1 : public sourcemeta::one::RouterAction {
+class ActionDependencyTreeV1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
       "Look up the dependency graph of a specific schema (incoming or "
@@ -28,7 +28,7 @@ public:
   static constexpr bool IDEMPOTENT{true};
   static constexpr bool OPEN_WORLD{false};
 
-  ActionDependencyTree_v1(
+  ActionDependencyTreeV1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
@@ -158,7 +158,7 @@ public:
   }
 
 protected:
-  ActionDependencyTree_v1(
+  ActionDependencyTreeV1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,

@@ -69,8 +69,10 @@ TEST(full_empty_registry) {
 TEST(full_single_leaf) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  const TestLeaves schemas{
-      {"https://example.com/foo", "/src/foo.json", "foo", MTIME(100)}};
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(100)}};
 
   entries.configure(test_rules::RULES.leaves, test_rules::RULES.directories,
                     sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
@@ -125,8 +127,10 @@ TEST(full_single_leaf) {
 TEST(a_leaf_no_view_holds_is_written_outside_the_namespaced_tree_alone) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  const TestLeaves schemas{
-      {"https://example.com/foo", "/src/foo.json", "foo", MTIME(100)}};
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(100)}};
 
   entries.configure(test_rules::RULES.leaves, test_rules::RULES.directories,
                     sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
@@ -191,8 +195,10 @@ TEST(a_leaf_no_view_holds_is_written_outside_the_namespaced_tree_alone) {
 TEST(full_single_leaf_across_two_views) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  const TestLeaves schemas{
-      {"https://example.com/foo", "/src/foo.json", "foo", MTIME(100)}};
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(100)}};
 
   entries.configure(test_rules::RULES.leaves, test_rules::RULES.directories,
                     sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
@@ -269,8 +275,10 @@ TEST(full_single_leaf_across_two_views) {
 TEST(full_single_leaf_headless_skips_full_only) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  const TestLeaves schemas{
-      {"https://example.com/foo", "/src/foo.json", "foo", MTIME(100)}};
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(100)}};
 
   entries.configure(test_rules::RULES.leaves, test_rules::RULES.directories,
                     sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
@@ -320,8 +328,10 @@ TEST(full_single_leaf_headless_skips_full_only) {
 TEST(full_nested_leaf_path) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  const TestLeaves schemas{
-      {"https://example.com/a/b/c", "/src/abc.json", "a/b/c", MTIME(100)}};
+  const TestLeaves schemas{{.identifier = "https://example.com/a/b/c",
+                            .path = "/src/abc.json",
+                            .relative_path = "a/b/c",
+                            .mtime = MTIME(100)}};
 
   entries.configure(test_rules::RULES.leaves, test_rules::RULES.directories,
                     sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
@@ -464,9 +474,14 @@ TEST(full_without_comment_removes_stale_comment) {
 TEST(full_multiple_leaves_emits_per_leaf_actions) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  const TestLeaves schemas{
-      {"https://example.com/a", "/src/a.json", "a", MTIME(100)},
-      {"https://example.com/b", "/src/b.json", "b", MTIME(100)}};
+  const TestLeaves schemas{{.identifier = "https://example.com/a",
+                            .path = "/src/a.json",
+                            .relative_path = "a",
+                            .mtime = MTIME(100)},
+                           {.identifier = "https://example.com/b",
+                            .path = "/src/b.json",
+                            .relative_path = "b",
+                            .mtime = MTIME(100)}};
 
   entries.configure(test_rules::RULES.leaves, test_rules::RULES.directories,
                     sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
@@ -540,8 +555,10 @@ TEST(incremental_cached_globals_are_omitted) {
   const auto output{delta_path("cached_globals")};
   WRITE_GLOBAL_OUTPUTS(output);
   sourcemeta::one::BuildState entries;
-  const TestLeaves schemas{
-      {"https://example.com/foo", "/src/foo.json", "foo", MTIME(100)}};
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(100)}};
   ADD_LEAF_ENTRIES(entries, output, "foo", true, MTIME(50));
   ADD_GLOBAL_ENTRIES(entries, output, MTIME(150));
   entries.emplace(output / "secondary" / "public" / "%" / "listing.bin",
@@ -582,9 +599,14 @@ TEST(incremental_only_the_new_leaf_is_built_beside_an_unchanged_one) {
   const auto output{delta_path("new_leaf_alongside")};
   WRITE_GLOBAL_OUTPUTS(output);
   sourcemeta::one::BuildState entries;
-  const TestLeaves schemas{
-      {"https://example.com/foo", "/src/foo.json", "foo", MTIME(100)},
-      {"https://example.com/bar", "/src/bar.json", "bar", MTIME(200)}};
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(100)},
+                           {.identifier = "https://example.com/bar",
+                            .path = "/src/bar.json",
+                            .relative_path = "bar",
+                            .mtime = MTIME(200)}};
   ADD_LEAF_ENTRIES(entries, output, "foo", true, MTIME(150));
   ADD_GLOBAL_ENTRIES(entries, output, MTIME(150));
   entries.emplace(output / "secondary" / "public" / "%" / "listing.bin",
@@ -642,8 +664,10 @@ TEST(incremental_missing_version_global_is_repaired) {
   WRITE_GLOBAL_OUTPUTS(output);
   std::filesystem::remove(output / "version.json");
   sourcemeta::one::BuildState entries;
-  const TestLeaves schemas{
-      {"https://example.com/foo", "/src/foo.json", "foo", MTIME(100)}};
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(100)}};
   ADD_LEAF_ENTRIES(entries, output, "foo", true, MTIME(150));
   ADD_GLOBAL_ENTRIES(entries, output, MTIME(150));
   entries.emplace(output / "secondary" / "public" / "%" / "listing.bin",
@@ -675,8 +699,10 @@ TEST(incremental_missing_configuration_anchor_is_repaired) {
   WRITE_GLOBAL_OUTPUTS(output);
   std::filesystem::remove(output / "configuration.json");
   sourcemeta::one::BuildState entries;
-  const TestLeaves schemas{
-      {"https://example.com/foo", "/src/foo.json", "foo", MTIME(100)}};
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(100)}};
   ADD_LEAF_ENTRIES(entries, output, "foo", true, MTIME(150));
   ADD_GLOBAL_ENTRIES(entries, output, MTIME(150));
   entries.emplace(output / "secondary" / "public" / "%" / "listing.bin",
@@ -708,8 +734,10 @@ TEST(incremental_missing_mode_global_is_repaired) {
   WRITE_GLOBAL_OUTPUTS(output);
   std::filesystem::remove(output / "routes.bin");
   sourcemeta::one::BuildState entries;
-  const TestLeaves schemas{
-      {"https://example.com/foo", "/src/foo.json", "foo", MTIME(100)}};
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(100)}};
   ADD_LEAF_ENTRIES(entries, output, "foo", true, MTIME(150));
   ADD_GLOBAL_ENTRIES(entries, output, MTIME(150));
   entries.emplace(output / "secondary" / "public" / "%" / "listing.bin",
@@ -741,8 +769,10 @@ TEST(incremental_missing_dependent_global_is_repaired) {
   WRITE_GLOBAL_OUTPUTS(output);
   std::filesystem::remove(output / "gate.bin");
   sourcemeta::one::BuildState entries;
-  const TestLeaves schemas{
-      {"https://example.com/foo", "/src/foo.json", "foo", MTIME(100)}};
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(100)}};
   ADD_LEAF_ENTRIES(entries, output, "foo", true, MTIME(150));
   ADD_GLOBAL_ENTRIES(entries, output, MTIME(150));
   entries.emplace(output / "secondary" / "public" / "%" / "listing.bin",
@@ -776,8 +806,10 @@ TEST(incremental_missing_globals_repair_in_dependency_order) {
   std::filesystem::remove(output / "routes.bin");
   std::filesystem::remove(output / "gate.bin");
   sourcemeta::one::BuildState entries;
-  const TestLeaves schemas{
-      {"https://example.com/foo", "/src/foo.json", "foo", MTIME(100)}};
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(100)}};
   ADD_LEAF_ENTRIES(entries, output, "foo", true, MTIME(150));
   ADD_GLOBAL_ENTRIES(entries, output, MTIME(150));
   entries.emplace(output / "secondary" / "public" / "%" / "listing.bin",
@@ -817,8 +849,10 @@ TEST(incremental_unrecorded_missing_global_is_not_demanded) {
   WRITE_GLOBAL_OUTPUTS(output);
   std::filesystem::remove(output / "gate.bin");
   sourcemeta::one::BuildState entries;
-  const TestLeaves schemas{
-      {"https://example.com/foo", "/src/foo.json", "foo", MTIME(100)}};
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(100)}};
   ADD_LEAF_ENTRIES(entries, output, "foo", true, MTIME(50));
   entries.emplace(output / "configuration.json",
                   {.file_mark = MTIME(150), .dependencies = {}});
@@ -889,11 +923,22 @@ TEST(incremental_missing_global_repairs_alone_when_nothing_else_changed) {
 TEST(limits_zero_disables_check) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  const TestLeaves schemas{
-      {"https://example.com/a", "/src/a.json", "a", MTIME(100)},
-      {"https://example.com/b", "/src/b.json", "b", MTIME(100)},
-      {"https://example.com/c", "/src/c.json", "c", MTIME(100)},
-      {"https://example.com/d", "/src/d.json", "d", MTIME(100)}};
+  const TestLeaves schemas{{.identifier = "https://example.com/a",
+                            .path = "/src/a.json",
+                            .relative_path = "a",
+                            .mtime = MTIME(100)},
+                           {.identifier = "https://example.com/b",
+                            .path = "/src/b.json",
+                            .relative_path = "b",
+                            .mtime = MTIME(100)},
+                           {.identifier = "https://example.com/c",
+                            .path = "/src/c.json",
+                            .relative_path = "c",
+                            .mtime = MTIME(100)},
+                           {.identifier = "https://example.com/d",
+                            .path = "/src/d.json",
+                            .relative_path = "d",
+                            .mtime = MTIME(100)}};
 
   entries.configure(test_rules::RULES.leaves, test_rules::RULES.directories,
                     sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
@@ -908,9 +953,14 @@ TEST(limits_zero_disables_check) {
 TEST(limits_within_threshold_succeeds) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  const TestLeaves schemas{
-      {"https://example.com/a", "/src/a.json", "a", MTIME(100)},
-      {"https://example.com/b", "/src/b.json", "b", MTIME(100)}};
+  const TestLeaves schemas{{.identifier = "https://example.com/a",
+                            .path = "/src/a.json",
+                            .relative_path = "a",
+                            .mtime = MTIME(100)},
+                           {.identifier = "https://example.com/b",
+                            .path = "/src/b.json",
+                            .relative_path = "b",
+                            .mtime = MTIME(100)}};
 
   entries.configure(test_rules::RULES.leaves, test_rules::RULES.directories,
                     sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
@@ -925,16 +975,18 @@ TEST(limits_within_threshold_succeeds) {
 TEST(a_named_view_is_a_segment_of_the_namespaced_tree_alone) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  const TestLeaves schemas{
-      {"https://example.com/foo", "/src/foo.json", "foo", MTIME(100)}};
-  static constexpr std::array<std::string_view, 1> named{{"alpha"}};
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(100)}};
+  static constexpr std::array<std::string_view, 1> NAMED{{"alpha"}};
 
   entries.configure(test_rules::RULES.leaves, test_rules::RULES.directories,
                     sourcemeta::one::rules_fingerprint<test_rules::RULES>(),
                     INPUTS, test_rules::RULES.sentinel);
   const auto plan{sourcemeta::one::delta<test_rules::RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
-      output, schemas, "1.0.0", false, "", "Full", {}, named, everything())};
+      output, schemas, "1.0.0", false, "", "Full", {}, NAMED, everything())};
 
   EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 6, 8);
 
@@ -986,8 +1038,10 @@ TEST(combine_leaf_without_previous_references_rebuilds_its_own_reverse) {
   std::filesystem::remove_all(output);
   std::filesystem::create_directories(output);
   sourcemeta::one::BuildState entries;
-  const TestLeaves schemas{
-      {"https://example.com/foo", "/src/foo.json", "foo", MTIME(100)}};
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(100)}};
   entries.emplace(output / "primary" / "foo" / "%" / "references.bin",
                   {.file_mark = MTIME(150), .dependencies = {}});
 
@@ -1015,9 +1069,14 @@ TEST(combine_new_reference_rebuilds_the_reverse_of_what_it_points_at) {
   std::filesystem::remove_all(output);
   std::filesystem::create_directories(output);
   const auto state{output / "state.bin"};
-  const TestLeaves schemas{
-      {"https://example.com/foo", "/src/foo.json", "foo", MTIME(100)},
-      {"https://example.com/bar", "/src/bar.json", "bar", MTIME(100)}};
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(100)},
+                           {.identifier = "https://example.com/bar",
+                            .path = "/src/bar.json",
+                            .relative_path = "bar",
+                            .mtime = MTIME(100)}};
 
   sourcemeta::one::BuildState previous;
   previous.emplace(output / "primary" / "foo" / "%" / "references.bin",
@@ -1060,9 +1119,14 @@ TEST(combine_unchanged_references_rebuild_nothing) {
   std::filesystem::remove_all(output);
   std::filesystem::create_directories(output);
   const auto state{output / "state.bin"};
-  const TestLeaves schemas{
-      {"https://example.com/foo", "/src/foo.json", "foo", MTIME(100)},
-      {"https://example.com/bar", "/src/bar.json", "bar", MTIME(100)}};
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(100)},
+                           {.identifier = "https://example.com/bar",
+                            .path = "/src/bar.json",
+                            .relative_path = "bar",
+                            .mtime = MTIME(100)}};
 
   sourcemeta::one::BuildState previous;
   previous.emplace(output / "primary" / "foo" / "%" / "references.bin",
@@ -1101,9 +1165,14 @@ TEST(combine_dropped_reference_rebuilds_the_reverse_of_what_it_left) {
   std::filesystem::remove_all(output);
   std::filesystem::create_directories(output);
   const auto state{output / "state.bin"};
-  const TestLeaves schemas{
-      {"https://example.com/foo", "/src/foo.json", "foo", MTIME(100)},
-      {"https://example.com/bar", "/src/bar.json", "bar", MTIME(100)}};
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(100)},
+                           {.identifier = "https://example.com/bar",
+                            .path = "/src/bar.json",
+                            .relative_path = "bar",
+                            .mtime = MTIME(100)}};
 
   sourcemeta::one::BuildState previous;
   previous.emplace(output / "primary" / "foo" / "%" / "references.bin",
@@ -1146,8 +1215,10 @@ TEST(combine_destination_follows_the_tree_the_rule_names) {
   std::filesystem::remove_all(output);
   std::filesystem::create_directories(output);
   sourcemeta::one::BuildState entries;
-  const TestLeaves schemas{
-      {"https://example.com/foo", "/src/foo.json", "foo", MTIME(100)}};
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(100)}};
   entries.emplace(output / "primary" / "foo" / "%" / "references.bin",
                   {.file_mark = MTIME(150), .dependencies = {}});
 
@@ -1174,10 +1245,18 @@ TEST(combine_destination_follows_the_tree_the_rule_names) {
 TEST(limits_exceeded_throws) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
-  const TestLeaves schemas{
-      {"https://example.com/a", "/src/a.json", "a", MTIME(100)},
-      {"https://example.com/b", "/src/b.json", "b", MTIME(100)},
-      {"https://example.com/c", "/src/c.json", "c", MTIME(100)}};
+  const TestLeaves schemas{{.identifier = "https://example.com/a",
+                            .path = "/src/a.json",
+                            .relative_path = "a",
+                            .mtime = MTIME(100)},
+                           {.identifier = "https://example.com/b",
+                            .path = "/src/b.json",
+                            .relative_path = "b",
+                            .mtime = MTIME(100)},
+                           {.identifier = "https://example.com/c",
+                            .path = "/src/c.json",
+                            .relative_path = "c",
+                            .mtime = MTIME(100)}};
 
   entries.configure(test_rules::RULES.leaves, test_rules::RULES.directories,
                     sourcemeta::one::rules_fingerprint<test_rules::RULES>(),

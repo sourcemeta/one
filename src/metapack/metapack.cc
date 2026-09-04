@@ -346,10 +346,10 @@ auto metapack_info(const sourcemeta::core::FileView &view)
 
   std::string checksum_hex;
   checksum_hex.reserve(64);
-  static constexpr const char *hex_chars = "0123456789abcdef";
+  static constexpr const char *HEX_CHARS = "0123456789abcdef";
   for (const auto byte : header->checksum) {
-    checksum_hex += hex_chars[(byte >> 4) & 0x0F];
-    checksum_hex += hex_chars[byte & 0x0F];
+    checksum_hex += HEX_CHARS[(byte >> 4) & 0x0F];
+    checksum_hex += HEX_CHARS[byte & 0x0F];
   }
 
   const auto nanos{std::chrono::nanoseconds{header->last_modified}};

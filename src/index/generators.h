@@ -29,6 +29,7 @@
 #include <sourcemeta/one/enterprise_index.h>
 #endif
 
+#include <array>        // std::array, std::to_array
 #include <cassert>      // assert
 #include <cstring>      // std::memcpy
 #include <filesystem>   // std::filesystem
@@ -44,7 +45,8 @@
 #include <string_view>  // std::string_view
 #include <unordered_map> // std::unordered_map
 #include <unordered_set> // std::unordered_set
-#include <utility>       // std::move
+#include <utility>       // std::move, std::unreachable
+#include <variant>       // std::holds_alternative, std::get
 #include <vector>        // std::vector
 
 namespace sourcemeta::one {
@@ -67,6 +69,45 @@ static auto make_dialect_extension(const std::string_view dialect)
   return result;
 }
 
+// The name a location kind answers to outside this program, which is a name
+// this project promises rather than one it happens to use
+static auto
+location_type_name(const sourcemeta::blaze::SchemaFrame::LocationType type)
+    -> std::string_view {
+  switch (type) {
+    case sourcemeta::blaze::SchemaFrame::LocationType::Resource:
+      return "resource";
+    case sourcemeta::blaze::SchemaFrame::LocationType::Anchor:
+      return "anchor";
+    case sourcemeta::blaze::SchemaFrame::LocationType::Pointer:
+      return "pointer";
+    case sourcemeta::blaze::SchemaFrame::LocationType::Subschema:
+      return "subschema";
+  }
+
+  std::unreachable();
+}
+
+// Which vocabulary a keyword belongs to, as a name a report is keyed by, with
+// keywords no vocabulary claims gathered under one of their own
+static auto
+vocabulary_name(const sourcemeta::blaze::SchemaWalkerResult &walker_result)
+    -> sourcemeta::core::JSON::String {
+  if (!walker_result.vocabulary.has_value()) {
+    return "unknown";
+  }
+
+  const auto &vocabulary{walker_result.vocabulary.value()};
+  if (std::holds_alternative<sourcemeta::blaze::SchemaVocabularies::Known>(
+          vocabulary)) {
+    return std::format(
+        "{}",
+        std::get<sourcemeta::blaze::SchemaVocabularies::Known>(vocabulary));
+  }
+
+  return sourcemeta::core::JSON::String{std::get<std::string_view>(vocabulary)};
+}
+
 // A metaschema that insists on a vocabulary this build does not implement is
 // one it cannot honour, so saying so is better than quietly ignoring half of
 // what the metaschema asks for.
@@ -78,9 +119,9 @@ static auto throw_if_unknown_required_vocabulary(
     const sourcemeta::core::JSON &schema,
     const sourcemeta::blaze::SchemaResolver &resolver,
     const std::string_view dialect) -> void {
-  sourcemeta::blaze::SchemaFrame frame{
-      sourcemeta::blaze::SchemaFrame::Mode::Root};
-  frame.analyse(schema, sourcemeta::blaze::schema_walker, resolver, dialect);
+  const sourcemeta::blaze::SchemaFrame frame{
+      sourcemeta::blaze::SchemaFrame::Mode::Root, schema,
+      sourcemeta::blaze::schema_walker, resolver, dialect};
   const auto base{frame.root_location().value().get().base_dialect};
 
   if (base != sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2020_12 &&
@@ -122,7 +163,7 @@ static auto throw_if_unknown_required_vocabulary(
   }
 }
 
-struct GENERATE_VERSION {
+struct GenerateVersion {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
@@ -137,7 +178,7 @@ struct GENERATE_VERSION {
   }
 };
 
-struct GENERATE_COMMENT {
+struct GenerateComment {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
@@ -152,7 +193,7 @@ struct GENERATE_COMMENT {
   }
 };
 
-struct GENERATE_CONFIGURATION {
+struct GenerateConfiguration {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
@@ -166,7 +207,7 @@ struct GENERATE_CONFIGURATION {
   }
 };
 
-struct GENERATE_MATERIALISED_SCHEMA {
+struct GenerateMaterialisedSchema {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
@@ -190,8 +231,8 @@ struct GENERATE_MATERIALISED_SCHEMA {
     sourcemeta::blaze::SimpleOutput output{schema.value()};
     sourcemeta::blaze::Evaluator evaluator;
     const auto result{evaluator.validate(
-        GENERATE_MATERIALISED_SCHEMA::compile(std::string{dialect_identifier},
-                                              metaschema.value(), resolver),
+        GenerateMaterialisedSchema::compile(std::string{dialect_identifier},
+                                            metaschema.value(), resolver),
         schema.value(), std::ref(output))};
     if (!result) {
       throw MetaschemaError(output);
@@ -274,7 +315,7 @@ private:
   }
 };
 
-struct GENERATE_POINTER_POSITIONS {
+struct GeneratePointerPositions {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
@@ -302,7 +343,7 @@ struct GENERATE_POINTER_POSITIONS {
   }
 };
 
-struct GENERATE_FRAME_LOCATIONS {
+struct GenerateFrameLocations {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
@@ -320,13 +361,64 @@ struct GENERATE_FRAME_LOCATIONS {
     sourcemeta::core::JSON parsed{nullptr};
     sourcemeta::core::parse_json(contents_stream.str(), parsed,
                                  std::ref(tracker));
-    sourcemeta::blaze::SchemaFrame frame{
-        sourcemeta::blaze::SchemaFrame::Mode::Locations};
-    frame.analyse(contents, sourcemeta::blaze::schema_walker,
-                  [&callback, &resolver](const auto identifier) {
-                    return resolver(identifier, callback);
-                  });
-    const auto result{frame.to_json(tracker).at("locations")};
+    const sourcemeta::blaze::SchemaResolver schema_resolver{
+        [&callback, &resolver](const auto identifier) {
+          return resolver(identifier, callback);
+        }};
+    const sourcemeta::blaze::SchemaFrame frame{
+        sourcemeta::blaze::SchemaFrame::Mode::Pointers, contents,
+        sourcemeta::blaze::schema_walker, schema_resolver};
+    auto result{sourcemeta::core::JSON::make_object()};
+    result.assign("static", sourcemeta::core::JSON::make_object());
+    result.assign("dynamic", sourcemeta::core::JSON::make_object());
+    frame.for_each_location(
+        [&frame, &tracker, &result](
+            const sourcemeta::blaze::SchemaReferenceType type,
+            const std::string_view uri,
+            const sourcemeta::blaze::SchemaFrame::Location &location) -> void {
+          auto entry{sourcemeta::core::JSON::make_object()};
+          entry.assign("parent",
+                       location.parent.has_value()
+                           ? sourcemeta::core::JSON{sourcemeta::core::to_string(
+                                 location.parent.value())}
+                           : sourcemeta::core::JSON{nullptr});
+          entry.assign("type",
+                       sourcemeta::core::JSON{sourcemeta::core::JSON::String{
+                           location_type_name(location.type)}});
+          entry.assign("root", frame.root().empty()
+                                   ? sourcemeta::core::JSON{nullptr}
+                                   : sourcemeta::core::JSON{frame.root()});
+          entry.assign("base",
+                       sourcemeta::core::JSON{
+                           sourcemeta::core::JSON::String{location.base}});
+          entry.assign("pointer",
+                       sourcemeta::core::JSON{
+                           sourcemeta::core::to_string(location.pointer)});
+          entry.assign("position",
+                       sourcemeta::core::to_json(tracker.get(
+                           sourcemeta::core::to_pointer(location.pointer))));
+          entry.assign("relativePointer",
+                       sourcemeta::core::JSON{sourcemeta::core::to_string(
+                           frame.relative_instance_location(location))});
+          entry.assign("dialect",
+                       sourcemeta::core::JSON{
+                           sourcemeta::core::JSON::String{location.dialect}});
+          entry.assign("baseDialect", sourcemeta::core::JSON{std::format(
+                                          "{}", location.base_dialect)});
+          entry.assign("propertyName",
+                       sourcemeta::core::JSON{location.property_name});
+          entry.assign("orphan", sourcemeta::core::JSON{location.orphan});
+          switch (type) {
+            case sourcemeta::blaze::SchemaReferenceType::Static:
+              result.at("static").assign(sourcemeta::core::JSON::String{uri},
+                                         std::move(entry));
+              break;
+            case sourcemeta::blaze::SchemaReferenceType::Dynamic:
+              result.at("dynamic").assign(sourcemeta::core::JSON::String{uri},
+                                          std::move(entry));
+              break;
+          }
+        });
     const auto timestamp_end{std::chrono::steady_clock::now()};
     sourcemeta::one::metapack_write_pretty_json(
         action.destination, result, "application/json",
@@ -336,7 +428,7 @@ struct GENERATE_FRAME_LOCATIONS {
   }
 };
 
-struct GENERATE_DEPENDENCIES {
+struct GenerateDependencies {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
@@ -366,7 +458,7 @@ struct GENERATE_DEPENDENCIES {
     // Otherwise we are returning non-sense
     assert(result.unique());
 
-    if (result.size() > 0) {
+    if (!result.empty()) {
       const sourcemeta::one::Authentication::Table authentication{
           action.dependencies.at(1)};
       for (const auto &edge : result.as_array()) {
@@ -405,7 +497,7 @@ private:
   }
 };
 
-struct GENERATE_HEALTH {
+struct GenerateHealth {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
@@ -522,7 +614,7 @@ private:
 // one exactly as visible as the schema it belongs to, and therefore gated
 // wholesale on that schema's path, so relaxing the earlier rule to permit the
 // reference and merely omit it here would be a leak rather than a narrowing
-struct GENERATE_BUNDLE {
+struct GenerateBundle {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
@@ -567,7 +659,7 @@ struct GENERATE_BUNDLE {
   }
 };
 
-struct GENERATE_EDITOR {
+struct GenerateEditor {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
@@ -620,12 +712,12 @@ static auto generate_blaze_template(
       sourcemeta::one::metapack_read_json(dependencies.front())};
   assert(contents_option.has_value());
   const auto &contents{contents_option.value()};
-  sourcemeta::blaze::SchemaFrame frame{
-      sourcemeta::blaze::SchemaFrame::Mode::References};
-  frame.analyse(contents, sourcemeta::blaze::schema_walker,
-                [&callback, &resolver](const auto identifier) {
-                  return resolver(identifier, callback);
-                });
+  const sourcemeta::blaze::SchemaFrame frame{
+      sourcemeta::blaze::SchemaFrame::Mode::References, contents,
+      sourcemeta::blaze::schema_walker,
+      [&callback, &resolver](const auto identifier) {
+        return resolver(identifier, callback);
+      }};
   const auto schema_template{sourcemeta::blaze::compile(
       contents, sourcemeta::blaze::schema_walker,
       [&callback, &resolver](const auto identifier) {
@@ -641,7 +733,7 @@ static auto generate_blaze_template(
                                                             timestamp_start));
 }
 
-struct GENERATE_BLAZE_TEMPLATE_EXHAUSTIVE {
+struct GenerateBlazeTemplateExhaustive {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
@@ -653,7 +745,7 @@ struct GENERATE_BLAZE_TEMPLATE_EXHAUSTIVE {
   }
 };
 
-struct GENERATE_BLAZE_TEMPLATE_FAST {
+struct GenerateBlazeTemplateFast {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
@@ -665,7 +757,7 @@ struct GENERATE_BLAZE_TEMPLATE_FAST {
   }
 };
 
-struct GENERATE_STATS {
+struct GenerateStats {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
@@ -684,9 +776,9 @@ struct GENERATE_STATS {
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         }};
-    sourcemeta::blaze::SchemaFrame frame{
-        sourcemeta::blaze::SchemaFrame::Mode::Locations};
-    frame.analyse(schema, sourcemeta::blaze::schema_walker, schema_resolver);
+    const sourcemeta::blaze::SchemaFrame frame{
+        sourcemeta::blaze::SchemaFrame::Mode::Locations, schema,
+        sourcemeta::blaze::schema_walker, schema_resolver};
 
     // A subschema is located once for every URI that reaches it, and what is
     // counted here is the keywords it holds rather than the names it answers
@@ -694,38 +786,28 @@ struct GENERATE_STATS {
     std::unordered_set<sourcemeta::core::Pointer,
                        sourcemeta::core::Pointer::Hasher>
         visited;
-    for (const auto &entry : frame.locations()) {
-      if (entry.second.type !=
-              sourcemeta::blaze::SchemaFrame::LocationType::Resource &&
-          entry.second.type !=
-              sourcemeta::blaze::SchemaFrame::LocationType::Subschema) {
-        continue;
-      }
+    frame.for_each_subschema(
+        [&frame, &schema, &schema_resolver, &result, &visited](
+            const sourcemeta::blaze::SchemaFrame::Location &location) -> void {
+          const auto [pointer, inserted]{
+              visited.insert(sourcemeta::core::to_pointer(location.pointer))};
+          if (!inserted) {
+            return;
+          }
 
-      const auto [pointer, inserted]{
-          visited.insert(sourcemeta::core::to_pointer(entry.second.pointer))};
-      if (!inserted) {
-        continue;
-      }
+          const auto &subschema{sourcemeta::core::get(schema, *pointer)};
+          if (!subschema.is_object()) {
+            return;
+          }
 
-      const auto &subschema{sourcemeta::core::get(schema, *pointer)};
-      if (!subschema.is_object()) {
-        continue;
-      }
-
-      const auto &vocabularies{
-          frame.vocabularies(entry.second, schema_resolver)};
-      for (const auto &property : subschema.as_object()) {
-        const auto &walker_result{
-            sourcemeta::blaze::schema_walker(property.first, vocabularies)};
-        if (walker_result.vocabulary.has_value()) {
-          result[std::format("{}", walker_result.vocabulary.value())]
-                [property.first] += 1;
-        } else {
-          result["unknown"][property.first] += 1;
-        }
-      }
-    }
+          const auto &vocabularies{
+              frame.vocabularies(location, schema_resolver)};
+          for (const auto &property : subschema.as_object()) {
+            const auto &walker_result{
+                sourcemeta::blaze::schema_walker(property.first, vocabularies)};
+            result[vocabulary_name(walker_result)][property.first] += 1;
+          }
+        });
 
     const auto timestamp_end{std::chrono::steady_clock::now()};
     sourcemeta::one::metapack_write_pretty_json(
@@ -736,7 +818,7 @@ struct GENERATE_STATS {
   }
 };
 
-struct GENERATE_URITEMPLATE_ROUTES {
+struct GenerateURITemplateRoutes {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
@@ -745,295 +827,307 @@ struct GENERATE_URITEMPLATE_ROUTES {
                       const sourcemeta::core::JSON &) -> void {
     sourcemeta::core::URITemplateRouter router{{}, configuration.url};
 
-    constexpr std::string_view list_schema{
+    constexpr std::string_view LIST_SCHEMA{
         "/self/v1/schemas/api/list/response"};
-    constexpr std::string_view dependencies_schema{
+    constexpr std::string_view DEPENDENCIES_SCHEMA{
         "/self/v1/schemas/api/schemas/dependencies/response"};
-    constexpr std::string_view dependents_schema{
+    constexpr std::string_view DEPENDENTS_SCHEMA{
         "/self/v1/schemas/api/schemas/dependents/response"};
-    constexpr std::string_view health_schema{
+    constexpr std::string_view HEALTH_SCHEMA{
         "/self/v1/schemas/api/schemas/health/response"};
-    constexpr std::string_view locations_schema{
+    constexpr std::string_view LOCATIONS_SCHEMA{
         "/self/v1/schemas/api/schemas/locations/response"};
-    constexpr std::string_view positions_schema{
+    constexpr std::string_view POSITIONS_SCHEMA{
         "/self/v1/schemas/api/schemas/positions/response"};
-    constexpr std::string_view stats_schema{
+    constexpr std::string_view STATS_SCHEMA{
         "/self/v1/schemas/api/schemas/stats/response"};
-    constexpr std::string_view metadata_schema{
+    constexpr std::string_view METADATA_SCHEMA{
         "/self/v1/schemas/api/schemas/metadata/response"};
-    constexpr std::string_view evaluate_request_schema{
+    constexpr std::string_view EVALUATE_REQUEST_SCHEMA{
         "/self/v1/schemas/api/schemas/evaluate/request"};
-    constexpr std::string_view evaluate_response_schema{
+    constexpr std::string_view EVALUATE_RESPONSE_SCHEMA{
         "/self/v1/schemas/api/schemas/evaluate/response"};
-    constexpr std::string_view rdf_request_schema{
+    constexpr std::string_view RDF_REQUEST_SCHEMA{
         "/self/v1/schemas/api/schemas/rdf/request"};
-    constexpr std::string_view rdf_response_schema{
+    constexpr std::string_view RDF_RESPONSE_SCHEMA{
         "/self/v1/schemas/api/schemas/rdf/response"};
-    constexpr std::string_view trace_request_schema{
+    constexpr std::string_view TRACE_REQUEST_SCHEMA{
         "/self/v1/schemas/api/schemas/trace/request"};
-    constexpr std::string_view trace_response_schema{
+    constexpr std::string_view TRACE_RESPONSE_SCHEMA{
         "/self/v1/schemas/api/schemas/trace/response"};
-    constexpr std::string_view search_response_schema{
+    constexpr std::string_view SEARCH_RESPONSE_SCHEMA{
         "/self/v1/schemas/api/schemas/search/response"};
-    constexpr std::string_view auth_login_page_response_schema{
+    constexpr std::string_view AUTH_LOGIN_PAGE_RESPONSE_SCHEMA{
         "/self/v1/schemas/api/auth/login/response"};
-    constexpr std::string_view list_directory_request_schema{
+    constexpr std::string_view LIST_DIRECTORY_REQUEST_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/list-directory/request"};
-    constexpr std::string_view list_directory_response_schema{
+    constexpr std::string_view LIST_DIRECTORY_RESPONSE_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/list-directory/response"};
-    constexpr std::string_view get_schema_dependencies_request_schema{
+    constexpr std::string_view GET_SCHEMA_DEPENDENCIES_REQUEST_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request"};
-    constexpr std::string_view get_schema_dependencies_response_schema{
+    constexpr std::string_view GET_SCHEMA_DEPENDENCIES_RESPONSE_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response"};
-    constexpr std::string_view get_schema_dependents_request_schema{
+    constexpr std::string_view GET_SCHEMA_DEPENDENTS_REQUEST_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/get-schema-dependents/request"};
-    constexpr std::string_view get_schema_dependents_response_schema{
+    constexpr std::string_view GET_SCHEMA_DEPENDENTS_RESPONSE_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/get-schema-dependents/response"};
-    constexpr std::string_view get_schema_health_request_schema{
+    constexpr std::string_view GET_SCHEMA_HEALTH_REQUEST_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/get-schema-health/request"};
-    constexpr std::string_view get_schema_health_response_schema{
+    constexpr std::string_view GET_SCHEMA_HEALTH_RESPONSE_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/get-schema-health/response"};
-    constexpr std::string_view get_schema_locations_request_schema{
+    constexpr std::string_view GET_SCHEMA_LOCATIONS_REQUEST_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/get-schema-locations/request"};
-    constexpr std::string_view get_schema_locations_response_schema{
+    constexpr std::string_view GET_SCHEMA_LOCATIONS_RESPONSE_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/get-schema-locations/response"};
-    constexpr std::string_view get_schema_positions_request_schema{
+    constexpr std::string_view GET_SCHEMA_POSITIONS_REQUEST_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/get-schema-positions/request"};
-    constexpr std::string_view get_schema_positions_response_schema{
+    constexpr std::string_view GET_SCHEMA_POSITIONS_RESPONSE_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/get-schema-positions/response"};
-    constexpr std::string_view get_schema_stats_request_schema{
+    constexpr std::string_view GET_SCHEMA_STATS_REQUEST_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/get-schema-stats/request"};
-    constexpr std::string_view get_schema_stats_response_schema{
+    constexpr std::string_view GET_SCHEMA_STATS_RESPONSE_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/get-schema-stats/response"};
-    constexpr std::string_view get_schema_metadata_request_schema{
+    constexpr std::string_view GET_SCHEMA_METADATA_REQUEST_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/get-schema-metadata/request"};
-    constexpr std::string_view get_schema_metadata_response_schema{
+    constexpr std::string_view GET_SCHEMA_METADATA_RESPONSE_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/get-schema-metadata/response"};
-    constexpr std::string_view evaluate_schema_request_schema{
+    constexpr std::string_view EVALUATE_SCHEMA_REQUEST_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/evaluate-schema/request"};
-    constexpr std::string_view evaluate_schema_response_schema{
+    constexpr std::string_view EVALUATE_SCHEMA_RESPONSE_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/evaluate-schema/response"};
-    constexpr std::string_view instance_to_rdf_request_schema{
+    constexpr std::string_view INSTANCE_TO_RDF_REQUEST_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/instance-to-rdf/request"};
-    constexpr std::string_view instance_to_rdf_response_schema{
+    constexpr std::string_view INSTANCE_TO_RDF_RESPONSE_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/instance-to-rdf/response"};
-    constexpr std::string_view trace_schema_evaluation_request_schema{
+    constexpr std::string_view TRACE_SCHEMA_EVALUATION_REQUEST_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request"};
-    constexpr std::string_view trace_schema_evaluation_response_schema{
+    constexpr std::string_view TRACE_SCHEMA_EVALUATION_RESPONSE_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response"};
-    constexpr std::string_view search_schemas_request_schema{
+    constexpr std::string_view SEARCH_SCHEMAS_REQUEST_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/search-schemas/request"};
-    constexpr std::string_view search_schemas_response_schema{
+    constexpr std::string_view SEARCH_SCHEMAS_RESPONSE_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/search-schemas/response"};
-    constexpr std::string_view error_schema{"/self/v1/schemas/api/error"};
-    constexpr std::string_view mcp_request_schema{
+    constexpr std::string_view ERROR_SCHEMA{"/self/v1/schemas/api/error"};
+    constexpr std::string_view MCP_REQUEST_SCHEMA{
         "/self/v1/schemas/mcp/request"};
-    constexpr std::string_view mcp_response_schema{
+    constexpr std::string_view MCP_RESPONSE_SCHEMA{
         "/self/v1/schemas/mcp/response"};
-    constexpr std::string_view mcp_protected_resource_metadata_response_schema{
+    constexpr std::string_view MCP_PROTECTED_RESOURCE_METADATA_RESPONSE_SCHEMA{
         "/self/v1/schemas/mcp/prm/response"};
 
     sourcemeta::core::URITemplateRouter::Identifier next_id{1};
 
     if (configuration.api) {
-      const sourcemeta::core::URITemplateRouter::Argument
-          otherwise_arguments[] = {
-              {"errorSchema", std::string_view{error_schema}}};
+      const auto otherwise_arguments{
+          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+              {{"errorSchema", std::string_view{ERROR_SCHEMA}}})};
       router.otherwise(sourcemeta::one::ACTION_TYPE_DEFAULT_V1,
                        otherwise_arguments);
 
-      const sourcemeta::core::URITemplateRouter::Argument list_arguments[] = {
-          {"responseSchema", std::string_view{list_schema}},
-          {"mcpRequestSchema", std::string_view{list_directory_request_schema}},
-          {"mcpResponseSchema",
-           std::string_view{list_directory_response_schema}},
-          {"errorSchema", std::string_view{error_schema}}};
+      const auto list_arguments{
+          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+              {{"responseSchema", std::string_view{LIST_SCHEMA}},
+               {"mcpRequestSchema",
+                std::string_view{LIST_DIRECTORY_REQUEST_SCHEMA}},
+               {"mcpResponseSchema",
+                std::string_view{LIST_DIRECTORY_RESPONSE_SCHEMA}},
+               {"errorSchema", std::string_view{ERROR_SCHEMA}}})};
       router.add(sourcemeta::one::ENDPOINT_LIST_DIRECTORY, "list_directory",
                  next_id++, sourcemeta::one::ACTION_TYPE_LIST_DIRECTORY_V1,
                  list_arguments);
 
-      const sourcemeta::core::URITemplateRouter::Argument
-          dependencies_arguments[] = {
-              {"responseSchema", std::string_view{dependencies_schema}},
-              {"mcpRequestSchema",
-               std::string_view{get_schema_dependencies_request_schema}},
-              {"mcpResponseSchema",
-               std::string_view{get_schema_dependencies_response_schema}},
-              {"errorSchema", std::string_view{error_schema}}};
+      const auto dependencies_arguments{
+          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+              {{"responseSchema", std::string_view{DEPENDENCIES_SCHEMA}},
+               {"mcpRequestSchema",
+                std::string_view{GET_SCHEMA_DEPENDENCIES_REQUEST_SCHEMA}},
+               {"mcpResponseSchema",
+                std::string_view{GET_SCHEMA_DEPENDENCIES_RESPONSE_SCHEMA}},
+               {"errorSchema", std::string_view{ERROR_SCHEMA}}})};
       router.add(sourcemeta::one::ENDPOINT_SCHEMA_DEPENDENCIES,
                  "get_schema_dependencies", next_id++,
                  sourcemeta::one::ACTION_TYPE_GET_SCHEMA_DEPENDENCIES_V1,
                  dependencies_arguments);
 
-      const sourcemeta::core::URITemplateRouter::Argument
-          dependents_arguments[] = {
-              {"responseSchema", std::string_view{dependents_schema}},
-              {"mcpRequestSchema",
-               std::string_view{get_schema_dependents_request_schema}},
-              {"mcpResponseSchema",
-               std::string_view{get_schema_dependents_response_schema}},
-              {"errorSchema", std::string_view{error_schema}}};
+      const auto dependents_arguments{
+          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+              {{"responseSchema", std::string_view{DEPENDENTS_SCHEMA}},
+               {"mcpRequestSchema",
+                std::string_view{GET_SCHEMA_DEPENDENTS_REQUEST_SCHEMA}},
+               {"mcpResponseSchema",
+                std::string_view{GET_SCHEMA_DEPENDENTS_RESPONSE_SCHEMA}},
+               {"errorSchema", std::string_view{ERROR_SCHEMA}}})};
       router.add(sourcemeta::one::ENDPOINT_SCHEMA_DEPENDENTS,
                  "get_schema_dependents", next_id++,
                  sourcemeta::one::ACTION_TYPE_GET_SCHEMA_DEPENDENTS_V1,
                  dependents_arguments);
 
-      const sourcemeta::core::URITemplateRouter::Argument health_arguments[] = {
-          {"responseSchema", std::string_view{health_schema}},
-          {"mcpRequestSchema",
-           std::string_view{get_schema_health_request_schema}},
-          {"mcpResponseSchema",
-           std::string_view{get_schema_health_response_schema}},
-          {"errorSchema", std::string_view{error_schema}}};
+      const auto health_arguments{
+          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+              {{"responseSchema", std::string_view{HEALTH_SCHEMA}},
+               {"mcpRequestSchema",
+                std::string_view{GET_SCHEMA_HEALTH_REQUEST_SCHEMA}},
+               {"mcpResponseSchema",
+                std::string_view{GET_SCHEMA_HEALTH_RESPONSE_SCHEMA}},
+               {"errorSchema", std::string_view{ERROR_SCHEMA}}})};
       router.add(sourcemeta::one::ENDPOINT_SCHEMA_HEALTH, "get_schema_health",
                  next_id++, sourcemeta::one::ACTION_TYPE_GET_SCHEMA_HEALTH_V1,
                  health_arguments);
 
-      const sourcemeta::core::URITemplateRouter::Argument
-          locations_arguments[] = {
-              {"responseSchema", std::string_view{locations_schema}},
-              {"mcpRequestSchema",
-               std::string_view{get_schema_locations_request_schema}},
-              {"mcpResponseSchema",
-               std::string_view{get_schema_locations_response_schema}},
-              {"errorSchema", std::string_view{error_schema}}};
+      const auto locations_arguments{
+          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+              {{"responseSchema", std::string_view{LOCATIONS_SCHEMA}},
+               {"mcpRequestSchema",
+                std::string_view{GET_SCHEMA_LOCATIONS_REQUEST_SCHEMA}},
+               {"mcpResponseSchema",
+                std::string_view{GET_SCHEMA_LOCATIONS_RESPONSE_SCHEMA}},
+               {"errorSchema", std::string_view{ERROR_SCHEMA}}})};
       router.add(sourcemeta::one::ENDPOINT_SCHEMA_LOCATIONS,
                  "get_schema_locations", next_id++,
                  sourcemeta::one::ACTION_TYPE_GET_SCHEMA_LOCATIONS_V1,
                  locations_arguments);
 
-      const sourcemeta::core::URITemplateRouter::Argument
-          positions_arguments[] = {
-              {"responseSchema", std::string_view{positions_schema}},
-              {"mcpRequestSchema",
-               std::string_view{get_schema_positions_request_schema}},
-              {"mcpResponseSchema",
-               std::string_view{get_schema_positions_response_schema}},
-              {"errorSchema", std::string_view{error_schema}}};
+      const auto positions_arguments{
+          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+              {{"responseSchema", std::string_view{POSITIONS_SCHEMA}},
+               {"mcpRequestSchema",
+                std::string_view{GET_SCHEMA_POSITIONS_REQUEST_SCHEMA}},
+               {"mcpResponseSchema",
+                std::string_view{GET_SCHEMA_POSITIONS_RESPONSE_SCHEMA}},
+               {"errorSchema", std::string_view{ERROR_SCHEMA}}})};
       router.add(sourcemeta::one::ENDPOINT_SCHEMA_POSITIONS,
                  "get_schema_positions", next_id++,
                  sourcemeta::one::ACTION_TYPE_GET_SCHEMA_POSITIONS_V1,
                  positions_arguments);
 
-      const sourcemeta::core::URITemplateRouter::Argument stats_arguments[] = {
-          {"responseSchema", std::string_view{stats_schema}},
-          {"mcpRequestSchema",
-           std::string_view{get_schema_stats_request_schema}},
-          {"mcpResponseSchema",
-           std::string_view{get_schema_stats_response_schema}},
-          {"errorSchema", std::string_view{error_schema}}};
+      const auto stats_arguments{
+          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+              {{"responseSchema", std::string_view{STATS_SCHEMA}},
+               {"mcpRequestSchema",
+                std::string_view{GET_SCHEMA_STATS_REQUEST_SCHEMA}},
+               {"mcpResponseSchema",
+                std::string_view{GET_SCHEMA_STATS_RESPONSE_SCHEMA}},
+               {"errorSchema", std::string_view{ERROR_SCHEMA}}})};
       router.add(sourcemeta::one::ENDPOINT_SCHEMA_STATS, "get_schema_stats",
                  next_id++, sourcemeta::one::ACTION_TYPE_GET_SCHEMA_STATS_V1,
                  stats_arguments);
 
-      const sourcemeta::core::URITemplateRouter::Argument metadata_arguments[] =
-          {{"responseSchema", std::string_view{metadata_schema}},
-           {"mcpRequestSchema",
-            std::string_view{get_schema_metadata_request_schema}},
-           {"mcpResponseSchema",
-            std::string_view{get_schema_metadata_response_schema}},
-           {"errorSchema", std::string_view{error_schema}}};
+      const auto metadata_arguments{
+          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+              {{"responseSchema", std::string_view{METADATA_SCHEMA}},
+               {"mcpRequestSchema",
+                std::string_view{GET_SCHEMA_METADATA_REQUEST_SCHEMA}},
+               {"mcpResponseSchema",
+                std::string_view{GET_SCHEMA_METADATA_RESPONSE_SCHEMA}},
+               {"errorSchema", std::string_view{ERROR_SCHEMA}}})};
       router.add(sourcemeta::one::ENDPOINT_SCHEMA_METADATA,
                  "get_schema_metadata", next_id++,
                  sourcemeta::one::ACTION_TYPE_GET_SCHEMA_METADATA_V1,
                  metadata_arguments);
 
-      const sourcemeta::core::URITemplateRouter::Argument evaluate_arguments[] =
-          {{"requestSchema", std::string_view{evaluate_request_schema}},
-           {"responseSchema", std::string_view{evaluate_response_schema}},
-           {"mcpRequestSchema",
-            std::string_view{evaluate_schema_request_schema}},
-           {"mcpResponseSchema",
-            std::string_view{evaluate_schema_response_schema}},
-           {"errorSchema", std::string_view{error_schema}}};
+      const auto evaluate_arguments{
+          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+              {{"requestSchema", std::string_view{EVALUATE_REQUEST_SCHEMA}},
+               {"responseSchema", std::string_view{EVALUATE_RESPONSE_SCHEMA}},
+               {"mcpRequestSchema",
+                std::string_view{EVALUATE_SCHEMA_REQUEST_SCHEMA}},
+               {"mcpResponseSchema",
+                std::string_view{EVALUATE_SCHEMA_RESPONSE_SCHEMA}},
+               {"errorSchema", std::string_view{ERROR_SCHEMA}}})};
       router.add(sourcemeta::one::ENDPOINT_SCHEMA_EVALUATE, "evaluate_schema",
                  next_id++, sourcemeta::one::ACTION_TYPE_JSONSCHEMA_EVALUATE_V1,
                  evaluate_arguments);
 
-      const sourcemeta::core::URITemplateRouter::Argument rdf_arguments[] = {
-          {"requestSchema", std::string_view{rdf_request_schema}},
-          {"responseSchema", std::string_view{rdf_response_schema}},
-          {"mcpRequestSchema",
-           std::string_view{instance_to_rdf_request_schema}},
-          {"mcpResponseSchema",
-           std::string_view{instance_to_rdf_response_schema}},
-          {"errorSchema", std::string_view{error_schema}}};
+      const auto rdf_arguments{
+          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+              {{"requestSchema", std::string_view{RDF_REQUEST_SCHEMA}},
+               {"responseSchema", std::string_view{RDF_RESPONSE_SCHEMA}},
+               {"mcpRequestSchema",
+                std::string_view{INSTANCE_TO_RDF_REQUEST_SCHEMA}},
+               {"mcpResponseSchema",
+                std::string_view{INSTANCE_TO_RDF_RESPONSE_SCHEMA}},
+               {"errorSchema", std::string_view{ERROR_SCHEMA}}})};
       router.add(sourcemeta::one::ENDPOINT_SCHEMA_RDF, "instance_to_rdf",
                  next_id++, sourcemeta::one::ACTION_TYPE_JSONSCHEMA_RDF_V1,
                  rdf_arguments);
 
-      const sourcemeta::core::URITemplateRouter::Argument trace_arguments[] = {
-          {"requestSchema", std::string_view{trace_request_schema}},
-          {"responseSchema", std::string_view{trace_response_schema}},
-          {"mcpRequestSchema",
-           std::string_view{trace_schema_evaluation_request_schema}},
-          {"mcpResponseSchema",
-           std::string_view{trace_schema_evaluation_response_schema}},
-          {"errorSchema", std::string_view{error_schema}}};
+      const auto trace_arguments{
+          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+              {{"requestSchema", std::string_view{TRACE_REQUEST_SCHEMA}},
+               {"responseSchema", std::string_view{TRACE_RESPONSE_SCHEMA}},
+               {"mcpRequestSchema",
+                std::string_view{TRACE_SCHEMA_EVALUATION_REQUEST_SCHEMA}},
+               {"mcpResponseSchema",
+                std::string_view{TRACE_SCHEMA_EVALUATION_RESPONSE_SCHEMA}},
+               {"errorSchema", std::string_view{ERROR_SCHEMA}}})};
       router.add(sourcemeta::one::ENDPOINT_SCHEMA_TRACE,
                  "trace_schema_evaluation", next_id++,
                  sourcemeta::one::ACTION_TYPE_JSONSCHEMA_TRACE_V1,
                  trace_arguments);
 
-      const sourcemeta::core::URITemplateRouter::Argument search_arguments[] = {
-          {"responseSchema", std::string_view{search_response_schema}},
-          {"mcpRequestSchema", std::string_view{search_schemas_request_schema}},
-          {"mcpResponseSchema",
-           std::string_view{search_schemas_response_schema}},
-          {"errorSchema", std::string_view{error_schema}}};
+      const auto search_arguments{
+          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+              {{"responseSchema", std::string_view{SEARCH_RESPONSE_SCHEMA}},
+               {"mcpRequestSchema",
+                std::string_view{SEARCH_SCHEMAS_REQUEST_SCHEMA}},
+               {"mcpResponseSchema",
+                std::string_view{SEARCH_SCHEMAS_RESPONSE_SCHEMA}},
+               {"errorSchema", std::string_view{ERROR_SCHEMA}}})};
       router.add(sourcemeta::one::ENDPOINT_SCHEMA_SEARCH, "search_schemas",
                  next_id++, sourcemeta::one::ACTION_TYPE_SCHEMA_SEARCH_V1,
                  search_arguments);
 
-      const sourcemeta::core::URITemplateRouter::Argument
-          health_check_arguments[] = {
-              {"errorSchema", std::string_view{error_schema}}};
+      const auto health_check_arguments{
+          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+              {{"errorSchema", std::string_view{ERROR_SCHEMA}}})};
       router.add(sourcemeta::one::ENDPOINT_HEALTH, "check_server_health",
                  next_id++, sourcemeta::one::ACTION_TYPE_HEALTH_CHECK_V1,
                  health_check_arguments);
 
-      const sourcemeta::core::URITemplateRouter::Argument metrics_arguments[] =
-          {{"errorSchema", std::string_view{error_schema}}};
+      const auto metrics_arguments{
+          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+              {{"errorSchema", std::string_view{ERROR_SCHEMA}}})};
       router.add(sourcemeta::one::ENDPOINT_METRICS, "server_metrics", next_id++,
                  sourcemeta::one::ACTION_TYPE_METRICS_V1, metrics_arguments);
 
-      const sourcemeta::core::URITemplateRouter::Argument
-          auth_logout_arguments[] = {
-              {"errorSchema", std::string_view{error_schema}}};
+      const auto auth_logout_arguments{
+          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+              {{"errorSchema", std::string_view{ERROR_SCHEMA}}})};
       router.add(sourcemeta::one::ENDPOINT_AUTH_LOGOUT, "auth_logout",
                  next_id++, sourcemeta::one::ACTION_TYPE_AUTH_LOGOUT_V1,
                  auth_logout_arguments);
 
-      const sourcemeta::core::URITemplateRouter::Argument
-          auth_login_arguments[] = {
-              {"errorSchema", std::string_view{error_schema}}};
+      const auto auth_login_arguments{
+          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+              {{"errorSchema", std::string_view{ERROR_SCHEMA}}})};
       router.add(sourcemeta::one::ENDPOINT_AUTH_LOGIN, "auth_login", next_id++,
                  sourcemeta::one::ACTION_TYPE_AUTH_LOGIN_V1,
                  auth_login_arguments);
 
-      const sourcemeta::core::URITemplateRouter::Argument
-          auth_callback_arguments[] = {
-              {"errorSchema", std::string_view{error_schema}}};
+      const auto auth_callback_arguments{
+          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+              {{"errorSchema", std::string_view{ERROR_SCHEMA}}})};
       router.add(sourcemeta::one::ENDPOINT_AUTH_CALLBACK, "auth_callback",
                  next_id++, sourcemeta::one::ACTION_TYPE_AUTH_CALLBACK_V1,
                  auth_callback_arguments);
 
-      const sourcemeta::core::URITemplateRouter::Argument mcp_arguments[] = {
-          {"requestSchema", std::string_view{mcp_request_schema}},
-          {"responseSchema", std::string_view{mcp_response_schema}},
-          {"metadataPath", sourcemeta::one::ENDPOINT_MCP_PRM}};
+      const auto mcp_arguments{
+          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+              {{"requestSchema", std::string_view{MCP_REQUEST_SCHEMA}},
+               {"responseSchema", std::string_view{MCP_RESPONSE_SCHEMA}},
+               {"metadataPath", sourcemeta::one::ENDPOINT_MCP_PRM}})};
       router.add(sourcemeta::one::ENDPOINT_MCP, "handle_mcp_request", next_id++,
                  sourcemeta::one::ACTION_TYPE_MCP_V1, mcp_arguments);
       router.add(sourcemeta::one::ENDPOINT_MCP_TRAILING_SLASH,
                  "handle_mcp_request_trailing_slash", next_id++,
                  sourcemeta::one::ACTION_TYPE_MCP_V1, mcp_arguments);
 
-      const sourcemeta::core::URITemplateRouter::Argument
-          mcp_protected_resource_metadata_arguments[] = {
-              {"errorSchema", std::string_view{error_schema}},
-              {"responseSchema",
-               std::string_view{
-                   mcp_protected_resource_metadata_response_schema}}};
+      const auto mcp_protected_resource_metadata_arguments{
+          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+              {{"errorSchema", std::string_view{ERROR_SCHEMA}},
+               {"responseSchema",
+                std::string_view{
+                    MCP_PROTECTED_RESOURCE_METADATA_RESPONSE_SCHEMA}}})};
       router.add(
           sourcemeta::one::ENDPOINT_MCP_PRM, "mcp_protected_resource_metadata",
           next_id++,
@@ -1045,32 +1139,34 @@ struct GENERATE_URITEMPLATE_ROUTES {
           sourcemeta::one::ACTION_TYPE_MCP_PROTECTED_RESOURCE_METADATA_V1,
           mcp_protected_resource_metadata_arguments);
 
-      const sourcemeta::core::URITemplateRouter::Argument
-          not_found_arguments[] = {
-              {"errorSchema", std::string_view{error_schema}}};
+      const auto not_found_arguments{
+          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+              {{"errorSchema", std::string_view{ERROR_SCHEMA}}})};
       router.add(sourcemeta::one::ENDPOINT_API_NOT_FOUND, "handle_not_found",
                  next_id++, sourcemeta::one::ACTION_TYPE_NOT_FOUND_V1,
                  not_found_arguments);
 
-      const sourcemeta::core::URITemplateRouter::Argument
-          auth_login_page_arguments[] = {
-              {"responseSchema",
-               std::string_view{auth_login_page_response_schema}},
-              {"errorSchema", std::string_view{error_schema}}};
+      const auto auth_login_page_arguments{
+          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+              {{"responseSchema",
+                std::string_view{AUTH_LOGIN_PAGE_RESPONSE_SCHEMA}},
+               {"errorSchema", std::string_view{ERROR_SCHEMA}}})};
       router.add(sourcemeta::one::ENDPOINT_AUTH_LOGIN_PAGE, "auth_login_page",
                  next_id++, sourcemeta::one::ACTION_TYPE_AUTH_LOGIN_PAGE_V1,
                  auth_login_page_arguments);
 
       if (action.data == "Full") {
-        const sourcemeta::core::URITemplateRouter::Argument static_arguments[] =
-            {{"path", std::string_view{SOURCEMETA_ONE_STATIC}},
-             {"errorSchema", std::string_view{error_schema}}};
+        const auto static_arguments{
+            std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+                {{"path", std::string_view{SOURCEMETA_ONE_STATIC}},
+                 {"errorSchema", std::string_view{ERROR_SCHEMA}}})};
         router.add(sourcemeta::one::ENDPOINT_STATIC, "serve_static_asset",
                    next_id++, sourcemeta::one::ACTION_TYPE_SERVE_STATIC_V1,
                    static_arguments);
       } else {
-        const sourcemeta::core::URITemplateRouter::Argument static_arguments[] =
-            {{"errorSchema", std::string_view{error_schema}}};
+        const auto static_arguments{
+            std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+                {{"errorSchema", std::string_view{ERROR_SCHEMA}}})};
         router.add(sourcemeta::one::ENDPOINT_STATIC, "serve_static_asset",
                    next_id++, sourcemeta::one::ACTION_TYPE_SERVE_STATIC_V1,
                    static_arguments);
@@ -1084,7 +1180,7 @@ struct GENERATE_URITEMPLATE_ROUTES {
   }
 };
 
-struct GENERATE_AUTHENTICATION {
+struct GenerateAuthentication {
   // The policies borrow the paths, keys and session secrets they are declared
   // with, so the vectors that hold those must outlive the policies that point
   // into them

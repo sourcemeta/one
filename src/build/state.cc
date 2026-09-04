@@ -151,37 +151,38 @@ auto BuildState::take_lock() const -> std::unique_lock<std::mutex> {
   return std::unique_lock<std::mutex>{this->mutex_};
 }
 
-auto BuildState::configure(std::span<const LeafRule> rules,
-                           std::span<const DirectoryRule> trees,
-                           std::uint32_t fingerprint,
-                           const BuildState::InputsFingerprint &inputs,
-                           std::string_view sentinel) -> void {
-  assert(trees.size() >= 2);
-  this->leaf_rules = rules;
-  this->directories = trees;
-  this->rules_fingerprint = fingerprint;
-  this->inputs_fingerprint = inputs;
-  this->inputs_match = false;
-  this->sentinel_separator = std::string{"/"} + std::string{sentinel} + "/";
+auto BuildState::configure(
+    std::span<const LeafRule> leaf_rules,
+    std::span<const DirectoryRule> directories, std::uint32_t rules_fingerprint,
+    const BuildState::InputsFingerprint &inputs_fingerprint,
+    std::string_view sentinel) -> void {
+  assert(directories.size() >= 2);
+  this->leaf_rules_ = leaf_rules;
+  this->directories_ = directories;
+  this->rules_fingerprint_ = rules_fingerprint;
+  this->inputs_fingerprint_ = inputs_fingerprint;
+  this->inputs_match_ = false;
+  this->sentinel_separator_ = std::string{"/"} + std::string{sentinel} + "/";
 }
 
 auto BuildState::reset_loaded_state() -> void {
-  this->table_capacity = 0;
-  this->table_slots = nullptr;
-  this->string_pool = nullptr;
-  this->view.reset();
-  this->view_data = nullptr;
-  this->entry_count = 0;
-  this->resolver_entry_count = 0;
+  this->table_capacity_ = 0;
+  this->table_slots_ = nullptr;
+  this->string_pool_ = nullptr;
+  this->view_.reset();
+  this->view_data_ = nullptr;
+  this->entry_count_ = 0;
+  this->resolver_entry_count_ = 0;
 }
 
 auto BuildState::load(const std::filesystem::path &path,
-                      std::span<const LeafRule> rules,
-                      std::span<const DirectoryRule> trees,
-                      std::uint32_t fingerprint,
-                      const BuildState::InputsFingerprint &inputs,
+                      std::span<const LeafRule> leaf_rules,
+                      std::span<const DirectoryRule> directories,
+                      std::uint32_t rules_fingerprint,
+                      const BuildState::InputsFingerprint &inputs_fingerprint,
                       std::string_view sentinel) -> void {
-  this->configure(rules, trees, fingerprint, inputs, sentinel);
+  this->configure(leaf_rules, directories, rules_fingerprint,
+                  inputs_fingerprint, sentinel);
 
   if (!std::filesystem::exists(path)) {
     return;
@@ -191,7 +192,7 @@ auto BuildState::load(const std::filesystem::path &path,
   // validate it must degrade to a full rebuild rather than abort, so every
   // failure path below discards the mapping and starts from an empty state
   try {
-    this->loaded_path = path;
+    this->loaded_path_ = path;
 
     // Mapping a zero-length file fails, and a file shorter than the header
     // cannot describe a valid table, so both start fresh without mapping
@@ -201,16 +202,16 @@ auto BuildState::load(const std::filesystem::path &path,
       return;
     }
 
-    this->view = std::make_unique<sourcemeta::core::FileView>(path);
-    this->view_data = this->view->as<std::uint8_t>();
+    this->view_ = std::make_unique<sourcemeta::core::FileView>(path);
+    this->view_data_ = this->view_->as<std::uint8_t>();
 
-    sourcemeta::core::BinaryReader header_reader{*this->view};
+    sourcemeta::core::BinaryReader header_reader{*this->view_};
     const auto magic{header_reader.get_dword()};
     const auto version{header_reader.get_dword()};
     const auto on_disk_fingerprint{header_reader.get_dword()};
     const auto on_disk_inputs{header_reader.get_qword()};
     if (magic != STATE_MAGIC || version != STATE_VERSION ||
-        on_disk_fingerprint != fingerprint) {
+        on_disk_fingerprint != rules_fingerprint) {
       this->reset_loaded_state();
       return;
     }
@@ -219,7 +220,7 @@ auto BuildState::load(const std::filesystem::path &path,
     // so it is kept and reused for everything that does not depend on them.
     // What it cannot vouch for is anything derived from them, which is why the
     // mismatch is recorded rather than discarding the whole file
-    this->inputs_match = on_disk_inputs == inputs;
+    this->inputs_match_ = on_disk_inputs == inputs_fingerprint;
 
     const auto capacity{header_reader.get_dword()};
     const auto entries{header_reader.get_dword()};
@@ -238,20 +239,20 @@ auto BuildState::load(const std::filesystem::path &path,
       return;
     }
 
-    this->table_capacity = capacity;
-    this->entry_count = entries;
-    this->resolver_entry_count = resolver_entries;
-    this->table_slots = this->view_data + HEADER_SIZE;
-    this->string_pool = this->table_slots + slots_bytes;
+    this->table_capacity_ = capacity;
+    this->entry_count_ = entries;
+    this->resolver_entry_count_ = resolver_entries;
+    this->table_slots_ = this->view_data_ + HEADER_SIZE;
+    this->string_pool_ = this->table_slots_ + slots_bytes;
 
     const auto leaf_table_start{HEADER_SIZE + slots_bytes + pool_size_value};
-    if (leaf_table_start + sizeof(std::uint32_t) * 2 <= file_size &&
-        read_field<std::uint32_t>(this->view_data, leaf_table_start) ==
+    if (leaf_table_start + (sizeof(std::uint32_t) * 2) <= file_size &&
+        read_field<std::uint32_t>(this->view_data_, leaf_table_start) ==
             LEAF_INDEX_MAGIC) {
-      this->persisted_leaf_count = read_field<std::uint32_t>(
-          this->view_data, leaf_table_start + sizeof(std::uint32_t));
-      this->persisted_leaf_table =
-          this->view_data + leaf_table_start + sizeof(std::uint32_t) * 2;
+      this->persisted_leaf_count_ = read_field<std::uint32_t>(
+          this->view_data_, leaf_table_start + sizeof(std::uint32_t));
+      this->persisted_leaf_table_ =
+          this->view_data_ + leaf_table_start + (sizeof(std::uint32_t) * 2);
     }
   } catch (...) {
     this->reset_loaded_state();
@@ -260,15 +261,15 @@ auto BuildState::load(const std::filesystem::path &path,
 
 auto BuildState::probe_slot(std::string_view key, std::uint8_t kind) const
     -> const std::uint8_t * {
-  if (this->table_capacity == 0) {
+  if (this->table_capacity_ == 0) {
     return nullptr;
   }
 
   const auto hash{fnv1a(key.data(), key.size())};
-  auto index{static_cast<std::uint32_t>(hash & (this->table_capacity - 1))};
+  auto index{static_cast<std::uint32_t>(hash & (this->table_capacity_ - 1))};
 
-  for (std::uint32_t probe = 0; probe < this->table_capacity; ++probe) {
-    const auto *slot{this->table_slots + index * SLOT_SIZE};
+  for (std::uint32_t probe = 0; probe < this->table_capacity_; ++probe) {
+    const auto *slot{this->table_slots_ + (index * SLOT_SIZE)};
     if (slot[SLOT_OCCUPIED] == 0) {
       return nullptr;
     }
@@ -278,14 +279,14 @@ auto BuildState::probe_slot(std::string_view key, std::uint8_t kind) const
       const auto key_length{read_field<std::uint32_t>(slot, SLOT_KEY_LENGTH)};
       if (key_length == key.size()) {
         const auto key_offset{read_field<std::uint32_t>(slot, SLOT_KEY_OFFSET)};
-        if (std::memcmp(this->string_pool + key_offset, key.data(),
+        if (std::memcmp(this->string_pool_ + key_offset, key.data(),
                         key.size()) == 0) {
           return slot;
         }
       }
     }
 
-    index = (index + 1) & (this->table_capacity - 1);
+    index = (index + 1) & (this->table_capacity_ - 1);
   }
 
   return nullptr;
@@ -293,14 +294,14 @@ auto BuildState::probe_slot(std::string_view key, std::uint8_t kind) const
 
 auto BuildState::parse_slot_entry(const std::uint8_t *slot) const
     -> const Entry & {
-  const auto key{slot_key(slot, this->string_pool)};
+  const auto key{slot_key(slot, this->string_pool_)};
 
-  const auto cache_match{this->lazy_cache.find(key)};
-  if (cache_match != this->lazy_cache.end()) {
+  const auto cache_match{this->lazy_cache_.find(key)};
+  if (cache_match != this->lazy_cache_.end()) {
     return cache_match->second;
   }
 
-  auto &cached{this->lazy_cache[std::string{key}]};
+  auto &cached{this->lazy_cache_[std::string{key}]};
 
   const auto nanoseconds{read_field<std::int64_t>(slot, SLOT_TIMESTAMP)};
   cached.file_mark = mark_type{std::chrono::duration_cast<mark_type::duration>(
@@ -313,7 +314,7 @@ auto BuildState::parse_slot_entry(const std::uint8_t *slot) const
         read_field<std::uint32_t>(slot, SLOT_DATA_OFFSET))};
     for (std::uint16_t dep_index = 0; dep_index < data_count; ++dep_index) {
       cached.dependencies.emplace_back(
-          read_pool_string(this->string_pool, offset));
+          read_pool_string(this->string_pool_, offset));
     }
   }
 
@@ -322,14 +323,14 @@ auto BuildState::parse_slot_entry(const std::uint8_t *slot) const
 
 auto BuildState::parse_slot_resolver_entry(const std::uint8_t *slot) const
     -> const ResolverEntry & {
-  const auto key{slot_key(slot, this->string_pool)};
+  const auto key{slot_key(slot, this->string_pool_)};
 
-  const auto cache_match{this->resolver_lazy_cache.find(key)};
-  if (cache_match != this->resolver_lazy_cache.end()) {
+  const auto cache_match{this->resolver_lazy_cache_.find(key)};
+  if (cache_match != this->resolver_lazy_cache_.end()) {
     return cache_match->second;
   }
 
-  auto &cached{this->resolver_lazy_cache[std::string{key}]};
+  auto &cached{this->resolver_lazy_cache_[std::string{key}]};
 
   const auto nanoseconds{read_field<std::int64_t>(slot, SLOT_TIMESTAMP)};
   cached.file_mark = mark_type{std::chrono::duration_cast<mark_type::duration>(
@@ -337,20 +338,20 @@ auto BuildState::parse_slot_resolver_entry(const std::uint8_t *slot) const
 
   auto offset{static_cast<std::size_t>(
       read_field<std::uint32_t>(slot, SLOT_DATA_OFFSET))};
-  cached.new_identifier = read_pool_string(this->string_pool, offset);
-  cached.original_identifier = read_pool_string(this->string_pool, offset);
-  cached.dialect = read_pool_string(this->string_pool, offset);
-  cached.relative_path = read_pool_string(this->string_pool, offset);
+  cached.new_identifier = read_pool_string(this->string_pool_, offset);
+  cached.original_identifier = read_pool_string(this->string_pool_, offset);
+  cached.dialect = read_pool_string(this->string_pool_, offset);
+  cached.relative_path = read_pool_string(this->string_pool_, offset);
 
   return cached;
 }
 
 auto BuildState::contains(std::string_view key) const -> bool {
-  if (this->overlay.contains(key)) {
+  if (this->overlay_.contains(key)) {
     return true;
   }
 
-  if (this->deleted.contains(key)) {
+  if (this->deleted_.contains(key)) {
     return false;
   }
 
@@ -358,12 +359,12 @@ auto BuildState::contains(std::string_view key) const -> bool {
 }
 
 auto BuildState::entry(std::string_view key) const -> const Entry * {
-  const auto overlay_match{this->overlay.find(key)};
-  if (overlay_match != this->overlay.end()) {
+  const auto overlay_match{this->overlay_.find(key)};
+  if (overlay_match != this->overlay_.end()) {
     return &overlay_match->second;
   }
 
-  if (this->deleted.contains(key)) {
+  if (this->deleted_.contains(key)) {
     return nullptr;
   }
 
@@ -378,12 +379,12 @@ auto BuildState::entry(std::string_view key) const -> const Entry * {
 auto BuildState::is_stale(
     std::string_view key,
     const std::filesystem::file_time_type source_mtime) const -> bool {
-  const auto overlay_match{this->overlay.find(key)};
-  if (overlay_match != this->overlay.end()) {
+  const auto overlay_match{this->overlay_.find(key)};
+  if (overlay_match != this->overlay_.end()) {
     return source_mtime > overlay_match->second.file_mark;
   }
 
-  if (this->deleted.contains(key)) {
+  if (this->deleted_.contains(key)) {
     return true;
   }
 
@@ -403,22 +404,22 @@ auto BuildState::commit(const std::filesystem::path &path,
                         std::vector<std::filesystem::path> dependencies)
     -> void {
   const auto &key{path.native()};
-  const auto was_live{this->overlay.contains(key) ||
+  const auto was_live{this->overlay_.contains(key) ||
                       (this->probe_slot(key, KIND_OUTPUT) != nullptr &&
-                       !this->deleted.contains(key))};
+                       !this->deleted_.contains(key))};
 
-  auto &result{this->overlay[key]};
+  auto &result{this->overlay_[key]};
   result.file_mark = std::filesystem::file_time_type::clock::now();
   result.dependencies = std::move(dependencies);
-  this->deleted.erase(key);
+  this->deleted_.erase(key);
 
   if (!was_live) {
-    this->entry_count++;
+    this->entry_count_++;
   }
 
-  this->dirty = true;
-  this->keys_stale = true;
-  this->leaf_index_stale = true;
+  this->dirty_ = true;
+  this->keys_stale_ = true;
+  this->leaf_index_stale_ = true;
 }
 
 auto BuildState::forget(const std::string &key) -> void {
@@ -426,93 +427,93 @@ auto BuildState::forget(const std::string &key) -> void {
 
   std::unordered_set<std::string, TransparentHash, TransparentEqual>
       removed_from_overlay;
-  for (auto iterator = this->overlay.begin();
-       iterator != this->overlay.end();) {
+  for (auto iterator = this->overlay_.begin();
+       iterator != this->overlay_.end();) {
     if (is_key_or_descendant(iterator->first, key, child_prefix)) {
       removed_from_overlay.insert(iterator->first);
-      iterator = this->overlay.erase(iterator);
-      this->entry_count--;
+      iterator = this->overlay_.erase(iterator);
+      this->entry_count_--;
     } else {
       ++iterator;
     }
   }
 
-  for (std::uint32_t slot_index = 0; slot_index < this->table_capacity;
+  for (std::uint32_t slot_index = 0; slot_index < this->table_capacity_;
        ++slot_index) {
-    const auto *slot{this->table_slots + slot_index * SLOT_SIZE};
+    const auto *slot{this->table_slots_ + (slot_index * SLOT_SIZE)};
     if (slot[SLOT_OCCUPIED] == 0 || slot[SLOT_KIND] != KIND_OUTPUT) {
       continue;
     }
 
-    const auto key_sv{slot_key(slot, this->string_pool)};
+    const auto key_sv{slot_key(slot, this->string_pool_)};
     if (is_key_or_descendant(key_sv, key, child_prefix) &&
-        !this->deleted.contains(key_sv)) {
-      this->deleted.emplace(key_sv);
-      this->lazy_cache.erase(std::string{key_sv});
+        !this->deleted_.contains(key_sv)) {
+      this->deleted_.emplace(key_sv);
+      this->lazy_cache_.erase(std::string{key_sv});
       if (!removed_from_overlay.contains(key_sv)) {
-        this->entry_count--;
+        this->entry_count_--;
       }
     }
   }
 
-  this->dirty = true;
-  this->keys_stale = true;
-  this->leaf_index_stale = true;
+  this->dirty_ = true;
+  this->keys_stale_ = true;
+  this->leaf_index_stale_ = true;
 }
 
 auto BuildState::emplace(const std::filesystem::path &path, Entry entry)
     -> void {
   const auto &key{path.native()};
-  const auto was_live{this->overlay.contains(key) ||
+  const auto was_live{this->overlay_.contains(key) ||
                       (this->probe_slot(key, KIND_OUTPUT) != nullptr &&
-                       !this->deleted.contains(key))};
+                       !this->deleted_.contains(key))};
 
-  this->overlay[key] = std::move(entry);
-  this->deleted.erase(key);
+  this->overlay_[key] = std::move(entry);
+  this->deleted_.erase(key);
 
   if (!was_live) {
-    this->entry_count++;
+    this->entry_count_++;
   }
 
-  this->dirty = true;
-  this->keys_stale = true;
-  this->leaf_index_stale = true;
+  this->dirty_ = true;
+  this->keys_stale_ = true;
+  this->leaf_index_stale_ = true;
 }
 
 auto BuildState::keys() const -> const std::vector<std::string_view> & {
-  if (!this->keys_stale) {
-    return this->cached_keys;
+  if (!this->keys_stale_) {
+    return this->cached_keys_;
   }
 
-  this->cached_keys.clear();
-  this->cached_keys.reserve(this->entry_count);
+  this->cached_keys_.clear();
+  this->cached_keys_.reserve(this->entry_count_);
 
-  for (const auto &[key, value] : this->overlay) {
-    this->cached_keys.push_back(key);
+  for (const auto &[key, value] : this->overlay_) {
+    this->cached_keys_.push_back(key);
   }
 
-  for (std::uint32_t slot_index = 0; slot_index < this->table_capacity;
+  for (std::uint32_t slot_index = 0; slot_index < this->table_capacity_;
        ++slot_index) {
-    const auto *slot{this->table_slots + slot_index * SLOT_SIZE};
+    const auto *slot{this->table_slots_ + (slot_index * SLOT_SIZE)};
     if (slot[SLOT_OCCUPIED] == 0 || slot[SLOT_KIND] != KIND_OUTPUT) {
       continue;
     }
 
-    const auto key{slot_key(slot, this->string_pool)};
-    if (!this->deleted.contains(key) && !this->overlay.contains(key)) {
-      this->cached_keys.push_back(key);
+    const auto key{slot_key(slot, this->string_pool_)};
+    if (!this->deleted_.contains(key) && !this->overlay_.contains(key)) {
+      this->cached_keys_.push_back(key);
     }
   }
 
-  this->keys_stale = false;
-  return this->cached_keys;
+  this->keys_stale_ = false;
+  return this->cached_keys_;
 }
 
 auto BuildState::resolve(const std::string &source_path,
                          const std::filesystem::file_time_type mtime) const
     -> const ResolverEntry * {
-  const auto overlay_match{this->resolver_overlay.find(source_path)};
-  if (overlay_match != this->resolver_overlay.end()) {
+  const auto overlay_match{this->resolver_overlay_.find(source_path)};
+  if (overlay_match != this->resolver_overlay_.end()) {
     if (mtime <= overlay_match->second.file_mark) {
       return &overlay_match->second;
     }
@@ -538,24 +539,24 @@ auto BuildState::resolve(const std::string &source_path,
 
 auto BuildState::commit(const std::string &source_path, ResolverEntry entry)
     -> void {
-  const auto was_live{this->resolver_overlay.contains(source_path) ||
+  const auto was_live{this->resolver_overlay_.contains(source_path) ||
                       this->probe_slot(source_path, KIND_RESOLVER) != nullptr};
 
-  this->resolver_overlay[source_path] = std::move(entry);
+  this->resolver_overlay_[source_path] = std::move(entry);
 
   if (!was_live) {
-    this->resolver_entry_count++;
+    this->resolver_entry_count_++;
   }
 
-  this->dirty = true;
+  this->dirty_ = true;
 }
 
 auto BuildState::in_overlay(std::string_view key) const -> bool {
-  return this->overlay.contains(key);
+  return this->overlay_.contains(key);
 }
 
 auto BuildState::disk_entry(std::string_view key) const -> const Entry * {
-  if (this->deleted.contains(key)) {
+  if (this->deleted_.contains(key)) {
     return nullptr;
   }
 
@@ -578,18 +579,18 @@ auto BuildState::raw_disk_entry(std::string_view key) const -> const Entry * {
 
 auto BuildState::deleted_keys() const -> const
     std::unordered_set<std::string, TransparentHash, TransparentEqual> & {
-  return this->deleted;
+  return this->deleted_;
 }
 
 auto BuildState::index_leaf_target(std::filesystem::file_time_type mtime,
                                    bool is_explorer,
                                    std::string_view relative_path,
                                    std::string_view filename) const -> void {
-  auto &leaf_entry{this->leaf_index_cache[std::string{relative_path}]};
+  auto &leaf_entry{this->leaf_index_cache_[std::string{relative_path}]};
 
-  for (std::size_t rule_index{0}; rule_index < this->leaf_rules.size();
+  for (std::size_t rule_index{0}; rule_index < this->leaf_rules_.size();
        rule_index++) {
-    const auto &rule{this->leaf_rules[rule_index]};
+    const auto &rule{this->leaf_rules_[rule_index]};
     if (filename == rule.filename && ((rule.base == 1) == is_explorer)) {
       leaf_entry.target_bitmap |= static_cast<std::uint16_t>(1 << rule_index);
       if (rule.is_root) {
@@ -608,9 +609,9 @@ auto BuildState::flag_cross_leaf_dependencies(
   for (const auto &dependency : dependencies) {
     const auto [dep_relative, dep_filename] =
         split_leaf_base(dependency.native(), primary_prefix, secondary_prefix,
-                        secondary_namespaced, this->sentinel_separator);
+                        secondary_namespaced, this->sentinel_separator_);
     if (!dep_relative.empty() && dep_relative != owner_relative) {
-      this->leaf_index_cache[std::string{owner_relative}].has_cross_leaf_deps =
+      this->leaf_index_cache_[std::string{owner_relative}].has_cross_leaf_deps =
           true;
       return;
     }
@@ -618,13 +619,14 @@ auto BuildState::flag_cross_leaf_dependencies(
 }
 
 auto BuildState::build_leaf_index(const std::string &output) const -> void {
-  this->leaf_index_cache.clear();
-  this->leaf_index_output = output;
+  this->leaf_index_cache_.clear();
+  this->leaf_index_output_ = output;
 
-  if (this->persisted_leaf_table != nullptr && this->persisted_leaf_count > 0 &&
-      this->overlay.empty() && this->deleted.empty()) {
-    const auto *cursor{this->persisted_leaf_table};
-    for (std::uint32_t index{0}; index < this->persisted_leaf_count; index++) {
+  if (this->persisted_leaf_table_ != nullptr &&
+      this->persisted_leaf_count_ > 0 && this->overlay_.empty() &&
+      this->deleted_.empty()) {
+    const auto *cursor{this->persisted_leaf_table_};
+    for (std::uint32_t index{0}; index < this->persisted_leaf_count_; index++) {
       const auto *record{reinterpret_cast<const LeafIndexRecord *>(cursor)};
       cursor += sizeof(LeafIndexRecord);
       const std::string relative_path{reinterpret_cast<const char *>(cursor),
@@ -632,7 +634,7 @@ auto BuildState::build_leaf_index(const std::string &output) const -> void {
       cursor += record->relative_path_length;
 
       using file_time = std::filesystem::file_time_type;
-      auto &entry{this->leaf_index_cache[relative_path]};
+      auto &entry{this->leaf_index_cache_[relative_path]};
       entry.root_mtime =
           file_time{std::chrono::duration_cast<file_time::duration>(
               std::chrono::nanoseconds{record->root_mtime})};
@@ -640,31 +642,31 @@ auto BuildState::build_leaf_index(const std::string &output) const -> void {
       entry.has_cross_leaf_deps = record->has_cross_leaf_deps != 0;
     }
 
-    this->leaf_index_stale = false;
+    this->leaf_index_stale_ = false;
     return;
   }
 
   const auto primary_prefix{output + "/" +
-                            std::string{this->directories[0].name} + "/"};
+                            std::string{this->directories_[0].name} + "/"};
   const auto secondary_prefix{output + "/" +
-                              std::string{this->directories[1].name} + "/"};
-  const auto secondary_namespaced{this->directories[1].namespaced};
+                              std::string{this->directories_[1].name} + "/"};
+  const auto secondary_namespaced{this->directories_[1].namespaced};
 
-  for (std::uint32_t slot_index = 0; slot_index < this->table_capacity;
+  for (std::uint32_t slot_index = 0; slot_index < this->table_capacity_;
        ++slot_index) {
-    const auto *slot{this->table_slots + slot_index * SLOT_SIZE};
+    const auto *slot{this->table_slots_ + (slot_index * SLOT_SIZE)};
     if (slot[SLOT_OCCUPIED] == 0 || slot[SLOT_KIND] != KIND_OUTPUT) {
       continue;
     }
 
-    const auto key{slot_key(slot, this->string_pool)};
-    if (this->deleted.contains(key) || this->overlay.contains(key)) {
+    const auto key{slot_key(slot, this->string_pool_)};
+    if (this->deleted_.contains(key) || this->overlay_.contains(key)) {
       continue;
     }
 
     const auto [relative_path, filename] =
         split_leaf_base(key, primary_prefix, secondary_prefix,
-                        secondary_namespaced, this->sentinel_separator);
+                        secondary_namespaced, this->sentinel_separator_);
     if (relative_path.empty()) {
       continue;
     }
@@ -683,12 +685,13 @@ auto BuildState::build_leaf_index(const std::string &output) const -> void {
           read_field<std::uint32_t>(slot, SLOT_DATA_OFFSET))};
       for (std::uint16_t dependency_index = 0; dependency_index < data_count;
            ++dependency_index) {
-        const auto dependency_path{read_pool_string(this->string_pool, offset)};
+        const auto dependency_path{
+            read_pool_string(this->string_pool_, offset)};
         const auto [dep_relative, dep_filename] =
             split_leaf_base(dependency_path, primary_prefix, secondary_prefix,
-                            secondary_namespaced, this->sentinel_separator);
+                            secondary_namespaced, this->sentinel_separator_);
         if (!dep_relative.empty() && dep_relative != relative_path) {
-          this->leaf_index_cache[std::string{relative_path}]
+          this->leaf_index_cache_[std::string{relative_path}]
               .has_cross_leaf_deps = true;
           break;
         }
@@ -696,10 +699,10 @@ auto BuildState::build_leaf_index(const std::string &output) const -> void {
     }
   }
 
-  for (const auto &[entry_path, entry_value] : this->overlay) {
+  for (const auto &[entry_path, entry_value] : this->overlay_) {
     const auto [relative_path, filename] =
         split_leaf_base(entry_path, primary_prefix, secondary_prefix,
-                        secondary_namespaced, this->sentinel_separator);
+                        secondary_namespaced, this->sentinel_separator_);
     if (relative_path.empty()) {
       continue;
     }
@@ -713,18 +716,18 @@ auto BuildState::build_leaf_index(const std::string &output) const -> void {
                                        secondary_namespaced);
   }
 
-  this->leaf_index_stale = false;
+  this->leaf_index_stale_ = false;
 }
 
 auto BuildState::leaf_state(const std::string &output,
                             const std::string &relative_path, const bool,
                             const bool) const -> const LeafStateEntry * {
-  if (this->leaf_index_stale || this->leaf_index_output != output) {
+  if (this->leaf_index_stale_ || this->leaf_index_output_ != output) {
     this->build_leaf_index(output);
   }
 
-  const auto match{this->leaf_index_cache.find(relative_path)};
-  if (match == this->leaf_index_cache.end()) {
+  const auto match{this->leaf_index_cache_.find(relative_path)};
+  if (match == this->leaf_index_cache_.end()) {
     return nullptr;
   }
 
@@ -733,13 +736,13 @@ auto BuildState::leaf_state(const std::string &output,
 
 auto BuildState::leaf_relative_paths(const std::string &output) const
     -> std::vector<std::string> {
-  if (this->leaf_index_stale || this->leaf_index_output != output) {
+  if (this->leaf_index_stale_ || this->leaf_index_output_ != output) {
     this->build_leaf_index(output);
   }
 
   std::vector<std::string> result;
-  result.reserve(this->leaf_index_cache.size());
-  for (const auto &[relative_path, entry] : this->leaf_index_cache) {
+  result.reserve(this->leaf_index_cache_.size());
+  for (const auto &[relative_path, entry] : this->leaf_index_cache_) {
     result.push_back(relative_path);
   }
 
@@ -747,18 +750,18 @@ auto BuildState::leaf_relative_paths(const std::string &output) const
 }
 
 auto BuildState::save(const std::filesystem::path &path) const -> void {
-  if (!this->dirty && this->view && path == this->loaded_path) {
+  if (!this->dirty_ && this->view_ && path == this->loaded_path_) {
     return;
   }
 
-  const auto output_count{static_cast<std::uint32_t>(this->entry_count)};
+  const auto output_count{static_cast<std::uint32_t>(this->entry_count_)};
   const auto resolver_count{
-      static_cast<std::uint32_t>(this->resolver_entry_count)};
+      static_cast<std::uint32_t>(this->resolver_entry_count_)};
   const auto total_count{output_count + resolver_count};
 
-  const bool can_patch{this->table_capacity > 0 &&
-                       this->string_pool != nullptr &&
-                       total_count < this->table_capacity * 3 / 4};
+  const bool can_patch{this->table_capacity_ > 0 &&
+                       this->string_pool_ != nullptr &&
+                       total_count < this->table_capacity_ * 3 / 4};
 
   std::string pool;
   std::vector<std::uint8_t> slots;
@@ -771,12 +774,12 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
       resolver_updates;
 
   if (can_patch) {
-    capacity = this->table_capacity;
+    capacity = this->table_capacity_;
     const auto old_slots_size{static_cast<std::size_t>(capacity) * SLOT_SIZE};
     slots.resize(old_slots_size);
-    std::memcpy(slots.data(), this->table_slots, old_slots_size);
+    std::memcpy(slots.data(), this->table_slots_, old_slots_size);
 
-    sourcemeta::core::BinaryReader pool_size_reader{*this->view};
+    sourcemeta::core::BinaryReader pool_size_reader{*this->view_};
     // Layout: [magic, version, fingerprint, inputs, capacity, entry_count,
     // pool_size, resolver_entry_count], so the pool size is the second dword
     // from the end. Counted back from the header size rather than written out,
@@ -787,10 +790,10 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
     auto find_slot{[&](std::string_view entry_key) -> std::uint32_t {
       const auto hash{fnv1a(entry_key.data(), entry_key.size())};
       auto index{static_cast<std::uint32_t>(hash & (capacity - 1))};
-      while (slots[index * SLOT_SIZE + SLOT_OCCUPIED] != 0) {
-        const auto *slot{slots.data() + index * SLOT_SIZE};
+      while (slots[(index * SLOT_SIZE) + SLOT_OCCUPIED] != 0) {
+        const auto *slot{slots.data() + (index * SLOT_SIZE)};
         if (read_field<std::uint64_t>(slot, SLOT_HASH) == hash &&
-            slot_key(slot, this->string_pool) == entry_key) {
+            slot_key(slot, this->string_pool_) == entry_key) {
           return index;
         }
         index = (index + 1) & (capacity - 1);
@@ -798,42 +801,42 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
       return capacity;
     }};
 
-    for (const auto &deleted_key : this->deleted) {
+    for (const auto &deleted_key : this->deleted_) {
       const auto slot_index{find_slot(deleted_key)};
       if (slot_index < capacity) {
         auto empty{slot_index};
         for (;;) {
           const auto next{(empty + 1) & (capacity - 1)};
-          if (slots[next * SLOT_SIZE + SLOT_OCCUPIED] == 0) {
+          if (slots[(next * SLOT_SIZE) + SLOT_OCCUPIED] == 0) {
             break;
           }
 
           const auto next_hash{read_field<std::uint64_t>(
-              slots.data() + next * SLOT_SIZE, SLOT_HASH)};
+              slots.data() + (next * SLOT_SIZE), SLOT_HASH)};
           const auto natural{
               static_cast<std::uint32_t>(next_hash & (capacity - 1))};
           const auto distance_current{(next - natural) & (capacity - 1)};
           const auto distance_new{(empty - natural) & (capacity - 1)};
           if (distance_new <= distance_current) {
-            std::memcpy(slots.data() + empty * SLOT_SIZE,
-                        slots.data() + next * SLOT_SIZE, SLOT_SIZE);
+            std::memcpy(slots.data() + (empty * SLOT_SIZE),
+                        slots.data() + (next * SLOT_SIZE), SLOT_SIZE);
             empty = next;
           } else {
             break;
           }
         }
 
-        slots[empty * SLOT_SIZE + SLOT_OCCUPIED] = 0;
+        slots[(empty * SLOT_SIZE) + SLOT_OCCUPIED] = 0;
       }
     }
 
-    for (const auto &[overlay_key, overlay_entry] : this->overlay) {
+    for (const auto &[overlay_key, overlay_entry] : this->overlay_) {
       if (find_slot(overlay_key) < capacity) {
         overlay_updates.insert(overlay_key);
       }
     }
 
-    for (const auto &[overlay_key, overlay_entry] : this->resolver_overlay) {
+    for (const auto &[overlay_key, overlay_entry] : this->resolver_overlay_) {
       if (find_slot(overlay_key) < capacity) {
         resolver_updates.insert(overlay_key);
       }
@@ -847,22 +850,22 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
     pool.reserve(static_cast<std::size_t>(total_count) * 100);
     slots.resize(static_cast<std::size_t>(capacity) * SLOT_SIZE, 0);
 
-    for (std::uint32_t slot_index = 0; slot_index < this->table_capacity;
+    for (std::uint32_t slot_index = 0; slot_index < this->table_capacity_;
          ++slot_index) {
-      const auto *old_slot{this->table_slots + slot_index * SLOT_SIZE};
+      const auto *old_slot{this->table_slots_ + (slot_index * SLOT_SIZE)};
       if (old_slot[SLOT_OCCUPIED] == 0) {
         continue;
       }
 
       const auto old_kind{old_slot[SLOT_KIND]};
-      const auto key{slot_key(old_slot, this->string_pool)};
+      const auto key{slot_key(old_slot, this->string_pool_)};
 
       if (old_kind == KIND_OUTPUT) {
-        if (this->deleted.contains(key) || this->overlay.contains(key)) {
+        if (this->deleted_.contains(key) || this->overlay_.contains(key)) {
           continue;
         }
       } else if (old_kind == KIND_RESOLVER) {
-        if (this->resolver_overlay.contains(key)) {
+        if (this->resolver_overlay_.contains(key)) {
           continue;
         }
       }
@@ -879,23 +882,23 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
         for (std::uint16_t item_index = 0; item_index < data_count;
              ++item_index) {
           const auto item_length{
-              read_field<std::uint32_t>(this->string_pool, raw_offset)};
+              read_field<std::uint32_t>(this->string_pool_, raw_offset)};
           raw_offset += sizeof(std::uint32_t) + item_length;
         }
 
         const auto raw_size{raw_offset - old_data_offset};
-        pool.append(
-            reinterpret_cast<const char *>(this->string_pool + old_data_offset),
-            raw_size);
+        pool.append(reinterpret_cast<const char *>(this->string_pool_ +
+                                                   old_data_offset),
+                    raw_size);
       }
 
       const auto hash{fnv1a(key.data(), key.size())};
       auto index{static_cast<std::uint32_t>(hash & (capacity - 1))};
-      while (slots[index * SLOT_SIZE + SLOT_OCCUPIED] != 0) {
+      while (slots[(index * SLOT_SIZE) + SLOT_OCCUPIED] != 0) {
         index = (index + 1) & (capacity - 1);
       }
 
-      auto *slot{slots.data() + index * SLOT_SIZE};
+      auto *slot{slots.data() + (index * SLOT_SIZE)};
       const auto key_offset{static_cast<std::uint32_t>(pool.size())};
       pool.append(key);
       const auto key_length{static_cast<std::uint32_t>(key.size())};
@@ -921,8 +924,8 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
 
     if (is_update) {
       index = static_cast<std::uint32_t>(hash & (capacity - 1));
-      while (slots[index * SLOT_SIZE + SLOT_OCCUPIED] != 0) {
-        const auto *slot{slots.data() + index * SLOT_SIZE};
+      while (slots[(index * SLOT_SIZE) + SLOT_OCCUPIED] != 0) {
+        const auto *slot{slots.data() + (index * SLOT_SIZE)};
         if (read_field<std::uint64_t>(slot, SLOT_HASH) == hash) {
           const auto probe_key_offset{
               read_field<std::uint32_t>(slot, SLOT_KEY_OFFSET)};
@@ -930,7 +933,7 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
               read_field<std::uint32_t>(slot, SLOT_KEY_LENGTH)};
           std::string_view probe_key;
           if (can_patch && probe_key_offset < old_pool_size) {
-            probe_key = {reinterpret_cast<const char *>(this->string_pool +
+            probe_key = {reinterpret_cast<const char *>(this->string_pool_ +
                                                         probe_key_offset),
                          probe_key_length};
           } else {
@@ -947,12 +950,12 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
       }
     } else {
       index = static_cast<std::uint32_t>(hash & (capacity - 1));
-      while (slots[index * SLOT_SIZE + SLOT_OCCUPIED] != 0) {
+      while (slots[(index * SLOT_SIZE) + SLOT_OCCUPIED] != 0) {
         index = (index + 1) & (capacity - 1);
       }
     }
 
-    auto *slot{slots.data() + index * SLOT_SIZE};
+    auto *slot{slots.data() + (index * SLOT_SIZE)};
     const auto key_offset{
         static_cast<std::uint32_t>(old_pool_size + pool.size())};
     pool.append(entry_key);
@@ -969,7 +972,7 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
     slot[SLOT_KIND] = kind;
   }};
 
-  for (const auto &[entry_path, entry] : this->overlay) {
+  for (const auto &[entry_path, entry] : this->overlay_) {
     const auto timestamp{static_cast<std::int64_t>(
         std::chrono::duration_cast<std::chrono::nanoseconds>(
             entry.file_mark.time_since_epoch())
@@ -988,7 +991,7 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
                    overlay_updates.contains(entry_path));
   }
 
-  for (const auto &[source_path, cache_entry] : this->resolver_overlay) {
+  for (const auto &[source_path, cache_entry] : this->resolver_overlay_) {
     const auto timestamp{static_cast<std::int64_t>(
         std::chrono::duration_cast<std::chrono::nanoseconds>(
             cache_entry.file_mark.time_since_epoch())
@@ -1013,7 +1016,7 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
       const auto key_offset{read_field<std::uint32_t>(slot, SLOT_KEY_OFFSET)};
       const auto key_length{read_field<std::uint32_t>(slot, SLOT_KEY_LENGTH)};
       if (can_patch && key_offset < old_pool_size) {
-        return {reinterpret_cast<const char *>(this->string_pool + key_offset),
+        return {reinterpret_cast<const char *>(this->string_pool_ + key_offset),
                 key_length};
       }
       const auto offset_in_pool{can_patch ? key_offset - old_pool_size
@@ -1023,7 +1026,7 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
 
     auto read_slot_pool_string{[&](std::size_t &offset) -> std::string {
       if (can_patch && offset < old_pool_size) {
-        return read_pool_string(this->string_pool, offset);
+        return read_pool_string(this->string_pool_, offset);
       }
       auto adjusted_offset{can_patch ? offset - old_pool_size : offset};
       auto result{
@@ -1035,19 +1038,19 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
 
     const auto output_dir{path.parent_path().string()};
     const auto primary_prefix{output_dir + "/" +
-                              std::string{this->directories[0].name} + "/"};
+                              std::string{this->directories_[0].name} + "/"};
     const auto secondary_prefix{output_dir + "/" +
-                                std::string{this->directories[1].name} + "/"};
-    const auto secondary_namespaced{this->directories[1].namespaced};
+                                std::string{this->directories_[1].name} + "/"};
+    const auto secondary_namespaced{this->directories_[1].namespaced};
 
     std::unordered_map<std::string, LeafStateEntry, TransparentHash,
                        TransparentEqual>
         save_leaf_index;
 
-    if (can_patch && this->persisted_leaf_table != nullptr) {
-      const auto *record_ptr{this->persisted_leaf_table};
+    if (can_patch && this->persisted_leaf_table_ != nullptr) {
+      const auto *record_ptr{this->persisted_leaf_table_};
       for (std::uint32_t record_index = 0;
-           record_index < this->persisted_leaf_count; ++record_index) {
+           record_index < this->persisted_leaf_count_; ++record_index) {
         const auto *record{
             reinterpret_cast<const LeafIndexRecord *>(record_ptr)};
         const auto relative_path{std::string{
@@ -1063,10 +1066,10 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
         record_ptr += sizeof(*record) + record->relative_path_length;
       }
 
-      for (const auto &deleted_key : this->deleted) {
+      for (const auto &deleted_key : this->deleted_) {
         const auto [relative_path, filename] =
             split_leaf_base(deleted_key, primary_prefix, secondary_prefix,
-                            secondary_namespaced, this->sentinel_separator);
+                            secondary_namespaced, this->sentinel_separator_);
         if (relative_path.empty()) {
           continue;
         }
@@ -1076,10 +1079,10 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
 
       std::unordered_set<std::string, TransparentHash, TransparentEqual>
           affected_leaves;
-      for (const auto &[overlay_key, overlay_entry] : this->overlay) {
+      for (const auto &[overlay_key, overlay_entry] : this->overlay_) {
         const auto [relative_path, filename] =
             split_leaf_base(overlay_key, primary_prefix, secondary_prefix,
-                            secondary_namespaced, this->sentinel_separator);
+                            secondary_namespaced, this->sentinel_separator_);
         if (relative_path.empty()) {
           continue;
         }
@@ -1093,7 +1096,7 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
 
         for (std::uint32_t slot_index = 0; slot_index < capacity;
              ++slot_index) {
-          const auto *slot{slots.data() + slot_index * SLOT_SIZE};
+          const auto *slot{slots.data() + (slot_index * SLOT_SIZE)};
           if (slot[SLOT_OCCUPIED] == 0 || slot[SLOT_KIND] != KIND_OUTPUT) {
             continue;
           }
@@ -1101,15 +1104,15 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
           const auto key{read_slot_key(slot)};
           const auto [relative_path, filename] =
               split_leaf_base(key, primary_prefix, secondary_prefix,
-                              secondary_namespaced, this->sentinel_separator);
+                              secondary_namespaced, this->sentinel_separator_);
           if (relative_path.empty() || relative_path != affected_relative) {
             continue;
           }
 
           const bool is_explorer{key.starts_with(secondary_prefix)};
-          for (std::size_t rule_index{0}; rule_index < this->leaf_rules.size();
+          for (std::size_t rule_index{0}; rule_index < this->leaf_rules_.size();
                rule_index++) {
-            const auto &rule{this->leaf_rules[rule_index]};
+            const auto &rule{this->leaf_rules_[rule_index]};
             if (filename == rule.filename &&
                 ((rule.base == 1) == is_explorer)) {
               leaf_entry.target_bitmap |=
@@ -1136,7 +1139,7 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
               const auto dependency_path{read_slot_pool_string(offset)};
               const auto [dep_relative, dep_filename] = split_leaf_base(
                   dependency_path, primary_prefix, secondary_prefix,
-                  secondary_namespaced, this->sentinel_separator);
+                  secondary_namespaced, this->sentinel_separator_);
               if (!dep_relative.empty() && dep_relative != affected_relative) {
                 leaf_entry.has_cross_leaf_deps = true;
                 break;
@@ -1148,7 +1151,7 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
     } else {
 
       for (std::uint32_t slot_index = 0; slot_index < capacity; ++slot_index) {
-        const auto *slot{slots.data() + slot_index * SLOT_SIZE};
+        const auto *slot{slots.data() + (slot_index * SLOT_SIZE)};
         if (slot[SLOT_OCCUPIED] == 0 || slot[SLOT_KIND] != KIND_OUTPUT) {
           continue;
         }
@@ -1156,7 +1159,7 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
         const auto key{read_slot_key(slot)};
         const auto [relative_path, filename] =
             split_leaf_base(key, primary_prefix, secondary_prefix,
-                            secondary_namespaced, this->sentinel_separator);
+                            secondary_namespaced, this->sentinel_separator_);
         if (relative_path.empty()) {
           continue;
         }
@@ -1164,9 +1167,9 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
         const bool is_explorer{key.starts_with(secondary_prefix)};
         auto &leaf_entry{save_leaf_index[std::string{relative_path}]};
 
-        for (std::size_t rule_index{0}; rule_index < this->leaf_rules.size();
+        for (std::size_t rule_index{0}; rule_index < this->leaf_rules_.size();
              rule_index++) {
-          const auto &rule{this->leaf_rules[rule_index]};
+          const auto &rule{this->leaf_rules_[rule_index]};
           if (filename == rule.filename && ((rule.base == 1) == is_explorer)) {
             leaf_entry.target_bitmap |=
                 static_cast<std::uint16_t>(1 << rule_index);
@@ -1191,7 +1194,7 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
             const auto dependency_path{read_slot_pool_string(offset)};
             const auto [dep_relative, dep_filename] = split_leaf_base(
                 dependency_path, primary_prefix, secondary_prefix,
-                secondary_namespaced, this->sentinel_separator);
+                secondary_namespaced, this->sentinel_separator_);
             if (!dep_relative.empty() && dep_relative != relative_path) {
               leaf_entry.has_cross_leaf_deps = true;
               break;
@@ -1204,7 +1207,7 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
     std::string leaf_index_buffer;
     const auto leaf_count{static_cast<std::uint32_t>(save_leaf_index.size())};
     leaf_index_buffer.reserve(sizeof(LEAF_INDEX_MAGIC) + sizeof(leaf_count) +
-                              leaf_count * (sizeof(LeafIndexRecord) + 64));
+                              (leaf_count * (sizeof(LeafIndexRecord) + 64)));
     leaf_index_buffer.append(reinterpret_cast<const char *>(&LEAF_INDEX_MAGIC),
                              sizeof(LEAF_INDEX_MAGIC));
     leaf_index_buffer.append(reinterpret_cast<const char *>(&leaf_count),
@@ -1231,8 +1234,8 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
           sourcemeta::core::BinaryWriter writer{stream};
           writer.put_dword(STATE_MAGIC);
           writer.put_dword(STATE_VERSION);
-          writer.put_dword(this->rules_fingerprint);
-          writer.put_qword(this->inputs_fingerprint);
+          writer.put_dword(this->rules_fingerprint_);
+          writer.put_qword(this->inputs_fingerprint_);
           writer.put_dword(capacity);
           writer.put_dword(output_count);
           writer.put_dword(total_pool_size);
@@ -1243,7 +1246,7 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
 
           if (can_patch && old_pool_size > 0) {
             writer.put_bytes(
-                reinterpret_cast<const std::byte *>(this->string_pool),
+                reinterpret_cast<const std::byte *>(this->string_pool_),
                 old_pool_size);
           }
           if (!pool.empty()) {

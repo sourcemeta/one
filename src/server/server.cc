@@ -122,20 +122,20 @@ auto main(int argc, char *argv[]) noexcept -> int {
           const auto duration{
               std::chrono::duration_cast<std::chrono::milliseconds>(
                   std::chrono::steady_clock::now() - timestamp_start)};
-          sourcemeta::one::HTTP_LOG("Listening on port " +
+          sourcemeta::one::http_log("Listening on port " +
                                     std::to_string(bound_port) + " in " +
                                     std::to_string(duration.count()) + " ms");
         },
         [](const std::uint16_t requested_port) {
-          sourcemeta::one::HTTP_LOG("Failed to listen on port " +
+          sourcemeta::one::http_log("Failed to listen on port " +
                                     std::to_string(requested_port));
         }};
 
     if (server.stopped_gracefully()) {
-      sourcemeta::one::HTTP_LOG("The server stopped gracefully");
+      sourcemeta::one::http_log("The server stopped gracefully");
       return EXIT_SUCCESS;
     }
-    sourcemeta::one::HTTP_LOG("The server could not start");
+    sourcemeta::one::http_log("The server could not start");
     return EXIT_FAILURE;
   } catch (const std::exception &error) {
     std::cerr << "unexpected error: " << error.what() << "\n";

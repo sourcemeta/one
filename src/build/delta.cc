@@ -1,6 +1,6 @@
 #include <sourcemeta/one/build.h>
 
-#include <algorithm>     // std::ranges::sort, std::ranges::all_of
+#include <algorithm>     // std::ranges::sort, std::ranges::all_of, std::max
 #include <cassert>       // assert
 #include <cstdint>       // std::size_t
 #include <filesystem>    // std::filesystem::path, std::filesystem::exists
@@ -298,9 +298,7 @@ compute_wave(const std::string &path, const TargetMap &targets,
     if (dirty_set.contains(dependency)) {
       const auto dependency_wave{
           compute_wave(dependency, targets, dirty_set, cache)};
-      if (dependency_wave + 1 > max_dependency_wave) {
-        max_dependency_wave = dependency_wave + 1;
-      }
+      max_dependency_wave = std::max(dependency_wave + 1, max_dependency_wave);
     }
   }
 
@@ -345,6 +343,9 @@ static auto collect_affected_directories(
   return result;
 }
 
+// The plan is settled in one pass over every rule kind, since what a wave holds
+// depends on what the waves before it decided
+// NOLINTNEXTLINE(google-readability-function-size,hicpp-function-size,readability-function-size)
 auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
                   const BuildState &entries,
                   const std::filesystem::path &output, const LeafSet &leaves,
@@ -1497,9 +1498,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
     }
 
     const auto wave{compute_wave(target_path, targets, dirty_set, wave_cache)};
-    if (wave > max_wave) {
-      max_wave = wave;
-    }
+    max_wave = std::max(wave, max_wave);
   }
 
   std::vector<std::vector<BuildPlan::Action>> dag_waves;
@@ -1568,7 +1567,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
 
   if (has_potential_stale || is_full) {
     std::unordered_set<std::string> known_bases;
-    known_bases.reserve(active_leaves.size() * 2 + 1);
+    known_bases.reserve((active_leaves.size() * 2) + 1);
     for (const auto &leaf : active_leaves) {
       known_bases.insert(leaf.primary_base);
       // Only the views holding this leaf know it, so a view without it leaves
@@ -1656,7 +1655,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
       }
     }
 
-    for (auto &root : stale_roots) {
+    for (const auto &root : stale_roots) {
       remove_wave.push_back({.type = remove_action,
                              .destination = std::filesystem::path{root},
                              .dependencies = {},

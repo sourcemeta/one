@@ -52,7 +52,7 @@ auto write_providers(sourcemeta::core::HTMLWriter &body,
 
 } // namespace
 
-auto GENERATE_WEB_LOGIN::handler(
+auto GenerateWebLogin::handler(
     const sourcemeta::one::BuildState &,
     const sourcemeta::one::BuildPlan::Action &action,
     const sourcemeta::one::BuildDynamicCallback &, sourcemeta::one::Resolver &,

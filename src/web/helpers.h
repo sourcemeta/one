@@ -62,16 +62,20 @@ make_schema_health_progress_bar(sourcemeta::core::HTMLWriter &writer,
     if (health > 90) {
       return {"progress-bar text-bg-success",
               "width:" + std::to_string(health) + "%"};
-    } else if (health > 60) {
+    }
+
+    if (health > 60) {
       return {"progress-bar text-bg-warning",
               "width:" + std::to_string(health) + "%"};
-    } else if (health == 0) {
+    }
+
+    if (health == 0) {
       // Otherwise if we set width: 0px, then the label is not shown
       return {"progress-bar text-bg-danger", ""};
-    } else {
-      return {"progress-bar text-bg-danger",
-              "width:" + std::to_string(health) + "%"};
     }
+
+    return {"progress-bar text-bg-danger",
+            "width:" + std::to_string(health) + "%"};
   }();
 
   writer.div()
@@ -101,30 +105,35 @@ make_dialect_badge(sourcemeta::core::HTMLWriter &writer,
         base_dialect_uri ==
             "https://json-schema.org/draft/2020-12/hyper-schema") {
       return {"2020-12", true};
-    } else if (base_dialect_uri ==
-                   "https://json-schema.org/draft/2019-09/schema" ||
-               base_dialect_uri ==
-                   "https://json-schema.org/draft/2019-09/hyper-schema") {
-      return {"2019-09", false};
-    } else if (base_dialect_uri == "http://json-schema.org/draft-07/schema#" ||
-               base_dialect_uri ==
-                   "http://json-schema.org/draft-07/hyper-schema#") {
-      return {"draft7", false};
-    } else if (base_dialect_uri == "http://json-schema.org/draft-06/schema#" ||
-               base_dialect_uri ==
-                   "http://json-schema.org/draft-06/hyper-schema#") {
-      return {"draft6", false};
-    } else if (base_dialect_uri == "http://json-schema.org/draft-04/schema#" ||
-               base_dialect_uri ==
-                   "http://json-schema.org/draft-04/hyper-schema#") {
-      return {"draft4", false};
-    } else if (base_dialect_uri == "http://json-schema.org/draft-03/schema#" ||
-               base_dialect_uri ==
-                   "http://json-schema.org/draft-03/hyper-schema#") {
-      return {"draft3", false};
-    } else {
-      return {"unknown", false};
     }
+
+    if (base_dialect_uri == "https://json-schema.org/draft/2019-09/schema" ||
+        base_dialect_uri ==
+            "https://json-schema.org/draft/2019-09/hyper-schema") {
+      return {"2019-09", false};
+    }
+
+    if (base_dialect_uri == "http://json-schema.org/draft-07/schema#" ||
+        base_dialect_uri == "http://json-schema.org/draft-07/hyper-schema#") {
+      return {"draft7", false};
+    }
+
+    if (base_dialect_uri == "http://json-schema.org/draft-06/schema#" ||
+        base_dialect_uri == "http://json-schema.org/draft-06/hyper-schema#") {
+      return {"draft6", false};
+    }
+
+    if (base_dialect_uri == "http://json-schema.org/draft-04/schema#" ||
+        base_dialect_uri == "http://json-schema.org/draft-04/hyper-schema#") {
+      return {"draft4", false};
+    }
+
+    if (base_dialect_uri == "http://json-schema.org/draft-03/schema#" ||
+        base_dialect_uri == "http://json-schema.org/draft-03/hyper-schema#") {
+      return {"draft3", false};
+    }
+
+    return {"unknown", false};
   }();
 
   // Capitalize first character
@@ -375,15 +384,15 @@ inline auto make_file_manager(sourcemeta::core::HTMLWriter &writer,
     return;
   }
 
-  constexpr std::string_view self_path{"/self"};
-  constexpr std::string_view self_path_slash{"/self/"};
+  constexpr std::string_view SELF_PATH{"/self"};
+  constexpr std::string_view SELF_PATH_SLASH{"/self/"};
 
   writer.div().attribute("class", "container-fluid p-4 flex-grow-1");
 
   bool has_regular_entries{false};
   for (const auto &entry : directory.at("entries").as_array()) {
     const auto path{entry.at("path").to_string()};
-    if (path != self_path && path != self_path_slash) {
+    if (path != SELF_PATH && path != SELF_PATH_SLASH) {
       if (!has_regular_entries) {
         writer.table().attribute(
             "class", "table table-bordered border-light-subtle table-light");
@@ -403,7 +412,7 @@ inline auto make_file_manager(sourcemeta::core::HTMLWriter &writer,
 
   for (const auto &entry : directory.at("entries").as_array()) {
     const auto path{entry.at("path").to_string()};
-    if (path == self_path || path == self_path_slash) {
+    if (path == SELF_PATH || path == SELF_PATH_SLASH) {
       writer.h6().attribute("class", "text-secondary mt-4 mb-3");
       writer.text("Special directories");
       writer.close();

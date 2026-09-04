@@ -80,7 +80,7 @@ jsonpath "$.result.resources[8].uri" == "{{base}}/self/v1/schemas/api/schemas/ev
 jsonpath "$.result.resources[8].name" == "Sourcemeta One Schema Evaluate API Response"
 jsonpath "$.result.resources[8].description" == "The response format for the schema evaluation API endpoint"
 jsonpath "$.result.resources[8].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[8].size" == 2214
+jsonpath "$.result.resources[8].size" == 2138
 jsonpath "$.result.resources[8].annotations.priority" == 0
 jsonpath "$.result.resources[9].uri" == "{{base}}/self/v1/schemas/api/schemas/health/response"
 jsonpath "$.result.resources[9].name" == "Sourcemeta One Schema Health API Response"
@@ -528,7 +528,7 @@ jsonpath "$.result.resources[11].uri" == "{{base}}/self/v1/schemas/api/schemas/e
 jsonpath "$.result.resources[11].name" == "Sourcemeta One Schema Evaluate API Response"
 jsonpath "$.result.resources[11].description" == "The response format for the schema evaluation API endpoint"
 jsonpath "$.result.resources[11].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[11].size" == 2214
+jsonpath "$.result.resources[11].size" == 2138
 jsonpath "$.result.resources[11].annotations.priority" == 0
 jsonpath "$.result.resources[12].uri" == "{{base}}/self/v1/schemas/api/schemas/health/response"
 jsonpath "$.result.resources[12].name" == "Sourcemeta One Schema Health API Response"
@@ -959,7 +959,7 @@ jsonpath "$.result.resources[9].uri" == "{{base}}/self/v1/schemas/api/schemas/ev
 jsonpath "$.result.resources[9].name" == "Sourcemeta One Schema Evaluate API Response"
 jsonpath "$.result.resources[9].description" == "The response format for the schema evaluation API endpoint"
 jsonpath "$.result.resources[9].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[9].size" == 2214
+jsonpath "$.result.resources[9].size" == 2138
 jsonpath "$.result.resources[9].annotations.priority" == 0
 jsonpath "$.result.resources[10].uri" == "{{base}}/self/v1/schemas/api/schemas/health/response"
 jsonpath "$.result.resources[10].name" == "Sourcemeta One Schema Health API Response"

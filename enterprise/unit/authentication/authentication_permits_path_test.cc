@@ -297,28 +297,28 @@ TEST(an_explicit_route_is_gated_on_the_target_as_it_arrived) {
 TEST(supports_the_maximum_number_of_policies) {
   // One bit per policy in a 64 bit mask, which is what an artifact has room
   // to name
-  constexpr std::size_t maximum{64};
+  constexpr std::size_t MAXIMUM{64};
   std::vector<std::string> path_storage;
-  path_storage.reserve(maximum);
-  for (std::size_t index{0}; index < maximum; index += 1) {
+  path_storage.reserve(MAXIMUM);
+  for (std::size_t index{0}; index < MAXIMUM; index += 1) {
     path_storage.push_back("/p" + std::to_string(index));
   }
 
   std::vector<std::string_view> path_views;
-  path_views.reserve(maximum);
+  path_views.reserve(MAXIMUM);
   for (const auto &value : path_storage) {
     path_views.push_back(value);
   }
 
   std::vector<std::string> name_storage;
-  name_storage.reserve(maximum);
-  for (std::size_t index{0}; index < maximum; index += 1) {
+  name_storage.reserve(MAXIMUM);
+  for (std::size_t index{0}; index < MAXIMUM; index += 1) {
     name_storage.push_back("p" + std::to_string(index));
   }
 
   std::vector<sourcemeta::one::Authentication::Policy> policies;
-  policies.reserve(maximum);
-  for (std::size_t index{0}; index < maximum; index += 1) {
+  policies.reserve(MAXIMUM);
+  for (std::size_t index{0}; index < MAXIMUM; index += 1) {
     policies.push_back(
         {.paths = std::span<const std::string_view>{&path_views[index], 1},
          .name = name_storage[index],

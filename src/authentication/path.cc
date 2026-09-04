@@ -77,7 +77,9 @@ auto canonicalize(const std::string_view input) -> std::string {
     // current one, while a double dot climbs, which at the root goes nowhere
     if (segment.empty() || segment == ".") {
       continue;
-    } else if (segment == "..") {
+    }
+
+    if (segment == "..") {
       if (!segments.empty()) {
         segments.pop_back();
       }

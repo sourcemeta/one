@@ -19,7 +19,7 @@
 #include <string>      // std::string
 #include <string_view> // std::string_view
 
-class ActionDefault_v1 : public sourcemeta::one::RouterAction {
+class ActionDefaultV1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
       "Default fallback action for unmatched URIs"};
@@ -28,7 +28,7 @@ public:
   static constexpr bool IDEMPOTENT{true};
   static constexpr bool OPEN_WORLD{false};
 
-  ActionDefault_v1(
+  ActionDefaultV1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
@@ -98,8 +98,8 @@ public:
     const auto stripped_json{
         sourcemeta::core::remove_suffix_ignore_case(path, ".json")};
     if (stripped_json.size() != path.size()) {
-      ActionJSONSchemaServe_v1::serve(*this, caller, stripped_json, request,
-                                      response, this->error_schema_);
+      ActionJSONSchemaServeV1::serve(*this, caller, stripped_json, request,
+                                     response, this->error_schema_);
       return;
     }
 
@@ -127,8 +127,8 @@ public:
           this->serve_missing_html(caller.view(), request, response);
         }
       } else {
-        ActionJSONSchemaServe_v1::serve(*this, caller, path, request, response,
-                                        this->error_schema_);
+        ActionJSONSchemaServeV1::serve(*this, caller, path, request, response,
+                                       this->error_schema_);
       }
     } else {
       // RFC 9110 §15.5.6: when the path resolves to an existing resource
@@ -158,10 +158,11 @@ public:
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
-           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
+           const sourcemeta::core::JSON &request_id,
+           const sourcemeta::core::JSON &,
            const sourcemeta::one::Authentication::Caller &)
       -> sourcemeta::core::JSON override {
-    return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
+    return sourcemeta::core::jsonrpc_make_error_method_not_found(request_id);
   }
 
 private:

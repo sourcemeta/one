@@ -5,6 +5,9 @@
 
 namespace sourcemeta::one {
 
+// The value of an entry is what a rule records as the action to take, so these
+// stand in for an integer wherever a rule asks for one
+// NOLINTNEXTLINE(cppcoreguidelines-use-enum-class)
 enum : BuildPlan::Action::Type {
   ACTION_MATERIALISE,
   ACTION_POSITIONS,
@@ -36,6 +39,9 @@ enum : BuildPlan::Action::Type {
   ACTION_COUNT
 };
 
+// The value of an entry is the build type a plan records, so these stand in for
+// an integer wherever a plan asks for one
+// NOLINTNEXTLINE(cppcoreguidelines-use-enum-class)
 enum : BuildPlan::Type { MODE_HEADLESS, MODE_FULL };
 
 inline constexpr DeltaRuleSet<13, 8, 5, 2> INDEX_RULES{

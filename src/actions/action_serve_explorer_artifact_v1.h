@@ -16,7 +16,7 @@
 #include <string_view> // std::string_view
 #include <utility>     // std::move
 
-class ActionServeExplorerArtifact_v1 : public sourcemeta::one::RouterAction {
+class ActionServeExplorerArtifactV1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
       "Read a navigation artifact for browsing schemas"};
@@ -25,7 +25,7 @@ public:
   static constexpr bool IDEMPOTENT{true};
   static constexpr bool OPEN_WORLD{false};
 
-  ActionServeExplorerArtifact_v1(
+  ActionServeExplorerArtifactV1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
@@ -121,7 +121,7 @@ public:
   }
 
 protected:
-  ActionServeExplorerArtifact_v1(
+  ActionServeExplorerArtifactV1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,

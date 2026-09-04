@@ -47,14 +47,14 @@ static auto make_breadcrumb(const std::filesystem::path &relative_path,
                             const bool is_directory) -> sourcemeta::core::JSON {
   auto result{sourcemeta::core::JSON::make_array()};
   std::filesystem::path current_path{"/"};
-  const auto parts_count{
-      std::distance(relative_path.begin(), relative_path.end())};
+  const auto parts_count{static_cast<std::size_t>(
+      std::distance(relative_path.begin(), relative_path.end()))};
   std::size_t index{0};
   for (const auto &part : relative_path) {
     current_path = current_path / part;
     auto entry{sourcemeta::core::JSON::make_object()};
     entry.assign("name", sourcemeta::core::JSON{part});
-    const auto is_last{index == static_cast<std::size_t>(parts_count - 1)};
+    const auto is_last{index == parts_count - 1};
     // Add trailing slash to directory paths to distinguish between
     // schema and directory entries which might have the same name
     if (!is_last || is_directory) {
@@ -176,12 +176,13 @@ static auto parse_version_info(const std::string_view name)
   const auto version{sourcemeta::core::SemVer::from(
       name, sourcemeta::core::SemVer::Mode::Loose)};
   if (version.has_value()) {
-    return {1, static_cast<std::uint32_t>(version->major()),
-            static_cast<std::uint32_t>(version->minor()),
-            static_cast<std::uint32_t>(version->patch())};
+    return {.is_version = 1,
+            .major = static_cast<std::uint32_t>(version->major()),
+            .minor = static_cast<std::uint32_t>(version->minor()),
+            .patch = static_cast<std::uint32_t>(version->patch())};
   }
 
-  return {0, 0, 0, 0};
+  return {.is_version = 0, .major = 0, .minor = 0, .patch = 0};
 }
 
 inline auto directory_extension_string(const MetapackDirectoryExtension *,
@@ -378,7 +379,7 @@ static auto make_explorer_schema_extension(
   return result;
 }
 
-struct GENERATE_EXPLORER_SCHEMA_METADATA {
+struct GenerateExplorerSchemaMetadata {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
@@ -400,12 +401,12 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
     assert(schema_data_option.has_value());
     const auto &schema_data{schema_data_option.value()};
-    sourcemeta::blaze::SchemaFrame frame{
-        sourcemeta::blaze::SchemaFrame::Mode::Root};
-    frame.analyse(schema_data, sourcemeta::blaze::schema_walker,
-                  [&callback, &resolver](const auto identifier) {
-                    return resolver(identifier, callback);
-                  });
+    const sourcemeta::blaze::SchemaFrame frame{
+        sourcemeta::blaze::SchemaFrame::Mode::Root, schema_data,
+        sourcemeta::blaze::schema_walker,
+        [&callback, &resolver](const auto identifier) {
+          return resolver(identifier, callback);
+        }};
     assert(!frame.root().empty());
     const auto &schema_location{frame.root_location().value().get()};
     auto result{sourcemeta::core::JSON::make_object()};
@@ -423,19 +424,19 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
     result.assign("dialect", sourcemeta::core::JSON{schema_location.dialect});
 
     if (schema_data.is_object()) {
-      const auto title{schema_data.try_at("title")};
-      if (title && title->is_string()) {
+      const auto *const title{schema_data.try_at("title")};
+      if (title != nullptr && title->is_string()) {
         result.assign("title", sourcemeta::core::JSON{title->trim()});
       }
-      const auto description{schema_data.try_at("description")};
-      if (description && description->is_string()) {
+      const auto *const description{schema_data.try_at("description")};
+      if (description != nullptr && description->is_string()) {
         result.assign("description",
                       sourcemeta::core::JSON{description->trim()});
       }
 
       auto examples_array{sourcemeta::core::JSON::make_array()};
       const auto *examples{schema_data.try_at("examples")};
-      if (examples && examples->is_array() && !examples->empty()) {
+      if (examples != nullptr && examples->is_array() && !examples->empty()) {
         const auto &vocabularies{frame.vocabularies(
             schema_location, [&callback, &resolver](const auto identifier) {
               return resolver(identifier, callback);
@@ -539,7 +540,7 @@ struct GENERATE_EXPLORER_SCHEMA_METADATA {
 
 // The relevant input dependencies files are determined by delta. The handler
 // reads only those few files to build the reverse dependency graph
-struct GENERATE_DEPENDENTS {
+struct GenerateDependents {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
@@ -591,8 +592,8 @@ struct GENERATE_DEPENDENTS {
         continue;
       }
 
-      for (const auto &[dependent, at] : match->second) {
-        edges.emplace(dependent, current, at);
+      for (const auto &[dependent, pointer] : match->second) {
+        edges.emplace(dependent, current, pointer);
         if (visited.emplace(dependent).second) {
           queue.emplace(dependent);
         }
@@ -600,11 +601,11 @@ struct GENERATE_DEPENDENTS {
     }
 
     auto result{sourcemeta::core::JSON::make_array()};
-    for (const auto &[from, to, at] : edges) {
+    for (const auto &[from, target, pointer] : edges) {
       auto object{sourcemeta::core::JSON::make_object()};
       object.assign("from", sourcemeta::core::JSON{from});
-      object.assign("to", sourcemeta::core::JSON{to});
-      object.assign("at", sourcemeta::core::JSON{at});
+      object.assign("to", sourcemeta::core::JSON{target});
+      object.assign("at", sourcemeta::core::JSON{pointer});
       result.push_back(std::move(object));
     }
 
@@ -618,7 +619,7 @@ struct GENERATE_DEPENDENTS {
   }
 };
 
-struct GENERATE_EXPLORER_SEARCH_INDEX {
+struct GenerateExplorerSearchIndex {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
@@ -643,30 +644,31 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
         }
 
         entries.push_back(
-            {directory_entry.at("path").to_string(),
-             directory_entry.at("identifier").to_string(),
-             directory_entry.defines("title")
-                 ? directory_entry.at("title").to_string()
-                 : "",
-             directory_entry.defines("description")
-                 ? directory_entry.at("description").to_string()
-                 : "",
-             directory_entry.defines("health")
-                 ? static_cast<std::uint8_t>(
-                       directory_entry.at("health").to_integer())
-                 : static_cast<std::uint8_t>(0),
-             directory_entry.defines("priority")
-                 ? static_cast<std::uint8_t>(
-                       directory_entry.at("priority").to_integer())
-                 : static_cast<std::uint8_t>(100),
-             directory_entry.defines("bytes")
-                 ? static_cast<std::uint64_t>(
-                       directory_entry.at("bytes").to_integer())
-                 : static_cast<std::uint64_t>(0),
-             directory_entry.defines("bytesBundled")
-                 ? static_cast<std::uint64_t>(
-                       directory_entry.at("bytesBundled").to_integer())
-                 : static_cast<std::uint64_t>(0)});
+            {.path = directory_entry.at("path").to_string(),
+             .identifier = directory_entry.at("identifier").to_string(),
+             .title = directory_entry.defines("title")
+                          ? directory_entry.at("title").to_string()
+                          : "",
+             .description = directory_entry.defines("description")
+                                ? directory_entry.at("description").to_string()
+                                : "",
+             .health = directory_entry.defines("health")
+                           ? static_cast<std::uint8_t>(
+                                 directory_entry.at("health").to_integer())
+                           : static_cast<std::uint8_t>(0),
+             .priority = directory_entry.defines("priority")
+                             ? static_cast<std::uint8_t>(
+                                   directory_entry.at("priority").to_integer())
+                             : static_cast<std::uint8_t>(100),
+             .bytes_raw = directory_entry.defines("bytes")
+                              ? static_cast<std::uint64_t>(
+                                    directory_entry.at("bytes").to_integer())
+                              : static_cast<std::uint64_t>(0),
+             .bytes_bundled =
+                 directory_entry.defines("bytesBundled")
+                     ? static_cast<std::uint64_t>(
+                           directory_entry.at("bytesBundled").to_integer())
+                     : static_cast<std::uint64_t>(0)});
       }
     }
 
@@ -692,7 +694,7 @@ struct GENERATE_EXPLORER_SEARCH_INDEX {
 // The ways of signing in, written once for the whole instance. The page that
 // offers them renders from this and nothing else, so what a person is shown and
 // what a custom interface reads cannot describe different instances
-struct GENERATE_LOGIN {
+struct GenerateLogin {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
@@ -743,7 +745,7 @@ inline constexpr std::string_view MCP_RESOURCE_MIME_TYPE{
     "application/schema+json"};
 inline constexpr std::size_t MCP_RESOURCES_PAGE_SIZE{50};
 
-struct GENERATE_MCP {
+struct GenerateMCP {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
@@ -881,7 +883,7 @@ struct GENERATE_MCP {
       sourcemeta::one::SearchView search{action.dependencies.front()};
       const auto total{search.count()};
       std::size_t offset{0};
-      do {
+      while (true) {
         auto resources{sourcemeta::core::JSON::make_array()};
         search.for_each(
             offset, MCP_RESOURCES_PAGE_SIZE,
@@ -907,7 +909,10 @@ struct GENERATE_MCP {
         offset += MCP_RESOURCES_PAGE_SIZE;
         // A catalog holding nothing still has a first page, so that asking for
         // the beginning is answered rather than refused
-      } while (offset < total);
+        if (offset >= total) {
+          break;
+        }
+      }
     }
 
     auto document{sourcemeta::core::JSON::make_object()};
@@ -956,7 +961,7 @@ static auto in_overlay_synchronised(const sourcemeta::one::BuildState &state,
   return state.in_overlay(key);
 }
 
-struct GENERATE_EXPLORER_DIRECTORY_LIST {
+struct GenerateExplorerDirectoryList {
   static auto handler(const sourcemeta::one::BuildState &state,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &,
@@ -1027,9 +1032,9 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
       if (filename == "directory.metapack") {
         if (old_listing.has_value() &&
             !in_overlay_synchronised(state, dependency.native())) {
-          auto it = old_directory_entries.find(child_name);
-          if (it != old_directory_entries.end()) {
-            const auto &old_entry{*it->second};
+          const auto match{old_directory_entries.find(child_name)};
+          if (match != old_directory_entries.end()) {
+            const auto &old_entry{*match->second};
             if (old_entry.defines("health")) {
               scores.emplace_back(old_entry.at("health").to_integer());
             }
@@ -1038,7 +1043,9 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
               child_schemas_total += old_entry.at("schemas").to_integer();
             }
             directory_entries.push_back(
-                {old_entry, parse_version_info(child_name), child_name});
+                {.json = old_entry,
+                 .version = parse_version_info(child_name),
+                 .name = child_name});
             continue;
           }
         }
@@ -1160,21 +1167,23 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
           }
         }
 
-        directory_entries.push_back(
-            {std::move(entry_json), directory_version, {}});
+        directory_entries.push_back({.json = std::move(entry_json),
+                                     .version = directory_version,
+                                     .name = {}});
         directory_entries.back().name =
             directory_entries.back().json.at("name").to_string();
       } else if (filename == "schema.metapack") {
         if (old_listing.has_value() &&
             !in_overlay_synchronised(state, dependency.native())) {
-          auto it = old_schema_entries.find(child_name);
-          if (it != old_schema_entries.end()) {
-            const auto &old_entry{*it->second};
+          const auto match{old_schema_entries.find(child_name)};
+          if (match != old_schema_entries.end()) {
+            const auto &old_entry{*match->second};
             if (old_entry.defines("health")) {
               scores.emplace_back(old_entry.at("health").to_integer());
             }
-            schema_entries.push_back(
-                {old_entry, parse_version_info(child_name), child_name});
+            schema_entries.push_back({.json = old_entry,
+                                      .version = parse_version_info(child_name),
+                                      .name = child_name});
             continue;
           }
         }
@@ -1238,8 +1247,9 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
         }
 
         scores.emplace_back(extension->health);
-        schema_entries.push_back(
-            {std::move(entry_json), extension->version, {}});
+        schema_entries.push_back({.json = std::move(entry_json),
+                                  .version = extension->version,
+                                  .name = {}});
         schema_entries.back().name =
             schema_entries.back().json.at("name").to_string();
       }
@@ -1252,10 +1262,14 @@ struct GENERATE_EXPLORER_DIRECTORY_LIST {
       }
 
       if (left.version.is_version && right.version.is_version) {
-        if (left.version.major != right.version.major)
+        if (left.version.major != right.version.major) {
           return left.version.major > right.version.major;
-        if (left.version.minor != right.version.minor)
+        }
+
+        if (left.version.minor != right.version.minor) {
           return left.version.minor > right.version.minor;
+        }
+
         return left.version.patch > right.version.patch;
       }
 

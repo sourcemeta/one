@@ -75,19 +75,21 @@ declared_identifier(const sourcemeta::core::JSON &schema,
                     const std::string_view default_dialect,
                     const std::string_view default_identifier)
     -> sourcemeta::core::JSON::String {
-  sourcemeta::blaze::SchemaFrame frame{
-      sourcemeta::blaze::SchemaFrame::Mode::Root};
   try {
-    frame.analyse(schema, sourcemeta::blaze::schema_walker, resolver,
-                  default_dialect, default_identifier,
-                  sourcemeta::blaze::SchemaFrame::IdentifierMode::Fallback);
+    const sourcemeta::blaze::SchemaFrame frame{
+        sourcemeta::blaze::SchemaFrame::Mode::Root,
+        schema,
+        sourcemeta::blaze::schema_walker,
+        resolver,
+        default_dialect,
+        default_identifier,
+        sourcemeta::blaze::SchemaFrame::IdentifierMode::Fallback};
+    return frame.root();
   } catch (const sourcemeta::blaze::SchemaUnknownBaseDialectError &) {
     return sourcemeta::core::JSON::String{default_identifier};
   } catch (const sourcemeta::blaze::SchemaResolutionError &) {
     return sourcemeta::core::JSON::String{default_identifier};
   }
-
-  return frame.root();
 }
 
 static auto normalise_identifier(const std::string_view identifier)
@@ -171,7 +173,7 @@ normalise_ref(const sourcemeta::one::Configuration::Collection &collection,
 namespace sourcemeta::one {
 
 Resolver::Resolver(const std::string_view url)
-    : server_url{url}, server_uri{std::string{url}} {}
+    : server_url_{url}, server_uri_{std::string{url}} {}
 
 auto Resolver::operator()(
     std::string_view raw_identifier,
@@ -198,8 +200,8 @@ auto Resolver::operator()(
   }
 
   struct ResolveGuard {
-    std::string id;
-    ~ResolveGuard() { resolving.erase(id); }
+    std::string uri;
+    ~ResolveGuard() { resolving.erase(uri); }
   } resolve_guard{std::string{identifier}};
 
   // The cached materialisation path is the only part of an entry that is
@@ -214,9 +216,9 @@ auto Resolver::operator()(
   const sourcemeta::core::JSON::String *new_identifier{nullptr};
   std::optional<std::filesystem::path> cached_path;
   {
-    std::shared_lock lock{this->mutex};
-    const auto result{this->views.find(identifier)};
-    if (result != this->views.cend()) {
+    std::shared_lock lock{this->mutex_};
+    const auto result{this->views_.find(identifier)};
+    if (result != this->views_.cend()) {
       view = &result->second;
       new_identifier = &result->first;
       cached_path = result->second.cache_path;
@@ -225,7 +227,12 @@ auto Resolver::operator()(
 
   // If we don't recognise the schema, try a fallback as a last resort
   if (view == nullptr) {
-    return sourcemeta::blaze::schema_resolver(identifier);
+    auto fallback{sourcemeta::blaze::schema_resolver(identifier)};
+    if (!fallback.has_value()) {
+      return std::nullopt;
+    }
+
+    return std::move(fallback).to_owned();
   }
 
   auto cached{this->cached_dialect(identifier)};
@@ -284,51 +291,50 @@ auto Resolver::operator()(
   // (5) Normalise all references, if any, to match the new identifier
   /////////////////////////////////////////////////////////////////////////////
 
-  sourcemeta::blaze::SchemaFrame frame{
-      sourcemeta::blaze::SchemaFrame::Mode::Locations};
-  frame.analyse(
-      schema, sourcemeta::blaze::schema_walker,
+  const sourcemeta::blaze::SchemaFrame frame{
+      sourcemeta::blaze::SchemaFrame::Mode::Locations,
+      schema,
+      sourcemeta::blaze::schema_walker,
       [this](
           const auto subidentifier) -> std::optional<sourcemeta::core::JSON> {
         return this->operator()(subidentifier);
       },
-      view->dialect, view->original_identifier,
-      sourcemeta::blaze::SchemaFrame::IdentifierMode::Fallback);
+      view->dialect,
+      view->original_identifier,
+      sourcemeta::blaze::SchemaFrame::IdentifierMode::Fallback};
 
   const auto ref_hash{schema.as_object().hash("$ref")};
   const auto dynamic_ref_hash{schema.as_object().hash("$dynamicRef")};
-  for (const auto &entry : frame.locations()) {
-    if (entry.second.type ==
-            sourcemeta::blaze::SchemaFrame::LocationType::Resource ||
-        entry.second.type ==
-            sourcemeta::blaze::SchemaFrame::LocationType::Subschema) {
-      auto &subschema{sourcemeta::core::get(schema, entry.second.pointer)};
-      if (subschema.is_object()) {
-        const auto maybe_ref{subschema.try_at("$ref", ref_hash)};
-        const auto maybe_dynamic_ref{
-            entry.second.base_dialect ==
-                    sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2020_12
-                ? subschema.try_at("$dynamicRef", dynamic_ref_hash)
-                : nullptr};
-        const auto has_ref{maybe_ref && maybe_ref->is_string()};
-        const auto has_dynamic_ref{maybe_dynamic_ref &&
-                                   maybe_dynamic_ref->is_string()};
-        if (has_ref || has_dynamic_ref) {
-          const sourcemeta::core::URI subschema_base{
-              std::string{entry.second.base}};
-          if (has_ref) {
-            normalise_ref(*view->collection, subschema_base, subschema, "$ref",
-                          maybe_ref->to_string(), this->server_uri);
-          }
-          if (has_dynamic_ref) {
-            normalise_ref(*view->collection, subschema_base, subschema,
-                          "$dynamicRef", maybe_dynamic_ref->to_string(),
-                          this->server_uri);
-          }
-        }
-      }
+  frame.for_each_subschema([this, &schema, &view, ref_hash,
+                            dynamic_ref_hash](const auto &location) -> void {
+    auto &subschema{sourcemeta::core::get(schema, location.pointer)};
+    if (!subschema.is_object()) {
+      return;
     }
-  }
+
+    const auto maybe_ref{subschema.try_at("$ref", ref_hash)};
+    const auto maybe_dynamic_ref{
+        location.base_dialect ==
+                sourcemeta::blaze::SchemaBaseDialect::JSON_Schema_2020_12
+            ? subschema.try_at("$dynamicRef", dynamic_ref_hash)
+            : nullptr};
+    const auto has_ref{maybe_ref && maybe_ref->is_string()};
+    const auto has_dynamic_ref{maybe_dynamic_ref &&
+                               maybe_dynamic_ref->is_string()};
+    if (!has_ref && !has_dynamic_ref) {
+      return;
+    }
+
+    const sourcemeta::core::URI subschema_base{std::string{location.base}};
+    if (has_ref) {
+      normalise_ref(*view->collection, subschema_base, subschema, "$ref",
+                    maybe_ref->to_string(), this->server_uri_);
+    }
+    if (has_dynamic_ref) {
+      normalise_ref(*view->collection, subschema_base, subschema, "$dynamicRef",
+                    maybe_dynamic_ref->to_string(), this->server_uri_);
+    }
+  });
 
   /////////////////////////////////////////////////////////////////////////////
   // (6) Assign the new final identifier to the schema
@@ -355,13 +361,13 @@ auto Resolver::track_dialect(const sourcemeta::core::JSON::String &dialect)
     return;
   }
 
-  std::unique_lock lock{this->dialect_mutex};
-  const auto match{std::ranges::find_if(this->dialects,
+  std::unique_lock lock{this->dialect_mutex_};
+  const auto match{std::ranges::find_if(this->dialects_,
                                         [&dialect](const auto &entry) -> bool {
                                           return entry.first == dialect;
                                         })};
-  if (match == this->dialects.cend()) {
-    this->dialects.emplace_back(dialect, std::nullopt);
+  if (match == this->dialects_.cend()) {
+    this->dialects_.emplace_back(dialect, std::nullopt);
   }
 }
 
@@ -371,34 +377,33 @@ auto Resolver::cache_dialect(const sourcemeta::core::JSON::String &uri,
   // Most schemas are not dialects, so we first check whether there is
   // anything to do while only holding the shared lock
   {
-    std::shared_lock lock{this->dialect_mutex};
-    const auto match{
-        std::ranges::find_if(this->dialects, [&uri](const auto &entry) -> bool {
-          return entry.first == uri;
-        })};
-    if (match == this->dialects.cend() || match->second.has_value()) {
+    std::shared_lock lock{this->dialect_mutex_};
+    const auto match{std::ranges::find_if(
+        this->dialects_,
+        [&uri](const auto &entry) -> bool { return entry.first == uri; })};
+    if (match == this->dialects_.cend() || match->second.has_value()) {
       return;
     }
   }
 
-  std::unique_lock lock{this->dialect_mutex};
+  std::unique_lock lock{this->dialect_mutex_};
   const auto match{
-      std::ranges::find_if(this->dialects, [&uri](const auto &entry) -> bool {
+      std::ranges::find_if(this->dialects_, [&uri](const auto &entry) -> bool {
         return entry.first == uri;
       })};
-  if (match != this->dialects.cend() && !match->second.has_value()) {
+  if (match != this->dialects_.cend() && !match->second.has_value()) {
     match->second = schema;
   }
 }
 
 auto Resolver::cached_dialect(const sourcemeta::core::JSON::String &uri) const
     -> std::optional<sourcemeta::core::JSON> {
-  std::shared_lock lock{this->dialect_mutex};
+  std::shared_lock lock{this->dialect_mutex_};
   const auto match{
-      std::ranges::find_if(this->dialects, [&uri](const auto &entry) -> bool {
+      std::ranges::find_if(this->dialects_, [&uri](const auto &entry) -> bool {
         return entry.first == uri;
       })};
-  if (match != this->dialects.cend() && match->second.has_value()) {
+  if (match != this->dialects_.cend() && match->second.has_value()) {
     return match->second;
   }
 
@@ -439,7 +444,7 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
             [this, &collection](const auto subidentifier)
                 -> std::optional<sourcemeta::core::JSON> {
               const auto rewritten{
-                  pre_resolve(collection, subidentifier, this->server_uri)};
+                  pre_resolve(collection, subidentifier, this->server_uri_)};
               if (rewritten.has_value()) {
                 return this->operator()(*rewritten);
               }
@@ -470,7 +475,7 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
     /////////////////////////////////////////////////////////////////////////////
     // (3) Determine the new URI of the schema, from the one base URI
     /////////////////////////////////////////////////////////////////////////////
-    const auto new_identifier{rebase(collection, identifier, this->server_uri,
+    const auto new_identifier{rebase(collection, identifier, this->server_uri_,
                                      collection_relative_path)};
     // Otherwise we have things like "../" that should not be there
     assert(new_identifier.find("..") == std::string::npos);
@@ -488,7 +493,7 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
     if (raw_dialect.empty()) {
       throw sourcemeta::blaze::SchemaUnknownDialectError();
     }
-    auto rewritten{pre_resolve(collection, raw_dialect, this->server_uri)};
+    auto rewritten{pre_resolve(collection, raw_dialect, this->server_uri_)};
     bool resolved_to_instance{false};
     if (rewritten.has_value()) {
       raw_dialect = std::move(*rewritten);
@@ -498,7 +503,7 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
       // form, and would only mangle a URI that is already there.
       resolved_to_instance =
           sourcemeta::core::URI{raw_dialect}.has_same_authority(
-              this->server_uri);
+              this->server_uri_);
     }
     const auto is_known_dialect{
         !resolved_to_instance &&
@@ -508,7 +513,7 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
         : is_known_dialect
             ? raw_dialect
             : rebase(collection, normalise_identifier(raw_dialect),
-                     this->server_uri, collection_relative_path)};
+                     this->server_uri_, collection_relative_path)};
     // Otherwise we messed things up
     assert(!current_dialect.ends_with("#.json"));
 
@@ -518,12 +523,12 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
 
     const auto evaluate{Configuration::should_evaluate(collection)};
 
-    std::unique_lock lock{this->mutex};
-    auto result{this->views.emplace(
+    std::unique_lock lock{this->mutex_};
+    auto result{this->views_.emplace(
         new_identifier,
         Entry{.path = path,
               .relative_path = sourcemeta::core::URI{new_identifier}
-                                   .relative_to(this->server_uri)
+                                   .relative_to(this->server_uri_)
                                    .recompose(),
               .mtime = mtime,
               .evaluate = evaluate,
@@ -575,7 +580,8 @@ auto Resolver::emplace(std::string new_identifier, Entry entry) -> void {
 
   assert(entry.collection);
   const auto path{entry.path};
-  auto result{this->views.emplace(std::move(new_identifier), std::move(entry))};
+  auto result{
+      this->views_.emplace(std::move(new_identifier), std::move(entry))};
   if (!result.second && result.first->second.path != path) {
     throw sourcemeta::blaze::SchemaFrameError(
         result.first->first, "Cannot register the same identifier twice");
@@ -584,8 +590,8 @@ auto Resolver::emplace(std::string new_identifier, Entry entry) -> void {
 }
 
 auto Resolver::entry(const std::string_view identifier) const -> const Entry & {
-  const auto result{this->views.find(std::string{identifier})};
-  assert(result != this->views.cend());
+  const auto result{this->views_.find(std::string{identifier})};
+  assert(result != this->views_.cend());
   assert(!result->second.dialect.empty());
   assert(!result->second.original_identifier.empty());
   assert(result->second.collection != nullptr);
@@ -596,9 +602,9 @@ auto Resolver::cache_path(const std::string_view uri,
                           const std::filesystem::path &path) -> void {
   assert(std::filesystem::exists(path));
   // As we are modifying the actual map
-  std::unique_lock lock{this->mutex};
-  auto entry{this->views.find(std::string{uri})};
-  assert(entry != this->views.cend());
+  std::unique_lock lock{this->mutex_};
+  auto entry{this->views_.find(std::string{uri})};
+  assert(entry != this->views_.cend());
   assert(!entry->second.cache_path.has_value());
   entry->second.cache_path = path;
 }

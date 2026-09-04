@@ -92,8 +92,14 @@ TEST_F(SearchCorruption, at_rejects_out_of_bounds_record_offset) {
 TEST_F(SearchCorruption, at_rejects_index_past_count) {
   const auto path{test_path("corrupt_index_past_count.metapack")};
   write_raw_search_file(path, sourcemeta::one::make_search(
-                                  {{"/foo", "http://example.com/foo", "Title",
-                                    "Desc", 80, 100, 100, 200}}));
+                                  {{.path = "/foo",
+                                    .identifier = "http://example.com/foo",
+                                    .title = "Title",
+                                    .description = "Desc",
+                                    .health = 80,
+                                    .priority = 100,
+                                    .bytes_raw = 100,
+                                    .bytes_bundled = 200}}));
   sourcemeta::one::SearchView view{path};
   EXPECT_EQ(view.count(), 1);
   const auto entry{view.at(5)};

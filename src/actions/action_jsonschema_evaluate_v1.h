@@ -18,7 +18,7 @@
 #include <string_view> // std::string_view
 #include <utility>     // std::move
 
-class ActionJSONSchemaEvaluate_v1 : public sourcemeta::one::RouterAction {
+class ActionJSONSchemaEvaluateV1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
       "Validate a JSON instance against a schema and return whether it "
@@ -28,7 +28,7 @@ public:
   static constexpr bool IDEMPOTENT{true};
   static constexpr bool OPEN_WORLD{false};
 
-  ActionJSONSchemaEvaluate_v1(
+  ActionJSONSchemaEvaluateV1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
@@ -54,7 +54,7 @@ public:
             const sourcemeta::one::Authentication::Caller &caller,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
-    ActionJSONSchemaEvaluate_v1::serve_post(
+    ActionJSONSchemaEvaluateV1::serve_post(
         matches, caller, request, response, *this, this->response_schema_,
         this->error_schema_, this->request_schema_,
         // A throw here is intended and caught by the surrounding request

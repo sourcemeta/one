@@ -90,7 +90,7 @@ public:
       return;
     }
 
-    const auto boundary{std::ranges::lower_bound(BUCKETS, seconds)};
+    const auto *const boundary{std::ranges::lower_bound(BUCKETS, seconds)};
     const auto bucket{
         static_cast<std::size_t>(std::distance(BUCKETS.begin(), boundary))};
 
@@ -174,9 +174,9 @@ private:
   // and keeps it, so which line to touch costs nothing to work out afterwards
   [[nodiscard]] auto shard() const noexcept -> Shard & {
     static std::atomic<std::size_t> next{0};
-    thread_local const std::size_t assigned{
+    thread_local const std::size_t ASSIGNED{
         next.fetch_add(1, std::memory_order_relaxed)};
-    return this->shards_[assigned % SHARD_COUNT];
+    return this->shards_[ASSIGNED % SHARD_COUNT];
   }
 
   std::size_t handlers_{0};
@@ -191,10 +191,10 @@ private:
 // is worth is read where a request is answered and that is not there. It is
 // built before anything runs, so reaching it never costs a check
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-inline HTTPMetrics HTTP_METRICS;
+inline HTTPMetrics server_metrics;
 
 [[nodiscard]] inline auto http_metrics() noexcept -> HTTPMetrics & {
-  return HTTP_METRICS;
+  return server_metrics;
 }
 
 } // namespace sourcemeta::one

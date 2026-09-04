@@ -63,23 +63,23 @@ public:
 
   using Views = std::unordered_map<sourcemeta::core::JSON::String, Entry>;
 
-  auto reserve(std::size_t count) -> void { this->views.reserve(count); }
+  auto reserve(std::size_t count) -> void { this->views_.reserve(count); }
 
-  [[nodiscard]] auto begin() const -> auto { return this->views.begin(); }
-  [[nodiscard]] auto end() const -> auto { return this->views.end(); }
-  [[nodiscard]] auto size() const -> auto { return this->views.size(); }
-  [[nodiscard]] auto data() const -> const Views & { return this->views; }
+  [[nodiscard]] auto begin() const -> auto { return this->views_.begin(); }
+  [[nodiscard]] auto end() const -> auto { return this->views_.end(); }
+  [[nodiscard]] auto size() const -> auto { return this->views_.size(); }
+  [[nodiscard]] auto data() const -> const Views & { return this->views_; }
 
   [[nodiscard]] auto entry(std::string_view identifier) const -> const Entry &;
 
 private:
-  Views views;
+  Views views_;
   // Resolution is a const operation that runs concurrently with the
   // writers that commit cached materialisation paths, so readers must
   // be able to take the shared lock too
-  mutable std::shared_mutex mutex;
-  std::string_view server_url;
-  sourcemeta::core::URI server_uri;
+  mutable std::shared_mutex mutex_;
+  std::string_view server_url_;
+  sourcemeta::core::URI server_uri_;
 
   // Schemas that act as meta-schemas of other schemas get resolved over
   // and over again during indexing (i.e. for every schema that uses them),
@@ -96,10 +96,10 @@ private:
   [[nodiscard]] auto
   cached_dialect(const sourcemeta::core::JSON::String &uri) const
       -> std::optional<sourcemeta::core::JSON>;
-  mutable std::shared_mutex dialect_mutex;
+  mutable std::shared_mutex dialect_mutex_;
   mutable std::vector<std::pair<sourcemeta::core::JSON::String,
                                 std::optional<sourcemeta::core::JSON>>>
-      dialects;
+      dialects_;
 };
 
 } // namespace sourcemeta::one

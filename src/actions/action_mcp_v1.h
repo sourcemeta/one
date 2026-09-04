@@ -30,7 +30,7 @@
 #include <string_view> // std::string_view
 #include <utility>     // std::move
 
-class ActionMCP_v1 : public sourcemeta::one::RouterAction {
+class ActionMCPV1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
       "Handle Model Context Protocol JSON-RPC requests"};
@@ -39,10 +39,10 @@ public:
   static constexpr bool IDEMPOTENT{true};
   static constexpr bool OPEN_WORLD{false};
 
-  ActionMCP_v1(const std::filesystem::path &base,
-               const sourcemeta::core::URITemplateRouterView &router,
-               const sourcemeta::core::URITemplateRouter::Identifier identifier,
-               sourcemeta::one::Router &dispatcher)
+  ActionMCPV1(const std::filesystem::path &base,
+              const sourcemeta::core::URITemplateRouterView &router,
+              const sourcemeta::core::URITemplateRouter::Identifier identifier,
+              sourcemeta::one::Router &dispatcher)
       : sourcemeta::one::RouterAction{base, router.base_url(), dispatcher} {
     router.arguments(
         identifier, [this](const auto &key, const auto &value) -> void {
@@ -323,10 +323,11 @@ public:
   }
 
   auto mcp(const sourcemeta::core::MCPProtocolVersion,
-           const sourcemeta::core::JSON &id, const sourcemeta::core::JSON &,
+           const sourcemeta::core::JSON &request_id,
+           const sourcemeta::core::JSON &,
            const sourcemeta::one::Authentication::Caller &)
       -> sourcemeta::core::JSON override {
-    return sourcemeta::core::jsonrpc_make_error_method_not_found(id);
+    return sourcemeta::core::jsonrpc_make_error_method_not_found(request_id);
   }
 
 private:
@@ -369,13 +370,13 @@ private:
                                    sourcemeta::one::Encoding::Identity);
   }
 
-  auto enterprise_required(const sourcemeta::core::JSON *id) const
+  auto enterprise_required(const sourcemeta::core::JSON *request_id) const
       -> sourcemeta::core::JSON {
     static constexpr std::string_view MCP_ENTERPRISE_REQUIRED_DATA{
         "MCP support is only available in the Enterprise edition of "
         "Sourcemeta One"};
     return sourcemeta::core::jsonrpc_make_error(
-        id, -32000, "Enterprise edition required",
+        request_id, -32000, "Enterprise edition required",
         sourcemeta::core::JSON{MCP_ENTERPRISE_REQUIRED_DATA});
   }
 
@@ -392,8 +393,8 @@ private:
           sourcemeta::core::jsonrpc_request_id(request_json));
     }
 
-    const auto *id{sourcemeta::core::jsonrpc_request_id(request_json)};
-    if (id == nullptr) {
+    const auto *request_id{sourcemeta::core::jsonrpc_request_id(request_json)};
+    if (request_id == nullptr) {
       return this->enterprise_required(nullptr);
     }
 
@@ -421,11 +422,12 @@ private:
 
     if (method == sourcemeta::core::MCP_METHOD_RESOURCES_TEMPLATES_LIST) {
       return sourcemeta::core::jsonrpc_make_success(
-          *id, this->mcp_metadata_.at(
-                   sourcemeta::core::MCP_METHOD_RESOURCES_TEMPLATES_LIST));
+          *request_id,
+          this->mcp_metadata_.at(
+              sourcemeta::core::MCP_METHOD_RESOURCES_TEMPLATES_LIST));
     }
 
-    return this->enterprise_required(id);
+    return this->enterprise_required(request_id);
   }
 
   std::string_view response_schema_;

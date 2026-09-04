@@ -19,7 +19,7 @@
 #include <string_view> // std::string_view
 #include <utility>     // std::move
 
-class ActionListDirectory_v1 : public sourcemeta::one::RouterAction {
+class ActionListDirectoryV1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
       "List the contents of a directory in the catalog"};
@@ -28,7 +28,7 @@ public:
   static constexpr bool IDEMPOTENT{true};
   static constexpr bool OPEN_WORLD{false};
 
-  ActionListDirectory_v1(
+  ActionListDirectoryV1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
