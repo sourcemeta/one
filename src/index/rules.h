@@ -221,8 +221,11 @@ inline constexpr DeltaRuleSet<13, 8, 5, 2> INDEX_RULES{
                             .filename = "bundle.metapack"},
                            {.source = DependencySource::GlobalOutput,
                             .base = 0,
-                            .filename = "authentication.bin"}}},
-         .dependency_count = 5},
+                            .filename = "authentication.bin"},
+                           {.source = DependencySource::DialectDependents,
+                            .base = 0,
+                            .filename = "schema.metapack"}}},
+         .dependency_count = 6},
 
         {.action = ACTION_DEPENDENTS,
          .base = 1,

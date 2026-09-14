@@ -544,7 +544,7 @@ jsonpath "$.result.resources[37].uri" == "{{base}}/self/v1/schemas/api/schemas/m
 jsonpath "$.result.resources[37].name" == "Sourcemeta One Schema Metadata API Response"
 jsonpath "$.result.resources[37].description" == "The response format for the schema metadata API endpoint"
 jsonpath "$.result.resources[37].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[37].size" == 2943
+jsonpath "$.result.resources[37].size" == 3035
 jsonpath "$.result.resources[37].annotations.priority" == 0
 jsonpath "$.result.resources[38].uri" == "{{base}}/self/v1/schemas/api/schemas/output-error"
 jsonpath "$.result.resources[38].name" == "Sourcemeta One Schema Output Error"
@@ -815,7 +815,7 @@ jsonpath "$.result.resources[24].uri" == "{{base}}/self/v1/schemas/mcp/tools/cal
 jsonpath "$.result.resources[24].name" == "Sourcemeta One Schema Metadata RPC Output"
 jsonpath "$.result.resources[24].description" == "Get metadata information about a schema in the catalog"
 jsonpath "$.result.resources[24].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[24].size" == 843
+jsonpath "$.result.resources[24].size" == 870
 jsonpath "$.result.resources[24].annotations.priority" == 0
 jsonpath "$.result.resources[25].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/request"
 jsonpath "$.result.resources[25].name" == "Sourcemeta One Schema Positions RPC Input"
@@ -1335,7 +1335,7 @@ jsonpath "$.result.resources[37].uri" == "{{base}}/self/v1/schemas/api/schemas/m
 jsonpath "$.result.resources[37].name" == "Sourcemeta One Schema Metadata API Response"
 jsonpath "$.result.resources[37].description" == "The response format for the schema metadata API endpoint"
 jsonpath "$.result.resources[37].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[37].size" == 2943
+jsonpath "$.result.resources[37].size" == 3035
 jsonpath "$.result.resources[37].annotations.priority" == 0
 jsonpath "$.result.resources[38].uri" == "{{base}}/self/v1/schemas/api/schemas/output-error"
 jsonpath "$.result.resources[38].name" == "Sourcemeta One Schema Output Error"

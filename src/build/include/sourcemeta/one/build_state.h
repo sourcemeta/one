@@ -57,7 +57,9 @@ enum class DependencySource : std::uint8_t {
   Base,
   GlobalOutput,
   ExternalSource,
-  ExternalConfig
+  ExternalConfig,
+  // The given file of every leaf declaring this leaf as its dialect
+  DialectDependents
 };
 
 struct DependencyReference {
@@ -66,7 +68,7 @@ struct DependencyReference {
   const char *filename;
 };
 
-inline constexpr std::size_t MAX_DEPENDENCIES_PER_RULE = 5;
+inline constexpr std::size_t MAX_DEPENDENCIES_PER_RULE = 6;
 
 struct LeafRule {
   BuildPlan::Action::Type action;

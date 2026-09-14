@@ -251,6 +251,21 @@ inline constexpr sourcemeta::one::DeltaRuleSet<3, 1, 5, 2> COMBINE_RULES{
 inline constexpr auto COMBINE_RULES_SECONDARY{
     combine_rules_with_reverse_in_secondary()};
 
+// The same set with the metadata leaf also reading every leaf that declares it
+// as its dialect
+[[nodiscard]] consteval auto rules_with_dialect_dependents()
+    -> sourcemeta::one::DeltaRuleSet<3, 1, 5, 2> {
+  auto result{RULES};
+  result.leaves[1].dependencies[1] = {
+      .source = sourcemeta::one::DependencySource::DialectDependents,
+      .base = 0,
+      .filename = "primary.bin"};
+  result.leaves[1].dependency_count = 2;
+  return result;
+}
+
+inline constexpr auto DIALECT_RULES{rules_with_dialect_dependents()};
+
 } // namespace test_rules
 
 #endif

@@ -24,6 +24,7 @@ jsonpath "$.health" == 0
 jsonpath "$.priority" == 50
 jsonpath "$.dependencies" == 0
 jsonpath "$.dialect" == "http://json-schema.org/draft-07/schema#"
+jsonpath "$.metaschema" == false
 jsonpath "$.identifier" == "{{base}}/test/v2.0/schema"
 jsonpath "$.path" == "/test/v2.0/schema"
 jsonpath "$.alert" == null
@@ -77,6 +78,7 @@ jsonpath "$.health" == 0
 jsonpath "$.priority" == 50
 jsonpath "$.dependencies" == 0
 jsonpath "$.dialect" == "http://json-schema.org/draft-07/schema#"
+jsonpath "$.metaschema" == false
 jsonpath "$.identifier" == "{{base}}/test/schemas/string"
 jsonpath "$.path" == "/test/schemas/string"
 jsonpath "$.alert" == null
@@ -268,6 +270,7 @@ jsonpath "$.health" == 67
 jsonpath "$.priority" == 50
 jsonpath "$.dependencies" == 3
 jsonpath "$.dialect" == "http://json-schema.org/draft-07/schema#"
+jsonpath "$.metaschema" == false
 jsonpath "$.identifier" == "{{base}}/test/bundling/double"
 jsonpath "$.path" == "/test/bundling/double"
 jsonpath "$.alert" == null
@@ -279,6 +282,176 @@ jsonpath "$.breadcrumb[1].name" == "bundling"
 jsonpath "$.breadcrumb[1].path" == "/test/bundling/"
 jsonpath "$.breadcrumb[2].name" == "double"
 jsonpath "$.breadcrumb[2].path" == "/test/bundling/double"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+header "Vary" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.valid" == true
+
+# A draft-07 schema is a meta-schema because another schema declares it as its
+# dialect
+GET {{base}}/self/v1/api/schemas/metadata/test/schemas/custom-meta-draft7
+Accept: application/json
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "Vary" == "Accept-Encoding"
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
+header "Last-Modified" exists
+jsonpath "$.bytes" == 124
+jsonpath "$.bytesBundled" == 124
+jsonpath "$.baseDialect" == "http://json-schema.org/draft-07/schema#"
+jsonpath "$.health" == 0
+jsonpath "$.priority" == 50
+jsonpath "$.dependencies" == 0
+jsonpath "$.dialect" == "http://json-schema.org/draft-07/schema#"
+jsonpath "$.metaschema" == true
+jsonpath "$.private" == false
+jsonpath "$.identifier" == "{{base}}/test/schemas/custom-meta-draft7"
+jsonpath "$.path" == "/test/schemas/custom-meta-draft7"
+jsonpath "$.alert" == null
+jsonpath "$.examples" count == 0
+jsonpath "$.breadcrumb" count == 3
+jsonpath "$.breadcrumb[0].name" == "test"
+jsonpath "$.breadcrumb[0].path" == "/test/"
+jsonpath "$.breadcrumb[1].name" == "schemas"
+jsonpath "$.breadcrumb[1].path" == "/test/schemas/"
+jsonpath "$.breadcrumb[2].name" == "custom-meta-draft7"
+jsonpath "$.breadcrumb[2].path" == "/test/schemas/custom-meta-draft7"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+header "Vary" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.valid" == true
+
+# A 2020-12 schema declaring its vocabularies is a meta-schema
+GET {{base}}/self/v1/api/schemas/metadata/test/schemas/custom-meta-2020
+Accept: application/json
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "Vary" == "Accept-Encoding"
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
+header "Last-Modified" exists
+jsonpath "$.bytes" == 652
+jsonpath "$.bytesBundled" == 652
+jsonpath "$.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.health" == 0
+jsonpath "$.priority" == 50
+jsonpath "$.dependencies" == 0
+jsonpath "$.dialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.metaschema" == true
+jsonpath "$.private" == false
+jsonpath "$.identifier" == "{{base}}/test/schemas/custom-meta-2020"
+jsonpath "$.path" == "/test/schemas/custom-meta-2020"
+jsonpath "$.alert" == null
+jsonpath "$.examples" count == 0
+jsonpath "$.breadcrumb" count == 3
+jsonpath "$.breadcrumb[0].name" == "test"
+jsonpath "$.breadcrumb[0].path" == "/test/"
+jsonpath "$.breadcrumb[1].name" == "schemas"
+jsonpath "$.breadcrumb[1].path" == "/test/schemas/"
+jsonpath "$.breadcrumb[2].name" == "custom-meta-2020"
+jsonpath "$.breadcrumb[2].path" == "/test/schemas/custom-meta-2020"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+header "Vary" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.valid" == true
+
+# A schema declaring a custom dialect is not a meta-schema itself, and is not
+# private where nothing governs it
+GET {{base}}/self/v1/api/schemas/metadata/test/schemas/using-meta-draft7
+Accept: application/json
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "Vary" == "Accept-Encoding"
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
+header "Last-Modified" exists
+jsonpath "$.bytes" == 157
+jsonpath "$.bytesBundled" == 157
+jsonpath "$.baseDialect" == "http://json-schema.org/draft-07/schema#"
+jsonpath "$.health" == 0
+jsonpath "$.priority" == 50
+jsonpath "$.dependencies" == 1
+jsonpath "$.dialect" == "{{base}}/test/schemas/custom-meta-draft7"
+jsonpath "$.metaschema" == false
+jsonpath "$.private" == false
+jsonpath "$.identifier" == "{{base}}/test/schemas/using-meta-draft7"
+jsonpath "$.path" == "/test/schemas/using-meta-draft7"
+jsonpath "$.alert" == null
+jsonpath "$.examples" count == 0
+jsonpath "$.breadcrumb" count == 3
+jsonpath "$.breadcrumb[0].name" == "test"
+jsonpath "$.breadcrumb[0].path" == "/test/"
+jsonpath "$.breadcrumb[1].name" == "schemas"
+jsonpath "$.breadcrumb[1].path" == "/test/schemas/"
+jsonpath "$.breadcrumb[2].name" == "using-meta-draft7"
+jsonpath "$.breadcrumb[2].path" == "/test/schemas/using-meta-draft7"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

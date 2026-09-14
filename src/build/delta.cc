@@ -1,6 +1,6 @@
 #include <sourcemeta/one/build.h>
 
-#include <algorithm>     // std::ranges::sort, std::ranges::all_of, std::max
+#include <algorithm> // std::ranges::sort, std::ranges::all_of, std::ranges::any_of, std::max
 #include <cassert>       // assert
 #include <cstdint>       // std::size_t
 #include <filesystem>    // std::filesystem::path, std::filesystem::exists
@@ -65,6 +65,7 @@ global_rule_dependencies(const GlobalRule &rule,
         break;
       case DependencySource::Base:
       case DependencySource::ExternalSource:
+      case DependencySource::DialectDependents:
         break;
     }
   }
@@ -218,8 +219,12 @@ static auto declare_leaf_targets(
     const bool evaluate, const BuildPlan::Type build_type,
     const BuildPlan::Type full_mode, const std::string &configuration_string,
     const std::string_view uri, const BuildPhase phase,
-    std::span<const LeafRule> leaf_rules, const std::string_view view,
-    const bool only_secondary, const bool only_primary = false) -> void {
+    std::span<const LeafRule> leaf_rules,
+    const std::string_view primary_directory, const std::string_view sentinel,
+    const std::span<const std::filesystem::path *const> dialect_dependents,
+    const std::size_t view_index, const ViewFilter &visible,
+    const std::string_view view, const bool only_secondary,
+    const bool only_primary = false) -> void {
   for (std::size_t index{0}; index < leaf_rules.size(); index++) {
     const auto &rule{leaf_rules[index]};
 
@@ -269,6 +274,20 @@ static auto declare_leaf_targets(
           break;
         case DependencySource::ExternalConfig:
           target.dependencies.push_back(configuration_string);
+          break;
+        case DependencySource::DialectDependents:
+          assert(dependency.base == 0);
+          for (const auto *dependent : dialect_dependents) {
+            // A view is only told about the leaves it holds
+            if (rule.base != 0 && !visible(view_index, dependent->native())) {
+              continue;
+            }
+
+            target.dependencies.push_back(append_filename(
+                make_base_string(output_string, primary_directory, {},
+                                 dependent->native(), sentinel),
+                dependency.filename));
+          }
           break;
       }
     }
@@ -867,6 +886,42 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
   std::vector<std::filesystem::path> all_relative_paths;
   all_relative_paths.reserve(leaves.size());
 
+  // Which leaves declare each leaf as their dialect, and which dialects a
+  // changed leaf declares, gathered only when some rule reads them
+  const auto reads_dialect_dependents{
+      std::ranges::any_of(leaf_rules, [](const LeafRule &rule) -> bool {
+        return std::ranges::any_of(
+            std::span{rule.dependencies.data(), rule.dependency_count},
+            [](const DependencyReference &dependency) -> bool {
+              return dependency.source == DependencySource::DialectDependents;
+            });
+      })};
+  std::unordered_map<std::string_view,
+                     std::vector<const std::filesystem::path *>>
+      dialect_dependents;
+  std::unordered_set<std::string_view> changed_dialects;
+  if (reads_dialect_dependents) {
+    for (const auto &leaf : leaves) {
+      const auto &info{leaf.second};
+      if (info.dialect.empty()) {
+        continue;
+      }
+
+      dialect_dependents[info.dialect].push_back(info.relative_path);
+      if (is_full) {
+        continue;
+      }
+
+      const auto *cached_leaf_state{
+          entries.leaf_state(output_string, info.relative_path->native(),
+                             info.evaluate, build_type == full_mode)};
+      if (cached_leaf_state == nullptr ||
+          info.mtime > cached_leaf_state->root_mtime) {
+        changed_dialects.insert(info.dialect);
+      }
+    }
+  }
+
   std::unordered_set<std::string> dirty_relative_paths;
   for (const auto &[uri, info] : leaves) {
     const auto &relative_string{info.relative_path->native()};
@@ -920,15 +975,25 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
                              expected_bitmap) != expected_bitmap;
     }
 
+    // A leaf that a changed leaf declares as its dialect is reconsidered even
+    // when nothing of its own changed, since what it reads may have
     const bool needs_targets{leaf_dirty || has_missing_targets ||
                              (cached_leaf_state != nullptr &&
-                              cached_leaf_state->has_cross_leaf_deps)};
+                              cached_leaf_state->has_cross_leaf_deps) ||
+                             changed_dialects.contains(uri)};
 
     if (leaf_dirty) {
       dirty_relative_paths.insert(relative_string);
     }
 
     if (needs_targets) {
+      const auto dependents_match{dialect_dependents.find(uri)};
+      const std::span<const std::filesystem::path *const>
+          leaf_dialect_dependents{
+              dependents_match == dialect_dependents.end()
+                  ? std::span<const std::filesystem::path *const>{}
+                  : std::span<const std::filesystem::path *const>{
+                        dependents_match->second}};
       bool declared_primary{false};
       for (std::size_t view{0}; view < secondary_bases.size(); view++) {
         if (secondary_bases[view].empty()) {
@@ -937,10 +1002,11 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
 
         const std::array<std::string, 2> bases{
             {primary_base, secondary_bases[view]}};
-        declare_leaf_targets(targets, bases, output_string, info.path->native(),
-                             info.evaluate, build_type, full_mode,
-                             configuration_string, uri, phase, leaf_rules,
-                             secondary_views[view], declared_primary);
+        declare_leaf_targets(
+            targets, bases, output_string, info.path->native(), info.evaluate,
+            build_type, full_mode, configuration_string, uri, phase, leaf_rules,
+            primary_directory, sentinel, leaf_dialect_dependents, view, visible,
+            secondary_views[view], declared_primary);
         declared_primary = true;
       }
 
@@ -948,10 +1014,11 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
       // the unit tree is declared on its own rather than left undeclared
       if (!declared_primary) {
         const std::array<std::string, 2> bases{{primary_base, std::string{}}};
-        declare_leaf_targets(targets, bases, output_string, info.path->native(),
-                             info.evaluate, build_type, full_mode,
-                             configuration_string, uri, phase, leaf_rules, {},
-                             false, true);
+        declare_leaf_targets(
+            targets, bases, output_string, info.path->native(), info.evaluate,
+            build_type, full_mode, configuration_string, uri, phase, leaf_rules,
+            primary_directory, sentinel, leaf_dialect_dependents, 0, visible,
+            {}, false, true);
       }
     }
 

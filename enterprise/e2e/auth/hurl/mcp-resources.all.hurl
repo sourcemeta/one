@@ -104,7 +104,7 @@ jsonpath "$.result.resources[12].uri" == "{{base}}/self/v1/schemas/api/schemas/m
 jsonpath "$.result.resources[12].name" == "Sourcemeta One Schema Metadata API Response"
 jsonpath "$.result.resources[12].description" == "The response format for the schema metadata API endpoint"
 jsonpath "$.result.resources[12].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[12].size" == 2943
+jsonpath "$.result.resources[12].size" == 3035
 jsonpath "$.result.resources[12].annotations.priority" == 0
 jsonpath "$.result.resources[13].uri" == "{{base}}/self/v1/schemas/api/schemas/output-error"
 jsonpath "$.result.resources[13].name" == "Sourcemeta One Schema Output Error"
@@ -326,7 +326,7 @@ jsonpath "$.result.resources[49].uri" == "{{base}}/self/v1/schemas/mcp/tools/cal
 jsonpath "$.result.resources[49].name" == "Sourcemeta One Schema Metadata RPC Output"
 jsonpath "$.result.resources[49].description" == "Get metadata information about a schema in the catalog"
 jsonpath "$.result.resources[49].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[49].size" == 843
+jsonpath "$.result.resources[49].size" == 870
 jsonpath "$.result.resources[49].annotations.priority" == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{anonymous_list_schema}}
@@ -582,7 +582,7 @@ jsonpath "$.result.resources[15].uri" == "{{base}}/self/v1/schemas/api/schemas/m
 jsonpath "$.result.resources[15].name" == "Sourcemeta One Schema Metadata API Response"
 jsonpath "$.result.resources[15].description" == "The response format for the schema metadata API endpoint"
 jsonpath "$.result.resources[15].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[15].size" == 2943
+jsonpath "$.result.resources[15].size" == 3035
 jsonpath "$.result.resources[15].annotations.priority" == 0
 jsonpath "$.result.resources[16].uri" == "{{base}}/self/v1/schemas/api/schemas/output-error"
 jsonpath "$.result.resources[16].name" == "Sourcemeta One Schema Output Error"
@@ -826,7 +826,7 @@ jsonpath "$.result.resources[2].uri" == "{{base}}/self/v1/schemas/mcp/tools/call
 jsonpath "$.result.resources[2].name" == "Sourcemeta One Schema Metadata RPC Output"
 jsonpath "$.result.resources[2].description" == "Get metadata information about a schema in the catalog"
 jsonpath "$.result.resources[2].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[2].size" == 843
+jsonpath "$.result.resources[2].size" == 870
 jsonpath "$.result.resources[2].annotations.priority" == 0
 jsonpath "$.result.resources[3].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/request"
 jsonpath "$.result.resources[3].name" == "Sourcemeta One Schema Positions RPC Input"
@@ -1043,7 +1043,7 @@ jsonpath "$.result.resources[13].uri" == "{{base}}/self/v1/schemas/api/schemas/m
 jsonpath "$.result.resources[13].name" == "Sourcemeta One Schema Metadata API Response"
 jsonpath "$.result.resources[13].description" == "The response format for the schema metadata API endpoint"
 jsonpath "$.result.resources[13].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[13].size" == 2943
+jsonpath "$.result.resources[13].size" == 3035
 jsonpath "$.result.resources[13].annotations.priority" == 0
 jsonpath "$.result.resources[14].uri" == "{{base}}/self/v1/schemas/api/schemas/output-error"
 jsonpath "$.result.resources[14].name" == "Sourcemeta One Schema Output Error"
@@ -1287,7 +1287,7 @@ jsonpath "$.result.resources[0].uri" == "{{base}}/self/v1/schemas/mcp/tools/call
 jsonpath "$.result.resources[0].name" == "Sourcemeta One Schema Metadata RPC Output"
 jsonpath "$.result.resources[0].description" == "Get metadata information about a schema in the catalog"
 jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[0].size" == 843
+jsonpath "$.result.resources[0].size" == 870
 jsonpath "$.result.resources[0].annotations.priority" == 0
 jsonpath "$.result.resources[1].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/request"
 jsonpath "$.result.resources[1].name" == "Sourcemeta One Schema Positions RPC Input"

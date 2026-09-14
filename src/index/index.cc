@@ -637,7 +637,8 @@ static auto index_main(const std::string_view &program,
         sourcemeta::one::LeafView{.path = &entry.path,
                                   .relative_path = &entry.relative_path,
                                   .mtime = entry.mtime,
-                                  .evaluate = entry.evaluate});
+                                  .evaluate = entry.evaluate,
+                                  .dialect = entry.dialect});
   }
   const sourcemeta::one::LeafSet leaves{leaves_storage};
 

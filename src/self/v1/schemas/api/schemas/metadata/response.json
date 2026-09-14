@@ -13,6 +13,7 @@
       "health": 100,
       "priority": 100,
       "private": false,
+      "metaschema": false,
       "breadcrumb": [
         {
           "name": "Home",
@@ -23,11 +24,14 @@
     }
   ],
   "$ref": "#base",
-  "required": [ "breadcrumb", "examples" ],
+  "required": [ "breadcrumb", "examples", "metaschema" ],
   "properties": {
     "examples": {
       "type": "array",
       "maxItems": 10
+    },
+    "metaschema": {
+      "type": "boolean"
     },
     "breadcrumb": {
       "type": "array",

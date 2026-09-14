@@ -13,6 +13,7 @@
       "health": 100,
       "priority": 100,
       "private": false,
+      "metaschema": false,
       "breadcrumb": [
         {
           "name": "Home",

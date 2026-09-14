@@ -896,7 +896,7 @@ jsonpath "$.result.resources[24].uri" == "{{base}}/self/v1/schemas/mcp/tools/cal
 jsonpath "$.result.resources[24].name" == "Sourcemeta One Schema Metadata RPC Output"
 jsonpath "$.result.resources[24].description" == "Get metadata information about a schema in the catalog"
 jsonpath "$.result.resources[24].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[24].size" == 843
+jsonpath "$.result.resources[24].size" == 870
 jsonpath "$.result.resources[24].annotations.priority" == 0
 jsonpath "$.result.resources[25].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/request"
 jsonpath "$.result.resources[25].name" == "Sourcemeta One Schema Positions RPC Input"
@@ -1209,7 +1209,7 @@ jsonpath "$.result.resources[24].uri" == "{{base}}/self/v1/schemas/mcp/tools/cal
 jsonpath "$.result.resources[24].name" == "Sourcemeta One Schema Metadata RPC Output"
 jsonpath "$.result.resources[24].description" == "Get metadata information about a schema in the catalog"
 jsonpath "$.result.resources[24].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[24].size" == 843
+jsonpath "$.result.resources[24].size" == 870
 jsonpath "$.result.resources[24].annotations.priority" == 0
 jsonpath "$.result.resources[25].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/request"
 jsonpath "$.result.resources[25].name" == "Sourcemeta One Schema Positions RPC Input"

@@ -35,6 +35,8 @@ struct LeafView {
   const std::filesystem::path *relative_path;
   std::filesystem::file_time_type mtime;
   bool evaluate{true};
+  // The identifier of the dialect this leaf declares
+  std::string_view dialect{};
 };
 
 using LeafSet = std::span<const std::pair<std::string_view, LeafView>>;

@@ -23,6 +23,7 @@ struct TestLeafEntry {
   std::filesystem::path relative_path;
   std::filesystem::file_time_type mtime;
   bool evaluate{true};
+  std::string dialect{};
 };
 
 class TestLeaves {
@@ -37,7 +38,8 @@ public:
           sourcemeta::one::LeafView{.path = &entry.path,
                                     .relative_path = &entry.relative_path,
                                     .mtime = entry.mtime,
-                                    .evaluate = entry.evaluate});
+                                    .evaluate = entry.evaluate,
+                                    .dialect = entry.dialect});
     }
   }
 

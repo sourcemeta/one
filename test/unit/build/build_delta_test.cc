@@ -1271,3 +1271,503 @@ TEST(limits_exceeded_throws) {
     EXPECT_STREQ(error.what(), "Too many entries in a single directory");
   }
 }
+
+TEST(full_dialect_dependents_are_read_by_the_leaf_they_name) {
+  const std::filesystem::path output{"/output"};
+  sourcemeta::one::BuildState entries;
+  // A dialect naming no leaf contributes nothing
+  const TestLeaves schemas{
+      {.identifier = "https://example.com/meta",
+       .path = "/src/meta.json",
+       .relative_path = "meta",
+       .mtime = MTIME(100),
+       .dialect = "https://json-schema.org/draft/2020-12/schema"},
+      {.identifier = "https://example.com/user",
+       .path = "/src/user.json",
+       .relative_path = "user",
+       .mtime = MTIME(100),
+       .dialect = "https://example.com/meta"}};
+
+  entries.configure(
+      test_rules::DIALECT_RULES.leaves, test_rules::DIALECT_RULES.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::DIALECT_RULES>(), INPUTS,
+      test_rules::DIALECT_RULES.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::DIALECT_RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, schemas, "1.0.0", false, "", "Full", {}, VIEWS, everything())};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 6, 11);
+
+  EXPECT_ACTION(plan, 0, 0, 2, test_rules::ACTION_CONFIGURATION,
+                output / "configuration.json", "");
+  EXPECT_ACTION(plan, 0, 1, 2, test_rules::ACTION_VERSION,
+                output / "version.json", "1.0.0");
+
+  EXPECT_ACTION(plan, 1, 0, 1, test_rules::ACTION_ROUTES, output / "routes.bin",
+                "Full", output / "configuration.json");
+
+  EXPECT_ACTION(plan, 2, 0, 1, test_rules::ACTION_GATE, output / "gate.bin", "",
+                output / "routes.bin");
+
+  EXPECT_ACTION(plan, 3, 0, 2, test_rules::ACTION_PRIMARY,
+                output / "primary" / "meta" / "%" / "primary.bin",
+                "https://example.com/meta",
+                std::filesystem::path{"/"} / "src" / "meta.json",
+                output / "configuration.json");
+  EXPECT_ACTION(plan, 3, 1, 2, test_rules::ACTION_PRIMARY,
+                output / "primary" / "user" / "%" / "primary.bin",
+                "https://example.com/user",
+                std::filesystem::path{"/"} / "src" / "user.json",
+                output / "configuration.json");
+
+  // The leaf another one declares as its dialect waits on that other leaf too
+  EXPECT_ACTION(plan, 4, 0, 2, test_rules::ACTION_METADATA,
+                output / "secondary" / "public" / "meta" / "%" / "metadata.bin",
+                "https://example.com/meta",
+                output / "primary" / "meta" / "%" / "primary.bin",
+                output / "primary" / "user" / "%" / "primary.bin");
+  EXPECT_ACTION(plan, 4, 1, 2, test_rules::ACTION_METADATA,
+                output / "secondary" / "public" / "user" / "%" / "metadata.bin",
+                "https://example.com/user",
+                output / "primary" / "user" / "%" / "primary.bin");
+
+  EXPECT_ACTION_UNORDERED(
+      plan, 5, 0, 3, test_rules::ACTION_LISTING,
+      output / "secondary" / "public" / "%" / "listing.bin", "",
+      output / "secondary" / "public" / "meta" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "user" / "%" / "metadata.bin");
+  EXPECT_ACTION(plan, 5, 1, 3, test_rules::ACTION_WEB,
+                output / "secondary" / "public" / "meta" / "%" / "web.bin",
+                "https://example.com/meta",
+                output / "secondary" / "public" / "meta" / "%" /
+                    "metadata.bin");
+  EXPECT_ACTION(plan, 5, 2, 3, test_rules::ACTION_WEB,
+                output / "secondary" / "public" / "user" / "%" / "web.bin",
+                "https://example.com/user",
+                output / "secondary" / "public" / "user" / "%" /
+                    "metadata.bin");
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      output / "routes.bin", output / "gate.bin",
+      output / "primary" / "meta" / "%" / "primary.bin",
+      output / "primary" / "user" / "%" / "primary.bin",
+      output / "secondary" / "public" / "meta" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "user" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "meta" / "%" / "web.bin",
+      output / "secondary" / "public" / "user" / "%" / "web.bin",
+      output / "secondary" / "public" / "%" / "listing.bin");
+}
+
+TEST(full_dialect_dependents_are_filtered_by_view) {
+  const std::filesystem::path output{"/output"};
+  sourcemeta::one::BuildState entries;
+  const TestLeaves schemas{{.identifier = "https://example.com/meta",
+                            .path = "/src/meta.json",
+                            .relative_path = "meta",
+                            .mtime = MTIME(100)},
+                           {.identifier = "https://example.com/user",
+                            .path = "/src/user.json",
+                            .relative_path = "user",
+                            .mtime = MTIME(100),
+                            .dialect = "https://example.com/meta"}};
+
+  entries.configure(
+      test_rules::DIALECT_RULES.leaves, test_rules::DIALECT_RULES.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::DIALECT_RULES>(), INPUTS,
+      test_rules::DIALECT_RULES.sentinel);
+  // The first view cannot see the leaf declaring the other as its dialect
+  const auto plan{sourcemeta::one::delta<test_rules::DIALECT_RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, schemas, "1.0.0", false, "", "Full", {}, TWO_VIEWS,
+      [](const std::size_t view, const std::string_view relative) -> bool {
+        return view == 1 || relative != "user";
+      })};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 6, 14);
+
+  EXPECT_ACTION(plan, 0, 0, 2, test_rules::ACTION_CONFIGURATION,
+                output / "configuration.json", "");
+  EXPECT_ACTION(plan, 0, 1, 2, test_rules::ACTION_VERSION,
+                output / "version.json", "1.0.0");
+
+  EXPECT_ACTION(plan, 1, 0, 1, test_rules::ACTION_ROUTES, output / "routes.bin",
+                "Full", output / "configuration.json");
+
+  EXPECT_ACTION(plan, 2, 0, 1, test_rules::ACTION_GATE, output / "gate.bin", "",
+                output / "routes.bin");
+
+  EXPECT_ACTION(plan, 3, 0, 2, test_rules::ACTION_PRIMARY,
+                output / "primary" / "meta" / "%" / "primary.bin",
+                "https://example.com/meta",
+                std::filesystem::path{"/"} / "src" / "meta.json",
+                output / "configuration.json");
+  EXPECT_ACTION(plan, 3, 1, 2, test_rules::ACTION_PRIMARY,
+                output / "primary" / "user" / "%" / "primary.bin",
+                "https://example.com/user",
+                std::filesystem::path{"/"} / "src" / "user.json",
+                output / "configuration.json");
+
+  // Each view reads only the leaves it holds
+  EXPECT_ACTION(plan, 4, 0, 3, test_rules::ACTION_METADATA,
+                output / "secondary" / "private" / "meta" / "%" /
+                    "metadata.bin",
+                "https://example.com/meta",
+                output / "primary" / "meta" / "%" / "primary.bin",
+                output / "primary" / "user" / "%" / "primary.bin");
+  EXPECT_ACTION(plan, 4, 1, 3, test_rules::ACTION_METADATA,
+                output / "secondary" / "private" / "user" / "%" /
+                    "metadata.bin",
+                "https://example.com/user",
+                output / "primary" / "user" / "%" / "primary.bin");
+  EXPECT_ACTION(plan, 4, 2, 3, test_rules::ACTION_METADATA,
+                output / "secondary" / "public" / "meta" / "%" / "metadata.bin",
+                "https://example.com/meta",
+                output / "primary" / "meta" / "%" / "primary.bin");
+
+  EXPECT_ACTION_UNORDERED(
+      plan, 5, 0, 5, test_rules::ACTION_LISTING,
+      output / "secondary" / "private" / "%" / "listing.bin", "",
+      output / "secondary" / "private" / "meta" / "%" / "metadata.bin",
+      output / "secondary" / "private" / "user" / "%" / "metadata.bin");
+  EXPECT_ACTION(plan, 5, 1, 5, test_rules::ACTION_WEB,
+                output / "secondary" / "private" / "meta" / "%" / "web.bin",
+                "https://example.com/meta",
+                output / "secondary" / "private" / "meta" / "%" /
+                    "metadata.bin");
+  EXPECT_ACTION(plan, 5, 2, 5, test_rules::ACTION_WEB,
+                output / "secondary" / "private" / "user" / "%" / "web.bin",
+                "https://example.com/user",
+                output / "secondary" / "private" / "user" / "%" /
+                    "metadata.bin");
+  EXPECT_ACTION_UNORDERED(
+      plan, 5, 3, 5, test_rules::ACTION_LISTING,
+      output / "secondary" / "public" / "%" / "listing.bin", "",
+      output / "secondary" / "public" / "meta" / "%" / "metadata.bin");
+  EXPECT_ACTION(plan, 5, 4, 5, test_rules::ACTION_WEB,
+                output / "secondary" / "public" / "meta" / "%" / "web.bin",
+                "https://example.com/meta",
+                output / "secondary" / "public" / "meta" / "%" /
+                    "metadata.bin");
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      output / "routes.bin", output / "gate.bin",
+      output / "primary" / "meta" / "%" / "primary.bin",
+      output / "primary" / "user" / "%" / "primary.bin",
+      output / "secondary" / "private" / "meta" / "%" / "metadata.bin",
+      output / "secondary" / "private" / "user" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "meta" / "%" / "metadata.bin",
+      output / "secondary" / "private" / "meta" / "%" / "web.bin",
+      output / "secondary" / "private" / "user" / "%" / "web.bin",
+      output / "secondary" / "public" / "meta" / "%" / "web.bin",
+      output / "secondary" / "private" / "%" / "listing.bin",
+      output / "secondary" / "public" / "%" / "listing.bin");
+}
+
+TEST(incremental_new_dialect_dependent_rebuilds_the_leaf_it_names) {
+  const auto output{delta_path("new_dialect_dependent")};
+  WRITE_GLOBAL_OUTPUTS(output);
+  sourcemeta::one::BuildState entries;
+  const TestLeaves schemas{{.identifier = "https://example.com/meta",
+                            .path = "/src/meta.json",
+                            .relative_path = "meta",
+                            .mtime = MTIME(100)},
+                           {.identifier = "https://example.com/user",
+                            .path = "/src/user.json",
+                            .relative_path = "user",
+                            .mtime = MTIME(200),
+                            .dialect = "https://example.com/meta"}};
+  ADD_LEAF_ENTRIES(entries, output, "meta", true, MTIME(150));
+  ADD_GLOBAL_ENTRIES(entries, output, MTIME(150));
+  entries.emplace(output / "secondary" / "public" / "%" / "listing.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+
+  entries.configure(
+      test_rules::DIALECT_RULES.leaves, test_rules::DIALECT_RULES.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::DIALECT_RULES>(), INPUTS,
+      test_rules::DIALECT_RULES.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::DIALECT_RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS, everything())};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 3, 6);
+
+  EXPECT_ACTION(plan, 0, 0, 1, test_rules::ACTION_PRIMARY,
+                output / "primary" / "user" / "%" / "primary.bin",
+                "https://example.com/user",
+                std::filesystem::path{"/"} / "src" / "user.json",
+                output / "configuration.json");
+
+  // The unchanged leaf is rebuilt, since it is now declared as a dialect
+  EXPECT_ACTION(plan, 1, 0, 2, test_rules::ACTION_METADATA,
+                output / "secondary" / "public" / "meta" / "%" / "metadata.bin",
+                "https://example.com/meta",
+                output / "primary" / "meta" / "%" / "primary.bin",
+                output / "primary" / "user" / "%" / "primary.bin");
+  EXPECT_ACTION(plan, 1, 1, 2, test_rules::ACTION_METADATA,
+                output / "secondary" / "public" / "user" / "%" / "metadata.bin",
+                "https://example.com/user",
+                output / "primary" / "user" / "%" / "primary.bin");
+
+  EXPECT_ACTION_UNORDERED(
+      plan, 2, 0, 3, test_rules::ACTION_LISTING,
+      output / "secondary" / "public" / "%" / "listing.bin", "",
+      output / "secondary" / "public" / "meta" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "user" / "%" / "metadata.bin");
+  EXPECT_ACTION(plan, 2, 1, 3, test_rules::ACTION_WEB,
+                output / "secondary" / "public" / "meta" / "%" / "web.bin",
+                "https://example.com/meta",
+                output / "secondary" / "public" / "meta" / "%" /
+                    "metadata.bin");
+  EXPECT_ACTION(plan, 2, 2, 3, test_rules::ACTION_WEB,
+                output / "secondary" / "public" / "user" / "%" / "web.bin",
+                "https://example.com/user",
+                output / "secondary" / "public" / "user" / "%" /
+                    "metadata.bin");
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      output / "routes.bin", output / "gate.bin",
+      output / "primary" / "meta" / "%" / "primary.bin",
+      output / "secondary" / "public" / "meta" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "meta" / "%" / "web.bin",
+      output / "primary" / "user" / "%" / "primary.bin",
+      output / "secondary" / "public" / "user" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "user" / "%" / "web.bin",
+      output / "secondary" / "public" / "%" / "listing.bin");
+}
+
+TEST(incremental_unrelated_change_leaves_the_named_leaf_alone) {
+  const auto output{delta_path("unrelated_dialect_change")};
+  WRITE_GLOBAL_OUTPUTS(output);
+  sourcemeta::one::BuildState entries;
+  const TestLeaves schemas{{.identifier = "https://example.com/meta",
+                            .path = "/src/meta.json",
+                            .relative_path = "meta",
+                            .mtime = MTIME(100)},
+                           {.identifier = "https://example.com/user",
+                            .path = "/src/user.json",
+                            .relative_path = "user",
+                            .mtime = MTIME(100),
+                            .dialect = "https://example.com/meta"},
+                           {.identifier = "https://example.com/other",
+                            .path = "/src/other.json",
+                            .relative_path = "other",
+                            .mtime = MTIME(200)}};
+  ADD_LEAF_ENTRIES(entries, output, "meta", true, MTIME(150));
+  ADD_LEAF_ENTRIES(entries, output, "user", true, MTIME(150));
+  ADD_LEAF_ENTRIES(entries, output, "other", true, MTIME(150));
+  entries.emplace(
+      output / "secondary" / "public" / "meta" / "%" / "metadata.bin",
+      {.file_mark = MTIME(150),
+       .dependencies = {output / "primary" / "meta" / "%" / "primary.bin",
+                        output / "primary" / "user" / "%" / "primary.bin"}});
+  ADD_GLOBAL_ENTRIES(entries, output, MTIME(150));
+  entries.emplace(output / "secondary" / "public" / "%" / "listing.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+
+  entries.configure(
+      test_rules::DIALECT_RULES.leaves, test_rules::DIALECT_RULES.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::DIALECT_RULES>(), INPUTS,
+      test_rules::DIALECT_RULES.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::DIALECT_RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS, everything())};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 3, 4);
+
+  EXPECT_ACTION(plan, 0, 0, 1, test_rules::ACTION_PRIMARY,
+                output / "primary" / "other" / "%" / "primary.bin",
+                "https://example.com/other",
+                std::filesystem::path{"/"} / "src" / "other.json",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 1, 0, 1, test_rules::ACTION_METADATA,
+                output / "secondary" / "public" / "other" / "%" /
+                    "metadata.bin",
+                "https://example.com/other",
+                output / "primary" / "other" / "%" / "primary.bin");
+
+  EXPECT_ACTION_UNORDERED(
+      plan, 2, 0, 2, test_rules::ACTION_LISTING,
+      output / "secondary" / "public" / "%" / "listing.bin", "",
+      output / "secondary" / "public" / "meta" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "user" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "other" / "%" / "metadata.bin");
+  EXPECT_ACTION(plan, 2, 1, 2, test_rules::ACTION_WEB,
+                output / "secondary" / "public" / "other" / "%" / "web.bin",
+                "https://example.com/other",
+                output / "secondary" / "public" / "other" / "%" /
+                    "metadata.bin");
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      output / "routes.bin", output / "gate.bin",
+      output / "primary" / "meta" / "%" / "primary.bin",
+      output / "secondary" / "public" / "meta" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "meta" / "%" / "web.bin",
+      output / "primary" / "user" / "%" / "primary.bin",
+      output / "secondary" / "public" / "user" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "user" / "%" / "web.bin",
+      output / "primary" / "other" / "%" / "primary.bin",
+      output / "secondary" / "public" / "other" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "other" / "%" / "web.bin",
+      output / "secondary" / "public" / "%" / "listing.bin");
+}
+
+TEST(incremental_dialect_dependent_switching_rebuilds_both_leaves) {
+  const auto output{delta_path("switched_dialect_dependent")};
+  WRITE_GLOBAL_OUTPUTS(output);
+  sourcemeta::one::BuildState entries;
+  const TestLeaves schemas{{.identifier = "https://example.com/meta",
+                            .path = "/src/meta.json",
+                            .relative_path = "meta",
+                            .mtime = MTIME(100)},
+                           {.identifier = "https://example.com/alt",
+                            .path = "/src/alt.json",
+                            .relative_path = "alt",
+                            .mtime = MTIME(100)},
+                           {.identifier = "https://example.com/user",
+                            .path = "/src/user.json",
+                            .relative_path = "user",
+                            .mtime = MTIME(200),
+                            .dialect = "https://example.com/alt"}};
+  ADD_LEAF_ENTRIES(entries, output, "meta", true, MTIME(150));
+  ADD_LEAF_ENTRIES(entries, output, "alt", true, MTIME(150));
+  ADD_LEAF_ENTRIES(entries, output, "user", true, MTIME(150));
+  // The previous build had the changed leaf declaring the first as its dialect
+  entries.emplace(
+      output / "secondary" / "public" / "meta" / "%" / "metadata.bin",
+      {.file_mark = MTIME(150),
+       .dependencies = {output / "primary" / "meta" / "%" / "primary.bin",
+                        output / "primary" / "user" / "%" / "primary.bin"}});
+  ADD_GLOBAL_ENTRIES(entries, output, MTIME(150));
+  entries.emplace(output / "secondary" / "public" / "%" / "listing.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+
+  entries.configure(
+      test_rules::DIALECT_RULES.leaves, test_rules::DIALECT_RULES.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::DIALECT_RULES>(), INPUTS,
+      test_rules::DIALECT_RULES.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::DIALECT_RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS, everything())};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 3, 8);
+
+  // The leaf it left no longer reads it, so it has nothing to wait on
+  EXPECT_ACTION(plan, 0, 0, 2, test_rules::ACTION_PRIMARY,
+                output / "primary" / "user" / "%" / "primary.bin",
+                "https://example.com/user",
+                std::filesystem::path{"/"} / "src" / "user.json",
+                output / "configuration.json");
+  EXPECT_ACTION(plan, 0, 1, 2, test_rules::ACTION_METADATA,
+                output / "secondary" / "public" / "meta" / "%" / "metadata.bin",
+                "https://example.com/meta",
+                output / "primary" / "meta" / "%" / "primary.bin");
+
+  EXPECT_ACTION(plan, 1, 0, 3, test_rules::ACTION_METADATA,
+                output / "secondary" / "public" / "alt" / "%" / "metadata.bin",
+                "https://example.com/alt",
+                output / "primary" / "alt" / "%" / "primary.bin",
+                output / "primary" / "user" / "%" / "primary.bin");
+  EXPECT_ACTION(plan, 1, 1, 3, test_rules::ACTION_WEB,
+                output / "secondary" / "public" / "meta" / "%" / "web.bin",
+                "https://example.com/meta",
+                output / "secondary" / "public" / "meta" / "%" /
+                    "metadata.bin");
+  EXPECT_ACTION(plan, 1, 2, 3, test_rules::ACTION_METADATA,
+                output / "secondary" / "public" / "user" / "%" / "metadata.bin",
+                "https://example.com/user",
+                output / "primary" / "user" / "%" / "primary.bin");
+
+  EXPECT_ACTION_UNORDERED(
+      plan, 2, 0, 3, test_rules::ACTION_LISTING,
+      output / "secondary" / "public" / "%" / "listing.bin", "",
+      output / "secondary" / "public" / "meta" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "alt" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "user" / "%" / "metadata.bin");
+  EXPECT_ACTION(plan, 2, 1, 3, test_rules::ACTION_WEB,
+                output / "secondary" / "public" / "alt" / "%" / "web.bin",
+                "https://example.com/alt",
+                output / "secondary" / "public" / "alt" / "%" / "metadata.bin");
+  EXPECT_ACTION(plan, 2, 2, 3, test_rules::ACTION_WEB,
+                output / "secondary" / "public" / "user" / "%" / "web.bin",
+                "https://example.com/user",
+                output / "secondary" / "public" / "user" / "%" /
+                    "metadata.bin");
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      output / "routes.bin", output / "gate.bin",
+      output / "primary" / "meta" / "%" / "primary.bin",
+      output / "secondary" / "public" / "meta" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "meta" / "%" / "web.bin",
+      output / "primary" / "alt" / "%" / "primary.bin",
+      output / "secondary" / "public" / "alt" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "alt" / "%" / "web.bin",
+      output / "primary" / "user" / "%" / "primary.bin",
+      output / "secondary" / "public" / "user" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "user" / "%" / "web.bin",
+      output / "secondary" / "public" / "%" / "listing.bin");
+}
+
+TEST(incremental_removed_dialect_dependent_rebuilds_the_leaf_it_named) {
+  const auto output{delta_path("removed_dialect_dependent")};
+  WRITE_GLOBAL_OUTPUTS(output);
+  sourcemeta::one::BuildState entries;
+  const TestLeaves schemas{{.identifier = "https://example.com/meta",
+                            .path = "/src/meta.json",
+                            .relative_path = "meta",
+                            .mtime = MTIME(100)}};
+  ADD_LEAF_ENTRIES(entries, output, "meta", true, MTIME(150));
+  ADD_LEAF_ENTRIES(entries, output, "user", true, MTIME(150));
+  // The previous build had the removed leaf declaring the other as its dialect
+  entries.emplace(
+      output / "secondary" / "public" / "meta" / "%" / "metadata.bin",
+      {.file_mark = MTIME(150),
+       .dependencies = {output / "primary" / "meta" / "%" / "primary.bin",
+                        output / "primary" / "user" / "%" / "primary.bin"}});
+  ADD_GLOBAL_ENTRIES(entries, output, MTIME(150));
+  entries.emplace(output / "secondary" / "public" / "%" / "listing.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+
+  entries.configure(
+      test_rules::DIALECT_RULES.leaves, test_rules::DIALECT_RULES.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::DIALECT_RULES>(), INPUTS,
+      test_rules::DIALECT_RULES.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::DIALECT_RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS, everything())};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 3, 5);
+
+  EXPECT_ACTION(plan, 0, 0, 1, test_rules::ACTION_METADATA,
+                output / "secondary" / "public" / "meta" / "%" / "metadata.bin",
+                "https://example.com/meta",
+                output / "primary" / "meta" / "%" / "primary.bin");
+
+  EXPECT_ACTION_UNORDERED(
+      plan, 1, 0, 2, test_rules::ACTION_LISTING,
+      output / "secondary" / "public" / "%" / "listing.bin", "",
+      output / "secondary" / "public" / "meta" / "%" / "metadata.bin");
+  EXPECT_ACTION(plan, 1, 1, 2, test_rules::ACTION_WEB,
+                output / "secondary" / "public" / "meta" / "%" / "web.bin",
+                "https://example.com/meta",
+                output / "secondary" / "public" / "meta" / "%" /
+                    "metadata.bin");
+
+  EXPECT_ACTION(plan, 2, 0, 2, test_rules::ACTION_REMOVE,
+                output / "primary" / "user", "");
+  EXPECT_ACTION(plan, 2, 1, 2, test_rules::ACTION_REMOVE,
+                output / "secondary" / "public" / "user", "");
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      output / "routes.bin", output / "gate.bin",
+      output / "primary" / "meta" / "%" / "primary.bin",
+      output / "secondary" / "public" / "meta" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "meta" / "%" / "web.bin",
+      output / "secondary" / "public" / "%" / "listing.bin");
+}

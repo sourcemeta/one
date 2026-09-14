@@ -132,6 +132,28 @@ make_private(const sourcemeta::one::Authentication::Table &authentication,
                                 !governing.value().empty()};
 }
 
+// Whether a schema declares the vocabularies of a dialect, which only these
+// dialects give meaning to
+static auto
+declares_vocabulary(const sourcemeta::core::JSON &schema,
+                    const sourcemeta::blaze::SchemaBaseDialect base_dialect)
+    -> bool {
+  if (base_dialect !=
+          sourcemeta::blaze::SchemaBaseDialect::JSON_SCHEMA_2020_12 &&
+      base_dialect !=
+          sourcemeta::blaze::SchemaBaseDialect::JSON_SCHEMA_2020_12_HYPER &&
+      base_dialect !=
+          sourcemeta::blaze::SchemaBaseDialect::JSON_SCHEMA_2019_09 &&
+      base_dialect !=
+          sourcemeta::blaze::SchemaBaseDialect::JSON_SCHEMA_2019_09_HYPER) {
+    return false;
+  }
+
+  const auto *vocabulary{schema.is_object() ? schema.try_at("$vocabulary")
+                                            : nullptr};
+  return vocabulary != nullptr && vocabulary->is_object();
+}
+
 namespace sourcemeta::one {
 
 #pragma pack(push, 1)
@@ -388,6 +410,12 @@ struct GenerateExplorerSchemaMetadata {
                       const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto &resolver_entry{resolver.entry(action.data)};
+    // The inputs past the ones every schema reads are the schemas declaring
+    // this one as their dialect
+    constexpr std::size_t FIXED_INPUTS{5};
+    assert(action.dependencies.size() >= FIXED_INPUTS);
+    const auto has_dialect_dependents{action.dependencies.size() >
+                                      FIXED_INPUTS};
     // Read the schema to get data and bytes
     sourcemeta::core::FileView schema_view{action.dependencies.front()};
     const auto schema_info_option{sourcemeta::one::metapack_info(schema_view)};
@@ -422,6 +450,11 @@ struct GenerateExplorerSchemaMetadata {
     result.assign("baseDialect", sourcemeta::core::JSON{std::format(
                                      "{}", schema_location.base_dialect)});
     result.assign("dialect", sourcemeta::core::JSON{schema_location.dialect});
+    result.assign(
+        "metaschema",
+        sourcemeta::core::JSON{
+            has_dialect_dependents ||
+            declares_vocabulary(schema_data, schema_location.base_dialect)});
 
     if (schema_data.is_object()) {
       const auto *const title{schema_data.try_at("title")};
@@ -490,7 +523,7 @@ struct GenerateExplorerSchemaMetadata {
                   make_breadcrumb(resolver_entry.relative_path, false));
 
     const sourcemeta::one::Authentication::Table authentication{
-        action.dependencies.back()};
+        action.dependencies.at(4)};
     result.assign("private",
                   make_private(authentication, result.at("path").to_string()));
 

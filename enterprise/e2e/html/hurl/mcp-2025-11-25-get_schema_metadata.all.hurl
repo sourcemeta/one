@@ -77,6 +77,8 @@ jsonpath "$.result.structuredContent.path" == "/test/bare/01"
 variable "text" jsonpath "$.path" == "/test/bare/01"
 jsonpath "$.result.structuredContent.dialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.dialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.metaschema" == false
+variable "text" jsonpath "$.metaschema" == false
 jsonpath "$.result.structuredContent.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.examples" count == 0
@@ -178,6 +180,8 @@ jsonpath "$.result.structuredContent.path" == "/test/object"
 variable "text" jsonpath "$.path" == "/test/object"
 jsonpath "$.result.structuredContent.dialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.dialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.metaschema" == false
+variable "text" jsonpath "$.metaschema" == false
 jsonpath "$.result.structuredContent.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.title" == "My Object"

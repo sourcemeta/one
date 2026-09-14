@@ -1,0 +1,112 @@
+// A schema declared as the dialect of a schema only one view holds is read with
+// that dependent in that view alone, so changing the dependent rebuilds its
+// metadata there and nowhere else
+
+MAKE DIRECTORY schemas
+MAKE DIRECTORY schemas/open
+MAKE DIRECTORY schemas/closed
+
+WRITE schemas/open/meta.json UNTIL EOF
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/schemas/open/meta"
+}
+EOF
+
+WRITE schemas/closed/user.json UNTIL EOF
+{
+  "$schema": "https://example.com/schemas/open/meta",
+  "$id": "https://example.com/schemas/closed/user"
+}
+EOF
+
+WRITE one.json UNTIL EOF
+{
+  "url": "https://example.com",
+  "authentication": [
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "name": "alpha",
+      "paths": [ "/schemas/closed" ],
+      "keys": [ { "environmentVariable": "ONE_TEST_KEY_ALPHA" } ]
+    }
+  ],
+  "contents": {
+    "schemas": {
+      "contents": {
+        "open": {
+          "baseUri": "https://example.com/schemas/open",
+          "path": "./schemas/open"
+        },
+        "closed": {
+          "baseUri": "https://example.com/schemas/closed",
+          "path": "./schemas/closed"
+        }
+      }
+    }
+  }
+}
+EOF
+
+RUN --skip-banner --deterministic --concurrency 1 one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+DROP LINES MATCHING '^[12]> \([ 0-9]+%\) ' IN log_1.txt
+DROP LINES CONTAINING $ONE_PREFIX IN log_1.txt
+REPLACE MATCHING ' \(#[0-9]+\)' WITH '' IN log_1.txt
+REPLACE $CWD WITH '[CWD]' IN log_1.txt
+SORT log_1.txt
+WRITE expected_log_1.txt UNTIL EOF
+2> Detecting: [CWD]/schemas/closed/user.json
+2> Detecting: [CWD]/schemas/open/meta.json
+2> Using configuration: [CWD]/one.json
+2> Writing output to: [CWD]/output
+EOF
+COMPARE log_1.txt AGAINST expected_log_1.txt
+
+WRITE schemas/closed/user.json UNTIL EOF
+{
+  "$schema": "https://example.com/schemas/open/meta",
+  "$id": "https://example.com/schemas/closed/user",
+  "title": "Edited"
+}
+EOF
+
+RUN --skip-banner --deterministic --concurrency 1 one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 0
+REPLACE MATCHING ' \[[^\]\n]*[^a-z\-\n][^\]\n]*\]' WITH '' IN output.txt
+COPY output.txt TO produced.txt
+DROP LINES MATCHING '^(?!.*(Producing|Combining)).*$' IN produced.txt
+
+// The schema declared as the dialect is rebuilt in the view holding the changed
+// schema, and never in the view that cannot see it
+WRITE expected-produced.txt UNTIL EOF
+2> (  3%) Producing: explorer/public/schemas/%/directory.metapack
+2> (  7%) Producing: schemas/schemas/closed/user/%/schema.metapack
+2> ( 10%) Producing: explorer/alpha/schemas/open/meta/%/schema.metapack
+2> ( 14%) Producing: explorer/public/%/directory.metapack
+2> ( 17%) Producing: explorer/public/schemas/%/directory-html.metapack
+2> ( 21%) Producing: schemas/schemas/closed/user/%/dependencies.metapack
+2> ( 25%) Producing: schemas/schemas/closed/user/%/locations.metapack
+2> ( 28%) Producing: schemas/schemas/closed/user/%/positions.metapack
+2> ( 32%) Producing: schemas/schemas/closed/user/%/stats.metapack
+2> ( 35%) Producing: explorer/alpha/schemas/open/meta/%/schema-html.metapack
+2> ( 39%) Producing: explorer/public/%/directory-html.metapack
+2> ( 42%) Producing: explorer/public/%/search.metapack
+2> ( 46%) Producing: schemas/schemas/closed/user/%/bundle.metapack
+2> ( 50%) Producing: schemas/schemas/closed/user/%/health.metapack
+2> ( 53%) Producing: explorer/alpha/schemas/closed/user/%/schema.metapack
+2> ( 57%) Producing: explorer/public/%/mcp.metapack
+2> ( 60%) Producing: schemas/schemas/closed/user/%/blaze-exhaustive.metapack
+2> ( 64%) Producing: schemas/schemas/closed/user/%/blaze-fast.metapack
+2> ( 67%) Producing: schemas/schemas/closed/user/%/editor.metapack
+2> ( 71%) Producing: explorer/alpha/schemas/closed/%/directory.metapack
+2> ( 75%) Producing: explorer/alpha/schemas/closed/user/%/schema-html.metapack
+2> ( 78%) Producing: explorer/alpha/schemas/%/directory.metapack
+2> ( 82%) Producing: explorer/alpha/schemas/closed/%/directory-html.metapack
+2> ( 85%) Producing: explorer/alpha/%/directory.metapack
+2> ( 89%) Producing: explorer/alpha/schemas/%/directory-html.metapack
+2> ( 92%) Producing: explorer/alpha/%/directory-html.metapack
+2> ( 96%) Producing: explorer/alpha/%/search.metapack
+2> (100%) Producing: explorer/alpha/%/mcp.metapack
+EOF
+
+COMPARE produced.txt AGAINST expected-produced.txt

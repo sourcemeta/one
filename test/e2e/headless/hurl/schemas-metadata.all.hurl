@@ -22,6 +22,7 @@ jsonpath "$.health" == 0
 jsonpath "$.priority" == 50
 jsonpath "$.dependencies" == 0
 jsonpath "$.dialect" == "http://json-schema.org/draft-07/schema#"
+jsonpath "$.metaschema" == false
 jsonpath "$.identifier" == "{{base}}/test/schemas/no-id"
 jsonpath "$.path" == "/test/schemas/no-id"
 jsonpath "$.alert" == null
@@ -75,6 +76,7 @@ jsonpath "$.health" == 0
 jsonpath "$.priority" == 50
 jsonpath "$.dependencies" == 0
 jsonpath "$.dialect" == "http://json-schema.org/draft-07/schema#"
+jsonpath "$.metaschema" == false
 jsonpath "$.identifier" == "{{base}}/test/schemas/string"
 jsonpath "$.path" == "/test/schemas/string"
 jsonpath "$.alert" == null
@@ -261,6 +263,7 @@ header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$.baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.dialect" == "http://json-schema.org/draft-07/schema#"
+jsonpath "$.metaschema" == false
 jsonpath "$.identifier" == "{{base}}/test/schemas/bundling-double"
 jsonpath "$.path" == "/test/schemas/bundling-double"
 jsonpath "$.alert" == null
