@@ -41,7 +41,10 @@
     },
     "vault": {
       "baseUri": "https://example.com/vault/",
-      "path": "./schemas/vault"
+      "path": "./schemas/vault",
+      "resolve": {
+        "https://example.com/open/meta": "/open/meta"
+      }
     },
     "ledger": {
       "title": "Ledger",

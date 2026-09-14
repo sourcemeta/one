@@ -217,13 +217,16 @@ vault_schema: header "Link" regex "<([^>]+)>"
 header "ETag" exists
 jsonpath "$.path" == "/vault"
 jsonpath "$.private" == true
-jsonpath "$.entries" count == 2
+jsonpath "$.entries" count == 3
 jsonpath "$.entries[0].name" == "inner"
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].private" == true
 jsonpath "$.entries[1].name" == "secret"
 jsonpath "$.entries[1].type" == "schema"
 jsonpath "$.entries[1].private" == true
+jsonpath "$.entries[2].name" == "typed"
+jsonpath "$.entries[2].type" == "schema"
+jsonpath "$.entries[2].private" == true
 
 POST {{base}}/self/v1/api/schemas/evaluate{{vault_schema}}
 ```
@@ -285,13 +288,16 @@ open_schema: header "Link" regex "<([^>]+)>"
 header "ETag" exists
 jsonpath "$.path" == "/open"
 jsonpath "$.private" == false
-jsonpath "$.entries" count == 2
+jsonpath "$.entries" count == 3
 jsonpath "$.entries[0].name" == "deep"
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].private" == false
-jsonpath "$.entries[1].name" == "string"
+jsonpath "$.entries[1].name" == "meta"
 jsonpath "$.entries[1].type" == "schema"
 jsonpath "$.entries[1].private" == false
+jsonpath "$.entries[2].name" == "string"
+jsonpath "$.entries[2].type" == "schema"
+jsonpath "$.entries[2].private" == false
 
 POST {{base}}/self/v1/api/schemas/evaluate{{open_schema}}
 ```

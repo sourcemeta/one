@@ -280,6 +280,7 @@ tool_success: body
 jsonpath "$.error" not exists
 jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent" exists
+jsonpath "$.result.structuredContent.metaschema" == false
 
 POST {{base}}/self/v1/api/schemas/evaluate{{mcp_schema}}
 Authorization: Bearer {{machine_token}}

@@ -1,0 +1,6 @@
+{
+  "$schema": "https://example.com/open/meta",
+  "$id": "https://example.com/vault/typed",
+  "title": "A vault string with an open dialect",
+  "type": "string"
+}

@@ -151,6 +151,8 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1202
 jsonpath "$.result.isError" == false
+jsonpath "$.result.structuredContent.metaschema" == false
+variable "text" jsonpath "$.metaschema" == false
 jsonpath "$.result.structuredContent.identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.path" == "/test/object"
@@ -261,6 +263,8 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1211
 jsonpath "$.result.isError" == false
+jsonpath "$.result.structuredContent.metaschema" == false
+variable "text" jsonpath "$.metaschema" == false
 jsonpath "$.result.structuredContent.identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.title" == "My Object"

@@ -65,6 +65,7 @@ metadata_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.private" == false
 jsonpath "$.path" == "/test/no-blaze/string"
+jsonpath "$.metaschema" == false
 
 POST {{base}}/self/v1/api/schemas/evaluate{{metadata_schema}}
 ```
