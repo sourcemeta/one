@@ -4,7 +4,7 @@ MAKE DIRECTORY data/skip
 
 WRITE data/keep/foo.json UNTIL EOF
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/keep/foo",
   "type": "object"
 }

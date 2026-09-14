@@ -14,7 +14,7 @@ mkdir -p "$TMP/schemas/keep" "$TMP/schemas/skip"
 
 cat << 'EOF' > "$TMP/schemas/keep/foo.json"
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/keep/foo",
   "type": "object"
 }

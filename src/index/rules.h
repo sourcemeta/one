@@ -3,6 +3,8 @@
 
 #include <sourcemeta/one/build.h>
 
+#include <cstddef> // std::size_t
+
 namespace sourcemeta::one {
 
 // The value of an entry is what a rule records as the action to take, so these
@@ -35,6 +37,13 @@ enum : BuildPlan::Action::Type {
   ACTION_AUTHENTICATION,
   ACTION_LOGIN,
   ACTION_WEB_LOGIN,
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
+  ACTION_CONVERSION_DRAFT4,
+  ACTION_CONVERSION_DRAFT6,
+  ACTION_CONVERSION_DRAFT7,
+  ACTION_CONVERSION_2019_09,
+  ACTION_CONVERSION_2020_12,
+#endif
   ACTION_REMOVE,
   ACTION_COUNT
 };
@@ -44,7 +53,13 @@ enum : BuildPlan::Action::Type {
 // NOLINTNEXTLINE(cppcoreguidelines-use-enum-class)
 enum : BuildPlan::Type { MODE_HEADLESS, MODE_FULL };
 
-inline constexpr DeltaRuleSet<13, 8, 5, 2> INDEX_RULES{
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
+inline constexpr std::size_t INDEX_LEAF_RULES{18};
+#else
+inline constexpr std::size_t INDEX_LEAF_RULES{13};
+#endif
+
+inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
     .leaves = {{
         {.action = ACTION_MATERIALISE,
          .base = 0,
@@ -260,6 +275,97 @@ inline constexpr DeltaRuleSet<13, 8, 5, 2> INDEX_RULES{
                             .base = 0,
                             .filename = "health.metapack"}}},
          .dependency_count = 2},
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
+        {.action = ACTION_CONVERSION_DRAFT4,
+         .base = 0,
+         .filename = "schema-draft4.metapack",
+         .gate = TargetGate::IfSelected,
+         .dirty = DirtyOverride::Normal,
+         .is_root = false,
+         .combine_only = false,
+         .container_target = false,
+         .tracks_dependencies = false,
+         .dependencies = {{{.source = DependencySource::Base,
+                            .base = 0,
+                            .filename = "schema.metapack"},
+                           {.source = DependencySource::DialectDependents,
+                            .base = 0,
+                            .filename = "schema.metapack"}}},
+         .dependency_count = 2,
+         .selector = 0},
+
+        {.action = ACTION_CONVERSION_DRAFT6,
+         .base = 0,
+         .filename = "schema-draft6.metapack",
+         .gate = TargetGate::IfSelected,
+         .dirty = DirtyOverride::Normal,
+         .is_root = false,
+         .combine_only = false,
+         .container_target = false,
+         .tracks_dependencies = false,
+         .dependencies = {{{.source = DependencySource::Base,
+                            .base = 0,
+                            .filename = "schema.metapack"},
+                           {.source = DependencySource::DialectDependents,
+                            .base = 0,
+                            .filename = "schema.metapack"}}},
+         .dependency_count = 2,
+         .selector = 1},
+
+        {.action = ACTION_CONVERSION_DRAFT7,
+         .base = 0,
+         .filename = "schema-draft7.metapack",
+         .gate = TargetGate::IfSelected,
+         .dirty = DirtyOverride::Normal,
+         .is_root = false,
+         .combine_only = false,
+         .container_target = false,
+         .tracks_dependencies = false,
+         .dependencies = {{{.source = DependencySource::Base,
+                            .base = 0,
+                            .filename = "schema.metapack"},
+                           {.source = DependencySource::DialectDependents,
+                            .base = 0,
+                            .filename = "schema.metapack"}}},
+         .dependency_count = 2,
+         .selector = 2},
+
+        {.action = ACTION_CONVERSION_2019_09,
+         .base = 0,
+         .filename = "schema-2019-09.metapack",
+         .gate = TargetGate::IfSelected,
+         .dirty = DirtyOverride::Normal,
+         .is_root = false,
+         .combine_only = false,
+         .container_target = false,
+         .tracks_dependencies = false,
+         .dependencies = {{{.source = DependencySource::Base,
+                            .base = 0,
+                            .filename = "schema.metapack"},
+                           {.source = DependencySource::DialectDependents,
+                            .base = 0,
+                            .filename = "schema.metapack"}}},
+         .dependency_count = 2,
+         .selector = 3},
+
+        {.action = ACTION_CONVERSION_2020_12,
+         .base = 0,
+         .filename = "schema-2020-12.metapack",
+         .gate = TargetGate::IfSelected,
+         .dirty = DirtyOverride::Normal,
+         .is_root = false,
+         .combine_only = false,
+         .container_target = false,
+         .tracks_dependencies = false,
+         .dependencies = {{{.source = DependencySource::Base,
+                            .base = 0,
+                            .filename = "schema.metapack"},
+                           {.source = DependencySource::DialectDependents,
+                            .base = 0,
+                            .filename = "schema.metapack"}}},
+         .dependency_count = 2,
+         .selector = 4},
+#endif
     }},
     .containers = {{
         {.action = ACTION_DIRECTORY_LIST,

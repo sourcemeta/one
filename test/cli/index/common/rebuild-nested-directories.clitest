@@ -37,28 +37,28 @@ MAKE DIRECTORY schemas-right-b
 
 WRITE schemas-left-a/s1.json UNTIL EOF
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/left/left-a/s1"
 }
 EOF
 
 WRITE schemas-left-b/s2.json UNTIL EOF
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/left/left-b/s2"
 }
 EOF
 
 WRITE schemas-right-a/s3.json UNTIL EOF
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/right/right-a/s3"
 }
 EOF
 
 WRITE schemas-right-b/s4.json UNTIL EOF
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/right/right-b/s4"
 }
 EOF
@@ -84,7 +84,7 @@ COMPARE log_1.txt AGAINST expected_log_1.txt
 // Only the new schema's artifacts and affected directories should rebuild
 WRITE schemas-left-a/s5.json UNTIL EOF
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/left/left-a/s5"
 }
 EOF

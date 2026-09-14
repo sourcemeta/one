@@ -17,7 +17,7 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.result.resourceTemplates" count == 1
-jsonpath "$.result.resourceTemplates[0].uriTemplate" == "{{base}}/{+path}{?bundle}"
+jsonpath "$.result.resourceTemplates[0].uriTemplate" == "{{base}}/{+path}{?bundle,as}"
 
 # Batch of two valid request methods. JSON-RPC 2.0 §6 says the server must
 # return responses as an array in any order. We preserve input order so clients
@@ -58,7 +58,7 @@ jsonpath "$[1].jsonrpc" == "2.0"
 jsonpath "$[1].id" == 2
 jsonpath "$[1].error" not exists
 jsonpath "$[1].result.resourceTemplates" count == 1
-jsonpath "$[1].result.resourceTemplates[0].uriTemplate" == "{{base}}/{+path}{?bundle}"
+jsonpath "$[1].result.resourceTemplates[0].uriTemplate" == "{{base}}/{+path}{?bundle,as}"
 jsonpath "$[1].result.resourceTemplates[0].name" == "JSON Schema"
 jsonpath "$[1].result.resourceTemplates[0].mimeType" == "application/schema+json"
 

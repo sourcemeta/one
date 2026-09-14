@@ -37,15 +37,17 @@ struct LeafView {
   bool evaluate{true};
   // The identifier of the dialect this leaf declares
   std::string_view dialect{};
+  // The selection bits this leaf sets
+  std::uint32_t selected{0};
 };
 
 using LeafSet = std::span<const std::pair<std::string_view, LeafView>>;
 
 template <std::size_t S, std::size_t D, std::size_t G, std::size_t B>
 struct DeltaRuleSet {
-  // Each leaf rule's index is shifted into a std::uint16_t target bitmap, so
+  // Each leaf rule's index is shifted into a std::uint32_t target bitmap, so
   // more rules than the bitmap has bits would silently truncate 1 << index
-  static_assert(S <= std::numeric_limits<std::uint16_t>::digits,
+  static_assert(S <= std::numeric_limits<std::uint32_t>::digits,
                 "Too many leaf rules for the target bitmap width");
   std::array<LeafRule, S> leaves;
   std::array<ContainerRule, D> containers;
@@ -168,6 +170,7 @@ template <const auto &RuleSet>
     fingerprint_mix(hash, rule.base);
     fingerprint_text(hash, rule.filename);
     fingerprint_mix(hash, static_cast<std::uint8_t>(rule.gate));
+    fingerprint_mix(hash, rule.selector);
     fingerprint_mix(hash, static_cast<std::uint8_t>(rule.dirty));
     fingerprint_mix(hash, static_cast<std::uint8_t>(rule.is_root));
     fingerprint_mix(hash, static_cast<std::uint8_t>(rule.combine_only));

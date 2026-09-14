@@ -4,7 +4,7 @@
 #include "test_rules.h"
 
 #include <chrono>     // std::chrono::nanoseconds, std::chrono::duration_cast
-#include <cstdint>    // std::uint64_t
+#include <cstdint>    // std::uint32_t, std::uint64_t
 #include <filesystem> // std::filesystem::path
 #include <string>     // std::string
 
@@ -265,4 +265,36 @@ TEST(forget_removes_children) {
   EXPECT_FALSE(entries.contains("/output/schemas/foo/%/locations.metapack"));
   EXPECT_TRUE(entries.contains("/output/schemas/bar/%/schema.metapack"));
   EXPECT_TRUE(entries.contains("/output/configuration.json"));
+}
+
+TEST(round_trip_target_bitmap_beyond_sixteen_bits) {
+  const auto path{state_path("wide_bitmap")};
+  std::filesystem::create_directories(path.parent_path());
+
+  const auto now{std::filesystem::file_time_type::clock::now()};
+  sourcemeta::one::BuildState original_entries;
+  original_entries.emplace("/output/primary/foo/%/primary.bin",
+                           {.file_mark = now, .dependencies = {}});
+  original_entries.emplace("/output/primary/foo/%/wide-17.bin",
+                           {.file_mark = now, .dependencies = {}});
+
+  original_entries.configure(
+      test_rules::WIDE_RULES.leaves, test_rules::WIDE_RULES.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::WIDE_RULES>(), INPUTS,
+      test_rules::WIDE_RULES.sentinel);
+  original_entries.save(path);
+
+  sourcemeta::one::BuildState loaded_entries;
+  loaded_entries.load(
+      path, test_rules::WIDE_RULES.leaves, test_rules::WIDE_RULES.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::WIDE_RULES>(), INPUTS,
+      test_rules::WIDE_RULES.sentinel);
+
+  // The last target sits past the sixteenth bit, which has to survive the state
+  // being written and read back
+  const auto *leaf_entry{
+      loaded_entries.leaf_state("/output", "foo", true, true)};
+  EXPECT_NE(leaf_entry, nullptr);
+  EXPECT_EQ(leaf_entry->target_bitmap,
+            (std::uint32_t{1} << 0) | (std::uint32_t{1} << 17));
 }

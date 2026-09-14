@@ -8,6 +8,7 @@
 
 #include <algorithm>  // std::ranges::sort
 #include <cstddef>    // std::size_t
+#include <cstdint>    // std::uint32_t
 #include <filesystem> // std::filesystem::path, std::filesystem::file_time_type
 #include <fstream>    // std::ofstream
 #include <initializer_list> // std::initializer_list
@@ -24,6 +25,7 @@ struct TestLeafEntry {
   std::filesystem::file_time_type mtime;
   bool evaluate{true};
   std::string dialect{};
+  std::uint32_t selected{0};
 };
 
 class TestLeaves {
@@ -39,7 +41,8 @@ public:
                                     .relative_path = &entry.relative_path,
                                     .mtime = entry.mtime,
                                     .evaluate = entry.evaluate,
-                                    .dialect = entry.dialect});
+                                    .dialect = entry.dialect,
+                                    .selected = entry.selected});
     }
   }
 

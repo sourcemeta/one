@@ -2,6 +2,7 @@
 #define SOURCEMETA_ONE_INDEX_EXPLORER_H_
 
 #include "endpoints.h"
+#include "metaschema.h"
 
 #include <sourcemeta/one/authentication.h>
 #include <sourcemeta/one/configuration.h>
@@ -130,28 +131,6 @@ make_private(const sourcemeta::one::Authentication::Table &authentication,
       sourcemeta::one::Authentication::Path::relative(registry_path))};
   return sourcemeta::core::JSON{!governing.has_value() ||
                                 !governing.value().empty()};
-}
-
-// Whether a schema declares the vocabularies of a dialect, which only these
-// dialects give meaning to
-static auto
-declares_vocabulary(const sourcemeta::core::JSON &schema,
-                    const sourcemeta::blaze::SchemaBaseDialect base_dialect)
-    -> bool {
-  if (base_dialect !=
-          sourcemeta::blaze::SchemaBaseDialect::JSON_SCHEMA_2020_12 &&
-      base_dialect !=
-          sourcemeta::blaze::SchemaBaseDialect::JSON_SCHEMA_2020_12_HYPER &&
-      base_dialect !=
-          sourcemeta::blaze::SchemaBaseDialect::JSON_SCHEMA_2019_09 &&
-      base_dialect !=
-          sourcemeta::blaze::SchemaBaseDialect::JSON_SCHEMA_2019_09_HYPER) {
-    return false;
-  }
-
-  const auto *vocabulary{schema.is_object() ? schema.try_at("$vocabulary")
-                                            : nullptr};
-  return vocabulary != nullptr && vocabulary->is_object();
 }
 
 namespace sourcemeta::one {
@@ -455,6 +434,25 @@ struct GenerateExplorerSchemaMetadata {
         sourcemeta::core::JSON{
             has_dialect_dependents ||
             declares_vocabulary(schema_data, schema_location.base_dialect)});
+
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
+    auto conversions{sourcemeta::core::JSON::make_object()};
+    const auto official{
+        sourcemeta::one::official_dialect(resolver_entry.dialect)};
+    if (official.has_value()) {
+      for (const auto target :
+           sourcemeta::one::dialect_conversions(official.value())) {
+        auto conversion{sourcemeta::core::JSON::make_object()};
+        conversion.assign("mediaType",
+                          sourcemeta::core::JSON{"application/schema+json"});
+        conversions.assign(
+            std::string{sourcemeta::one::conversion_name(target)},
+            std::move(conversion));
+      }
+    }
+
+    result.assign("conversions", std::move(conversions));
+#endif
 
     if (schema_data.is_object()) {
       const auto *const title{schema_data.try_at("title")};
@@ -823,7 +821,7 @@ struct GenerateMCP {
     if (!template_uri.empty() && template_uri.back() == '/') {
       template_uri.pop_back();
     }
-    template_uri.append("/{+path}{?bundle}");
+    template_uri.append("/{+path}{?bundle,as}");
 
     auto resource_templates{sourcemeta::core::JSON::make_array()};
     resource_templates.push_back(sourcemeta::core::mcp_make_resource_template(
@@ -835,9 +833,12 @@ struct GenerateMCP {
         "`{+path}` with the schema's catalog path. Include `{?bundle}` "
         "(its presence alone triggers bundling, any value is ignored) "
         "to receive the schema with every external `$ref` inlined into "
-        "a single self-contained document. The URI must not contain a "
-        "fragment. Use `resources/list` to discover the available "
-        "schemas rather than guessing paths",
+        "a single self-contained document. Alternatively, include "
+        "`{?as}` with one of the keys of the `conversions` property of "
+        "the schema metadata to receive the schema converted into that "
+        "dialect. The URI must not contain a fragment. Use "
+        "`resources/list` to discover the available schemas rather than "
+        "guessing paths",
         "application/schema+json"));
 
     auto tools{sourcemeta::core::JSON::make_array()};

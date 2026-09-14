@@ -18,6 +18,14 @@
       "params": {
         "uri": "https://example.com/v1/foo/v1/example?bundle=1"
       }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 22,
+      "method": "resources/read",
+      "params": {
+        "uri": "https://example.com/v1/foo/v1/example?as=2020-12"
+      }
     }
   ],
   "type": "object",

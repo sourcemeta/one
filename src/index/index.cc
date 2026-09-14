@@ -95,6 +95,18 @@ static constexpr std::array<BuildHandlerFunction, sourcemeta::one::ACTION_COUNT>
         &sourcemeta::one::GenerateAuthentication::handler,
         &sourcemeta::one::GenerateLogin::handler,
         &sourcemeta::one::GenerateWebLogin::handler,
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
+        &sourcemeta::one::GenerateConversion<
+            sourcemeta::one::SchemaDialect::Draft4>::handler,
+        &sourcemeta::one::GenerateConversion<
+            sourcemeta::one::SchemaDialect::Draft6>::handler,
+        &sourcemeta::one::GenerateConversion<
+            sourcemeta::one::SchemaDialect::Draft7>::handler,
+        &sourcemeta::one::GenerateConversion<
+            sourcemeta::one::SchemaDialect::Draft201909>::handler,
+        &sourcemeta::one::GenerateConversion<
+            sourcemeta::one::SchemaDialect::Draft202012>::handler,
+#endif
         // Removal is done before anything is dispatched, so it is the one
         // action with nothing to call
         nullptr,
@@ -634,11 +646,16 @@ static auto index_main(const std::string_view &program,
   for (const auto &[uri, entry] : resolver.data()) {
     leaves_storage.emplace_back(
         std::string_view{uri},
-        sourcemeta::one::LeafView{.path = &entry.path,
-                                  .relative_path = &entry.relative_path,
-                                  .mtime = entry.mtime,
-                                  .evaluate = entry.evaluate,
-                                  .dialect = entry.dialect});
+        sourcemeta::one::LeafView{
+            .path = &entry.path,
+            .relative_path = &entry.relative_path,
+            .mtime = entry.mtime,
+            .evaluate = entry.evaluate,
+            .dialect = entry.dialect,
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
+            .selected = sourcemeta::one::conversion_selection(entry.dialect)
+#endif
+        });
   }
   const sourcemeta::one::LeafSet leaves{leaves_storage};
 
@@ -855,6 +872,13 @@ auto main(int argc, char *argv[]) noexcept -> int {
     std::print(stderr, "error: {}\n  at path {}\n", error.what(),
                error.path().string());
     return EXIT_FAILURE;
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
+  } catch (const sourcemeta::one::SchemaConversionError &error) {
+    std::print(
+        stderr, "error: {}\n  to dialect {}\n  at path {}\n  with reason {}\n",
+        error.what(), error.dialect(), error.path().string(), error.message());
+    return EXIT_FAILURE;
+#endif
   } catch (const sourcemeta::one::CrossPolicyReferenceError &error) {
     std::print(stderr,
                "error: {}\n  at schema {}\n  with reference {}\n  at path {}\n",

@@ -18,7 +18,7 @@ MAKE DIRECTORY schemas
 
 WRITE schemas/test.json UNTIL EOF
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/old.json"
 }
 EOF
@@ -1202,7 +1202,7 @@ COMPARE listing_6.txt AGAINST presence_6.txt
 
 WRITE schemas/test.json UNTIL EOF
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/new"
 }
 EOF

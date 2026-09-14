@@ -29,6 +29,9 @@ jsonpath "$.priority" == 50
 jsonpath "$.dependencies" == 0
 jsonpath "$.dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.metaschema" == true
+jsonpath "$.conversions.*" count == 2
+jsonpath "$.conversions['2019-09'].mediaType" == "application/schema+json"
+jsonpath "$.conversions['2020-12'].mediaType" == "application/schema+json"
 jsonpath "$.private" == false
 jsonpath "$.identifier" == "{{base}}/open/meta"
 jsonpath "$.path" == "/open/meta"
@@ -80,6 +83,9 @@ jsonpath "$.priority" == 50
 jsonpath "$.dependencies" == 0
 jsonpath "$.dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.metaschema" == true
+jsonpath "$.conversions.*" count == 2
+jsonpath "$.conversions['2019-09'].mediaType" == "application/schema+json"
+jsonpath "$.conversions['2020-12'].mediaType" == "application/schema+json"
 jsonpath "$.private" == false
 jsonpath "$.identifier" == "{{base}}/open/meta"
 jsonpath "$.path" == "/open/meta"
@@ -131,6 +137,9 @@ jsonpath "$.priority" == 50
 jsonpath "$.dependencies" == 0
 jsonpath "$.dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.metaschema" == true
+jsonpath "$.conversions.*" count == 2
+jsonpath "$.conversions['2019-09'].mediaType" == "application/schema+json"
+jsonpath "$.conversions['2020-12'].mediaType" == "application/schema+json"
 jsonpath "$.private" == false
 jsonpath "$.identifier" == "{{base}}/open/meta"
 jsonpath "$.path" == "/open/meta"
@@ -182,6 +191,7 @@ jsonpath "$.priority" == 50
 jsonpath "$.dependencies" == 1
 jsonpath "$.dialect" == "{{base}}/open/meta"
 jsonpath "$.metaschema" == false
+jsonpath "$.conversions" isEmpty
 jsonpath "$.private" == true
 jsonpath "$.identifier" == "{{base}}/vault/typed"
 jsonpath "$.path" == "/vault/typed"
@@ -245,6 +255,9 @@ jsonpath "$.result.structuredContent.priority" == 50
 jsonpath "$.result.structuredContent.dependencies" == 0
 jsonpath "$.result.structuredContent.dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.result.structuredContent.metaschema" == true
+jsonpath "$.result.structuredContent.conversions.*" count == 2
+jsonpath "$.result.structuredContent.conversions['2019-09'].mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions['2020-12'].mediaType" == "application/schema+json"
 jsonpath "$.result.structuredContent.private" == false
 jsonpath "$.result.structuredContent.identifier" == "{{base}}/open/meta"
 jsonpath "$.result.structuredContent.path" == "/open/meta"
@@ -310,6 +323,9 @@ jsonpath "$.result.structuredContent.priority" == 50
 jsonpath "$.result.structuredContent.dependencies" == 0
 jsonpath "$.result.structuredContent.dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.result.structuredContent.metaschema" == true
+jsonpath "$.result.structuredContent.conversions.*" count == 2
+jsonpath "$.result.structuredContent.conversions['2019-09'].mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions['2020-12'].mediaType" == "application/schema+json"
 jsonpath "$.result.structuredContent.private" == false
 jsonpath "$.result.structuredContent.identifier" == "{{base}}/open/meta"
 jsonpath "$.result.structuredContent.path" == "/open/meta"

@@ -22,21 +22,21 @@ MAKE DIRECTORY schemas
 
 WRITE schemas/a.json UNTIL EOF
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/a"
 }
 EOF
 
 WRITE schemas/b.json UNTIL EOF
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/b"
 }
 EOF
 
 WRITE schemas/c.json UNTIL EOF
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/c"
 }
 EOF
@@ -60,7 +60,7 @@ COMPARE log_1.txt AGAINST expected_log_1.txt
 // Run 2: add D that references A
 WRITE schemas/d.json UNTIL EOF
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/d",
   "properties": {
     "foo": { "$ref": "https://example.com/a" }

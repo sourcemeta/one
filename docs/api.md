@@ -370,7 +370,7 @@ control that reaches it is a form submission.
 *This endpoint fetches the JSON Schema located at the `{path}` parameter.*
 
 ```
-GET /{path}[.json][?bundle=1]
+GET /{path}[.json][?bundle=1][?as={dialect}]
 ```
 
 The `.json` extension is optional unless the HTML UI is enabled and the
@@ -393,9 +393,36 @@ meta-schema that a schema may declare.
     `?bundle=0`, and `?bundle=false` all trigger bundling. To disable
     bundling, omit the parameter entirely.
 
+!!! success "Enterprise"
+
+    The `as` query parameter is only available in the
+    [Enterprise](commercial.md) edition. Learn more about [commercial
+    licensing](commercial.md).
+
+If the `as` query parameter is set, the schema is served converted into another
+official dialect: `draft4`, `draft6`, `draft7`, `2019-09`, or `2020-12`. A schema
+can only be converted into a dialect newer than the official dialect it declares
+with [`$schema`](https://www.learnjsonschema.com/2020-12/core/schema/), and the
+`conversions` property of its [metadata](#metadata) lists exactly the values it
+accepts. A meta-schema converted into 2019-09 or 2020-12 also declares the
+vocabularies of that dialect with
+[`$vocabulary`](https://www.learnjsonschema.com/2020-12/core/vocabulary/). The
+`as` query parameter cannot be combined with `bundle`, and Visual Studio Code and
+Deno clients are served as if it was not set.
+
 === "200"
 
     The schema as JSON.
+
+=== "400"
+
+    The `as` query parameter names a dialect the schema cannot be converted
+    into, or is combined with `bundle`.
+
+=== "403"
+
+    The `as` query parameter is set on an instance that is not running the
+    Enterprise edition.
 
 === "404"
 
@@ -600,6 +627,8 @@ GET /self/v1/api/schemas/metadata/{path}
     | `/dialect` | String | Yes | The dialect URI of the schema |
     | `/baseDialect` | String | Yes | The base dialect URI of the schema |
     | `/metaschema` | Boolean | Yes | Whether the schema is a meta-schema, as it either declares [`$vocabulary`](https://www.learnjsonschema.com/2020-12/core/vocabulary/) or another schema in this instance declares it as its [`$schema`](https://www.learnjsonschema.com/2020-12/core/schema/) |
+    | `/conversions` | Object | No | Only in the [Enterprise](commercial.md) edition, where it is always present. What the schema can be [fetched](#fetch) as with the `as` query parameter, keyed by that value, and empty when there is nothing |
+    | `/conversions/*/mediaType` | String | Yes | The media type a fetch with that `as` value responds with |
     | `/health` | Integer | Yes | The health score of the schema |
     | `/priority` | Integer | Yes | An importance hint from `0` (least important) to `100` (most important), inherited from the schema collection's [`x-sourcemeta-one:priority`](configuration.md) configuration value |
     | `/private` | Boolean | Yes | Whether an authentication policy governs this schema |

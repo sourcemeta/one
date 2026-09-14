@@ -1774,3 +1774,417 @@ TEST(incremental_removed_dialect_dependent_rebuilds_the_leaf_it_named) {
       output / "secondary" / "public" / "meta" / "%" / "web.bin",
       output / "secondary" / "public" / "%" / "listing.bin");
 }
+
+TEST(full_selected_leaves_are_declared_only_where_selected) {
+  const std::filesystem::path output{"/output"};
+  sourcemeta::one::BuildState entries;
+  // Each of the first two selects one of the leaves, and the last selects none
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(100),
+                            .selected = 0b01},
+                           {.identifier = "https://example.com/bar",
+                            .path = "/src/bar.json",
+                            .relative_path = "bar",
+                            .mtime = MTIME(100),
+                            .selected = 0b10},
+                           {.identifier = "https://example.com/baz",
+                            .path = "/src/baz.json",
+                            .relative_path = "baz",
+                            .mtime = MTIME(100)}};
+
+  entries.configure(
+      test_rules::SELECTED_RULES.leaves, test_rules::SELECTED_RULES.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::SELECTED_RULES>(), INPUTS,
+      test_rules::SELECTED_RULES.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::SELECTED_RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, schemas, "1.0.0", false, "", "Full", {}, VIEWS, everything())};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 6, 16);
+
+  EXPECT_ACTION(plan, 0, 0, 2, test_rules::ACTION_CONFIGURATION,
+                output / "configuration.json", "");
+  EXPECT_ACTION(plan, 0, 1, 2, test_rules::ACTION_VERSION,
+                output / "version.json", "1.0.0");
+
+  EXPECT_ACTION(plan, 1, 0, 1, test_rules::ACTION_ROUTES, output / "routes.bin",
+                "Full", output / "configuration.json");
+
+  EXPECT_ACTION(plan, 2, 0, 1, test_rules::ACTION_GATE, output / "gate.bin", "",
+                output / "routes.bin");
+
+  EXPECT_ACTION(plan, 3, 0, 3, test_rules::ACTION_PRIMARY,
+                output / "primary" / "bar" / "%" / "primary.bin",
+                "https://example.com/bar",
+                std::filesystem::path{"/"} / "src" / "bar.json",
+                output / "configuration.json");
+  EXPECT_ACTION(plan, 3, 1, 3, test_rules::ACTION_PRIMARY,
+                output / "primary" / "baz" / "%" / "primary.bin",
+                "https://example.com/baz",
+                std::filesystem::path{"/"} / "src" / "baz.json",
+                output / "configuration.json");
+  EXPECT_ACTION(plan, 3, 2, 3, test_rules::ACTION_PRIMARY,
+                output / "primary" / "foo" / "%" / "primary.bin",
+                "https://example.com/foo",
+                std::filesystem::path{"/"} / "src" / "foo.json",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 4, 0, 5, test_rules::ACTION_VARIANT,
+                output / "primary" / "bar" / "%" / "variant-b.bin",
+                "https://example.com/bar",
+                output / "primary" / "bar" / "%" / "primary.bin");
+  EXPECT_ACTION(plan, 4, 1, 5, test_rules::ACTION_VARIANT,
+                output / "primary" / "foo" / "%" / "variant-a.bin",
+                "https://example.com/foo",
+                output / "primary" / "foo" / "%" / "primary.bin");
+  EXPECT_ACTION(plan, 4, 2, 5, test_rules::ACTION_METADATA,
+                output / "secondary" / "public" / "bar" / "%" / "metadata.bin",
+                "https://example.com/bar",
+                output / "primary" / "bar" / "%" / "primary.bin");
+  EXPECT_ACTION(plan, 4, 3, 5, test_rules::ACTION_METADATA,
+                output / "secondary" / "public" / "baz" / "%" / "metadata.bin",
+                "https://example.com/baz",
+                output / "primary" / "baz" / "%" / "primary.bin");
+  EXPECT_ACTION(plan, 4, 4, 5, test_rules::ACTION_METADATA,
+                output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+                "https://example.com/foo",
+                output / "primary" / "foo" / "%" / "primary.bin");
+
+  EXPECT_ACTION_UNORDERED(
+      plan, 5, 0, 4, test_rules::ACTION_LISTING,
+      output / "secondary" / "public" / "%" / "listing.bin", "",
+      output / "secondary" / "public" / "bar" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "baz" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin");
+  EXPECT_ACTION(plan, 5, 1, 4, test_rules::ACTION_WEB,
+                output / "secondary" / "public" / "bar" / "%" / "web.bin",
+                "https://example.com/bar",
+                output / "secondary" / "public" / "bar" / "%" / "metadata.bin");
+  EXPECT_ACTION(plan, 5, 2, 4, test_rules::ACTION_WEB,
+                output / "secondary" / "public" / "baz" / "%" / "web.bin",
+                "https://example.com/baz",
+                output / "secondary" / "public" / "baz" / "%" / "metadata.bin");
+  EXPECT_ACTION(plan, 5, 3, 4, test_rules::ACTION_WEB,
+                output / "secondary" / "public" / "foo" / "%" / "web.bin",
+                "https://example.com/foo",
+                output / "secondary" / "public" / "foo" / "%" / "metadata.bin");
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      output / "routes.bin", output / "gate.bin",
+      output / "primary" / "foo" / "%" / "primary.bin",
+      output / "primary" / "bar" / "%" / "primary.bin",
+      output / "primary" / "baz" / "%" / "primary.bin",
+      output / "primary" / "foo" / "%" / "variant-a.bin",
+      output / "primary" / "bar" / "%" / "variant-b.bin",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "bar" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "baz" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "foo" / "%" / "web.bin",
+      output / "secondary" / "public" / "bar" / "%" / "web.bin",
+      output / "secondary" / "public" / "baz" / "%" / "web.bin",
+      output / "secondary" / "public" / "%" / "listing.bin");
+}
+
+TEST(incremental_deselected_leaf_removes_its_target_once_dirty) {
+  const auto output{delta_path("deselected_leaf")};
+  WRITE_GLOBAL_OUTPUTS(output);
+  sourcemeta::one::BuildState entries;
+  // The leaf changed and no longer selects what it produced before
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(200)}};
+  ADD_LEAF_ENTRIES(entries, output, "foo", true, MTIME(150));
+  entries.emplace(
+      output / "primary" / "foo" / "%" / "variant-a.bin",
+      {.file_mark = MTIME(150),
+       .dependencies = {output / "primary" / "foo" / "%" / "primary.bin"}});
+  ADD_GLOBAL_ENTRIES(entries, output, MTIME(150));
+  entries.emplace(output / "secondary" / "public" / "%" / "listing.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+
+  entries.configure(
+      test_rules::SELECTED_RULES.leaves, test_rules::SELECTED_RULES.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::SELECTED_RULES>(), INPUTS,
+      test_rules::SELECTED_RULES.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::SELECTED_RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS, everything())};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 4, 5);
+
+  EXPECT_ACTION(plan, 0, 0, 1, test_rules::ACTION_PRIMARY,
+                output / "primary" / "foo" / "%" / "primary.bin",
+                "https://example.com/foo",
+                std::filesystem::path{"/"} / "src" / "foo.json",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 1, 0, 1, test_rules::ACTION_METADATA,
+                output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+                "https://example.com/foo",
+                output / "primary" / "foo" / "%" / "primary.bin");
+
+  EXPECT_ACTION_UNORDERED(
+      plan, 2, 0, 2, test_rules::ACTION_LISTING,
+      output / "secondary" / "public" / "%" / "listing.bin", "",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin");
+  EXPECT_ACTION(plan, 2, 1, 2, test_rules::ACTION_WEB,
+                output / "secondary" / "public" / "foo" / "%" / "web.bin",
+                "https://example.com/foo",
+                output / "secondary" / "public" / "foo" / "%" / "metadata.bin");
+
+  // What the leaf no longer selects goes away rather than lingering
+  EXPECT_ACTION(plan, 3, 0, 1, test_rules::ACTION_REMOVE,
+                output / "primary" / "foo" / "%" / "variant-a.bin", "");
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      output / "routes.bin", output / "gate.bin",
+      output / "primary" / "foo" / "%" / "primary.bin",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "foo" / "%" / "web.bin",
+      output / "secondary" / "public" / "%" / "listing.bin");
+}
+
+TEST(incremental_unselected_target_is_not_expected_by_the_fast_path) {
+  const auto output{delta_path("unselected_fast_path")};
+  WRITE_GLOBAL_OUTPUTS(output);
+  sourcemeta::one::BuildState entries;
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(100)}};
+  ADD_LEAF_ENTRIES(entries, output, "foo", true, MTIME(150));
+  ADD_GLOBAL_ENTRIES(entries, output, MTIME(150));
+  entries.emplace(output / "secondary" / "public" / "%" / "listing.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+
+  entries.configure(
+      test_rules::SELECTED_RULES.leaves, test_rules::SELECTED_RULES.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::SELECTED_RULES>(), INPUTS,
+      test_rules::SELECTED_RULES.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::SELECTED_RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS, everything())};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 0, 0);
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      output / "routes.bin", output / "gate.bin",
+      output / "primary" / "foo" / "%" / "primary.bin",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "foo" / "%" / "web.bin",
+      output / "secondary" / "public" / "%" / "listing.bin");
+}
+
+TEST(incremental_newly_selected_target_is_planned_for_an_unchanged_leaf) {
+  const auto output{delta_path("newly_selected")};
+  WRITE_GLOBAL_OUTPUTS(output);
+  sourcemeta::one::BuildState entries;
+  // Nothing about the leaf changed, yet it now selects a leaf it never had
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(100),
+                            .selected = 0b01}};
+  ADD_LEAF_ENTRIES(entries, output, "foo", true, MTIME(150));
+  ADD_GLOBAL_ENTRIES(entries, output, MTIME(150));
+  entries.emplace(output / "secondary" / "public" / "%" / "listing.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+
+  entries.configure(
+      test_rules::SELECTED_RULES.leaves, test_rules::SELECTED_RULES.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::SELECTED_RULES>(), INPUTS,
+      test_rules::SELECTED_RULES.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::SELECTED_RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS, everything())};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 1, 2);
+
+  EXPECT_ACTION(plan, 0, 0, 2, test_rules::ACTION_VARIANT,
+                output / "primary" / "foo" / "%" / "variant-a.bin",
+                "https://example.com/foo",
+                output / "primary" / "foo" / "%" / "primary.bin");
+  EXPECT_ACTION_UNORDERED(
+      plan, 0, 1, 2, test_rules::ACTION_LISTING,
+      output / "secondary" / "public" / "%" / "listing.bin", "",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin");
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      output / "routes.bin", output / "gate.bin",
+      output / "primary" / "foo" / "%" / "primary.bin",
+      output / "primary" / "foo" / "%" / "variant-a.bin",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "foo" / "%" / "web.bin",
+      output / "secondary" / "public" / "%" / "listing.bin");
+}
+
+TEST(incremental_targets_beyond_sixteen_bits_are_recorded) {
+  const auto output{delta_path("wide_recorded")};
+  WRITE_GLOBAL_OUTPUTS(output);
+  sourcemeta::one::BuildState entries;
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(100)}};
+  ADD_LEAF_ENTRIES(entries, output, "foo", true, MTIME(150));
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-03.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-04.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-05.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-06.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-07.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-08.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-09.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-10.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-11.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-12.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-13.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-14.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-15.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-16.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-17.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  ADD_GLOBAL_ENTRIES(entries, output, MTIME(150));
+  entries.emplace(output / "secondary" / "public" / "%" / "listing.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+
+  entries.configure(
+      test_rules::WIDE_RULES.leaves, test_rules::WIDE_RULES.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::WIDE_RULES>(), INPUTS,
+      test_rules::WIDE_RULES.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::WIDE_RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS, everything())};
+
+  // Every target is recorded, including those past the sixteenth, so there is
+  // nothing to do
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 0, 0);
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      output / "routes.bin", output / "gate.bin",
+      output / "primary" / "foo" / "%" / "primary.bin",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "foo" / "%" / "web.bin",
+      output / "primary" / "foo" / "%" / "wide-03.bin",
+      output / "primary" / "foo" / "%" / "wide-04.bin",
+      output / "primary" / "foo" / "%" / "wide-05.bin",
+      output / "primary" / "foo" / "%" / "wide-06.bin",
+      output / "primary" / "foo" / "%" / "wide-07.bin",
+      output / "primary" / "foo" / "%" / "wide-08.bin",
+      output / "primary" / "foo" / "%" / "wide-09.bin",
+      output / "primary" / "foo" / "%" / "wide-10.bin",
+      output / "primary" / "foo" / "%" / "wide-11.bin",
+      output / "primary" / "foo" / "%" / "wide-12.bin",
+      output / "primary" / "foo" / "%" / "wide-13.bin",
+      output / "primary" / "foo" / "%" / "wide-14.bin",
+      output / "primary" / "foo" / "%" / "wide-15.bin",
+      output / "primary" / "foo" / "%" / "wide-16.bin",
+      output / "primary" / "foo" / "%" / "wide-17.bin",
+      output / "secondary" / "public" / "%" / "listing.bin");
+}
+
+TEST(incremental_missing_target_beyond_sixteen_bits_is_planned) {
+  const auto output{delta_path("wide_missing")};
+  WRITE_GLOBAL_OUTPUTS(output);
+  sourcemeta::one::BuildState entries;
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(100)}};
+  ADD_LEAF_ENTRIES(entries, output, "foo", true, MTIME(150));
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-03.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-04.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-05.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-06.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-07.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-08.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-09.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-10.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-11.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-12.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-13.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-14.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-15.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  entries.emplace(output / "primary" / "foo" / "%" / "wide-16.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  ADD_GLOBAL_ENTRIES(entries, output, MTIME(150));
+  entries.emplace(output / "secondary" / "public" / "%" / "listing.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+
+  entries.configure(
+      test_rules::WIDE_RULES.leaves, test_rules::WIDE_RULES.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::WIDE_RULES>(), INPUTS,
+      test_rules::WIDE_RULES.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::WIDE_RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS, everything())};
+
+  // Only the one target past the sixteenth that was never recorded is built
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 1, 2);
+
+  EXPECT_ACTION(plan, 0, 0, 2, test_rules::ACTION_VARIANT,
+                output / "primary" / "foo" / "%" / "wide-17.bin",
+                "https://example.com/foo",
+                output / "primary" / "foo" / "%" / "primary.bin");
+  EXPECT_ACTION_UNORDERED(
+      plan, 0, 1, 2, test_rules::ACTION_LISTING,
+      output / "secondary" / "public" / "%" / "listing.bin", "",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin");
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      output / "routes.bin", output / "gate.bin",
+      output / "primary" / "foo" / "%" / "primary.bin",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "foo" / "%" / "web.bin",
+      output / "primary" / "foo" / "%" / "wide-03.bin",
+      output / "primary" / "foo" / "%" / "wide-04.bin",
+      output / "primary" / "foo" / "%" / "wide-05.bin",
+      output / "primary" / "foo" / "%" / "wide-06.bin",
+      output / "primary" / "foo" / "%" / "wide-07.bin",
+      output / "primary" / "foo" / "%" / "wide-08.bin",
+      output / "primary" / "foo" / "%" / "wide-09.bin",
+      output / "primary" / "foo" / "%" / "wide-10.bin",
+      output / "primary" / "foo" / "%" / "wide-11.bin",
+      output / "primary" / "foo" / "%" / "wide-12.bin",
+      output / "primary" / "foo" / "%" / "wide-13.bin",
+      output / "primary" / "foo" / "%" / "wide-14.bin",
+      output / "primary" / "foo" / "%" / "wide-15.bin",
+      output / "primary" / "foo" / "%" / "wide-16.bin",
+      output / "primary" / "foo" / "%" / "wide-17.bin",
+      output / "secondary" / "public" / "%" / "listing.bin");
+}

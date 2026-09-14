@@ -22,7 +22,7 @@ MAKE DIRECTORY schemas
 
 WRITE schemas/a.json UNTIL EOF
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/a"
 }
 EOF
@@ -30,7 +30,7 @@ EOF
 // B references A
 WRITE schemas/b.json UNTIL EOF
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/b",
   "properties": {
     "foo": { "$ref": "https://example.com/a" }
@@ -41,7 +41,7 @@ EOF
 // C is standalone
 WRITE schemas/c.json UNTIL EOF
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/c"
 }
 EOF
@@ -65,7 +65,7 @@ COMPARE log_1.txt AGAINST expected_log_1.txt
 // Run 2: modify B (add a property, keep the $ref to A)
 WRITE schemas/b.json UNTIL EOF
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/b",
   "properties": {
     "foo": { "$ref": "https://example.com/a" },

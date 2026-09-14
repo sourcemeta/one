@@ -2,7 +2,7 @@
 
 #include <algorithm> // std::ranges::sort, std::ranges::all_of, std::ranges::any_of, std::max
 #include <cassert>       // assert
-#include <cstdint>       // std::size_t
+#include <cstdint>       // std::size_t, std::uint32_t
 #include <filesystem>    // std::filesystem::path, std::filesystem::exists
 #include <span>          // std::span
 #include <string>        // std::string
@@ -213,13 +213,20 @@ declare_target_direct(TargetMap &targets, BuildPlan::Action::Type action,
   return iterator->second;
 }
 
+// Whether a leaf leaves out a rule that only the leaves selecting it get
+static auto is_deselected(const LeafRule &rule, const std::uint32_t selected)
+    -> bool {
+  return rule.gate == TargetGate::IfSelected &&
+         (selected & (std::uint32_t{1} << rule.selector)) == 0;
+}
+
 static auto declare_leaf_targets(
     TargetMap &targets, std::span<const std::string> bases,
     const std::string &output_string, const std::string &source_string,
-    const bool evaluate, const BuildPlan::Type build_type,
-    const BuildPlan::Type full_mode, const std::string &configuration_string,
-    const std::string_view uri, const BuildPhase phase,
-    std::span<const LeafRule> leaf_rules,
+    const bool evaluate, const std::uint32_t selected,
+    const BuildPlan::Type build_type, const BuildPlan::Type full_mode,
+    const std::string &configuration_string, const std::string_view uri,
+    const BuildPhase phase, std::span<const LeafRule> leaf_rules,
     const std::string_view primary_directory, const std::string_view sentinel,
     const std::span<const std::filesystem::path *const> dialect_dependents,
     const std::string_view view, const bool only_secondary,
@@ -240,6 +247,10 @@ static auto declare_leaf_targets(
     }
 
     if (rule.gate == TargetGate::IfEvaluate && !evaluate) {
+      continue;
+    }
+
+    if (is_deselected(rule, selected)) {
       continue;
     }
 
@@ -758,11 +769,15 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
           break;
         }
 
-        std::uint16_t expected_bitmap{0};
+        std::uint32_t expected_bitmap{0};
         for (std::size_t rule_index{0}; rule_index < leaf_rules.size();
              rule_index++) {
           const auto &rule{leaf_rules[rule_index]};
           if (rule.gate == TargetGate::IfEvaluate && !info.evaluate) {
+            continue;
+          }
+
+          if (is_deselected(rule, info.selected)) {
             continue;
           }
 
@@ -771,7 +786,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
             continue;
           }
 
-          expected_bitmap |= static_cast<std::uint16_t>(1 << rule_index);
+          expected_bitmap |= std::uint32_t{1} << rule_index;
         }
 
         if ((leaf_entry->target_bitmap & expected_bitmap) != expected_bitmap) {
@@ -954,18 +969,21 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
 
     bool has_missing_targets{false};
     if (!leaf_dirty && cached_leaf_state != nullptr) {
-      std::uint16_t expected_bitmap{0};
+      std::uint32_t expected_bitmap{0};
       for (std::size_t rule_index{0}; rule_index < leaf_rules.size();
            rule_index++) {
         const auto &rule{leaf_rules[rule_index]};
         if (rule.gate == TargetGate::IfEvaluate && !info.evaluate) {
           continue;
         }
+        if (is_deselected(rule, info.selected)) {
+          continue;
+        }
         if (rule.gate == TargetGate::OnlyInFullMode &&
             build_type != full_mode) {
           continue;
         }
-        expected_bitmap |= static_cast<std::uint16_t>(1 << rule_index);
+        expected_bitmap |= std::uint32_t{1} << rule_index;
       }
       has_missing_targets = (cached_leaf_state->target_bitmap &
                              expected_bitmap) != expected_bitmap;
@@ -1000,9 +1018,9 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
             {primary_base, secondary_bases[view]}};
         declare_leaf_targets(
             targets, bases, output_string, info.path->native(), info.evaluate,
-            build_type, full_mode, configuration_string, uri, phase, leaf_rules,
-            primary_directory, sentinel, leaf_dialect_dependents,
-            secondary_views[view], declared_primary);
+            info.selected, build_type, full_mode, configuration_string, uri,
+            phase, leaf_rules, primary_directory, sentinel,
+            leaf_dialect_dependents, secondary_views[view], declared_primary);
         declared_primary = true;
       }
 
@@ -1011,9 +1029,9 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
       if (!declared_primary) {
         const std::array<std::string, 2> bases{{primary_base, std::string{}}};
         declare_leaf_targets(targets, bases, output_string, info.path->native(),
-                             info.evaluate, build_type, full_mode,
-                             configuration_string, uri, phase, leaf_rules,
-                             primary_directory, sentinel,
+                             info.evaluate, info.selected, build_type,
+                             full_mode, configuration_string, uri, phase,
+                             leaf_rules, primary_directory, sentinel,
                              leaf_dialect_dependents, {}, false, true);
       }
     }
@@ -1070,6 +1088,10 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
       for (std::size_t index{0}; index < leaf_rules.size(); index++) {
         const auto &rule{leaf_rules[index]};
         if (rule.gate == TargetGate::IfEvaluate && !leaf.info->evaluate) {
+          continue;
+        }
+
+        if (is_deselected(rule, leaf.info->selected)) {
           continue;
         }
 
@@ -1143,8 +1165,8 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
               const auto &rule{leaf_rules[rule_index]};
               if (target_filename == rule.filename &&
                   ((rule.base == 1) == in_secondary)) {
-                target_known =
-                    (leaf_entry->target_bitmap & (1 << rule_index)) != 0;
+                target_known = (leaf_entry->target_bitmap &
+                                (std::uint32_t{1} << rule_index)) != 0;
                 break;
               }
             }
@@ -1595,14 +1617,15 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
   std::vector<BuildPlan::Action> remove_wave;
 
   for (const auto &leaf : active_leaves) {
-    if (leaf.info->evaluate) {
-      continue;
-    }
-
     const auto leaf_dirty{dirty_set.contains(leaf.root_path)};
     if (leaf_dirty || is_full) {
       for (const auto &rule : leaf_rules) {
-        if (rule.gate != TargetGate::IfEvaluate) {
+        // What a leaf no longer gets goes away, whether it stopped evaluating
+        // or stopped selecting it
+        const auto excluded{
+            (rule.gate == TargetGate::IfEvaluate && !leaf.info->evaluate) ||
+            is_deselected(rule, leaf.info->selected)};
+        if (!excluded) {
           continue;
         }
 

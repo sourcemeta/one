@@ -45,7 +45,13 @@ struct BuildPlan {
   std::size_t size{0};
 };
 
-enum class TargetGate : std::uint8_t { Always, OnlyInFullMode, IfEvaluate };
+enum class TargetGate : std::uint8_t {
+  Always,
+  OnlyInFullMode,
+  IfEvaluate,
+  // Only for the leaves setting the selection bit the rule reads
+  IfSelected
+};
 
 enum class DirtyOverride : std::uint8_t {
   Normal,
@@ -82,6 +88,8 @@ struct LeafRule {
   bool tracks_dependencies;
   std::array<DependencyReference, MAX_DEPENDENCIES_PER_RULE> dependencies;
   std::uint8_t dependency_count;
+  // Which selection bit a rule gated on selection reads
+  std::uint8_t selector{0};
 };
 
 enum class ContainerScope : std::uint8_t {
@@ -248,7 +256,7 @@ public:
 
   struct LeafStateEntry {
     std::filesystem::file_time_type root_mtime;
-    std::uint16_t target_bitmap;
+    std::uint32_t target_bitmap;
     bool has_cross_leaf_deps;
   };
 

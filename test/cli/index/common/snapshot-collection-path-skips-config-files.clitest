@@ -15,7 +15,7 @@ EOF
 WRITE jsonschema.json UNTIL EOF
 {
   "baseUri": "https://example.com/",
-  "defaultDialect": "http://json-schema.org/draft-07/schema#",
+  "defaultDialect": "https://json-schema.org/draft/2020-12/schema",
   "path": "."
 }
 EOF
@@ -29,7 +29,7 @@ EOF
 
 WRITE test.json UNTIL EOF
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/test",
   "type": "string"
 }

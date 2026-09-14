@@ -1,5 +1,5 @@
 sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME enterprise_index
-  SOURCES enterprise_index.cc)
+  SOURCES enterprise_index.cc enterprise_index_conversion.cc)
 
 target_compile_definitions(sourcemeta_one_enterprise_index PUBLIC SOURCEMETA_ONE_ENTERPRISE)
 

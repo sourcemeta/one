@@ -55,6 +55,20 @@ public:
     const auto is_deno{user_agent.starts_with("Deno/")};
     const auto bundle{request.has_query("bundle")};
 
+    if (!is_vscode && !is_deno && request.has_query("as")) {
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
+      sourcemeta::one::serve_schema_as(self, caller, schema_path, request,
+                                       response, error_schema);
+#else
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::core::HTTP_STATUS_FORBIDDEN,
+          "urn:sourcemeta:one:enterprise-required",
+          "This feature is only available in the Enterprise edition",
+          error_schema, "*");
+#endif
+      return;
+    }
+
     const std::string_view artifact{is_vscode ? std::string_view{"editor"}
                                     : (bundle || is_deno)
                                         ? std::string_view{"bundle"}

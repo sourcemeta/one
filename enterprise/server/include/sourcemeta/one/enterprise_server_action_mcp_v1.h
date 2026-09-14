@@ -9,6 +9,7 @@
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
+#include <sourcemeta/one/enterprise_server_schema_as.h>
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
@@ -478,6 +479,7 @@ private:
     const auto &uri{request_json.at("params").at("uri").to_string()};
 
     bool bundle{false};
+    std::optional<std::string> conversion;
     try {
       sourcemeta::core::URI request{uri};
       if (request.fragment().has_value()) {
@@ -485,23 +487,30 @@ private:
             &request_id, -32602, "Invalid resource schema URI",
             sourcemeta::core::JSON{
                 "URIs accepted by resources/read must not contain a fragment "
-                "and may only carry an optional `bundle` query parameter"});
+                "and may only carry optional `bundle` or `as` query "
+                "parameters"});
       }
       request.canonicalize();
-      // The MCP `resources/read` URI must match the `{+path}{?bundle}`
-      // resource template exactly. Any query parameter other than `bundle` is
-      // outside the template and must be rejected to keep the input shape
-      // predictable for clients
+      // The MCP `resources/read` URI must match the `{+path}{?bundle,as}`
+      // resource template exactly. Any query parameter other than `bundle` and
+      // `as` is outside the template and must be rejected to keep the input
+      // shape predictable for clients
       if (const auto query_view{request.query()}; query_view.has_value()) {
+        const auto conversion_value{query_view->at("as")};
         const auto expected_size{
-            static_cast<std::ptrdiff_t>(query_view->at("bundle").has_value())};
+            static_cast<std::ptrdiff_t>(query_view->at("bundle").has_value()) +
+            static_cast<std::ptrdiff_t>(conversion_value.has_value())};
         if (std::ranges::distance(*query_view) != expected_size) {
           return sourcemeta::core::jsonrpc_make_error(
               &request_id, -32602, "Invalid resource schema URI",
               sourcemeta::core::JSON{
                   "URIs accepted by resources/read must not contain a "
-                  "fragment "
-                  "and may only carry an optional `bundle` query parameter"});
+                  "fragment and may only carry optional `bundle` or `as` "
+                  "query parameters"});
+        }
+
+        if (conversion_value.has_value()) {
+          conversion.emplace(conversion_value.value());
         }
       }
       request.relative_to(sourcemeta::core::URI{this->server_uri()});
@@ -520,13 +529,37 @@ private:
           "Resource not found");
     }
 
-    const auto resolution{this->artifact_resolve_path(
-        caller, uri, Tree::Schemas, bundle ? "bundle" : "schema")};
+    auto resolution{this->artifact_resolve_path(caller, uri, Tree::Schemas,
+                                                bundle ? "bundle" : "schema")};
     if (!resolution.path.has_value()) {
       return sourcemeta::core::jsonrpc_make_error(
           &request_id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
           "Resource not found");
     }
+
+    if (conversion.has_value()) {
+      if (bundle) {
+        return sourcemeta::core::jsonrpc_make_error(
+            &request_id, -32602, "Invalid resource schema URI",
+            sourcemeta::core::JSON{"The as and bundle query parameters cannot "
+                                   "be combined"});
+      }
+
+      const auto artifact{
+          sourcemeta::one::schema_conversion_artifact(conversion.value())};
+      if (artifact.has_value()) {
+        resolution = this->artifact_resolve_path(caller, uri, Tree::Schemas,
+                                                 artifact.value());
+      }
+
+      if (!artifact.has_value() || !resolution.path.has_value()) {
+        return sourcemeta::core::jsonrpc_make_error(
+            &request_id, -32602, "Invalid resource schema URI",
+            sourcemeta::core::JSON{
+                "The schema cannot be converted into this dialect"});
+      }
+    }
+
     const auto schema{this->artifact_read_json(resolution.path.value())};
     if (!schema.has_value()) {
       return sourcemeta::core::jsonrpc_make_error(

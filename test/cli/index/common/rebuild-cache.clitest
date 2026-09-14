@@ -18,7 +18,7 @@ MAKE DIRECTORY schemas
 
 WRITE schemas/foo.json UNTIL EOF
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/foo"
 }
 EOF
@@ -1247,7 +1247,7 @@ COMPARE output.txt AGAINST expected.txt
 // Update the file
 WRITE schemas/foo.json UNTIL EOF
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/foo",
   "type": "string"
 }

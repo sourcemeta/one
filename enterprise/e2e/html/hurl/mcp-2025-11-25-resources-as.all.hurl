@@ -1,3 +1,4 @@
+# A schema can be read converted into a newer official dialect
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
@@ -5,11 +6,10 @@ Content-Type: application/json
 ```
 {
   "jsonrpc": "2.0",
-  "id": 1200,
-  "method": "tools/call",
+  "id": 900,
+  "method": "resources/read",
   "params": {
-    "name": "list_directory",
-    "arguments": {}
+    "uri": "{{base}}/test/draft3/string?as=2020-12"
   }
 }
 ```
@@ -23,8 +23,6 @@ MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
-test_path: jsonpath "$.result.structuredContent.entries[2].path"
-text: jsonpath "$.result.content[0].text"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -32,15 +30,12 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 1200
-jsonpath "$.result.isError" == false
-jsonpath "$.result.structuredContent.path" == "/"
-variable "text" jsonpath "$.path" == "/"
-jsonpath "$.result.structuredContent.entries[2].name" == "test"
-jsonpath "$.result.structuredContent.entries[2].private" == false
-variable "text" jsonpath "$.entries[2].name" == "test"
-variable "text" jsonpath "$.entries[2].private" == false
-variable "test_path" == "/test/"
+jsonpath "$.id" == 900
+jsonpath "$.result.contents" count == 1
+jsonpath "$.result.contents[0].uri" == "{{base}}/test/draft3/string?as=2020-12"
+jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
+jsonpath "$.result.contents[0].text" == "{\n  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n  \"$id\": \"{{base}}/test/draft3/string\",\n  \"type\": \"string\"\n}"
+jsonpath "$.error" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -63,11 +58,10 @@ Content-Type: application/json
 ```
 {
   "jsonrpc": "2.0",
-  "id": 1201,
-  "method": "tools/call",
+  "id": 901,
+  "method": "resources/read",
   "params": {
-    "name": "list_directory",
-    "arguments": { "path": "test" }
+    "uri": "{{base}}/test/draft3/string?as=draft4"
   }
 }
 ```
@@ -81,8 +75,6 @@ MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
-object_path: jsonpath "$.result.structuredContent.entries[6].path"
-text: jsonpath "$.result.content[0].text"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -90,17 +82,12 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 1201
-jsonpath "$.result.isError" == false
-jsonpath "$.result.structuredContent.path" == "/test"
-variable "text" jsonpath "$.path" == "/test"
-jsonpath "$.result.structuredContent.entries[6].name" == "object"
-jsonpath "$.result.structuredContent.entries[6].private" == false
-variable "text" jsonpath "$.entries[6].name" == "object"
-variable "text" jsonpath "$.entries[6].private" == false
-jsonpath "$.result.structuredContent.entries[6].type" == "schema"
-variable "text" jsonpath "$.entries[6].type" == "schema"
-variable "object_path" == "/test/object"
+jsonpath "$.id" == 901
+jsonpath "$.result.contents" count == 1
+jsonpath "$.result.contents[0].uri" == "{{base}}/test/draft3/string?as=draft4"
+jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
+jsonpath "$.result.contents[0].text" == "{\n  \"$schema\": \"http://json-schema.org/draft-04/schema#\",\n  \"id\": \"{{base}}/test/draft3/string\",\n  \"type\": \"string\"\n}"
+jsonpath "$.error" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -116,6 +103,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
+# A schema cannot be read in the dialect it already declares
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
@@ -123,11 +111,10 @@ Content-Type: application/json
 ```
 {
   "jsonrpc": "2.0",
-  "id": 1202,
-  "method": "tools/call",
+  "id": 902,
+  "method": "resources/read",
   "params": {
-    "name": "get_schema_metadata",
-    "arguments": { "schema": "{{base}}{{object_path}}" }
+    "uri": "{{base}}/test/draft3/string?as=draft3"
   }
 }
 ```
@@ -141,7 +128,6 @@ MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
-text: jsonpath "$.result.content[0].text"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -149,18 +135,11 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 1202
-jsonpath "$.result.isError" == false
-jsonpath "$.result.structuredContent.metaschema" == false
-jsonpath "$.result.structuredContent.conversions" isEmpty
-variable "text" jsonpath "$.metaschema" == false
-variable "text" jsonpath "$.conversions" isEmpty
-jsonpath "$.result.structuredContent.identifier" == "{{base}}/test/object"
-variable "text" jsonpath "$.identifier" == "{{base}}/test/object"
-jsonpath "$.result.structuredContent.path" == "/test/object"
-variable "text" jsonpath "$.path" == "/test/object"
-jsonpath "$.result.structuredContent.title" == "My Object"
-variable "text" jsonpath "$.title" == "My Object"
+jsonpath "$.id" == 902
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Invalid resource schema URI"
+jsonpath "$.error.data" == "The schema cannot be converted into this dialect"
+jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -176,6 +155,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
+# Nor in an older one
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
@@ -183,11 +163,10 @@ Content-Type: application/json
 ```
 {
   "jsonrpc": "2.0",
-  "id": 1210,
-  "method": "tools/call",
+  "id": 903,
+  "method": "resources/read",
   "params": {
-    "name": "search_schemas",
-    "arguments": { "q": "Object" }
+    "uri": "{{base}}/test/jsonld/draft7?as=draft6"
   }
 }
 ```
@@ -201,8 +180,6 @@ MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
-hit_path: jsonpath "$.result.structuredContent.results[0].path"
-text: jsonpath "$.result.content[0].text"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -210,11 +187,11 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 1210
-jsonpath "$.result.isError" == false
-jsonpath "$.result.structuredContent.results" count == 1
-variable "text" jsonpath "$.results" count == 1
-variable "hit_path" == "/test/object"
+jsonpath "$.id" == 903
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Invalid resource schema URI"
+jsonpath "$.error.data" == "The schema cannot be converted into this dialect"
+jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -230,6 +207,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
+# Nor in a dialect that is not an official one
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
@@ -237,11 +215,10 @@ Content-Type: application/json
 ```
 {
   "jsonrpc": "2.0",
-  "id": 1211,
-  "method": "tools/call",
+  "id": 904,
+  "method": "resources/read",
   "params": {
-    "name": "get_schema_metadata",
-    "arguments": { "schema": "{{base}}{{hit_path}}" }
+    "uri": "{{base}}/test/draft3/string?as=draft5"
   }
 }
 ```
@@ -255,7 +232,6 @@ MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
-text: jsonpath "$.result.content[0].text"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -263,18 +239,11 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 1211
-jsonpath "$.result.isError" == false
-jsonpath "$.result.structuredContent.metaschema" == false
-jsonpath "$.result.structuredContent.conversions" isEmpty
-variable "text" jsonpath "$.metaschema" == false
-variable "text" jsonpath "$.conversions" isEmpty
-jsonpath "$.result.structuredContent.identifier" == "{{base}}/test/object"
-variable "text" jsonpath "$.identifier" == "{{base}}/test/object"
-jsonpath "$.result.structuredContent.title" == "My Object"
-variable "text" jsonpath "$.title" == "My Object"
-jsonpath "$.result.structuredContent.health" == 67
-variable "text" jsonpath "$.health" == 67
+jsonpath "$.id" == 904
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Invalid resource schema URI"
+jsonpath "$.error.data" == "The schema cannot be converted into this dialect"
+jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -290,6 +259,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
+# A converted schema cannot be bundled
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
@@ -297,11 +267,10 @@ Content-Type: application/json
 ```
 {
   "jsonrpc": "2.0",
-  "id": 1220,
-  "method": "tools/call",
+  "id": 905,
+  "method": "resources/read",
   "params": {
-    "name": "evaluate_schema",
-    "arguments": { "schema": "{{base}}/test/bare/01", "stringifiedInstance": "42" }
+    "uri": "{{base}}/test/draft3/string?as=2020-12&bundle"
   }
 }
 ```
@@ -315,8 +284,6 @@ MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
-error_location: jsonpath "$.result.structuredContent.errors[0].absoluteKeywordLocation"
-text: jsonpath "$.result.content[0].text"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -324,11 +291,11 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 1220
-jsonpath "$.result.isError" == false
-jsonpath "$.result.structuredContent.valid" == false
-variable "text" jsonpath "$.valid" == false
-variable "error_location" == "{{base}}/test/bare/01#/type"
+jsonpath "$.id" == 905
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Invalid resource schema URI"
+jsonpath "$.error.data" == "The as and bundle query parameters cannot be combined"
+jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -344,6 +311,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
+# A schema that does not exist is not found, whatever it is asked for in
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2025-11-25
@@ -351,11 +319,10 @@ Content-Type: application/json
 ```
 {
   "jsonrpc": "2.0",
-  "id": 1230,
-  "method": "tools/call",
+  "id": 906,
+  "method": "resources/read",
   "params": {
-    "name": "trace_schema_evaluation",
-    "arguments": { "schema": "{{base}}/test/bare/01", "stringifiedInstance": "42" }
+    "uri": "{{base}}/test/draft3/nope?as=2020-12"
   }
 }
 ```
@@ -369,7 +336,6 @@ MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
-text: jsonpath "$.result.content[0].text"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -377,14 +343,63 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == 1230
-jsonpath "$.result.isError" == false
-jsonpath "$.result.structuredContent.valid" == false
-variable "text" jsonpath "$.valid" == false
-jsonpath "$.result.structuredContent.steps[1].type" == "fail"
-variable "text" jsonpath "$.steps[1].type" == "fail"
-jsonpath "$.result.structuredContent.steps[1].keywordLocation" == "{{error_location}}"
-variable "text" jsonpath "$.steps[1].keywordLocation" == "{{error_location}}"
+jsonpath "$.id" == 906
+jsonpath "$.error.code" == -32002
+jsonpath "$.error.message" == "Resource not found"
+jsonpath "$.error.data" not exists
+jsonpath "$.result" not exists
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Cache-Control: no-store
+[Asserts]
+header "Vary" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.valid" == true
+
+# Any other query parameter is still refused
+POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
+MCP-Protocol-Version: 2025-11-25
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 907,
+  "method": "resources/read",
+  "params": {
+    "uri": "{{base}}/test/draft3/string?as=2020-12&foo=bar"
+  }
+}
+```
+HTTP 200
+Cache-Control: no-store
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+MCP-Protocol-Version: 2025-11-25
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "Vary" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 907
+jsonpath "$.error.code" == -32602
+jsonpath "$.error.message" == "Invalid resource schema URI"
+jsonpath "$.error.data" == "URIs accepted by resources/read must not contain a fragment and may only carry optional `bundle` or `as` query parameters"
+jsonpath "$.result" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

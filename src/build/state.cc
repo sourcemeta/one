@@ -16,7 +16,7 @@
 namespace {
 
 constexpr std::uint32_t STATE_MAGIC{0x44455053};
-constexpr std::uint32_t STATE_VERSION{4};
+constexpr std::uint32_t STATE_VERSION{5};
 constexpr std::uint32_t LEAF_INDEX_MAGIC{0x58444953};
 constexpr std::size_t HEADER_SIZE{36};
 
@@ -25,12 +25,12 @@ struct LeafIndexRecord {
   std::uint32_t relative_path_offset;
   std::uint16_t relative_path_length;
   std::int64_t root_mtime;
-  std::uint16_t target_bitmap;
+  std::uint32_t target_bitmap;
   std::uint8_t has_cross_leaf_deps;
   std::uint8_t padding;
 };
 #pragma pack(pop)
-static_assert(sizeof(LeafIndexRecord) == 18);
+static_assert(sizeof(LeafIndexRecord) == 20);
 
 // Slot layout (32 bytes, open-addressing with linear probing):
 //   0:  hash         u64
@@ -592,7 +592,7 @@ auto BuildState::index_leaf_target(std::filesystem::file_time_type mtime,
        rule_index++) {
     const auto &rule{this->leaf_rules_[rule_index]};
     if (filename == rule.filename && ((rule.base == 1) == is_explorer)) {
-      leaf_entry.target_bitmap |= static_cast<std::uint16_t>(1 << rule_index);
+      leaf_entry.target_bitmap |= std::uint32_t{1} << rule_index;
       if (rule.is_root) {
         leaf_entry.root_mtime = mtime;
       }
@@ -1115,8 +1115,7 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
             const auto &rule{this->leaf_rules_[rule_index]};
             if (filename == rule.filename &&
                 ((rule.base == 1) == is_explorer)) {
-              leaf_entry.target_bitmap |=
-                  static_cast<std::uint16_t>(1 << rule_index);
+              leaf_entry.target_bitmap |= std::uint32_t{1} << rule_index;
               if (rule.is_root) {
                 const auto nanoseconds{
                     read_field<std::int64_t>(slot, SLOT_TIMESTAMP)};
@@ -1171,8 +1170,7 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
              rule_index++) {
           const auto &rule{this->leaf_rules_[rule_index]};
           if (filename == rule.filename && ((rule.base == 1) == is_explorer)) {
-            leaf_entry.target_bitmap |=
-                static_cast<std::uint16_t>(1 << rule_index);
+            leaf_entry.target_bitmap |= std::uint32_t{1} << rule_index;
             if (rule.is_root) {
               const auto nanoseconds{
                   read_field<std::int64_t>(slot, SLOT_TIMESTAMP)};

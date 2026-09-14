@@ -33,6 +33,22 @@
     "metaschema": {
       "type": "boolean"
     },
+    "conversions": {
+      "type": "object",
+      "propertyNames": {
+        "enum": [ "draft4", "draft6", "draft7", "2019-09", "2020-12" ]
+      },
+      "additionalProperties": {
+        "type": "object",
+        "required": [ "mediaType" ],
+        "properties": {
+          "mediaType": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
     "breadcrumb": {
       "type": "array",
       "items": {

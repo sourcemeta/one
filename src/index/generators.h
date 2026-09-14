@@ -3,6 +3,7 @@
 
 #include "endpoints.h"
 #include "error.h"
+#include "metaschema.h"
 
 #include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/authentication.h>
@@ -314,6 +315,66 @@ private:
     return slot->value;
   }
 };
+
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
+// A schema converted into a newer official dialect than the one it declares
+template <sourcemeta::one::SchemaDialect Target> struct GenerateConversion {
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
+                      const sourcemeta::one::BuildDynamicCallback &callback,
+                      sourcemeta::one::Resolver &resolver,
+                      const sourcemeta::one::Configuration &,
+                      const sourcemeta::core::JSON &) -> void {
+    const auto timestamp_start{std::chrono::steady_clock::now()};
+    // The inputs past the schema are the schemas declaring it as their dialect
+    constexpr std::size_t FIXED_INPUTS{1};
+    assert(action.dependencies.size() >= FIXED_INPUTS);
+    const auto has_dialect_dependents{action.dependencies.size() >
+                                      FIXED_INPUTS};
+    const auto &resolver_entry{resolver.entry(action.data)};
+    const auto dialect{
+        sourcemeta::one::official_dialect(resolver_entry.dialect)};
+    assert(dialect.has_value());
+    auto schema_option{
+        sourcemeta::one::metapack_read_json(action.dependencies.front())};
+    assert(schema_option.has_value());
+    auto &schema{schema_option.value()};
+    // Exactly what the metadata reports, so the two cannot disagree
+    const auto is_metaschema{
+        has_dialect_dependents ||
+        declares_vocabulary(
+            schema, sourcemeta::one::conversion_base_dialect(dialect.value()))};
+
+    try {
+      sourcemeta::one::convert_schema(
+          schema, Target, is_metaschema,
+          [&callback, &resolver](const auto identifier) {
+            return resolver(identifier, callback);
+          });
+      sourcemeta::blaze::format(
+          schema, sourcemeta::blaze::schema_walker,
+          [&callback, &resolver](const auto identifier) {
+            return resolver(identifier, callback);
+          },
+          sourcemeta::one::conversion_uri(Target));
+    } catch (const std::exception &error) {
+      throw sourcemeta::one::SchemaConversionError(
+          resolver_entry.path, sourcemeta::one::conversion_name(Target),
+          error.what());
+    }
+
+    const auto timestamp_end{std::chrono::steady_clock::now()};
+    const auto extension_bytes{
+        make_dialect_extension(sourcemeta::one::conversion_uri(Target))};
+    sourcemeta::one::metapack_write_pretty_json(
+        action.destination, schema, "application/schema+json",
+        sourcemeta::one::MetapackEncoding::GZIP,
+        std::span<const std::uint8_t>{extension_bytes},
+        std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
+                                                              timestamp_start));
+  }
+};
+#endif
 
 struct GeneratePointerPositions {
   static auto handler(const sourcemeta::one::BuildState &,

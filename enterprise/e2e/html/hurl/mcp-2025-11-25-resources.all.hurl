@@ -490,7 +490,7 @@ jsonpath "$.result.resources[28].uri" == "{{base}}/self/v1/schemas/api/error"
 jsonpath "$.result.resources[28].name" == "Sourcemeta One API Error"
 jsonpath "$.result.resources[28].description" == "The error response format returned by the Sourcemeta One API endpoints"
 jsonpath "$.result.resources[28].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[28].size" == 11208
+jsonpath "$.result.resources[28].size" == 11662
 jsonpath "$.result.resources[28].annotations.priority" == 0
 jsonpath "$.result.resources[29].uri" == "{{base}}/self/v1/schemas/api/list/response"
 jsonpath "$.result.resources[29].name" == "Sourcemeta One List API Response"
@@ -544,7 +544,7 @@ jsonpath "$.result.resources[37].uri" == "{{base}}/self/v1/schemas/api/schemas/m
 jsonpath "$.result.resources[37].name" == "Sourcemeta One Schema Metadata API Response"
 jsonpath "$.result.resources[37].description" == "The response format for the schema metadata API endpoint"
 jsonpath "$.result.resources[37].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[37].size" == 3035
+jsonpath "$.result.resources[37].size" == 3434
 jsonpath "$.result.resources[37].annotations.priority" == 0
 jsonpath "$.result.resources[38].uri" == "{{base}}/self/v1/schemas/api/schemas/output-error"
 jsonpath "$.result.resources[38].name" == "Sourcemeta One Schema Output Error"
@@ -604,7 +604,7 @@ jsonpath "$.result.resources[47].uri" == "{{base}}/self/v1/schemas/mcp/error"
 jsonpath "$.result.resources[47].name" == "Sourcemeta One MCP Error Response"
 jsonpath "$.result.resources[47].description" == "The error response Sourcemeta One returns when an MCP request fails"
 jsonpath "$.result.resources[47].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[47].size" == 5860
+jsonpath "$.result.resources[47].size" == 6285
 jsonpath "$.result.resources[47].annotations.priority" == 0
 jsonpath "$.result.resources[48].uri" == "{{base}}/self/v1/schemas/mcp/initialize/request"
 jsonpath "$.result.resources[48].name" == "Sourcemeta One MCP Initialize Request"
@@ -719,7 +719,7 @@ jsonpath "$.result.resources[8].uri" == "{{base}}/self/v1/schemas/mcp/resources/
 jsonpath "$.result.resources[8].name" == "Sourcemeta One MCP Resources Read Request"
 jsonpath "$.result.resources[8].description" == "Request from a client to read an MCP resource"
 jsonpath "$.result.resources[8].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[8].size" == 1293
+jsonpath "$.result.resources[8].size" == 1472
 jsonpath "$.result.resources[8].annotations.priority" == 0
 jsonpath "$.result.resources[9].uri" == "{{base}}/self/v1/schemas/mcp/resources/read/response"
 jsonpath "$.result.resources[9].name" == "Sourcemeta One MCP Resources Read Response"
@@ -737,13 +737,13 @@ jsonpath "$.result.resources[11].uri" == "{{base}}/self/v1/schemas/mcp/resources
 jsonpath "$.result.resources[11].name" == "Sourcemeta One MCP Resources Templates List Response"
 jsonpath "$.result.resources[11].description" == "Sourcemeta One's list of MCP resource templates"
 jsonpath "$.result.resources[11].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[11].size" == 2927
+jsonpath "$.result.resources[11].size" == 3242
 jsonpath "$.result.resources[11].annotations.priority" == 0
 jsonpath "$.result.resources[12].uri" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.resources[12].name" == "Sourcemeta One MCP Response"
 jsonpath "$.result.resources[12].description" == "Any outgoing MCP response the server returns"
 jsonpath "$.result.resources[12].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[12].size" == 4799
+jsonpath "$.result.resources[12].size" == 4958
 jsonpath "$.result.resources[12].annotations.priority" == 0
 jsonpath "$.result.resources[13].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/evaluate-schema/request"
 jsonpath "$.result.resources[13].name" == "Sourcemeta One Schema Evaluate RPC Input"
@@ -1281,7 +1281,7 @@ jsonpath "$.result.resources[28].uri" == "{{base}}/self/v1/schemas/api/error"
 jsonpath "$.result.resources[28].name" == "Sourcemeta One API Error"
 jsonpath "$.result.resources[28].description" == "The error response format returned by the Sourcemeta One API endpoints"
 jsonpath "$.result.resources[28].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[28].size" == 11208
+jsonpath "$.result.resources[28].size" == 11662
 jsonpath "$.result.resources[28].annotations.priority" == 0
 jsonpath "$.result.resources[29].uri" == "{{base}}/self/v1/schemas/api/list/response"
 jsonpath "$.result.resources[29].name" == "Sourcemeta One List API Response"
@@ -1335,7 +1335,7 @@ jsonpath "$.result.resources[37].uri" == "{{base}}/self/v1/schemas/api/schemas/m
 jsonpath "$.result.resources[37].name" == "Sourcemeta One Schema Metadata API Response"
 jsonpath "$.result.resources[37].description" == "The response format for the schema metadata API endpoint"
 jsonpath "$.result.resources[37].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[37].size" == 3035
+jsonpath "$.result.resources[37].size" == 3434
 jsonpath "$.result.resources[37].annotations.priority" == 0
 jsonpath "$.result.resources[38].uri" == "{{base}}/self/v1/schemas/api/schemas/output-error"
 jsonpath "$.result.resources[38].name" == "Sourcemeta One Schema Output Error"
@@ -1395,7 +1395,7 @@ jsonpath "$.result.resources[47].uri" == "{{base}}/self/v1/schemas/mcp/error"
 jsonpath "$.result.resources[47].name" == "Sourcemeta One MCP Error Response"
 jsonpath "$.result.resources[47].description" == "The error response Sourcemeta One returns when an MCP request fails"
 jsonpath "$.result.resources[47].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[47].size" == 5860
+jsonpath "$.result.resources[47].size" == 6285
 jsonpath "$.result.resources[47].annotations.priority" == 0
 jsonpath "$.result.resources[48].uri" == "{{base}}/self/v1/schemas/mcp/initialize/request"
 jsonpath "$.result.resources[48].name" == "Sourcemeta One MCP Initialize Request"
@@ -1508,9 +1508,9 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 12
 jsonpath "$.result.resourceTemplates" count == 1
-jsonpath "$.result.resourceTemplates[0].uriTemplate" == "{{base}}/{+path}{?bundle}"
+jsonpath "$.result.resourceTemplates[0].uriTemplate" == "{{base}}/{+path}{?bundle,as}"
 jsonpath "$.result.resourceTemplates[0].name" == "JSON Schema"
-jsonpath "$.result.resourceTemplates[0].description" == "A JSON Schema in this catalog, addressable by its canonical absolute URI under this server's origin. This instance is sovereign over its own URL namespace. Schemas whose URIs lie outside this namespace will not be served here. Substitute `{+path}` with the schema's catalog path. Include `{?bundle}` (its presence alone triggers bundling, any value is ignored) to receive the schema with every external `$ref` inlined into a single self-contained document. The URI must not contain a fragment. Use `resources/list` to discover the available schemas rather than guessing paths"
+jsonpath "$.result.resourceTemplates[0].description" == "A JSON Schema in this catalog, addressable by its canonical absolute URI under this server's origin. This instance is sovereign over its own URL namespace. Schemas whose URIs lie outside this namespace will not be served here. Substitute `{+path}` with the schema's catalog path. Include `{?bundle}` (its presence alone triggers bundling, any value is ignored) to receive the schema with every external `$ref` inlined into a single self-contained document. Alternatively, include `{?as}` with one of the keys of the `conversions` property of the schema metadata to receive the schema converted into that dialect. The URI must not contain a fragment. Use `resources/list` to discover the available schemas rather than guessing paths"
 jsonpath "$.result.resourceTemplates[0].mimeType" == "application/schema+json"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -1659,7 +1659,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 40
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid resource schema URI"
-jsonpath "$.error.data" == "URIs accepted by resources/read must not contain a fragment and may only carry an optional `bundle` query parameter"
+jsonpath "$.error.data" == "URIs accepted by resources/read must not contain a fragment and may only carry optional `bundle` or `as` query parameters"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1709,7 +1709,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 41
 jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Invalid resource schema URI"
-jsonpath "$.error.data" == "URIs accepted by resources/read must not contain a fragment and may only carry an optional `bundle` query parameter"
+jsonpath "$.error.data" == "URIs accepted by resources/read must not contain a fragment and may only carry optional `bundle` or `as` query parameters"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

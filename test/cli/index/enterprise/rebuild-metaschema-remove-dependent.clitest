@@ -1,0 +1,71 @@
+// Removing the schema that declares another schema as its dialect rebuilds the
+// metadata of that other schema
+
+WRITE one.json UNTIL EOF
+{
+  "url": "https://sourcemeta.com",
+  "contents": {
+    "example": {
+      "contents": {
+        "schemas": {
+          "baseUri": "https://example.com/",
+          "path": "./schemas"
+        }
+      }
+    }
+  }
+}
+EOF
+
+MAKE DIRECTORY schemas
+
+WRITE schemas/meta.json UNTIL EOF
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/meta"
+}
+EOF
+
+WRITE schemas/user.json UNTIL EOF
+{
+  "$schema": "https://example.com/meta",
+  "$id": "https://example.com/user"
+}
+EOF
+
+RUN --skip-banner --deterministic --concurrency 1 one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+DROP LINES MATCHING '^[12]> \([ 0-9]+%\) ' IN log_1.txt
+DROP LINES CONTAINING $ONE_PREFIX IN log_1.txt
+REPLACE MATCHING ' \(#[0-9]+\)' WITH '' IN log_1.txt
+REPLACE $CWD WITH '[CWD]' IN log_1.txt
+SORT log_1.txt
+WRITE expected_log_1.txt UNTIL EOF
+2> Detecting: [CWD]/schemas/meta.json
+2> Detecting: [CWD]/schemas/user.json
+2> Using configuration: [CWD]/one.json
+2> Writing output to: [CWD]/output
+EOF
+COMPARE log_1.txt AGAINST expected_log_1.txt
+
+REMOVE schemas/user.json
+
+RUN --skip-banner --deterministic --concurrency 1 one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 0
+REPLACE MATCHING ' \[[^\]\n]*[^a-z\-\n][^\]\n]*\]' WITH '' IN output.txt
+COPY output.txt TO produced.txt
+DROP LINES MATCHING '^(?!.*(Producing|Combining)).*$' IN produced.txt
+
+// The schema that was declared as the dialect is rebuilt even though nothing of
+// its own changed
+WRITE expected-produced.txt UNTIL EOF
+2> ( 10%) Producing: explorer/public/%/directory.metapack
+2> ( 20%) Producing: explorer/public/example/schemas/meta/%/schema.metapack
+2> ( 30%) Producing: schemas/example/schemas/meta/%/schema-2019-09.metapack
+2> ( 40%) Producing: schemas/example/schemas/meta/%/schema-2020-12.metapack
+2> ( 50%) Producing: explorer/public/%/directory-html.metapack
+2> ( 60%) Producing: explorer/public/%/search.metapack
+2> ( 70%) Producing: explorer/public/example/schemas/meta/%/schema-html.metapack
+2> ( 80%) Producing: explorer/public/%/mcp.metapack
+2> (100%) Combining: explorer/public/example/schemas/meta/%/dependents.metapack
+EOF
+
+COMPARE produced.txt AGAINST expected-produced.txt

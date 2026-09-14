@@ -106,6 +106,10 @@ service whether or not for a fee, each require a
   schemas that validate them, turning the catalog into a [bridge between your
   JSON data and knowledge
   graphs](https://www.sourcemeta.com/blog/json-schema-jsonld-interoperability/)
+- :material-update: __Dialect Upgrades (Enterprise)__ Serve any schema
+  [upgraded](api.md#fetch) to a newer JSON Schema dialect on request, so
+  consumers get the dialect their tooling understands without anybody
+  maintaining converted copies in Git
 - :material-lock: __Access Control (Enterprise)__ Gate part of your catalog, or
   the entire instance, behind [authentication](configuration.md#authentication)
   policies, keeping schemas private to the consumers you choose
@@ -170,9 +174,9 @@ capabilities, but the current Sourcemeta One represents just the beginning of
 our vision. Your feedback is crucial in helping us build the schema management
 solution the industry needs.
 
-- **Automatic schema upgrades and downgrades**: Seamlessly serve your schemas
-  in any JSON Schema version that external tools require, eliminating manual
-  conversion headaches
+- **Automatic schema downgrades**: Seamlessly serve your schemas in older JSON
+  Schema versions that external tools require, complementing the [dialect
+  upgrades](commercial.md#dialect-upgrades) available today
 - **Schema evolution and transforms**: Convert data between schema versions and
   formats. Includes schema evolution (i.e. v1 to v2) to arbitrary data
   transformations (i.e. Celsius to Fahrenheit)

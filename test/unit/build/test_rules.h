@@ -3,6 +3,9 @@
 
 #include <sourcemeta/one/build.h>
 
+#include <array>   // std::array
+#include <cstddef> // std::size_t
+
 namespace test_rules {
 
 enum : sourcemeta::one::BuildPlan::Action::Type {
@@ -17,6 +20,7 @@ enum : sourcemeta::one::BuildPlan::Action::Type {
   ACTION_GATE,
   ACTION_REFERENCES,
   ACTION_REVERSE,
+  ACTION_VARIANT,
   ACTION_REMOVE
 };
 
@@ -265,6 +269,98 @@ inline constexpr auto COMBINE_RULES_SECONDARY{
 }
 
 inline constexpr auto DIALECT_RULES{rules_with_dialect_dependents()};
+
+// The same set with two leaves outside the view tree that only the leaves
+// selecting them get, each reading the primary leaf
+[[nodiscard]] consteval auto rules_with_selected_leaves()
+    -> sourcemeta::one::DeltaRuleSet<5, 1, 5, 2> {
+  sourcemeta::one::DeltaRuleSet<5, 1, 5, 2> result{};
+  result.leaves[0] = RULES.leaves[0];
+  result.leaves[1] = RULES.leaves[1];
+  result.leaves[2] = RULES.leaves[2];
+  result.leaves[3] = {
+      .action = ACTION_VARIANT,
+      .base = 0,
+      .filename = "variant-a.bin",
+      .gate = sourcemeta::one::TargetGate::IfSelected,
+      .dirty = sourcemeta::one::DirtyOverride::Normal,
+      .is_root = false,
+      .combine_only = false,
+      .container_target = false,
+      .tracks_dependencies = false,
+      .dependencies = {{{.source = sourcemeta::one::DependencySource::Base,
+                         .base = 0,
+                         .filename = "primary.bin"}}},
+      .dependency_count = 1,
+      .selector = 0};
+  result.leaves[4] = {
+      .action = ACTION_VARIANT,
+      .base = 0,
+      .filename = "variant-b.bin",
+      .gate = sourcemeta::one::TargetGate::IfSelected,
+      .dirty = sourcemeta::one::DirtyOverride::Normal,
+      .is_root = false,
+      .combine_only = false,
+      .container_target = false,
+      .tracks_dependencies = false,
+      .dependencies = {{{.source = sourcemeta::one::DependencySource::Base,
+                         .base = 0,
+                         .filename = "primary.bin"}}},
+      .dependency_count = 1,
+      .selector = 1};
+  result.containers = RULES.containers;
+  result.globals = RULES.globals;
+  result.directories = RULES.directories;
+  result.sentinel = RULES.sentinel;
+  result.remove_action = RULES.remove_action;
+  result.full_mode = RULES.full_mode;
+  return result;
+}
+
+inline constexpr auto SELECTED_RULES{rules_with_selected_leaves()};
+
+// Every leaf of a set holding more leaves than a sixteen bit bitmap has bits
+inline constexpr std::array<const char *, 18> WIDE_FILENAMES{
+    {"primary.bin", "metadata.bin", "web.bin", "wide-03.bin", "wide-04.bin",
+     "wide-05.bin", "wide-06.bin", "wide-07.bin", "wide-08.bin", "wide-09.bin",
+     "wide-10.bin", "wide-11.bin", "wide-12.bin", "wide-13.bin", "wide-14.bin",
+     "wide-15.bin", "wide-16.bin", "wide-17.bin"}};
+
+// The same set grown past what a sixteen bit bitmap holds, every added leaf
+// reading the primary leaf
+[[nodiscard]] consteval auto rules_with_eighteen_leaves()
+    -> sourcemeta::one::DeltaRuleSet<18, 1, 5, 2> {
+  sourcemeta::one::DeltaRuleSet<18, 1, 5, 2> result{};
+  result.leaves[0] = RULES.leaves[0];
+  result.leaves[1] = RULES.leaves[1];
+  result.leaves[2] = RULES.leaves[2];
+  for (std::size_t index{3}; index < result.leaves.size(); index++) {
+    result.leaves[index] = {
+        .action = ACTION_VARIANT,
+        .base = 0,
+        .filename = WIDE_FILENAMES[index],
+        .gate = sourcemeta::one::TargetGate::Always,
+        .dirty = sourcemeta::one::DirtyOverride::Normal,
+        .is_root = false,
+        .combine_only = false,
+        .container_target = false,
+        .tracks_dependencies = false,
+        .dependencies = {{{.source = sourcemeta::one::DependencySource::Base,
+                           .base = 0,
+                           .filename = "primary.bin"}}},
+        .dependency_count = 1};
+  }
+
+  result.containers = RULES.containers;
+  result.globals = RULES.globals;
+  result.directories = RULES.directories;
+  result.sentinel = RULES.sentinel;
+  result.remove_action = RULES.remove_action;
+  result.full_mode = RULES.full_mode;
+  return result;
+}
+
+inline constexpr auto WIDE_RULES{rules_with_eighteen_leaves()};
 
 } // namespace test_rules
 
