@@ -1,5 +1,5 @@
 # A Draft 7 schema declared as the dialect of a private schema alone is a
-# meta-schema only to the views that hold that private schema
+# meta-schema whoever asks, since the answer does not depend on the view
 
 # Nobody anonymous can see the schema declaring it as its dialect
 GET {{base}}/self/v1/api/schemas/metadata/open/meta
@@ -28,7 +28,7 @@ jsonpath "$.health" == 0
 jsonpath "$.priority" == 50
 jsonpath "$.dependencies" == 0
 jsonpath "$.dialect" == "http://json-schema.org/draft-07/schema#"
-jsonpath "$.metaschema" == false
+jsonpath "$.metaschema" == true
 jsonpath "$.private" == false
 jsonpath "$.identifier" == "{{base}}/open/meta"
 jsonpath "$.path" == "/open/meta"
@@ -51,7 +51,7 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-# The view holding the private schema sees the same schema as a meta-schema
+# The view holding the private schema gets the same answer
 GET {{base}}/self/v1/api/schemas/metadata/open/meta
 Accept: application/json
 Authorization: Bearer vault-secret-key
@@ -102,7 +102,7 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-# A view admitted elsewhere still cannot see the private schema
+# So does a view admitted elsewhere, which cannot see the private schema either
 GET {{base}}/self/v1/api/schemas/metadata/open/meta
 Accept: application/json
 Authorization: Bearer ledger-secret-key
@@ -130,7 +130,7 @@ jsonpath "$.health" == 0
 jsonpath "$.priority" == 50
 jsonpath "$.dependencies" == 0
 jsonpath "$.dialect" == "http://json-schema.org/draft-07/schema#"
-jsonpath "$.metaschema" == false
+jsonpath "$.metaschema" == true
 jsonpath "$.private" == false
 jsonpath "$.identifier" == "{{base}}/open/meta"
 jsonpath "$.path" == "/open/meta"
@@ -204,7 +204,7 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-# An agent is told the same as the endpoint, view by view
+# An agent is told the same as the endpoint, whoever asks
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 Content-Type: application/json
@@ -244,7 +244,7 @@ jsonpath "$.result.structuredContent.health" == 0
 jsonpath "$.result.structuredContent.priority" == 50
 jsonpath "$.result.structuredContent.dependencies" == 0
 jsonpath "$.result.structuredContent.dialect" == "http://json-schema.org/draft-07/schema#"
-jsonpath "$.result.structuredContent.metaschema" == false
+jsonpath "$.result.structuredContent.metaschema" == true
 jsonpath "$.result.structuredContent.private" == false
 jsonpath "$.result.structuredContent.identifier" == "{{base}}/open/meta"
 jsonpath "$.result.structuredContent.path" == "/open/meta"
@@ -256,7 +256,7 @@ jsonpath "$.result.structuredContent.breadcrumb[0].name" == "open"
 jsonpath "$.result.structuredContent.breadcrumb[0].path" == "/open/"
 jsonpath "$.result.structuredContent.breadcrumb[1].name" == "meta"
 jsonpath "$.result.structuredContent.breadcrumb[1].path" == "/open/meta"
-variable "anonymous_text" jsonpath "$.metaschema" == false
+variable "anonymous_text" jsonpath "$.metaschema" == true
 variable "anonymous_text" jsonpath "$.identifier" == "{{base}}/open/meta"
 
 POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/mcp/response

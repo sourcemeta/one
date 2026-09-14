@@ -222,7 +222,6 @@ static auto declare_leaf_targets(
     std::span<const LeafRule> leaf_rules,
     const std::string_view primary_directory, const std::string_view sentinel,
     const std::span<const std::filesystem::path *const> dialect_dependents,
-    const std::size_t view_index, const ViewFilter &visible,
     const std::string_view view, const bool only_secondary,
     const bool only_primary = false) -> void {
   for (std::size_t index{0}; index < leaf_rules.size(); index++) {
@@ -277,12 +276,9 @@ static auto declare_leaf_targets(
           break;
         case DependencySource::DialectDependents:
           assert(dependency.base == 0);
+          // What a dialect declaration says is the same whoever asks, so every
+          // view reads every declaration, including those it cannot see
           for (const auto *dependent : dialect_dependents) {
-            // A view is only told about the leaves it holds
-            if (rule.base != 0 && !visible(view_index, dependent->native())) {
-              continue;
-            }
-
             target.dependencies.push_back(append_filename(
                 make_base_string(output_string, primary_directory, {},
                                  dependent->native(), sentinel),
@@ -1005,7 +1001,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
         declare_leaf_targets(
             targets, bases, output_string, info.path->native(), info.evaluate,
             build_type, full_mode, configuration_string, uri, phase, leaf_rules,
-            primary_directory, sentinel, leaf_dialect_dependents, view, visible,
+            primary_directory, sentinel, leaf_dialect_dependents,
             secondary_views[view], declared_primary);
         declared_primary = true;
       }
@@ -1014,11 +1010,11 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
       // the unit tree is declared on its own rather than left undeclared
       if (!declared_primary) {
         const std::array<std::string, 2> bases{{primary_base, std::string{}}};
-        declare_leaf_targets(
-            targets, bases, output_string, info.path->native(), info.evaluate,
-            build_type, full_mode, configuration_string, uri, phase, leaf_rules,
-            primary_directory, sentinel, leaf_dialect_dependents, 0, visible,
-            {}, false, true);
+        declare_leaf_targets(targets, bases, output_string, info.path->native(),
+                             info.evaluate, build_type, full_mode,
+                             configuration_string, uri, phase, leaf_rules,
+                             primary_directory, sentinel,
+                             leaf_dialect_dependents, {}, false, true);
       }
     }
 

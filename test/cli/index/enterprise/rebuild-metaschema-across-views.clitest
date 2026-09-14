@@ -1,6 +1,6 @@
 // A schema declared as the dialect of a schema only one view holds is read with
-// that dependent in that view alone, so changing the dependent rebuilds its
-// metadata there and nowhere else
+// that dependent in every view, so changing the dependent rebuilds its metadata
+// even in the view that cannot see the dependent
 
 MAKE DIRECTORY schemas
 MAKE DIRECTORY schemas/open
@@ -76,35 +76,37 @@ REPLACE MATCHING ' \[[^\]\n]*[^a-z\-\n][^\]\n]*\]' WITH '' IN output.txt
 COPY output.txt TO produced.txt
 DROP LINES MATCHING '^(?!.*(Producing|Combining)).*$' IN produced.txt
 
-// The schema declared as the dialect is rebuilt in the view holding the changed
-// schema, and never in the view that cannot see it
+// The schema declared as the dialect is rebuilt in both views, including the one
+// that cannot see the changed schema
 WRITE expected-produced.txt UNTIL EOF
 2> (  3%) Producing: explorer/public/schemas/%/directory.metapack
-2> (  7%) Producing: schemas/schemas/closed/user/%/schema.metapack
+2> (  6%) Producing: schemas/schemas/closed/user/%/schema.metapack
 2> ( 10%) Producing: explorer/alpha/schemas/open/meta/%/schema.metapack
-2> ( 14%) Producing: explorer/public/%/directory.metapack
-2> ( 17%) Producing: explorer/public/schemas/%/directory-html.metapack
-2> ( 21%) Producing: schemas/schemas/closed/user/%/dependencies.metapack
-2> ( 25%) Producing: schemas/schemas/closed/user/%/locations.metapack
-2> ( 28%) Producing: schemas/schemas/closed/user/%/positions.metapack
-2> ( 32%) Producing: schemas/schemas/closed/user/%/stats.metapack
-2> ( 35%) Producing: explorer/alpha/schemas/open/meta/%/schema-html.metapack
-2> ( 39%) Producing: explorer/public/%/directory-html.metapack
-2> ( 42%) Producing: explorer/public/%/search.metapack
-2> ( 46%) Producing: schemas/schemas/closed/user/%/bundle.metapack
-2> ( 50%) Producing: schemas/schemas/closed/user/%/health.metapack
-2> ( 53%) Producing: explorer/alpha/schemas/closed/user/%/schema.metapack
-2> ( 57%) Producing: explorer/public/%/mcp.metapack
-2> ( 60%) Producing: schemas/schemas/closed/user/%/blaze-exhaustive.metapack
-2> ( 64%) Producing: schemas/schemas/closed/user/%/blaze-fast.metapack
-2> ( 67%) Producing: schemas/schemas/closed/user/%/editor.metapack
-2> ( 71%) Producing: explorer/alpha/schemas/closed/%/directory.metapack
-2> ( 75%) Producing: explorer/alpha/schemas/closed/user/%/schema-html.metapack
-2> ( 78%) Producing: explorer/alpha/schemas/%/directory.metapack
-2> ( 82%) Producing: explorer/alpha/schemas/closed/%/directory-html.metapack
-2> ( 85%) Producing: explorer/alpha/%/directory.metapack
-2> ( 89%) Producing: explorer/alpha/schemas/%/directory-html.metapack
-2> ( 92%) Producing: explorer/alpha/%/directory-html.metapack
+2> ( 13%) Producing: explorer/public/%/directory.metapack
+2> ( 16%) Producing: explorer/public/schemas/%/directory-html.metapack
+2> ( 20%) Producing: explorer/public/schemas/open/meta/%/schema.metapack
+2> ( 23%) Producing: schemas/schemas/closed/user/%/dependencies.metapack
+2> ( 26%) Producing: schemas/schemas/closed/user/%/locations.metapack
+2> ( 30%) Producing: schemas/schemas/closed/user/%/positions.metapack
+2> ( 33%) Producing: schemas/schemas/closed/user/%/stats.metapack
+2> ( 36%) Producing: explorer/alpha/schemas/open/meta/%/schema-html.metapack
+2> ( 40%) Producing: explorer/public/%/directory-html.metapack
+2> ( 43%) Producing: explorer/public/%/search.metapack
+2> ( 46%) Producing: explorer/public/schemas/open/meta/%/schema-html.metapack
+2> ( 50%) Producing: schemas/schemas/closed/user/%/bundle.metapack
+2> ( 53%) Producing: schemas/schemas/closed/user/%/health.metapack
+2> ( 56%) Producing: explorer/alpha/schemas/closed/user/%/schema.metapack
+2> ( 60%) Producing: explorer/public/%/mcp.metapack
+2> ( 63%) Producing: schemas/schemas/closed/user/%/blaze-exhaustive.metapack
+2> ( 66%) Producing: schemas/schemas/closed/user/%/blaze-fast.metapack
+2> ( 70%) Producing: schemas/schemas/closed/user/%/editor.metapack
+2> ( 73%) Producing: explorer/alpha/schemas/closed/%/directory.metapack
+2> ( 76%) Producing: explorer/alpha/schemas/closed/user/%/schema-html.metapack
+2> ( 80%) Producing: explorer/alpha/schemas/%/directory.metapack
+2> ( 83%) Producing: explorer/alpha/schemas/closed/%/directory-html.metapack
+2> ( 86%) Producing: explorer/alpha/%/directory.metapack
+2> ( 90%) Producing: explorer/alpha/schemas/%/directory-html.metapack
+2> ( 93%) Producing: explorer/alpha/%/directory-html.metapack
 2> ( 96%) Producing: explorer/alpha/%/search.metapack
 2> (100%) Producing: explorer/alpha/%/mcp.metapack
 EOF

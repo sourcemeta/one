@@ -599,7 +599,7 @@ GET /self/v1/api/schemas/metadata/{path}
     | `/identifier` | String | Yes | The absolute URI of the schema |
     | `/dialect` | String | Yes | The dialect URI of the schema |
     | `/baseDialect` | String | Yes | The base dialect URI of the schema |
-    | `/metaschema` | Boolean | Yes | Whether the schema is a meta-schema, as it either declares [`$vocabulary`](https://www.learnjsonschema.com/2020-12/core/vocabulary/) or another schema you can access declares it as its [`$schema`](https://www.learnjsonschema.com/2020-12/core/schema/) |
+    | `/metaschema` | Boolean | Yes | Whether the schema is a meta-schema, as it either declares [`$vocabulary`](https://www.learnjsonschema.com/2020-12/core/vocabulary/) or another schema in this instance declares it as its [`$schema`](https://www.learnjsonschema.com/2020-12/core/schema/) |
     | `/health` | Integer | Yes | The health score of the schema |
     | `/priority` | Integer | Yes | An importance hint from `0` (least important) to `100` (most important), inherited from the schema collection's [`x-sourcemeta-one:priority`](configuration.md) configuration value |
     | `/private` | Boolean | Yes | Whether an authentication policy governs this schema |

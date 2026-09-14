@@ -1359,7 +1359,7 @@ TEST(full_dialect_dependents_are_read_by_the_leaf_they_name) {
       output / "secondary" / "public" / "%" / "listing.bin");
 }
 
-TEST(full_dialect_dependents_are_filtered_by_view) {
+TEST(full_dialect_dependents_are_read_in_every_view) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
   const TestLeaves schemas{{.identifier = "https://example.com/meta",
@@ -1376,7 +1376,8 @@ TEST(full_dialect_dependents_are_filtered_by_view) {
       test_rules::DIALECT_RULES.leaves, test_rules::DIALECT_RULES.directories,
       sourcemeta::one::rules_fingerprint<test_rules::DIALECT_RULES>(), INPUTS,
       test_rules::DIALECT_RULES.sentinel);
-  // The first view cannot see the leaf declaring the other as its dialect
+  // The first view cannot see the leaf declaring the other as its dialect, yet
+  // what that declaration says is the same whoever asks
   const auto plan{sourcemeta::one::delta<test_rules::DIALECT_RULES>(
       sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
       output, schemas, "1.0.0", false, "", "Full", {}, TWO_VIEWS,
@@ -1408,7 +1409,8 @@ TEST(full_dialect_dependents_are_filtered_by_view) {
                 std::filesystem::path{"/"} / "src" / "user.json",
                 output / "configuration.json");
 
-  // Each view reads only the leaves it holds
+  // Every view reads every leaf declaring the other as its dialect, including
+  // the view that cannot see it
   EXPECT_ACTION(plan, 4, 0, 3, test_rules::ACTION_METADATA,
                 output / "secondary" / "private" / "meta" / "%" /
                     "metadata.bin",
@@ -1423,7 +1425,8 @@ TEST(full_dialect_dependents_are_filtered_by_view) {
   EXPECT_ACTION(plan, 4, 2, 3, test_rules::ACTION_METADATA,
                 output / "secondary" / "public" / "meta" / "%" / "metadata.bin",
                 "https://example.com/meta",
-                output / "primary" / "meta" / "%" / "primary.bin");
+                output / "primary" / "meta" / "%" / "primary.bin",
+                output / "primary" / "user" / "%" / "primary.bin");
 
   EXPECT_ACTION_UNORDERED(
       plan, 5, 0, 5, test_rules::ACTION_LISTING,
