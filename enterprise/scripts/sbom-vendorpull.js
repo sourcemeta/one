@@ -15,6 +15,7 @@ const LICENSES = {
   "pcre2": "BSD-3-Clause WITH PCRE2-exception",
   "cmark-gfm": "BSD-2-Clause",
   "unicodetools": "Unicode-3.0",
+  "whatwg-html-build": "CC-BY-4.0 AND BSD-3-Clause",
   "mimalloc": "MIT"
 };
 
@@ -45,7 +46,6 @@ const IGNORED = new Set([
   "jsonschema-draft0",
   "openapi",
   "openapi-test-suite-3-1",
-  "whatwg-html-build",
   "spdx",
   "iana-oauth/parameters.csv",
   "iana-oauth/extensions-error.csv",

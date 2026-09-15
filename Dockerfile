@@ -107,6 +107,8 @@ COPY vendor/core/vendor/cmark-gfm/COPYING \
   /usr/share/doc/sourcemeta-one/licenses/cmark-gfm
 COPY vendor/core/vendor/unicodetools/LICENSE \
   /usr/share/doc/sourcemeta-one/licenses/unicodetools
+COPY vendor/core/vendor/whatwg-html-build/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/whatwg-html-build
 COPY vendor/core/vendor/mimalloc/LICENSE \
   /usr/share/doc/sourcemeta-one/licenses/mimalloc
 COPY vendor/jsonschema/LICENSE \
