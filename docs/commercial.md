@@ -83,9 +83,7 @@ query parameter of the [schema endpoint](api.md#fetch) and the equivalent MCP
 resource. Teams keep authoring and reviewing schemas in the dialect they already
 have, while consumers whose tooling only understands a newer dialect fetch the
 version they need. Meta-schemas are upgraded too, declaring the vocabularies the
-newer dialect expects. Every upgrade is precomputed when the instance is built,
-and the [metadata](api.md#metadata) of each schema lists the dialects it can be
-fetched as.
+newer dialect expects.
 
 ## Standard Library
 

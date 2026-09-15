@@ -406,9 +406,7 @@ with [`$schema`](https://www.learnjsonschema.com/2020-12/core/schema/), and the
 `conversions` property of its [metadata](#metadata) lists exactly the values it
 accepts. A meta-schema converted into 2019-09 or 2020-12 also declares the
 vocabularies of that dialect with
-[`$vocabulary`](https://www.learnjsonschema.com/2020-12/core/vocabulary/). The
-`as` query parameter cannot be combined with `bundle`, and Visual Studio Code and
-Deno clients are served as if it was not set.
+[`$vocabulary`](https://www.learnjsonschema.com/2020-12/core/vocabulary/).
 
 === "200"
 
@@ -417,7 +415,7 @@ Deno clients are served as if it was not set.
 === "400"
 
     The `as` query parameter names a dialect the schema cannot be converted
-    into, or is combined with `bundle`.
+    into.
 
 === "403"
 

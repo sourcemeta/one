@@ -16,7 +16,7 @@ namespace sourcemeta::one {
 
 // The dialects a schema may be asked for in, as the query parameter spells them
 inline constexpr std::array<std::string_view, 5> SCHEMA_CONVERSIONS{
-    "draft4", "draft6", "draft7", "2019-09", "2020-12"};
+    {"draft4", "draft6", "draft7", "2019-09", "2020-12"}};
 
 // The artifact holding a schema converted into the given dialect, if the
 // dialect is one a schema may be asked for in at all
