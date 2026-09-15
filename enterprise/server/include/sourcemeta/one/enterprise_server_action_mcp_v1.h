@@ -9,7 +9,8 @@
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
-#include <sourcemeta/one/enterprise_server_schema_as.h>
+#include <sourcemeta/one/enterprise_conversion.h>
+#include <sourcemeta/one/enterprise_server_conversion.h>
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
@@ -545,14 +546,25 @@ private:
                                    "be combined"});
       }
 
-      const auto artifact{
-          sourcemeta::one::schema_conversion_artifact(conversion.value())};
-      if (artifact.has_value()) {
-        resolution = this->artifact_resolve_path(caller, uri, Tree::Schemas,
-                                                 artifact.value());
+      const auto target{sourcemeta::one::conversion_target(conversion.value())};
+      if (target.has_value()) {
+        auto converted{this->artifact_resolve_path(
+            caller, uri, Tree::Schemas,
+            sourcemeta::one::conversion_artifact(target.value()))};
+        if (!converted.path.has_value() &&
+            sourcemeta::one::declares_custom_dialect(*this,
+                                                     resolution.path.value())) {
+          return sourcemeta::core::jsonrpc_make_error(
+              &request_id, -32602, "Invalid resource schema URI",
+              sourcemeta::core::JSON{
+                  "Schemas with custom dialects cannot be converted yet, as "
+                  "their meta-schemas would need to be converted too"});
+        }
+
+        resolution = std::move(converted);
       }
 
-      if (!artifact.has_value() || !resolution.path.has_value()) {
+      if (!target.has_value() || !resolution.path.has_value()) {
         return sourcemeta::core::jsonrpc_make_error(
             &request_id, -32602, "Invalid resource schema URI",
             sourcemeta::core::JSON{

@@ -351,12 +351,6 @@ template <sourcemeta::one::SchemaDialect Target> struct GenerateConversion {
           [&callback, &resolver](const auto identifier) {
             return resolver(identifier, callback);
           });
-      sourcemeta::blaze::format(
-          schema, sourcemeta::blaze::schema_walker,
-          [&callback, &resolver](const auto identifier) {
-            return resolver(identifier, callback);
-          },
-          sourcemeta::one::conversion_uri(Target));
     } catch (const std::exception &error) {
       throw sourcemeta::one::SchemaConversionError(
           resolver_entry.path, sourcemeta::one::conversion_name(Target),

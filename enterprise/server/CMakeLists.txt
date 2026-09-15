@@ -1,5 +1,6 @@
 sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME enterprise_server
-  PRIVATE_HEADERS action_mcp_v1.h action_jsonschema_rdf_v1.h)
+  PRIVATE_HEADERS action_mcp_v1.h action_jsonschema_rdf_v1.h
+    action_jsonschema_serve_v1.h conversion.h)
 
 target_compile_definitions(sourcemeta_one_enterprise_server INTERFACE SOURCEMETA_ONE_ENTERPRISE)
 
@@ -8,6 +9,7 @@ target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::cor
 target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::core::oauth)
 target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::core::oidc)
 
+target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::one::enterprise_conversion)
 target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::one::router)
 target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::one::http)
 target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::one::search)

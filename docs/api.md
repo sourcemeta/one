@@ -404,8 +404,9 @@ official dialect: `draft4`, `draft6`, `draft7`, `2019-09`, or `2020-12`. A schem
 can only be converted into a dialect newer than the official dialect it declares
 with [`$schema`](https://www.learnjsonschema.com/2020-12/core/schema/), and the
 `conversions` property of its [metadata](#metadata) lists exactly the values it
-accepts. A meta-schema converted into 2019-09 or 2020-12 also declares the
-vocabularies of that dialect with
+accepts. Schemas that declare a custom dialect cannot be converted yet, as their
+meta-schemas would need to be converted too. A meta-schema converted into
+2019-09 or 2020-12 also declares the vocabularies of that dialect with
 [`$vocabulary`](https://www.learnjsonschema.com/2020-12/core/vocabulary/).
 
 === "200"

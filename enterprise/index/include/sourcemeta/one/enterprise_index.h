@@ -4,6 +4,7 @@
 #include <sourcemeta/one/authentication.h>
 #include <sourcemeta/one/build.h>
 #include <sourcemeta/one/configuration.h>
+#include <sourcemeta/one/enterprise_conversion.h>
 #include <sourcemeta/one/resolver.h>
 
 #include <sourcemeta/blaze/alterschema.h>
@@ -14,12 +15,9 @@
 #include <sourcemeta/core/uritemplate.h>
 
 #include <cstddef>       // std::size_t
-#include <cstdint>       // std::uint8_t, std::uint32_t
 #include <exception>     // std::exception
 #include <filesystem>    // std::filesystem::path
 #include <functional>    // std::function
-#include <optional>      // std::optional
-#include <span>          // std::span
 #include <string>        // std::string
 #include <string_view>   // std::string_view
 #include <unordered_set> // std::unordered_set
@@ -27,38 +25,9 @@
 
 namespace sourcemeta::one {
 
-// An official JSON Schema dialect, oldest first
-enum class SchemaDialect : std::uint8_t {
-  Draft3,
-  Draft4,
-  Draft6,
-  Draft7,
-  Draft201909,
-  Draft202012
-};
-
-// The official dialect a declared dialect names, in any spelling of it
-auto official_dialect(std::string_view uri) -> std::optional<SchemaDialect>;
-
-// What a conversion into a dialect is called
-auto conversion_name(SchemaDialect dialect) -> std::string_view;
-
-// The canonical identifier of a dialect
-auto conversion_uri(SchemaDialect dialect) -> std::string_view;
-
-// The base dialect of an official dialect
-auto conversion_base_dialect(SchemaDialect dialect)
-    -> sourcemeta::blaze::SchemaBaseDialect;
-
-// The dialects a schema declaring a dialect can be converted into, oldest first
-auto dialect_conversions(SchemaDialect dialect)
-    -> std::span<const SchemaDialect>;
-
-// The selection bits of every conversion a schema declaring a dialect gets
-auto conversion_selection(std::string_view dialect) -> std::uint32_t;
-
-// The selection bit of a conversion into a dialect
-auto conversion_selector(SchemaDialect dialect) -> std::uint8_t;
+// What a schema declaring a dialect can be converted into, as its metadata
+// describes it
+auto conversions_metadata(std::string_view dialect) -> sourcemeta::core::JSON;
 
 // Convert a schema into a newer official dialect
 auto convert_schema(sourcemeta::core::JSON &schema, SchemaDialect target,

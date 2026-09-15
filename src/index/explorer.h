@@ -436,22 +436,8 @@ struct GenerateExplorerSchemaMetadata {
             declares_vocabulary(schema_data, schema_location.base_dialect)});
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
-    auto conversions{sourcemeta::core::JSON::make_object()};
-    const auto official{
-        sourcemeta::one::official_dialect(resolver_entry.dialect)};
-    if (official.has_value()) {
-      for (const auto target :
-           sourcemeta::one::dialect_conversions(official.value())) {
-        auto conversion{sourcemeta::core::JSON::make_object()};
-        conversion.assign("mediaType",
-                          sourcemeta::core::JSON{"application/schema+json"});
-        conversions.assign(
-            std::string{sourcemeta::one::conversion_name(target)},
-            std::move(conversion));
-      }
-    }
-
-    result.assign("conversions", std::move(conversions));
+    result.assign("conversions", sourcemeta::one::conversions_metadata(
+                                     resolver_entry.dialect));
 #endif
 
     if (schema_data.is_object()) {

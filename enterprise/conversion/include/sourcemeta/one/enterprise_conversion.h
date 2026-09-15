@@ -1,0 +1,220 @@
+#ifndef SOURCEMETA_ONE_ENTERPRISE_CONVERSION_H_
+#define SOURCEMETA_ONE_ENTERPRISE_CONVERSION_H_
+
+#include <sourcemeta/blaze/foundation.h>
+
+#include <algorithm>   // std::ranges::find
+#include <array>       // std::array
+#include <cassert>     // assert
+#include <cstddef>     // std::size_t
+#include <cstdint>     // std::uint8_t, std::uint32_t
+#include <optional>    // std::optional, std::nullopt
+#include <span>        // std::span
+#include <string>      // std::string
+#include <string_view> // std::string_view
+#include <utility>     // std::unreachable
+
+namespace sourcemeta::one {
+
+// An official JSON Schema dialect, oldest first
+enum class SchemaDialect : std::uint8_t {
+  Draft3,
+  Draft4,
+  Draft6,
+  Draft7,
+  Draft201909,
+  Draft202012
+};
+
+// One way of writing the identifier of an official dialect
+struct SchemaDialectSpelling {
+  std::string_view uri;
+  SchemaDialect dialect;
+};
+
+// Every spelling of an official dialect that Blaze recognises
+inline constexpr std::array<SchemaDialectSpelling, 24> SCHEMA_DIALECT_SPELLINGS{
+    {
+        {.uri = "http://json-schema.org/draft-03/schema#",
+         .dialect = SchemaDialect::Draft3},
+        {.uri = "http://json-schema.org/draft-03/schema",
+         .dialect = SchemaDialect::Draft3},
+        {.uri = "https://json-schema.org/draft-03/schema#",
+         .dialect = SchemaDialect::Draft3},
+        {.uri = "https://json-schema.org/draft-03/schema",
+         .dialect = SchemaDialect::Draft3},
+        {.uri = "http://json-schema.org/draft-04/schema#",
+         .dialect = SchemaDialect::Draft4},
+        {.uri = "http://json-schema.org/draft-04/schema",
+         .dialect = SchemaDialect::Draft4},
+        {.uri = "https://json-schema.org/draft-04/schema#",
+         .dialect = SchemaDialect::Draft4},
+        {.uri = "https://json-schema.org/draft-04/schema",
+         .dialect = SchemaDialect::Draft4},
+        {.uri = "http://json-schema.org/draft-06/schema#",
+         .dialect = SchemaDialect::Draft6},
+        {.uri = "http://json-schema.org/draft-06/schema",
+         .dialect = SchemaDialect::Draft6},
+        {.uri = "https://json-schema.org/draft-06/schema#",
+         .dialect = SchemaDialect::Draft6},
+        {.uri = "https://json-schema.org/draft-06/schema",
+         .dialect = SchemaDialect::Draft6},
+        {.uri = "http://json-schema.org/draft-07/schema#",
+         .dialect = SchemaDialect::Draft7},
+        {.uri = "http://json-schema.org/draft-07/schema",
+         .dialect = SchemaDialect::Draft7},
+        {.uri = "https://json-schema.org/draft-07/schema#",
+         .dialect = SchemaDialect::Draft7},
+        {.uri = "https://json-schema.org/draft-07/schema",
+         .dialect = SchemaDialect::Draft7},
+        {.uri = "https://json-schema.org/draft/2019-09/schema",
+         .dialect = SchemaDialect::Draft201909},
+        {.uri = "https://json-schema.org/draft/2019-09/schema#",
+         .dialect = SchemaDialect::Draft201909},
+        {.uri = "http://json-schema.org/draft/2019-09/schema",
+         .dialect = SchemaDialect::Draft201909},
+        {.uri = "http://json-schema.org/draft/2019-09/schema#",
+         .dialect = SchemaDialect::Draft201909},
+        {.uri = "https://json-schema.org/draft/2020-12/schema",
+         .dialect = SchemaDialect::Draft202012},
+        {.uri = "https://json-schema.org/draft/2020-12/schema#",
+         .dialect = SchemaDialect::Draft202012},
+        {.uri = "http://json-schema.org/draft/2020-12/schema",
+         .dialect = SchemaDialect::Draft202012},
+        {.uri = "http://json-schema.org/draft/2020-12/schema#",
+         .dialect = SchemaDialect::Draft202012},
+    }};
+
+// Every dialect a schema can be converted into, oldest first
+inline constexpr std::array<SchemaDialect, 5> SCHEMA_CONVERSION_TARGETS{
+    {SchemaDialect::Draft4, SchemaDialect::Draft6, SchemaDialect::Draft7,
+     SchemaDialect::Draft201909, SchemaDialect::Draft202012}};
+
+// The official dialect a declared dialect names, in any spelling of it
+[[nodiscard]] inline auto official_dialect(const std::string_view uri)
+    -> std::optional<SchemaDialect> {
+  const auto match{std::ranges::find(SCHEMA_DIALECT_SPELLINGS, uri,
+                                     &SchemaDialectSpelling::uri)};
+  if (match == SCHEMA_DIALECT_SPELLINGS.cend()) {
+    return std::nullopt;
+  }
+
+  return match->dialect;
+}
+
+// What a conversion into a dialect is called
+[[nodiscard]] inline auto conversion_name(const SchemaDialect dialect)
+    -> std::string_view {
+  switch (dialect) {
+    case SchemaDialect::Draft3:
+      return "draft3";
+    case SchemaDialect::Draft4:
+      return "draft4";
+    case SchemaDialect::Draft6:
+      return "draft6";
+    case SchemaDialect::Draft7:
+      return "draft7";
+    case SchemaDialect::Draft201909:
+      return "2019-09";
+    case SchemaDialect::Draft202012:
+      return "2020-12";
+  }
+
+  std::unreachable();
+}
+
+// The canonical identifier of a dialect
+[[nodiscard]] inline auto conversion_uri(const SchemaDialect dialect)
+    -> std::string_view {
+  switch (dialect) {
+    case SchemaDialect::Draft3:
+      return "http://json-schema.org/draft-03/schema#";
+    case SchemaDialect::Draft4:
+      return "http://json-schema.org/draft-04/schema#";
+    case SchemaDialect::Draft6:
+      return "http://json-schema.org/draft-06/schema#";
+    case SchemaDialect::Draft7:
+      return "http://json-schema.org/draft-07/schema#";
+    case SchemaDialect::Draft201909:
+      return "https://json-schema.org/draft/2019-09/schema";
+    case SchemaDialect::Draft202012:
+      return "https://json-schema.org/draft/2020-12/schema";
+  }
+
+  std::unreachable();
+}
+
+// The base dialect of an official dialect
+[[nodiscard]] inline auto conversion_base_dialect(const SchemaDialect dialect)
+    -> sourcemeta::blaze::SchemaBaseDialect {
+  switch (dialect) {
+    case SchemaDialect::Draft3:
+      return sourcemeta::blaze::SchemaBaseDialect::JSON_SCHEMA_DRAFT_3;
+    case SchemaDialect::Draft4:
+      return sourcemeta::blaze::SchemaBaseDialect::JSON_SCHEMA_DRAFT_4;
+    case SchemaDialect::Draft6:
+      return sourcemeta::blaze::SchemaBaseDialect::JSON_SCHEMA_DRAFT_6;
+    case SchemaDialect::Draft7:
+      return sourcemeta::blaze::SchemaBaseDialect::JSON_SCHEMA_DRAFT_7;
+    case SchemaDialect::Draft201909:
+      return sourcemeta::blaze::SchemaBaseDialect::JSON_SCHEMA_2019_09;
+    case SchemaDialect::Draft202012:
+      return sourcemeta::blaze::SchemaBaseDialect::JSON_SCHEMA_2020_12;
+  }
+
+  std::unreachable();
+}
+
+// The dialects a schema declaring a dialect can be converted into, oldest first
+[[nodiscard]] inline auto dialect_conversions(const SchemaDialect dialect)
+    -> std::span<const SchemaDialect> {
+  return std::span<const SchemaDialect>{SCHEMA_CONVERSION_TARGETS}.subspan(
+      static_cast<std::size_t>(dialect));
+}
+
+// The dialect a conversion is named after, if the name is one at all
+[[nodiscard]] inline auto conversion_target(const std::string_view name)
+    -> std::optional<SchemaDialect> {
+  const auto match{
+      std::ranges::find(SCHEMA_CONVERSION_TARGETS, name, conversion_name)};
+  if (match == SCHEMA_CONVERSION_TARGETS.cend()) {
+    return std::nullopt;
+  }
+
+  return *match;
+}
+
+// The selection bit of a conversion into a dialect
+[[nodiscard]] inline auto conversion_selector(const SchemaDialect dialect)
+    -> std::uint8_t {
+  assert(dialect != SchemaDialect::Draft3);
+  return static_cast<std::uint8_t>(static_cast<std::uint8_t>(dialect) - 1);
+}
+
+// The selection bits of every conversion a schema declaring a dialect gets
+[[nodiscard]] inline auto conversion_selection(const std::string_view dialect)
+    -> std::uint32_t {
+  const auto official{official_dialect(dialect)};
+  if (!official.has_value()) {
+    return 0;
+  }
+
+  std::uint32_t result{0};
+  for (const auto target : dialect_conversions(official.value())) {
+    result |= std::uint32_t{1} << conversion_selector(target);
+  }
+
+  return result;
+}
+
+// The artifact holding a schema converted into a dialect
+[[nodiscard]] inline auto conversion_artifact(const SchemaDialect dialect)
+    -> std::string {
+  std::string result{"schema-"};
+  result.append(conversion_name(dialect));
+  return result;
+}
+
+} // namespace sourcemeta::one
+
+#endif

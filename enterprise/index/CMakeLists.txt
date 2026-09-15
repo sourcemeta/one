@@ -19,3 +19,5 @@ target_link_libraries(sourcemeta_one_enterprise_index PRIVATE sourcemeta::core::
 target_link_libraries(sourcemeta_one_enterprise_index PRIVATE sourcemeta::core::oauth)
 target_link_libraries(sourcemeta_one_enterprise_index PUBLIC sourcemeta::blaze::foundation)
 target_link_libraries(sourcemeta_one_enterprise_index PUBLIC sourcemeta::core::uritemplate)
+target_link_libraries(sourcemeta_one_enterprise_index PUBLIC sourcemeta::one::enterprise_conversion)
+target_link_libraries(sourcemeta_one_enterprise_index PRIVATE sourcemeta::blaze::format)

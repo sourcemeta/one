@@ -43,7 +43,7 @@
         "required": [ "mediaType" ],
         "properties": {
           "mediaType": {
-            "type": "string"
+            "const": "application/schema+json"
           }
         },
         "additionalProperties": false
