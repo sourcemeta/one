@@ -13,7 +13,6 @@ const LICENSES = {
   "bootstrap": "MIT",
   "bootstrap-icons": "MIT",
   "pcre2": "BSD-3-Clause WITH PCRE2-exception",
-  "libdeflate": "MIT",
   "cmark-gfm": "BSD-2-Clause",
   "unicodetools": "Unicode-3.0",
   "mimalloc": "MIT"
@@ -45,6 +44,8 @@ const IGNORED = new Set([
   "jsonschema-draft1",
   "jsonschema-draft0",
   "openapi",
+  "openapi-test-suite-3-1",
+  "whatwg-html-build",
   "spdx",
   "iana-oauth/parameters.csv",
   "iana-oauth/extensions-error.csv",
