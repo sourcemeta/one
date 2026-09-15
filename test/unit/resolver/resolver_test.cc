@@ -1,4 +1,4 @@
-#include <sourcemeta/blaze/foundation.h>
+#include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/test.h>
 #include <sourcemeta/one/configuration.h>
 #include <sourcemeta/one/resolver.h>
@@ -105,7 +105,7 @@ TEST(duplicate_id) {
   try {
     RESOLVER_IMPORT(resolver, "example", "2020-12-with-id-json-duplicate.json");
     FAIL();
-  } catch (const sourcemeta::blaze::SchemaFrameError &error) {
+  } catch (const sourcemeta::core::SchemaFrameError &error) {
     EXPECT_EQ(error.identifier(),
               "http://localhost:8000/example/2020-12-with-id-json");
   }
@@ -144,7 +144,7 @@ TEST(example_official_2020_12_meta) {
   sourcemeta::one::Resolver resolver{shared_configuration().url};
   const auto resolved{resolver("https://json-schema.org/draft/2020-12/schema")};
   EXPECT_TRUE(resolved.has_value());
-  const auto official{sourcemeta::blaze::schema_resolver(
+  const auto official{sourcemeta::core::schema_resolver(
       "https://json-schema.org/draft/2020-12/schema")};
   EXPECT_TRUE(official.has_value());
   EXPECT_EQ(resolved.value(), official.value());
@@ -445,7 +445,7 @@ TEST(example_2020_12_meta_schema) {
   try {
     resolver(schema_result.first.get());
     FAIL();
-  } catch (const sourcemeta::blaze::SchemaResolutionError &error) {
+  } catch (const sourcemeta::core::SchemaResolutionError &error) {
     EXPECT_EQ(error.identifier(), "http://localhost:8000/example/2020-12-meta");
   }
 
@@ -598,7 +598,7 @@ TEST(no_dialect) {
   try {
     RESOLVER_IMPORT(resolver, "no-base", "no-dialect.json");
     FAIL();
-  } catch (const sourcemeta::blaze::SchemaUnknownDialectError &error) {
+  } catch (const sourcemeta::core::SchemaUnknownDialectError &error) {
     EXPECT_STREQ(error.what(), "Could not determine the dialect of the schema");
   }
 }
@@ -610,7 +610,7 @@ TEST(non_string_ref_no_crash) {
   try {
     resolver(result.first.get());
     FAIL();
-  } catch (const sourcemeta::blaze::SchemaReferenceObjectResourceError &error) {
+  } catch (const sourcemeta::core::SchemaReferenceObjectResourceError &error) {
     EXPECT_EQ(error.identifier(), result.first.get());
   }
 }

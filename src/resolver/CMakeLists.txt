@@ -11,7 +11,7 @@ target_link_libraries(sourcemeta_one_resolver PRIVATE
 target_link_libraries(sourcemeta_one_resolver PRIVATE
   sourcemeta::core::uri)
 target_link_libraries(sourcemeta_one_resolver PRIVATE
-  sourcemeta::blaze::foundation)
+  sourcemeta::core::jsonschema)
 target_link_libraries(sourcemeta_one_resolver PRIVATE
   sourcemeta::core::yaml)
 target_link_libraries(sourcemeta_one_resolver PRIVATE

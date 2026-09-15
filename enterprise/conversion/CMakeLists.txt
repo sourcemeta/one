@@ -2,4 +2,4 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME enterprise_conversion)
 
 target_compile_definitions(sourcemeta_one_enterprise_conversion INTERFACE SOURCEMETA_ONE_ENTERPRISE)
 
-target_link_libraries(sourcemeta_one_enterprise_conversion INTERFACE sourcemeta::blaze::foundation)
+target_link_libraries(sourcemeta_one_enterprise_conversion INTERFACE sourcemeta::core::jsonschema)

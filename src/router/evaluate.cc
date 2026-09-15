@@ -1,7 +1,8 @@
 #include <sourcemeta/blaze/compiler.h>
 #include <sourcemeta/blaze/evaluator.h>
-#include <sourcemeta/blaze/foundation.h>
 #include <sourcemeta/blaze/output.h>
+
+#include <sourcemeta/core/jsonschema.h>
 
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
@@ -42,7 +43,7 @@ public:
       : action_{&action}, caller_{&caller} {}
 
   [[nodiscard]] auto operator()(const std::string_view identifier) const
-      -> sourcemeta::blaze::SchemaResolverResult {
+      -> sourcemeta::core::SchemaResolverResult {
     const auto resolution{this->action_->artifact_resolve_path(
         *this->caller_, identifier, RouterAction::Tree::Schemas, "schema")};
     if (resolution.path.has_value()) {
@@ -52,7 +53,7 @@ public:
       }
     }
 
-    return sourcemeta::blaze::schema_resolver(identifier);
+    return sourcemeta::core::schema_resolver(identifier);
   }
 
 private:
@@ -66,27 +67,28 @@ private:
 // tells them where they went wrong without telling them what this instance
 // holds
 auto unresolvable_reference(const sourcemeta::core::JSON &document,
-                            const sourcemeta::blaze::SchemaResolver &resolver,
+                            const sourcemeta::core::SchemaResolver &resolver,
                             const std::string_view identifier)
     -> PlaygroundSchemaError {
   std::string reference;
   std::string location;
 
   try {
-    const sourcemeta::blaze::SchemaFrame frame{
-        sourcemeta::blaze::SchemaFrame::Mode::References,
+    const sourcemeta::core::SchemaFrame frame{
+        sourcemeta::core::SchemaFrame::Mode::References,
         document,
-        sourcemeta::blaze::schema_walker,
+        sourcemeta::core::schema_walker,
         resolver,
         "",
         "",
-        sourcemeta::blaze::SchemaFrame::IdentifierMode::Additional,
+        sourcemeta::core::SchemaFrame::IdentifierMode::Additional,
         {sourcemeta::core::EMPTY_WEAK_POINTER},
+        "",
         MAX_PLAYGROUND_SCHEMA_LOCATIONS};
     frame.for_each_unresolved_reference(
         [&reference, &location, identifier](
             const sourcemeta::core::WeakPointer &pointer,
-            const sourcemeta::blaze::SchemaFrame::Reference &entry) -> void {
+            const sourcemeta::core::SchemaFrame::Reference &entry) -> void {
           if (reference.empty() &&
               (entry.destination == identifier || entry.base == identifier)) {
             reference = entry.destination;
@@ -296,11 +298,11 @@ auto RouterAction::compile_playground_schema(
 
   try {
     return sourcemeta::blaze::compile(
-        schema, sourcemeta::blaze::schema_walker, std::ref(resolver),
+        schema, sourcemeta::core::schema_walker, std::ref(resolver),
         sourcemeta::blaze::default_schema_compiler,
         sourcemeta::blaze::Mode::Exhaustive, "", "", "", tweaks,
         MAX_PLAYGROUND_SCHEMA_LOCATIONS);
-  } catch (const sourcemeta::blaze::SchemaFrameLimitError &) {
+  } catch (const sourcemeta::core::SchemaFrameLimitError &) {
     throw PlaygroundSchemaError{
         sourcemeta::core::HTTP_STATUS_UNPROCESSABLE_CONTENT,
         "urn:sourcemeta:one:schema-too-complex",
@@ -318,10 +320,10 @@ auto RouterAction::compile_playground_schema(
         "urn:sourcemeta:one:schema-too-complex",
         "The supplied schema is too complex to compile on demand, so try a "
         "simpler one or add it to the catalog, where no such limit applies"};
-  } catch (const sourcemeta::blaze::SchemaResolutionError &error) {
+  } catch (const sourcemeta::core::SchemaResolutionError &error) {
     throw unresolvable_reference(schema, std::ref(resolver),
                                  error.identifier());
-  } catch (const sourcemeta::blaze::SchemaReferenceError &error) {
+  } catch (const sourcemeta::core::SchemaReferenceError &error) {
     throw unresolvable_reference(schema, std::ref(resolver),
                                  error.identifier());
   } catch (const PlaygroundSchemaError &) {

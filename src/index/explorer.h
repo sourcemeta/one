@@ -11,8 +11,8 @@
 #include <sourcemeta/one/search.h>
 #include <sourcemeta/one/shared.h>
 
-#include <sourcemeta/blaze/foundation.h>
 #include <sourcemeta/core/json.h>
+#include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/semver.h>
 #include <sourcemeta/core/text.h>
@@ -408,9 +408,9 @@ struct GenerateExplorerSchemaMetadata {
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
     assert(schema_data_option.has_value());
     const auto &schema_data{schema_data_option.value()};
-    const sourcemeta::blaze::SchemaFrame frame{
-        sourcemeta::blaze::SchemaFrame::Mode::Root, schema_data,
-        sourcemeta::blaze::schema_walker,
+    const sourcemeta::core::SchemaFrame frame{
+        sourcemeta::core::SchemaFrame::Mode::Root, schema_data,
+        sourcemeta::core::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         }};
@@ -459,11 +459,11 @@ struct GenerateExplorerSchemaMetadata {
               return resolver(identifier, callback);
             })};
         const auto &walker_result{
-            sourcemeta::blaze::schema_walker("examples", vocabularies)};
+            sourcemeta::core::schema_walker("examples", vocabularies)};
         if (walker_result.type ==
-                sourcemeta::blaze::SchemaKeywordType::Annotation ||
+                sourcemeta::core::SchemaKeywordType::Annotation ||
             walker_result.type ==
-                sourcemeta::blaze::SchemaKeywordType::Comment) {
+                sourcemeta::core::SchemaKeywordType::Comment) {
           constexpr std::size_t EXAMPLES_MAXIMUM{10};
           for (std::size_t cursor = 0;
                cursor < std::min(EXAMPLES_MAXIMUM, examples->size());

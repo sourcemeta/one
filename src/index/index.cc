@@ -1,10 +1,10 @@
 #include <sourcemeta/blaze/alterschema.h>
 #include <sourcemeta/blaze/compiler.h>
-#include <sourcemeta/blaze/foundation.h>
 
 #include <sourcemeta/core/error.h>
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json.h>
+#include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/options.h>
 #include <sourcemeta/core/parallel.h>
 #include <sourcemeta/core/stacktrace.h>
@@ -203,44 +203,44 @@ static auto execute_plan(sourcemeta::one::BuildState &entries,
                   action.dependencies.emplace_back(path);
                 },
                 resolver, configuration, raw_configuration);
-          } catch (const sourcemeta::blaze::SchemaResolutionError &error) {
+          } catch (const sourcemeta::core::SchemaResolutionError &error) {
             const auto *entry{
                 action.data.empty() ? nullptr : &resolver.entry(action.data)};
             if (entry) {
               throw sourcemeta::core::FileError<
-                  sourcemeta::blaze::SchemaResolutionError>(
+                  sourcemeta::core::SchemaResolutionError>(
                   entry->path, error.identifier(), error.what());
             }
 
             throw;
-          } catch (const sourcemeta::blaze::SchemaReferenceError &error) {
+          } catch (const sourcemeta::core::SchemaReferenceError &error) {
             const auto *entry{
                 action.data.empty() ? nullptr : &resolver.entry(action.data)};
             if (entry) {
               throw sourcemeta::core::FileError<
-                  sourcemeta::blaze::SchemaReferenceError>(
+                  sourcemeta::core::SchemaReferenceError>(
                   entry->path, error.identifier(), error.location(),
                   error.what());
             }
 
             throw;
-          } catch (const sourcemeta::blaze::SchemaReferenceObjectResourceError
+          } catch (const sourcemeta::core::SchemaReferenceObjectResourceError
                        &error) {
             const auto *entry{
                 action.data.empty() ? nullptr : &resolver.entry(action.data)};
             if (entry) {
               throw sourcemeta::core::FileError<
-                  sourcemeta::blaze::SchemaReferenceObjectResourceError>(
+                  sourcemeta::core::SchemaReferenceObjectResourceError>(
                   entry->path, error.identifier());
             }
 
             throw;
-          } catch (const sourcemeta::blaze::SchemaVocabularyError &error) {
+          } catch (const sourcemeta::core::SchemaVocabularyError &error) {
             const auto *entry{
                 action.data.empty() ? nullptr : &resolver.entry(action.data)};
             if (entry) {
               throw sourcemeta::core::FileError<
-                  sourcemeta::blaze::SchemaVocabularyError>(
+                  sourcemeta::core::SchemaVocabularyError>(
                   entry->path, error.uri(), error.what());
             }
 
@@ -938,21 +938,22 @@ auto main(int argc, char *argv[]) noexcept -> int {
   } catch (const sourcemeta::blaze::SchemaRuleMissingNameError &error) {
     std::println(stderr, "error: {}", error.what());
     return EXIT_FAILURE;
-  } catch (const sourcemeta::core::FileError<
-           sourcemeta::blaze::SchemaVocabularyError> &error) {
+  } catch (
+      const sourcemeta::core::FileError<sourcemeta::core::SchemaVocabularyError>
+          &error) {
     std::print(stderr, "error: {}\n  at vocabulary {}\n  at path {}\n",
                error.what(), error.uri(), error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
-           sourcemeta::blaze::SchemaUnknownBaseDialectError> &error) {
+           sourcemeta::core::SchemaUnknownBaseDialectError> &error) {
     std::print(stderr, "error: {}\n  at path {}\n", error.what(),
                error.path().string());
     return EXIT_FAILURE;
-  } catch (const sourcemeta::blaze::SchemaUnknownBaseDialectError &error) {
+  } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &error) {
     std::println(stderr, "error: {}", error.what());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
-           sourcemeta::blaze::SchemaUnknownDialectError> &error) {
+           sourcemeta::core::SchemaUnknownDialectError> &error) {
     std::print(stderr, "error: {}\n  at path {}\n", error.what(),
                error.path().string());
     return EXIT_FAILURE;
@@ -977,29 +978,30 @@ auto main(int argc, char *argv[]) noexcept -> int {
                error.what(), error.path().string(), error.uri(), error.base());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::FileError<
-           sourcemeta::blaze::SchemaReferenceObjectResourceError> &error) {
+           sourcemeta::core::SchemaReferenceObjectResourceError> &error) {
     std::print(stderr, "error: {}\n  at path {}\n  at identifier {}\n",
                error.what(), error.path().string(), error.identifier());
     return EXIT_FAILURE;
-  } catch (const sourcemeta::blaze::SchemaReferenceObjectResourceError &error) {
+  } catch (const sourcemeta::core::SchemaReferenceObjectResourceError &error) {
     std::print(stderr, "error: {}\n  at identifier {}\n", error.what(),
                error.identifier());
     return EXIT_FAILURE;
-  } catch (const sourcemeta::core::FileError<
-           sourcemeta::blaze::SchemaResolutionError> &error) {
+  } catch (
+      const sourcemeta::core::FileError<sourcemeta::core::SchemaResolutionError>
+          &error) {
     std::print(stderr,
                "error: {}\n  at identifier {}\n  at path {}\n\n"
                "Did you forget to register a schema with such URI?\n",
                error.what(), error.identifier(), error.path().string());
     return EXIT_FAILURE;
-  } catch (const sourcemeta::blaze::SchemaResolutionError &error) {
+  } catch (const sourcemeta::core::SchemaResolutionError &error) {
     std::print(stderr,
                "error: {}\n  at identifier {}\n\n"
                "Did you forget to register a schema with such URI?\n",
                error.what(), error.identifier());
     return EXIT_FAILURE;
   } catch (
-      const sourcemeta::core::FileError<sourcemeta::blaze::SchemaReferenceError>
+      const sourcemeta::core::FileError<sourcemeta::core::SchemaReferenceError>
           &error) {
     std::print(stderr,
                "error: {}\n  to identifier {}\n  at path {}\n"
@@ -1007,7 +1009,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
                error.what(), error.identifier(), error.path().string(),
                sourcemeta::core::to_string(error.location()));
     return EXIT_FAILURE;
-  } catch (const sourcemeta::blaze::SchemaReferenceError &error) {
+  } catch (const sourcemeta::core::SchemaReferenceError &error) {
     std::print(stderr, "error: {}\n  to identifier {}\n  at location \"{}\"\n",
                error.what(), error.identifier(),
                sourcemeta::core::to_string(error.location()));
@@ -1024,7 +1026,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
         error.what(), error.path().string(), error.line(), error.column());
     return EXIT_FAILURE;
   } catch (
-      const sourcemeta::core::FileError<sourcemeta::blaze::SchemaKeywordError>
+      const sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>
           &error) {
     std::print(stderr,
                "error: {}\n  at path {}\n  at keyword {}\n"
@@ -1032,9 +1034,8 @@ auto main(int argc, char *argv[]) noexcept -> int {
                error.what(), error.path().string(), error.keyword(),
                error.value());
     return EXIT_FAILURE;
-  } catch (
-      const sourcemeta::core::FileError<sourcemeta::blaze::SchemaFrameError>
-          &error) {
+  } catch (const sourcemeta::core::FileError<sourcemeta::core::SchemaFrameError>
+               &error) {
     std::print(stderr, "error: {}\n  at path {}\n  at identifier {}\n",
                error.what(), error.path().string(), error.identifier());
     return EXIT_FAILURE;

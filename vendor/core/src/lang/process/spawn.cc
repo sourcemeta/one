@@ -16,8 +16,7 @@
 #include <utility>          // std::move
 #include <vector>           // std::vector
 
-#if defined(_WIN32) && !defined(__MSYS__) && !defined(__CYGWIN__) &&           \
-    !defined(__MINGW32__) && !defined(__MINGW64__)
+#if defined(_WIN32) && !defined(__MSYS__) && !defined(__CYGWIN__)
 #define WIN32_LEAN_AND_MEAN
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -49,8 +48,7 @@ constexpr std::size_t TRANSFER_BUFFER_SIZE{16384};
 
 } // namespace
 
-#if defined(_WIN32) && !defined(__MSYS__) && !defined(__CYGWIN__) &&           \
-    !defined(__MINGW32__) && !defined(__MINGW64__)
+#if defined(_WIN32) && !defined(__MSYS__) && !defined(__CYGWIN__)
 
 namespace {
 
@@ -220,9 +218,6 @@ public:
   ~Descriptor() { this->close(); }
   Descriptor(const Descriptor &) = delete;
   auto operator=(const Descriptor &) -> Descriptor & = delete;
-  Descriptor(Descriptor &&other) noexcept : value_{other.value_} {
-    other.value_ = -1;
-  }
   auto operator=(Descriptor &&other) noexcept -> Descriptor & {
     if (this != &other) {
       this->close();
@@ -363,10 +358,6 @@ auto make_pipe(Descriptor &read_end, Descriptor &write_end) -> bool {
          relocate_above_standard(write_end);
 }
 
-// On every platform this builds for, a would-block error shares its value with
-// EAGAIN
-auto is_retryable_error() -> bool { return errno == EINTR || errno == EAGAIN; }
-
 // Returns whether the stream is still open
 auto drain_stream(Descriptor &descriptor, std::string &destination) -> bool {
   std::array<char, TRANSFER_BUFFER_SIZE> buffer{};
@@ -375,7 +366,9 @@ auto drain_stream(Descriptor &descriptor, std::string &destination) -> bool {
     destination.append(buffer.data(), static_cast<std::size_t>(count));
     return true;
   }
-  if (count == -1 && is_retryable_error()) {
+  // On every platform this builds for, a would-block error shares its value
+  // with EAGAIN
+  if (count == -1 && (errno == EINTR || errno == EAGAIN)) {
     return true;
   }
 
@@ -395,7 +388,7 @@ auto write_stream(Descriptor &descriptor, const std::string_view input,
 
     return;
   }
-  if (count == -1 && is_retryable_error()) {
+  if (count == -1 && (errno == EINTR || errno == EAGAIN)) {
     return;
   }
 
@@ -496,8 +489,7 @@ auto execute(const std::string &program,
 
   sourcemeta::core::ProcessOutput result;
 
-#if defined(_WIN32) && !defined(__MSYS__) && !defined(__CYGWIN__) &&           \
-    !defined(__MINGW32__) && !defined(__MINGW64__)
+#if defined(_WIN32) && !defined(__MSYS__) && !defined(__CYGWIN__)
   Handle input_read;
   Handle input_write;
   Handle output_read;
@@ -699,8 +691,7 @@ auto execute(const std::string &program,
     throw ProcessSpawnError{program, arguments};
   }
 
-#if defined(__MSYS__) || defined(__CYGWIN__) || defined(__MINGW32__) ||        \
-    defined(__MINGW64__)
+#if defined(__MSYS__) || defined(__CYGWIN__)
   // These platforms lack a child-directory file action, so we change the
   // process-wide working directory around the spawn and restore it afterwards
   // This races with any concurrent thread that observes or mutates the current
@@ -733,8 +724,7 @@ auto execute(const std::string &program,
   posix_spawn_file_actions_destroy(&file_actions);
   posix_spawnattr_destroy(&attributes);
 
-#if defined(__MSYS__) || defined(__CYGWIN__) || defined(__MINGW32__) ||        \
-    defined(__MINGW64__)
+#if defined(__MSYS__) || defined(__CYGWIN__)
   std::filesystem::current_path(original_directory);
 #endif
 

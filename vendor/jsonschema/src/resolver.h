@@ -2,10 +2,10 @@
 #define SOURCEMETA_JSONSCHEMA_CLI_RESOLVER_H_
 
 #include <sourcemeta/blaze/configuration.h>
-#include <sourcemeta/blaze/foundation.h>
 #include <sourcemeta/core/http.h>
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json.h>
+#include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/options.h>
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/yaml.h>
@@ -20,14 +20,16 @@
 #include <cstddef> // std::size_t
 #include <cstdint> // std::uint8_t
 #include <exception> // std::exception_ptr, std::current_exception, std::rethrow_exception
-#include <filesystem>  // std::filesystem
-#include <functional>  // std::function, std::ref
-#include <iostream>    // std::cerr
-#include <map>         // std::map
-#include <optional>    // std::optional
-#include <string>      // std::string
-#include <string_view> // std::string_view
-#include <thread>      // std::this_thread::sleep_for
+#include <filesystem>    // std::filesystem
+#include <functional>    // std::function, std::ref
+#include <iostream>      // std::cerr
+#include <map>           // std::map
+#include <optional>      // std::optional
+#include <string>        // std::string
+#include <string_view>   // std::string_view
+#include <thread>        // std::this_thread::sleep_for
+#include <unordered_map> // std::unordered_map
+#include <unordered_set> // std::unordered_set
 #include <utility> // std::pair, std::piecewise_construct, std::forward_as_tuple, std::move
 #include <vector> // std::vector
 
@@ -35,29 +37,110 @@ namespace sourcemeta::jsonschema {
 
 static constexpr std::uint8_t HTTP_MAXIMUM_RETRIES{3};
 
+// A key that is not a valid URI cannot denote a schema identifier, but it must
+// not render the rest of the map unusable either, so it stays as the user
+// wrote it
+static inline auto canonical_resolve_key(const std::string_view key)
+    -> std::string {
+  try {
+    return sourcemeta::core::URI::canonicalize(key);
+  } catch (const sourcemeta::core::URIParseError &) {
+    return std::string{key};
+  }
+}
+
+// The `.json` extension is not a URI concern, so this single alternative is
+// tried by hand, and always after the identifier itself, so that a map holding
+// both spellings is unambiguous
+static inline auto resolve_alternative(const std::string &identifier)
+    -> std::string {
+  return identifier.ends_with(".json")
+             ? identifier.substr(0, identifier.size() - 5)
+             : identifier + ".json";
+}
+
+// Keys are canonicalized once, up front, rather than on every lookup, which
+// would make resolution linear in the size of the map for each reference. When
+// several keys canonicalize to the same URI, the one the user already wrote in
+// canonical form wins, and otherwise the first in lexicographic order, so that
+// the winner never depends on hash iteration order
+// TODO: Move this to Blaze's configuration parser, alongside where the values
+// of the `resolve` object are already canonicalized. Doing it there would let
+// a key that is not a valid URI, and a set of keys that collapse into the same
+// canonical URI, be reported as a `ConfigurationParseError` pointing at the
+// offending property rather than quietly tolerated, and would spare every
+// consumer of a configuration from repeating the work
+static inline auto canonical_resolve_map(
+    const std::unordered_map<std::string, std::string> &resolve_map)
+    -> std::unordered_map<std::string, std::string> {
+  const std::map<std::string_view, std::string_view> sorted{
+      resolve_map.cbegin(), resolve_map.cend()};
+
+  std::unordered_map<std::string, std::string> result;
+  result.reserve(sorted.size());
+  for (const auto &entry : sorted) {
+    auto canonical{canonical_resolve_key(entry.first)};
+    const auto is_canonical{canonical == entry.first};
+    const auto match{result.find(canonical)};
+    if (match == result.cend()) {
+      result.emplace(std::move(canonical), entry.second);
+    } else if (is_canonical) {
+      match->second = entry.second;
+    }
+  }
+
+  return result;
+}
+
 static inline auto find_resolve_match(
     const std::unordered_map<std::string, std::string> &resolve_map,
     const std::string &identifier)
     -> std::unordered_map<std::string, std::string>::const_iterator {
+  if (resolve_map.empty()) {
+    return resolve_map.cend();
+  }
+
+  // Keys are stored canonicalized, so an identifier spelled the way its key is
+  // matches without parsing a URI at all
   auto match{resolve_map.find(identifier)};
-  if (match == resolve_map.cend() && !identifier.ends_with(".json")) {
-    match = resolve_map.find(identifier + ".json");
+  if (match != resolve_map.cend()) {
+    return match;
   }
-  if (match == resolve_map.cend() && identifier.ends_with(".json")) {
-    match = resolve_map.find(identifier.substr(0, identifier.size() - 5));
+
+  match = resolve_map.find(resolve_alternative(identifier));
+  if (match != resolve_map.cend()) {
+    return match;
   }
-  return match;
+
+  // Comparing canonical URIs is what lets a key match however the user spelled
+  // it. Canonicalization lowercases the scheme and the host, drops an empty
+  // fragment and a default port, resolves dot segments, and normalises
+  // percent-encoding, all per RFC 3986. An identifier that no URI can express
+  // canonicalizes to itself here, and so falls through as unresolved rather
+  // than aborting the command
+  const auto canonical{canonical_resolve_key(identifier)};
+  if (canonical == identifier) {
+    return resolve_map.cend();
+  }
+
+  match = resolve_map.find(canonical);
+  if (match != resolve_map.cend()) {
+    return match;
+  }
+
+  return resolve_map.find(resolve_alternative(canonical));
 }
 
 static inline auto
-resolve_map_uri(const sourcemeta::blaze::Configuration &configuration,
+resolve_map_uri(const std::unordered_map<std::string, std::string> &resolve_map,
+                const std::filesystem::path &base_path,
                 const std::string &identifier) -> std::optional<std::string> {
-  const auto match{find_resolve_match(configuration.resolve, identifier)};
-  if (match == configuration.resolve.cend()) {
+  const auto match{find_resolve_match(resolve_map, identifier)};
+  if (match == resolve_map.cend()) {
     return std::nullopt;
   }
 
-  return resolve_relative_uri(match->second, configuration.base_path);
+  return resolve_relative_uri(match->second, base_path);
 }
 
 static constexpr std::string_view HTTP_HEADER_EXAMPLE{
@@ -193,8 +276,8 @@ static inline auto fetch_schema(const sourcemeta::core::Options &options,
                                 std::string_view identifier,
                                 const bool remote = true,
                                 const bool bundle = false)
-    -> sourcemeta::blaze::SchemaResolverResult {
-  auto official_result{sourcemeta::blaze::schema_resolver(identifier)};
+    -> sourcemeta::core::SchemaResolverResult {
+  auto official_result{sourcemeta::core::schema_resolver(identifier)};
   if (official_result.has_value()) {
     return official_result;
   }
@@ -241,16 +324,16 @@ static inline auto fetch_schema(const sourcemeta::core::Options &options,
 
 static inline auto
 anonymous_base_dialect(const sourcemeta::core::JSON &schema,
-                       const sourcemeta::blaze::SchemaResolver &resolver)
-    -> std::optional<sourcemeta::blaze::SchemaBaseDialect> {
+                       const sourcemeta::core::SchemaResolver &resolver)
+    -> std::optional<sourcemeta::core::SchemaBaseDialect> {
   if (!schema.is_object()) {
     return std::nullopt;
   }
 
   try {
-    const sourcemeta::blaze::SchemaFrame frame{
-        sourcemeta::blaze::SchemaFrame::Mode::Root, schema,
-        sourcemeta::blaze::schema_walker, resolver};
+    const sourcemeta::core::SchemaFrame frame{
+        sourcemeta::core::SchemaFrame::Mode::Root, schema,
+        sourcemeta::core::schema_walker, resolver};
     if (!frame.root().empty()) {
       return std::nullopt;
     }
@@ -261,9 +344,122 @@ anonymous_base_dialect(const sourcemeta::core::JSON &schema,
     }
 
     return location.value().get().base_dialect;
-  } catch (const sourcemeta::blaze::SchemaUnknownBaseDialectError &) {
+  } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
     return std::nullopt;
   }
+}
+
+enum class IdentifierKeyword : std::uint8_t { Unknown, Modern, Legacy };
+
+// Every official meta-schema identifies itself using the keyword that its own
+// dialect relies on, which reveals that keyword without framing anything
+static inline auto identifier_keyword(const std::string_view dialect)
+    -> IdentifierKeyword {
+  const auto metaschema{sourcemeta::core::schema_resolver(dialect)};
+  if (!metaschema.has_value()) {
+    return IdentifierKeyword::Unknown;
+  }
+
+  if (metaschema.value().defines("$id")) {
+    return IdentifierKeyword::Modern;
+  }
+
+  if (metaschema.value().defines("id")) {
+    return IdentifierKeyword::Legacy;
+  }
+
+  return IdentifierKeyword::Unknown;
+}
+
+static inline auto
+resolve_identifier(const sourcemeta::core::JSON &document,
+                   const sourcemeta::core::JSON::String &keyword,
+                   const sourcemeta::core::URI &base,
+                   std::unordered_set<std::string> &accumulator)
+    -> std::optional<sourcemeta::core::URI> {
+  const auto *identifier{document.try_at(keyword)};
+  if (identifier == nullptr || !identifier->is_string()) {
+    return std::nullopt;
+  }
+
+  try {
+    sourcemeta::core::URI resolved{identifier->to_string()};
+    resolved.resolve_from(base).canonicalize();
+    accumulator.insert(resolved.recompose());
+    return resolved;
+  } catch (const sourcemeta::core::URIParseError &) {
+    accumulator.insert(identifier->to_string());
+    return std::nullopt;
+  }
+}
+
+// Framing a schema is what reveals the identifiers it declares, but framing
+// needs its meta-schema resolved first, which is precisely what the caller
+// cannot do yet. Scan for identifiers syntactically instead, erring on the
+// side of collecting too many, as the only cost of a false positive is
+// declining to fetch an identifier over the network. Only one of `$id` and
+// `id` identifies a resource, and which one depends on the dialect. Follow a
+// chain of bases for each keyword, as branching on every resource that
+// declares both takes exponential time. Where an official dialect is in
+// effect, both chains resolve its keyword, so that a resource switching
+// dialects still resolves against its parent whichever keyword identified it
+static inline auto
+collect_identifiers(const sourcemeta::core::JSON &document,
+                    const sourcemeta::core::URI &modern_base,
+                    const sourcemeta::core::URI &legacy_base,
+                    const IdentifierKeyword keyword,
+                    std::unordered_set<std::string> &accumulator) -> void {
+  if (document.is_object()) {
+    const auto *dialect{document.try_at("$schema")};
+    const auto effective_keyword{dialect != nullptr && dialect->is_string()
+                                     ? identifier_keyword(dialect->to_string())
+                                     : keyword};
+    const auto modern_resolved{resolve_identifier(
+        document, effective_keyword == IdentifierKeyword::Legacy ? "id" : "$id",
+        modern_base, accumulator)};
+
+    // Chains that share a base and follow the same keyword resolve alike
+    const auto shared{effective_keyword != IdentifierKeyword::Unknown &&
+                      &modern_base == &legacy_base};
+    const auto legacy_resolved{
+        shared
+            ? std::optional<sourcemeta::core::URI>{}
+            : resolve_identifier(
+                  document,
+                  effective_keyword == IdentifierKeyword::Modern ? "$id" : "id",
+                  legacy_base, accumulator)};
+
+    const auto &children_modern_base{
+        modern_resolved.has_value() ? modern_resolved.value() : modern_base};
+    const auto &children_legacy_base{shared ? children_modern_base
+                                            : (legacy_resolved.has_value()
+                                                   ? legacy_resolved.value()
+                                                   : legacy_base)};
+    for (const auto &entry : document.as_object()) {
+      collect_identifiers(entry.second, children_modern_base,
+                          children_legacy_base, effective_keyword, accumulator);
+    }
+  } else if (document.is_array()) {
+    for (const auto &element : document.as_array()) {
+      collect_identifiers(element, modern_base, legacy_base, keyword,
+                          accumulator);
+    }
+  }
+}
+
+// Identifiers are stored canonicalized, as whoever asks for one may well have
+// resolved it against a base URI first and so spell it differently than the
+// document that declares it. Trying the identifier as given before parsing it
+// as a URI keeps the common case free, exactly as `find_resolve_match` does
+static inline auto
+declares_identifier(const std::unordered_set<std::string> &identifiers,
+                    const std::string &identifier) -> bool {
+  if (identifiers.contains(identifier)) {
+    return true;
+  }
+
+  const auto canonical{canonical_resolve_key(identifier)};
+  return canonical != identifier && identifiers.contains(canonical);
 }
 
 class CustomResolver {
@@ -272,7 +468,12 @@ public:
       const sourcemeta::core::Options &options,
       const std::optional<sourcemeta::blaze::Configuration> &configuration,
       const bool remote, const std::string_view default_dialect)
-      : options_{options}, configuration_{configuration}, remote_{remote} {
+      : options_{options}, configuration_{configuration},
+        canonical_resolve_{
+            configuration.has_value()
+                ? canonical_resolve_map(configuration->resolve)
+                : std::unordered_map<std::string, std::string>{}},
+        remote_{remote} {
     if (options.contains("resolve")) {
       const auto entries{for_each_json(options.at("resolve"), options)};
       std::vector<std::size_t> pending;
@@ -285,7 +486,29 @@ public:
       // be another one of the schemas that the user is importing. Rather than
       // forcing the user to declare their files in dependency order, keep
       // retrying the ones that cannot resolve yet for as long as every pass
-      // manages to import at least one more schema
+      // manages to import at least one more schema. Keep remote fetching
+      // disabled while the locally provided schemas can make progress, so
+      // that a schema imported before the local file that declares its
+      // meta-schema resolves against that local file instead of triggering
+      // a network fetch for it
+      const auto allow_remote{this->remote_};
+
+      // Once remote fetching does come back on, it must still never shadow a
+      // schema that the user supplied locally, so remember every identifier
+      // these entries can contribute. Entries that do get imported are found
+      // among the imported schemas before this ever comes into play
+      if (allow_remote) {
+        const auto default_keyword{identifier_keyword(default_dialect)};
+        for (const auto &entry : entries) {
+          sourcemeta::core::URI base{sourcemeta::jsonschema::default_id(entry)};
+          base.canonicalize();
+          this->pending_identifiers_.insert(base.recompose());
+          collect_identifiers(entry.second, base, base, default_keyword,
+                              this->pending_identifiers_);
+        }
+      }
+
+      this->remote_ = false;
       while (!pending.empty()) {
         std::vector<std::size_t> deferred;
         std::exception_ptr failure;
@@ -294,7 +517,7 @@ public:
           try {
             this->import_entry(entries[index], default_dialect);
           } catch (const sourcemeta::core::FileError<
-                   sourcemeta::blaze::SchemaResolutionError> &) {
+                   sourcemeta::core::SchemaResolutionError> &) {
             if (!failure) {
               failure = std::current_exception();
             }
@@ -313,11 +536,20 @@ public:
         // one we report might be waiting on another stuck entry rather than
         // on the schema that is genuinely missing
         if (deferred.size() == pending.size()) {
-          std::rethrow_exception(failure);
+          // Before giving up, let the remaining entries try their remote
+          // fallback when the user enabled it
+          if (allow_remote && !this->remote_) {
+            this->remote_ = true;
+          } else {
+            std::rethrow_exception(failure);
+          }
         }
 
         pending = std::move(deferred);
       }
+
+      this->pending_identifiers_.clear();
+      this->remote_ = allow_remote;
     }
 
     if (this->configuration_.has_value()) {
@@ -349,7 +581,7 @@ public:
 
   // Prevent accidental copies, as every schema this imported would come
   // along. Passing this resolver by value to anything that takes a
-  // sourcemeta::blaze::SchemaResolver would do exactly that
+  // sourcemeta::core::SchemaResolver would do exactly that
   CustomResolver(const CustomResolver &) = delete;
   auto operator=(const CustomResolver &) -> CustomResolver & = delete;
   CustomResolver(CustomResolver &&) = default;
@@ -366,10 +598,10 @@ public:
 
     // Registering the top-level schema is not enough. We need to check
     // and register every embedded schema resource too
-    const sourcemeta::blaze::SchemaFrame frame{
-        sourcemeta::blaze::SchemaFrame::Mode::References,
+    const sourcemeta::core::SchemaFrame frame{
+        sourcemeta::core::SchemaFrame::Mode::References,
         schema,
-        sourcemeta::blaze::schema_walker,
+        sourcemeta::core::schema_walker,
         std::ref(*this),
         default_dialect,
         default_id};
@@ -378,7 +610,7 @@ public:
     frame.for_each_resource(
         [this, &schema, &frame, &origin, &callback, &added_any_schema](
             const std::string_view uri,
-            const sourcemeta::blaze::SchemaFrame::Location &entry) -> void {
+            const sourcemeta::core::SchemaFrame::Location &entry) -> void {
           auto subschema{sourcemeta::core::get(schema, entry.pointer)};
           // Reject a resource whose vocabularies we cannot make sense of
           // upfront, rather than at the point some consumer relies on them
@@ -389,8 +621,8 @@ public:
           // resolve their dialect and identifiers, otherwise the
           // consumer might have no idea what to do with them
           subschema.assign("$schema", sourcemeta::core::JSON{entry.dialect});
-          sourcemeta::blaze::schema_reidentify(subschema, uri,
-                                               entry.base_dialect);
+          sourcemeta::core::schema_reidentify(subschema, uri,
+                                              entry.base_dialect);
 
           const std::string identifier{uri};
           const auto result{this->schemas_.emplace(identifier, subschema)};
@@ -417,12 +649,14 @@ public:
   }
 
   auto operator()(std::string_view identifier) const
-      -> sourcemeta::blaze::SchemaResolverResult {
+      -> sourcemeta::core::SchemaResolverResult {
     const std::string string_identifier{identifier};
     const auto mapped_result = this->configuration_.and_then(
-        [&string_identifier](const sourcemeta::blaze::Configuration &config)
+        [this,
+         &string_identifier](const sourcemeta::blaze::Configuration &config)
             -> std::optional<std::string> {
-          return resolve_map_uri(config, string_identifier);
+          return resolve_map_uri(this->canonical_resolve_, config.base_path,
+                                 string_identifier);
         });
     const std::string &target{mapped_result.has_value() ? mapped_result.value()
                                                         : string_identifier};
@@ -434,6 +668,11 @@ public:
     const auto match{this->schemas_.find(target)};
     if (match != this->schemas_.cend()) {
       return match->second;
+    }
+
+    if (this->remote_ &&
+        declares_identifier(this->pending_identifiers_, target)) {
+      return std::nullopt;
     }
 
     auto fetched{fetch_schema(this->options_, target, this->remote_)};
@@ -451,8 +690,8 @@ public:
     }
 
     auto schema{std::move(fetched).to_owned()};
-    sourcemeta::blaze::schema_reidentify(schema, string_identifier,
-                                         base_dialect.value());
+    sourcemeta::core::schema_reidentify(schema, string_identifier,
+                                        base_dialect.value());
     return schema;
   }
 
@@ -463,7 +702,7 @@ private:
         << "Detecting schema resources from file: " << entry.first << "\n";
 
     if (!entry.second.is_object() && !entry.second.is_boolean()) {
-      throw sourcemeta::core::FileError<sourcemeta::blaze::SchemaError>(
+      throw sourcemeta::core::FileError<sourcemeta::core::SchemaError>(
           entry.resolution_base,
           "The file you provided does not represent a valid JSON Schema");
     }
@@ -495,47 +734,46 @@ private:
       throw sourcemeta::core::FileError<SchemaIdentifierConflictError>(
           entry.resolution_base, error.identifier(), error.location(),
           error.other_path(), error.other());
-    } catch (const sourcemeta::blaze::SchemaKeywordError &error) {
-      throw sourcemeta::core::FileError<sourcemeta::blaze::SchemaKeywordError>(
+    } catch (const sourcemeta::core::SchemaKeywordError &error) {
+      throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
           entry.resolution_base, error);
-    } catch (const sourcemeta::blaze::SchemaFrameError &error) {
-      throw sourcemeta::core::FileError<sourcemeta::blaze::SchemaFrameError>(
+    } catch (const sourcemeta::core::SchemaFrameError &error) {
+      throw sourcemeta::core::FileError<sourcemeta::core::SchemaFrameError>(
           entry.resolution_base, error.identifier(), error.what());
-    } catch (const sourcemeta::blaze::SchemaAnchorCollisionError &error) {
+    } catch (const sourcemeta::core::SchemaAnchorCollisionError &error) {
       const auto position{entry.positions.get(error.location())};
       if (position.has_value()) {
         throw PositionError<sourcemeta::core::FileError<
-            sourcemeta::blaze::SchemaAnchorCollisionError>>(
+            sourcemeta::core::SchemaAnchorCollisionError>>(
             std::get<0>(position.value()), std::get<1>(position.value()),
             entry.resolution_base, error);
       }
 
       throw sourcemeta::core::FileError<
-          sourcemeta::blaze::SchemaAnchorCollisionError>(entry.resolution_base,
-                                                         error);
-    } catch (const sourcemeta::blaze::SchemaReferenceError &error) {
-      throw sourcemeta::core::FileError<
-          sourcemeta::blaze::SchemaReferenceError>(
+          sourcemeta::core::SchemaAnchorCollisionError>(entry.resolution_base,
+                                                        error);
+    } catch (const sourcemeta::core::SchemaReferenceError &error) {
+      throw sourcemeta::core::FileError<sourcemeta::core::SchemaReferenceError>(
           entry.resolution_base, error.identifier(), error.location(),
           error.what());
-    } catch (const sourcemeta::blaze::SchemaUnknownBaseDialectError &) {
+    } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
       throw sourcemeta::core::FileError<
-          sourcemeta::blaze::SchemaUnknownBaseDialectError>(
+          sourcemeta::core::SchemaUnknownBaseDialectError>(
           entry.resolution_base);
-    } catch (const sourcemeta::blaze::SchemaUnknownDialectError &) {
+    } catch (const sourcemeta::core::SchemaUnknownDialectError &) {
       throw sourcemeta::core::FileError<
-          sourcemeta::blaze::SchemaUnknownDialectError>(entry.resolution_base);
-    } catch (const sourcemeta::blaze::SchemaRelativeMetaschemaResolutionError
+          sourcemeta::core::SchemaUnknownDialectError>(entry.resolution_base);
+    } catch (const sourcemeta::core::SchemaRelativeMetaschemaResolutionError
                  &error) {
       throw sourcemeta::core::FileError<
-          sourcemeta::blaze::SchemaRelativeMetaschemaResolutionError>(
+          sourcemeta::core::SchemaRelativeMetaschemaResolutionError>(
           entry.resolution_base, error);
-    } catch (const sourcemeta::blaze::SchemaResolutionError &error) {
+    } catch (const sourcemeta::core::SchemaResolutionError &error) {
       throw sourcemeta::core::FileError<
-          sourcemeta::blaze::SchemaResolutionError>(
+          sourcemeta::core::SchemaResolutionError>(
           entry.resolution_base, error.identifier(), error.what());
-    } catch (const sourcemeta::blaze::SchemaError &error) {
-      throw sourcemeta::core::FileError<sourcemeta::blaze::SchemaError>(
+    } catch (const sourcemeta::core::SchemaError &error) {
+      throw sourcemeta::core::FileError<sourcemeta::core::SchemaError>(
           entry.resolution_base, error.what());
     }
   }
@@ -546,19 +784,21 @@ private:
       origins_{};
   const sourcemeta::core::Options &options_;
   const std::optional<sourcemeta::blaze::Configuration> configuration_;
+  const std::unordered_map<std::string, std::string> canonical_resolve_;
   bool remote_{false};
+  std::unordered_set<std::string> pending_identifiers_{};
 };
 
 inline auto
 resolver(const sourcemeta::core::Options &options, const bool remote,
          const std::string_view default_dialect,
          const std::optional<sourcemeta::blaze::Configuration> &configuration)
-    -> const sourcemeta::blaze::SchemaResolver & {
+    -> const sourcemeta::core::SchemaResolver & {
   using CacheKey = std::pair<bool, std::string>;
   static std::map<CacheKey, CustomResolver> resolver_cache;
   // What callers get is a handle that refers back to the cached resolver,
   // as the resolver itself must never be copied into the callee
-  static std::map<CacheKey, sourcemeta::blaze::SchemaResolver> handle_cache;
+  static std::map<CacheKey, sourcemeta::core::SchemaResolver> handle_cache;
   const CacheKey cache_key{remote, std::string{default_dialect}};
 
   const auto handle{handle_cache.find(cache_key)};

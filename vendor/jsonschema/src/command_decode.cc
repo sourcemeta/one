@@ -1,11 +1,10 @@
-#include <sourcemeta/blaze/foundation.h>
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json.h>
+#include <sourcemeta/core/jsonschema.h>
 
 #include <sourcemeta/jsonbinpack/compiler.h>
 #include <sourcemeta/jsonbinpack/runtime.h>
 
-#include <cassert>    // assert
 #include <filesystem> // std::filesystem
 #include <fstream>    // std::ifstream
 
@@ -51,15 +50,11 @@ auto sourcemeta::jsonschema::decode(const sourcemeta::core::Options &options)
   const auto &custom_resolver{
       resolver(options, options.contains("http"), dialect, configuration)};
 
-  sourcemeta::jsonbinpack::compile(schema, sourcemeta::blaze::schema_walker,
+  sourcemeta::jsonbinpack::compile(schema, sourcemeta::core::schema_walker,
                                    custom_resolver);
   const auto encoding{sourcemeta::jsonbinpack::load(schema)};
 
-  std::ifstream input_stream{
-      sourcemeta::core::weakly_canonical(options.positional().front()),
-      std::ios::binary};
-  assert(!input_stream.fail());
-  assert(input_stream.is_open());
+  auto input_stream{sourcemeta::core::read_file(options.positional().front())};
 
   const std::filesystem::path output{options.positional().at(1)};
   std::ofstream output_stream(sourcemeta::core::weakly_canonical(output),
@@ -67,27 +62,32 @@ auto sourcemeta::jsonschema::decode(const sourcemeta::core::Options &options)
   output_stream.exceptions(std::ios_base::badbit);
   sourcemeta::jsonbinpack::Decoder decoder{input_stream};
 
-  if (output.extension() == ".jsonl") {
-    LOG_VERBOSE(options) << "Interpreting input as JSONL: "
-                         << sourcemeta::core::weakly_canonical(
-                                options.positional().front())
-                                .generic_string()
-                         << "\n";
+  try {
+    if (output.extension() == ".jsonl") {
+      LOG_VERBOSE(options) << "Interpreting input as JSONL: "
+                           << sourcemeta::core::weakly_canonical(
+                                  options.positional().front())
+                                  .generic_string()
+                           << "\n";
 
-    std::size_t count{0};
-    while (has_data(input_stream)) {
-      LOG_VERBOSE(options) << "Decoding entry #" << count << "\n";
-      auto document{decoder.read(encoding)};
-      if (count > 0) {
-        output_stream << "\n";
+      std::size_t count{0};
+      while (has_data(input_stream)) {
+        LOG_VERBOSE(options) << "Decoding entry #" << count << "\n";
+        auto document{decoder.read(encoding)};
+        if (count > 0) {
+          output_stream << "\n";
+        }
+
+        sourcemeta::core::prettify(document, output_stream);
+        count += 1;
       }
-
+    } else {
+      auto document{decoder.read(encoding)};
       sourcemeta::core::prettify(document, output_stream);
-      count += 1;
     }
-  } else {
-    auto document{decoder.read(encoding)};
-    sourcemeta::core::prettify(document, output_stream);
+  } catch (const sourcemeta::core::IOReadOutOfBoundsError &) {
+    throw sourcemeta::core::FileError<sourcemeta::core::IOReadOutOfBoundsError>(
+        options.positional().front());
   }
 
   output_stream << "\n";

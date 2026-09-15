@@ -1,8 +1,8 @@
 #include <sourcemeta/blaze/bundle.h>
-#include <sourcemeta/blaze/foundation.h>
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonpointer.h>
+#include <sourcemeta/core/jsonschema.h>
 
 #include <sourcemeta/blaze/compiler.h>
 #include <sourcemeta/blaze/evaluator.h>
@@ -10,6 +10,7 @@
 
 #include <cassert>     // assert
 #include <iostream>    // std::cout, std::cerr
+#include <iterator>    // std::next
 #include <map>         // std::map
 #include <sstream>     // std::ostringstream
 #include <string>      // std::string
@@ -40,8 +41,8 @@ auto effective_dialect(const sourcemeta::core::JSON &schema,
   if (!dialect->is_string()) {
     std::ostringstream value;
     sourcemeta::core::stringify(*dialect, value);
-    throw sourcemeta::blaze::SchemaKeywordError{"$schema", value.str(),
-                                                "The dialect value is invalid"};
+    throw sourcemeta::core::SchemaKeywordError{"$schema", value.str(),
+                                               "The dialect value is invalid"};
   }
 
   return dialect->to_string();
@@ -54,13 +55,26 @@ auto sourcemeta::jsonschema::metaschema(
   validate_http_headers(options);
   const auto trace{options.contains("trace")};
   const auto json_output{options.contains("json")};
+  const auto continue_on_error{options.contains("continue")};
 
   ValidationSummary summary;
   sourcemeta::blaze::Evaluator evaluator;
 
   std::map<std::string, sourcemeta::blaze::Template> cache;
 
-  for (const auto &entry : for_each_json(options, InputRequirement::NonEmpty)) {
+  const auto entries{for_each_json(options, InputRequirement::NonEmpty)};
+
+  // Trace output carries no per schema header, so more than one schema would
+  // produce an unattributable stream of interleaved evaluation steps
+  if (trace && entries.size() > 1) {
+    throw OptionConflictError{
+        "The `--trace/-t` option is only allowed given a single schema"};
+  }
+
+  for (auto iterator{entries.cbegin()}; iterator != entries.cend();
+       ++iterator) {
+    const auto &entry{*iterator};
+    const auto failures_before{summary.failed};
     summary.validated += 1;
     if (!entry.second.is_object() && !entry.second.is_boolean()) {
       throw NotSchemaError{entry.from_stdin ? stdin_path()
@@ -82,26 +96,26 @@ auto sourcemeta::jsonschema::metaschema(
           effective_dialect(entry.second, default_dialect_option)};
       if (dialect.empty()) {
         throw sourcemeta::core::FileError<
-            sourcemeta::blaze::SchemaUnknownBaseDialectError>(
+            sourcemeta::core::SchemaUnknownBaseDialectError>(
             entry.resolution_base);
       }
 
-      const sourcemeta::blaze::SchemaFrame schema_frame{
-          sourcemeta::blaze::SchemaFrame::Mode::Root, entry.second,
-          sourcemeta::blaze::schema_walker, custom_resolver,
+      const sourcemeta::core::SchemaFrame schema_frame{
+          sourcemeta::core::SchemaFrame::Mode::Root, entry.second,
+          sourcemeta::core::schema_walker, custom_resolver,
           default_dialect_option};
       const sourcemeta::core::JSON bundled{sourcemeta::blaze::bundle(
           schema_frame.metaschema(custom_resolver),
-          sourcemeta::blaze::schema_walker, custom_resolver,
+          sourcemeta::core::schema_walker, custom_resolver,
           sourcemeta::blaze::BundleMode::References, default_dialect_option)};
-      const sourcemeta::blaze::SchemaFrame frame{
-          sourcemeta::blaze::SchemaFrame::Mode::References, bundled,
-          sourcemeta::blaze::schema_walker, custom_resolver,
+      const sourcemeta::core::SchemaFrame frame{
+          sourcemeta::core::SchemaFrame::Mode::References, bundled,
+          sourcemeta::core::schema_walker, custom_resolver,
           default_dialect_option};
 
       if (!cache.contains(std::string{dialect})) {
         const auto metaschema_template{sourcemeta::blaze::compile(
-            bundled, sourcemeta::blaze::schema_walker, custom_resolver,
+            bundled, sourcemeta::core::schema_walker, custom_resolver,
             sourcemeta::blaze::default_schema_compiler, frame, frame.root(),
             sourcemeta::blaze::Mode::Exhaustive,
             sourcemeta::jsonschema::format_assertion_tweaks(options))};
@@ -119,7 +133,7 @@ auto sourcemeta::jsonschema::metaschema(
       } else if (json_output) {
         // Otherwise its impossible to correlate the output
         // when validating i.e. a directory of schemas
-        std::cerr << entry.first << "\n";
+        std::cerr << relative_path_string(entry.resolution_base) << "\n";
         const auto output{sourcemeta::blaze::standard(
             evaluator, cache.at(std::string{dialect}), entry.second,
             sourcemeta::blaze::StandardOutput::Basic, entry.positions)};
@@ -137,18 +151,20 @@ auto sourcemeta::jsonschema::metaschema(
         if (evaluator.validate(cache.at(std::string{dialect}), entry.second,
                                std::ref(output))) {
           LOG_VERBOSE(options)
-              << "ok: " << entry.first << "\n  matches " << dialect << "\n";
+              << "ok: " << relative_path_string(entry.resolution_base)
+              << "\n  matches " << dialect << "\n";
         } else {
-          std::cerr << "fail: " << entry.first << "\n";
+          std::cerr << "fail: " << relative_path_string(entry.resolution_base)
+                    << "\n";
           print(output, entry.positions, std::cerr);
           summary.failed += 1;
         }
       }
-    } catch (const sourcemeta::blaze::SchemaKeywordError &error) {
-      throw sourcemeta::core::FileError<sourcemeta::blaze::SchemaKeywordError>(
+    } catch (const sourcemeta::core::SchemaKeywordError &error) {
+      throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
           entry.resolution_base, error);
-    } catch (const sourcemeta::blaze::SchemaFrameError &error) {
-      throw sourcemeta::core::FileError<sourcemeta::blaze::SchemaFrameError>(
+    } catch (const sourcemeta::core::SchemaFrameError &error) {
+      throw sourcemeta::core::FileError<sourcemeta::core::SchemaFrameError>(
           entry.resolution_base, error);
     } catch (const sourcemeta::blaze::CompilerInvalidRegexError &error) {
       throw sourcemeta::core::FileError<
@@ -164,43 +180,53 @@ auto sourcemeta::jsonschema::metaschema(
       throw sourcemeta::core::FileError<
           sourcemeta::blaze::CompilerReferenceTargetNotSchemaError>(
           entry.resolution_base, error);
-    } catch (const sourcemeta::blaze::SchemaRelativeMetaschemaResolutionError
+    } catch (const sourcemeta::core::SchemaRelativeMetaschemaResolutionError
                  &error) {
       throw sourcemeta::core::FileError<
-          sourcemeta::blaze::SchemaRelativeMetaschemaResolutionError>(
+          sourcemeta::core::SchemaRelativeMetaschemaResolutionError>(
           entry.resolution_base, error);
-    } catch (const sourcemeta::blaze::SchemaResolutionError &error) {
+    } catch (const sourcemeta::core::SchemaResolutionError &error) {
       throw sourcemeta::core::FileError<
-          sourcemeta::blaze::SchemaResolutionError>(entry.resolution_base,
-                                                    error);
-    } catch (const sourcemeta::blaze::SchemaVocabularyError &error) {
+          sourcemeta::core::SchemaResolutionError>(entry.resolution_base,
+                                                   error);
+    } catch (const sourcemeta::core::SchemaVocabularyError &error) {
       throw sourcemeta::core::FileError<
-          sourcemeta::blaze::SchemaVocabularyError>(entry.resolution_base,
-                                                    error.uri(), error.what());
-    } catch (const sourcemeta::blaze::SchemaUnknownBaseDialectError &) {
+          sourcemeta::core::SchemaVocabularyError>(entry.resolution_base,
+                                                   error.uri(), error.what());
+    } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
       throw sourcemeta::core::FileError<
-          sourcemeta::blaze::SchemaUnknownBaseDialectError>(
+          sourcemeta::core::SchemaUnknownBaseDialectError>(
           entry.resolution_base);
-    } catch (const sourcemeta::blaze::SchemaUnknownDialectError &) {
+    } catch (const sourcemeta::core::SchemaUnknownDialectError &) {
       throw sourcemeta::core::FileError<
-          sourcemeta::blaze::SchemaUnknownDialectError>(entry.resolution_base);
-    } catch (const sourcemeta::blaze::SchemaAnchorCollisionError &error) {
+          sourcemeta::core::SchemaUnknownDialectError>(entry.resolution_base);
+    } catch (const sourcemeta::core::SchemaAnchorCollisionError &error) {
       const auto position{entry.positions.get(error.location())};
       if (position.has_value()) {
         throw PositionError<sourcemeta::core::FileError<
-            sourcemeta::blaze::SchemaAnchorCollisionError>>(
+            sourcemeta::core::SchemaAnchorCollisionError>>(
             std::get<0>(position.value()), std::get<1>(position.value()),
             entry.resolution_base, error);
       }
 
       throw sourcemeta::core::FileError<
-          sourcemeta::blaze::SchemaAnchorCollisionError>(entry.resolution_base,
-                                                         error);
+          sourcemeta::core::SchemaAnchorCollisionError>(entry.resolution_base,
+                                                        error);
+    }
+
+    if (summary.failed > failures_before && !continue_on_error) {
+      summary.stopped = std::next(iterator) != entries.cend();
+      break;
     }
   }
 
   if (!json_output && !trace) {
     print_summary(summary, options, std::cerr);
+  }
+
+  if (summary.stopped) {
+    LOG_WARNING()
+        << "Stopped at first failure, pass --continue/-c to keep going\n";
   }
 
   if (summary.failed > 0) {

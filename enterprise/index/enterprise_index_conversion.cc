@@ -1,34 +1,30 @@
 #include <sourcemeta/one/enterprise_index.h>
 
-#include <sourcemeta/blaze/alterschema.h>
+#include <sourcemeta/blaze/convert.h>
 #include <sourcemeta/blaze/format.h>
-#include <sourcemeta/blaze/foundation.h>
 
 #include <sourcemeta/core/json.h>
-#include <sourcemeta/core/jsonpointer.h>
+#include <sourcemeta/core/jsonschema.h>
 
-#include <array>       // std::array
-#include <memory>      // std::unique_ptr, std::make_unique
-#include <stdexcept>   // std::runtime_error
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move, std::unreachable
 
 namespace {
 
-auto upgrade_mode(const sourcemeta::one::SchemaDialect dialect)
-    -> sourcemeta::blaze::AlterSchemaMode {
+auto convert_target(const sourcemeta::one::SchemaDialect dialect)
+    -> sourcemeta::blaze::ConvertTarget {
   switch (dialect) {
     case sourcemeta::one::SchemaDialect::Draft4:
-      return sourcemeta::blaze::AlterSchemaMode::UpgradeDraft4;
+      return sourcemeta::blaze::ConvertTarget::Draft4;
     case sourcemeta::one::SchemaDialect::Draft6:
-      return sourcemeta::blaze::AlterSchemaMode::UpgradeDraft6;
+      return sourcemeta::blaze::ConvertTarget::Draft6;
     case sourcemeta::one::SchemaDialect::Draft7:
-      return sourcemeta::blaze::AlterSchemaMode::UpgradeDraft7;
+      return sourcemeta::blaze::ConvertTarget::Draft7;
     case sourcemeta::one::SchemaDialect::Draft201909:
-      return sourcemeta::blaze::AlterSchemaMode::Upgrade201909;
+      return sourcemeta::blaze::ConvertTarget::Draft201909;
     case sourcemeta::one::SchemaDialect::Draft202012:
-      return sourcemeta::blaze::AlterSchemaMode::Upgrade202012;
+      return sourcemeta::blaze::ConvertTarget::Draft202012;
     case sourcemeta::one::SchemaDialect::Draft3:
       break;
   }
@@ -61,29 +57,10 @@ auto conversions_metadata(const std::string_view dialect)
 
 auto convert_schema(sourcemeta::core::JSON &schema, const SchemaDialect target,
                     const bool is_metaschema,
-                    const sourcemeta::blaze::SchemaResolver &resolver) -> void {
-  // A transformer is never shared between threads
-  thread_local std::array<std::unique_ptr<sourcemeta::blaze::SchemaTransformer>,
-                          SCHEMA_CONVERSION_TARGETS.size()>
-      transformers;
-  auto &transformer{transformers[conversion_selector(target)]};
-  if (!transformer) {
-    transformer = std::make_unique<sourcemeta::blaze::SchemaTransformer>();
-    sourcemeta::blaze::add(*transformer, upgrade_mode(target));
-  }
-
-  const auto result{transformer->apply(
-      schema, sourcemeta::blaze::schema_walker, resolver,
-      [](const sourcemeta::core::Pointer &, const std::string_view,
-         const std::string_view,
-         const sourcemeta::blaze::SchemaTransformRule::Result &,
-         const bool) -> void {},
-      "", "", "", is_metaschema)};
-  if (!result.first) {
-    throw std::runtime_error("The schema could not be fully converted");
-  }
-
-  sourcemeta::blaze::format(schema, sourcemeta::blaze::schema_walker, resolver,
+                    const sourcemeta::core::SchemaResolver &resolver) -> void {
+  sourcemeta::blaze::convert(schema, sourcemeta::core::schema_walker, resolver,
+                             convert_target(target), "", "", is_metaschema);
+  sourcemeta::blaze::format(schema, sourcemeta::core::schema_walker, resolver,
                             conversion_uri(target));
 }
 

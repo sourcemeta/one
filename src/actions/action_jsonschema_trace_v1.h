@@ -4,11 +4,11 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonpointer.h>
 #include <sourcemeta/core/jsonrpc.h>
+#include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/blaze/evaluator.h>
-#include <sourcemeta/blaze/foundation.h>
 #include <sourcemeta/blaze/output.h>
 
 #include <sourcemeta/one/http.h>

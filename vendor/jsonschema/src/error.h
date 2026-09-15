@@ -4,7 +4,7 @@
 #include <sourcemeta/blaze/alterschema.h>
 #include <sourcemeta/blaze/codegen.h>
 #include <sourcemeta/blaze/configuration.h>
-#include <sourcemeta/blaze/foundation.h>
+#include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/blaze/test.h>
 #include <sourcemeta/core/error.h>
 #include <sourcemeta/core/gzip.h>
@@ -13,6 +13,7 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonld.h>
 #include <sourcemeta/core/jsonpointer.h>
+#include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/options.h>
 #include <sourcemeta/core/yaml.h>
 
@@ -542,6 +543,30 @@ inline auto stdin_path_string(const std::filesystem::path &path)
   }
 
   return sourcemeta::core::weakly_canonical(path).generic_string();
+}
+
+// Per instance output names paths relative to the working directory, while
+// error output stays absolute through `stdin_path_string`. Both the input and
+// the base are canonical, so a path reached through a symlink displays its
+// target rather than the argument. That is what keeps a symlinked working
+// directory resolving correctly, as `current_path()` is already resolved.
+// Requiring a canonical input also keeps this a lexical comparison that we can
+// afford once per instance
+inline auto relative_path_string(const std::filesystem::path &canonical)
+    -> std::string {
+  if (canonical == stdin_path()) {
+    return std::string{STDIN_DEFAULT_ID};
+  }
+
+  // The working directory cannot change while a command runs
+  static const auto WORKING_DIRECTORY{
+      sourcemeta::core::weakly_canonical(std::filesystem::current_path())};
+  const auto result{canonical.lexically_relative(WORKING_DIRECTORY)};
+  if (result.empty()) {
+    return canonical.generic_string();
+  }
+
+  return result.generic_string();
 }
 
 template <typename Exception>
@@ -1199,7 +1224,7 @@ inline auto try_catch(const sourcemeta::core::Options &options,
 
     return EXIT_SCHEMA_INPUT_ERROR;
   } catch (
-      const sourcemeta::core::FileError<sourcemeta::blaze::SchemaReferenceError>
+      const sourcemeta::core::FileError<sourcemeta::core::SchemaReferenceError>
           &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
@@ -1224,12 +1249,13 @@ inline auto try_catch(const sourcemeta::core::Options &options,
     print_exception(is_json, error);
     return EXIT_OTHER_INPUT_ERROR;
   } catch (const sourcemeta::core::FileError<
-           sourcemeta::blaze::SchemaRelativeMetaschemaResolutionError> &error) {
+           sourcemeta::core::SchemaRelativeMetaschemaResolutionError> &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     return EXIT_SCHEMA_INPUT_ERROR;
-  } catch (const sourcemeta::core::FileError<
-           sourcemeta::blaze::SchemaResolutionError> &error) {
+  } catch (
+      const sourcemeta::core::FileError<sourcemeta::core::SchemaResolutionError>
+          &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     if (!is_json) {
@@ -1244,7 +1270,7 @@ inline auto try_catch(const sourcemeta::core::Options &options,
 
     return EXIT_SCHEMA_INPUT_ERROR;
   } catch (const sourcemeta::core::FileError<
-           sourcemeta::blaze::SchemaUnknownBaseDialectError> &error) {
+           sourcemeta::core::SchemaUnknownBaseDialectError> &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     if (!is_json) {
@@ -1259,7 +1285,7 @@ inline auto try_catch(const sourcemeta::core::Options &options,
 
     return EXIT_SCHEMA_INPUT_ERROR;
   } catch (const sourcemeta::core::FileError<
-           sourcemeta::blaze::SchemaUnknownDialectError> &error) {
+           sourcemeta::core::SchemaUnknownDialectError> &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     if (!is_json) {
@@ -1274,7 +1300,7 @@ inline auto try_catch(const sourcemeta::core::Options &options,
 
     return EXIT_SCHEMA_INPUT_ERROR;
   } catch (
-      const sourcemeta::core::FileError<sourcemeta::blaze::SchemaKeywordError>
+      const sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>
           &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
@@ -1295,36 +1321,41 @@ inline auto try_catch(const sourcemeta::core::Options &options,
     print_exception(is_json, error);
     return EXIT_SCHEMA_INPUT_ERROR;
   } catch (const PositionError<sourcemeta::core::FileError<
-               sourcemeta::blaze::SchemaAnchorCollisionError>> &error) {
+               sourcemeta::core::SchemaAnchorCollisionError>> &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     return EXIT_SCHEMA_INPUT_ERROR;
   } catch (const sourcemeta::core::FileError<
-           sourcemeta::blaze::SchemaAnchorCollisionError> &error) {
+           sourcemeta::core::SchemaAnchorCollisionError> &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     return EXIT_SCHEMA_INPUT_ERROR;
-  } catch (
-      const sourcemeta::core::FileError<sourcemeta::blaze::SchemaFrameError>
-          &error) {
-    const auto is_json{options.contains("json")};
-    print_exception(is_json, error);
-    return EXIT_SCHEMA_INPUT_ERROR;
-  } catch (const sourcemeta::core::FileError<
-           sourcemeta::blaze::SchemaReferenceObjectResourceError> &error) {
-    const auto is_json{options.contains("json")};
-    print_exception(is_json, error);
-    return EXIT_SCHEMA_INPUT_ERROR;
-  } catch (const sourcemeta::core::FileError<sourcemeta::blaze::SchemaError>
+  } catch (const sourcemeta::core::FileError<sourcemeta::core::SchemaFrameError>
                &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     return EXIT_SCHEMA_INPUT_ERROR;
   } catch (const sourcemeta::core::FileError<
-           sourcemeta::blaze::SchemaVocabularyError> &error) {
+           sourcemeta::core::SchemaReferenceObjectResourceError> &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (
+      const sourcemeta::core::FileError<sourcemeta::core::SchemaError> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (
+      const sourcemeta::core::FileError<sourcemeta::core::SchemaVocabularyError>
+          &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const sourcemeta::core::FileError<sourcemeta::blaze::EvaluationError>
+               &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_NOT_SUPPORTED;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::blaze::CodegenUnsupportedKeywordError> &error) {
     const auto is_json{options.contains("json")};
@@ -1443,6 +1474,11 @@ inline auto try_catch(const sourcemeta::core::Options &options,
     return EXIT_NOT_SUPPORTED;
 
     // Standard library handlers
+  } catch (const sourcemeta::core::FileError<
+           sourcemeta::core::IOReadOutOfBoundsError> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_OTHER_INPUT_ERROR;
   } catch (const sourcemeta::core::IOFileNotFoundError &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);

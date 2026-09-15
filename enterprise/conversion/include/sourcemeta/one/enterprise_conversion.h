@@ -1,7 +1,7 @@
 #ifndef SOURCEMETA_ONE_ENTERPRISE_CONVERSION_H_
 #define SOURCEMETA_ONE_ENTERPRISE_CONVERSION_H_
 
-#include <sourcemeta/blaze/foundation.h>
+#include <sourcemeta/core/jsonschema.h>
 
 #include <algorithm>   // std::ranges::find
 #include <array>       // std::array
@@ -146,20 +146,20 @@ inline constexpr std::array<SchemaDialect, 5> SCHEMA_CONVERSION_TARGETS{
 
 // The base dialect of an official dialect
 [[nodiscard]] inline auto conversion_base_dialect(const SchemaDialect dialect)
-    -> sourcemeta::blaze::SchemaBaseDialect {
+    -> sourcemeta::core::SchemaBaseDialect {
   switch (dialect) {
     case SchemaDialect::Draft3:
-      return sourcemeta::blaze::SchemaBaseDialect::JSON_SCHEMA_DRAFT_3;
+      return sourcemeta::core::SchemaBaseDialect::JSON_SCHEMA_DRAFT_3;
     case SchemaDialect::Draft4:
-      return sourcemeta::blaze::SchemaBaseDialect::JSON_SCHEMA_DRAFT_4;
+      return sourcemeta::core::SchemaBaseDialect::JSON_SCHEMA_DRAFT_4;
     case SchemaDialect::Draft6:
-      return sourcemeta::blaze::SchemaBaseDialect::JSON_SCHEMA_DRAFT_6;
+      return sourcemeta::core::SchemaBaseDialect::JSON_SCHEMA_DRAFT_6;
     case SchemaDialect::Draft7:
-      return sourcemeta::blaze::SchemaBaseDialect::JSON_SCHEMA_DRAFT_7;
+      return sourcemeta::core::SchemaBaseDialect::JSON_SCHEMA_DRAFT_7;
     case SchemaDialect::Draft201909:
-      return sourcemeta::blaze::SchemaBaseDialect::JSON_SCHEMA_2019_09;
+      return sourcemeta::core::SchemaBaseDialect::JSON_SCHEMA_2019_09;
     case SchemaDialect::Draft202012:
-      return sourcemeta::blaze::SchemaBaseDialect::JSON_SCHEMA_2020_12;
+      return sourcemeta::core::SchemaBaseDialect::JSON_SCHEMA_2020_12;
   }
 
   std::unreachable();

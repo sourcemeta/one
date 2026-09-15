@@ -16,10 +16,10 @@
 #include <sourcemeta/blaze/bundle.h>
 #include <sourcemeta/blaze/editor.h>
 #include <sourcemeta/blaze/format.h>
-#include <sourcemeta/blaze/foundation.h>
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonpointer.h>
+#include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/blaze/compiler.h>
@@ -73,16 +73,16 @@ static auto make_dialect_extension(const std::string_view dialect)
 // The name a location kind answers to outside this program, which is a name
 // this project promises rather than one it happens to use
 static auto
-location_type_name(const sourcemeta::blaze::SchemaFrame::LocationType type)
+location_type_name(const sourcemeta::core::SchemaFrame::LocationType type)
     -> std::string_view {
   switch (type) {
-    case sourcemeta::blaze::SchemaFrame::LocationType::Resource:
+    case sourcemeta::core::SchemaFrame::LocationType::Resource:
       return "resource";
-    case sourcemeta::blaze::SchemaFrame::LocationType::Anchor:
+    case sourcemeta::core::SchemaFrame::LocationType::Anchor:
       return "anchor";
-    case sourcemeta::blaze::SchemaFrame::LocationType::Pointer:
+    case sourcemeta::core::SchemaFrame::LocationType::Pointer:
       return "pointer";
-    case sourcemeta::blaze::SchemaFrame::LocationType::Subschema:
+    case sourcemeta::core::SchemaFrame::LocationType::Subschema:
       return "subschema";
   }
 
@@ -92,18 +92,18 @@ location_type_name(const sourcemeta::blaze::SchemaFrame::LocationType type)
 // Which vocabulary a keyword belongs to, as a name a report is keyed by, with
 // keywords no vocabulary claims gathered under one of their own
 static auto
-vocabulary_name(const sourcemeta::blaze::SchemaWalkerResult &walker_result)
+vocabulary_name(const sourcemeta::core::SchemaWalkerResult &walker_result)
     -> sourcemeta::core::JSON::String {
   if (!walker_result.vocabulary.has_value()) {
     return "unknown";
   }
 
   const auto &vocabulary{walker_result.vocabulary.value()};
-  if (std::holds_alternative<sourcemeta::blaze::SchemaVocabularies::Known>(
+  if (std::holds_alternative<sourcemeta::core::SchemaVocabularies::Known>(
           vocabulary)) {
     return std::format(
         "{}",
-        std::get<sourcemeta::blaze::SchemaVocabularies::Known>(vocabulary));
+        std::get<sourcemeta::core::SchemaVocabularies::Known>(vocabulary));
   }
 
   return sourcemeta::core::JSON::String{std::get<std::string_view>(vocabulary)};
@@ -118,17 +118,17 @@ vocabulary_name(const sourcemeta::blaze::SchemaWalkerResult &walker_result)
 // established before the declaration is read at all
 static auto throw_if_unknown_required_vocabulary(
     const sourcemeta::core::JSON &schema,
-    const sourcemeta::blaze::SchemaResolver &resolver,
+    const sourcemeta::core::SchemaResolver &resolver,
     const std::string_view dialect) -> void {
-  const sourcemeta::blaze::SchemaFrame frame{
-      sourcemeta::blaze::SchemaFrame::Mode::Root, schema,
-      sourcemeta::blaze::schema_walker, resolver, dialect};
+  const sourcemeta::core::SchemaFrame frame{
+      sourcemeta::core::SchemaFrame::Mode::Root, schema,
+      sourcemeta::core::schema_walker, resolver, dialect};
   const auto base{frame.root_location().value().get().base_dialect};
 
-  if (base != sourcemeta::blaze::SchemaBaseDialect::JSON_SCHEMA_2020_12 &&
-      base != sourcemeta::blaze::SchemaBaseDialect::JSON_SCHEMA_2020_12_HYPER &&
-      base != sourcemeta::blaze::SchemaBaseDialect::JSON_SCHEMA_2019_09 &&
-      base != sourcemeta::blaze::SchemaBaseDialect::JSON_SCHEMA_2019_09_HYPER) {
+  if (base != sourcemeta::core::SchemaBaseDialect::JSON_SCHEMA_2020_12 &&
+      base != sourcemeta::core::SchemaBaseDialect::JSON_SCHEMA_2020_12_HYPER &&
+      base != sourcemeta::core::SchemaBaseDialect::JSON_SCHEMA_2019_09 &&
+      base != sourcemeta::core::SchemaBaseDialect::JSON_SCHEMA_2019_09_HYPER) {
     return;
   }
 
@@ -155,10 +155,10 @@ static auto throw_if_unknown_required_vocabulary(
     // Whether a vocabulary is one this build knows is a question only the set
     // that holds them can answer, so it is asked one vocabulary at a time in
     // order to name the one that could not be honoured
-    sourcemeta::blaze::SchemaVocabularies vocabulary;
+    sourcemeta::core::SchemaVocabularies vocabulary;
     vocabulary.insert(entry.first, true);
     if (vocabulary.has_unknown()) {
-      throw sourcemeta::blaze::SchemaVocabularyError(
+      throw sourcemeta::core::SchemaVocabularyError(
           entry.first, "The metaschema requires an unrecognised vocabulary");
     }
   }
@@ -252,7 +252,7 @@ struct GenerateMaterialisedSchema {
     }
 
     sourcemeta::blaze::format(
-        schema.value(), sourcemeta::blaze::schema_walker,
+        schema.value(), sourcemeta::core::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
@@ -306,7 +306,7 @@ private:
 
     std::call_once(slot->flag, [&] {
       slot->value = sourcemeta::blaze::compile(
-          schema, sourcemeta::blaze::schema_walker,
+          schema, sourcemeta::core::schema_walker,
           [&resolver](const auto identifier) { return resolver(identifier); },
           sourcemeta::blaze::default_schema_compiler,
           // The point of this class is to show nice errors to the user
@@ -416,21 +416,21 @@ struct GenerateFrameLocations {
     sourcemeta::core::JSON parsed{nullptr};
     sourcemeta::core::parse_json(contents_stream.str(), parsed,
                                  std::ref(tracker));
-    const sourcemeta::blaze::SchemaResolver schema_resolver{
+    const sourcemeta::core::SchemaResolver schema_resolver{
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         }};
-    const sourcemeta::blaze::SchemaFrame frame{
-        sourcemeta::blaze::SchemaFrame::Mode::Locations, contents,
-        sourcemeta::blaze::schema_walker, schema_resolver};
+    const sourcemeta::core::SchemaFrame frame{
+        sourcemeta::core::SchemaFrame::Mode::Locations, contents,
+        sourcemeta::core::schema_walker, schema_resolver};
     auto result{sourcemeta::core::JSON::make_object()};
     result.assign("static", sourcemeta::core::JSON::make_object());
     result.assign("dynamic", sourcemeta::core::JSON::make_object());
     frame.for_each_location(
         [&frame, &tracker, &result](
-            const sourcemeta::blaze::SchemaReferenceType type,
+            const sourcemeta::core::SchemaReferenceType type,
             const std::string_view uri,
-            const sourcemeta::blaze::SchemaFrame::Location &location) -> void {
+            const sourcemeta::core::SchemaFrame::Location &location) -> void {
           auto entry{sourcemeta::core::JSON::make_object()};
           entry.assign("parent",
                        location.parent.has_value()
@@ -464,11 +464,11 @@ struct GenerateFrameLocations {
                        sourcemeta::core::JSON{location.property_name});
           entry.assign("orphan", sourcemeta::core::JSON{location.orphan});
           switch (type) {
-            case sourcemeta::blaze::SchemaReferenceType::Static:
+            case sourcemeta::core::SchemaReferenceType::Static:
               result.at("static").assign(sourcemeta::core::JSON::String{uri},
                                          std::move(entry));
               break;
-            case sourcemeta::blaze::SchemaReferenceType::Dynamic:
+            case sourcemeta::core::SchemaReferenceType::Dynamic:
               result.at("dynamic").assign(sourcemeta::core::JSON::String{uri},
                                           std::move(entry));
               break;
@@ -497,7 +497,7 @@ struct GenerateDependencies {
     const auto &contents{contents_option.value()};
     auto result{sourcemeta::core::JSON::make_array()};
     sourcemeta::blaze::dependencies(
-        contents, sourcemeta::blaze::schema_walker,
+        contents, sourcemeta::core::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
@@ -575,7 +575,7 @@ struct GenerateHealth {
     {
       auto &cache_entry{bundle_for(collection, resolver, callback)};
       const auto result{cache_entry.bundle.check(
-          contents, sourcemeta::blaze::schema_walker,
+          contents, sourcemeta::core::schema_walker,
           [&callback, &resolver](const auto identifier) {
             return resolver(identifier, callback);
           },
@@ -684,7 +684,7 @@ struct GenerateBundle {
     // The registry serves every meta-schema a schema may declare, so
     // bundles only need to embed references and can skip meta-schemas
     sourcemeta::blaze::bundle(
-        schema, sourcemeta::blaze::schema_walker,
+        schema, sourcemeta::core::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
@@ -697,7 +697,7 @@ struct GenerateBundle {
             : std::string_view{}};
     assert(!dialect_identifier.empty());
     sourcemeta::blaze::format(
-        schema, sourcemeta::blaze::schema_walker,
+        schema, sourcemeta::core::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
@@ -727,7 +727,7 @@ struct GenerateEditor {
     assert(schema_option.has_value());
     auto schema{std::move(schema_option.value())};
     sourcemeta::blaze::for_editor(
-        schema, sourcemeta::blaze::schema_walker,
+        schema, sourcemeta::core::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         });
@@ -739,7 +739,7 @@ struct GenerateEditor {
             : std::string_view{}};
     assert(!dialect_identifier.empty());
     sourcemeta::blaze::format(
-        schema, sourcemeta::blaze::schema_walker,
+        schema, sourcemeta::core::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
@@ -767,14 +767,14 @@ static auto generate_blaze_template(
       sourcemeta::one::metapack_read_json(dependencies.front())};
   assert(contents_option.has_value());
   const auto &contents{contents_option.value()};
-  const sourcemeta::blaze::SchemaFrame frame{
-      sourcemeta::blaze::SchemaFrame::Mode::References, contents,
-      sourcemeta::blaze::schema_walker,
+  const sourcemeta::core::SchemaFrame frame{
+      sourcemeta::core::SchemaFrame::Mode::References, contents,
+      sourcemeta::core::schema_walker,
       [&callback, &resolver](const auto identifier) {
         return resolver(identifier, callback);
       }};
   const auto schema_template{sourcemeta::blaze::compile(
-      contents, sourcemeta::blaze::schema_walker,
+      contents, sourcemeta::core::schema_walker,
       [&callback, &resolver](const auto identifier) {
         return resolver(identifier, callback);
       },
@@ -827,13 +827,13 @@ struct GenerateStats {
     std::map<sourcemeta::core::JSON::String,
              std::map<sourcemeta::core::JSON::String, std::uint64_t>>
         result;
-    const sourcemeta::blaze::SchemaResolver schema_resolver{
+    const sourcemeta::core::SchemaResolver schema_resolver{
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         }};
-    const sourcemeta::blaze::SchemaFrame frame{
-        sourcemeta::blaze::SchemaFrame::Mode::Locations, schema,
-        sourcemeta::blaze::schema_walker, schema_resolver};
+    const sourcemeta::core::SchemaFrame frame{
+        sourcemeta::core::SchemaFrame::Mode::Locations, schema,
+        sourcemeta::core::schema_walker, schema_resolver};
 
     // A subschema is located once for every URI that reaches it, and what is
     // counted here is the keywords it holds rather than the names it answers
@@ -843,7 +843,7 @@ struct GenerateStats {
         visited;
     frame.for_each_subschema(
         [&frame, &schema, &schema_resolver, &result, &visited](
-            const sourcemeta::blaze::SchemaFrame::Location &location) -> void {
+            const sourcemeta::core::SchemaFrame::Location &location) -> void {
           const auto [pointer, inserted]{
               visited.insert(sourcemeta::core::to_pointer(location.pointer))};
           if (!inserted) {
@@ -859,7 +859,7 @@ struct GenerateStats {
               frame.vocabularies(location, schema_resolver)};
           for (const auto &property : subschema.as_object()) {
             const auto &walker_result{
-                sourcemeta::blaze::schema_walker(property.first, vocabularies)};
+                sourcemeta::core::schema_walker(property.first, vocabularies)};
             result[vocabulary_name(walker_result)][property.first] += 1;
           }
         });

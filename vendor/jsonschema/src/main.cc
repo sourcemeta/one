@@ -1,4 +1,4 @@
-#include <sourcemeta/blaze/foundation.h>
+#include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/options.h>
 
 #include <cstdlib>     // EXIT_SUCCESS
@@ -47,6 +47,9 @@ Commands:
 
        Validate one or more instances against the given schema.
 
+       The --trace/-t option is only allowed given a single instance, and
+       --benchmark/-b given a single file, which may be a JSONL dataset.
+
        By default, schemas are validated in exhaustive mode, which results in
        better error messages, at the expense of speed. The --fast/-f option
        makes the schema compiler optimise for speed, at the expense of error
@@ -60,10 +63,11 @@ Commands:
 
    metaschema [schemas-or-directories...] [--extension/-e <extension>]
               [--ignore/-i <schemas-or-directories>] [--trace/-t]
-              [--format-assertion/-F]
+              [--continue/-c] [--format-assertion/-F]
 
        Validate that a schema or a set of schemas are valid with respect
-       to their metaschemas.
+       to their metaschemas. The --trace/-t option is only allowed given a
+       single schema.
 
    compile <schema.json|.yaml> [--extension/-e <extension>]
            [--ignore/-i <schemas-or-directories>] [--fast/-f] [--minify/-m]
@@ -76,10 +80,11 @@ Commands:
 
    test [schemas-or-directories...] [--extension/-e <extension>]
         [--ignore/-i <schemas-or-directories>] [--format-assertion/-F]
-        [--jobs/-J <count>]
+        [--jobs/-J <count>] [--trace/-t]
 
        Run a set of unit tests against a schema.
        Pass --json/-j to output results in CTRF format (https://ctrf.io).
+       Pass --trace/-t to print the evaluation trace of every failing test.
 
    fmt [schemas-or-directories...] [--check/-c] [--extension/-e <extension>]
        [--ignore/-i <schemas-or-directories>] [--keep-ordering/-k]
@@ -227,6 +232,7 @@ auto jsonschema_main(const std::string &program, const std::string &command,
   if (command == "metaschema") {
     app.flag("trace", {"t"});
     app.flag("format-assertion", {"F"});
+    app.flag("continue", {"c"});
     app.option("extension", {"e"});
     app.option("ignore", {"i"});
     app.parse(argc, argv, {.skip = 1});
@@ -247,6 +253,7 @@ auto jsonschema_main(const std::string &program, const std::string &command,
 
   if (command == "test") {
     app.flag("format-assertion", {"F"});
+    app.flag("trace", {"t"});
     app.option("extension", {"e"});
     app.option("ignore", {"i"});
     app.option("jobs", {"J"});

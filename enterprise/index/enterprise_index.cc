@@ -2,9 +2,9 @@
 
 #include <sourcemeta/blaze/alterschema.h>
 #include <sourcemeta/blaze/compiler.h>
-#include <sourcemeta/blaze/foundation.h>
 
 #include <sourcemeta/core/error.h>
+#include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/oauth.h>
 #include <sourcemeta/core/text.h>
@@ -39,7 +39,7 @@ auto load_custom_lint_rules(
     auto rule_schema{sourcemeta::core::read_yaml_or_json(rule.path)};
     try {
       custom_names.emplace(bundle.add<sourcemeta::blaze::SchemaRule>(
-          rule_schema, sourcemeta::blaze::schema_walker,
+          rule_schema, sourcemeta::core::schema_walker,
           [&callback, &resolver](
               const auto identifier) -> std::optional<sourcemeta::core::JSON> {
             return resolver(identifier, callback);
@@ -60,9 +60,9 @@ auto load_custom_lint_rules(
     } catch (const sourcemeta::blaze::SchemaRuleMissingNameError &) {
       throw sourcemeta::core::FileError<
           sourcemeta::blaze::SchemaRuleMissingNameError>(rule.path);
-    } catch (const sourcemeta::blaze::SchemaUnknownBaseDialectError &) {
+    } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
       throw sourcemeta::core::FileError<
-          sourcemeta::blaze::SchemaUnknownBaseDialectError>(rule.path);
+          sourcemeta::core::SchemaUnknownBaseDialectError>(rule.path);
     }
   }
 }
