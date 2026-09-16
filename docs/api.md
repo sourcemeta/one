@@ -409,21 +409,47 @@ declare them.
 
 !!! warning "Why meta-schemas are not converted"
 
-    A meta-schema describes a dialect, so converting one would change the
-    dialect it is written in without restating the dialect it describes. The
-    result would declare a newer dialect while still permitting the keywords of
-    the older one. A schema that declares a custom meta-schema is refused for
-    the same reason. Conversion renames keywords, for instance to
-    [`$defs`](https://www.learnjsonschema.com/2020-12/core/defs/) in 2020-12,
-    so a converted schema stops satisfying the meta-schema it declares whenever
-    that meta-schema enumerates the keywords it allows.
+    A meta-schema describes a dialect, so converting one changes the dialect it
+    is written in without restating the dialect it describes. Take a team
+    dialect that insists every schema gathers its subschemas in one place:
 
-    Plenty of individual conversions would in fact be harmless, and a dialect
-    that constrains nothing of the sort would convert cleanly. The trouble is
-    that nothing in a schema says which case it is, and what the author of a
-    dialect meant by each of their own keywords is not something a conversion
-    can infer. Rather than guess and hand back a document that quietly means
-    something else, this is refused, and it is unlikely to ever happen
+    ```json
+    {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "https://example.com/meta",
+      "type": "object",
+      "required": [ "definitions" ]
+    }
+    ```
+
+    A schema written in that dialect satisfies it. Converting that schema into
+    2020-12 would rename
+    [`definitions`](https://www.learnjsonschema.com/draft7/validation/definitions/)
+    into [`$defs`](https://www.learnjsonschema.com/2020-12/core/defs/), and
+    point the reference at its new home:
+
+    ```json
+    {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://example.com/contact",
+      "properties": { "address": { "$ref": "#/$defs/email" } },
+      "$defs": { "email": { "type": "string" } }
+    }
+    ```
+
+    The schema satisfies its dialect as written and would not after such a
+    conversion, as the dialect still requires
+    [`definitions`](https://www.learnjsonschema.com/draft7/validation/definitions/).
+    Converting the meta-schema alongside it changes nothing, as that only
+    changes the dialect the meta-schema is written in, leaving the keyword it
+    requires exactly as it was.
+
+    Nothing in either document says whether the author meant the JSON Schema
+    keyword, which a conversion should rename, or a keyword of their own that
+    happens to share the name, which it should leave alone. Plenty of
+    conversions would be harmless, and a dialect that constrains nothing of the
+    sort converts cleanly, but since nothing says which case is at hand, this is
+    refused rather than guessed at, and it is unlikely to ever happen
     automatically.
 
 === "200"
