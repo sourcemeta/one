@@ -20,7 +20,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
   "type": "urn:sourcemeta:one:metaschema-conversion",
   "title": "Bad Request",
   "status": 400,
-  "detail": "Meta-schemas cannot be converted, as a conversion cannot restate the dialect that a meta-schema describes"
+  "detail": "Meta-schemas are not converted, as restating the dialect that a meta-schema describes is not always safe"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -59,7 +59,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
   "type": "urn:sourcemeta:one:metaschema-conversion",
   "title": "Bad Request",
   "status": 400,
-  "detail": "Meta-schemas cannot be converted, as a conversion cannot restate the dialect that a meta-schema describes"
+  "detail": "Meta-schemas are not converted, as restating the dialect that a meta-schema describes is not always safe"
 }
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}

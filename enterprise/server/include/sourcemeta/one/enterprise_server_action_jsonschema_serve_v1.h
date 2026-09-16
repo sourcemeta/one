@@ -173,8 +173,8 @@ private:
         sourcemeta::one::json_error(
             request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
             "urn:sourcemeta:one:metaschema-conversion",
-            "Meta-schemas cannot be converted, as a conversion cannot restate "
-            "the dialect that a meta-schema describes",
+            "Meta-schemas are not converted, as restating the dialect that a "
+            "meta-schema describes is not always safe",
             error_schema, "*");
         return;
       }

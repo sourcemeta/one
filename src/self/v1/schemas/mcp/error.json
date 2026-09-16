@@ -118,7 +118,7 @@
           "const": {
             "code": -32602,
             "message": "Invalid resource schema URI",
-            "data": "Meta-schemas cannot be converted, as a conversion cannot restate the dialect that a meta-schema describes"
+            "data": "Meta-schemas are not converted, as restating the dialect that a meta-schema describes is not always safe"
           }
         },
         {

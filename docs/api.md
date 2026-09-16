@@ -416,9 +416,15 @@ declare them.
     the same reason. Conversion renames keywords, for instance to
     [`$defs`](https://www.learnjsonschema.com/2020-12/core/defs/) in 2020-12,
     so a converted schema stops satisfying the meta-schema it declares whenever
-    that meta-schema enumerates the keywords it allows. What the author of a
+    that meta-schema enumerates the keywords it allows.
+
+    Plenty of individual conversions would in fact be harmless, and a dialect
+    that constrains nothing of the sort would convert cleanly. The trouble is
+    that nothing in a schema says which case it is, and what the author of a
     dialect meant by each of their own keywords is not something a conversion
-    can infer, so this is unlikely to ever happen automatically.
+    can infer. Rather than guess and hand back a document that quietly means
+    something else, this is refused, and it is unlikely to ever happen
+    automatically.
 
 === "200"
 

@@ -567,8 +567,8 @@ private:
             return sourcemeta::core::jsonrpc_make_error(
                 &request_id, -32602, "Invalid resource schema URI",
                 sourcemeta::core::JSON{
-                    "Meta-schemas cannot be converted, as a conversion cannot "
-                    "restate the dialect that a meta-schema describes"});
+                    "Meta-schemas are not converted, as restating the dialect "
+                    "that a meta-schema describes is not always safe"});
           }
         }
 
