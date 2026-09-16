@@ -508,13 +508,13 @@ jsonpath "$.result.resources[31].uri" == "{{base}}/self/v1/schemas/api/schemas/d
 jsonpath "$.result.resources[31].name" == "Sourcemeta One Schema Dependencies API Response"
 jsonpath "$.result.resources[31].description" == "The response format for the schema dependencies API endpoint"
 jsonpath "$.result.resources[31].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[31].size" == 1196
+jsonpath "$.result.resources[31].size" == 2006
 jsonpath "$.result.resources[31].annotations.priority" == 0
 jsonpath "$.result.resources[32].uri" == "{{base}}/self/v1/schemas/api/schemas/dependents/response"
 jsonpath "$.result.resources[32].name" == "Sourcemeta One Schema Dependents API Response"
 jsonpath "$.result.resources[32].description" == "The response format for the schema dependents API endpoint"
 jsonpath "$.result.resources[32].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[32].size" == 1190
+jsonpath "$.result.resources[32].size" == 2000
 jsonpath "$.result.resources[32].annotations.priority" == 0
 jsonpath "$.result.resources[33].uri" == "{{base}}/self/v1/schemas/api/schemas/evaluate/request"
 jsonpath "$.result.resources[33].name" == "Sourcemeta One Schema Evaluate API Request"
@@ -1299,13 +1299,13 @@ jsonpath "$.result.resources[31].uri" == "{{base}}/self/v1/schemas/api/schemas/d
 jsonpath "$.result.resources[31].name" == "Sourcemeta One Schema Dependencies API Response"
 jsonpath "$.result.resources[31].description" == "The response format for the schema dependencies API endpoint"
 jsonpath "$.result.resources[31].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[31].size" == 1196
+jsonpath "$.result.resources[31].size" == 2006
 jsonpath "$.result.resources[31].annotations.priority" == 0
 jsonpath "$.result.resources[32].uri" == "{{base}}/self/v1/schemas/api/schemas/dependents/response"
 jsonpath "$.result.resources[32].name" == "Sourcemeta One Schema Dependents API Response"
 jsonpath "$.result.resources[32].description" == "The response format for the schema dependents API endpoint"
 jsonpath "$.result.resources[32].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[32].size" == 1190
+jsonpath "$.result.resources[32].size" == 2000
 jsonpath "$.result.resources[32].annotations.priority" == 0
 jsonpath "$.result.resources[33].uri" == "{{base}}/self/v1/schemas/api/schemas/evaluate/request"
 jsonpath "$.result.resources[33].name" == "Sourcemeta One Schema Evaluate API Request"
