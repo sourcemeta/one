@@ -8,7 +8,8 @@
 
 namespace sourcemeta::one {
 
-// The official dialect a schema declares, if the dialect it declares is one
+// The official dialect a schema declares, which is nothing at all when the
+// dialect it declares is not an official one
 [[nodiscard]] inline auto
 declared_official_dialect(const RouterAction &action,
                           const ResolvedArtifact &schema)

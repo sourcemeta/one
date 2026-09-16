@@ -168,6 +168,8 @@ private:
         return;
       }
 
+      // Every schema on an official dialect has an artifact for every dialect
+      // newer than it, unless it is a meta-schema, which gets none
       if (sourcemeta::one::conversion_applies(declared.value(),
                                               target.value())) {
         sourcemeta::one::json_error(

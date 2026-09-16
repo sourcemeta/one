@@ -405,7 +405,7 @@ can only be converted into a dialect newer than the official dialect it declares
 with [`$schema`](https://www.learnjsonschema.com/2020-12/core/schema/), and the
 `conversions` property of its [metadata](#metadata) lists exactly the values it
 accepts. Meta-schemas are never converted, and neither are the schemas that
-declare them.
+declare a custom meta-schema.
 
 !!! warning "Why meta-schemas are not converted"
 

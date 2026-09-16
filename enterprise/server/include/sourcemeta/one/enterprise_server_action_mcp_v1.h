@@ -562,6 +562,8 @@ private:
                     "their meta-schemas would need to be converted too"});
           }
 
+          // Every schema on an official dialect has an artifact for every
+          // dialect newer than it, unless it is a meta-schema, which gets none
           if (sourcemeta::one::conversion_applies(declared.value(),
                                                   target.value())) {
             return sourcemeta::core::jsonrpc_make_error(
