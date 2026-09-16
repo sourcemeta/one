@@ -106,10 +106,10 @@ service whether or not for a fee, each require a
   schemas that validate them, turning the catalog into a [bridge between your
   JSON data and knowledge
   graphs](https://www.sourcemeta.com/blog/json-schema-jsonld-interoperability/)
-- :material-update: __Dialect Upgrades (Enterprise)__ Serve any schema
-  [upgraded](api.md#fetch) to a newer JSON Schema dialect on request, so
-  consumers get the dialect their tooling understands without anybody
-  maintaining converted copies in Git
+- :material-update: __Dialect Upgrades (Enterprise)__ Serve a schema that
+  declares an official dialect [upgraded](api.md#fetch) to a newer JSON Schema
+  dialect on request, so consumers get the dialect their tooling understands
+  without anybody maintaining converted copies in Git
 - :material-lock: __Access Control (Enterprise)__ Gate part of your catalog, or
   the entire instance, behind [authentication](configuration.md#authentication)
   policies, keeping schemas private to the consumers you choose

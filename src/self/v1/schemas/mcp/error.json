@@ -111,7 +111,14 @@
           "const": {
             "code": -32602,
             "message": "Invalid resource schema URI",
-            "data": "Schemas with custom dialects cannot be converted yet, as their meta-schemas would need to be converted too"
+            "data": "Schemas with custom dialects cannot be converted, as their meta-schemas would need to be converted too"
+          }
+        },
+        {
+          "const": {
+            "code": -32602,
+            "message": "Invalid resource schema URI",
+            "data": "Meta-schemas cannot be converted, as a conversion cannot restate the dialect that a meta-schema describes"
           }
         },
         {

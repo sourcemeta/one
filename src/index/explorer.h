@@ -429,15 +429,14 @@ struct GenerateExplorerSchemaMetadata {
     result.assign("baseDialect", sourcemeta::core::JSON{std::format(
                                      "{}", schema_location.base_dialect)});
     result.assign("dialect", sourcemeta::core::JSON{schema_location.dialect});
-    result.assign(
-        "metaschema",
-        sourcemeta::core::JSON{
-            has_dialect_dependents ||
-            declares_vocabulary(schema_data, schema_location.base_dialect)});
+    const auto is_metaschema{
+        has_dialect_dependents ||
+        declares_vocabulary(schema_data, schema_location.base_dialect)};
+    result.assign("metaschema", sourcemeta::core::JSON{is_metaschema});
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
     result.assign("conversions", sourcemeta::one::conversions_metadata(
-                                     resolver_entry.dialect));
+                                     resolver_entry.dialect, is_metaschema));
 #endif
 
     if (schema_data.is_object()) {

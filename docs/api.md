@@ -404,10 +404,21 @@ official dialect: `draft4`, `draft6`, `draft7`, `2019-09`, or `2020-12`. A schem
 can only be converted into a dialect newer than the official dialect it declares
 with [`$schema`](https://www.learnjsonschema.com/2020-12/core/schema/), and the
 `conversions` property of its [metadata](#metadata) lists exactly the values it
-accepts. Schemas that declare a custom dialect cannot be converted yet, as their
-meta-schemas would need to be converted too. A meta-schema converted into
-2019-09 or 2020-12 also declares the vocabularies of that dialect with
-[`$vocabulary`](https://www.learnjsonschema.com/2020-12/core/vocabulary/).
+accepts. Meta-schemas are never converted, and neither are the schemas that
+declare them.
+
+!!! warning "Why meta-schemas are not converted"
+
+    A meta-schema describes a dialect, so converting one would change the
+    dialect it is written in without restating the dialect it describes. The
+    result would declare a newer dialect while still permitting the keywords of
+    the older one. A schema that declares a custom meta-schema is refused for
+    the same reason. Conversion renames keywords, for instance to
+    [`$defs`](https://www.learnjsonschema.com/2020-12/core/defs/) in 2020-12,
+    so a converted schema stops satisfying the meta-schema it declares whenever
+    that meta-schema enumerates the keywords it allows. What the author of a
+    dialect meant by each of their own keywords is not something a conversion
+    can infer, so this is unlikely to ever happen automatically.
 
 === "200"
 

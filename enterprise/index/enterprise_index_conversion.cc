@@ -37,11 +37,11 @@ auto convert_target(const sourcemeta::one::SchemaDialect dialect)
 
 namespace sourcemeta::one {
 
-auto conversions_metadata(const std::string_view dialect)
-    -> sourcemeta::core::JSON {
+auto conversions_metadata(const std::string_view dialect,
+                          const bool is_metaschema) -> sourcemeta::core::JSON {
   auto result{sourcemeta::core::JSON::make_object()};
   const auto official{official_dialect(dialect)};
-  if (!official.has_value()) {
+  if (is_metaschema || !official.has_value()) {
     return result;
   }
 

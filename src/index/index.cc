@@ -583,6 +583,7 @@ static auto index_main(const std::string_view &program,
               .cache_path = canonical_output / "schemas" /
                             cached->relative_path / "%" / "schema.metapack",
               .dialect = cached->dialect,
+              .vocabularies = cached->vocabularies,
               .original_identifier = cached->original_identifier,
               .collection = &collection});
     } else {
@@ -616,7 +617,8 @@ static auto index_main(const std::string_view &program,
                              .original_identifier =
                                  std::string{resolved.original_identifier},
                              .dialect = std::string{resolved.dialect},
-                             .relative_path = resolved.relative_path.string()});
+                             .relative_path = resolved.relative_path.string(),
+                             .vocabularies = resolved.vocabularies});
         }
 
         if (app.contains("verbose")) {
@@ -653,7 +655,10 @@ static auto index_main(const std::string_view &program,
             .evaluate = entry.evaluate,
             .dialect = entry.dialect,
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
-            .selected = sourcemeta::one::conversion_selection(entry.dialect)
+            .selected = sourcemeta::one::conversion_selection(
+                entry.dialect, sourcemeta::one::is_metaschema(
+                                   entry.dialect, entry.vocabularies,
+                                   resolver.is_dialect(uri)))
 #endif
         });
   }

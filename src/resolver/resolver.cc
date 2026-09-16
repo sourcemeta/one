@@ -371,6 +371,13 @@ auto Resolver::track_dialect(const sourcemeta::core::JSON::String &dialect)
   }
 }
 
+auto Resolver::is_dialect(const std::string_view uri) const -> bool {
+  const std::shared_lock lock{this->dialect_mutex_};
+  return std::ranges::any_of(
+      this->dialects_,
+      [&uri](const auto &entry) -> bool { return entry.first == uri; });
+}
+
 auto Resolver::cache_dialect(const sourcemeta::core::JSON::String &uri,
                              const sourcemeta::core::JSON &schema) const
     -> void {
@@ -524,6 +531,11 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
     // (5) Safely one the schema entry in the resolver
     /////////////////////////////////////////////////////////////////////////////
 
+    const auto *vocabularies{schema.is_object() ? schema.try_at("$vocabulary")
+                                                : nullptr};
+    const auto declares_vocabularies{vocabularies != nullptr &&
+                                     vocabularies->is_object()};
+
     const auto evaluate{Configuration::should_evaluate(collection)};
 
     std::unique_lock lock{this->mutex_};
@@ -537,6 +549,7 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
               .evaluate = evaluate,
               .cache_path = std::nullopt,
               .dialect = std::move(current_dialect),
+              .vocabularies = declares_vocabularies,
               .original_identifier = identifier,
               .collection = &collection})};
     lock.unlock();
@@ -608,7 +621,10 @@ auto Resolver::cache_path(const std::string_view uri,
   std::unique_lock lock{this->mutex_};
   auto entry{this->views_.find(std::string{uri})};
   assert(entry != this->views_.cend());
-  assert(!entry->second.cache_path.has_value());
+  // A leaf whose selection changed is planned again without its own file
+  // changing, and what it materialises into does not move
+  assert(!entry->second.cache_path.has_value() ||
+         entry->second.cache_path.value() == path);
   entry->second.cache_path = path;
 }
 

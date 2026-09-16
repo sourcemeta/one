@@ -46,6 +46,8 @@ public:
     bool evaluate{true};
     std::optional<std::filesystem::path> cache_path{};
     sourcemeta::core::JSON::String dialect{};
+    // Whether the schema declares vocabularies of its own
+    bool vocabularies{false};
     sourcemeta::core::JSON::String original_identifier{};
     const Configuration::Collection *collection{nullptr};
   };
@@ -71,6 +73,9 @@ public:
   [[nodiscard]] auto data() const -> const Views & { return this->views_; }
 
   [[nodiscard]] auto entry(std::string_view identifier) const -> const Entry &;
+
+  // Whether any schema in the catalog declares the given URI as its dialect
+  [[nodiscard]] auto is_dialect(std::string_view uri) const -> bool;
 
 private:
   Views views_;

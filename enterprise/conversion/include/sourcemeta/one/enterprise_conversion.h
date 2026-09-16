@@ -172,6 +172,31 @@ inline constexpr std::array<SchemaDialect, 5> SCHEMA_CONVERSION_TARGETS{
       static_cast<std::size_t>(dialect));
 }
 
+// Whether a schema is a meta-schema, which is what its metadata reports. A
+// schema declares vocabularies only where the dialect it declares gives that
+// keyword meaning
+[[nodiscard]] inline auto is_metaschema(const std::string_view dialect,
+                                        const bool declares_vocabularies,
+                                        const bool declared_as_dialect)
+    -> bool {
+  if (declared_as_dialect) {
+    return true;
+  }
+
+  const auto official{official_dialect(dialect)};
+  return declares_vocabularies && official.has_value() &&
+         (official.value() == SchemaDialect::Draft201909 ||
+          official.value() == SchemaDialect::Draft202012);
+}
+
+// Whether a schema declaring a dialect can be converted into another
+[[nodiscard]] inline auto conversion_applies(const SchemaDialect dialect,
+                                             const SchemaDialect target)
+    -> bool {
+  const auto targets{dialect_conversions(dialect)};
+  return std::ranges::find(targets, target) != targets.end();
+}
+
 // The dialect a conversion is named after, if the name is one at all
 [[nodiscard]] inline auto conversion_target(const std::string_view name)
     -> std::optional<SchemaDialect> {
@@ -191,11 +216,14 @@ inline constexpr std::array<SchemaDialect, 5> SCHEMA_CONVERSION_TARGETS{
   return static_cast<std::uint8_t>(static_cast<std::uint8_t>(dialect) - 1);
 }
 
-// The selection bits of every conversion a schema declaring a dialect gets
-[[nodiscard]] inline auto conversion_selection(const std::string_view dialect)
+// The selection bits of every conversion a schema declaring a dialect gets.
+// A meta-schema gets none, as a conversion cannot restate the dialect that a
+// meta-schema describes
+[[nodiscard]] inline auto conversion_selection(const std::string_view dialect,
+                                               const bool is_metaschema)
     -> std::uint32_t {
   const auto official{official_dialect(dialect)};
-  if (!official.has_value()) {
+  if (is_metaschema || !official.has_value()) {
     return 0;
   }
 

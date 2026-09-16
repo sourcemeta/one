@@ -551,14 +551,25 @@ private:
         auto converted{this->artifact_resolve_path(
             caller, uri, Tree::Schemas,
             sourcemeta::one::conversion_artifact(target.value()))};
-        if (!converted.path.has_value() &&
-            sourcemeta::one::declares_custom_dialect(*this,
-                                                     resolution.path.value())) {
-          return sourcemeta::core::jsonrpc_make_error(
-              &request_id, -32602, "Invalid resource schema URI",
-              sourcemeta::core::JSON{
-                  "Schemas with custom dialects cannot be converted yet, as "
-                  "their meta-schemas would need to be converted too"});
+        if (!converted.path.has_value()) {
+          const auto declared{sourcemeta::one::declared_official_dialect(
+              *this, resolution.path.value())};
+          if (!declared.has_value()) {
+            return sourcemeta::core::jsonrpc_make_error(
+                &request_id, -32602, "Invalid resource schema URI",
+                sourcemeta::core::JSON{
+                    "Schemas with custom dialects cannot be converted, as "
+                    "their meta-schemas would need to be converted too"});
+          }
+
+          if (sourcemeta::one::conversion_applies(declared.value(),
+                                                  target.value())) {
+            return sourcemeta::core::jsonrpc_make_error(
+                &request_id, -32602, "Invalid resource schema URI",
+                sourcemeta::core::JSON{
+                    "Meta-schemas cannot be converted, as a conversion cannot "
+                    "restate the dialect that a meta-schema describes"});
+          }
         }
 
         resolution = std::move(converted);

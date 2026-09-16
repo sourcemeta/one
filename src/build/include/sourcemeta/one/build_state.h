@@ -181,6 +181,7 @@ public:
     std::string original_identifier;
     std::string dialect;
     std::string relative_path;
+    bool vocabularies{false};
   };
 
   BuildState() = default;

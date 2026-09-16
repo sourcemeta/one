@@ -987,6 +987,14 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
       }
       has_missing_targets = (cached_leaf_state->target_bitmap &
                              expected_bitmap) != expected_bitmap;
+
+      // What a leaf is selected for can stop holding without the leaf itself
+      // changing, as when another leaf starts declaring it as its dialect.
+      // Treating that as a change is what disposes of what the leaf no longer
+      // has
+      if ((cached_leaf_state->target_bitmap & ~expected_bitmap) != 0) {
+        leaf_dirty = true;
+      }
     }
 
     // A leaf that a changed leaf declares as its dialect is reconsidered even

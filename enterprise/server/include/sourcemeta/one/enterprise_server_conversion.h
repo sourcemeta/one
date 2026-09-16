@@ -4,18 +4,24 @@
 #include <sourcemeta/one/enterprise_conversion.h>
 #include <sourcemeta/one/router.h>
 
+#include <optional> // std::optional, std::nullopt
+
 namespace sourcemeta::one {
 
-// Whether a schema declares a dialect that is not an official one
+// The official dialect a schema declares, if the dialect it declares is one
 [[nodiscard]] inline auto
-declares_custom_dialect(const RouterAction &action,
-                        const ResolvedArtifact &schema) -> bool {
+declared_official_dialect(const RouterAction &action,
+                          const ResolvedArtifact &schema)
+    -> std::optional<SchemaDialect> {
   const auto contents{action.artifact_read_json(schema)};
   const auto *dialect{contents.has_value() && contents->is_object()
                           ? contents->try_at("$schema")
                           : nullptr};
-  return dialect != nullptr && dialect->is_string() &&
-         !official_dialect(dialect->to_string()).has_value();
+  if (dialect == nullptr || !dialect->is_string()) {
+    return std::nullopt;
+  }
+
+  return official_dialect(dialect->to_string());
 }
 
 } // namespace sourcemeta::one

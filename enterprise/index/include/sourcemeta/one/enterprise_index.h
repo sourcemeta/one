@@ -27,7 +27,8 @@ namespace sourcemeta::one {
 
 // What a schema declaring a dialect can be converted into, as its metadata
 // describes it
-auto conversions_metadata(std::string_view dialect) -> sourcemeta::core::JSON;
+auto conversions_metadata(std::string_view dialect, bool is_metaschema)
+    -> sourcemeta::core::JSON;
 
 // Convert a schema into a newer official dialect
 auto convert_schema(sourcemeta::core::JSON &schema, SchemaDialect target,

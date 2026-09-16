@@ -86,7 +86,15 @@
         "type": "urn:sourcemeta:one:custom-dialect-conversion",
         "title": "Bad Request",
         "status": 400,
-        "detail": "Schemas with custom dialects cannot be converted yet, as their meta-schemas would need to be converted too"
+        "detail": "Schemas with custom dialects cannot be converted, as their meta-schemas would need to be converted too"
+      }
+    },
+    {
+      "const": {
+        "type": "urn:sourcemeta:one:metaschema-conversion",
+        "title": "Bad Request",
+        "status": 400,
+        "detail": "Meta-schemas cannot be converted, as a conversion cannot restate the dialect that a meta-schema describes"
       }
     },
     {
