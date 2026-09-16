@@ -6,7 +6,8 @@ WRITE one.json UNTIL EOF
       "contents": {
         "schemas": {
           "baseUri": "https://example.com/",
-          "path": "./schemas"
+          "path": "./schemas",
+          "defaultDialect": "https://json-schema.org/draft/2020-12/schema"
         }
       }
     }

@@ -972,6 +972,10 @@ auto main(int argc, char *argv[]) noexcept -> int {
     std::print(stderr, "error: {}\n  at path {}\n", error.what(),
                error.path().string());
     return EXIT_FAILURE;
+  } catch (const sourcemeta::one::ResolverBooleanSchemaError &error) {
+    std::print(stderr, "error: {}\n  at path {}\n", error.what(),
+               error.path().string());
+    return EXIT_FAILURE;
   } catch (const sourcemeta::one::ResolverOutsideBaseError &error) {
     std::print(stderr,
                "error: {}\n  at path {}\n  at identifier {}\n  with base {}\n",

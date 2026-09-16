@@ -26,6 +26,25 @@ private:
   std::filesystem::path path_;
 };
 
+// A boolean is a valid JSON Schema, but every schema in a catalog is addressed
+// by an identifier and described by metadata that only an object can carry
+class ResolverBooleanSchemaError : public std::exception {
+public:
+  ResolverBooleanSchemaError(std::filesystem::path path)
+      : path_{std::move(path)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "The schema must be an object";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+private:
+  std::filesystem::path path_;
+};
+
 // The output directory belongs to the indexer, so a recorded artifact that is
 // gone from disk means something else modified the directory, which is the one
 // assumption the build cannot recover from on its own

@@ -420,7 +420,11 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
   assert(path.is_absolute());
   try {
     const auto schema{sourcemeta::core::read_yaml_or_json(path)};
-    if (!schema.is_object() && !schema.is_boolean()) {
+    if (schema.is_boolean()) {
+      throw ResolverBooleanSchemaError(path);
+    }
+
+    if (!schema.is_object()) {
       throw ResolverNotASchemaError(path);
     }
 
