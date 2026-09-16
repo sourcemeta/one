@@ -20,6 +20,7 @@ jsonpath "$" count == 1
 jsonpath "$[0].from" == "{{base}}/test/bundling/single"
 jsonpath "$[0].to" == "{{base}}/test/v2.0/schema"
 jsonpath "$[0].at" == "/properties/foo/$ref"
+jsonpath "$[0].baseDialect" == "http://json-schema.org/draft-07/schema#"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -163,12 +164,15 @@ jsonpath "$" count == 3
 jsonpath "$[0].from" == "{{base}}/test/schemas/cycle/foo"
 jsonpath "$[0].to" == "{{base}}/test/schemas/cycle/bar"
 jsonpath "$[0].at" == "/additionalProperties/$ref"
+jsonpath "$[0].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$[1].from" == "{{base}}/test/schemas/cycle/bar"
 jsonpath "$[1].to" == "{{base}}/test/schemas/cycle/baz"
 jsonpath "$[1].at" == "/additionalProperties/$ref"
+jsonpath "$[1].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$[2].from" == "{{base}}/test/schemas/cycle/baz"
 jsonpath "$[2].to" == "{{base}}/test/schemas/cycle/foo"
 jsonpath "$[2].at" == "/additionalProperties/$ref"
+jsonpath "$[2].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -205,6 +209,7 @@ jsonpath "$" count == 1
 jsonpath "$[0].from" == "{{base}}/test/schemas/using-meta-draft7"
 jsonpath "$[0].to" == "{{base}}/test/schemas/custom-meta-draft7"
 jsonpath "$[0].at" == "/$schema"
+jsonpath "$[0].baseDialect" == "http://json-schema.org/draft-07/schema#"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -239,6 +244,7 @@ jsonpath "$" count == 1
 jsonpath "$[0].from" == "{{base}}/test/schemas/using-meta-2020"
 jsonpath "$[0].to" == "{{base}}/test/schemas/custom-meta-2020"
 jsonpath "$[0].at" == "/$schema"
+jsonpath "$[0].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

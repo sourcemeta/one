@@ -7,19 +7,39 @@
       {
         "from": "https://example.com/schemas/user.json",
         "to": "https://example.com/schemas/address.json",
-        "at": "/properties/address/$ref"
+        "at": "/properties/address/$ref",
+        "baseDialect": "https://json-schema.org/draft/2020-12/schema"
       }
     ]
   ],
   "type": "array",
   "items": {
     "type": "object",
-    "required": [ "from", "to", "at" ],
+    "required": [ "from", "to", "at", "baseDialect" ],
     "properties": {
       "at": {
         "x-format-assertion": true,
         "type": "string",
         "format": "json-pointer"
+      },
+      "baseDialect": {
+        "enum": [
+          "https://json-schema.org/draft/2020-12/schema",
+          "https://json-schema.org/draft/2020-12/hyper-schema",
+          "https://json-schema.org/draft/2019-09/schema",
+          "https://json-schema.org/draft/2019-09/hyper-schema",
+          "http://json-schema.org/draft-07/schema#",
+          "http://json-schema.org/draft-07/hyper-schema#",
+          "http://json-schema.org/draft-06/schema#",
+          "http://json-schema.org/draft-06/hyper-schema#",
+          "http://json-schema.org/draft-04/schema#",
+          "http://json-schema.org/draft-04/hyper-schema#",
+          "http://json-schema.org/draft-03/schema#",
+          "http://json-schema.org/draft-03/hyper-schema#",
+          "http://json-schema.org/draft-02/hyper-schema#",
+          "http://json-schema.org/draft-01/hyper-schema#",
+          "http://json-schema.org/draft-00/hyper-schema#"
+        ]
       },
       "from": {
         "x-format-assertion": true,

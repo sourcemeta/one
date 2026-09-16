@@ -20,6 +20,7 @@ jsonpath "$" count == 1
 jsonpath "$[0].from" == "{{base}}/test/schemas/bundling-single"
 jsonpath "$[0].to" == "{{base}}/test/schemas/no-id"
 jsonpath "$[0].at" == "/properties/foo/$ref"
+jsonpath "$[0].baseDialect" == "http://json-schema.org/draft-07/schema#"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
