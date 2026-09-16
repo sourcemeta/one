@@ -219,10 +219,12 @@ jsonpath "$.result.structuredContent.results" count == 1
 jsonpath "$.result.structuredContent.results[0].from" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.structuredContent.results[0].to" == "{{base}}/self/v1/schemas/mcp/error"
 jsonpath "$.result.structuredContent.results[0].at" == "/$defs/single/anyOf/2/$ref"
+jsonpath "$.result.structuredContent.results[0].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.results" count == 1
 variable "text" jsonpath "$.results[0].from" == "{{base}}/self/v1/schemas/mcp/response"
 variable "text" jsonpath "$.results[0].to" == "{{base}}/self/v1/schemas/mcp/error"
 variable "text" jsonpath "$.results[0].at" == "/$defs/single/anyOf/2/$ref"
+variable "text" jsonpath "$.results[0].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -362,10 +364,12 @@ jsonpath "$.result.structuredContent.results" count == 1
 jsonpath "$.result.structuredContent.results[0].from" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.structuredContent.results[0].to" == "{{base}}/self/v1/schemas/mcp/error"
 jsonpath "$.result.structuredContent.results[0].at" == "/$defs/single/anyOf/2/$ref"
+jsonpath "$.result.structuredContent.results[0].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.results" count == 1
 variable "text" jsonpath "$.results[0].from" == "{{base}}/self/v1/schemas/mcp/response"
 variable "text" jsonpath "$.results[0].to" == "{{base}}/self/v1/schemas/mcp/error"
 variable "text" jsonpath "$.results[0].at" == "/$defs/single/anyOf/2/$ref"
+variable "text" jsonpath "$.results[0].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

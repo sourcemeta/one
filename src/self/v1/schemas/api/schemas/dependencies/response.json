@@ -7,19 +7,25 @@
       {
         "from": "https://example.com/schemas/user.json",
         "to": "https://example.com/schemas/address.json",
-        "at": "/properties/address/$ref"
+        "at": "/properties/address/$ref",
+        "baseDialect": "https://json-schema.org/draft/2020-12/schema"
       }
     ]
   ],
   "type": "array",
   "items": {
     "type": "object",
-    "required": [ "from", "to", "at" ],
+    "required": [ "from", "to", "at", "baseDialect" ],
     "properties": {
       "at": {
         "x-format-assertion": true,
         "type": "string",
         "format": "json-pointer"
+      },
+      "baseDialect": {
+        "x-format-assertion": true,
+        "type": "string",
+        "format": "uri"
       },
       "from": {
         "x-format-assertion": true,

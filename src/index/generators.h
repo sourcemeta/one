@@ -496,18 +496,42 @@ struct GenerateDependencies {
     assert(contents_option.has_value());
     const auto &contents{contents_option.value()};
     auto result{sourcemeta::core::JSON::make_array()};
+    // What a dependency is written in is part of what this report is for, and
+    // the same schema is commonly reached more than once
+    std::unordered_map<sourcemeta::core::JSON::String,
+                       sourcemeta::core::JSON::String>
+        base_dialects;
     sourcemeta::blaze::dependencies(
         contents, sourcemeta::core::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
-        [&result](const auto &origin, const auto &pointer, const auto &target,
-                  const auto &) {
+        [&result, &base_dialects, &callback,
+         &resolver](const auto &origin, const auto &pointer, const auto &target,
+                    const auto &schema) {
           auto trace{sourcemeta::core::JSON::make_object()};
           trace.assign("from", without_json_extension(origin));
           trace.assign("to", without_json_extension(target));
           trace.assign("at", sourcemeta::core::JSON{
                                  sourcemeta::core::to_string(pointer)});
+          sourcemeta::core::JSON::String target_uri{target};
+          const auto match{base_dialects.find(target_uri)};
+          if (match == base_dialects.cend()) {
+            const sourcemeta::core::SchemaFrame frame{
+                sourcemeta::core::SchemaFrame::Mode::Root, schema,
+                sourcemeta::core::schema_walker,
+                [&callback, &resolver](const auto identifier) {
+                  return resolver(identifier, callback);
+                }};
+            auto base_dialect{std::format(
+                "{}", frame.root_location().value().get().base_dialect)};
+            trace.assign("baseDialect", sourcemeta::core::JSON{base_dialect});
+            base_dialects.emplace(std::move(target_uri),
+                                  std::move(base_dialect));
+          } else {
+            trace.assign("baseDialect", sourcemeta::core::JSON{match->second});
+          }
+
           result.push_back(std::move(trace));
         });
     // Otherwise we are returning non-sense

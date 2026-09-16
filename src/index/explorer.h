@@ -559,8 +559,8 @@ struct GenerateExplorerSchemaMetadata {
 struct GenerateDependents {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
-                      const sourcemeta::one::BuildDynamicCallback &,
-                      sourcemeta::one::Resolver &,
+                      const sourcemeta::one::BuildDynamicCallback &callback,
+                      sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
@@ -616,12 +616,35 @@ struct GenerateDependents {
       }
     }
 
+    // What a dependent is written in is part of what this report is for, and
+    // a schema commonly reaches this one along more than one path
+    std::unordered_map<sourcemeta::core::JSON::String,
+                       sourcemeta::core::JSON::String>
+        base_dialects;
     auto result{sourcemeta::core::JSON::make_array()};
     for (const auto &[from, target, pointer] : edges) {
       auto object{sourcemeta::core::JSON::make_object()};
       object.assign("from", sourcemeta::core::JSON{from});
       object.assign("to", sourcemeta::core::JSON{target});
       object.assign("at", sourcemeta::core::JSON{pointer});
+      const auto match{base_dialects.find(from)};
+      if (match == base_dialects.cend()) {
+        const auto schema{resolver(from, callback)};
+        assert(schema.has_value());
+        const sourcemeta::core::SchemaFrame frame{
+            sourcemeta::core::SchemaFrame::Mode::Root, schema.value(),
+            sourcemeta::core::schema_walker,
+            [&callback, &resolver](const auto identifier) {
+              return resolver(identifier, callback);
+            }};
+        auto base_dialect{std::format(
+            "{}", frame.root_location().value().get().base_dialect)};
+        object.assign("baseDialect", sourcemeta::core::JSON{base_dialect});
+        base_dialects.emplace(from, std::move(base_dialect));
+      } else {
+        object.assign("baseDialect", sourcemeta::core::JSON{match->second});
+      }
+
       result.push_back(std::move(object));
     }
 
