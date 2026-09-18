@@ -1,0 +1,120 @@
+@import "tailwindcss";
+
+/* Tailwind's preflight resets button cursor to "default" for cross-browser
+   consistency; every button here is actually clickable, so restore the
+   pointer hand instead of leaving it feeling inert. */
+button:not(:disabled),
+[role="button"]:not(:disabled) {
+  cursor: pointer;
+}
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* Warm dark palette, ported from Sourcemeta's own JSON Schema Studio
+   (umber surfaces + a glowing copper accent) so this UI reads as part
+   of the same family rather than a generic gray admin panel. Layers are
+   spaced further apart in lightness than before so canvas/surface/inset
+   read as distinct depths instead of blurring together. */
+:root {
+  --umber-950: #0a0805;
+  --umber-900: #14100a;
+  --umber-850: #1a1510;
+  --umber-800: #221b12;
+  --umber-750: #2b2216;
+  --umber-700: #3d3120;
+  --umber-650: #4a3c28;
+  --umber-600: #5c4a30;
+
+  --parchment-100: #f7f1e6;
+  --parchment-300: #ddd0b6;
+  --parchment-500: #ab9c7e;
+
+  --copper-300: #e0873a;
+  --copper-200: #f3a75c;
+
+  --green-400: #5fbf82;
+  --amber-400: #dfb144;
+  --red-400: #e0645a;
+  --blue-400: #6fabe0;
+
+  color-scheme: dark;
+
+  --bg-canvas: var(--umber-950);
+  --bg-surface: var(--umber-850);
+  --bg-inset: var(--umber-750);
+  --bg-editor: var(--umber-900);
+
+  --border: var(--umber-700);
+  --border-strong: var(--umber-650);
+
+  --text: var(--parchment-100);
+  --text-secondary: var(--parchment-500);
+  --text-nav: var(--parchment-300);
+
+  --accent: var(--copper-300);
+  --accent-hover: var(--copper-200);
+
+  --success: var(--green-400);
+  --success-soft: color-mix(in srgb, var(--green-400) 22%, var(--umber-950) 78%);
+  --warning: var(--amber-400);
+  --warning-soft: color-mix(in srgb, var(--amber-400) 22%, var(--umber-950) 78%);
+  --danger: var(--red-400);
+  --danger-soft: color-mix(in srgb, var(--red-400) 22%, var(--umber-950) 78%);
+  --info: var(--blue-400);
+  --info-soft: color-mix(in srgb, var(--blue-400) 22%, var(--umber-950) 78%);
+
+  --radius-md: 8px;
+  --radius-sm: 6px;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.55);
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--bg-canvas);
+  color: var(--text);
+}
+
+#root {
+  height: 100dvh;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 8px;
+}
+
+@keyframes logo-pop {
+  0% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 0 transparent);
+  }
+  35% {
+    transform: scale(0.7);
+    filter: drop-shadow(0 0 8px var(--accent));
+  }
+  75% {
+    transform: scale(1.5);
+    filter: drop-shadow(0 0 40px var(--accent));
+  }
+  100% {
+    transform: scale(1.2);
+    filter: drop-shadow(0 0 20px var(--accent));
+  }
+}
+
+.animate-logo-pop {
+  animation: logo-pop 1.8s cubic-bezier(0.34, 1.56, 0.64, 1) 1 both;
+}
