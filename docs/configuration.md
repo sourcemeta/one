@@ -182,6 +182,25 @@ contain the actual schema definitions that power your instance.
 | `/x-sourcemeta-one:alert`      | String  | No  | N/A | When set, provide a human-readable alert on both the API and the HTML explorer for every schema in the collection. This is useful to provide any important message to consumers. The web explorer renders this as Markdown |
 | `/x-sourcemeta-one:priority`      | Integer  | No  | `50` | A hint, from `0` (least important) to `100` (most important), that signals the relative importance of this collection compared to others in the same instance. Consumers may use this to rank or filter collections |
 
+!!! note "Why ingested schemas get a new `$id`"
+
+    Sourcemeta One always serves a schema under an identifier rooted at the
+    instance `url`, even if the schema declares a `$id` on another domain,
+    and rewrites the references inside it to match. This is intentional. A
+    `$id` is not a label but an authority claim that consumers are entitled
+    to treat as a cache key, so one identifier must resolve to exactly one
+    authoritative content. If a copy kept its original `$id`, two different
+    documents would claim the same identity. A consumer that loaded the
+    wrong one would silently validate every schema that references that
+    identifier against it, and the result would depend on load order. With a
+    stale or tampered copy, this is both a correctness and a security hazard.
+
+    Rebasing avoids the collision. Your copy is honestly identified as yours,
+    while the upstream identifier remains the single authority for the
+    upstream content. If other schemas in your instance reference the
+    original identifier, use [`resolve`](#resolve) to route them to your
+    copy.
+
 !!! warning
 
     To preserve scalability and encourage best practices in schema
