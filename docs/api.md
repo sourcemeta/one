@@ -592,6 +592,9 @@ this approach in [Fully solving JSON Schema and JSON-LD
 interoperability](https://www.sourcemeta.com/blog/json-schema-jsonld-interoperability/).
 The annotation vocabulary is documented in the [JSON Schema CLI RDF
 documentation](https://github.com/sourcemeta/jsonschema/blob/main/docs/rdf.markdown).
+If you are new to JSON-LD, [A JSON-LD
+Handbook](https://dr-json-ld.com/book/) is a great place to learn the
+format from.
 A schema without such annotations (including schemas on dialects older than
 2019-09, which do not support annotation collection) produces an empty
 JSON-LD document. Availability follows the evaluate flag: schemas excluded
