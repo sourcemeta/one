@@ -87,6 +87,18 @@ event contracts, and message payloads [all bottom out at the same schema
 layer](https://apievangelist.com/2026/06/26/json-schema-governs-the-shape-of-your-data/),
 so governing the shape of the data once governs it across every protocol.
 
+That convergence is visible in the specifications themselves. Analysing the
+published schemas of the nine standards that define the modern API
+landscape, API Evangelist mapped how each one references the others.
+OpenAPI, AsyncAPI, and Arazzo embed JSON Schema. MCP embeds it too. Spectral
+lints it. Almost every arrow eventually lands in the same place:
+
+![A graph of the relationships between nine API standards, where APIs.json, Spectral, Arazzo, Overlay, AsyncAPI, OpenAPI, A2A, and MCP all point, directly or indirectly, at JSON Schema](../assets/apievangelist-standards-point-to-json-schema.png)
+
+*Diagram from [How the Specifications
+Relate](https://standards.apievangelist.com/relationships/) by Kin Lane, API
+Evangelist.*
+
 In [Crafting Great APIs with Domain-Driven
 Design](https://www.amazon.com/Crafting-Great-APIs-Domain-Driven-Design/dp/B0DYNMWP67)
 (Apress, 2025), Annegret Junker and Fabrizio Lazzaretti also advocate for
