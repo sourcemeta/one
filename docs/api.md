@@ -460,7 +460,7 @@ the `as` query parameter cannot be combined with any other query parameter.
 === "400"
 
     The `as` query parameter names a dialect the schema cannot be converted
-    into.
+    into, or is combined with another query parameter.
 
 === "403"
 

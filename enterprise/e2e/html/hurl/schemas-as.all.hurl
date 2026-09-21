@@ -634,6 +634,28 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
+# An empty segment in the query is not a parameter
+GET {{base}}/test/draft3/string?as=2020-12&
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/schema+json
+Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
+header "Last-Modified" exists
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "{{base}}/test/draft3/string?as=2020-12",
+  "type": "string"
+}
+
 # A schema that does not exist is not found, whatever it is asked for in
 GET {{base}}/test/draft3/nope?as=2020-12
 HTTP 404

@@ -205,8 +205,8 @@ contain the actual schema definitions that power your instance.
 
     Query parameters in schema identifiers are stripped and are not considered
     part of the identity of a schema, as Sourcemeta One claims the query string
-    of a schema URL for itself. For example, for providing modifiers such as
-    [`bundle` and `as`](api.md#fetch).
+    of a schema URL for itself, where it provides modifiers such as [`bundle`
+    and `as`](api.md#fetch).
 
 !!! warning
 
