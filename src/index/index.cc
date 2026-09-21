@@ -648,17 +648,14 @@ static auto index_main(const std::string_view &program,
   for (const auto &[uri, entry] : resolver.data()) {
     leaves_storage.emplace_back(
         std::string_view{uri},
-        sourcemeta::one::LeafView{
-            .path = &entry.path,
-            .relative_path = &entry.relative_path,
-            .mtime = entry.mtime,
-            .evaluate = entry.evaluate,
-            .dialect = entry.dialect,
+        sourcemeta::one::LeafView{.path = &entry.path,
+                                  .relative_path = &entry.relative_path,
+                                  .mtime = entry.mtime,
+                                  .evaluate = entry.evaluate,
+                                  .dialect = entry.dialect,
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
-            .selected = sourcemeta::one::conversion_selection(
-                entry.dialect, sourcemeta::one::is_metaschema(
-                                   entry.dialect, entry.vocabularies,
-                                   resolver.is_dialect(uri)))
+                                  .selected =
+                                      schema_conversions(resolver, uri, entry)
 #endif
         });
   }

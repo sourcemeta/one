@@ -317,6 +317,19 @@ private:
 };
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
+// The conversions a schema in the catalog gets, which is both what gates its
+// artifacts and what a reference to it may point at
+[[nodiscard]] inline auto
+schema_conversions(const sourcemeta::one::Resolver &resolver,
+                   const std::string_view identifier,
+                   const sourcemeta::one::Resolver::Entry &entry)
+    -> std::uint32_t {
+  return sourcemeta::one::conversion_selection(
+      entry.dialect,
+      sourcemeta::one::is_metaschema(entry.dialect, entry.vocabularies,
+                                     resolver.is_dialect(identifier)));
+}
+
 // A schema converted into a newer official dialect than the one it declares
 template <sourcemeta::one::SchemaDialect Target> struct GenerateConversion {
   static auto handler(const sourcemeta::one::BuildState &,
@@ -361,18 +374,12 @@ template <sourcemeta::one::SchemaDialect Target> struct GenerateConversion {
               return match->second;
             }
 
-            // Exactly what the artifacts are gated on, so a reference cannot
-            // point at a conversion that was never produced
             const auto &views{resolver.data()};
             const auto referent_entry{views.find(referent)};
             const auto result{referent_entry != views.cend() &&
                               sourcemeta::one::conversion_selected(
-                                  sourcemeta::one::conversion_selection(
-                                      referent_entry->second.dialect,
-                                      sourcemeta::one::is_metaschema(
-                                          referent_entry->second.dialect,
-                                          referent_entry->second.vocabularies,
-                                          resolver.is_dialect(identifier))),
+                                  schema_conversions(resolver, identifier,
+                                                     referent_entry->second),
                                   Target)};
             conversions.emplace(std::move(referent), result);
             return result;
