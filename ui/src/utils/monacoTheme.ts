@@ -7,7 +7,7 @@ export const ONE_UI_MONACO_THEME = "one-ui-dark";
 // Monaco doesn't read page CSS for its own rendering, so this — not
 // index.css — is the place to change it app-wide.
 export const ONE_UI_EDITOR_FONT_OPTIONS: MonacoEditor.IEditorOptions = {
-  fontFamily: "'Inter', ui-sans-serif, sans-serif",
+  fontFamily: "'Inter Variable', ui-sans-serif, sans-serif",
   fontLigatures: false,
   lineHeight: 24,
 };
