@@ -101,6 +101,7 @@ WRITE expected.txt UNTIL EOF
 ./schemas/test/schemas/test-1/%/health.metapack
 ./schemas/test/schemas/test-1/%/locations.metapack
 ./schemas/test/schemas/test-1/%/positions.metapack
+./schemas/test/schemas/test-1/%/schema-2020-12.metapack
 ./schemas/test/schemas/test-1/%/schema.metapack
 ./schemas/test/schemas/test-1/%/stats.metapack
 ./state.bin

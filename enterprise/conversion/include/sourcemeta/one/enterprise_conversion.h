@@ -166,11 +166,14 @@ inline constexpr std::array<SchemaDialect, 5> SCHEMA_CONVERSION_TARGETS{
   std::unreachable();
 }
 
-// The dialects a schema declaring a dialect can be converted into, oldest first
+// The dialects a schema declaring a dialect can be converted into, oldest
+// first, including the one it declares, as what it references may still have
+// conversions of its own to point at. Nothing converts into the oldest dialect
 [[nodiscard]] inline auto dialect_conversions(const SchemaDialect dialect)
     -> std::span<const SchemaDialect> {
   return std::span<const SchemaDialect>{SCHEMA_CONVERSION_TARGETS}.subspan(
-      static_cast<std::size_t>(dialect));
+      dialect == SchemaDialect::Draft3 ? 0
+                                       : static_cast<std::size_t>(dialect) - 1);
 }
 
 // Whether a schema is a meta-schema, which is what its metadata reports. A

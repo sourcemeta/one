@@ -71,25 +71,26 @@ DROP LINES MATCHING '^(?!.*(Producing|Combining)).*$' IN produced.txt
 // Nothing describing the schema declared as the dialect is rebuilt
 WRITE expected-produced.txt UNTIL EOF
 2> (  4%) Producing: schemas/example/schemas/other/%/schema.metapack
-2> (  9%) Producing: schemas/example/schemas/other/%/dependencies.metapack
+2> (  8%) Producing: schemas/example/schemas/other/%/dependencies.metapack
 2> ( 13%) Producing: schemas/example/schemas/other/%/locations.metapack
-2> ( 18%) Producing: schemas/example/schemas/other/%/positions.metapack
-2> ( 22%) Producing: schemas/example/schemas/other/%/schema-2019-09.metapack
-2> ( 27%) Producing: schemas/example/schemas/other/%/schema-2020-12.metapack
-2> ( 31%) Producing: schemas/example/schemas/other/%/stats.metapack
-2> ( 36%) Producing: schemas/example/schemas/other/%/bundle.metapack
-2> ( 40%) Producing: schemas/example/schemas/other/%/health.metapack
-2> ( 45%) Producing: explorer/public/example/schemas/other/%/schema.metapack
-2> ( 50%) Producing: schemas/example/schemas/other/%/blaze-exhaustive.metapack
-2> ( 54%) Producing: schemas/example/schemas/other/%/blaze-fast.metapack
-2> ( 59%) Producing: schemas/example/schemas/other/%/editor.metapack
-2> ( 63%) Producing: explorer/public/example/schemas/%/directory.metapack
-2> ( 68%) Producing: explorer/public/example/schemas/other/%/schema-html.metapack
-2> ( 72%) Producing: explorer/public/example/%/directory.metapack
-2> ( 77%) Producing: explorer/public/example/schemas/%/directory-html.metapack
-2> ( 81%) Producing: explorer/public/%/directory.metapack
+2> ( 17%) Producing: schemas/example/schemas/other/%/positions.metapack
+2> ( 21%) Producing: schemas/example/schemas/other/%/schema-2019-09.metapack
+2> ( 26%) Producing: schemas/example/schemas/other/%/schema-2020-12.metapack
+2> ( 30%) Producing: schemas/example/schemas/other/%/schema-draft7.metapack
+2> ( 34%) Producing: schemas/example/schemas/other/%/stats.metapack
+2> ( 39%) Producing: schemas/example/schemas/other/%/bundle.metapack
+2> ( 43%) Producing: schemas/example/schemas/other/%/health.metapack
+2> ( 47%) Producing: explorer/public/example/schemas/other/%/schema.metapack
+2> ( 52%) Producing: schemas/example/schemas/other/%/blaze-exhaustive.metapack
+2> ( 56%) Producing: schemas/example/schemas/other/%/blaze-fast.metapack
+2> ( 60%) Producing: schemas/example/schemas/other/%/editor.metapack
+2> ( 65%) Producing: explorer/public/example/schemas/%/directory.metapack
+2> ( 69%) Producing: explorer/public/example/schemas/other/%/schema-html.metapack
+2> ( 73%) Producing: explorer/public/example/%/directory.metapack
+2> ( 78%) Producing: explorer/public/example/schemas/%/directory-html.metapack
+2> ( 82%) Producing: explorer/public/%/directory.metapack
 2> ( 86%) Producing: explorer/public/example/%/directory-html.metapack
-2> ( 90%) Producing: explorer/public/%/directory-html.metapack
+2> ( 91%) Producing: explorer/public/%/directory-html.metapack
 2> ( 95%) Producing: explorer/public/%/search.metapack
 2> (100%) Producing: explorer/public/%/mcp.metapack
 EOF

@@ -233,7 +233,7 @@ header "Last-Modified" exists
       "$ref": "string?as=2020-12"
     },
     "latest": {
-      "$ref": "../jsonld/plain"
+      "$ref": "../jsonld/plain?as=2020-12"
     },
     "same": {
       "$ref": "#/properties/tag"
@@ -301,7 +301,8 @@ jsonpath "$.priority" == 50
 jsonpath "$.dependencies" == 0
 jsonpath "$.dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.metaschema" == false
-jsonpath "$.conversions.*" count == 2
+jsonpath "$.conversions.*" count == 3
+jsonpath "$.conversions.draft7.mediaType" == "application/schema+json"
 jsonpath "$.conversions['2019-09'].mediaType" == "application/schema+json"
 jsonpath "$.conversions['2020-12'].mediaType" == "application/schema+json"
 jsonpath "$.private" == false
@@ -363,46 +364,38 @@ header "Last-Modified" exists
   }
 }
 
-# A schema cannot be asked for in the dialect it already declares
-GET {{base}}/test/draft3/string?as=draft3
-HTTP 400
-Cache-Control: no-store
-Content-Type: application/problem+json
+# A schema can be asked for in the dialect it already declares
+GET {{base}}/test/jsonld/draft7?as=draft7
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/schema+json
+Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/error>; rel="describedby"
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
-header "Vary" not exists
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
+header "Last-Modified" exists
 {
-  "type": "urn:sourcemeta:one:invalid-conversion",
-  "title": "Bad Request",
-  "status": 400,
-  "detail": "The schema cannot be converted into this dialect"
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "{{base}}/test/jsonld/draft7?as=draft7",
+  "title": "Legacy Dialect",
+  "description": "A schema on a dialect without annotation support",
+  "type": "object",
+  "properties": {
+    "name": {
+      "x-jsonld-id": "https://schema.org/name",
+      "type": "string"
+    }
+  }
 }
 
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-Cache-Control: no-store
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
-[Asserts]
-header "Vary" not exists
-header "Referrer-Policy" not exists
-header "Content-Security-Policy" not exists
-header "X-Frame-Options" not exists
-header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.valid" == true
-
-GET {{base}}/test/jsonld/draft7?as=draft7
+# A schema cannot be asked for in the oldest dialect, as nothing converts into it
+GET {{base}}/test/draft3/string?as=draft3
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json

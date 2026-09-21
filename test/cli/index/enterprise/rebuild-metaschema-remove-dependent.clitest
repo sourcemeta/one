@@ -57,14 +57,15 @@ DROP LINES MATCHING '^(?!.*(Producing|Combining)).*$' IN produced.txt
 // The schema that was declared as the dialect is rebuilt even though nothing of
 // its own changed
 WRITE expected-produced.txt UNTIL EOF
-2> ( 10%) Producing: explorer/public/%/directory.metapack
-2> ( 20%) Producing: explorer/public/example/schemas/meta/%/schema.metapack
-2> ( 30%) Producing: schemas/example/schemas/meta/%/schema-2019-09.metapack
-2> ( 40%) Producing: schemas/example/schemas/meta/%/schema-2020-12.metapack
-2> ( 50%) Producing: explorer/public/%/directory-html.metapack
-2> ( 60%) Producing: explorer/public/%/search.metapack
-2> ( 70%) Producing: explorer/public/example/schemas/meta/%/schema-html.metapack
-2> ( 80%) Producing: explorer/public/%/mcp.metapack
+2> (  9%) Producing: explorer/public/%/directory.metapack
+2> ( 18%) Producing: explorer/public/example/schemas/meta/%/schema.metapack
+2> ( 27%) Producing: schemas/example/schemas/meta/%/schema-2019-09.metapack
+2> ( 36%) Producing: schemas/example/schemas/meta/%/schema-2020-12.metapack
+2> ( 45%) Producing: schemas/example/schemas/meta/%/schema-draft7.metapack
+2> ( 54%) Producing: explorer/public/%/directory-html.metapack
+2> ( 63%) Producing: explorer/public/%/search.metapack
+2> ( 72%) Producing: explorer/public/example/schemas/meta/%/schema-html.metapack
+2> ( 81%) Producing: explorer/public/%/mcp.metapack
 2> (100%) Combining: explorer/public/example/schemas/meta/%/dependents.metapack
 EOF
 

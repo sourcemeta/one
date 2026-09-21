@@ -281,7 +281,8 @@ jsonpath "$.error" not exists
 jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent" exists
 jsonpath "$.result.structuredContent.metaschema" == false
-jsonpath "$.result.structuredContent.conversions" isEmpty
+jsonpath "$.result.structuredContent.conversions.*.mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions['2020-12'].mediaType" == "application/schema+json"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{mcp_schema}}
 Authorization: Bearer {{machine_token}}

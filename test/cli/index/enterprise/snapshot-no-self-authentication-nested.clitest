@@ -215,6 +215,7 @@ WRITE expected.txt UNTIL EOF
 ./schemas/group/closed/nested/deeper/%/health.metapack
 ./schemas/group/closed/nested/deeper/%/locations.metapack
 ./schemas/group/closed/nested/deeper/%/positions.metapack
+./schemas/group/closed/nested/deeper/%/schema-2020-12.metapack
 ./schemas/group/closed/nested/deeper/%/schema.metapack
 ./schemas/group/closed/nested/deeper/%/stats.metapack
 ./schemas/group/closed/secret
@@ -227,6 +228,7 @@ WRITE expected.txt UNTIL EOF
 ./schemas/group/closed/secret/%/health.metapack
 ./schemas/group/closed/secret/%/locations.metapack
 ./schemas/group/closed/secret/%/positions.metapack
+./schemas/group/closed/secret/%/schema-2020-12.metapack
 ./schemas/group/closed/secret/%/schema.metapack
 ./schemas/group/closed/secret/%/stats.metapack
 ./schemas/group/open
@@ -241,6 +243,7 @@ WRITE expected.txt UNTIL EOF
 ./schemas/group/open/nested/two/%/health.metapack
 ./schemas/group/open/nested/two/%/locations.metapack
 ./schemas/group/open/nested/two/%/positions.metapack
+./schemas/group/open/nested/two/%/schema-2020-12.metapack
 ./schemas/group/open/nested/two/%/schema.metapack
 ./schemas/group/open/nested/two/%/stats.metapack
 ./schemas/group/open/one
@@ -253,6 +256,7 @@ WRITE expected.txt UNTIL EOF
 ./schemas/group/open/one/%/health.metapack
 ./schemas/group/open/one/%/locations.metapack
 ./schemas/group/open/one/%/positions.metapack
+./schemas/group/open/one/%/schema-2020-12.metapack
 ./schemas/group/open/one/%/schema.metapack
 ./schemas/group/open/one/%/stats.metapack
 ./schemas/loose
@@ -266,6 +270,7 @@ WRITE expected.txt UNTIL EOF
 ./schemas/loose/plain/%/health.metapack
 ./schemas/loose/plain/%/locations.metapack
 ./schemas/loose/plain/%/positions.metapack
+./schemas/loose/plain/%/schema-2020-12.metapack
 ./schemas/loose/plain/%/schema.metapack
 ./schemas/loose/plain/%/stats.metapack
 ./state.bin

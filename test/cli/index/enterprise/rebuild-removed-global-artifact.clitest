@@ -84,6 +84,7 @@ WRITE expected.txt UNTIL EOF
 ./schemas/schemas/a/%/positions.metapack
 ./schemas/schemas/a/%/schema-2019-09.metapack
 ./schemas/schemas/a/%/schema-2020-12.metapack
+./schemas/schemas/a/%/schema-draft7.metapack
 ./schemas/schemas/a/%/schema.metapack
 ./schemas/schemas/a/%/stats.metapack
 ./state.bin

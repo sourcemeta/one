@@ -152,9 +152,11 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1202
 jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent.metaschema" == false
-jsonpath "$.result.structuredContent.conversions" isEmpty
+jsonpath "$.result.structuredContent.conversions.*.mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions['2020-12'].mediaType" == "application/schema+json"
 variable "text" jsonpath "$.metaschema" == false
-variable "text" jsonpath "$.conversions" isEmpty
+variable "text" jsonpath "$.conversions.*.mediaType" == "application/schema+json"
+variable "text" jsonpath "$.conversions['2020-12'].mediaType" == "application/schema+json"
 jsonpath "$.result.structuredContent.identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.path" == "/test/object"
@@ -266,9 +268,11 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1211
 jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent.metaschema" == false
-jsonpath "$.result.structuredContent.conversions" isEmpty
+jsonpath "$.result.structuredContent.conversions.*.mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions['2020-12'].mediaType" == "application/schema+json"
 variable "text" jsonpath "$.metaschema" == false
-variable "text" jsonpath "$.conversions" isEmpty
+variable "text" jsonpath "$.conversions.*.mediaType" == "application/schema+json"
+variable "text" jsonpath "$.conversions['2020-12'].mediaType" == "application/schema+json"
 jsonpath "$.result.structuredContent.identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.title" == "My Object"
