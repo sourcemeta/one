@@ -1037,10 +1037,19 @@ struct GenerateURITemplateRoutes {
 
     sourcemeta::core::URITemplateRouter::Identifier next_id{1};
 
+    // The application is one page whatever the request names, so the fallback
+    // carries where that page lives rather than resolving one per location.
+    // Empty in every other mode, which is what tells the fallback to keep
+    // reaching for the pages the index wrote out
+    const auto experimental_root{action.data == "Experimental"
+                                     ? std::string_view{SOURCEMETA_ONE_UI}
+                                     : std::string_view{}};
+
     if (configuration.api) {
       const auto otherwise_arguments{
           std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
-              {{"errorSchema", std::string_view{ERROR_SCHEMA}}})};
+              {{"errorSchema", std::string_view{ERROR_SCHEMA}},
+               {"experimentalRoot", experimental_root}})};
       router.otherwise(sourcemeta::one::ACTION_TYPE_DEFAULT_V1,
                        otherwise_arguments);
 
@@ -1291,10 +1300,15 @@ struct GenerateURITemplateRoutes {
                  next_id++, sourcemeta::one::ACTION_TYPE_AUTH_LOGIN_PAGE_V1,
                  auth_login_page_arguments);
 
-      if (action.data == "Full") {
+      // Both modes that serve something to a browser serve it from the same
+      // place, as what a mode changes is which tree of assets is the one the
+      // pages it writes point at
+      if (action.data == "Full" || action.data == "Experimental") {
         const auto static_arguments{
             std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
-                {{"path", std::string_view{SOURCEMETA_ONE_STATIC}},
+                {{"path", action.data == "Experimental"
+                              ? std::string_view{SOURCEMETA_ONE_UI}
+                              : std::string_view{SOURCEMETA_ONE_STATIC}},
                  {"errorSchema", std::string_view{ERROR_SCHEMA}}})};
         router.add(sourcemeta::one::ENDPOINT_STATIC, "serve_static_asset",
                    next_id++, sourcemeta::one::ACTION_TYPE_SERVE_STATIC_V1,

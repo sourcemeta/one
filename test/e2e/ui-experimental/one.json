@@ -1,0 +1,12 @@
+{
+  "url": "http://localhost:8000",
+  "html": {
+    "experimental": true
+  },
+  "contents": {
+    "test": {
+      "baseUri": "https://example.com",
+      "path": "./schemas"
+    }
+  }
+}

@@ -56,6 +56,9 @@
         },
         "name": {
           "type": "string"
+        },
+        "experimental": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false

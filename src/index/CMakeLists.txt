@@ -8,6 +8,8 @@ target_compile_definitions(sourcemeta_one_index
   PRIVATE SOURCEMETA_ONE_SELF="${ONE_PREFIX}/share/sourcemeta/one/self")
 target_compile_definitions(sourcemeta_one_index
   PRIVATE SOURCEMETA_ONE_STATIC="${ONE_PREFIX}/share/sourcemeta/one/static")
+target_compile_definitions(sourcemeta_one_index
+  PRIVATE SOURCEMETA_ONE_UI="${ONE_PREFIX}/share/sourcemeta/one/ui")
 
 if(ONE_ENTERPRISE)
   target_link_libraries(sourcemeta_one_index PRIVATE sourcemeta::one::enterprise_index)

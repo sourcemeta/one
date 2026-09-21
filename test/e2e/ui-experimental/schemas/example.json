@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/example",
+  "title": "Example",
+  "description": "A schema for testing the experimental user interface",
+  "type": "string"
+}

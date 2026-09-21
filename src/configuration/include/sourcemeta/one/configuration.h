@@ -52,6 +52,11 @@ struct Configuration {
     };
 
     std::optional<Action> action;
+
+    // Whether to serve the experimental single page application instead of
+    // the pages the index writes out. Opting in means no HTML is produced at
+    // all, including the sign in and not found pages
+    bool experimental{false};
   };
 
   std::optional<HTML> html;

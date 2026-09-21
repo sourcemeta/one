@@ -86,6 +86,7 @@ test-e2e: check
 	./contrib/e2e-native.sh test/e2e/empty $(EDITION) $(SANDBOX_PORT)
 	./contrib/e2e-native.sh test/e2e/headless $(EDITION) $(SANDBOX_PORT)
 	./contrib/e2e-native.sh test/e2e/html $(EDITION) $(SANDBOX_PORT)
+	./contrib/e2e-native.sh test/e2e/ui-experimental $(EDITION) $(SANDBOX_PORT)
 	./contrib/e2e-native.sh test/e2e/meta $(EDITION) $(SANDBOX_PORT)
 	./contrib/e2e-native.sh test/e2e/no-api $(EDITION) $(SANDBOX_PORT)
 	./contrib/e2e-native.sh test/e2e/chaos $(EDITION) $(SANDBOX_PORT)

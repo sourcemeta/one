@@ -38,6 +38,8 @@ public:
         identifier, [this](const auto &key, const auto &value) -> void {
           if (key == "errorSchema") {
             this->error_schema_ = std::get<std::string_view>(value);
+          } else if (key == "experimentalRoot") {
+            this->experimental_root_ = std::get<std::string_view>(value);
           }
         });
   }
@@ -77,11 +79,12 @@ public:
       const auto serve_html{
           sourcemeta::one::prefers_html(request.header("accept"))};
       const auto root_html{this->artifact_resolve_path(
-          caller, "", Tree::Explorer, "directory-html")};
+          caller, "", Tree::Explorer, this->html_artifact())};
       if (serve_html && root_html.path.has_value()) {
         this->artifact_serve(
-            root_html.path.value(), sourcemeta::core::HTTP_STATUS_OK, false, {},
-            {}, HTML_BROWSER_SECURITY, request, response, this->error_schema_,
+            this->html_target(root_html.path.value()),
+            sourcemeta::core::HTTP_STATUS_OK, false, {}, {},
+            HTML_BROWSER_SECURITY, request, response, this->error_schema_,
             sourcemeta::one::cache_control_content(root_html.is_public),
             sourcemeta::one::vary_type_and_encoding());
       } else if (serve_html) {
@@ -106,21 +109,21 @@ public:
     if (request.method() == "get" || request.method() == "head") {
       if (sourcemeta::one::prefers_html(request.header("accept"))) {
         const auto schema_html{this->artifact_resolve_path(
-            caller, path, Tree::Explorer, "schema-html")};
+            caller, path, Tree::Explorer, this->schema_artifact())};
         const auto directory_html{this->artifact_resolve_path(
-            caller, path, Tree::Explorer, "directory-html")};
+            caller, path, Tree::Explorer, this->html_artifact())};
         if (!path.ends_with("/") && schema_html.path.has_value()) {
           this->artifact_serve(
-              schema_html.path.value(), sourcemeta::core::HTTP_STATUS_OK, false,
-              {}, {}, HTML_BROWSER_SECURITY, request, response,
-              this->error_schema_,
+              this->html_target(schema_html.path.value()),
+              sourcemeta::core::HTTP_STATUS_OK, false, {}, {},
+              HTML_BROWSER_SECURITY, request, response, this->error_schema_,
               sourcemeta::one::cache_control_content(schema_html.is_public),
               sourcemeta::one::vary_type_and_encoding());
         } else if (directory_html.path.has_value()) {
           this->artifact_serve(
-              directory_html.path.value(), sourcemeta::core::HTTP_STATUS_OK,
-              false, {}, {}, HTML_BROWSER_SECURITY, request, response,
-              this->error_schema_,
+              this->html_target(directory_html.path.value()),
+              sourcemeta::core::HTTP_STATUS_OK, false, {}, {},
+              HTML_BROWSER_SECURITY, request, response, this->error_schema_,
               sourcemeta::one::cache_control_content(directory_html.is_public),
               sourcemeta::one::vary_type_and_encoding());
         } else {
@@ -137,9 +140,9 @@ public:
       const auto schema_json{
           this->artifact_resolve_path(caller, path, Tree::Schemas, "schema")};
       const auto schema_html{this->artifact_resolve_path(
-          caller, path, Tree::Explorer, "schema-html")};
+          caller, path, Tree::Explorer, this->schema_artifact())};
       const auto directory_html{this->artifact_resolve_path(
-          caller, path, Tree::Explorer, "directory-html")};
+          caller, path, Tree::Explorer, this->html_artifact())};
       if (schema_json.path.has_value() ||
           (!path.ends_with("/") && schema_html.path.has_value()) ||
           directory_html.path.has_value()) {
@@ -181,6 +184,18 @@ private:
       return;
     }
 
+    // The application writes its own not found screen, so what is served here
+    // is the same one page as anywhere else, and only the status says that
+    // what was asked for is not here
+    if (!this->experimental_root_.empty()) {
+      this->artifact_serve(
+          this->shell(), sourcemeta::core::HTTP_STATUS_NOT_FOUND, false, {}, {},
+          HTML_BROWSER_SECURITY, request, response, this->error_schema_,
+          sourcemeta::one::cache_control_no_store(),
+          sourcemeta::one::vary_type_and_encoding());
+      return;
+    }
+
     // The absence is the caller's own, so it is told in the terms of the view
     // they resolve to rather than in the anonymous one's
     const auto not_found{this->artifact_resolve_path_unauthenticated(
@@ -200,7 +215,33 @@ private:
         this->error_schema_, "*");
   }
 
+  // What a location holds is still asked of the index, since the application
+  // needs a location to exist before it is worth opening the page at it. The
+  // pages themselves are gone in the experimental mode, so what is asked for
+  // is the metadata every location has either way
+  [[nodiscard]] auto schema_artifact() const noexcept -> std::string_view {
+    return this->experimental_root_.empty() ? "schema-html" : "schema";
+  }
+
+  [[nodiscard]] auto html_artifact() const noexcept -> std::string_view {
+    return this->experimental_root_.empty() ? "directory-html" : "directory";
+  }
+
+  [[nodiscard]] auto shell() const -> sourcemeta::one::ResolvedArtifact {
+    return this->artifact_resolve_static(this->experimental_root_, "index.html")
+        .path.value();
+  }
+
+  // One page answers for every location, so what was resolved only says
+  // whether there is anything to answer for, not what to send back
+  [[nodiscard]] auto
+  html_target(const sourcemeta::one::ResolvedArtifact &resolved) const
+      -> sourcemeta::one::ResolvedArtifact {
+    return this->experimental_root_.empty() ? resolved : this->shell();
+  }
+
   std::string_view error_schema_;
+  std::string_view experimental_root_;
 };
 
 #endif

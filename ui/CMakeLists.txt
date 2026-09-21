@@ -55,7 +55,9 @@ foreach(entry IN LISTS ONE_UI_ENTRIES)
   string(TOLOWER "${file_extension}" file_extension)
 
   if(file_extension STREQUAL ".html")
-    set(MIME "text/html")
+    # The pages the index writes name the encoding, and a browser left to
+    # guess at it is a browser that can guess wrong
+    set(MIME "text/html; charset=utf-8")
   elseif(file_extension STREQUAL ".js")
     set(MIME "text/javascript")
   elseif(file_extension STREQUAL ".css")

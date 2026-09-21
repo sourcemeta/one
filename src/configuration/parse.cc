@@ -199,6 +199,11 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
         result.html->head = data.at("html").at("head").to_string();
       }
 
+      if (data.at("html").defines("experimental")) {
+        result.html->experimental =
+            data.at("html").at("experimental").to_boolean();
+      }
+
       if (data.at("html").defines("action")) {
         result.html->action = {
             .url = data.at("html").at("action").at("url").to_string(),

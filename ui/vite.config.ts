@@ -41,7 +41,7 @@ const inlineLinkedStylesheets = (): Plugin => ({
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/one-ui/',
+  base: '/self/v1/static/',
   plugins: [react(), tailwindcss(), inlineLinkedStylesheets()],
   build: {
     // One serves these from a single flat directory, so nesting them under

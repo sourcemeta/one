@@ -446,10 +446,14 @@ static auto index_main(const std::string_view &program,
                                 ? std::string{app.at("comment").at(0)}
                                 : std::string{}};
   const auto build_type{configuration.html.has_value()
-                            ? sourcemeta::one::MODE_FULL
+                            ? (configuration.html->experimental
+                                   ? sourcemeta::one::MODE_EXPERIMENTAL
+                                   : sourcemeta::one::MODE_FULL)
                             : sourcemeta::one::MODE_HEADLESS};
   const std::string_view mode_label{
-      configuration.html.has_value() ? "Full" : "Headless"};
+      build_type == sourcemeta::one::MODE_EXPERIMENTAL ? "Experimental"
+      : build_type == sourcemeta::one::MODE_FULL       ? "Full"
+                                                       : "Headless"};
 
   // Mainly to not screw up the logs
   std::mutex mutex;

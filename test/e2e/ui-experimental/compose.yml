@@ -1,0 +1,11 @@
+services:
+  sandbox:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SOURCEMETA_ONE_SANDBOX_EDITION: ${EDITION}
+    environment:
+      - SOURCEMETA_ONE_PORT=8001
+    ports:
+      - "${PORT}:8001"

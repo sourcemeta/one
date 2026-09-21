@@ -50,8 +50,11 @@ enum : BuildPlan::Action::Type {
 
 // The value of an entry is the build type a plan records, so these stand in for
 // an integer wherever a plan asks for one
+// The experimental mode writes no HTML at all, so it is a mode of its own
+// rather than a variation on the full one: every rule gated on the full mode
+// is a page, and every one of them is a page the application replaces
 // NOLINTNEXTLINE(cppcoreguidelines-use-enum-class)
-enum : BuildPlan::Type { MODE_HEADLESS, MODE_FULL };
+enum : BuildPlan::Type { MODE_HEADLESS, MODE_FULL, MODE_EXPERIMENTAL };
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
 inline constexpr std::size_t INDEX_LEAF_RULES{18};
