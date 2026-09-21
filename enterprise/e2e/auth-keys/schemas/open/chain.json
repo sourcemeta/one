@@ -1,0 +1,8 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "https://example.com/open/chain",
+  "title": "An open schema referencing another",
+  "properties": {
+    "next": { "$ref": "refs" }
+  }
+}

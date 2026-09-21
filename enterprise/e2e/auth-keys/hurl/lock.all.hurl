@@ -288,16 +288,22 @@ open_schema: header "Link" regex "<([^>]+)>"
 header "ETag" exists
 jsonpath "$.path" == "/open"
 jsonpath "$.private" == false
-jsonpath "$.entries" count == 3
+jsonpath "$.entries" count == 5
 jsonpath "$.entries[0].name" == "deep"
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].private" == false
-jsonpath "$.entries[1].name" == "meta"
+jsonpath "$.entries[1].name" == "chain"
 jsonpath "$.entries[1].type" == "schema"
 jsonpath "$.entries[1].private" == false
-jsonpath "$.entries[2].name" == "string"
+jsonpath "$.entries[2].name" == "meta"
 jsonpath "$.entries[2].type" == "schema"
 jsonpath "$.entries[2].private" == false
+jsonpath "$.entries[3].name" == "refs"
+jsonpath "$.entries[3].type" == "schema"
+jsonpath "$.entries[3].private" == false
+jsonpath "$.entries[4].name" == "string"
+jsonpath "$.entries[4].type" == "schema"
+jsonpath "$.entries[4].private" == false
 
 POST {{base}}/self/v1/api/schemas/evaluate{{open_schema}}
 ```

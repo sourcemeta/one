@@ -1,0 +1,9 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "https://example.com/open/refs",
+  "title": "An open schema with references",
+  "properties": {
+    "meta": { "$ref": "meta" },
+    "string": { "$ref": "string" }
+  }
+}
