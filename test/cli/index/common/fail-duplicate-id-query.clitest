@@ -1,0 +1,48 @@
+WRITE one.json UNTIL EOF
+{
+  "url": "https://sourcemeta.com",
+  "contents": {
+    "example": {
+      "contents": {
+        "schemas": {
+          "baseUri": "https://example.com/",
+          "path": "./schemas"
+        }
+      }
+    }
+  }
+}
+EOF
+
+MAKE DIRECTORY schemas
+
+WRITE schemas/plain.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/test"
+}
+EOF
+
+// The query parameters of a schema URL belong to this instance rather than to
+// the schema, so an identifier keeps path components alone and these collide
+WRITE schemas/query.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/test?version=2"
+}
+EOF
+
+RUN --deterministic --concurrency 1 one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
+
+WRITE expected.txt UNTIL EOF
+2> Sourcemeta One [EDITION] v[VERSION]
+2> error: Cannot register the same identifier twice
+2>   at path [CWD]/schemas/query.json
+2>   at identifier https://sourcemeta.com/example/schemas/test
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+REPLACE $EDITION WITH '[EDITION]' IN output.txt
+REPLACE $VERSION WITH '[VERSION]' IN output.txt
+COMPARE output.txt AGAINST expected.txt

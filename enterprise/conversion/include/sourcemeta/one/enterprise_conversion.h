@@ -242,14 +242,9 @@ inline constexpr std::array<SchemaDialect, 5> SCHEMA_CONVERSION_TARGETS{
 conversion_identifier(const std::string_view identifier,
                       const SchemaDialect dialect) -> std::string {
   sourcemeta::core::URI uri{std::string{identifier}};
-  std::string query;
-  const auto current{uri.query()};
-  if (current.has_value() && !current.value().raw().empty()) {
-    query.append(current.value().raw());
-    query.push_back('&');
-  }
-
-  query.append("as=");
+  // Every identifier this catalog hands out is built from path components
+  assert(!uri.query().has_value());
+  std::string query{"as="};
   query.append(conversion_name(dialect));
   uri.query(query);
   return uri.recompose();
