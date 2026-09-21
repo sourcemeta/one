@@ -84,6 +84,12 @@ header "ETag" exists
   "properties": {
     "tag": {
       "$ref": "string"
+    },
+    "latest": {
+      "$ref": "../jsonld/plain"
+    },
+    "same": {
+      "$ref": "#/properties/tag"
     }
   }
 }
@@ -109,9 +115,22 @@ header "ETag" exists
   "properties": {
     "tag": {
       "$ref": "string"
+    },
+    "latest": {
+      "$ref": "../jsonld/plain"
+    },
+    "same": {
+      "$ref": "#/properties/tag"
     }
   },
   "definitions": {
+    "{{base}}/test/jsonld/plain": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "{{base}}/test/jsonld/plain",
+      "title": "Plain",
+      "description": "A schema without JSON-LD annotations",
+      "type": "object"
+    },
     "{{base}}/test/draft3/string": {
       "$schema": "http://json-schema.org/draft-03/schema#",
       "id": "{{base}}/test/draft3/string",

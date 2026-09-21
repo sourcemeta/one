@@ -345,11 +345,37 @@ template <sourcemeta::one::SchemaDialect Target> struct GenerateConversion {
         declares_vocabulary(
             schema, sourcemeta::one::conversion_base_dialect(dialect.value()))};
 
+    // What a reference points at is commonly pointed at more than once
+    std::unordered_map<sourcemeta::core::JSON::String, bool> conversions;
+
     try {
       sourcemeta::one::convert_schema(
           schema, Target, is_metaschema, action.data,
           [&callback, &resolver](const auto identifier) {
             return resolver(identifier, callback);
+          },
+          [&resolver, &conversions](const std::string_view identifier) -> bool {
+            sourcemeta::core::JSON::String referent{identifier};
+            const auto match{conversions.find(referent)};
+            if (match != conversions.cend()) {
+              return match->second;
+            }
+
+            // Exactly what the artifacts are gated on, so a reference cannot
+            // point at a conversion that was never produced
+            const auto &views{resolver.data()};
+            const auto referent_entry{views.find(referent)};
+            const auto result{referent_entry != views.cend() &&
+                              sourcemeta::one::conversion_selected(
+                                  sourcemeta::one::conversion_selection(
+                                      referent_entry->second.dialect,
+                                      sourcemeta::one::is_metaschema(
+                                          referent_entry->second.dialect,
+                                          referent_entry->second.vocabularies,
+                                          resolver.is_dialect(identifier))),
+                                  Target)};
+            conversions.emplace(std::move(referent), result);
+            return result;
           });
     } catch (const std::exception &error) {
       throw sourcemeta::one::SchemaConversionError(

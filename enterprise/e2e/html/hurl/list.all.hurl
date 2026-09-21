@@ -39,7 +39,7 @@ jsonpath "$.entries[1].path" == "/self/"
 jsonpath "$.entries[2].name" == "test"
 jsonpath "$.entries[2].private" == false
 jsonpath "$.entries[2].type" == "directory"
-jsonpath "$.entries[2].health" == 19
+jsonpath "$.entries[2].health" == 21
 jsonpath "$.entries[2].schemas" == 73
 jsonpath "$.entries[2].path" == "/test/"
 jsonpath "$.entries[3].name" == "twins"

@@ -164,7 +164,7 @@ jsonpath "$.result.resources[22].annotations.priority" == 0.5
 jsonpath "$.result.resources[23].uri" == "{{base}}/test/draft3/with-ref"
 jsonpath "$.result.resources[23].name" == "/test/draft3/with-ref"
 jsonpath "$.result.resources[23].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[23].size" == 197
+jsonpath "$.result.resources[23].size" == 306
 jsonpath "$.result.resources[23].annotations.priority" == 0.5
 jsonpath "$.result.resources[24].uri" == "{{base}}/no-blaze/jsonld"
 jsonpath "$.result.resources[24].name" == "/no-blaze/jsonld"

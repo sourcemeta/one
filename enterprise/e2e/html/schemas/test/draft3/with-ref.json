@@ -4,6 +4,12 @@
   "properties": {
     "tag": {
       "$ref": "string"
+    },
+    "latest": {
+      "$ref": "../jsonld/plain"
+    },
+    "same": {
+      "$ref": "#/properties/tag"
     }
   }
 }

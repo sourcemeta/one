@@ -217,6 +217,13 @@ inline constexpr std::array<SchemaDialect, 5> SCHEMA_CONVERSION_TARGETS{
   return static_cast<std::uint8_t>(static_cast<std::uint8_t>(dialect) - 1);
 }
 
+// Whether a selection includes the conversion into a dialect
+[[nodiscard]] inline auto conversion_selected(const std::uint32_t selection,
+                                              const SchemaDialect dialect)
+    -> bool {
+  return (selection & (std::uint32_t{1} << conversion_selector(dialect))) != 0;
+}
+
 // The selection bits of every conversion a schema declaring a dialect gets.
 // A meta-schema gets none, as a conversion cannot restate the dialect that a
 // meta-schema describes
@@ -236,6 +243,14 @@ inline constexpr std::array<SchemaDialect, 5> SCHEMA_CONVERSION_TARGETS{
   return result;
 }
 
+// The query that asks for a conversion into a dialect
+[[nodiscard]] inline auto conversion_query(const SchemaDialect dialect)
+    -> std::string {
+  std::string result{"as="};
+  result.append(conversion_name(dialect));
+  return result;
+}
+
 // The identifier of a schema converted into a dialect, which is the one the
 // schema declares plus the name of the conversion
 [[nodiscard]] inline auto
@@ -244,9 +259,7 @@ conversion_identifier(const std::string_view identifier,
   sourcemeta::core::URI uri{std::string{identifier}};
   // Every identifier this catalog hands out is built from path components
   assert(!uri.query().has_value());
-  std::string query{"as="};
-  query.append(conversion_name(dialect));
-  uri.query(query);
+  uri.query(conversion_query(dialect));
   return uri.recompose();
 }
 

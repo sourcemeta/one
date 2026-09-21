@@ -276,7 +276,7 @@ jsonpath "$.result.resources[22].annotations.priority" == 0.5
 jsonpath "$.result.resources[23].uri" == "{{base}}/test/draft3/with-ref"
 jsonpath "$.result.resources[23].name" == "/test/draft3/with-ref"
 jsonpath "$.result.resources[23].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[23].size" == 197
+jsonpath "$.result.resources[23].size" == 306
 jsonpath "$.result.resources[23].annotations.priority" == 0.5
 jsonpath "$.result.resources[24].uri" == "{{base}}/no-blaze/jsonld"
 jsonpath "$.result.resources[24].name" == "/no-blaze/jsonld"
@@ -797,7 +797,7 @@ variable "text" jsonpath "$.entries[1].path" == "/self/"
 variable "text" jsonpath "$.entries[2].name" == "test"
 variable "text" jsonpath "$.entries[2].private" == false
 variable "text" jsonpath "$.entries[2].type" == "directory"
-variable "text" jsonpath "$.entries[2].health" == 19
+variable "text" jsonpath "$.entries[2].health" == 21
 variable "text" jsonpath "$.entries[2].schemas" == 73
 variable "text" jsonpath "$.entries[2].path" == "/test/"
 variable "text" jsonpath "$.entries[3].name" == "twins"

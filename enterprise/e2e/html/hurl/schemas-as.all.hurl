@@ -207,7 +207,8 @@ header "ETag" exists
 header "Last-Modified" exists
 bytes count == 0
 
-# References are kept as they are
+# A reference is pointed at the matching conversion of what it references, and
+# left alone when there is none to point at
 GET {{base}}/test/draft3/with-ref?as=2020-12
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
@@ -229,7 +230,45 @@ header "Last-Modified" exists
   "type": "object",
   "properties": {
     "tag": {
-      "$ref": "string"
+      "$ref": "string?as=2020-12"
+    },
+    "latest": {
+      "$ref": "../jsonld/plain"
+    },
+    "same": {
+      "$ref": "#/properties/tag"
+    }
+  }
+}
+
+GET {{base}}/test/draft3/with-ref?as=draft4
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/schema+json
+Link: <http://json-schema.org/draft-04/schema\#>; rel="describedby"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
+header "Last-Modified" exists
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "{{base}}/test/draft3/with-ref?as=draft4",
+  "type": "object",
+  "properties": {
+    "tag": {
+      "$ref": "string?as=draft4"
+    },
+    "latest": {
+      "$ref": "../jsonld/plain"
+    },
+    "same": {
+      "$ref": "#/properties/tag"
     }
   }
 }

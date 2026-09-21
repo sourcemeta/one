@@ -4,11 +4,16 @@
 #include <sourcemeta/blaze/format.h>
 
 #include <sourcemeta/core/json.h>
+#include <sourcemeta/core/jsonpointer.h>
 #include <sourcemeta/core/jsonschema.h>
+#include <sourcemeta/core/uri.h>
 
+#include <cassert>     // assert
+#include <functional>  // std::function
 #include <string>      // std::string
 #include <string_view> // std::string_view
-#include <utility>     // std::move, std::unreachable
+#include <utility>     // std::move, std::pair, std::unreachable
+#include <vector>      // std::vector
 
 namespace {
 
@@ -31,6 +36,49 @@ auto convert_target(const sourcemeta::one::SchemaDialect dialect)
 
   // Nothing is ever converted into the oldest dialect
   std::unreachable();
+}
+
+// Point every reference that has a matching conversion at that conversion, so
+// that what a consumer reaches by following one is written in the dialect it
+// asked for
+auto rewrite_references(
+    sourcemeta::core::JSON &schema, const sourcemeta::one::SchemaDialect target,
+    const sourcemeta::core::SchemaResolver &resolver,
+    const std::function<bool(std::string_view)> &has_conversion) -> void {
+  const sourcemeta::core::SchemaFrame frame{
+      sourcemeta::core::SchemaFrame::Mode::References, schema,
+      sourcemeta::core::schema_walker, resolver};
+  const auto query{sourcemeta::one::conversion_query(target)};
+  std::vector<
+      std::pair<sourcemeta::core::Pointer, sourcemeta::core::JSON::String>>
+      rewrites;
+
+  frame.for_each_reference(
+      [&](const sourcemeta::core::SchemaReferenceType,
+          const sourcemeta::core::WeakPointer &origin,
+          const sourcemeta::core::SchemaFrame::Reference &reference) -> void {
+        assert(!origin.empty() && origin.back().is_property());
+        // The dialect a schema declares is not one of its references
+        if (origin.back().to_property() == "$schema") {
+          return;
+        }
+
+        const sourcemeta::core::URI destination{reference.destination};
+        const auto referent{destination.recompose_without_fragment()};
+        if (!referent.has_value() || !has_conversion(referent.value())) {
+          return;
+        }
+
+        sourcemeta::core::URI result{std::string{reference.original}};
+        result.query(query);
+        rewrites.emplace_back(sourcemeta::core::to_pointer(origin),
+                              result.recompose());
+      });
+
+  for (auto &[pointer, reference] : rewrites) {
+    sourcemeta::core::get(schema, pointer)
+        .into(sourcemeta::core::JSON{std::move(reference)});
+  }
 }
 
 } // namespace
@@ -57,7 +105,9 @@ auto conversions_metadata(const std::string_view dialect,
 
 auto convert_schema(sourcemeta::core::JSON &schema, const SchemaDialect target,
                     const bool is_metaschema, const std::string_view identifier,
-                    const sourcemeta::core::SchemaResolver &resolver) -> void {
+                    const sourcemeta::core::SchemaResolver &resolver,
+                    const std::function<bool(std::string_view)> &has_conversion)
+    -> void {
   sourcemeta::blaze::convert(schema, sourcemeta::core::schema_walker, resolver,
                              convert_target(target), "", "", is_metaschema);
   sourcemeta::blaze::format(schema, sourcemeta::core::schema_walker, resolver,
@@ -69,6 +119,7 @@ auto convert_schema(sourcemeta::core::JSON &schema, const SchemaDialect target,
   sourcemeta::core::schema_reidentify(schema,
                                       conversion_identifier(identifier, target),
                                       conversion_base_dialect(target));
+  rewrite_references(schema, target, resolver, has_conversion);
 }
 
 } // namespace sourcemeta::one
