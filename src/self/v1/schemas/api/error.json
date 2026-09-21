@@ -83,6 +83,14 @@
     },
     {
       "const": {
+        "type": "urn:sourcemeta:one:incompatible-query-parameters",
+        "title": "Bad Request",
+        "status": 400,
+        "detail": "The as query parameter cannot be combined with any other query parameter"
+      }
+    },
+    {
+      "const": {
         "type": "urn:sourcemeta:one:custom-dialect-conversion",
         "title": "Bad Request",
         "status": 400,

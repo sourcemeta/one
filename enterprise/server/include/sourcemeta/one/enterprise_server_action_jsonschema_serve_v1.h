@@ -142,6 +142,18 @@ private:
       return;
     }
 
+    // Asking for a conversion has a single spelling, so anything else in the
+    // query is a request this surface has no answer for
+    if (request.query_count() > 1) {
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+          "urn:sourcemeta:one:incompatible-query-parameters",
+          "The as query parameter cannot be combined with any other query "
+          "parameter",
+          error_schema, "*");
+      return;
+    }
+
     const auto target{sourcemeta::one::conversion_target(request.query("as"))};
     if (target.has_value()) {
       const auto conversion{self.artifact_resolve_path(

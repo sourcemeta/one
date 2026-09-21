@@ -13,6 +13,7 @@
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t, std::uint16_t
 #include <exception>   // std::exception_ptr, std::current_exception
+#include <iterator>    // std::ranges::distance
 #include <limits>      // std::numeric_limits
 #include <memory>      // std::shared_ptr, std::make_shared
 #include <optional>    // std::optional
@@ -171,6 +172,11 @@ public:
   [[nodiscard]] auto has_query(const std::string_view name) const -> bool {
     const sourcemeta::core::URI::Query query{this->request_->getQuery()};
     return query.at(name).has_value();
+  }
+
+  [[nodiscard]] auto query_count() const -> std::size_t {
+    const sourcemeta::core::URI::Query query{this->request_->getQuery()};
+    return static_cast<std::size_t>(std::ranges::distance(query));
   }
 
   [[nodiscard]] auto header_gmt(const std::string_view name) const noexcept
