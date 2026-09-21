@@ -36,8 +36,11 @@ all: configure compile test
 node_modules: package.json package-lock.json
 	$(NPM) ci
 
+ui/node_modules: ui/package.json ui/package-lock.json
+	cd ui && $(NPM) ci
+
 .PHONY: configure
-configure: node_modules
+configure: node_modules ui/node_modules
 	$(CMAKE) -S . -B $(OUTPUT) \
 		-DCMAKE_BUILD_TYPE:STRING=$(PRESET) \
 		-DCMAKE_COMPILE_WARNING_AS_ERROR:BOOL=ON \

@@ -103,6 +103,7 @@ if(ONE_INDEX)
   add_subdirectory(src/configuration)
   add_subdirectory(src/resolver)
   add_subdirectory(src/web)
+  add_subdirectory(ui)
   add_subdirectory(src/index)
   add_subdirectory(src/self)
 

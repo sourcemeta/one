@@ -7,11 +7,15 @@ RUN apt-get --yes -o Acquire::Retries=3 update && apt-get install --yes --no-ins
 COPY package.json /source/package.json
 COPY package-lock.json /source/package-lock.json
 RUN cd /source && npm ci
+COPY ui/package.json /source/ui/package.json
+COPY ui/package-lock.json /source/ui/package-lock.json
+RUN cd /source/ui && npm ci
 COPY cmake /source/cmake
 COPY src /source/src
 COPY contrib /source/contrib
 COPY vendor /source/vendor
 COPY CMakeLists.txt /source/CMakeLists.txt
+COPY ui /source/ui
 COPY VERSION /source/VERSION
 
 # For testing
