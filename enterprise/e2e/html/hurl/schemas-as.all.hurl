@@ -80,7 +80,7 @@ header "ETag" exists
 header "Last-Modified" exists
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "id": "{{base}}/test/draft3/string",
+  "id": "{{base}}/test/draft3/string?as=draft4",
   "type": "string"
 }
 
@@ -101,7 +101,7 @@ header "ETag" exists
 header "Last-Modified" exists
 {
   "$schema": "http://json-schema.org/draft-06/schema#",
-  "$id": "{{base}}/test/draft3/string",
+  "$id": "{{base}}/test/draft3/string?as=draft6",
   "type": "string"
 }
 
@@ -122,7 +122,7 @@ header "ETag" exists
 header "Last-Modified" exists
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "{{base}}/test/draft3/string",
+  "$id": "{{base}}/test/draft3/string?as=draft7",
   "type": "string"
 }
 
@@ -143,7 +143,7 @@ header "ETag" exists
 header "Last-Modified" exists
 {
   "$schema": "https://json-schema.org/draft/2019-09/schema",
-  "$id": "{{base}}/test/draft3/string",
+  "$id": "{{base}}/test/draft3/string?as=2019-09",
   "type": "string"
 }
 
@@ -164,7 +164,7 @@ header "ETag" exists
 header "Last-Modified" exists
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "{{base}}/test/draft3/string",
+  "$id": "{{base}}/test/draft3/string?as=2020-12",
   "type": "string"
 }
 
@@ -186,7 +186,7 @@ header "ETag" exists
 header "Last-Modified" exists
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "id": "{{base}}/test/draft3/string",
+  "id": "{{base}}/test/draft3/string?as=draft4",
   "type": "string"
 }
 
@@ -225,7 +225,7 @@ header "ETag" exists
 header "Last-Modified" exists
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "{{base}}/test/draft3/with-ref",
+  "$id": "{{base}}/test/draft3/with-ref?as=2020-12",
   "type": "object",
   "properties": {
     "tag": {
@@ -312,7 +312,7 @@ header "ETag" exists
 header "Last-Modified" exists
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "{{base}}/test/jsonld/draft7",
+  "$id": "{{base}}/test/jsonld/draft7?as=2020-12",
   "title": "Legacy Dialect",
   "description": "A schema on a dialect without annotation support",
   "type": "object",

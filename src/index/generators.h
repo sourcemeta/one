@@ -347,7 +347,7 @@ template <sourcemeta::one::SchemaDialect Target> struct GenerateConversion {
 
     try {
       sourcemeta::one::convert_schema(
-          schema, Target, is_metaschema,
+          schema, Target, is_metaschema, action.data,
           [&callback, &resolver](const auto identifier) {
             return resolver(identifier, callback);
           });

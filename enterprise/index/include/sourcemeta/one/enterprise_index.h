@@ -32,7 +32,7 @@ auto conversions_metadata(std::string_view dialect, bool is_metaschema)
 
 // Convert a schema into a newer official dialect
 auto convert_schema(sourcemeta::core::JSON &schema, SchemaDialect target,
-                    bool is_metaschema,
+                    bool is_metaschema, std::string_view identifier,
                     const sourcemeta::core::SchemaResolver &resolver) -> void;
 
 // A schema that could not be converted into a dialect

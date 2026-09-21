@@ -56,12 +56,19 @@ auto conversions_metadata(const std::string_view dialect,
 }
 
 auto convert_schema(sourcemeta::core::JSON &schema, const SchemaDialect target,
-                    const bool is_metaschema,
+                    const bool is_metaschema, const std::string_view identifier,
                     const sourcemeta::core::SchemaResolver &resolver) -> void {
   sourcemeta::blaze::convert(schema, sourcemeta::core::schema_walker, resolver,
                              convert_target(target), "", "", is_metaschema);
   sourcemeta::blaze::format(schema, sourcemeta::core::schema_walker, resolver,
                             conversion_uri(target));
+  // A reference that carries a conversion resolves against a schema that
+  // identifies itself with that conversion and against nothing else, as a
+  // query names a resource of its own where a fragment only addresses into
+  // one. Without this, rewriting references to carry a conversion cannot work
+  sourcemeta::core::schema_reidentify(schema,
+                                      conversion_identifier(identifier, target),
+                                      conversion_base_dialect(target));
 }
 
 } // namespace sourcemeta::one

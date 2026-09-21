@@ -34,7 +34,7 @@ jsonpath "$.id" == 900
 jsonpath "$.result.contents" count == 1
 jsonpath "$.result.contents[0].uri" == "{{base}}/test/draft3/string?as=2020-12"
 jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
-jsonpath "$.result.contents[0].text" == "{\n  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n  \"$id\": \"{{base}}/test/draft3/string\",\n  \"type\": \"string\"\n}"
+jsonpath "$.result.contents[0].text" == "{\n  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n  \"$id\": \"{{base}}/test/draft3/string?as=2020-12\",\n  \"type\": \"string\"\n}"
 jsonpath "$.error" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -86,7 +86,7 @@ jsonpath "$.id" == 901
 jsonpath "$.result.contents" count == 1
 jsonpath "$.result.contents[0].uri" == "{{base}}/test/draft3/string?as=draft4"
 jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
-jsonpath "$.result.contents[0].text" == "{\n  \"$schema\": \"http://json-schema.org/draft-04/schema#\",\n  \"id\": \"{{base}}/test/draft3/string\",\n  \"type\": \"string\"\n}"
+jsonpath "$.result.contents[0].text" == "{\n  \"$schema\": \"http://json-schema.org/draft-04/schema#\",\n  \"id\": \"{{base}}/test/draft3/string?as=draft4\",\n  \"type\": \"string\"\n}"
 jsonpath "$.error" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
