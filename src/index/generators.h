@@ -325,20 +325,7 @@ private:
 };
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
-// The conversions a schema in the catalog gets, which is both what gates its
-// artifacts and what a reference to it may point at
-[[nodiscard]] inline auto
-schema_conversions(const sourcemeta::one::Resolver &resolver,
-                   const std::string_view identifier,
-                   const sourcemeta::one::Resolver::Entry &entry)
-    -> std::uint32_t {
-  return sourcemeta::one::conversion_selection(
-      entry.dialect,
-      sourcemeta::one::is_metaschema(entry.dialect, entry.vocabularies,
-                                     resolver.is_dialect(identifier)));
-}
-
-// A schema converted into a newer official dialect than the one it declares
+// A schema's closure, bundled and then converted into a newer official dialect
 template <sourcemeta::one::SchemaDialect Target> struct GenerateConversion {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
@@ -356,31 +343,11 @@ template <sourcemeta::one::SchemaDialect Target> struct GenerateConversion {
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
     assert(schema_option.has_value());
     auto &schema{schema_option.value()};
-    // What a reference points at is commonly pointed at more than once
-    std::unordered_map<sourcemeta::core::JSON::String, bool> conversions;
-
     try {
       sourcemeta::one::convert_schema(
           schema, Target, action.data,
           [&callback, &resolver](const auto identifier) {
             return resolver(identifier, callback);
-          },
-          [&resolver, &conversions](const std::string_view identifier) -> bool {
-            sourcemeta::core::JSON::String referent{identifier};
-            const auto match{conversions.find(referent)};
-            if (match != conversions.cend()) {
-              return match->second;
-            }
-
-            const auto &views{resolver.data()};
-            const auto referent_entry{views.find(referent)};
-            const auto result{referent_entry != views.cend() &&
-                              sourcemeta::one::conversion_selected(
-                                  schema_conversions(resolver, identifier,
-                                                     referent_entry->second),
-                                  Target)};
-            conversions.emplace(std::move(referent), result);
-            return result;
           });
     } catch (const std::exception &error) {
       throw sourcemeta::one::SchemaConversionError(

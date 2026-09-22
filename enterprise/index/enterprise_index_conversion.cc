@@ -3,16 +3,16 @@
 #include <sourcemeta/blaze/convert.h>
 
 #include <sourcemeta/core/json.h>
-#include <sourcemeta/core/jsonpointer.h>
 #include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/uri.h>
 
-#include <cassert>     // assert
-#include <functional>  // std::function
-#include <string>      // std::string
-#include <string_view> // std::string_view
-#include <utility>     // std::move, std::pair, std::unreachable
-#include <vector>      // std::vector
+#include <exception>     // std::exception
+#include <string>        // std::string
+#include <string_view>   // std::string_view
+#include <unordered_map> // std::unordered_map
+#include <unordered_set> // std::unordered_set
+#include <utility>       // std::move, std::unreachable
+#include <vector>        // std::vector
 
 namespace {
 
@@ -37,49 +37,6 @@ auto convert_target(const sourcemeta::one::SchemaDialect dialect)
   std::unreachable();
 }
 
-// Point every reference that has a matching conversion at that conversion, so
-// that what a consumer reaches by following one is written in the dialect it
-// asked for
-auto rewrite_references(
-    sourcemeta::core::JSON &schema, const sourcemeta::one::SchemaDialect target,
-    const sourcemeta::core::SchemaResolver &resolver,
-    const std::function<bool(std::string_view)> &has_conversion) -> void {
-  const sourcemeta::core::SchemaFrame frame{
-      sourcemeta::core::SchemaFrame::Mode::References, schema,
-      sourcemeta::core::schema_walker, resolver};
-  const auto query{sourcemeta::one::conversion_query(target)};
-  std::vector<
-      std::pair<sourcemeta::core::Pointer, sourcemeta::core::JSON::String>>
-      rewrites;
-
-  frame.for_each_reference(
-      [&](const sourcemeta::core::SchemaReferenceType,
-          const sourcemeta::core::WeakPointer &origin,
-          const sourcemeta::core::SchemaFrame::Reference &reference) -> void {
-        assert(!origin.empty() && origin.back().is_property());
-        // The dialect a schema declares is not one of its references
-        if (origin.back().to_property() == "$schema") {
-          return;
-        }
-
-        const sourcemeta::core::URI destination{reference.destination};
-        const auto referent{destination.recompose_without_fragment()};
-        if (!referent.has_value() || !has_conversion(referent.value())) {
-          return;
-        }
-
-        sourcemeta::core::URI result{std::string{reference.original}};
-        result.query(query);
-        rewrites.emplace_back(sourcemeta::core::to_pointer(origin),
-                              result.recompose());
-      });
-
-  for (auto &[pointer, reference] : rewrites) {
-    sourcemeta::core::get(schema, pointer)
-        .into(sourcemeta::core::JSON{std::move(reference)});
-  }
-}
-
 } // namespace
 
 namespace sourcemeta::one {
@@ -102,25 +59,102 @@ auto conversions_metadata(const std::string_view dialect,
   return result;
 }
 
+auto conversion_selections(const Resolver &resolver)
+    -> std::unordered_map<sourcemeta::core::JSON::String, std::uint32_t> {
+  std::unordered_map<sourcemeta::core::JSON::String,
+                     std::vector<sourcemeta::core::JSON::String>>
+      referrers;
+  std::vector<sourcemeta::core::JSON::String> pending;
+  std::unordered_set<sourcemeta::core::JSON::String> result;
+  result.reserve(resolver.size());
+
+  for (const auto &[uri, entry] : resolver.data()) {
+    // A meta-schema is no more convertible inside a bundle than it is on its
+    // own, as converting one changes the dialect it is written in without
+    // restating the dialect it describes
+    auto convertible{official_dialect(entry.dialect).has_value() &&
+                     !is_metaschema(entry.dialect, entry.vocabularies,
+                                    resolver.is_dialect(uri))};
+
+    // Whatever stops a schema from being read here is reported where it always
+    // was, further into the build and with the context that belongs to it. All
+    // this pass concludes is that such a schema cannot be converted
+    try {
+      const auto schema{resolver(uri)};
+      if (schema.has_value()) {
+        const sourcemeta::core::SchemaFrame frame{
+            sourcemeta::core::SchemaFrame::Mode::References, schema.value(),
+            sourcemeta::core::schema_walker,
+            [&resolver](const auto identifier) {
+              return resolver(identifier);
+            }};
+        frame.for_each_reference(
+            [&referrers,
+             &uri](const sourcemeta::core::SchemaReferenceType,
+                   const sourcemeta::core::WeakPointer &,
+                   const sourcemeta::core::SchemaFrame::Reference &reference)
+                -> void {
+              const sourcemeta::core::URI destination{reference.destination};
+              const auto referent{destination.recompose_without_fragment()};
+              if (referent.has_value()) {
+                referrers[referent.value()].push_back(uri);
+              }
+            });
+      } else {
+        convertible = false;
+      }
+    } catch (const std::exception &) {
+      convertible = false;
+    }
+
+    if (convertible) {
+      result.emplace(uri);
+    } else {
+      pending.push_back(uri);
+    }
+  }
+
+  // What a schema reaches is only as convertible as the least convertible
+  // thing in it, which settles however the references are tangled
+  while (!pending.empty()) {
+    const auto current{std::move(pending.back())};
+    pending.pop_back();
+    const auto match{referrers.find(current)};
+    if (match == referrers.cend()) {
+      continue;
+    }
+
+    for (const auto &referrer : match->second) {
+      if (result.erase(referrer) > 0) {
+        pending.push_back(referrer);
+      }
+    }
+  }
+
+  std::unordered_map<sourcemeta::core::JSON::String, std::uint32_t> selections;
+  selections.reserve(resolver.size());
+  for (const auto &[uri, entry] : resolver.data()) {
+    selections.emplace(
+        uri, result.contains(uri)
+                 ? conversion_selection(entry.dialect,
+                                        is_metaschema(entry.dialect,
+                                                      entry.vocabularies,
+                                                      resolver.is_dialect(uri)))
+                 : 0);
+  }
+
+  return selections;
+}
+
 auto convert_schema(sourcemeta::core::JSON &schema, const SchemaDialect target,
                     const std::string_view identifier,
-                    const sourcemeta::core::SchemaResolver &resolver,
-                    const std::function<bool(std::string_view)> &has_conversion)
-    -> void {
+                    const sourcemeta::core::SchemaResolver &resolver) -> void {
   sourcemeta::blaze::convert(schema, sourcemeta::core::schema_walker, resolver,
                              convert_target(target), "", identifier);
   const sourcemeta::core::SchemaFrame frame{
       sourcemeta::core::SchemaFrame::Mode::Locations, schema,
       sourcemeta::core::schema_walker, resolver, conversion_uri(target)};
   sourcemeta::core::schema_format(schema, frame);
-  // A reference that carries a conversion resolves against a schema that
-  // identifies itself with that conversion and against nothing else, as a
-  // query names a resource of its own where a fragment only addresses into
-  // one. Without this, rewriting references to carry a conversion cannot work
-  sourcemeta::core::schema_reidentify(schema,
-                                      conversion_identifier(identifier, target),
-                                      conversion_base_dialect(target));
-  rewrite_references(schema, target, resolver, has_conversion);
 }
 
 } // namespace sourcemeta::one
