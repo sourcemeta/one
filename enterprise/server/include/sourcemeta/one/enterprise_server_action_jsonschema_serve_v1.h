@@ -133,18 +133,10 @@ private:
       return;
     }
 
-    if (request.has_query("bundle")) {
-      sourcemeta::one::json_error(
-          request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-          "urn:sourcemeta:one:incompatible-query-parameters",
-          "The as and bundle query parameters cannot be combined", error_schema,
-          "*");
-      return;
-    }
-
-    // Asking for a conversion has a single spelling, so anything else in the
-    // query is a request this surface has no answer for
-    if (request.query_count() > 1) {
+    // A conversion is served bundled, so asking for both is asking for the
+    // same thing twice. Anything else in the query is a request this surface
+    // has no answer for
+    if (request.query_count() > (request.has_query("bundle") ? 2 : 1)) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
           "urn:sourcemeta:one:incompatible-query-parameters",

@@ -78,14 +78,6 @@
         "type": "urn:sourcemeta:one:incompatible-query-parameters",
         "title": "Bad Request",
         "status": 400,
-        "detail": "The as and bundle query parameters cannot be combined"
-      }
-    },
-    {
-      "const": {
-        "type": "urn:sourcemeta:one:incompatible-query-parameters",
-        "title": "Bad Request",
-        "status": 400,
         "detail": "The as query parameter cannot be combined with any other query parameter"
       }
     },

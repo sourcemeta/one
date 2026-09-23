@@ -539,13 +539,6 @@ private:
     }
 
     if (conversion.has_value()) {
-      if (bundle) {
-        return sourcemeta::core::jsonrpc_make_error(
-            &request_id, -32602, "Invalid resource schema URI",
-            sourcemeta::core::JSON{"The as and bundle query parameters cannot "
-                                   "be combined"});
-      }
-
       const auto target{sourcemeta::one::conversion_target(conversion.value())};
       if (target.has_value()) {
         auto converted{this->artifact_resolve_path(

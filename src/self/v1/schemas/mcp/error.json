@@ -97,13 +97,6 @@
           "const": {
             "code": -32602,
             "message": "Invalid resource schema URI",
-            "data": "The as and bundle query parameters cannot be combined"
-          }
-        },
-        {
-          "const": {
-            "code": -32602,
-            "message": "Invalid resource schema URI",
             "data": "The schema cannot be converted into this dialect"
           }
         },
