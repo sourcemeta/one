@@ -401,12 +401,35 @@ meta-schema that a schema may declare.
 
 If the `as` query parameter is set, the schema is served converted into another
 official dialect: `draft4`, `draft6`, `draft7`, `2019-09`, or `2020-12`. A schema
-can only be converted into a dialect newer than the official dialect it declares
-with [`$schema`](https://www.learnjsonschema.com/2020-12/core/schema/), and the
-`conversions` property of its [metadata](#metadata) lists exactly the values it
-accepts. Meta-schemas are never converted, and neither are the schemas that
-declare a custom meta-schema. Asking for a conversion has a single spelling, so
-the `as` query parameter cannot be combined with any other query parameter.
+can be asked for in the official dialect it declares with
+[`$schema`](https://www.learnjsonschema.com/2020-12/core/schema/) or in any
+newer one, and the `conversions` property of its [metadata](#metadata) lists
+exactly the values it accepts.
+
+!!! note "A conversion is always bundled"
+
+    A conversion is served as a bundle, the whole closure of references embedded
+    and converted alongside the schema, exactly as if `bundle` had been asked for
+    too, so asking for both is the same request and either order is accepted.
+    Converting a schema on its own would leave every reference pointing at a
+    document in its original dialect, handing whoever asked for 2020-12 an older
+    one the moment they followed a reference.
+
+!!! note "`as` means nothing older, not exactly this"
+
+    A resource newer than the dialect asked for is carried across as it is,
+    because only upgrades are supported and downgrades are a harder problem this
+    does not attempt: moving a schema backwards means expressing what a newer
+    dialect can say in a dialect that cannot say it. So asking for the newest
+    dialect gives a document written entirely in it, since nothing can be newer,
+    while asking for an older one raises whatever sits below the line and leaves
+    the rest.
+
+A conversion is refused when the schema, or anything its references reach, is
+something a conversion cannot move: a meta-schema, or a schema on a dialect that
+is not one of the official ones. Because the closure travels with the schema,
+one such document anywhere in it is enough, and the `conversions` property
+reports none for that schema.
 
 !!! warning "Why meta-schemas are not converted"
 
@@ -453,6 +476,10 @@ the `as` query parameter cannot be combined with any other query parameter.
     refused rather than guessed at, and it is unlikely to ever happen
     automatically.
 
+    The same reasoning is what makes a reference to such a schema enough to
+    refuse the whole conversion. A bundled conversion has to convert every
+    document it embeds, so there is nowhere to put one it cannot move.
+
 === "200"
 
     The schema as JSON.
@@ -460,7 +487,7 @@ the `as` query parameter cannot be combined with any other query parameter.
 === "400"
 
     The `as` query parameter names a dialect the schema cannot be converted
-    into, or is combined with another query parameter.
+    into, or is combined with a query parameter other than `bundle`.
 
 === "403"
 
