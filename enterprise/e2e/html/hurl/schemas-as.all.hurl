@@ -80,7 +80,7 @@ header "ETag" exists
 header "Last-Modified" exists
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "id": "{{base}}/test/draft3/string?as=draft4",
+  "id": "{{base}}/test/draft3/string",
   "type": "string"
 }
 
@@ -101,7 +101,7 @@ header "ETag" exists
 header "Last-Modified" exists
 {
   "$schema": "http://json-schema.org/draft-06/schema#",
-  "$id": "{{base}}/test/draft3/string?as=draft6",
+  "$id": "{{base}}/test/draft3/string",
   "type": "string"
 }
 
@@ -122,7 +122,7 @@ header "ETag" exists
 header "Last-Modified" exists
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "{{base}}/test/draft3/string?as=draft7",
+  "$id": "{{base}}/test/draft3/string",
   "type": "string"
 }
 
@@ -143,7 +143,7 @@ header "ETag" exists
 header "Last-Modified" exists
 {
   "$schema": "https://json-schema.org/draft/2019-09/schema",
-  "$id": "{{base}}/test/draft3/string?as=2019-09",
+  "$id": "{{base}}/test/draft3/string",
   "type": "string"
 }
 
@@ -164,7 +164,7 @@ header "ETag" exists
 header "Last-Modified" exists
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "{{base}}/test/draft3/string?as=2020-12",
+  "$id": "{{base}}/test/draft3/string",
   "type": "string"
 }
 
@@ -186,7 +186,7 @@ header "ETag" exists
 header "Last-Modified" exists
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "id": "{{base}}/test/draft3/string?as=draft4",
+  "id": "{{base}}/test/draft3/string",
   "type": "string"
 }
 
@@ -207,8 +207,8 @@ header "ETag" exists
 header "Last-Modified" exists
 bytes count == 0
 
-# A reference is pointed at the matching conversion of what it references, and
-# left alone when there is none to point at
+# The closure comes with it, every resource older than the dialect asked for
+# raised to it, and anything newer left exactly as it is
 GET {{base}}/test/draft3/with-ref?as=2020-12
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
@@ -226,17 +226,31 @@ header "ETag" exists
 header "Last-Modified" exists
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "{{base}}/test/draft3/with-ref?as=2020-12",
+  "$id": "{{base}}/test/draft3/with-ref",
   "type": "object",
   "properties": {
     "tag": {
-      "$ref": "string?as=2020-12"
+      "$ref": "string"
     },
     "latest": {
-      "$ref": "../jsonld/plain?as=2020-12"
+      "$ref": "../jsonld/plain"
     },
     "same": {
       "$ref": "#/properties/tag"
+    }
+  },
+  "$defs": {
+    "{{base}}/test/jsonld/plain": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "{{base}}/test/jsonld/plain",
+      "title": "Plain",
+      "description": "A schema without JSON-LD annotations",
+      "type": "object"
+    },
+    "{{base}}/test/draft3/string": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "{{base}}/test/draft3/string",
+      "type": "string"
     }
   }
 }
@@ -258,17 +272,31 @@ header "ETag" exists
 header "Last-Modified" exists
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "id": "{{base}}/test/draft3/with-ref?as=draft4",
+  "id": "{{base}}/test/draft3/with-ref",
   "type": "object",
   "properties": {
     "tag": {
-      "$ref": "string?as=draft4"
+      "$ref": "string"
     },
     "latest": {
       "$ref": "../jsonld/plain"
     },
     "same": {
       "$ref": "#/properties/tag"
+    }
+  },
+  "definitions": {
+    "{{base}}/test/jsonld/plain": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "{{base}}/test/jsonld/plain",
+      "title": "Plain",
+      "description": "A schema without JSON-LD annotations",
+      "type": "object"
+    },
+    "{{base}}/test/draft3/string": {
+      "$schema": "http://json-schema.org/draft-04/schema#",
+      "id": "{{base}}/test/draft3/string",
+      "type": "string"
     }
   }
 }
@@ -352,7 +380,7 @@ header "ETag" exists
 header "Last-Modified" exists
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "{{base}}/test/jsonld/draft7?as=2020-12",
+  "$id": "{{base}}/test/jsonld/draft7",
   "title": "Legacy Dialect",
   "description": "A schema on a dialect without annotation support",
   "type": "object",
@@ -382,7 +410,7 @@ header "ETag" exists
 header "Last-Modified" exists
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "{{base}}/test/jsonld/draft7?as=draft7",
+  "$id": "{{base}}/test/jsonld/draft7",
   "title": "Legacy Dialect",
   "description": "A schema on a dialect without annotation support",
   "type": "object",
@@ -549,125 +577,8 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-# A converted schema cannot be bundled
+# A conversion is already bundled, so asking for both is the same request
 GET {{base}}/test/draft3/string?as=2020-12&bundle=1
-HTTP 400
-Cache-Control: no-store
-Content-Type: application/problem+json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/error>; rel="describedby"
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
-[Asserts]
-header "Vary" not exists
-header "Referrer-Policy" not exists
-header "Content-Security-Policy" not exists
-header "X-Frame-Options" not exists
-header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-{
-  "type": "urn:sourcemeta:one:incompatible-query-parameters",
-  "title": "Bad Request",
-  "status": 400,
-  "detail": "The as and bundle query parameters cannot be combined"
-}
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-Cache-Control: no-store
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
-[Asserts]
-header "Vary" not exists
-header "Referrer-Policy" not exists
-header "Content-Security-Policy" not exists
-header "X-Frame-Options" not exists
-header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.valid" == true
-
-# Nor can it be asked for alongside any other query parameter
-GET {{base}}/test/draft3/string?as=2020-12&pretty=1
-HTTP 400
-Cache-Control: no-store
-Content-Type: application/problem+json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/error>; rel="describedby"
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
-[Asserts]
-header "Vary" not exists
-header "Referrer-Policy" not exists
-header "Content-Security-Policy" not exists
-header "X-Frame-Options" not exists
-header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-{
-  "type": "urn:sourcemeta:one:incompatible-query-parameters",
-  "title": "Bad Request",
-  "status": 400,
-  "detail": "The as query parameter cannot be combined with any other query parameter"
-}
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-Cache-Control: no-store
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
-[Asserts]
-header "Vary" not exists
-header "Referrer-Policy" not exists
-header "Content-Security-Policy" not exists
-header "X-Frame-Options" not exists
-header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.valid" == true
-
-# Not even alongside another conversion, as there is one way of asking
-GET {{base}}/test/draft3/string?as=2020-12&as=draft7
-HTTP 400
-Cache-Control: no-store
-Content-Type: application/problem+json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/error>; rel="describedby"
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
-[Asserts]
-header "Vary" not exists
-header "Referrer-Policy" not exists
-header "Content-Security-Policy" not exists
-header "X-Frame-Options" not exists
-header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-{
-  "type": "urn:sourcemeta:one:incompatible-query-parameters",
-  "title": "Bad Request",
-  "status": 400,
-  "detail": "The as query parameter cannot be combined with any other query parameter"
-}
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-Cache-Control: no-store
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
-[Asserts]
-header "Vary" not exists
-header "Referrer-Policy" not exists
-header "Content-Security-Policy" not exists
-header "X-Frame-Options" not exists
-header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.valid" == true
-
-# An empty segment in the query is not a parameter
-GET {{base}}/test/draft3/string?as=2020-12&
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/schema+json
@@ -684,7 +595,29 @@ header "ETag" exists
 header "Last-Modified" exists
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "{{base}}/test/draft3/string?as=2020-12",
+  "$id": "{{base}}/test/draft3/string",
+  "type": "string"
+}
+
+# Whichever order they are given in
+GET {{base}}/test/draft3/string?bundle=1&as=2020-12
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/schema+json
+Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
+header "Last-Modified" exists
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "{{base}}/test/draft3/string",
   "type": "string"
 }
 

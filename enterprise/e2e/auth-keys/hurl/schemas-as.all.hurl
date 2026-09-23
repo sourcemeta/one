@@ -134,7 +134,7 @@ header "ETag" exists
 header "Last-Modified" exists
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "{{base}}/open/string?as=2020-12",
+  "$id": "{{base}}/open/string",
   "title": "An open string",
   "type": "string"
 }
@@ -178,10 +178,9 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-# TODO: Decide whether a schema that reaches a meta-schema should be refused
-# conversion outright. A meta-schema is never converted, so a reference to one
-# is left exactly as it is and the closure silently stops being written in the
-# dialect that was asked for
+# A schema is judged by what its own document holds, so one that merely
+# references a schema that something else declares as its dialect is converted,
+# and that reference is converted along with it
 GET {{base}}/open/refs?as=2020-12
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
@@ -199,19 +198,32 @@ header "ETag" exists
 header "Last-Modified" exists
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "{{base}}/open/refs?as=2020-12",
+  "$id": "{{base}}/open/refs",
   "title": "An open schema with references",
   "properties": {
     "meta": {
       "$ref": "meta"
     },
     "string": {
-      "$ref": "string?as=2020-12"
+      "$ref": "string"
+    }
+  },
+  "$defs": {
+    "{{base}}/open/meta": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "{{base}}/open/meta",
+      "title": "An open meta-schema"
+    },
+    "{{base}}/open/string": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "{{base}}/open/string",
+      "title": "An open string",
+      "type": "string"
     }
   }
 }
 
-# The same holds however many references away the meta-schema sits
+# However many references away it sits
 GET {{base}}/open/chain?as=2020-12
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
@@ -229,17 +241,43 @@ header "ETag" exists
 header "Last-Modified" exists
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "{{base}}/open/chain?as=2020-12",
+  "$id": "{{base}}/open/chain",
   "title": "An open schema referencing another",
   "properties": {
     "next": {
-      "$ref": "refs?as=2020-12"
+      "$ref": "refs"
+    }
+  },
+  "$defs": {
+    "{{base}}/open/meta": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "{{base}}/open/meta",
+      "title": "An open meta-schema"
+    },
+    "{{base}}/open/string": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "{{base}}/open/string",
+      "title": "An open string",
+      "type": "string"
+    },
+    "{{base}}/open/refs": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "{{base}}/open/refs",
+      "title": "An open schema with references",
+      "properties": {
+        "meta": {
+          "$ref": "meta"
+        },
+        "string": {
+          "$ref": "string"
+        }
+      }
     }
   }
 }
 
-# A reference is also left alone when what it references is newer than the
-# dialect being asked for
+# Asking for a dialect means nothing older than it, so a reference already
+# newer is carried across untouched
 GET {{base}}/open/refs?as=draft7
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
@@ -257,7 +295,7 @@ header "ETag" exists
 header "Last-Modified" exists
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "{{base}}/open/refs?as=draft7",
+  "$id": "{{base}}/open/refs",
   "title": "An open schema with references",
   "properties": {
     "meta": {
@@ -265,6 +303,19 @@ header "Last-Modified" exists
     },
     "string": {
       "$ref": "string"
+    }
+  },
+  "definitions": {
+    "{{base}}/open/meta": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "{{base}}/open/meta",
+      "title": "An open meta-schema"
+    },
+    "{{base}}/open/string": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "{{base}}/open/string",
+      "title": "An open string",
+      "type": "string"
     }
   }
 }

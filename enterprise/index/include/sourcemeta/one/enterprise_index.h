@@ -15,11 +15,13 @@
 #include <sourcemeta/core/uritemplate.h>
 
 #include <cstddef>       // std::size_t
+#include <cstdint>       // std::uint32_t
 #include <exception>     // std::exception
 #include <filesystem>    // std::filesystem::path
 #include <functional>    // std::function
 #include <string>        // std::string
 #include <string_view>   // std::string_view
+#include <unordered_map> // std::unordered_map
 #include <unordered_set> // std::unordered_set
 #include <utility>       // std::move
 
@@ -30,13 +32,11 @@ namespace sourcemeta::one {
 auto conversions_metadata(std::string_view dialect, bool is_metaschema)
     -> sourcemeta::core::JSON;
 
-// Convert a schema into a newer official dialect, pointing its references at
-// the matching conversion of what they reference wherever there is one
+// Convert a bundled schema into a newer official dialect, every resource it
+// holds included, reporting whether there was a conversion to make at all
 auto convert_schema(sourcemeta::core::JSON &schema, SchemaDialect target,
                     std::string_view identifier,
-                    const sourcemeta::core::SchemaResolver &resolver,
-                    const std::function<bool(std::string_view)> &has_conversion)
-    -> void;
+                    const sourcemeta::core::SchemaResolver &resolver) -> bool;
 
 // A schema that could not be converted into a dialect
 class SchemaConversionError : public std::exception {

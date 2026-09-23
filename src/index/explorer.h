@@ -435,8 +435,41 @@ struct GenerateExplorerSchemaMetadata {
     result.assign("metaschema", sourcemeta::core::JSON{is_metaschema});
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
-    result.assign("conversions", sourcemeta::one::conversions_metadata(
-                                     resolver_entry.dialect, is_metaschema));
+    auto conversions{sourcemeta::one::conversions_metadata(
+        resolver_entry.dialect, is_metaschema)};
+    // What a schema reaches decides its conversions as much as what it
+    // declares, and converting is what knows, so this asks rather than
+    // predicts. Converting into the oldest dialect on offer is what that
+    // costs, which for everything but the oldest dialect applies no rules at
+    // all
+    if (!conversions.empty()) {
+      const auto official{
+          sourcemeta::one::official_dialect(resolver_entry.dialect)};
+      assert(official.has_value());
+      auto bundle_option{
+          sourcemeta::one::metapack_read_json(action.dependencies.at(3))};
+      assert(bundle_option.has_value());
+      const auto target{
+          sourcemeta::one::dialect_conversions(official.value()).front()};
+      bool convertible{false};
+      try {
+        convertible = sourcemeta::one::convert_schema(
+            bundle_option.value(), target, frame.root(),
+            [&callback, &resolver](const auto identifier) {
+              return resolver(identifier, callback);
+            });
+      } catch (const std::exception &error) {
+        throw sourcemeta::one::SchemaConversionError(
+            resolver_entry.path, sourcemeta::one::conversion_name(target),
+            error.what());
+      }
+
+      if (!convertible) {
+        conversions = sourcemeta::core::JSON::make_object();
+      }
+    }
+
+    result.assign("conversions", std::move(conversions));
 #endif
 
     if (schema_data.is_object()) {

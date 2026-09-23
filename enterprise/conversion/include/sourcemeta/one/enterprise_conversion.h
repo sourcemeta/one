@@ -2,7 +2,6 @@
 #define SOURCEMETA_ONE_ENTERPRISE_CONVERSION_H_
 
 #include <sourcemeta/core/jsonschema.h>
-#include <sourcemeta/core/uri.h>
 
 #include <algorithm>   // std::ranges::find
 #include <array>       // std::array
@@ -167,8 +166,8 @@ inline constexpr std::array<SchemaDialect, 5> SCHEMA_CONVERSION_TARGETS{
 }
 
 // The dialects a schema declaring a dialect can be converted into, oldest
-// first, including the one it declares, as what it references may still have
-// conversions of its own to point at. Nothing converts into the oldest dialect
+// first, including the one it declares, as what it references may still be
+// older than that. Nothing converts into the oldest dialect
 [[nodiscard]] inline auto dialect_conversions(const SchemaDialect dialect)
     -> std::span<const SchemaDialect> {
   return std::span<const SchemaDialect>{SCHEMA_CONVERSION_TARGETS}.subspan(
@@ -220,13 +219,6 @@ inline constexpr std::array<SchemaDialect, 5> SCHEMA_CONVERSION_TARGETS{
   return static_cast<std::uint8_t>(static_cast<std::uint8_t>(dialect) - 1);
 }
 
-// Whether a selection includes the conversion into a dialect
-[[nodiscard]] inline auto conversion_selected(const std::uint32_t selection,
-                                              const SchemaDialect dialect)
-    -> bool {
-  return (selection & (std::uint32_t{1} << conversion_selector(dialect))) != 0;
-}
-
 // The selection bits of every conversion a schema declaring a dialect gets.
 // A meta-schema gets none, as a conversion cannot restate the dialect that a
 // meta-schema describes
@@ -246,30 +238,11 @@ inline constexpr std::array<SchemaDialect, 5> SCHEMA_CONVERSION_TARGETS{
   return result;
 }
 
-// The query that asks for a conversion into a dialect
-[[nodiscard]] inline auto conversion_query(const SchemaDialect dialect)
-    -> std::string {
-  std::string result{"as="};
-  result.append(conversion_name(dialect));
-  return result;
-}
-
-// The identifier of a schema converted into a dialect, which is the one the
-// schema declares plus the name of the conversion
-[[nodiscard]] inline auto
-conversion_identifier(const std::string_view identifier,
-                      const SchemaDialect dialect) -> std::string {
-  sourcemeta::core::URI uri{std::string{identifier}};
-  // Every identifier this catalog hands out is built from path components
-  assert(!uri.query().has_value());
-  uri.query(conversion_query(dialect));
-  return uri.recompose();
-}
-
-// The artifact holding a schema converted into a dialect
+// The artifact holding a schema converted into a dialect, which is its closure
+// bundled and then converted as one document
 [[nodiscard]] inline auto conversion_artifact(const SchemaDialect dialect)
     -> std::string {
-  std::string result{"schema-"};
+  std::string result{"bundle-"};
   result.append(conversion_name(dialect));
   return result;
 }

@@ -34,7 +34,7 @@ jsonpath "$.id" == 900
 jsonpath "$.result.contents" count == 1
 jsonpath "$.result.contents[0].uri" == "{{base}}/test/draft3/string?as=2020-12"
 jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
-jsonpath "$.result.contents[0].text" == "{\n  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n  \"$id\": \"{{base}}/test/draft3/string?as=2020-12\",\n  \"type\": \"string\"\n}"
+jsonpath "$.result.contents[0].text" == "{\n  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n  \"$id\": \"{{base}}/test/draft3/string\",\n  \"type\": \"string\"\n}"
 jsonpath "$.error" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -86,7 +86,7 @@ jsonpath "$.id" == 901
 jsonpath "$.result.contents" count == 1
 jsonpath "$.result.contents[0].uri" == "{{base}}/test/draft3/string?as=draft4"
 jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
-jsonpath "$.result.contents[0].text" == "{\n  \"$schema\": \"http://json-schema.org/draft-04/schema#\",\n  \"id\": \"{{base}}/test/draft3/string?as=draft4\",\n  \"type\": \"string\"\n}"
+jsonpath "$.result.contents[0].text" == "{\n  \"$schema\": \"http://json-schema.org/draft-04/schema#\",\n  \"id\": \"{{base}}/test/draft3/string\",\n  \"type\": \"string\"\n}"
 jsonpath "$.error" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -292,10 +292,10 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 905
-jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid resource schema URI"
-jsonpath "$.error.data" == "The as and bundle query parameters cannot be combined"
-jsonpath "$.result" not exists
+jsonpath "$.error" not exists
+jsonpath "$.result.contents" count == 1
+jsonpath "$.result.contents[0].uri" == "{{base}}/test/draft3/string?as=2020-12&bundle"
+jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

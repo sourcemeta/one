@@ -64,13 +64,13 @@ WRITE expected.txt UNTIL EOF
 ./schemas/example/.period/%
 ./schemas/example/.period/%/blaze-exhaustive.metapack
 ./schemas/example/.period/%/blaze-fast.metapack
+./schemas/example/.period/%/bundle-2020-12.metapack
 ./schemas/example/.period/%/bundle.metapack
 ./schemas/example/.period/%/dependencies.metapack
 ./schemas/example/.period/%/editor.metapack
 ./schemas/example/.period/%/health.metapack
 ./schemas/example/.period/%/locations.metapack
 ./schemas/example/.period/%/positions.metapack
-./schemas/example/.period/%/schema-2020-12.metapack
 ./schemas/example/.period/%/schema.metapack
 ./schemas/example/.period/%/stats.metapack
 ./state.bin

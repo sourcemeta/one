@@ -71,9 +71,9 @@ DROP LINES MATCHING '^(?!.*(Producing|Combining)).*$' IN produced.txt
 // left behind first since it no longer waits on the changed schema
 WRITE expected-produced.txt UNTIL EOF
 2> (  2%) Producing: explorer/public/example/schemas/meta-a/%/schema.metapack
-2> (  5%) Producing: schemas/example/schemas/meta-a/%/schema-2019-09.metapack
-2> (  7%) Producing: schemas/example/schemas/meta-a/%/schema-2020-12.metapack
-2> ( 10%) Producing: schemas/example/schemas/meta-a/%/schema-draft7.metapack
+2> (  5%) Producing: schemas/example/schemas/meta-a/%/bundle-2019-09.metapack
+2> (  7%) Producing: schemas/example/schemas/meta-a/%/bundle-2020-12.metapack
+2> ( 10%) Producing: schemas/example/schemas/meta-a/%/bundle-draft7.metapack
 2> ( 12%) Producing: schemas/example/schemas/meta-b/%/schema.metapack
 2> ( 15%) Producing: schemas/example/schemas/user/%/schema.metapack
 2> ( 17%) Producing: explorer/public/example/schemas/meta-a/%/schema-html.metapack

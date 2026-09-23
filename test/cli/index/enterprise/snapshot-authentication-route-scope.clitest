@@ -148,13 +148,13 @@ WRITE expected.txt UNTIL EOF
 ./schemas/schemas/test-1/%
 ./schemas/schemas/test-1/%/blaze-exhaustive.metapack
 ./schemas/schemas/test-1/%/blaze-fast.metapack
+./schemas/schemas/test-1/%/bundle-2020-12.metapack
 ./schemas/schemas/test-1/%/bundle.metapack
 ./schemas/schemas/test-1/%/dependencies.metapack
 ./schemas/schemas/test-1/%/editor.metapack
 ./schemas/schemas/test-1/%/health.metapack
 ./schemas/schemas/test-1/%/locations.metapack
 ./schemas/schemas/test-1/%/positions.metapack
-./schemas/schemas/test-1/%/schema-2020-12.metapack
 ./schemas/schemas/test-1/%/schema.metapack
 ./schemas/schemas/test-1/%/stats.metapack
 ./state.bin
