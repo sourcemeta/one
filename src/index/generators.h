@@ -356,10 +356,12 @@ template <sourcemeta::one::SchemaDialect Target> struct GenerateConversion {
           error.what());
     }
 
-    // What a schema reaches decides this as much as what it declares, so
-    // leaving the artifact out is how the catalog says it has no such
-    // conversion to serve
+    // What a schema reaches decides this as much as what it declares, so the
+    // absence of the artifact is how the catalog says it has no such conversion
+    // to serve. A closure that stops being convertible has to take the
+    // conversion it used to have with it, or the server keeps answering from it
     if (!converted) {
+      std::filesystem::remove(action.destination);
       return;
     }
 
