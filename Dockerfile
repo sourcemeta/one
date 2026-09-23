@@ -107,8 +107,6 @@ COPY vendor/bootstrap-icons/LICENSE \
   /usr/share/doc/sourcemeta-one/licenses/bootstrap-icons
 COPY vendor/core/vendor/pcre2/LICENCE.md \
   /usr/share/doc/sourcemeta-one/licenses/pcre2
-COPY vendor/core/vendor/cmark-gfm/COPYING \
-  /usr/share/doc/sourcemeta-one/licenses/cmark-gfm
 COPY vendor/core/vendor/unicodetools/LICENSE \
   /usr/share/doc/sourcemeta-one/licenses/unicodetools
 COPY vendor/core/vendor/whatwg-html-build/LICENSE \

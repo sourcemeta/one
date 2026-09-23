@@ -13,7 +13,6 @@ const LICENSES = {
   "bootstrap": "MIT",
   "bootstrap-icons": "MIT",
   "pcre2": "BSD-3-Clause WITH PCRE2-exception",
-  "cmark-gfm": "BSD-2-Clause",
   "unicodetools": "Unicode-3.0",
   "whatwg-html-build": "CC-BY-4.0 AND BSD-3-Clause",
   "mimalloc": "MIT"
