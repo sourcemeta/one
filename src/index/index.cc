@@ -646,25 +646,23 @@ static auto index_main(const std::string_view &program,
               ? parse_numeric_option(app, "maximum-direct-directory-entries")
               : 1000};
 
-#if defined(SOURCEMETA_ONE_ENTERPRISE)
-  // A conversion converts a schema's closure as one document, so this is
-  // decided across the catalog rather than one schema at a time
-  const auto conversions{sourcemeta::one::conversion_selections(resolver)};
-#endif
-
   std::vector<std::pair<std::string_view, sourcemeta::one::LeafView>>
       leaves_storage;
   leaves_storage.reserve(resolver.data().size());
   for (const auto &[uri, entry] : resolver.data()) {
     leaves_storage.emplace_back(
         std::string_view{uri},
-        sourcemeta::one::LeafView{.path = &entry.path,
-                                  .relative_path = &entry.relative_path,
-                                  .mtime = entry.mtime,
-                                  .evaluate = entry.evaluate,
-                                  .dialect = entry.dialect,
+        sourcemeta::one::LeafView{
+            .path = &entry.path,
+            .relative_path = &entry.relative_path,
+            .mtime = entry.mtime,
+            .evaluate = entry.evaluate,
+            .dialect = entry.dialect,
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
-                                  .selected = conversions.at(uri)
+            .selected = sourcemeta::one::conversion_selection(
+                entry.dialect, sourcemeta::one::is_metaschema(
+                                   entry.dialect, entry.vocabularies,
+                                   resolver.is_dialect(uri)))
 #endif
         });
   }

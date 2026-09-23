@@ -343,8 +343,9 @@ template <sourcemeta::one::SchemaDialect Target> struct GenerateConversion {
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
     assert(schema_option.has_value());
     auto &schema{schema_option.value()};
+    bool converted{false};
     try {
-      sourcemeta::one::convert_schema(
+      converted = sourcemeta::one::convert_schema(
           schema, Target, action.data,
           [&callback, &resolver](const auto identifier) {
             return resolver(identifier, callback);
@@ -353,6 +354,13 @@ template <sourcemeta::one::SchemaDialect Target> struct GenerateConversion {
       throw sourcemeta::one::SchemaConversionError(
           resolver_entry.path, sourcemeta::one::conversion_name(Target),
           error.what());
+    }
+
+    // What a schema reaches decides this as much as what it declares, so
+    // leaving the artifact out is how the catalog says it has no such
+    // conversion to serve
+    if (!converted) {
+      return;
     }
 
     const auto timestamp_end{std::chrono::steady_clock::now()};

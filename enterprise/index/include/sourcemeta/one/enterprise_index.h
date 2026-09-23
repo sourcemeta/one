@@ -32,17 +32,11 @@ namespace sourcemeta::one {
 auto conversions_metadata(std::string_view dialect, bool is_metaschema)
     -> sourcemeta::core::JSON;
 
-// The conversions every schema in the catalog gets. A conversion converts a
-// schema's closure as one document, so what a schema reaches decides this as
-// much as what the schema declares itself
-auto conversion_selections(const Resolver &resolver)
-    -> std::unordered_map<sourcemeta::core::JSON::String, std::uint32_t>;
-
 // Convert a bundled schema into a newer official dialect, every resource it
-// holds included
+// holds included, reporting whether there was a conversion to make at all
 auto convert_schema(sourcemeta::core::JSON &schema, SchemaDialect target,
                     std::string_view identifier,
-                    const sourcemeta::core::SchemaResolver &resolver) -> void;
+                    const sourcemeta::core::SchemaResolver &resolver) -> bool;
 
 // A schema that could not be converted into a dialect
 class SchemaConversionError : public std::exception {
