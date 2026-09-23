@@ -3,16 +3,19 @@
 
 #include <sourcemeta/core/openapi.h>
 
+#include <sourcemeta/core/text.h>
 #include <sourcemeta/core/uri.h>
 
 #include <algorithm>        // std::ranges::find
 #include <array>            // std::array
 #include <cstddef>          // std::size_t
-#include <cstdint>          // std::uint8_t
+#include <cstdint>          // std::uint8_t, std::uint64_t
 #include <initializer_list> // std::initializer_list
+#include <limits>           // std::numeric_limits
 #include <map>              // std::map
 #include <optional>         // std::optional
 #include <set>              // std::set
+#include <span>             // std::span
 #include <string_view>      // std::string_view
 #include <utility>          // std::pair, std::unreachable
 #include <vector>           // std::vector
@@ -147,6 +150,45 @@ inline auto openapi_kind_name(const OpenAPIObjectKind kind) noexcept
   std::unreachable();
 }
 
+// OpenAPI Specification 3.1.1, Section 4.6: "Unless specified otherwise, all
+// fields that are URIs MAY be relative references as defined by RFC3986", and
+// one of those is resolved "using the referring document's base URI". So an
+// Object that moves to another document carries fields that would otherwise
+// go on resolving against a base that is no longer theirs.
+//
+// Which fields those are is what the row of each one says rather than what it
+// is named. Section 4.6: "Note that some URI fields are named `url` for
+// historical reasons, but the descriptive text for those fields uses the
+// correct \"URI\" terminology". So a row reading URI belongs here and a row
+// reading URL does not, as Section 4.7 resolves those "using the URLs defined
+// in the Server Object as a Base URL" rather than against any document. The
+// endpoints of a Security Scheme Object and of an OAuth Flow Object are that
+// second kind, and moving one leaves what it names untouched because the
+// Server Objects it reads against are not what moved.
+//
+// A `$ref` and an `operationRef` are left out, as the frame records those as
+// references of their own. A Server Object `url` is left out too, as Section
+// 4.8.5 makes it a URL template rather than a URI reference, and resolving one
+// through a URI would mangle the variables it is written with. So is every
+// field of the Objects that only ever sit at the root of a document, as those
+// never move anywhere
+constexpr std::array<JSON::StringView, 1> OPENAPI_URI_FIELDS_EXTERNAL_DOCS{
+    {"url"sv}};
+constexpr std::array<JSON::StringView, 1> OPENAPI_URI_FIELDS_EXAMPLE{
+    {"externalValue"sv}};
+
+inline auto openapi_embedded_uri_fields(const OpenAPIObjectKind kind) noexcept
+    -> std::span<const JSON::StringView> {
+  switch (kind) {
+    case OpenAPIObjectKind::ExternalDocumentation:
+      return OPENAPI_URI_FIELDS_EXTERNAL_DOCS;
+    case OpenAPIObjectKind::Example:
+      return OPENAPI_URI_FIELDS_EXAMPLE;
+    default:
+      return {};
+  }
+}
+
 /// Where an Object that stands in for another leads. OpenAPI Specification
 /// 3.1.1 has a Reference Object and a Path Item Object each declare at most
 /// one `$ref`, and a Schema Object's `$ref` never reaches here, so this is a
@@ -161,6 +203,13 @@ struct OpenAPIReference {
   /// Whether that destination is nowhere the frame holds, which is what makes
   /// a description one that has to be made whole before it describes anything
   bool dangling{false};
+  /// What the position that spells it expects to find at the far end, which
+  /// OpenAPI Specification 3.1.1, Section 4.3.1 fixes by where the reference
+  /// sits rather than by anything the target says about itself
+  OpenAPIObjectKind expected{OpenAPIObjectKind::Document};
+  /// Where the member that spells it sits, which is the one place a rewrite
+  /// of this reference has to write to
+  Pointer origin;
 };
 
 /// How an Operation Object is reached from the entry document. OpenAPI
@@ -291,7 +340,7 @@ struct OpenAPIWalk {
   // the kind expected as well as by the place, because one place reached as
   // two kinds is a conflict, and reading it once as whichever reference was
   // walked first would let the order the description is written in decide what
-  // it is. Section 3.2 of OAS 3.2 names this hazard and says the behaviour
+  // it is. Appendix G of OAS 3.2 names this hazard and says the behaviour
   // "MAY be treated as an error if detected", so reading it as each kind in
   // turn surfaces the conflict rather than hiding it
   std::set<std::pair<JSON::String, OpenAPIObjectKind>> visited;
@@ -332,6 +381,10 @@ struct OpenAPIWalk {
   /// The names the entry document declares as security schemes, which is what
   /// a Security Requirement Object anywhere in the description may name
   std::set<JSON::String> security_schemes;
+  /// Whether an entry document is what the names above came from, which is
+  /// what makes this a document the description reaches rather than the one
+  /// that describes the API
+  bool referenced{false};
   /// Where the entry document declares each Tag Object, by the name it gave
   /// it, which is the name an Operation Object's tags resolve against
   std::map<JSON::String, JSON::String> tags;
@@ -359,6 +412,11 @@ struct OpenAPIWalk {
   /// What the entry document says about the API, kept so that reading it once
   /// serves both the walk and the caller
   OpenAPIInfo info;
+  /// What recording a location may still spend, and what the caller allowed in
+  /// the first place, which is what running out reports rather than whatever
+  /// was left of it by then
+  std::uint64_t remaining{std::numeric_limits<std::uint64_t>::max()};
+  std::uint64_t limit{std::numeric_limits<std::uint64_t>::max()};
 };
 
 // Where a position that stands in for another leads, following as far as the
@@ -389,8 +447,7 @@ inline auto openapi_reference_target(JSON::StringView reference,
     -> std::optional<URI>;
 
 inline auto openapi_follow_target(const URI &target, const Pointer &origin,
-                                  OpenAPIObjectKind expected,
-                                  bool demands_its_own_kind, OpenAPIWalk &walk)
+                                  OpenAPIObjectKind expected, OpenAPIWalk &walk)
     -> void;
 
 inline auto openapi_resolve_position(const OpenAPIWalk &walk,
@@ -488,10 +545,77 @@ inline auto openapi_location_uri(const JSON::String &base,
   return result;
 }
 
+// Resolve a URI reference against a base and canonicalise what it comes to,
+// which is what makes two spellings of one place one place, both to the set
+// that remembers where a walk has been and to a caller comparing a destination
+// against a location. Without a base there is nothing to resolve against,
+// though what comes back is canonicalised either way
+inline auto openapi_resolve_uri(const JSON::StringView reference,
+                                const JSON::String &base)
+    -> std::optional<URI> {
+  try {
+    URI target{JSON::String{reference}};
+    if (!base.empty()) {
+      target.resolve_from(URI{base});
+    }
+
+    target.canonicalize();
+    return target;
+  } catch (const URIParseError &) {
+    return std::nullopt;
+  }
+}
+
+// The document a location key names, which is that key up to its fragment,
+// which is why nothing repeats it on the entry a key leads to
+inline auto openapi_document_uri(const JSON::String &uri) -> JSON::String {
+  return JSON::String{take_until(uri, '#')};
+}
+
+// OpenAPI Specification 3.1.1, Section 4.6 determines a document's base URI
+// "in accordance with RFC3986 Section 5.1.2 - 5.1.4", a range that starts at
+// 5.1.2 and so leaves out 5.1.1, "Base URI Embedded in Content". A 3.1
+// document therefore has no way of declaring its own base, and what remains is
+// 5.1.3, "Base URI from the Retrieval URI", which only the caller can supply.
+// Section 4.6 says as much: implementations "SHOULD allow users to provide
+// documents with their intended retrieval URIs"
+inline auto openapi_canonical_base(const std::string_view input)
+    -> JSON::String {
+  if (input.empty()) {
+    return {};
+  }
+
+  std::optional<URI> base;
+  try {
+    base.emplace(input);
+  } catch (const URIParseError &) {
+    base.reset();
+  }
+
+  // RFC 3986 Section 5.2.1: "only the scheme component is required to be
+  // present in a base URI". Anything without one cannot resolve a reference
+  // RFC 3986 Section 5.2.2 resolves a reference against a base's scheme,
+  // authority, path and query, and never against its fragment, so a fragment
+  // is no part of what a base is. Keeping one would also put two of them in
+  // every location this frame reports
+  if (base.has_value() && base.value().scheme().has_value()) {
+    base.value().canonicalize();
+    const auto result{base.value().recompose_without_fragment()};
+    if (result.has_value()) {
+      return result.value();
+    }
+  }
+
+  throw OpenAPIError{EMPTY_POINTER,
+                     "The OpenAPI Description base must be a URI with a "
+                     "scheme"};
+}
+
 // Every Object gets one of these. The nearest recorded ancestor is the parent,
 // which holds because an Object is always recorded before anything inside it
 //
-// Appendix G of OAS 3.2, and Section 3.2 of 3.1, say of one place read as two
+// Appendix G of OAS 3.2, and Section 4.3.2 of 3.1, say of one place read as
+// two
 // kinds of Object:
 //
 //   the resulting behavior is implementation defined, and MAY be treated as
@@ -509,6 +633,16 @@ inline auto openapi_record(OpenAPIWalk &walk, const Pointer &pointer,
     -> void {
   auto uri{openapi_location_uri(walk.base, pointer)};
   const auto known{walk.locations.find(uri)};
+  // Reading one place twice records it once, so what an allowance is spent on
+  // is the places a description holds rather than the times it is read
+  if (known == walk.locations.cend()) {
+    if (walk.remaining == 0) {
+      throw OpenAPIFrameLimitError{walk.limit};
+    }
+
+    walk.remaining -= 1;
+  }
+
   if (known != walk.locations.cend() && known->second.type != kind) {
     throw OpenAPIError{walk.base, pointer,
                        "This place is read as more than one kind of Object"};

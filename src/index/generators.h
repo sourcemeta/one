@@ -13,9 +13,7 @@
 #include <sourcemeta/one/shared.h>
 
 #include <sourcemeta/blaze/alterschema.h>
-#include <sourcemeta/blaze/bundle.h>
 #include <sourcemeta/blaze/editor.h>
-#include <sourcemeta/blaze/format.h>
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonpointer.h>
@@ -24,6 +22,7 @@
 
 #include <sourcemeta/blaze/compiler.h>
 #include <sourcemeta/blaze/configuration.h>
+#include <sourcemeta/blaze/dependencies.h>
 #include <sourcemeta/blaze/evaluator.h>
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
@@ -57,6 +56,15 @@ struct MetapackDialectExtension {
   std::uint16_t dialect_length;
 };
 #pragma pack(pop)
+
+static auto format_schema(sourcemeta::core::JSON &schema,
+                          const sourcemeta::core::SchemaResolver &resolver,
+                          const std::string_view dialect) -> void {
+  const sourcemeta::core::SchemaFrame frame{
+      sourcemeta::core::SchemaFrame::Mode::Locations, schema,
+      sourcemeta::core::schema_walker, resolver, dialect};
+  sourcemeta::core::schema_format(schema, frame);
+}
 
 static auto make_dialect_extension(const std::string_view dialect)
     -> std::vector<std::uint8_t> {
@@ -251,8 +259,8 @@ struct GenerateMaterialisedSchema {
           dialect_identifier);
     }
 
-    sourcemeta::blaze::format(
-        schema.value(), sourcemeta::core::schema_walker,
+    format_schema(
+        schema.value(),
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
@@ -339,11 +347,7 @@ template <sourcemeta::one::SchemaDialect Target> struct GenerateConversion {
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
     const auto timestamp_start{std::chrono::steady_clock::now()};
-    // The inputs past the schema are the schemas declaring it as their dialect
-    constexpr std::size_t FIXED_INPUTS{1};
-    assert(action.dependencies.size() >= FIXED_INPUTS);
-    const auto has_dialect_dependents{action.dependencies.size() >
-                                      FIXED_INPUTS};
+    assert(!action.dependencies.empty());
     const auto &resolver_entry{resolver.entry(action.data)};
     const auto dialect{
         sourcemeta::one::official_dialect(resolver_entry.dialect)};
@@ -352,18 +356,12 @@ template <sourcemeta::one::SchemaDialect Target> struct GenerateConversion {
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
     assert(schema_option.has_value());
     auto &schema{schema_option.value()};
-    // Exactly what the metadata reports, so the two cannot disagree
-    const auto is_metaschema{
-        has_dialect_dependents ||
-        declares_vocabulary(
-            schema, sourcemeta::one::conversion_base_dialect(dialect.value()))};
-
     // What a reference points at is commonly pointed at more than once
     std::unordered_map<sourcemeta::core::JSON::String, bool> conversions;
 
     try {
       sourcemeta::one::convert_schema(
-          schema, Target, is_metaschema, action.data,
+          schema, Target, action.data,
           [&callback, &resolver](const auto identifier) {
             return resolver(identifier, callback);
           },
@@ -740,12 +738,15 @@ struct GenerateBundle {
     auto schema{std::move(schema_option.value())};
     // The registry serves every meta-schema a schema may declare, so
     // bundles only need to embed references and can skip meta-schemas
-    sourcemeta::blaze::bundle(
+    sourcemeta::core::SchemaBundleOptions bundle_options;
+    bundle_options.mode =
+        sourcemeta::core::SchemaBundleOptions::Mode::References;
+    sourcemeta::core::schema_bundle(
         schema, sourcemeta::core::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
-        sourcemeta::blaze::BundleMode::References);
+        "", "", bundle_options);
     const auto *declared_dialect{schema.is_object() ? schema.try_at("$schema")
                                                     : nullptr};
     const std::string_view dialect_identifier{
@@ -753,8 +754,8 @@ struct GenerateBundle {
             ? std::string_view{declared_dialect->to_string()}
             : std::string_view{}};
     assert(!dialect_identifier.empty());
-    sourcemeta::blaze::format(
-        schema, sourcemeta::core::schema_walker,
+    format_schema(
+        schema,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
@@ -795,8 +796,8 @@ struct GenerateEditor {
             ? std::string_view{declared_dialect->to_string()}
             : std::string_view{}};
     assert(!dialect_identifier.empty());
-    sourcemeta::blaze::format(
-        schema, sourcemeta::core::schema_walker,
+    format_schema(
+        schema,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },

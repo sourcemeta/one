@@ -3,7 +3,7 @@ sourcemeta_executable(
   NAME cli
   SOURCES
     main.cc configure.h.in command.h
-    utils.h error.h exit_code.h logger.h configuration.h input.h resolver.h
+    utils.h error.h exit_code.h logger.h configuration.h input.h resolver.h print.h
     command_fmt.cc
     command_inspect.cc
     command_bundle.cc
@@ -33,10 +33,10 @@ target_link_libraries(jsonschema_cli PRIVATE sourcemeta::core::jsonld)
 target_link_libraries(jsonschema_cli PRIVATE sourcemeta::core::yaml)
 target_link_libraries(jsonschema_cli PRIVATE sourcemeta::core::regex)
 target_link_libraries(jsonschema_cli PRIVATE sourcemeta::core::options)
+target_link_libraries(jsonschema_cli PRIVATE sourcemeta::core::terminal)
 target_link_libraries(jsonschema_cli PRIVATE sourcemeta::core::parallel)
 target_link_libraries(jsonschema_cli PRIVATE sourcemeta::core::jsonschema)
-target_link_libraries(jsonschema_cli PRIVATE sourcemeta::blaze::bundle)
-target_link_libraries(jsonschema_cli PRIVATE sourcemeta::blaze::format)
+target_link_libraries(jsonschema_cli PRIVATE sourcemeta::core::openapi)
 target_link_libraries(jsonschema_cli PRIVATE sourcemeta::blaze::editor)
 target_link_libraries(jsonschema_cli PRIVATE sourcemeta::blaze::configuration)
 target_link_libraries(jsonschema_cli PRIVATE sourcemeta::jsonbinpack::compiler)

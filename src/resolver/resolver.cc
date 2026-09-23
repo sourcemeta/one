@@ -340,6 +340,7 @@ auto Resolver::operator()(
   // (6) Assign the new final identifier to the schema
   /////////////////////////////////////////////////////////////////////////////
 
+  const auto root{frame.root_location()};
   sourcemeta::core::schema_reidentify(
       schema, *new_identifier,
       [this](
@@ -347,6 +348,16 @@ auto Resolver::operator()(
         return this->operator()(subidentifier);
       },
       view->dialect);
+
+  // A schema answers to one identifier. An identifier keyword that its dialect
+  // does not give that meaning to is not one, so leaving it behind would have
+  // the document claim two, and whichever of them a reader believes decides
+  // what its references resolve against
+  if (root.has_value()) {
+    const auto keyword{sourcemeta::core::schema_identifier_keyword(
+        root.value().get().base_dialect)};
+    schema.erase(keyword == "$id" ? "id" : "$id");
+  }
 
   this->cache_dialect(identifier, schema);
   return schema;

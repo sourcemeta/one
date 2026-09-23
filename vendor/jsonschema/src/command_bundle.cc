@@ -1,6 +1,4 @@
-#include <sourcemeta/blaze/bundle.h>
 #include <sourcemeta/blaze/editor.h>
-#include <sourcemeta/blaze/format.h>
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonschema.h>
@@ -56,9 +54,8 @@ auto sourcemeta::jsonschema::bundle(const sourcemeta::core::Options &options)
       resolver(options, options.contains("http"), dialect, configuration)};
 
   try {
-    sourcemeta::blaze::bundle(
-        schema, sourcemeta::core::schema_walker, custom_resolver,
-        sourcemeta::blaze::BundleMode::NonOfficialMetaschemas, dialect,
+    sourcemeta::core::schema_bundle(
+        schema, sourcemeta::core::schema_walker, custom_resolver, dialect,
         sourcemeta::jsonschema::default_id(schema_path, schema_from_stdin));
 
     if (options.contains("without-id")) {
@@ -79,8 +76,7 @@ auto sourcemeta::jsonschema::bundle(const sourcemeta::core::Options &options)
                                     custom_resolver, dialect);
     }
 
-    sourcemeta::blaze::format(schema, sourcemeta::core::schema_walker,
-                              custom_resolver, dialect);
+    sourcemeta::jsonschema::format_schema(schema, custom_resolver, dialect);
   } catch (const sourcemeta::core::SchemaKeywordError &error) {
     throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
         schema_display_path, error);

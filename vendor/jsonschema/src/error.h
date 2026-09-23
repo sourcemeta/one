@@ -14,6 +14,7 @@
 #include <sourcemeta/core/jsonld.h>
 #include <sourcemeta/core/jsonpointer.h>
 #include <sourcemeta/core/jsonschema.h>
+#include <sourcemeta/core/openapi.h>
 #include <sourcemeta/core/options.h>
 #include <sourcemeta/core/yaml.h>
 
@@ -169,6 +170,13 @@ private:
   std::filesystem::path path_;
 };
 
+class UnsupportedOpenAPIFormatError : public std::runtime_error {
+public:
+  UnsupportedOpenAPIFormatError()
+      : std::runtime_error{
+            "The --format option is not supported for OpenAPI descriptions"} {}
+};
+
 class OptionConflictError : public std::runtime_error {
 public:
   OptionConflictError(const std::string &message)
@@ -253,6 +261,91 @@ public:
 private:
   std::filesystem::path path_;
   sourcemeta::core::Pointer location_;
+};
+
+class InvalidReferenceUpgradeError : public std::runtime_error {
+public:
+  InvalidReferenceUpgradeError(std::filesystem::path path,
+                               sourcemeta::core::Pointer location,
+                               std::string reference)
+      : std::runtime_error{"The reference does not point to a schema"},
+        path_{std::move(path)}, location_{std::move(location)},
+        reference_{std::move(reference)} {}
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto location() const noexcept
+      -> const sourcemeta::core::Pointer & {
+    return this->location_;
+  }
+
+  [[nodiscard]] auto uri() const noexcept -> const std::string & {
+    return this->reference_;
+  }
+
+private:
+  std::filesystem::path path_;
+  sourcemeta::core::Pointer location_;
+  std::string reference_;
+};
+
+class BrokenReferenceUpgradeError : public std::runtime_error {
+public:
+  BrokenReferenceUpgradeError(std::filesystem::path path,
+                              sourcemeta::core::Pointer location,
+                              std::string reference)
+      : std::runtime_error{"The reference broke after upgrading"},
+        path_{std::move(path)}, location_{std::move(location)},
+        reference_{std::move(reference)} {}
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto location() const noexcept
+      -> const sourcemeta::core::Pointer & {
+    return this->location_;
+  }
+
+  [[nodiscard]] auto uri() const noexcept -> const std::string & {
+    return this->reference_;
+  }
+
+private:
+  std::filesystem::path path_;
+  sourcemeta::core::Pointer location_;
+  std::string reference_;
+};
+
+class MetaschemaUpgradeError : public std::runtime_error {
+public:
+  MetaschemaUpgradeError(std::filesystem::path path,
+                         sourcemeta::core::Pointer location,
+                         std::string dialect)
+      : std::runtime_error{"Cannot upgrade a schema that is itself a "
+                           "meta-schema"},
+        path_{std::move(path)}, location_{std::move(location)},
+        dialect_{std::move(dialect)} {}
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto location() const noexcept
+      -> const sourcemeta::core::Pointer & {
+    return this->location_;
+  }
+
+  [[nodiscard]] auto uri() const noexcept -> const std::string & {
+    return this->dialect_;
+  }
+
+private:
+  std::filesystem::path path_;
+  sourcemeta::core::Pointer location_;
+  std::string dialect_;
 };
 
 class CustomMetaschemaUpgradeError : public std::runtime_error {
@@ -528,6 +621,11 @@ private:
 constexpr std::string_view STDIN_DEFAULT_ID{
     "tag:sourcemeta.com,2026:jsonschema/stdin"};
 
+// An OpenAPI description that comes from standard input is not a schema, so we
+// give it an identifier of its own, on the same terms as the one above
+constexpr std::string_view STDIN_OPENAPI_DEFAULT_ID{
+    "tag:sourcemeta.com,2026:openapi/stdin"};
+
 // Input read from standard input never corresponds to a file, so we carry the
 // identifier itself where a path would otherwise go. It is never resolved
 // against the filesystem, as every such site is guarded on whether the input
@@ -536,10 +634,21 @@ inline auto stdin_path() -> std::filesystem::path {
   return std::filesystem::path{STDIN_DEFAULT_ID};
 }
 
+// The same, for an OpenAPI description, which goes by an identifier of its own
+inline auto openapi_stdin_path() -> std::filesystem::path {
+  return std::filesystem::path{STDIN_OPENAPI_DEFAULT_ID};
+}
+
+// A path that stands for standard input names no file, so it prints as itself
+// rather than being resolved against the filesystem
+inline auto is_stdin_path(const std::filesystem::path &path) -> bool {
+  return path == stdin_path() || path == openapi_stdin_path();
+}
+
 inline auto stdin_path_string(const std::filesystem::path &path)
     -> std::string {
-  if (path == stdin_path()) {
-    return std::string{STDIN_DEFAULT_ID};
+  if (is_stdin_path(path)) {
+    return path.generic_string();
   }
 
   return sourcemeta::core::weakly_canonical(path).generic_string();
@@ -554,8 +663,8 @@ inline auto stdin_path_string(const std::filesystem::path &path)
 // afford once per instance
 inline auto relative_path_string(const std::filesystem::path &canonical)
     -> std::string {
-  if (canonical == stdin_path()) {
-    return std::string{STDIN_DEFAULT_ID};
+  if (is_stdin_path(canonical)) {
+    return canonical.generic_string();
   }
 
   // The working directory cannot change while a command runs
@@ -1032,6 +1141,11 @@ inline auto try_catch(const sourcemeta::core::Options &options,
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     return EXIT_NOT_SUPPORTED;
+  } catch (
+      const sourcemeta::core::FileError<UnsupportedOpenAPIFormatError> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_NOT_SUPPORTED;
   } catch (const PositionError<UnsupportedDialectUpgradeError> &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
@@ -1126,6 +1240,84 @@ inline auto try_catch(const sourcemeta::core::Options &options,
     }
 
     return EXIT_UNEXPECTED_ERROR;
+  } catch (const PositionError<InvalidReferenceUpgradeError> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    if (!is_json) {
+      std::cerr << "\n";
+      std::cerr << "An upgrade rewrites the references that a change of "
+                   "dialect moves, which it\n";
+      std::cerr << "cannot do for one that never pointed at a schema. Fix the "
+                   "reported reference\n";
+      std::cerr << "and try again\n";
+    }
+
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const InvalidReferenceUpgradeError &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    if (!is_json) {
+      std::cerr << "\n";
+      std::cerr << "An upgrade rewrites the references that a change of "
+                   "dialect moves, which it\n";
+      std::cerr << "cannot do for one that never pointed at a schema. Fix the "
+                   "reported reference\n";
+      std::cerr << "and try again\n";
+    }
+
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const PositionError<BrokenReferenceUpgradeError> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    if (!is_json) {
+      std::cerr << "\n";
+      std::cerr << "This is a case we don't know how to upgrade yet. Please "
+                   "report it to the\n";
+      std::cerr << "issue tracker, so we can add it to the test suite and fix "
+                   "it:\n\n";
+      std::cerr << "https://github.com/sourcemeta/jsonschema/issues\n";
+    }
+
+    return EXIT_NOT_SUPPORTED;
+  } catch (const BrokenReferenceUpgradeError &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    if (!is_json) {
+      std::cerr << "\n";
+      std::cerr << "This is a case we don't know how to upgrade yet. Please "
+                   "report it to the\n";
+      std::cerr << "issue tracker, so we can add it to the test suite and fix "
+                   "it:\n\n";
+      std::cerr << "https://github.com/sourcemeta/jsonschema/issues\n";
+    }
+
+    return EXIT_NOT_SUPPORTED;
+  } catch (const PositionError<MetaschemaUpgradeError> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    if (!is_json) {
+      std::cerr << "\n";
+      std::cerr << "Meta-schemas name the keywords of their dialect as "
+                   "ordinary data, which an\n";
+      std::cerr << "upgrade cannot rename alongside the keywords themselves. "
+                   "Please upgrade\n";
+      std::cerr << "meta-schemas manually.\n";
+    }
+
+    return EXIT_NOT_SUPPORTED;
+  } catch (const MetaschemaUpgradeError &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    if (!is_json) {
+      std::cerr << "\n";
+      std::cerr << "Meta-schemas name the keywords of their dialect as "
+                   "ordinary data, which an\n";
+      std::cerr << "upgrade cannot rename alongside the keywords themselves. "
+                   "Please upgrade\n";
+      std::cerr << "meta-schemas manually.\n";
+    }
+
+    return EXIT_NOT_SUPPORTED;
   } catch (const PositionError<CustomMetaschemaUpgradeError> &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
@@ -1327,6 +1519,17 @@ inline auto try_catch(const sourcemeta::core::Options &options,
     return EXIT_SCHEMA_INPUT_ERROR;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::core::SchemaAnchorCollisionError> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (
+      const PositionError<
+          sourcemeta::core::FileError<sourcemeta::core::OpenAPIError>> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const sourcemeta::core::FileError<sourcemeta::core::OpenAPIError>
+               &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     return EXIT_SCHEMA_INPUT_ERROR;

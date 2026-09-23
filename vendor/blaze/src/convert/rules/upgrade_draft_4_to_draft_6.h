@@ -11,8 +11,7 @@ public:
             const sourcemeta::core::SchemaFrame &frame,
             const sourcemeta::core::SchemaFrame::Location &location,
             const sourcemeta::core::SchemaWalker &,
-            const sourcemeta::core::SchemaResolver &, const bool) const
-      -> bool override {
+            const sourcemeta::core::SchemaResolver &) const -> bool override {
     this->sanitize_pending_ = false;
 
     ONLY_CONTINUE_IF(
@@ -108,7 +107,7 @@ public:
     if (schema.defines("$schema") && schema.at("$schema").is_string() &&
         schema.at("$schema").to_string() == DRAFT_4_URL) {
       schema.assign("$schema", sourcemeta::core::JSON{DRAFT_6_URL});
-      drop_dialect_overrides(schema, true);
+      drop_dialect_overrides(schema, true, DRAFT_6_URL);
     } else {
       mark_dialect_override(schema, DRAFT_6_URL);
     }

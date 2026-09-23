@@ -11,8 +11,7 @@ public:
             const sourcemeta::core::SchemaFrame &frame,
             const sourcemeta::core::SchemaFrame::Location &location,
             const sourcemeta::core::SchemaWalker &,
-            const sourcemeta::core::SchemaResolver &, const bool) const
-      -> bool override {
+            const sourcemeta::core::SchemaResolver &) const -> bool override {
     ONLY_CONTINUE_IF(
         vocabularies.contains(SchemaVocabularies::Known::JSON_SCHEMA_DRAFT_6) &&
         subschema_at_dialect(schema, location, DRAFT_6_URL));
@@ -34,7 +33,7 @@ public:
     if (schema.defines("$schema") && schema.at("$schema").is_string() &&
         schema.at("$schema").to_string() == DRAFT_6_URL) {
       schema.assign("$schema", sourcemeta::core::JSON{DRAFT_7_URL});
-      drop_dialect_overrides(schema, true);
+      drop_dialect_overrides(schema, true, DRAFT_7_URL);
     } else {
       mark_dialect_override(schema, DRAFT_7_URL);
     }

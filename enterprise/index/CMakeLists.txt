@@ -20,5 +20,4 @@ target_link_libraries(sourcemeta_one_enterprise_index PRIVATE sourcemeta::core::
 target_link_libraries(sourcemeta_one_enterprise_index PUBLIC sourcemeta::core::jsonschema)
 target_link_libraries(sourcemeta_one_enterprise_index PUBLIC sourcemeta::core::uritemplate)
 target_link_libraries(sourcemeta_one_enterprise_index PUBLIC sourcemeta::one::enterprise_conversion)
-target_link_libraries(sourcemeta_one_enterprise_index PRIVATE sourcemeta::blaze::format)
 target_link_libraries(sourcemeta_one_enterprise_index PRIVATE sourcemeta::blaze::convert)

@@ -1,7 +1,6 @@
 #include <sourcemeta/one/enterprise_index.h>
 
 #include <sourcemeta/blaze/convert.h>
-#include <sourcemeta/blaze/format.h>
 
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonpointer.h>
@@ -104,14 +103,16 @@ auto conversions_metadata(const std::string_view dialect,
 }
 
 auto convert_schema(sourcemeta::core::JSON &schema, const SchemaDialect target,
-                    const bool is_metaschema, const std::string_view identifier,
+                    const std::string_view identifier,
                     const sourcemeta::core::SchemaResolver &resolver,
                     const std::function<bool(std::string_view)> &has_conversion)
     -> void {
   sourcemeta::blaze::convert(schema, sourcemeta::core::schema_walker, resolver,
-                             convert_target(target), "", "", is_metaschema);
-  sourcemeta::blaze::format(schema, sourcemeta::core::schema_walker, resolver,
-                            conversion_uri(target));
+                             convert_target(target), "", identifier);
+  const sourcemeta::core::SchemaFrame frame{
+      sourcemeta::core::SchemaFrame::Mode::Locations, schema,
+      sourcemeta::core::schema_walker, resolver, conversion_uri(target)};
+  sourcemeta::core::schema_format(schema, frame);
   // A reference that carries a conversion resolves against a schema that
   // identifies itself with that conversion and against nothing else, as a
   // query names a resource of its own where a fragment only addresses into

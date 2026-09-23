@@ -9,7 +9,6 @@
 #include <sourcemeta/core/options.h>
 #include <sourcemeta/core/uri.h>
 
-#include <sourcemeta/blaze/bundle.h>
 #include <sourcemeta/blaze/compiler.h>
 #include <sourcemeta/blaze/output.h>
 
@@ -152,6 +151,15 @@ inline auto default_dialect(
   return "";
 }
 
+inline auto format_schema(sourcemeta::core::JSON &schema,
+                          const sourcemeta::core::SchemaResolver &resolver,
+                          const std::string_view dialect) -> void {
+  const sourcemeta::core::SchemaFrame frame{
+      sourcemeta::core::SchemaFrame::Mode::Locations, schema,
+      sourcemeta::core::schema_walker, resolver, dialect};
+  sourcemeta::core::schema_format(schema, frame);
+}
+
 inline auto parse_jobs(const sourcemeta::core::Options &options)
     -> std::size_t {
   if (options.contains("jobs")) {
@@ -200,6 +208,13 @@ inline auto format_assertion_tweaks(const sourcemeta::core::Options &options)
   return std::nullopt;
 }
 
+inline auto bundle_references_options()
+    -> sourcemeta::core::SchemaBundleOptions {
+  sourcemeta::core::SchemaBundleOptions options;
+  options.mode = sourcemeta::core::SchemaBundleOptions::Mode::References;
+  return options;
+}
+
 inline auto
 bundle_for_evaluation(const sourcemeta::core::JSON &schema,
                       const sourcemeta::core::SchemaResolver &resolver,
@@ -208,9 +223,9 @@ bundle_for_evaluation(const sourcemeta::core::JSON &schema,
                       const sourcemeta::core::PointerPositionTracker &positions)
     -> sourcemeta::core::JSON {
   try {
-    return sourcemeta::blaze::bundle(
-        schema, sourcemeta::core::schema_walker, resolver,
-        sourcemeta::blaze::BundleMode::References, dialect, default_id);
+    return sourcemeta::core::schema_bundle(
+        schema, sourcemeta::core::schema_walker, resolver, dialect, default_id,
+        bundle_references_options());
   } catch (const sourcemeta::core::SchemaKeywordError &error) {
     throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
         resolution_base, error);
@@ -424,8 +439,9 @@ inline auto facet_name(const sourcemeta::blaze::JSONLDFacet facet)
 template <typename Entries>
 inline auto print(const Entries &output,
                   const sourcemeta::core::PointerPositionTracker &tracker,
-                  std::ostream &stream) -> void {
-  stream << "error: Schema validation failure\n";
+                  std::ostream &stream,
+                  const std::string_view error_label = "error:") -> void {
+  stream << error_label << " Schema validation failure\n";
   for (const auto &entry : output) {
     stream << "  " << entry.message << "\n";
     stream << "    at instance location \"";

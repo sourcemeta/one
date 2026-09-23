@@ -1,4 +1,3 @@
-#include <sourcemeta/blaze/bundle.h>
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonpointer.h>
@@ -21,6 +20,7 @@
 #include "error.h"
 #include "input.h"
 #include "logger.h"
+#include "print.h"
 #include "resolver.h"
 #include "utils.h"
 
@@ -104,10 +104,11 @@ auto sourcemeta::jsonschema::metaschema(
           sourcemeta::core::SchemaFrame::Mode::Root, entry.second,
           sourcemeta::core::schema_walker, custom_resolver,
           default_dialect_option};
-      const sourcemeta::core::JSON bundled{sourcemeta::blaze::bundle(
+      const sourcemeta::core::JSON bundled{sourcemeta::core::schema_bundle(
           schema_frame.metaschema(custom_resolver),
           sourcemeta::core::schema_walker, custom_resolver,
-          sourcemeta::blaze::BundleMode::References, default_dialect_option)};
+          default_dialect_option, "",
+          sourcemeta::jsonschema::bundle_references_options())};
       const sourcemeta::core::SchemaFrame frame{
           sourcemeta::core::SchemaFrame::Mode::References, bundled,
           sourcemeta::core::schema_walker, custom_resolver,
@@ -151,11 +152,14 @@ auto sourcemeta::jsonschema::metaschema(
         if (evaluator.validate(cache.at(std::string{dialect}), entry.second,
                                std::ref(output))) {
           LOG_VERBOSE(options)
-              << "ok: " << relative_path_string(entry.resolution_base)
-              << "\n  matches " << dialect << "\n";
+              << format_validation_status(ValidationStatus::Pass) << " "
+              << relative_path_string(entry.resolution_base) << "\n  matches "
+              << paint(dialect, sourcemeta::core::TerminalStyle::Cyan,
+                       sourcemeta::core::TerminalStream::Stderr)
+              << "\n";
         } else {
-          std::cerr << "fail: " << relative_path_string(entry.resolution_base)
-                    << "\n";
+          std::cerr << format_validation_status(ValidationStatus::Fail) << " "
+                    << relative_path_string(entry.resolution_base) << "\n";
           print(output, entry.positions, std::cerr);
           summary.failed += 1;
         }
