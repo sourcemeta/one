@@ -28,28 +28,11 @@ import type {
   TraceResult,
 } from "../types/one";
 
-const SESSION_REGISTRY_KEY = "one-ui.registryUrl";
-// Sourcemeta's own public instance — works out of the box with zero setup,
-// instead of pointing at a localhost registry that likely isn't running.
-const DEFAULT_REGISTRY_URL = "https://schemas.sourcemeta.com";
-
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [registryUrl, setRegistryUrlState] = useState(() => {
-    try {
-      return sessionStorage.getItem(SESSION_REGISTRY_KEY) ?? DEFAULT_REGISTRY_URL;
-    } catch {
-      return DEFAULT_REGISTRY_URL;
-    }
-  });
-
-  const setRegistryUrl = useCallback((url: string) => {
-    try {
-      sessionStorage.setItem(SESSION_REGISTRY_KEY, url);
-    } catch {
-      // Storage can be unavailable (private mode); the app still works.
-    }
-    setRegistryUrlState(url);
-  }, []);
+  // This UI is served BY the registry it's meant to browse (or, in dev, by
+  // a Vite proxy standing in for one — see vite.config.ts), so it's never
+  // pointed anywhere else: no separate "which registry" concept to manage.
+  const registryUrl = window.location.origin;
 
   const [registryHealthy, setRegistryHealthy] = useState<boolean | null>(null);
 
@@ -64,9 +47,29 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [registryUrl]);
 
-  const [selectedSchemaPath, setSelectedSchemaPath] = useState<string | null>(
-    null
-  );
+  // The server serves this same app for any path (including one that names
+  // a schema), so the path itself is the source of truth for which schema
+  // is selected — a reload or a shared link lands back on the same view.
+  const [selectedSchemaPath, setSelectedSchemaPathState] = useState<
+    string | null
+  >(() => (window.location.pathname === "/" ? null : window.location.pathname));
+
+  const setSelectedSchemaPath = useCallback((path: string | null) => {
+    setSelectedSchemaPathState(path);
+    const url = path ?? "/";
+    if (window.location.pathname !== url) {
+      window.history.pushState(null, "", url);
+    }
+  }, []);
+
+  useEffect(() => {
+    const onPopState = () => {
+      const path = window.location.pathname;
+      setSelectedSchemaPathState(path === "/" ? null : path);
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
   const [schemaMetadata, setSchemaMetadata] = useState<SchemaMetadata | null>(
     null
@@ -290,7 +293,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
 
   const value = {
     registryUrl,
-    setRegistryUrl,
     registryHealthy,
     selectedSchemaPath,
     setSelectedSchemaPath,

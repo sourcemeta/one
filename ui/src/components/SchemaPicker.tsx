@@ -8,9 +8,10 @@ const describeError = (err: unknown, registryUrl: string): string => {
   const message = err instanceof Error ? err.message : String(err);
   // A raw fetch failure (unreachable host, CORS, offline) surfaces as the
   // browser's generic "NetworkError"/"Failed to fetch" — not useful on its
-  // own, especially with the default localhost registry on a hosted deploy.
+  // own. This UI is always served by the registry it browses, so a failure
+  // here means that registry itself is down, not a misconfigured URL.
   if (/networkerror|failed to fetch/i.test(message)) {
-    return `Couldn't reach the registry at ${registryUrl}. Make sure it's running and reachable, or click "Connect" to point at a different URL.`;
+    return `Couldn't reach the registry at ${registryUrl}. It may be temporarily unavailable.`;
   }
   return message;
 };

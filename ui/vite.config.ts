@@ -39,10 +39,27 @@ const inlineLinkedStylesheets = (): Plugin => ({
   },
 })
 
+// In production this app is served BY the registry it browses, so every
+// fetch it makes is same-origin — there's no separate "registry URL" to
+// configure. `npm run dev` has no such registry of its own, so requests for
+// actual registry data (as opposed to a page route the SPA renders itself)
+// are proxied to a real one here instead, overridable via VITE_DEV_REGISTRY
+// for testing against a different instance.
+const devRegistryTarget = process.env.VITE_DEV_REGISTRY ?? 'https://schemas.sourcemeta.com'
+
 // https://vite.dev/config/
 export default defineConfig({
   base: '/self/v1/static/',
   plugins: [react(), tailwindcss(), inlineLinkedStylesheets()],
+  server: {
+    proxy: {
+      '/self/v1/api': { target: devRegistryTarget, changeOrigin: true },
+      '/self/v1/health': { target: devRegistryTarget, changeOrigin: true },
+      // Direct schema content fetches (e.g. /test/example.json) — anything
+      // else is a page route the SPA renders itself
+      '^/.*\\.json$': { target: devRegistryTarget, changeOrigin: true },
+    },
+  },
   build: {
     // One serves these from a single flat directory, so nesting them under
     // assets/ would only add a path segment nothing reads

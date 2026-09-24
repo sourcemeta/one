@@ -15,7 +15,6 @@ export type DetailTab = "dependencies" | "dependents" | "lint" | "stats" | "loca
 
 type AppContextType = {
   registryUrl: string;
-  setRegistryUrl: (url: string) => void;
   registryHealthy: boolean | null;
 
   selectedSchemaPath: string | null;

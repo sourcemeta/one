@@ -1,25 +1,13 @@
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { AppContext } from "../contexts/AppContext";
 import Logo from "./Logo";
 
 const RegistryBar = ({ onOpenCustomDebugger }: { onOpenCustomDebugger: () => void }) => {
-  const { registryUrl, setRegistryUrl, registryHealthy } = useContext(AppContext);
-  const [draft, setDraft] = useState(registryUrl);
-
-  const apply = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (draft.trim()) setRegistryUrl(draft.trim().replace(/\/+$/, ""));
-  };
+  const { registryUrl, registryHealthy } = useContext(AppContext);
 
   return (
-    <form
-      onSubmit={apply}
-      className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] shadow-[var(--shadow-sm)]"
-    >
+    <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] shadow-[var(--shadow-sm)]">
       <Logo />
-      <span className="text-sm text-[var(--text-secondary)] whitespace-nowrap">
-        Registry
-      </span>
       <span
         title={
           registryHealthy === null
@@ -36,19 +24,9 @@ const RegistryBar = ({ onOpenCustomDebugger }: { onOpenCustomDebugger: () => voi
               : "bg-[var(--danger)]"
         }`}
       />
-      <input
-        aria-label="Registry URL"
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        placeholder="http://localhost:8000"
-        className="flex-1 min-w-0 h-8 px-2.5 text-sm rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--bg-inset)] text-[var(--text)] outline-none focus:border-[var(--accent)] transition-colors"
-      />
-      <button
-        type="submit"
-        className="h-8 px-3 text-sm rounded-[var(--radius-sm)] border border-[var(--border-strong)] bg-[var(--bg-inset)] text-[var(--text)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
-      >
-        Connect
-      </button>
+      <span className="flex-1 min-w-0 text-sm text-[var(--text-secondary)] truncate">
+        {registryUrl}
+      </span>
       <button
         type="button"
         onClick={onOpenCustomDebugger}
@@ -56,7 +34,7 @@ const RegistryBar = ({ onOpenCustomDebugger }: { onOpenCustomDebugger: () => voi
       >
         Custom Debugger
       </button>
-    </form>
+    </div>
   );
 };
 
