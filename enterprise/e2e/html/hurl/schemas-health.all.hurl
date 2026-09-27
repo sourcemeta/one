@@ -69,7 +69,7 @@ jsonpath "$.errors[0].custom" == false
 jsonpath "$.errors[0].pointers" count == 1
 jsonpath "$.errors[0].pointers[0]" == ""
 jsonpath "$.errors[1].name" == "custom/approved_document_jsonld_type"
-jsonpath "$.errors[1].message" == "Ensure the document declares an approved JSON-LD type"
+jsonpath "$.errors[1].message" == "Ensure a declared JSON-LD type comes from the approved vocabulary"
 jsonpath "$.errors[1].description" == "The string value \"https://schema.org/Product\" was expected to equal the string constant \"https://schema.org/Thing\""
 jsonpath "$.errors[1].custom" == true
 jsonpath "$.errors[1].pointers" count == 1
