@@ -76,7 +76,24 @@
         "rules": {
           "type": "array",
           "items": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "required": [ "path" ],
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  },
+                  "topLevel": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              }
+            ]
           }
         }
       },

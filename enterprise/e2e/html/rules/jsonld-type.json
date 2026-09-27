@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "custom/approved_document_jsonld_type",
+  "description": "Ensure the document declares an approved JSON-LD type",
+  "properties": {
+    "x-jsonld-type": {
+      "const": "https://schema.org/Thing"
+    }
+  }
+}

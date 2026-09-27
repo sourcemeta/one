@@ -175,7 +175,9 @@ contain the actual schema definitions that power your instance.
 | `/include`     | String  | No  | None | A `jsonschema.json` manifest definition to include in-place. See the [Include](#include) section for more information. **If this property is set, none of the other properties can be set (including `path`)** |
 | `/resolve`      | Object  | No  | None | A URI-to-URI map to hook into the schema reference resolution process. See the [Resolve](#resolve) section for more information |
 | `/lint`      | Object  | No  | None | Linting configuration for this schema collection. See the [JSON Schema CLI configuration](https://github.com/sourcemeta/jsonschema/blob/main/docs/configuration.markdown) for more information |
-| `/lint/rules` (**Enterprise**) | Array  | No  | None | An array of file paths (relative to the configuration file location) to custom linting rule definitions. See the [Linter](#linter) section for more information |
+| `/lint/rules` (**Enterprise**) | Array  | No  | None | An array of custom linting rule definitions, each one either a file path (relative to the configuration file location) or an object that declares the path along with the scope of the rule. See the [Linter](#linter) section for more information |
+| `/lint/rules/*/path` (**Enterprise**) | String  | Yes | N/A | The file path (relative to the configuration file location) to a custom linting rule definition |
+| `/lint/rules/*/topLevel` (**Enterprise**) | Boolean  | No  | `false` | Whether to evaluate the rule against the top-level schema alone rather than against every subschema |
 | `/ignore`      | Array  | No  | None | An array of file paths (relative to the configuration file location) to exclude from the schema collection. See the [JSON Schema CLI configuration](https://github.com/sourcemeta/jsonschema/blob/main/docs/configuration.markdown) for more information |
 | `/x-sourcemeta-one:evaluate`      | Boolean  | No  | `true` | When set to `false`, disable the evaluation API for this schema collection. This is useful if you will never make use of the [evaluation API](api.md) and want to speed up the generation of the instance |
 | `/x-sourcemeta-one:alert`      | String  | No  | N/A | When set, provide a human-readable alert on both the API and the HTML explorer for every schema in the collection. This is useful to provide any important message to consumers. The web explorer renders this as Markdown |
@@ -310,10 +312,11 @@ violation is reported).
 
 !!! note
 
-    Rules apply to every subschema individually, not to the top-level schema
-    document as a whole. For example, a rule that requires every subschema to
-    define `title` will be checked against every nested subschema too, not only
-    the root.
+    By default, rules apply to every subschema individually, not to the
+    top-level schema document as a whole. For example, a rule that requires
+    every subschema to define `title` will be checked against every nested
+    subschema too, not only the root. Declare the rule as an object with
+    `topLevel` set to `true` to check the root alone.
 
 For example, say your organisation requires all schema property names to follow
 camelCase. Create a rule file like this:
@@ -355,6 +358,27 @@ level. Then register it in your configuration file:
 Rule file paths are relative to the configuration file location. You can list
 multiple rules in the array to enforce several constraints at once. Rule names
 must be unique across all rules in a collection.
+
+A rule that describes a schema document as a whole, rather than each of the
+subschemas in it, is declared as an object that names the path along with the
+scope of the rule:
+
+```json hl_lines="7-10" title="one.json"
+{
+  "url": "https://schemas.example.com",
+  "contents": {
+    "my-collection": {
+      "path": "./schemas",
+      "lint": {
+        "rules": [
+          "./rules/camelcase.json",
+          { "path": "./rules/license.json", "topLevel": true }
+        ]
+      }
+    }
+  }
+}
+```
 
 ## Pages
 

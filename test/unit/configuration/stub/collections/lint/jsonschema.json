@@ -1,0 +1,7 @@
+{
+  "title": "With a root only lint rule",
+  "path": "./schemas",
+  "lint": {
+    "rules": [ { "path": "./rules/root_rule.json", "topLevel": true } ]
+  }
+}

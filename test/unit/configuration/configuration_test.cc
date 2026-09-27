@@ -821,6 +821,170 @@ TEST(priority_helper_defaults_when_missing_or_wrong_type) {
   EXPECT_EQ(sourcemeta::one::Configuration::priority(collection), 50);
 }
 
+TEST(lint_rules_accept_the_object_form) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "parse_valid_lint_rule_object.json"};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.path, configuration_path);
+
+  EXPECT_EQ(configuration.url, "http://localhost:8000");
+  EXPECT_TRUE(configuration.api);
+
+  EXPECT_TRUE(configuration.html.has_value());
+  EXPECT_EQ(configuration.html.value().name, "Title");
+  EXPECT_EQ(configuration.html.value().description, "Description");
+
+  EXPECT_EQ(configuration.entries.size(), 4);
+
+  EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
+  EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
+                    std::filesystem::path{SELF_DIRECTORY} / "v1" / "schemas");
+
+  EXPECT_COLLECTION(configuration, "example", title, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", description, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", email, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", github, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", website, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", absolute_path,
+                    std::filesystem::path{STUB_DIRECTORY} / "schemas" /
+                        "example" / "extension");
+  EXPECT_COLLECTION(configuration, "example", base,
+                    "https://example.com/schemas");
+  EXPECT_COLLECTION(configuration, "example", default_dialect, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", resolve.size(), 0);
+  EXPECT_COLLECTION(configuration, "example", lint.rules.size(), 3);
+  EXPECT_COLLECTION(
+      configuration, "example", lint.rules.at(0).path,
+      std::filesystem::weakly_canonical(std::filesystem::path{STUB_DIRECTORY} /
+                                        "rules" / "my_rule.json"));
+  EXPECT_COLLECTION(configuration, "example", lint.rules.at(0).top_level,
+                    false);
+  EXPECT_COLLECTION(
+      configuration, "example", lint.rules.at(1).path,
+      std::filesystem::weakly_canonical(std::filesystem::path{STUB_DIRECTORY} /
+                                        "rules" / "another_rule.json"));
+  EXPECT_COLLECTION(configuration, "example", lint.rules.at(1).top_level,
+                    false);
+  EXPECT_COLLECTION(
+      configuration, "example", lint.rules.at(2).path,
+      std::filesystem::weakly_canonical(std::filesystem::path{STUB_DIRECTORY} /
+                                        "rules" / "root_rule.json"));
+  EXPECT_COLLECTION(configuration, "example", lint.rules.at(2).top_level, true);
+  EXPECT_COLLECTION(configuration, "example", ignore.size(), 0);
+  EXPECT_COLLECTION(configuration, "example", extra.size(), 1);
+  EXPECT_COLLECTION(configuration, "example",
+                    extra.defines("x-sourcemeta-one:path"), true);
+  EXPECT_COLLECTION(configuration, "example", extra.at("x-sourcemeta-one:path"),
+                    sourcemeta::core::JSON{configuration_path.string()});
+
+  EXPECT_PRIORITY(configuration, "self/v1/schemas", 0);
+  EXPECT_PRIORITY(configuration, "example", 50);
+}
+
+TEST(lint_rules_accept_the_object_form_from_an_included_manifest) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "parse_valid_lint_rule_object_include.json"};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.path, configuration_path);
+
+  EXPECT_EQ(configuration.url, "http://localhost:8000");
+  EXPECT_TRUE(configuration.api);
+
+  EXPECT_TRUE(configuration.html.has_value());
+  EXPECT_EQ(configuration.html.value().name, "Title");
+  EXPECT_EQ(configuration.html.value().description, "Description");
+
+  EXPECT_EQ(configuration.entries.size(), 4);
+
+  EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
+  EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
+                    std::filesystem::path{SELF_DIRECTORY} / "v1" / "schemas");
+
+  EXPECT_COLLECTION(configuration, "example", title,
+                    "With a root only lint rule");
+  EXPECT_COLLECTION(configuration, "example", description, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", email, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", github, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", website, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", absolute_path,
+                    std::filesystem::path{STUB_DIRECTORY} / "collections" /
+                        "lint" / "schemas");
+  EXPECT_COLLECTION(configuration, "example", base, "http://localhost:8000");
+  EXPECT_COLLECTION(configuration, "example", default_dialect, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", resolve.size(), 0);
+  EXPECT_COLLECTION(configuration, "example", lint.rules.size(), 1);
+  EXPECT_COLLECTION(configuration, "example", lint.rules.at(0).path,
+                    std::filesystem::weakly_canonical(
+                        std::filesystem::path{STUB_DIRECTORY} / "collections" /
+                        "lint" / "rules" / "root_rule.json"));
+  EXPECT_COLLECTION(configuration, "example", lint.rules.at(0).top_level, true);
+  EXPECT_COLLECTION(configuration, "example", ignore.size(), 0);
+  EXPECT_COLLECTION(configuration, "example", extra.size(), 1);
+  EXPECT_COLLECTION(configuration, "example",
+                    extra.defines("x-sourcemeta-one:path"), true);
+  EXPECT_COLLECTION(
+      configuration, "example", extra.at("x-sourcemeta-one:path"),
+      sourcemeta::core::JSON{(std::filesystem::path{STUB_DIRECTORY} /
+                              "collections" / "lint" / "jsonschema.json")
+                                 .string()});
+
+  EXPECT_PRIORITY(configuration, "self/v1/schemas", 0);
+  EXPECT_PRIORITY(configuration, "example", 50);
+}
+
+TEST(lint_rules_reject_an_object_without_a_path) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "parse_invalid_lint_rule_no_path.json"};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, configuration_path,
+                                          configuration_path.parent_path());
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationValidationError &error) {
+    EXPECT_STREQ(error.what(), "Invalid configuration");
+  }
+}
+
+TEST(lint_rules_reject_an_object_with_an_unknown_property) {
+  const auto configuration_path{
+      std::filesystem::path{STUB_DIRECTORY} /
+      "parse_invalid_lint_rule_unknown_property.json"};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, configuration_path,
+                                          configuration_path.parent_path());
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationValidationError &error) {
+    EXPECT_STREQ(error.what(), "Invalid configuration");
+  }
+}
+
+TEST(lint_rules_reject_a_top_level_that_is_not_a_boolean) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "parse_invalid_lint_rule_top_level_type.json"};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, configuration_path,
+                                          configuration_path.parent_path());
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationValidationError &error) {
+    EXPECT_STREQ(error.what(), "Invalid configuration");
+  }
+}
+
 TEST(authentication_defaults_to_empty_when_absent) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_001.json"};

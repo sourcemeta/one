@@ -1,0 +1,11 @@
+{
+  "url": "http://localhost:8000",
+  "contents": {
+    "example": {
+      "path": "./schemas/example/extension",
+      "lint": {
+        "rules": [ { "topLevel": true } ]
+      }
+    }
+  }
+}

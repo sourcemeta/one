@@ -4,7 +4,10 @@
     "test": {
       "path": "./schemas/test",
       "lint": {
-        "rules": [ "./rules/camelcase.json" ]
+        "rules": [
+          "./rules/camelcase.json",
+          { "path": "./rules/jsonld-type.json", "topLevel": true }
+        ]
       }
     },
     "twins": {

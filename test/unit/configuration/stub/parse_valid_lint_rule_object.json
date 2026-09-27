@@ -1,0 +1,20 @@
+{
+  "url": "http://localhost:8000",
+  "html": {
+    "name": "Title",
+    "description": "Description"
+  },
+  "contents": {
+    "example": {
+      "baseUri": "https://example.com/schemas",
+      "path": "./schemas/example/extension",
+      "lint": {
+        "rules": [
+          "./rules/my_rule.json",
+          { "path": "./rules/another_rule.json" },
+          { "path": "./rules/root_rule.json", "topLevel": true }
+        ]
+      }
+    }
+  }
+}
