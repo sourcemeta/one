@@ -1,8 +1,0 @@
-README.md
-sdf-feature.cddl
-sdf-framework.cddl
-sdf-validation.cddl
-sdf.html
-sdf.jso.json-unidiff
-sdf.md
-sdf.txt

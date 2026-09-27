@@ -15,7 +15,6 @@ SERVER ?= ON
 PRESET ?= Debug
 OUTPUT ?= ./build
 PREFIX ?= $(OUTPUT)/dist
-PUBLIC ?= ./enterprise/e2e/public
 PARALLEL ?= $(shell getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)
 DOCKERFILE_TEST_REPEAT ?= 1
 DOCKER_BUILD_FLAGS ?=
@@ -93,7 +92,6 @@ test-e2e: check
 ifeq ($(ENTERPRISE),ON)
 	./contrib/e2e-native.sh enterprise/e2e/empty $(EDITION) $(SANDBOX_PORT)
 	./contrib/e2e-native.sh enterprise/e2e/html $(EDITION) $(SANDBOX_PORT)
-	./contrib/e2e-native.sh enterprise/e2e/public $(EDITION) $(SANDBOX_PORT)
 	# Machine credentials need nobody to sign in, so this authentication
 	# sandbox is the one that runs without an identity provider beside it
 	./contrib/e2e-native.sh enterprise/e2e/auth-keys $(EDITION) $(SANDBOX_PORT)
@@ -112,7 +110,6 @@ docker: docker-build
 ifeq ($(ENTERPRISE),ON)
 	$(MAKE) -C enterprise/e2e/empty EDITION=$(EDITION)
 	$(MAKE) -C enterprise/e2e/html EDITION=$(EDITION)
-	$(MAKE) -C enterprise/e2e/public EDITION=$(EDITION)
 	$(MAKE) -C enterprise/e2e/auth-keys EDITION=$(EDITION)
 	# The rest each stand up an identity provider alongside the registry,
 	# exercising both JWT and apiKey policies
@@ -144,12 +141,6 @@ sandbox: sandbox-index
 .PHONY: docs
 docs: mkdocs.yml
 	$(MKDOCS) serve --config-file $< --strict --open
-
-.PHONY: public
-public:
-	$(PREFIX)/bin/sourcemeta-one-index $(PUBLIC)/one.json $(OUTPUT)/public --configuration
-	$(PREFIX)/bin/sourcemeta-one-index $(PUBLIC)/one.json $(OUTPUT)/public --verbose
-	$(PREFIX)/bin/sourcemeta-one-server $(OUTPUT)/public 8000
 
 .PHONY: clean
 clean:

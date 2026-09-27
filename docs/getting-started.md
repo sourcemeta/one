@@ -184,11 +184,9 @@ base, and the indexer would report an error.
 
 !!! tip
 
-    For a real-world example, take a look at the configuration file that powers
+    For a real-world example, take a look at
     [schemas.sourcemeta.com](https://schemas.sourcemeta.com), which ingests
-    schemas from many third-party sources using `baseUri`. [Find the
-    configuration file
-    here](https://github.com/sourcemeta/one/blob/main/enterprise/e2e/public/one.json)
+    schemas from many third-party sources using `baseUri`
 
 ### Next Steps
 
