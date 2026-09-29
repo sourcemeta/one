@@ -11,7 +11,7 @@
           "path": "./schemas/test",
           "defaultDialect": "http://json-schema.org/draft-07/schema#",
           "resolve": {
-            "https://other.com/single.json": "/test/schemas/bundling-single.json"
+            "https://other.com/single.json": "./schemas/test/bundling-single.json"
           }
         },
         "no-blaze": {

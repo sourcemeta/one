@@ -366,6 +366,7 @@ static auto index_main(const std::string_view &program,
 
   auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
+  sourcemeta::one::rebase_resolve_targets(configuration);
 
   /////////////////////////////////////////////////////////////////////////////
   // (3) Resolve a URI to a schema filesystem path
@@ -847,6 +848,18 @@ auto main(int argc, char *argv[]) noexcept -> int {
   } catch (const sourcemeta::blaze::ConfigurationParseError &error) {
     std::print(stderr, "error: {}\n  at instance location \"{}\"\n",
                error.what(), sourcemeta::core::to_string(error.location()));
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::one::ResolverUnknownTargetError &error) {
+    std::print(stderr, "error: {}\n  at uri {}\n  at path {}\n", error.what(),
+               error.uri(), error.target().string());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::one::ResolverUnmountedTargetError &error) {
+    std::print(stderr, "error: {}\n  at uri {}\n  at path {}\n", error.what(),
+               error.uri(), error.target().string());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::one::ResolverAmbiguousTargetError &error) {
+    std::print(stderr, "error: {}\n  at uri {}\n  at path {}\n", error.what(),
+               error.uri(), error.target().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ConfigurationDuplicateAuthenticationNameError
                &error) {

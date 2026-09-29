@@ -213,7 +213,128 @@ normalise_ref(const sourcemeta::one::Configuration::Collection &collection,
   schema.assign(keyword, sourcemeta::core::JSON{value.recompose()});
 }
 
+// What a schema calls itself, and what this instance serves it as. Both are
+// settled together because the second is derived from the first
+struct SchemaIdentity {
+  sourcemeta::core::JSON::String current;
+  sourcemeta::core::JSON::String served;
+};
+
+static auto
+schema_identity(const sourcemeta::one::Configuration::Collection &collection,
+                const std::filesystem::path &location,
+                const std::filesystem::path &path,
+                const sourcemeta::core::JSON &schema,
+                const sourcemeta::core::SchemaResolver &resolver,
+                const sourcemeta::core::URI &server) -> SchemaIdentity {
+  const auto default_identifier{
+      sourcemeta::core::URI{collection.base_uri}
+          .append_path(normalise_identifier(
+              std::filesystem::relative(path, collection.absolute_path)
+                  .string()))
+          .canonicalize()
+          .recompose()};
+  sourcemeta::core::URI identifier_uri{normalise_identifier(declared_identifier(
+      schema, resolver, collection.default_dialect.value_or(""),
+      default_identifier))};
+  identifier_uri.canonicalize();
+  auto identifier{identifier_uri.is_relative()
+                      ? sourcemeta::core::URI{collection.base_uri}
+                            .append_path(std::move(identifier_uri))
+                            .canonicalize()
+                            .recompose()
+                      : identifier_uri.recompose()};
+  // We have to do something if the schema is the base. Note that URI
+  // canonicalisation technically cannot remove trailing slashes as they might
+  // have meaning in certain use cases. But we still consider them equal in
+  // the context of the One
+  if (identifier == collection.base || identifier == collection.base + "/") {
+    identifier = default_identifier;
+  }
+  // A final check that everything went well
+  if (!identifier.starts_with(collection.base)) {
+    throw sourcemeta::one::ResolverOutsideBaseError(path, identifier,
+                                                    collection.base);
+  }
+  // Otherwise we have things like "../" that should not be there
+  assert(identifier.find("..") == std::string::npos);
+
+  auto served{rebase(collection, identifier, server, location)};
+  // Otherwise we have things like "../" that should not be there
+  assert(served.find("..") == std::string::npos);
+  return {.current = std::move(identifier), .served = std::move(served)};
+}
+
 namespace sourcemeta::one {
+
+auto rebase_resolve_targets(Configuration &configuration) -> void {
+  const sourcemeta::core::URI server{configuration.url};
+  std::vector<
+      std::pair<std::filesystem::path,
+                std::reference_wrapper<const Configuration::Collection>>>
+      collections;
+  for (const auto &entry : configuration.entries) {
+    const auto *collection{
+        std::get_if<Configuration::Collection>(&entry.second)};
+    if (collection != nullptr) {
+      collections.emplace_back(entry.first, std::cref(*collection));
+    }
+  }
+
+  for (auto &entry : configuration.entries) {
+    auto *collection{std::get_if<Configuration::Collection>(&entry.second)};
+    if (collection == nullptr || collection->resolve.empty()) {
+      continue;
+    }
+
+    std::unordered_map<sourcemeta::core::JSON::String,
+                       sourcemeta::core::JSON::String>
+        result;
+    result.reserve(collection->resolve.size());
+    for (const auto &pair : collection->resolve) {
+      const sourcemeta::core::URI value{pair.second};
+      if (!value.is_relative()) {
+        result.emplace(pair.first, pair.second);
+        continue;
+      }
+
+      const auto target{sourcemeta::core::weakly_canonical(
+          collection->base_path / value.to_path())};
+      if (!std::filesystem::is_regular_file(target)) {
+        throw ResolverUnknownTargetError(pair.first, target);
+      }
+
+      const Configuration::Collection *owner{nullptr};
+      const std::filesystem::path *owner_location{nullptr};
+      for (const auto &candidate : collections) {
+        if (!sourcemeta::core::is_under_path(
+                target, candidate.second.get().absolute_path)) {
+          continue;
+        }
+
+        if (owner != nullptr) {
+          throw ResolverAmbiguousTargetError(pair.first, target);
+        }
+
+        owner = &candidate.second.get();
+        owner_location = &candidate.first;
+      }
+
+      if (owner == nullptr) {
+        throw ResolverUnmountedTargetError(pair.first, target);
+      }
+
+      result.emplace(
+          pair.first,
+          schema_identity(*owner, *owner_location, target,
+                          sourcemeta::core::read_yaml_or_json(target),
+                          sourcemeta::core::schema_resolver, server)
+              .served);
+    }
+
+    collection->resolve = std::move(result);
+  }
+}
 
 Resolver::Resolver(const std::string_view url)
     : server_url_{url}, server_uri_{std::string{url}} {}
@@ -482,57 +603,23 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
         collection.default_dialect.value_or("")};
 
     /////////////////////////////////////////////////////////////////////////////
-    // (2) Try our best to determine the identifier of the schema, defaulting to
-    // a file-system-based identifier based on the *current* URI
+    // (2) and (3) Determine what the schema calls itself and what this instance
+    // serves it as
     /////////////////////////////////////////////////////////////////////////////
-    const auto default_identifier{
-        sourcemeta::core::URI{collection.base_uri}
-            .append_path(normalise_identifier(
-                std::filesystem::relative(path, collection.absolute_path)
-                    .string()))
-            .canonicalize()
-            .recompose()};
-    sourcemeta::core::URI identifier_uri{
-        normalise_identifier(declared_identifier(
-            schema,
-            [this, &collection](const auto subidentifier)
-                -> std::optional<sourcemeta::core::JSON> {
-              const auto rewritten{
-                  pre_resolve(collection, subidentifier, this->server_uri_)};
-              if (rewritten.has_value()) {
-                return this->operator()(*rewritten);
-              }
-              return this->operator()(subidentifier);
-            },
-            default_dialect_str, default_identifier))};
-    identifier_uri.canonicalize();
-    auto identifier{identifier_uri.is_relative()
-                        ? sourcemeta::core::URI{collection.base_uri}
-                              .append_path(std::move(identifier_uri))
-                              .canonicalize()
-                              .recompose()
-                        : identifier_uri.recompose()};
-    // We have to do something if the schema is the base. Note that URI
-    // canonicalisation technically cannot remove trailing slashes as they might
-    // have meaning in certain use cases. But we still consider them equal in
-    // the context of the One
-    if (identifier == collection.base || identifier == collection.base + "/") {
-      identifier = default_identifier;
-    }
-    // A final check that everything went well
-    if (!identifier.starts_with(collection.base)) {
-      throw ResolverOutsideBaseError(path, identifier, collection.base);
-    }
-    // Otherwise we have things like "../" that should not be there
-    assert(identifier.find("..") == std::string::npos);
-
-    /////////////////////////////////////////////////////////////////////////////
-    // (3) Determine the new URI of the schema, from the one base URI
-    /////////////////////////////////////////////////////////////////////////////
-    const auto new_identifier{rebase(collection, identifier, this->server_uri_,
-                                     collection_relative_path)};
-    // Otherwise we have things like "../" that should not be there
-    assert(new_identifier.find("..") == std::string::npos);
+    const auto identity{schema_identity(
+        collection, collection_relative_path, path, schema,
+        [this, &collection](
+            const auto subidentifier) -> std::optional<sourcemeta::core::JSON> {
+          const auto rewritten{
+              pre_resolve(collection, subidentifier, this->server_uri_)};
+          if (rewritten.has_value()) {
+            return this->operator()(*rewritten);
+          }
+          return this->operator()(subidentifier);
+        },
+        this->server_uri_)};
+    const auto &identifier{identity.current};
+    const auto &new_identifier{identity.served};
 
     /////////////////////////////////////////////////////////////////////////////
     // (4) Determine the dialect of the schema, which we also need to make sure

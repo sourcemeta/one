@@ -31,7 +31,7 @@ WRITE one.json UNTIL EOF
     "example": {
       "path": "./schemas",
       "resolve": {
-        "urn:example:custom-meta": "/meta/custom.json"
+        "urn:example:custom-meta": "./meta/custom.json"
       }
     }
   }

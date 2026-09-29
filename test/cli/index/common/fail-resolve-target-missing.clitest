@@ -1,0 +1,31 @@
+MAKE DIRECTORY schemas
+
+WRITE schemas/sample.json UNTIL EOF
+{ "$schema": "https://json-schema.org/draft/2020-12/schema" }
+EOF
+
+WRITE one.json UNTIL EOF
+{
+  "url": "https://example.com",
+  "contents": {
+    "example": {
+      "path": "./schemas",
+      "resolve": {
+        "urn:example:missing": "./meta/nowhere.json"
+      }
+    }
+  }
+}
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
+
+WRITE expected.txt UNTIL EOF
+2> error: The resolve target does not exist
+2>   at uri urn:example:missing
+2>   at path [CWD]/meta/nowhere.json
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected.txt

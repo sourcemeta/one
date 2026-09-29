@@ -29,7 +29,7 @@
       "path": "./schemas/with-schema-resolve-and-default-dialect",
       "defaultDialect": "urn:example:custom-meta",
       "resolve": {
-        "urn:example:custom-meta": "/meta/custom.json"
+        "urn:example:custom-meta": "./schemas/meta/custom.json"
       }
     }
   }

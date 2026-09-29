@@ -1,0 +1,118 @@
+MAKE DIRECTORY data
+MAKE DIRECTORY data/schemas
+
+WRITE data/schemas/shared.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Shared",
+  "type": "string"
+}
+EOF
+
+WRITE data/schemas/uses.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Uses",
+  "properties": {
+    "value": { "$ref": "urn:example:shared" }
+  }
+}
+EOF
+
+WRITE data/jsonschema.json UNTIL EOF
+{
+  "title": "Example",
+  "path": "./schemas",
+  "resolve": {
+    "urn:example:shared": "./schemas/shared.json"
+  }
+}
+EOF
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "mounted": {
+      "include": "./data"
+    }
+  }
+}
+EOF
+RUN one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+DROP LINES MATCHING '^[12]> \([ 0-9]+%\) ' IN log_1.txt
+DROP LINES CONTAINING $ONE_PREFIX IN log_1.txt
+REPLACE MATCHING ' \(#[0-9]+\)' WITH '' IN log_1.txt
+REPLACE $CWD WITH '[CWD]' IN log_1.txt
+REPLACE $EDITION WITH '[EDITION]' IN log_1.txt
+REPLACE $VERSION WITH '[VERSION]' IN log_1.txt
+SORT log_1.txt
+WRITE expected_log_1.txt UNTIL EOF
+2> Detecting: [CWD]/data/schemas/shared.json
+2> Detecting: [CWD]/data/schemas/uses.json
+2> Sourcemeta One [EDITION] v[VERSION]
+2> Using configuration: [CWD]/one.json
+2> Writing output to: [CWD]/output
+EOF
+COMPARE log_1.txt AGAINST expected_log_1.txt
+
+TREE output INTO manifest.txt
+DROP LINES MATCHING '^\./schemas/self(/.*)?$' IN manifest.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN manifest.txt
+
+WRITE expected.txt UNTIL EOF
+./authentication.bin
+./configuration.json
+./explorer
+./explorer/public
+./explorer/public/%
+./explorer/public/%/directory.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/mounted
+./explorer/public/mounted/%
+./explorer/public/mounted/%/directory.metapack
+./explorer/public/mounted/shared
+./explorer/public/mounted/shared/%
+./explorer/public/mounted/shared/%/dependents.metapack
+./explorer/public/mounted/shared/%/schema.metapack
+./explorer/public/mounted/uses
+./explorer/public/mounted/uses/%
+./explorer/public/mounted/uses/%/dependents.metapack
+./explorer/public/mounted/uses/%/schema.metapack
+./routes.bin
+./schemas
+./schemas/mounted
+./schemas/mounted/shared
+./schemas/mounted/shared/%
+./schemas/mounted/shared/%/blaze-exhaustive.metapack
+./schemas/mounted/shared/%/blaze-fast.metapack
+./schemas/mounted/shared/%/bundle-2020-12.metapack
+./schemas/mounted/shared/%/bundle.metapack
+./schemas/mounted/shared/%/dependencies.metapack
+./schemas/mounted/shared/%/editor.metapack
+./schemas/mounted/shared/%/health.metapack
+./schemas/mounted/shared/%/locations.metapack
+./schemas/mounted/shared/%/positions.metapack
+./schemas/mounted/shared/%/schema.metapack
+./schemas/mounted/shared/%/stats.metapack
+./schemas/mounted/uses
+./schemas/mounted/uses/%
+./schemas/mounted/uses/%/blaze-exhaustive.metapack
+./schemas/mounted/uses/%/blaze-fast.metapack
+./schemas/mounted/uses/%/bundle-2020-12.metapack
+./schemas/mounted/uses/%/bundle.metapack
+./schemas/mounted/uses/%/dependencies.metapack
+./schemas/mounted/uses/%/editor.metapack
+./schemas/mounted/uses/%/health.metapack
+./schemas/mounted/uses/%/locations.metapack
+./schemas/mounted/uses/%/positions.metapack
+./schemas/mounted/uses/%/schema.metapack
+./schemas/mounted/uses/%/stats.metapack
+./state.bin
+./version.json
+EOF
+
+COMPARE manifest.txt AGAINST expected.txt

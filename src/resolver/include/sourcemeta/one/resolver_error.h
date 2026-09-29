@@ -97,6 +97,78 @@ private:
   sourcemeta::core::JSON::String base_;
 };
 
+class ResolverUnknownTargetError : public std::exception {
+public:
+  ResolverUnknownTargetError(sourcemeta::core::JSON::String uri,
+                             std::filesystem::path target)
+      : uri_{std::move(uri)}, target_{std::move(target)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "The resolve target does not exist";
+  }
+
+  [[nodiscard]] auto uri() const noexcept
+      -> const sourcemeta::core::JSON::String & {
+    return this->uri_;
+  }
+
+  [[nodiscard]] auto target() const noexcept -> const std::filesystem::path & {
+    return this->target_;
+  }
+
+private:
+  sourcemeta::core::JSON::String uri_;
+  std::filesystem::path target_;
+};
+
+class ResolverUnmountedTargetError : public std::exception {
+public:
+  ResolverUnmountedTargetError(sourcemeta::core::JSON::String uri,
+                               std::filesystem::path target)
+      : uri_{std::move(uri)}, target_{std::move(target)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "The resolve target is not part of any schema collection";
+  }
+
+  [[nodiscard]] auto uri() const noexcept
+      -> const sourcemeta::core::JSON::String & {
+    return this->uri_;
+  }
+
+  [[nodiscard]] auto target() const noexcept -> const std::filesystem::path & {
+    return this->target_;
+  }
+
+private:
+  sourcemeta::core::JSON::String uri_;
+  std::filesystem::path target_;
+};
+
+class ResolverAmbiguousTargetError : public std::exception {
+public:
+  ResolverAmbiguousTargetError(sourcemeta::core::JSON::String uri,
+                               std::filesystem::path target)
+      : uri_{std::move(uri)}, target_{std::move(target)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "The resolve target is part of more than one schema collection";
+  }
+
+  [[nodiscard]] auto uri() const noexcept
+      -> const sourcemeta::core::JSON::String & {
+    return this->uri_;
+  }
+
+  [[nodiscard]] auto target() const noexcept -> const std::filesystem::path & {
+    return this->target_;
+  }
+
+private:
+  sourcemeta::core::JSON::String uri_;
+  std::filesystem::path target_;
+};
+
 } // namespace sourcemeta::one
 
 #endif
