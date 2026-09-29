@@ -1,5 +1,6 @@
 #include <sourcemeta/blaze/alterschema.h>
 #include <sourcemeta/blaze/compiler.h>
+#include <sourcemeta/blaze/configuration.h>
 
 #include <sourcemeta/core/error.h>
 #include <sourcemeta/core/io.h>
@@ -842,6 +843,10 @@ auto main(int argc, char *argv[]) noexcept -> int {
   } catch (const sourcemeta::one::ConfigurationValidationError &error) {
     std::print(stderr, "error: {}\n  at path {}\n{}", error.what(),
                error.path().string(), error.stacktrace());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::blaze::ConfigurationParseError &error) {
+    std::print(stderr, "error: {}\n  at instance location \"{}\"\n",
+               error.what(), sourcemeta::core::to_string(error.location()));
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ConfigurationDuplicateAuthenticationNameError
                &error) {

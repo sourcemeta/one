@@ -1,0 +1,11 @@
+{
+  "url": "http://localhost:8000",
+  "contents": {
+    "example": {
+      "path": "./schemas/example/extension",
+      "dependencies": {
+        "https://example.com/vendor.json": [ "./vendor/vendor.json" ]
+      }
+    }
+  }
+}

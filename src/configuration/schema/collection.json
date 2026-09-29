@@ -42,6 +42,16 @@
       "type": "string",
       "format": "uri-reference"
     },
+    "dependencies": {
+      "type": "object",
+      "propertyNames": {
+        "x-format-assertion": true,
+        "format": "uri-reference"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
     "email": {
       "x-format-assertion": true,
       "type": "string",
@@ -117,6 +127,9 @@
         "type": "string"
       }
     }
+  },
+  "patternProperties": {
+    "^x-": true
   },
   "additionalProperties": false
 }
