@@ -690,6 +690,10 @@ private:
     }
 #endif
 
+    for (const auto &name : configuration.lint.exclude) {
+      entry->bundle.remove(name);
+    }
+
     return *cache.emplace(key, std::move(entry)).first->second;
   }
 };

@@ -35,7 +35,10 @@
         },
         "v2.0": {
           "baseUri": "https://example.com/schemas",
-          "path": "./schemas/test/v2.0"
+          "path": "./schemas/test/v2.0",
+          "lint": {
+            "exclude": [ "top_level_examples" ]
+          }
         },
         "bundling": {
           "baseUri": "https://example.com/bundling",
