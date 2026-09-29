@@ -510,9 +510,13 @@ static auto index_main(const std::string_view &program,
         continue;
       }
 
-      const auto extension{entry.path().extension()};
-      // TODO: Allow the configuration file to override this
-      if (extension != ".yaml" && extension != ".yml" && extension != ".json") {
+      const auto entry_path{entry.path().string()};
+      if (!std::ranges::any_of(collection->extension,
+                               [&entry, &entry_path](const auto &extension) {
+                                 return extension.empty()
+                                            ? !entry.path().has_extension()
+                                            : entry_path.ends_with(extension);
+                               })) {
         continue;
       }
 

@@ -47,6 +47,12 @@
       "type": "string",
       "format": "email"
     },
+    "extension": {
+      "type": [ "string", "array" ],
+      "items": {
+        "type": "string"
+      }
+    },
     "github": {
       "type": "string"
     },

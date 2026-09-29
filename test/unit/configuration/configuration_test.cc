@@ -821,6 +821,136 @@ TEST(priority_helper_defaults_when_missing_or_wrong_type) {
   EXPECT_EQ(sourcemeta::one::Configuration::priority(collection), 50);
 }
 
+TEST(extension_accepts_an_array) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "parse_valid_extension_array.json"};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.path, configuration_path);
+
+  EXPECT_EQ(configuration.url, "http://localhost:8000");
+  EXPECT_TRUE(configuration.api);
+
+  EXPECT_TRUE(configuration.html.has_value());
+  EXPECT_EQ(configuration.html.value().name, "Title");
+  EXPECT_EQ(configuration.html.value().description, "Description");
+
+  EXPECT_EQ(configuration.entries.size(), 4);
+
+  EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
+  EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
+                    std::filesystem::path{SELF_DIRECTORY} / "v1" / "schemas");
+
+  EXPECT_COLLECTION(configuration, "example", title, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", description, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", email, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", github, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", website, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", absolute_path,
+                    std::filesystem::path{STUB_DIRECTORY} / "schemas" /
+                        "example" / "extension");
+  EXPECT_COLLECTION(configuration, "example", base,
+                    "https://example.com/schemas");
+  EXPECT_COLLECTION(configuration, "example", default_dialect, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", resolve.size(), 0);
+  EXPECT_COLLECTION(configuration, "example", extension.size(), 2);
+  EXPECT_COLLECTION(configuration, "example", extension.contains(".json"),
+                    true);
+  EXPECT_COLLECTION(configuration, "example", extension.contains(".yaml"),
+                    true);
+  EXPECT_COLLECTION(configuration, "example", lint.rules.size(), 0);
+  EXPECT_COLLECTION(configuration, "example", lint.exclude.size(), 0);
+  EXPECT_COLLECTION(configuration, "example", ignore.size(), 0);
+  EXPECT_COLLECTION(configuration, "example", extra.size(), 1);
+  EXPECT_COLLECTION(configuration, "example", extra.at("x-sourcemeta-one:path"),
+                    sourcemeta::core::JSON{configuration_path.string()});
+
+  EXPECT_PRIORITY(configuration, "self/v1/schemas", 0);
+  EXPECT_PRIORITY(configuration, "example", 50);
+}
+
+TEST(extension_accepts_a_single_string) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "parse_valid_extension_string.json"};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
+  const auto configuration{sourcemeta::one::Configuration::parse(
+      raw_configuration, configuration_path, configuration_path.parent_path())};
+
+  EXPECT_EQ(configuration.path, configuration_path);
+
+  EXPECT_EQ(configuration.url, "http://localhost:8000");
+  EXPECT_TRUE(configuration.api);
+
+  EXPECT_TRUE(configuration.html.has_value());
+  EXPECT_EQ(configuration.html.value().name, "Title");
+  EXPECT_EQ(configuration.html.value().description, "Description");
+
+  EXPECT_EQ(configuration.entries.size(), 4);
+
+  EXPECT_PAGE(configuration, "self", title, "Self");
+  EXPECT_PAGE(configuration, "self/v1", title, std::nullopt);
+  EXPECT_COLLECTION(configuration, "self/v1/schemas", absolute_path,
+                    std::filesystem::path{SELF_DIRECTORY} / "v1" / "schemas");
+
+  EXPECT_COLLECTION(configuration, "example", title, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", description, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", email, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", github, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", website, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", absolute_path,
+                    std::filesystem::path{STUB_DIRECTORY} / "schemas" /
+                        "example" / "extension");
+  EXPECT_COLLECTION(configuration, "example", base,
+                    "https://example.com/schemas");
+  EXPECT_COLLECTION(configuration, "example", default_dialect, std::nullopt);
+  EXPECT_COLLECTION(configuration, "example", resolve.size(), 0);
+  EXPECT_COLLECTION(configuration, "example", extension.size(), 1);
+  EXPECT_COLLECTION(configuration, "example", extension.contains(".yaml"),
+                    true);
+  EXPECT_COLLECTION(configuration, "example", lint.rules.size(), 0);
+  EXPECT_COLLECTION(configuration, "example", lint.exclude.size(), 0);
+  EXPECT_COLLECTION(configuration, "example", ignore.size(), 0);
+  EXPECT_COLLECTION(configuration, "example", extra.size(), 1);
+  EXPECT_COLLECTION(configuration, "example", extra.at("x-sourcemeta-one:path"),
+                    sourcemeta::core::JSON{configuration_path.string()});
+
+  EXPECT_PRIORITY(configuration, "self/v1/schemas", 0);
+  EXPECT_PRIORITY(configuration, "example", 50);
+}
+
+TEST(extension_rejects_a_value_that_is_not_a_string_or_an_array) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "parse_invalid_extension_type.json"};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, configuration_path,
+                                          configuration_path.parent_path());
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationValidationError &error) {
+    EXPECT_STREQ(error.what(), "Invalid configuration");
+  }
+}
+
+TEST(extension_rejects_an_entry_that_is_not_a_string) {
+  const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
+                                "parse_invalid_extension_item.json"};
+  const auto raw_configuration{
+      sourcemeta::one::Configuration::read(configuration_path, SELF_DIRECTORY)};
+  try {
+    sourcemeta::one::Configuration::parse(raw_configuration, configuration_path,
+                                          configuration_path.parent_path());
+    FAIL();
+  } catch (const sourcemeta::one::ConfigurationValidationError &error) {
+    EXPECT_STREQ(error.what(), "Invalid configuration");
+  }
+}
+
 TEST(lint_exclude_is_accepted) {
   const auto configuration_path{std::filesystem::path{STUB_DIRECTORY} /
                                 "parse_valid_lint_exclude.json"};
