@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790701056134,
+  "lastUpdate": 1790709659045,
   "repoUrl": "https://github.com/sourcemeta/one",
   "entries": {
     "Benchmark Index (community)": [
@@ -66043,6 +66043,125 @@ window.BENCHMARK_DATA = {
           {
             "name": "test/e2e/html: Schema Fetch (p99)",
             "value": 526,
+            "unit": "us"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jv@jviotti.com",
+            "name": "Juan Cruz Viotti",
+            "username": "jviotti"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e85241df20f0de76fa3a162ee00dae1e42bf70e4",
+          "message": "Match `resolve` keys in `jsonschema.json` the way the JSON Schema CLI does (#1293)\n\nSigned-off-by: Juan Cruz Viotti <jv@jviotti.com>",
+          "timestamp": "2026-09-29T16:08:30-03:00",
+          "tree_id": "570d8c2e4bb3401bdee18f851cdd0bd6938eaa6e",
+          "url": "https://github.com/sourcemeta/one/commit/e85241df20f0de76fa3a162ee00dae1e42bf70e4"
+        },
+        "date": 1790709654741,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Add one schema (0 existing)",
+            "value": 249,
+            "unit": "ms"
+          },
+          {
+            "name": "Add one schema (100 existing)",
+            "value": 38,
+            "unit": "ms"
+          },
+          {
+            "name": "Add one schema (1000 existing)",
+            "value": 99,
+            "unit": "ms"
+          },
+          {
+            "name": "Add one schema (10000 existing)",
+            "value": 708,
+            "unit": "ms"
+          },
+          {
+            "name": "Update one schema (1 existing)",
+            "value": 32,
+            "unit": "ms"
+          },
+          {
+            "name": "Update one schema (101 existing)",
+            "value": 43,
+            "unit": "ms"
+          },
+          {
+            "name": "Update one schema (1001 existing)",
+            "value": 96,
+            "unit": "ms"
+          },
+          {
+            "name": "Update one schema (10001 existing)",
+            "value": 735,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (1 existing)",
+            "value": 12,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (101 existing)",
+            "value": 13,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (1001 existing)",
+            "value": 38,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (10001 existing)",
+            "value": 291,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 100 schemas",
+            "value": 491,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 1000 schemas",
+            "value": 1425,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 10000 schemas",
+            "value": 12725,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 10000 schemas (custom meta-schema)",
+            "value": 15580,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 10000 schemas ($ref fan-out)",
+            "value": 15954,
+            "unit": "ms"
+          },
+          {
+            "name": "test/e2e/html: Schema Fetch (p50)",
+            "value": 399,
+            "unit": "us"
+          },
+          {
+            "name": "test/e2e/html: Schema Fetch (p99)",
+            "value": 481,
             "unit": "us"
           }
         ]
