@@ -18,10 +18,11 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$.score" == 0
-jsonpath "$.errors" count == 3
+jsonpath "$.errors" count == 2
+jsonpath "$.errors[0].name" == "top_level_title"
 jsonpath "$.errors[0].custom" == false
+jsonpath "$.errors[1].name" == "top_level_description"
 jsonpath "$.errors[1].custom" == false
-jsonpath "$.errors[2].custom" == false
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
