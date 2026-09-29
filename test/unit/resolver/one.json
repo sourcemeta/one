@@ -6,7 +6,9 @@
       "path": "./schemas/example",
       "defaultDialect": "http://json-schema.org/draft-07/schema#",
       "resolve": {
-        "https://other.com/2020-12-with-id": "/example/2020-12-with-id"
+        "https://other.com/2020-12-with-id": "/example/2020-12-with-id",
+        "https://other.com:443/needs-canonical-key": "/example/2020-12-with-id",
+        "https://other.com/needs-json-alternative": "/example/2020-12-with-id"
       }
     },
     "base-slash": {

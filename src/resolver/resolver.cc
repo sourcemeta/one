@@ -18,11 +18,54 @@
 #include <system_error>  // std::error_code
 #include <unordered_set> // std::unordered_set
 
+// The `.json` extension is not a URI concern, so this single alternative is
+// tried by hand, and always after the identifier itself
+static auto resolve_alternative(const std::string &identifier) -> std::string {
+  return identifier.ends_with(".json")
+             ? identifier.substr(0, identifier.size() - 5)
+             : identifier + ".json";
+}
+
+// Keys are stored canonicalised, so a reference spelled the way its key is
+// spelled matches without any further work, and the remaining spellings are
+// tried in turn
+static auto
+find_resolve_match(const sourcemeta::one::Configuration::Collection &collection,
+                   const std::string &identifier) {
+  auto match{collection.resolve.find(identifier)};
+  if (match != collection.resolve.cend()) {
+    return match;
+  }
+
+  match = collection.resolve.find(resolve_alternative(identifier));
+  if (match != collection.resolve.cend()) {
+    return match;
+  }
+
+  std::string canonical;
+  try {
+    canonical = sourcemeta::core::URI::canonicalize(identifier);
+  } catch (const sourcemeta::core::URIParseError &) {
+    return collection.resolve.cend();
+  }
+
+  if (canonical == identifier) {
+    return collection.resolve.cend();
+  }
+
+  match = collection.resolve.find(canonical);
+  if (match != collection.resolve.cend()) {
+    return match;
+  }
+
+  return collection.resolve.find(resolve_alternative(canonical));
+}
+
 static auto
 pre_resolve(const sourcemeta::one::Configuration::Collection &collection,
             const std::string_view uri, const sourcemeta::core::URI &server)
     -> std::optional<std::string> {
-  const auto match{collection.resolve.find(std::string{uri})};
+  const auto match{find_resolve_match(collection, std::string{uri})};
   if (match == collection.resolve.cend()) {
     return std::nullopt;
   }
@@ -127,7 +170,7 @@ normalise_ref(const sourcemeta::one::Configuration::Collection &collection,
   }
 
   // If we have a match in the configuration resolver, then trust that.
-  const auto match{collection.resolve.find(reference)};
+  const auto match{find_resolve_match(collection, reference)};
   if (match != collection.resolve.cend()) {
     sourcemeta::core::URI target{match->second};
     if (target.is_relative()) {

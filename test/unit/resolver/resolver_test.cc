@@ -410,6 +410,30 @@ TEST(example_2020_12_ref_needs_rebase) {
   })JSON");
 }
 
+TEST(example_2020_12_ref_noncanonical_key) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+  RESOLVER_ADD(resolver, "example", "2020-12-ref-noncanonical-key.json",
+               "https://example.com/schemas/2020-12-ref-noncanonical-key",
+               "http://localhost:8000/example/2020-12-ref-noncanonical-key",
+               R"JSON({
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "http://localhost:8000/example/2020-12-ref-noncanonical-key",
+    "$ref": "/example/2020-12-with-id"
+  })JSON");
+}
+
+TEST(example_2020_12_ref_json_alternative) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+  RESOLVER_ADD(resolver, "example", "2020-12-ref-json-alternative.json",
+               "https://example.com/schemas/2020-12-ref-json-alternative",
+               "http://localhost:8000/example/2020-12-ref-json-alternative",
+               R"JSON({
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "http://localhost:8000/example/2020-12-ref-json-alternative",
+    "$ref": "/example/2020-12-with-id"
+  })JSON");
+}
+
 TEST(example_2020_12_meta) {
   sourcemeta::one::Resolver resolver{shared_configuration().url};
   RESOLVER_ADD(resolver, "example", "2020-12-meta.json",
