@@ -8,12 +8,15 @@
 
 #include "template.h"
 
-#include <algorithm>   // std::ranges::sort, std::ranges::unique
-#include <cassert>     // assert
-#include <set>         // std::set
-#include <string_view> // std::string_view
-#include <utility>     // std::move
-#include <vector>      // std::vector
+#include <algorithm>     // std::ranges::sort, std::ranges::unique
+#include <cassert>       // assert
+#include <map>           // std::map
+#include <set>           // std::set
+#include <string>        // std::string
+#include <string_view>   // std::string_view
+#include <unordered_map> // std::unordered_map
+#include <utility>       // std::move
+#include <vector>        // std::vector
 
 namespace {
 
@@ -72,6 +75,41 @@ auto claims_from_json(const sourcemeta::core::JSON &input)
   return result;
 }
 
+// A reference is matched against these keys as the schema spells it, so a key
+// the author spelled differently to the same effect would never match
+auto canonical_resolve_key(const sourcemeta::core::JSON::String &key)
+    -> sourcemeta::core::JSON::String {
+  try {
+    return sourcemeta::core::URI::canonicalize(key);
+  } catch (const sourcemeta::core::URIParseError &) {
+    return key;
+  }
+}
+
+auto canonicalise_resolve_keys(sourcemeta::blaze::Configuration &collection)
+    -> void {
+  const std::map<std::string_view, std::string_view> sorted{
+      collection.resolve.cbegin(), collection.resolve.cend()};
+  std::unordered_map<sourcemeta::core::JSON::String,
+                     sourcemeta::core::JSON::String>
+      result;
+  result.reserve(sorted.size());
+  for (const auto &entry : sorted) {
+    auto canonical{
+        canonical_resolve_key(sourcemeta::core::JSON::String{entry.first})};
+    const auto was_canonical{canonical == entry.first};
+    const auto match{result.find(canonical)};
+    if (match == result.cend()) {
+      result.emplace(std::move(canonical),
+                     sourcemeta::core::JSON::String{entry.second});
+    } else if (was_canonical) {
+      match->second = sourcemeta::core::JSON::String{entry.second};
+    }
+  }
+
+  collection.resolve = std::move(result);
+}
+
 auto page_from_json(const sourcemeta::core::JSON &input)
     -> sourcemeta::one::Configuration::Page {
   sourcemeta::one::Configuration::Page result;
@@ -116,6 +154,7 @@ auto entries_from_json(T &result, const std::filesystem::path &location,
       // Filesystems behave differently with regards to casing. To unify
       // them, assume they are case-insensitive and just go for lowercase
       sourcemeta::core::to_lowercase(collection.base);
+      canonicalise_resolve_keys(collection);
       // This URI is guaranteed to be canonicalised by the collection parser
       assert(collection.base ==
              sourcemeta::core::URI::canonicalize(collection.base));
