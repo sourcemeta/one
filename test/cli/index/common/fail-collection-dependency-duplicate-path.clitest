@@ -1,0 +1,36 @@
+MAKE DIRECTORY schemas
+MAKE DIRECTORY vendor
+
+WRITE schemas/test.json UNTIL EOF
+{ "$schema": "https://json-schema.org/draft/2020-12/schema" }
+EOF
+
+WRITE vendor/shared.json UNTIL EOF
+{ "$schema": "https://json-schema.org/draft/2020-12/schema" }
+EOF
+
+WRITE one.json UNTIL EOF
+{
+  "url": "https://example.com",
+  "contents": {
+    "test": {
+      "path": "./schemas",
+      "dependencies": {
+        "https://example.com/a.json": "./vendor/shared.json",
+        "https://example.com/b.json": "./vendor/shared.json"
+      }
+    }
+  }
+}
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
+
+WRITE expected.txt UNTIL EOF
+2> error: Multiple dependencies cannot point to the same path
+2>   at instance location "/dependencies/https:~1~1example.com~1a.json"
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected.txt
