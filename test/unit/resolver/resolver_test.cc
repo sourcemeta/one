@@ -6,16 +6,17 @@
 #include <vector> // std::vector
 
 namespace {
+auto make_configuration() -> sourcemeta::one::Configuration {
+  auto result{sourcemeta::one::Configuration::parse(
+      sourcemeta::one::Configuration::read(CONFIGURATION_PATH, SELF_DIRECTORY),
+      std::filesystem::path{CONFIGURATION_PATH},
+      std::filesystem::path{CONFIGURATION_PATH}.parent_path())};
+  sourcemeta::one::rebase_resolve_targets(result);
+  return result;
+}
+
 auto shared_configuration() -> const sourcemeta::one::Configuration & {
-  static const auto CONFIGURATION{[]() {
-    auto result{sourcemeta::one::Configuration::parse(
-        sourcemeta::one::Configuration::read(CONFIGURATION_PATH,
-                                             SELF_DIRECTORY),
-        std::filesystem::path{CONFIGURATION_PATH},
-        std::filesystem::path{CONFIGURATION_PATH}.parent_path())};
-    sourcemeta::one::rebase_resolve_targets(result);
-    return result;
-  }()};
+  static const auto CONFIGURATION{make_configuration()};
   return CONFIGURATION;
 }
 } // namespace
