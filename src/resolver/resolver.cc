@@ -290,9 +290,10 @@ auto rebase_resolve_targets(Configuration &configuration) -> void {
     // Which configuration file declared this collection, so that a bad entry
     // points at the file the reader has to edit
     const auto *declared_in{collection->extra.try_at("x-sourcemeta-one:path")};
-    const auto from{declared_in == nullptr
-                        ? configuration.path
-                        : std::filesystem::path{declared_in->to_string()}};
+    const auto declared_path{
+        declared_in == nullptr
+            ? configuration.path
+            : std::filesystem::path{declared_in->to_string()}};
 
     std::unordered_map<sourcemeta::core::JSON::String,
                        sourcemeta::core::JSON::String>
@@ -308,7 +309,7 @@ auto rebase_resolve_targets(Configuration &configuration) -> void {
       const auto target{sourcemeta::core::weakly_canonical(
           collection->base_path / value.to_path())};
       if (!std::filesystem::is_regular_file(target)) {
-        throw ResolverUnknownTargetError(from, pair.first, target);
+        throw ResolverUnknownTargetError(declared_path, pair.first, target);
       }
 
       const Configuration::Collection *owner{nullptr};
@@ -320,7 +321,7 @@ auto rebase_resolve_targets(Configuration &configuration) -> void {
         }
 
         if (owner != nullptr) {
-          throw ResolverAmbiguousTargetError(from, pair.first, target);
+          throw ResolverAmbiguousTargetError(declared_path, pair.first, target);
         }
 
         owner = &candidate.second.get();
@@ -328,7 +329,7 @@ auto rebase_resolve_targets(Configuration &configuration) -> void {
       }
 
       if (owner == nullptr) {
-        throw ResolverUnmountedTargetError(from, pair.first, target);
+        throw ResolverUnmountedTargetError(declared_path, pair.first, target);
       }
 
       result.emplace(

@@ -29,9 +29,9 @@ WRITE expected.txt UNTIL EOF
 2> Writing output to: [CWD]/output
 2> Using configuration: [CWD]/one.json
 2> error: The resolve target is not part of any schema collection
-2>   from path [CWD]/one.json
 2>   at uri urn:example:outside
 2>   to path [CWD]/outside/custom.json
+2>   at path [CWD]/one.json
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt

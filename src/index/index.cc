@@ -850,19 +850,19 @@ auto main(int argc, char *argv[]) noexcept -> int {
                error.what(), sourcemeta::core::to_string(error.location()));
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ResolverUnknownTargetError &error) {
-    std::print(stderr, "error: {}\n  from path {}\n  at uri {}\n  to path {}\n",
-               error.what(), error.from().string(), error.uri(),
-               error.target().string());
+    std::print(stderr, "error: {}\n  at uri {}\n  to path {}\n  at path {}\n",
+               error.what(), error.uri(), error.target().string(),
+               error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ResolverUnmountedTargetError &error) {
-    std::print(stderr, "error: {}\n  from path {}\n  at uri {}\n  to path {}\n",
-               error.what(), error.from().string(), error.uri(),
-               error.target().string());
+    std::print(stderr, "error: {}\n  at uri {}\n  to path {}\n  at path {}\n",
+               error.what(), error.uri(), error.target().string(),
+               error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ResolverAmbiguousTargetError &error) {
-    std::print(stderr, "error: {}\n  from path {}\n  at uri {}\n  to path {}\n",
-               error.what(), error.from().string(), error.uri(),
-               error.target().string());
+    std::print(stderr, "error: {}\n  at uri {}\n  to path {}\n  at path {}\n",
+               error.what(), error.uri(), error.target().string(),
+               error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ConfigurationDuplicateAuthenticationNameError
                &error) {
