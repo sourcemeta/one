@@ -40,9 +40,9 @@ auto load_custom_lint_rules(
     try {
       custom_names.emplace(bundle.add<sourcemeta::blaze::SchemaRule>(
           rule_schema, sourcemeta::core::schema_walker,
-          [&callback, &resolver](
+          [&callback, &resolver, &configuration](
               const auto identifier) -> std::optional<sourcemeta::core::JSON> {
-            return resolver(identifier, callback);
+            return resolver(configuration, identifier, callback);
           },
           sourcemeta::blaze::default_schema_compiler, default_dialect,
           std::nullopt,

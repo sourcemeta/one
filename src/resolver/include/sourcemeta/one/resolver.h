@@ -40,6 +40,13 @@ public:
                   const Callback &callback = nullptr) const
       -> std::optional<sourcemeta::core::JSON>;
 
+  // The same, for an identifier written the way a schema of this collection
+  // writes it, so that whatever the collection routes elsewhere is honoured
+  auto operator()(const Configuration::Collection &collection,
+                  std::string_view identifier,
+                  const Callback &callback = nullptr) const
+      -> std::optional<sourcemeta::core::JSON>;
+
   auto cache_path(std::string_view uri, const std::filesystem::path &path)
       -> void;
 

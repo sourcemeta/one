@@ -1,0 +1,109 @@
+MAKE DIRECTORY data
+MAKE DIRECTORY data/schemas
+WRITE data/schemas/dialect.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$vocabulary": {
+    "https://json-schema.org/draft/2020-12/vocab/core": true,
+    "https://json-schema.org/draft/2020-12/vocab/validation": true
+  },
+  "$dynamicAnchor": "meta",
+  "$ref": "https://json-schema.org/draft/2020-12/schema"
+}
+EOF
+
+WRITE data/schemas/sample.json UNTIL EOF
+{
+  "$schema": "urn:example:dialect",
+  "title": "Sample",
+  "type": "string"
+}
+EOF
+WRITE data/jsonschema.json UNTIL EOF
+{
+  "path": "./schemas",
+  "resolve": { "urn:example:dialect": "./schemas/dialect.json" }
+}
+EOF
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": { "mounted": { "include": "./data" } }
+}
+EOF
+RUN one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+DROP LINES MATCHING '^[12]> \([ 0-9]+%\) ' IN log_1.txt
+DROP LINES CONTAINING $ONE_PREFIX IN log_1.txt
+REPLACE MATCHING ' \(#[0-9]+\)' WITH '' IN log_1.txt
+REPLACE $CWD WITH '[CWD]' IN log_1.txt
+REPLACE $EDITION WITH '[EDITION]' IN log_1.txt
+REPLACE $VERSION WITH '[VERSION]' IN log_1.txt
+SORT log_1.txt
+WRITE expected_log_1.txt UNTIL EOF
+2> Detecting: [CWD]/data/schemas/dialect.json
+2> Detecting: [CWD]/data/schemas/sample.json
+2> Sourcemeta One [EDITION] v[VERSION]
+2> Using configuration: [CWD]/one.json
+2> Writing output to: [CWD]/output
+EOF
+COMPARE log_1.txt AGAINST expected_log_1.txt
+
+TREE output INTO manifest.txt
+DROP LINES MATCHING '^\./schemas/self(/.*)?$' IN manifest.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN manifest.txt
+
+WRITE expected.txt UNTIL EOF
+./authentication.bin
+./configuration.json
+./explorer
+./explorer/public
+./explorer/public/%
+./explorer/public/%/directory.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/mounted
+./explorer/public/mounted/%
+./explorer/public/mounted/%/directory.metapack
+./explorer/public/mounted/dialect
+./explorer/public/mounted/dialect/%
+./explorer/public/mounted/dialect/%/dependents.metapack
+./explorer/public/mounted/dialect/%/schema.metapack
+./explorer/public/mounted/sample
+./explorer/public/mounted/sample/%
+./explorer/public/mounted/sample/%/dependents.metapack
+./explorer/public/mounted/sample/%/schema.metapack
+./routes.bin
+./schemas
+./schemas/mounted
+./schemas/mounted/dialect
+./schemas/mounted/dialect/%
+./schemas/mounted/dialect/%/blaze-exhaustive.metapack
+./schemas/mounted/dialect/%/blaze-fast.metapack
+./schemas/mounted/dialect/%/bundle.metapack
+./schemas/mounted/dialect/%/dependencies.metapack
+./schemas/mounted/dialect/%/editor.metapack
+./schemas/mounted/dialect/%/health.metapack
+./schemas/mounted/dialect/%/locations.metapack
+./schemas/mounted/dialect/%/positions.metapack
+./schemas/mounted/dialect/%/schema.metapack
+./schemas/mounted/dialect/%/stats.metapack
+./schemas/mounted/sample
+./schemas/mounted/sample/%
+./schemas/mounted/sample/%/blaze-exhaustive.metapack
+./schemas/mounted/sample/%/blaze-fast.metapack
+./schemas/mounted/sample/%/bundle.metapack
+./schemas/mounted/sample/%/dependencies.metapack
+./schemas/mounted/sample/%/editor.metapack
+./schemas/mounted/sample/%/health.metapack
+./schemas/mounted/sample/%/locations.metapack
+./schemas/mounted/sample/%/positions.metapack
+./schemas/mounted/sample/%/schema.metapack
+./schemas/mounted/sample/%/stats.metapack
+./state.bin
+./version.json
+EOF
+
+COMPARE manifest.txt AGAINST expected.txt
