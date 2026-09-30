@@ -379,6 +379,18 @@ auto rebase_resolve_targets(Configuration &configuration) -> void {
 Resolver::Resolver(const std::string_view url)
     : server_url_{url}, server_uri_{std::string{url}} {}
 
+auto Resolver::operator()(const Configuration::Collection &collection,
+                          const std::string_view identifier,
+                          const Callback &callback) const
+    -> std::optional<sourcemeta::core::JSON> {
+  const auto rewritten{pre_resolve(collection, identifier, this->server_uri_)};
+  if (rewritten.has_value()) {
+    return this->operator()(rewritten.value(), callback);
+  }
+
+  return this->operator()(identifier, callback);
+}
+
 auto Resolver::operator()(
     std::string_view raw_identifier,
     const std::function<void(const std::filesystem::path &)> &callback) const
@@ -650,12 +662,7 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
         collection, collection_relative_path, path, schema,
         [this, &collection](
             const auto subidentifier) -> std::optional<sourcemeta::core::JSON> {
-          const auto rewritten{
-              pre_resolve(collection, subidentifier, this->server_uri_)};
-          if (rewritten.has_value()) {
-            return this->operator()(*rewritten);
-          }
-          return this->operator()(subidentifier);
+          return this->operator()(collection, subidentifier);
         },
         this->server_uri_)};
     const auto &identifier{identity.current};
