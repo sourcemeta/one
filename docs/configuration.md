@@ -262,14 +262,12 @@ interprets such configuration files.
 
 The `resolve` property is an advanced feature to hook into the schema reference
 resolution process. When set, the object routes any reference that equals a
-property name in the object to the schema the corresponding value names.
-
-A value is a path to a schema file, relative to the configuration file that
+property name in the object to the schema the corresponding value names. A
+value is a path to a schema file, relative to the configuration file that
 declares it, exactly as in a [JSON Schema CLI
 configuration](https://github.com/sourcemeta/jsonschema/blob/main/docs/configuration.markdown).
 The file must be part of one of the schema collections of this instance, since
-that is what gives it a URI to route to. A value that is an absolute URI is left
-alone, which is how a reference is routed somewhere this instance does not serve.
+that is what gives it a URI to route to.
 
 This is useful when mounting two schema collections where one references the
 other through an absolute URL. For example, IPTC's [News in
@@ -297,16 +295,6 @@ resource outside your control:
   }
 }
 ```
-
-!!! warning "Changed in a previous release"
-
-    A relative value used to be resolved against the instance URL, so the
-    example above named `/geojson/GeoJSON.json`. It is now a path to a file, so
-    that a schema collection shipping its own manifest routes references the
-    same way whether it is consumed by this registry or by the command line
-    tool. Naming the file is also the more durable of the two, since remounting
-    a collection under a different name no longer invalidates it. A value that
-    names no file is rejected when the instance is generated.
 
 ### Linter
 
