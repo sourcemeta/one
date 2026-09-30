@@ -97,6 +97,161 @@ private:
   sourcemeta::core::JSON::String base_;
 };
 
+class ResolverUnknownTargetError : public std::exception {
+public:
+  ResolverUnknownTargetError(std::filesystem::path path,
+                             sourcemeta::core::JSON::String uri,
+                             std::filesystem::path target)
+      : path_{std::move(path)}, uri_{std::move(uri)},
+        target_{std::move(target)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "The resolve target does not exist";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto uri() const noexcept
+      -> const sourcemeta::core::JSON::String & {
+    return this->uri_;
+  }
+
+  [[nodiscard]] auto target() const noexcept -> const std::filesystem::path & {
+    return this->target_;
+  }
+
+private:
+  std::filesystem::path path_;
+  sourcemeta::core::JSON::String uri_;
+  std::filesystem::path target_;
+};
+
+class ResolverTargetNotAFileError : public std::exception {
+public:
+  ResolverTargetNotAFileError(std::filesystem::path path,
+                              sourcemeta::core::JSON::String uri,
+                              std::filesystem::path target)
+      : path_{std::move(path)}, uri_{std::move(uri)},
+        target_{std::move(target)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "The resolve target is not a file";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto uri() const noexcept
+      -> const sourcemeta::core::JSON::String & {
+    return this->uri_;
+  }
+
+  [[nodiscard]] auto target() const noexcept -> const std::filesystem::path & {
+    return this->target_;
+  }
+
+private:
+  std::filesystem::path path_;
+  sourcemeta::core::JSON::String uri_;
+  std::filesystem::path target_;
+};
+
+class ResolverTargetNotASchemaError : public std::exception {
+public:
+  ResolverTargetNotASchemaError(std::filesystem::path path,
+                                sourcemeta::core::JSON::String uri,
+                                std::filesystem::path target)
+      : path_{std::move(path)}, uri_{std::move(uri)},
+        target_{std::move(target)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "The resolve target is not a schema this registry can serve";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto uri() const noexcept
+      -> const sourcemeta::core::JSON::String & {
+    return this->uri_;
+  }
+
+  [[nodiscard]] auto target() const noexcept -> const std::filesystem::path & {
+    return this->target_;
+  }
+
+private:
+  std::filesystem::path path_;
+  sourcemeta::core::JSON::String uri_;
+  std::filesystem::path target_;
+};
+
+class ResolverUnmountedTargetError : public std::exception {
+public:
+  ResolverUnmountedTargetError(std::filesystem::path path,
+                               sourcemeta::core::JSON::String uri,
+                               std::filesystem::path target)
+      : path_{std::move(path)}, uri_{std::move(uri)},
+        target_{std::move(target)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "The resolve target is not served by any schema collection";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto uri() const noexcept
+      -> const sourcemeta::core::JSON::String & {
+    return this->uri_;
+  }
+
+  [[nodiscard]] auto target() const noexcept -> const std::filesystem::path & {
+    return this->target_;
+  }
+
+private:
+  std::filesystem::path path_;
+  sourcemeta::core::JSON::String uri_;
+  std::filesystem::path target_;
+};
+
+class ResolverAmbiguousTargetError : public std::exception {
+public:
+  ResolverAmbiguousTargetError(std::filesystem::path path,
+                               sourcemeta::core::JSON::String uri,
+                               std::filesystem::path target)
+      : path_{std::move(path)}, uri_{std::move(uri)},
+        target_{std::move(target)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "The resolve target is part of more than one schema collection";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto uri() const noexcept
+      -> const sourcemeta::core::JSON::String & {
+    return this->uri_;
+  }
+
+  [[nodiscard]] auto target() const noexcept -> const std::filesystem::path & {
+    return this->target_;
+  }
+
+private:
+  std::filesystem::path path_;
+  sourcemeta::core::JSON::String uri_;
+  std::filesystem::path target_;
+};
+
 } // namespace sourcemeta::one
 
 #endif

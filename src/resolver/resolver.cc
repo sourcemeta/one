@@ -28,10 +28,15 @@ static auto resolve_alternative(const std::string &identifier) -> std::string {
 
 // Keys are stored canonicalised, so a reference spelled the way its key is
 // spelled matches without any further work, and the remaining spellings are
-// tried in turn
+// tried in turn. Most collections declare no mapping at all, and every
+// reference of every schema comes through here, so that case does no work
 static auto
 find_resolve_match(const sourcemeta::one::Configuration::Collection &collection,
                    const std::string &identifier) {
+  if (collection.resolve.empty()) {
+    return collection.resolve.cend();
+  }
+
   auto match{collection.resolve.find(identifier)};
   if (match != collection.resolve.cend()) {
     return match;
@@ -65,6 +70,10 @@ static auto
 pre_resolve(const sourcemeta::one::Configuration::Collection &collection,
             const std::string_view uri, const sourcemeta::core::URI &server)
     -> std::optional<std::string> {
+  if (collection.resolve.empty()) {
+    return std::nullopt;
+  }
+
   const auto match{find_resolve_match(collection, std::string{uri})};
   if (match == collection.resolve.cend()) {
     return std::nullopt;
@@ -213,7 +222,159 @@ normalise_ref(const sourcemeta::one::Configuration::Collection &collection,
   schema.assign(keyword, sourcemeta::core::JSON{value.recompose()});
 }
 
+// What a schema calls itself, and what this instance serves it as. Both are
+// settled together because the second is derived from the first
+struct SchemaIdentity {
+  sourcemeta::core::JSON::String current;
+  sourcemeta::core::JSON::String served;
+};
+
+static auto
+schema_identity(const sourcemeta::one::Configuration::Collection &collection,
+                const std::filesystem::path &location,
+                const std::filesystem::path &path,
+                const sourcemeta::core::JSON &schema,
+                const sourcemeta::core::SchemaResolver &resolver,
+                const sourcemeta::core::URI &server) -> SchemaIdentity {
+  const auto default_identifier{
+      sourcemeta::core::URI{collection.base_uri}
+          .append_path(normalise_identifier(
+              std::filesystem::relative(path, collection.absolute_path)
+                  .string()))
+          .canonicalize()
+          .recompose()};
+  sourcemeta::core::URI identifier_uri{normalise_identifier(declared_identifier(
+      schema, resolver, collection.default_dialect.value_or(""),
+      default_identifier))};
+  identifier_uri.canonicalize();
+  auto identifier{identifier_uri.is_relative()
+                      ? sourcemeta::core::URI{collection.base_uri}
+                            .append_path(std::move(identifier_uri))
+                            .canonicalize()
+                            .recompose()
+                      : identifier_uri.recompose()};
+  // We have to do something if the schema is the base. Note that URI
+  // canonicalisation technically cannot remove trailing slashes as they might
+  // have meaning in certain use cases. But we still consider them equal in
+  // the context of the One
+  if (identifier == collection.base || identifier == collection.base + "/") {
+    identifier = default_identifier;
+  }
+  // A final check that everything went well
+  if (!identifier.starts_with(collection.base)) {
+    throw sourcemeta::one::ResolverOutsideBaseError(path, identifier,
+                                                    collection.base);
+  }
+  // Otherwise we have things like "../" that should not be there
+  assert(identifier.find("..") == std::string::npos);
+
+  auto served{rebase(collection, identifier, server, location)};
+  // Otherwise we have things like "../" that should not be there
+  assert(served.find("..") == std::string::npos);
+  return {.current = std::move(identifier), .served = std::move(served)};
+}
+
+// Whether a collection would take this file in when it walks its directory,
+// which is what decides that the registry serves it under a URI of its own
+static auto serves(const sourcemeta::one::Configuration::Collection &collection,
+                   const std::filesystem::path &path) -> bool {
+  if (!sourcemeta::core::is_under_path(path, collection.absolute_path)) {
+    return false;
+  }
+
+  if (std::ranges::any_of(collection.ignore, [&path](const auto &ignored) {
+        return sourcemeta::core::is_under_path(path, ignored);
+      })) {
+    return false;
+  }
+
+  const auto native{path.string()};
+  return std::ranges::any_of(
+      collection.extension, [&path, &native](const auto &extension) {
+        return extension.empty() ? !path.has_extension()
+                                 : native.ends_with(extension);
+      });
+}
+
 namespace sourcemeta::one {
+
+auto rebase_resolve_targets(Configuration &configuration) -> void {
+  const sourcemeta::core::URI server{configuration.url};
+  for (auto &entry : configuration.entries) {
+    auto *collection{std::get_if<Configuration::Collection>(&entry.second)};
+    if (collection == nullptr || collection->resolve.empty()) {
+      continue;
+    }
+
+    // Which configuration file declared this collection, so that a bad entry
+    // points at the file the reader has to edit
+    const auto *declared_in{collection->extra.try_at("x-sourcemeta-one:path")};
+    const auto declared_path{
+        declared_in == nullptr
+            ? configuration.path
+            : std::filesystem::path{declared_in->to_string()}};
+
+    std::unordered_map<sourcemeta::core::JSON::String,
+                       sourcemeta::core::JSON::String>
+        result;
+    result.reserve(collection->resolve.size());
+    for (const auto &pair : collection->resolve) {
+      const sourcemeta::core::URI value{pair.second};
+      if (!value.is_relative()) {
+        result.emplace(pair.first, pair.second);
+        continue;
+      }
+
+      const auto target{sourcemeta::core::weakly_canonical(
+          collection->base_path / value.to_path())};
+      if (!std::filesystem::exists(target)) {
+        throw ResolverUnknownTargetError(declared_path, pair.first, target);
+      }
+
+      if (!std::filesystem::is_regular_file(target)) {
+        throw ResolverTargetNotAFileError(declared_path, pair.first, target);
+      }
+
+      // Only a collection that would actually index the target can lend it a
+      // URI, so a collection that merely contains it does not count. Two
+      // collections may overlap on disk while only one of them takes the file
+      const Configuration::Collection *owner{nullptr};
+      const std::filesystem::path *owner_location{nullptr};
+      for (const auto &candidate : configuration.entries) {
+        const auto *other{
+            std::get_if<Configuration::Collection>(&candidate.second)};
+        if (other == nullptr || !serves(*other, target)) {
+          continue;
+        }
+
+        if (owner != nullptr) {
+          throw ResolverAmbiguousTargetError(declared_path, pair.first, target);
+        }
+
+        owner = other;
+        owner_location = &candidate.first;
+      }
+
+      if (owner == nullptr) {
+        throw ResolverUnmountedTargetError(declared_path, pair.first, target);
+      }
+
+      // A boolean schema is never served under an identity of its own, so
+      // neither of these can be routed to
+      auto contents{sourcemeta::core::read_yaml_or_json(target)};
+      if (!contents.is_object()) {
+        throw ResolverTargetNotASchemaError(declared_path, pair.first, target);
+      }
+
+      result.emplace(pair.first,
+                     schema_identity(*owner, *owner_location, target, contents,
+                                     sourcemeta::core::schema_resolver, server)
+                         .served);
+    }
+
+    collection->resolve = std::move(result);
+  }
+}
 
 Resolver::Resolver(const std::string_view url)
     : server_url_{url}, server_uri_{std::string{url}} {}
@@ -482,57 +643,23 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
         collection.default_dialect.value_or("")};
 
     /////////////////////////////////////////////////////////////////////////////
-    // (2) Try our best to determine the identifier of the schema, defaulting to
-    // a file-system-based identifier based on the *current* URI
+    // (2) and (3) Determine what the schema calls itself and what this instance
+    // serves it as
     /////////////////////////////////////////////////////////////////////////////
-    const auto default_identifier{
-        sourcemeta::core::URI{collection.base_uri}
-            .append_path(normalise_identifier(
-                std::filesystem::relative(path, collection.absolute_path)
-                    .string()))
-            .canonicalize()
-            .recompose()};
-    sourcemeta::core::URI identifier_uri{
-        normalise_identifier(declared_identifier(
-            schema,
-            [this, &collection](const auto subidentifier)
-                -> std::optional<sourcemeta::core::JSON> {
-              const auto rewritten{
-                  pre_resolve(collection, subidentifier, this->server_uri_)};
-              if (rewritten.has_value()) {
-                return this->operator()(*rewritten);
-              }
-              return this->operator()(subidentifier);
-            },
-            default_dialect_str, default_identifier))};
-    identifier_uri.canonicalize();
-    auto identifier{identifier_uri.is_relative()
-                        ? sourcemeta::core::URI{collection.base_uri}
-                              .append_path(std::move(identifier_uri))
-                              .canonicalize()
-                              .recompose()
-                        : identifier_uri.recompose()};
-    // We have to do something if the schema is the base. Note that URI
-    // canonicalisation technically cannot remove trailing slashes as they might
-    // have meaning in certain use cases. But we still consider them equal in
-    // the context of the One
-    if (identifier == collection.base || identifier == collection.base + "/") {
-      identifier = default_identifier;
-    }
-    // A final check that everything went well
-    if (!identifier.starts_with(collection.base)) {
-      throw ResolverOutsideBaseError(path, identifier, collection.base);
-    }
-    // Otherwise we have things like "../" that should not be there
-    assert(identifier.find("..") == std::string::npos);
-
-    /////////////////////////////////////////////////////////////////////////////
-    // (3) Determine the new URI of the schema, from the one base URI
-    /////////////////////////////////////////////////////////////////////////////
-    const auto new_identifier{rebase(collection, identifier, this->server_uri_,
-                                     collection_relative_path)};
-    // Otherwise we have things like "../" that should not be there
-    assert(new_identifier.find("..") == std::string::npos);
+    const auto identity{schema_identity(
+        collection, collection_relative_path, path, schema,
+        [this, &collection](
+            const auto subidentifier) -> std::optional<sourcemeta::core::JSON> {
+          const auto rewritten{
+              pre_resolve(collection, subidentifier, this->server_uri_)};
+          if (rewritten.has_value()) {
+            return this->operator()(*rewritten);
+          }
+          return this->operator()(subidentifier);
+        },
+        this->server_uri_)};
+    const auto &identifier{identity.current};
+    const auto &new_identifier{identity.served};
 
     /////////////////////////////////////////////////////////////////////////////
     // (4) Determine the dialect of the schema, which we also need to make sure

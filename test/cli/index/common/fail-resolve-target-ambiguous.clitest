@@ -1,11 +1,11 @@
 MAKE DIRECTORY schemas
-MAKE DIRECTORY vendor
+MAKE DIRECTORY other
 
-WRITE schemas/test.json UNTIL EOF
+WRITE schemas/target.json UNTIL EOF
 { "$schema": "https://json-schema.org/draft/2020-12/schema" }
 EOF
 
-WRITE vendor/shared.json UNTIL EOF
+WRITE other/sample.json UNTIL EOF
 { "$schema": "https://json-schema.org/draft/2020-12/schema" }
 EOF
 
@@ -13,11 +13,12 @@ WRITE one.json UNTIL EOF
 {
   "url": "https://example.com",
   "contents": {
-    "test": {
-      "path": "./schemas",
-      "dependencies": {
-        "https://example.com/a.json": "./vendor/shared.json",
-        "https://example.com/b.json": "./vendor/shared.json"
+    "first": { "path": "./schemas" },
+    "second": { "path": "./schemas" },
+    "example": {
+      "path": "./other",
+      "resolve": {
+        "urn:example:target": "./schemas/target.json"
       }
     }
   }
@@ -29,8 +30,10 @@ RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING
 WRITE expected.txt UNTIL EOF
 2> Writing output to: [CWD]/output
 2> Using configuration: [CWD]/one.json
-2> error: Multiple dependencies cannot point to the same path
-2>   at instance location "/dependencies/https:~1~1example.com~1a.json"
+2> error: The resolve target is part of more than one schema collection
+2>   at uri urn:example:target
+2>   to path [CWD]/schemas/target.json
+2>   at path [CWD]/one.json
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt

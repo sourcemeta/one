@@ -32,7 +32,7 @@ WRITE one.json UNTIL EOF
       "path": "./schemas",
       "resolve": {
         "urn:example:a": "urn:example:b",
-        "urn:example:b": "/meta/custom.json"
+        "urn:example:b": "./meta/custom.json"
       }
     }
   }

@@ -1,23 +1,21 @@
 MAKE DIRECTORY schemas
-MAKE DIRECTORY vendor
 
-WRITE schemas/test.json UNTIL EOF
+WRITE schemas/sample.json UNTIL EOF
 { "$schema": "https://json-schema.org/draft/2020-12/schema" }
 EOF
 
-WRITE vendor/shared.json UNTIL EOF
-{ "$schema": "https://json-schema.org/draft/2020-12/schema" }
+WRITE schemas/notes.json UNTIL EOF
+[ "not a schema" ]
 EOF
 
 WRITE one.json UNTIL EOF
 {
   "url": "https://example.com",
   "contents": {
-    "test": {
+    "example": {
       "path": "./schemas",
-      "dependencies": {
-        "https://example.com/a.json": "./vendor/shared.json",
-        "https://example.com/b.json": "./vendor/shared.json"
+      "resolve": {
+        "urn:example:target": "./schemas/notes.json"
       }
     }
   }
@@ -29,8 +27,10 @@ RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING
 WRITE expected.txt UNTIL EOF
 2> Writing output to: [CWD]/output
 2> Using configuration: [CWD]/one.json
-2> error: Multiple dependencies cannot point to the same path
-2>   at instance location "/dependencies/https:~1~1example.com~1a.json"
+2> error: The resolve target is not a schema this registry can serve
+2>   at uri urn:example:target
+2>   to path [CWD]/schemas/notes.json
+2>   at path [CWD]/one.json
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt

@@ -31,7 +31,7 @@ WRITE one.json UNTIL EOF
       "path": "./schemas",
       "defaultDialect": "urn:example:custom-meta",
       "resolve": {
-        "urn:example:custom-meta": "/meta/custom.json"
+        "urn:example:custom-meta": "./meta/custom.json"
       }
     }
   }

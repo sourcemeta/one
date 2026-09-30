@@ -22,7 +22,7 @@
           "path": "./schemas/test/folder",
           "defaultDialect": "http://json-schema.org/draft-07/schema#",
           "resolve": {
-            "https://other.com/single.json": "/test/bundling/single.json"
+            "https://other.com/single.json": "./schemas/test/bundling/single.json"
           }
         },
         "camelcase": {

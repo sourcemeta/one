@@ -173,7 +173,7 @@ contain the actual schema definitions that power your instance.
 | `/github`       | String  | No  | None | The GitHub organisation or `organisation/repository` identifier associated with the schema collection |
 | `/website`      | String  | No  | None | The absolute URL to the website associated with the schema collection |
 | `/include`     | String  | No  | None | A `jsonschema.json` manifest definition to include in-place. See the [Include](#include) section for more information. **If this property is set, none of the other properties can be set (including `path`)** |
-| `/resolve`      | Object  | No  | None | A URI-to-URI map to hook into the schema reference resolution process. See the [Resolve](#resolve) section for more information |
+| `/resolve`      | Object  | No  | None | A map from a reference to the schema that answers it, hooking into the schema reference resolution process. Each value is either a path to a schema file, relative to the configuration file that declares it, or an absolute URI. See the [Resolve](#resolve) section for more information |
 | `/lint`      | Object  | No  | None | Linting configuration for this schema collection. See the [JSON Schema CLI configuration](https://github.com/sourcemeta/jsonschema/blob/main/docs/configuration.markdown) for more information |
 | `/lint/rules` (**Enterprise**) | Array  | No  | None | An array of custom linting rule definitions, each one either a file path (relative to the configuration file location) or an object that declares the path along with the scope of the rule. See the [Linter](#linter) section for more information |
 | `/lint/rules/*/path` (**Enterprise**) | String  | Yes | N/A | The file path (relative to the configuration file location) to a custom linting rule definition |
@@ -261,8 +261,14 @@ interprets such configuration files.
 ### Resolve
 
 The `resolve` property is an advanced feature to hook into the schema reference
-resolution process. When set, the object translates any reference that equals a
-property name in the object to the corresponding property value.
+resolution process. When set, the object routes any reference that equals a
+property name in the object to the schema the corresponding value names. A
+value is either a path to a schema file, relative to the configuration file
+that declares it, exactly as in a [JSON Schema CLI
+configuration](https://github.com/sourcemeta/jsonschema/blob/main/docs/configuration.markdown),
+or an absolute URI, which is used as it stands. A file must be one that a
+schema collection of this instance serves, since that is what gives it a URI to
+route to.
 
 This is useful when mounting two schema collections where one references the
 other through an absolute URL. For example, IPTC's [News in
@@ -272,7 +278,7 @@ the [GeoJSON](https://geojson.org) schemas, you can use `resolve` to route
 those external references back into your instance instead of depending on a
 resource outside your control:
 
-```json hl_lines="8" title="one.json"
+```json hl_lines="12" title="one.json"
 {
   "url": "https://schemas.example.com",
   "contents": {
@@ -284,7 +290,7 @@ resource outside your control:
       "baseUri": "http://www.iptc.org/std/ninjs",
       "path": "./vendor/ninjs",
       "resolve": {
-        "https://geojson.org/schema/GeoJSON.json": "/geojson/GeoJSON.json"
+        "https://geojson.org/schema/GeoJSON.json": "./vendor/geojson/GeoJSON.json"
       }
     }
   }

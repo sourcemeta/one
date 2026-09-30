@@ -1,5 +1,6 @@
 MAKE DIRECTORY meta
-MAKE DIRECTORY schemas
+MAKE DIRECTORY data
+MAKE DIRECTORY data/schemas
 
 WRITE meta/custom.json UNTIL EOF
 {
@@ -13,10 +14,19 @@ WRITE meta/custom.json UNTIL EOF
 }
 EOF
 
-WRITE schemas/sample.json UNTIL EOF
+WRITE data/schemas/sample.json UNTIL EOF
 {
   "$schema": "urn:example:custom-meta",
   "type": "string"
+}
+EOF
+
+WRITE data/jsonschema.json UNTIL EOF
+{
+  "path": "./schemas",
+  "resolve": {
+    "urn:example:custom-meta": "../meta/custom.json"
+  }
 }
 EOF
 
@@ -29,10 +39,7 @@ WRITE one.json UNTIL EOF
       "path": "./meta"
     },
     "example": {
-      "path": "./schemas",
-      "resolve": {
-        "urn:example:custom-meta": "../meta/custom.json"
-      }
+      "include": "./data"
     }
   }
 }
@@ -46,8 +53,8 @@ REPLACE $EDITION WITH '[EDITION]' IN log_1.txt
 REPLACE $VERSION WITH '[VERSION]' IN log_1.txt
 SORT log_1.txt
 WRITE expected_log_1.txt UNTIL EOF
+2> Detecting: [CWD]/data/schemas/sample.json
 2> Detecting: [CWD]/meta/custom.json
-2> Detecting: [CWD]/schemas/sample.json
 2> Sourcemeta One [EDITION] v[VERSION]
 2> Using configuration: [CWD]/one.json
 2> Writing output to: [CWD]/output

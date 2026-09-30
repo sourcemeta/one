@@ -6,13 +6,17 @@
 #include <vector> // std::vector
 
 namespace {
+auto make_configuration() -> sourcemeta::one::Configuration {
+  auto result{sourcemeta::one::Configuration::parse(
+      sourcemeta::one::Configuration::read(CONFIGURATION_PATH, SELF_DIRECTORY),
+      std::filesystem::path{CONFIGURATION_PATH},
+      std::filesystem::path{CONFIGURATION_PATH}.parent_path())};
+  sourcemeta::one::rebase_resolve_targets(result);
+  return result;
+}
+
 auto shared_configuration() -> const sourcemeta::one::Configuration & {
-  static const sourcemeta::one::Configuration CONFIGURATION{
-      sourcemeta::one::Configuration::parse(
-          sourcemeta::one::Configuration::read(CONFIGURATION_PATH,
-                                               SELF_DIRECTORY),
-          std::filesystem::path{CONFIGURATION_PATH},
-          std::filesystem::path{CONFIGURATION_PATH}.parent_path())};
+  static const auto CONFIGURATION{make_configuration()};
   return CONFIGURATION;
 }
 } // namespace
@@ -679,26 +683,6 @@ TEST(path_url_anonymous) {
                   R"JSON({
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "http://localhost:8000/v1/catalog/example/2020-12-anonymous"
-  })JSON");
-}
-
-TEST(path_url_ref_needs_rebase) {
-  sourcemeta::one::Resolver resolver{"http://localhost:8000/v1/catalog"};
-  RESOLVER_IMPORT(resolver, "example", "2020-12-with-id.json");
-  const auto result{
-      RESOLVER_IMPORT(resolver, "example", "2020-12-ref-needs-rebase.json")};
-  EXPECT_EQ(result.second.get().original_identifier,
-            "https://example.com/schemas/2020-12-ref-needs-rebase");
-  EXPECT_EQ(
-      result.first.get(),
-      "http://localhost:8000/v1/catalog/example/2020-12-ref-needs-rebase");
-  RESOLVER_EXPECT(
-      resolver,
-      "http://localhost:8000/v1/catalog/example/2020-12-ref-needs-rebase",
-      R"JSON({
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "http://localhost:8000/v1/catalog/example/2020-12-ref-needs-rebase",
-    "$ref": "/v1/catalog/example/2020-12-with-id"
   })JSON");
 }
 

@@ -391,6 +391,10 @@ static auto index_main(const std::string_view &program,
     return EXIT_FAILURE;
   }
 
+  // Resolving a single URI reads the collection a schema lives in, and never
+  // the mappings, so this stays out of the way of that lookup
+  sourcemeta::one::rebase_resolve_targets(configuration);
+
   /////////////////////////////////////////////////////////////////////////////
   // (4) Prepare the output directory and load previous state
   /////////////////////////////////////////////////////////////////////////////
@@ -847,6 +851,31 @@ auto main(int argc, char *argv[]) noexcept -> int {
   } catch (const sourcemeta::blaze::ConfigurationParseError &error) {
     std::print(stderr, "error: {}\n  at instance location \"{}\"\n",
                error.what(), sourcemeta::core::to_string(error.location()));
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::one::ResolverUnknownTargetError &error) {
+    std::print(stderr, "error: {}\n  at uri {}\n  to path {}\n  at path {}\n",
+               error.what(), error.uri(), error.target().string(),
+               error.path().string());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::one::ResolverTargetNotASchemaError &error) {
+    std::print(stderr, "error: {}\n  at uri {}\n  to path {}\n  at path {}\n",
+               error.what(), error.uri(), error.target().string(),
+               error.path().string());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::one::ResolverTargetNotAFileError &error) {
+    std::print(stderr, "error: {}\n  at uri {}\n  to path {}\n  at path {}\n",
+               error.what(), error.uri(), error.target().string(),
+               error.path().string());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::one::ResolverUnmountedTargetError &error) {
+    std::print(stderr, "error: {}\n  at uri {}\n  to path {}\n  at path {}\n",
+               error.what(), error.uri(), error.target().string(),
+               error.path().string());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::one::ResolverAmbiguousTargetError &error) {
+    std::print(stderr, "error: {}\n  at uri {}\n  to path {}\n  at path {}\n",
+               error.what(), error.uri(), error.target().string(),
+               error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ConfigurationDuplicateAuthenticationNameError
                &error) {
