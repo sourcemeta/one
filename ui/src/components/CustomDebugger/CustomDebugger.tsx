@@ -3,7 +3,7 @@ import Editor, { type Monaco } from "@monaco-editor/react";
 import type { editor as MonacoEditor } from "monaco-editor";
 import { AppContext } from "../../contexts/AppContext";
 import { traceCustomSchema } from "../../api/one";
-import { defineMonacoTheme, ONE_UI_EDITOR_FONT_OPTIONS, ONE_UI_MONACO_THEME } from "../../utils/monacoTheme";
+import { defineMonacoTheme, monacoThemeName, ONE_UI_EDITOR_FONT_OPTIONS } from "../../utils/monacoTheme";
 import { attachSchemaKeywordLinks } from "../../utils/learnJsonSchemaLinks";
 import { computePropertyClaims } from "../../utils/propertyClaims";
 import { applyPropertyClaimDecorations } from "../../utils/propertyClaimDecorations";
@@ -103,25 +103,14 @@ const shortResourceLabel = (resource: string): string => {
 };
 
 const CustomDebugger = ({ onClose }: { onClose: () => void }) => {
-  const { customDebuggerSeed, consumeCustomDebuggerSeed } = useContext(AppContext);
+  const { theme } = useContext(AppContext);
 
   const [apiUrl, setApiUrl] = useState(
     () => localStorage.getItem(API_URL_KEY) ?? DEFAULT_API_URL
   );
 
-  const [schemaText, setSchemaText] = useState(
-    () => customDebuggerSeed?.schema ?? DEFAULT_SCHEMA
-  );
-  const [instanceText, setInstanceText] = useState(
-    () => customDebuggerSeed?.instance ?? DEFAULT_INSTANCE
-  );
-
-  // Consume once on mount so a later, unrelated open of the Custom Debugger
-  // (e.g. via the header button) doesn't reuse a stale seed.
-  useEffect(() => {
-    if (customDebuggerSeed) consumeCustomDebuggerSeed();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const [schemaText, setSchemaText] = useState(DEFAULT_SCHEMA);
+  const [instanceText, setInstanceText] = useState(DEFAULT_INSTANCE);
   const [traceResult, setTraceResult] = useState<TraceResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -384,7 +373,7 @@ const CustomDebugger = ({ onClose }: { onClose: () => void }) => {
             onChange={(e) => handleApiUrlChange(e.target.value)}
             placeholder={DEFAULT_API_URL}
             title="Sourcemeta One instance to send the schema + instance to for tracing"
-            className="h-8 w-56 px-2 text-xs rounded-[var(--radius-sm)] border border-[var(--border-strong)] bg-[var(--bg-inset)] text-[var(--text)] font-mono focus:outline-none focus:border-[var(--accent)]"
+            className="h-8 w-56 px-2 text-xs rounded-[var(--radius-sm)] border border-[var(--border-strong)] bg-[var(--bg-inset)] text-[var(--text)] focus:outline-none focus:border-[var(--accent)]"
           />
           <button
             onClick={runTrace}
@@ -395,7 +384,7 @@ const CustomDebugger = ({ onClose }: { onClose: () => void }) => {
           </button>
           {traceResult && (
             <span
-              className={`text-xs font-mono px-2 py-1 rounded-full border ${
+              className={`text-xs px-2 py-1 rounded-full border ${
                 traceResult.valid
                   ? "border-[var(--success)]/40 text-[var(--success)]"
                   : "border-[var(--danger)]/40 text-[var(--danger)]"
@@ -462,7 +451,7 @@ const CustomDebugger = ({ onClose }: { onClose: () => void }) => {
             ))}
             <span className="ml-auto px-2 flex items-center gap-2 min-w-0">
               {currentStep && (
-                <span className="text-xs text-[var(--accent)] font-mono truncate">
+                <span className="text-xs text-[var(--accent)] truncate">
                   {currentStep.keywordLocation || "#"}
                 </span>
               )}
@@ -477,7 +466,7 @@ const CustomDebugger = ({ onClose }: { onClose: () => void }) => {
             <Editor
               key={activeSchemaTab === "local" ? "local" : "ref"}
               language="json"
-              theme={ONE_UI_MONACO_THEME}
+              theme={monacoThemeName(theme)}
               beforeMount={beforeMount}
               value={
                 activeSchemaTab === "local"
@@ -510,7 +499,7 @@ const CustomDebugger = ({ onClose }: { onClose: () => void }) => {
           <div className="px-3 py-1.5 text-xs text-[var(--text-secondary)] border-b border-[var(--border)] truncate">
             Instance (editable)
             {currentStep && (
-              <span className="ml-2 text-[var(--accent)] font-mono">
+              <span className="ml-2 text-[var(--accent)]">
                 {currentStep.instanceLocation || "/"}
               </span>
             )}
@@ -518,7 +507,7 @@ const CustomDebugger = ({ onClose }: { onClose: () => void }) => {
           <div className="flex-1 min-h-0">
             <Editor
               language="json"
-              theme={ONE_UI_MONACO_THEME}
+              theme={monacoThemeName(theme)}
               beforeMount={beforeMount}
               value={instanceText}
               onChange={(value) => setInstanceText(value ?? "")}
@@ -624,7 +613,7 @@ const CustomDebugger = ({ onClose }: { onClose: () => void }) => {
               <div className="min-w-0">
                 <div className="text-sm font-medium">
                   {humanize(currentStep.name)}{" "}
-                  <span className="text-[var(--text-secondary)] font-mono text-xs">
+                  <span className="text-[var(--text-secondary)] text-xs">
                     {currentStep.evaluatePath || "/"}
                   </span>
                 </div>
@@ -671,7 +660,7 @@ const CustomDebugger = ({ onClose }: { onClose: () => void }) => {
               onChange={(e) => setStepIndex(Number(e.target.value))}
               className="flex-1 accent-[var(--accent)]"
             />
-            <span className="text-xs font-mono text-[var(--text-secondary)] w-16 text-right">
+            <span className="text-xs text-[var(--text-secondary)] w-16 text-right">
               {stepIndex + 1} / {steps.length}
             </span>
           </div>

@@ -9,6 +9,18 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>one-ui - Sourcemeta One Playground</title>
+    <script>
+      // Applied before first paint so a light-mode visitor never sees a
+      // flash of the dark theme while React boots.
+      (function () {
+        try {
+          var stored = localStorage.getItem("one-ui:theme");
+          if (stored === "light" || stored === "dark") {
+            document.documentElement.dataset.theme = stored;
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

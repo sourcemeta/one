@@ -12,7 +12,7 @@ const HealthBar = ({ health }: { health: number }) => (
         style={{ width: `${health}%`, background: colorFor(health) }}
       />
     </div>
-    <span className="text-xs font-mono text-[var(--text-secondary)] w-9 text-right">
+    <span className="text-xs text-[var(--text-secondary)] w-9 text-right">
       {health}%
     </span>
   </div>

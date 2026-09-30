@@ -5,6 +5,7 @@ import type {
   HealthReport,
   SchemaLocations,
   SchemaMetadata,
+  SchemaPositions,
   SchemaStats,
   TraceResult,
 } from "../types/one";
@@ -12,10 +13,14 @@ import type {
 export type ResultMode = "evaluate" | "trace" | "rdf";
 export type EditorTab = "schema" | "instance";
 export type DetailTab = "dependencies" | "dependents" | "lint" | "stats" | "locations";
+export type ThemeMode = "light" | "dark";
 
 type AppContextType = {
   registryUrl: string;
   registryHealthy: boolean | null;
+
+  theme: ThemeMode;
+  toggleTheme: () => void;
 
   selectedSchemaPath: string | null;
   setSelectedSchemaPath: (path: string | null) => void;
@@ -41,6 +46,10 @@ type AppContextType = {
   healthReport: HealthReport | null;
   schemaStats: SchemaStats | null;
   schemaLocations: SchemaLocations | null;
+  // Maps a schema's own JSON pointers to their line/column range, so a lint
+  // finding, dependency origin, or location entry can be resolved to a spot
+  // in the (read-only) schema editor when clicked.
+  schemaPositions: SchemaPositions | null;
   detailLoading: boolean;
 
   resultMode: ResultMode | null;
@@ -57,14 +66,6 @@ type AppContextType = {
   debuggerOpen: boolean;
   openDebugger: () => void;
   closeDebugger: () => void;
-
-  // Lets InstanceEditor hand an edited (unsaved) schema + instance off to
-  // the Custom Debugger, which is the only place able to trace a schema
-  // that isn't the one actually stored on the registry (the registry's
-  // own /schemas/trace endpoint always uses the stored version by path).
-  customDebuggerSeed: { schema: string; instance: string } | null;
-  openCustomDebuggerWithSchema: (schema: string, instance: string) => void;
-  consumeCustomDebuggerSeed: () => void;
 };
 
 export const AppContext = createContext<AppContextType>(
