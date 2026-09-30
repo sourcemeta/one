@@ -25,9 +25,10 @@ WRITE one.json UNTIL EOF
 EOF
 
 RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
-DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
 
 WRITE expected.txt UNTIL EOF
+2> Writing output to: [CWD]/output
+2> Using configuration: [CWD]/one.json
 2> error: Multiple dependencies cannot point to the same path
 2>   at instance location "/dependencies/https:~1~1example.com~1a.json"
 EOF

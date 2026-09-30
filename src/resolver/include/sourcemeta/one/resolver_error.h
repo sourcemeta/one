@@ -99,12 +99,18 @@ private:
 
 class ResolverUnknownTargetError : public std::exception {
 public:
-  ResolverUnknownTargetError(sourcemeta::core::JSON::String uri,
+  ResolverUnknownTargetError(std::filesystem::path from,
+                             sourcemeta::core::JSON::String uri,
                              std::filesystem::path target)
-      : uri_{std::move(uri)}, target_{std::move(target)} {}
+      : from_{std::move(from)}, uri_{std::move(uri)},
+        target_{std::move(target)} {}
 
   [[nodiscard]] auto what() const noexcept -> const char * override {
     return "The resolve target does not exist";
+  }
+
+  [[nodiscard]] auto from() const noexcept -> const std::filesystem::path & {
+    return this->from_;
   }
 
   [[nodiscard]] auto uri() const noexcept
@@ -117,18 +123,25 @@ public:
   }
 
 private:
+  std::filesystem::path from_;
   sourcemeta::core::JSON::String uri_;
   std::filesystem::path target_;
 };
 
 class ResolverUnmountedTargetError : public std::exception {
 public:
-  ResolverUnmountedTargetError(sourcemeta::core::JSON::String uri,
+  ResolverUnmountedTargetError(std::filesystem::path from,
+                               sourcemeta::core::JSON::String uri,
                                std::filesystem::path target)
-      : uri_{std::move(uri)}, target_{std::move(target)} {}
+      : from_{std::move(from)}, uri_{std::move(uri)},
+        target_{std::move(target)} {}
 
   [[nodiscard]] auto what() const noexcept -> const char * override {
     return "The resolve target is not part of any schema collection";
+  }
+
+  [[nodiscard]] auto from() const noexcept -> const std::filesystem::path & {
+    return this->from_;
   }
 
   [[nodiscard]] auto uri() const noexcept
@@ -141,18 +154,25 @@ public:
   }
 
 private:
+  std::filesystem::path from_;
   sourcemeta::core::JSON::String uri_;
   std::filesystem::path target_;
 };
 
 class ResolverAmbiguousTargetError : public std::exception {
 public:
-  ResolverAmbiguousTargetError(sourcemeta::core::JSON::String uri,
+  ResolverAmbiguousTargetError(std::filesystem::path from,
+                               sourcemeta::core::JSON::String uri,
                                std::filesystem::path target)
-      : uri_{std::move(uri)}, target_{std::move(target)} {}
+      : from_{std::move(from)}, uri_{std::move(uri)},
+        target_{std::move(target)} {}
 
   [[nodiscard]] auto what() const noexcept -> const char * override {
     return "The resolve target is part of more than one schema collection";
+  }
+
+  [[nodiscard]] auto from() const noexcept -> const std::filesystem::path & {
+    return this->from_;
   }
 
   [[nodiscard]] auto uri() const noexcept
@@ -165,6 +185,7 @@ public:
   }
 
 private:
+  std::filesystem::path from_;
   sourcemeta::core::JSON::String uri_;
   std::filesystem::path target_;
 };

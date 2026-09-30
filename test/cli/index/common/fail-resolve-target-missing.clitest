@@ -19,12 +19,14 @@ WRITE one.json UNTIL EOF
 EOF
 
 RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
-DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
 
 WRITE expected.txt UNTIL EOF
+2> Writing output to: [CWD]/output
+2> Using configuration: [CWD]/one.json
 2> error: The resolve target does not exist
+2>   from path [CWD]/one.json
 2>   at uri urn:example:missing
-2>   at path [CWD]/meta/nowhere.json
+2>   to path [CWD]/meta/nowhere.json
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt
