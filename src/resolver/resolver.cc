@@ -308,8 +308,12 @@ auto rebase_resolve_targets(Configuration &configuration) -> void {
 
       const auto target{sourcemeta::core::weakly_canonical(
           collection->base_path / value.to_path())};
-      if (!std::filesystem::is_regular_file(target)) {
+      if (!std::filesystem::exists(target)) {
         throw ResolverUnknownTargetError(declared_path, pair.first, target);
+      }
+
+      if (!std::filesystem::is_regular_file(target)) {
+        throw ResolverTargetNotAFileError(declared_path, pair.first, target);
       }
 
       const Configuration::Collection *owner{nullptr};
@@ -328,16 +332,28 @@ auto rebase_resolve_targets(Configuration &configuration) -> void {
         owner_location = &candidate.first;
       }
 
-      if (owner == nullptr) {
+      // A target the collection ignores is never indexed, so there is no URI
+      // to route the reference to
+      if (owner == nullptr ||
+          std::ranges::any_of(owner->ignore, [&target](const auto &ignored) {
+            return sourcemeta::core::is_under_path(target, ignored);
+          })) {
         throw ResolverUnmountedTargetError(declared_path, pair.first, target);
       }
 
-      result.emplace(
-          pair.first,
-          schema_identity(*owner, *owner_location, target,
-                          sourcemeta::core::read_yaml_or_json(target),
-                          sourcemeta::core::schema_resolver, server)
-              .served);
+      auto contents{sourcemeta::core::read_yaml_or_json(target)};
+      if (contents.is_boolean()) {
+        throw ResolverBooleanSchemaError(target);
+      }
+
+      if (!contents.is_object()) {
+        throw ResolverNotASchemaError(target);
+      }
+
+      result.emplace(pair.first,
+                     schema_identity(*owner, *owner_location, target, contents,
+                                     sourcemeta::core::schema_resolver, server)
+                         .served);
     }
 
     collection->resolve = std::move(result);

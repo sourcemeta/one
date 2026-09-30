@@ -1,11 +1,11 @@
 MAKE DIRECTORY schemas
-MAKE DIRECTORY outside
+MAKE DIRECTORY other
 
-WRITE schemas/sample.json UNTIL EOF
+WRITE schemas/target.json UNTIL EOF
 { "$schema": "https://json-schema.org/draft/2020-12/schema" }
 EOF
 
-WRITE outside/custom.json UNTIL EOF
+WRITE other/sample.json UNTIL EOF
 { "$schema": "https://json-schema.org/draft/2020-12/schema" }
 EOF
 
@@ -13,10 +13,12 @@ WRITE one.json UNTIL EOF
 {
   "url": "https://example.com",
   "contents": {
+    "first": { "path": "./schemas" },
+    "second": { "path": "./schemas" },
     "example": {
-      "path": "./schemas",
+      "path": "./other",
       "resolve": {
-        "urn:example:outside": "./outside/custom.json"
+        "urn:example:target": "./schemas/target.json"
       }
     }
   }
@@ -28,9 +30,9 @@ RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING
 WRITE expected.txt UNTIL EOF
 2> Writing output to: [CWD]/output
 2> Using configuration: [CWD]/one.json
-2> error: The resolve target is not served by any schema collection
-2>   at uri urn:example:outside
-2>   to path [CWD]/outside/custom.json
+2> error: The resolve target is part of more than one schema collection
+2>   at uri urn:example:target
+2>   to path [CWD]/schemas/target.json
 2>   at path [CWD]/one.json
 EOF
 

@@ -1,11 +1,10 @@
 MAKE DIRECTORY schemas
-MAKE DIRECTORY outside
 
 WRITE schemas/sample.json UNTIL EOF
 { "$schema": "https://json-schema.org/draft/2020-12/schema" }
 EOF
 
-WRITE outside/custom.json UNTIL EOF
+WRITE schemas/hidden.json UNTIL EOF
 { "$schema": "https://json-schema.org/draft/2020-12/schema" }
 EOF
 
@@ -15,8 +14,9 @@ WRITE one.json UNTIL EOF
   "contents": {
     "example": {
       "path": "./schemas",
+      "ignore": [ "./schemas/hidden.json" ],
       "resolve": {
-        "urn:example:outside": "./outside/custom.json"
+        "urn:example:target": "./schemas/hidden.json"
       }
     }
   }
@@ -29,8 +29,8 @@ WRITE expected.txt UNTIL EOF
 2> Writing output to: [CWD]/output
 2> Using configuration: [CWD]/one.json
 2> error: The resolve target is not served by any schema collection
-2>   at uri urn:example:outside
-2>   to path [CWD]/outside/custom.json
+2>   at uri urn:example:target
+2>   to path [CWD]/schemas/hidden.json
 2>   at path [CWD]/one.json
 EOF
 
