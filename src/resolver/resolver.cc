@@ -28,10 +28,15 @@ static auto resolve_alternative(const std::string &identifier) -> std::string {
 
 // Keys are stored canonicalised, so a reference spelled the way its key is
 // spelled matches without any further work, and the remaining spellings are
-// tried in turn
+// tried in turn. Most collections declare no mapping at all, and every
+// reference of every schema comes through here, so that case does no work
 static auto
 find_resolve_match(const sourcemeta::one::Configuration::Collection &collection,
                    const std::string &identifier) {
+  if (collection.resolve.empty()) {
+    return collection.resolve.cend();
+  }
+
   auto match{collection.resolve.find(identifier)};
   if (match != collection.resolve.cend()) {
     return match;
@@ -65,6 +70,10 @@ static auto
 pre_resolve(const sourcemeta::one::Configuration::Collection &collection,
             const std::string_view uri, const sourcemeta::core::URI &server)
     -> std::optional<std::string> {
+  if (collection.resolve.empty()) {
+    return std::nullopt;
+  }
+
   const auto match{find_resolve_match(collection, std::string{uri})};
   if (match == collection.resolve.cend()) {
     return std::nullopt;
@@ -265,22 +274,32 @@ schema_identity(const sourcemeta::one::Configuration::Collection &collection,
   return {.current = std::move(identifier), .served = std::move(served)};
 }
 
+// Whether a collection would take this file in when it walks its directory,
+// which is what decides that the registry serves it under a URI of its own
+static auto serves(const sourcemeta::one::Configuration::Collection &collection,
+                   const std::filesystem::path &path) -> bool {
+  if (!sourcemeta::core::is_under_path(path, collection.absolute_path)) {
+    return false;
+  }
+
+  if (std::ranges::any_of(collection.ignore, [&path](const auto &ignored) {
+        return sourcemeta::core::is_under_path(path, ignored);
+      })) {
+    return false;
+  }
+
+  const auto native{path.string()};
+  return std::ranges::any_of(
+      collection.extension, [&path, &native](const auto &extension) {
+        return extension.empty() ? !path.has_extension()
+                                 : native.ends_with(extension);
+      });
+}
+
 namespace sourcemeta::one {
 
 auto rebase_resolve_targets(Configuration &configuration) -> void {
   const sourcemeta::core::URI server{configuration.url};
-  std::vector<
-      std::pair<std::filesystem::path,
-                std::reference_wrapper<const Configuration::Collection>>>
-      collections;
-  for (const auto &entry : configuration.entries) {
-    const auto *collection{
-        std::get_if<Configuration::Collection>(&entry.second)};
-    if (collection != nullptr) {
-      collections.emplace_back(entry.first, std::cref(*collection));
-    }
-  }
-
   for (auto &entry : configuration.entries) {
     auto *collection{std::get_if<Configuration::Collection>(&entry.second)};
     if (collection == nullptr || collection->resolve.empty()) {
@@ -316,11 +335,15 @@ auto rebase_resolve_targets(Configuration &configuration) -> void {
         throw ResolverTargetNotAFileError(declared_path, pair.first, target);
       }
 
+      // Only a collection that would actually index the target can lend it a
+      // URI, so a collection that merely contains it does not count. Two
+      // collections may overlap on disk while only one of them takes the file
       const Configuration::Collection *owner{nullptr};
       const std::filesystem::path *owner_location{nullptr};
-      for (const auto &candidate : collections) {
-        if (!sourcemeta::core::is_under_path(
-                target, candidate.second.get().absolute_path)) {
+      for (const auto &candidate : configuration.entries) {
+        const auto *other{
+            std::get_if<Configuration::Collection>(&candidate.second)};
+        if (other == nullptr || !serves(*other, target)) {
           continue;
         }
 
@@ -328,16 +351,11 @@ auto rebase_resolve_targets(Configuration &configuration) -> void {
           throw ResolverAmbiguousTargetError(declared_path, pair.first, target);
         }
 
-        owner = &candidate.second.get();
+        owner = other;
         owner_location = &candidate.first;
       }
 
-      // A target the collection ignores is never indexed, so there is no URI
-      // to route the reference to
-      if (owner == nullptr ||
-          std::ranges::any_of(owner->ignore, [&target](const auto &ignored) {
-            return sourcemeta::core::is_under_path(target, ignored);
-          })) {
+      if (owner == nullptr) {
         throw ResolverUnmountedTargetError(declared_path, pair.first, target);
       }
 

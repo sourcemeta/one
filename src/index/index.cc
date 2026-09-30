@@ -366,7 +366,6 @@ static auto index_main(const std::string_view &program,
 
   auto configuration{sourcemeta::one::Configuration::parse(
       raw_configuration, configuration_path, configuration_path.parent_path())};
-  sourcemeta::one::rebase_resolve_targets(configuration);
 
   /////////////////////////////////////////////////////////////////////////////
   // (3) Resolve a URI to a schema filesystem path
@@ -391,6 +390,10 @@ static auto index_main(const std::string_view &program,
 
     return EXIT_FAILURE;
   }
+
+  // Resolving a single URI reads the collection a schema lives in, and never
+  // the mappings, so this stays out of the way of that lookup
+  sourcemeta::one::rebase_resolve_targets(configuration);
 
   /////////////////////////////////////////////////////////////////////////////
   // (4) Prepare the output directory and load previous state

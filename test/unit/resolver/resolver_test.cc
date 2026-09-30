@@ -7,12 +7,15 @@
 
 namespace {
 auto shared_configuration() -> const sourcemeta::one::Configuration & {
-  static const sourcemeta::one::Configuration CONFIGURATION{
-      sourcemeta::one::Configuration::parse(
-          sourcemeta::one::Configuration::read(CONFIGURATION_PATH,
-                                               SELF_DIRECTORY),
-          std::filesystem::path{CONFIGURATION_PATH},
-          std::filesystem::path{CONFIGURATION_PATH}.parent_path())};
+  static const auto CONFIGURATION{[]() {
+    auto result{sourcemeta::one::Configuration::parse(
+        sourcemeta::one::Configuration::read(CONFIGURATION_PATH,
+                                             SELF_DIRECTORY),
+        std::filesystem::path{CONFIGURATION_PATH},
+        std::filesystem::path{CONFIGURATION_PATH}.parent_path())};
+    sourcemeta::one::rebase_resolve_targets(result);
+    return result;
+  }()};
   return CONFIGURATION;
 }
 } // namespace
@@ -698,7 +701,7 @@ TEST(path_url_ref_needs_rebase) {
       R"JSON({
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "http://localhost:8000/v1/catalog/example/2020-12-ref-needs-rebase",
-    "$ref": "/v1/catalog/example/2020-12-with-id"
+    "$ref": "/example/2020-12-with-id"
   })JSON");
 }
 

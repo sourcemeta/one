@@ -263,11 +263,12 @@ interprets such configuration files.
 The `resolve` property is an advanced feature to hook into the schema reference
 resolution process. When set, the object routes any reference that equals a
 property name in the object to the schema the corresponding value names. A
-value is a path to a schema file, relative to the configuration file that
-declares it, exactly as in a [JSON Schema CLI
-configuration](https://github.com/sourcemeta/jsonschema/blob/main/docs/configuration.markdown).
-The file must be part of one of the schema collections of this instance, since
-that is what gives it a URI to route to.
+value is either a path to a schema file, relative to the configuration file
+that declares it, exactly as in a [JSON Schema CLI
+configuration](https://github.com/sourcemeta/jsonschema/blob/main/docs/configuration.markdown),
+or an absolute URI, which is used as it stands. A file must be one that a
+schema collection of this instance serves, since that is what gives it a URI to
+route to.
 
 This is useful when mounting two schema collections where one references the
 other through an absolute URL. For example, IPTC's [News in
@@ -277,7 +278,7 @@ the [GeoJSON](https://geojson.org) schemas, you can use `resolve` to route
 those external references back into your instance instead of depending on a
 resource outside your control:
 
-```json hl_lines="13" title="one.json"
+```json hl_lines="12" title="one.json"
 {
   "url": "https://schemas.example.com",
   "contents": {

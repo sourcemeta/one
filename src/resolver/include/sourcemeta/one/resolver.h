@@ -21,7 +21,7 @@ namespace sourcemeta::one {
 
 // A collection names the schemas it routes references to by file, the way the
 // manifest format does everywhere else. Every such target is replaced here with
-// the URI the registry serves that file under, before any schema is read
+// the URI the registry serves that file under, before the catalog is indexed
 auto rebase_resolve_targets(Configuration &configuration) -> void;
 
 class Resolver {
