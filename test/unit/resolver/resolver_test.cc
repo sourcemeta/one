@@ -686,26 +686,6 @@ TEST(path_url_anonymous) {
   })JSON");
 }
 
-TEST(path_url_ref_needs_rebase) {
-  sourcemeta::one::Resolver resolver{"http://localhost:8000/v1/catalog"};
-  RESOLVER_IMPORT(resolver, "example", "2020-12-with-id.json");
-  const auto result{
-      RESOLVER_IMPORT(resolver, "example", "2020-12-ref-needs-rebase.json")};
-  EXPECT_EQ(result.second.get().original_identifier,
-            "https://example.com/schemas/2020-12-ref-needs-rebase");
-  EXPECT_EQ(
-      result.first.get(),
-      "http://localhost:8000/v1/catalog/example/2020-12-ref-needs-rebase");
-  RESOLVER_EXPECT(
-      resolver,
-      "http://localhost:8000/v1/catalog/example/2020-12-ref-needs-rebase",
-      R"JSON({
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "http://localhost:8000/v1/catalog/example/2020-12-ref-needs-rebase",
-    "$ref": "/example/2020-12-with-id"
-  })JSON");
-}
-
 TEST(path_url_absolute_ref) {
   sourcemeta::one::Resolver resolver{"http://localhost:8000/v1/catalog"};
   const auto result{

@@ -359,13 +359,11 @@ auto rebase_resolve_targets(Configuration &configuration) -> void {
         throw ResolverUnmountedTargetError(declared_path, pair.first, target);
       }
 
+      // A boolean schema is never served under an identity of its own, so
+      // neither of these can be routed to
       auto contents{sourcemeta::core::read_yaml_or_json(target)};
-      if (contents.is_boolean()) {
-        throw ResolverBooleanSchemaError(target);
-      }
-
       if (!contents.is_object()) {
-        throw ResolverNotASchemaError(target);
+        throw ResolverTargetNotASchemaError(declared_path, pair.first, target);
       }
 
       result.emplace(pair.first,

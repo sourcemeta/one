@@ -857,6 +857,11 @@ auto main(int argc, char *argv[]) noexcept -> int {
                error.what(), error.uri(), error.target().string(),
                error.path().string());
     return EXIT_FAILURE;
+  } catch (const sourcemeta::one::ResolverTargetNotASchemaError &error) {
+    std::print(stderr, "error: {}\n  at uri {}\n  to path {}\n  at path {}\n",
+               error.what(), error.uri(), error.target().string(),
+               error.path().string());
+    return EXIT_FAILURE;
   } catch (const sourcemeta::one::ResolverTargetNotAFileError &error) {
     std::print(stderr, "error: {}\n  at uri {}\n  to path {}\n  at path {}\n",
                error.what(), error.uri(), error.target().string(),

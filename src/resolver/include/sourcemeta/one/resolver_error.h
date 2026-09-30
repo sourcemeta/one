@@ -159,6 +159,37 @@ private:
   std::filesystem::path target_;
 };
 
+class ResolverTargetNotASchemaError : public std::exception {
+public:
+  ResolverTargetNotASchemaError(std::filesystem::path path,
+                                sourcemeta::core::JSON::String uri,
+                                std::filesystem::path target)
+      : path_{std::move(path)}, uri_{std::move(uri)},
+        target_{std::move(target)} {}
+
+  [[nodiscard]] auto what() const noexcept -> const char * override {
+    return "The resolve target is not a schema this registry can serve";
+  }
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto uri() const noexcept
+      -> const sourcemeta::core::JSON::String & {
+    return this->uri_;
+  }
+
+  [[nodiscard]] auto target() const noexcept -> const std::filesystem::path & {
+    return this->target_;
+  }
+
+private:
+  std::filesystem::path path_;
+  sourcemeta::core::JSON::String uri_;
+  std::filesystem::path target_;
+};
+
 class ResolverUnmountedTargetError : public std::exception {
 public:
   ResolverUnmountedTargetError(std::filesystem::path path,

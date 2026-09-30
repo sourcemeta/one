@@ -27,8 +27,10 @@ RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING
 WRITE expected.txt UNTIL EOF
 2> Writing output to: [CWD]/output
 2> Using configuration: [CWD]/one.json
-2> error: The file does not contain a valid JSON Schema
-2>   at path [CWD]/schemas/notes.json
+2> error: The resolve target is not a schema this registry can serve
+2>   at uri urn:example:target
+2>   to path [CWD]/schemas/notes.json
+2>   at path [CWD]/one.json
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt
