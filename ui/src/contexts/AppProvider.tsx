@@ -4,6 +4,7 @@ import {
   type DetailTab,
   type EditorTab,
   type ResultMode,
+  type ThemeMode,
 } from "./AppContext";
 import {
   checkRegistryHealth,
@@ -14,6 +15,7 @@ import {
   getSchemaHealthReport,
   getSchemaLocations,
   getSchemaMetadata,
+  getSchemaPositions,
   getSchemaStats,
   promoteToRdf,
   traceSchema,
@@ -24,15 +26,41 @@ import type {
   HealthReport,
   SchemaLocations,
   SchemaMetadata,
+  SchemaPositions,
   SchemaStats,
   TraceResult,
 } from "../types/one";
+
+const THEME_KEY = "one-ui:theme";
+
+// index.html applies a stored choice to the <html> element before this ever
+// runs (avoids a flash of the wrong theme) — this just reads that same
+// choice back into React state so the rest of the app can react to it too.
+const readStoredTheme = (): ThemeMode =>
+  document.documentElement.dataset.theme === "light" ? "light" : "dark";
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   // This UI is served BY the registry it's meant to browse (or, in dev, by
   // a Vite proxy standing in for one — see vite.config.ts), so it's never
   // pointed anywhere else: no separate "which registry" concept to manage.
   const registryUrl = window.location.origin;
+
+  const [theme, setTheme] = useState<ThemeMode>(readStoredTheme);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    try {
+      localStorage.setItem(THEME_KEY, theme);
+    } catch {
+      // Storage can be unavailable (private mode); the toggle still works
+      // for the rest of the session.
+    }
+  }, [theme]);
+
+  const toggleTheme = useCallback(
+    () => setTheme((current) => (current === "light" ? "dark" : "light")),
+    []
+  );
 
   const [registryHealthy, setRegistryHealthy] = useState<boolean | null>(null);
 
@@ -50,9 +78,17 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   // The server serves this same app for any path (including one that names
   // a schema), so the path itself is the source of truth for which schema
   // is selected — a reload or a shared link lands back on the same view.
+  // In dev, Vite serves that app shell at `base` (see vite.config.ts)
+  // instead of "/", so that path counts as root too — only in production
+  // does a real page route ever land on the bare "/".
+  const isRootPath = (pathname: string) =>
+    pathname === "/" ||
+    pathname === import.meta.env.BASE_URL ||
+    pathname === import.meta.env.BASE_URL.replace(/\/+$/, "");
+
   const [selectedSchemaPath, setSelectedSchemaPathState] = useState<
     string | null
-  >(() => (window.location.pathname === "/" ? null : window.location.pathname));
+  >(() => (isRootPath(window.location.pathname) ? null : window.location.pathname));
 
   const setSelectedSchemaPath = useCallback((path: string | null) => {
     setSelectedSchemaPathState(path);
@@ -65,7 +101,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const onPopState = () => {
       const path = window.location.pathname;
-      setSelectedSchemaPathState(path === "/" ? null : path);
+      setSelectedSchemaPathState(isRootPath(path) ? null : path);
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
@@ -95,6 +131,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [schemaStats, setSchemaStats] = useState<SchemaStats | null>(null);
   const [schemaLocations, setSchemaLocations] =
     useState<SchemaLocations | null>(null);
+  const [schemaPositions, setSchemaPositions] =
+    useState<SchemaPositions | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
   const [resultMode, setResultMode] = useState<ResultMode | null>(null);
@@ -113,22 +151,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [debuggerOpen, setDebuggerOpen] = useState(false);
   const openDebugger = useCallback(() => setDebuggerOpen(true), []);
   const closeDebugger = useCallback(() => setDebuggerOpen(false), []);
-
-  const [customDebuggerSeed, setCustomDebuggerSeed] = useState<{
-    schema: string;
-    instance: string;
-  } | null>(null);
-  const openCustomDebuggerWithSchema = useCallback(
-    (schema: string, instance: string) => {
-      setCustomDebuggerSeed({ schema, instance });
-      window.location.hash = "#/debugger";
-    },
-    []
-  );
-  const consumeCustomDebuggerSeed = useCallback(
-    () => setCustomDebuggerSeed(null),
-    []
-  );
 
   useEffect(() => {
     if (!selectedSchemaPath) {
@@ -196,13 +218,15 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setHealthReport(null);
     setSchemaStats(null);
     setSchemaLocations(null);
+    setSchemaPositions(null);
     Promise.allSettled([
       getSchemaDependencies(registryUrl, selectedSchemaPath),
       getSchemaDependents(registryUrl, selectedSchemaPath),
       getSchemaHealthReport(registryUrl, selectedSchemaPath),
       getSchemaStats(registryUrl, selectedSchemaPath),
       getSchemaLocations(registryUrl, selectedSchemaPath),
-    ]).then(([deps, dependentsList, health, stats, locations]) => {
+      getSchemaPositions(registryUrl, selectedSchemaPath),
+    ]).then(([deps, dependentsList, health, stats, locations, positions]) => {
       if (cancelled) return;
       // Each panel section fails independently, instead of one bad endpoint
       // (e.g. stats) blanking out sections that loaded fine (e.g. dependencies).
@@ -211,6 +235,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       setHealthReport(health.status === "fulfilled" ? health.value : null);
       setSchemaStats(stats.status === "fulfilled" ? stats.value : null);
       setSchemaLocations(locations.status === "fulfilled" ? locations.value : null);
+      setSchemaPositions(positions.status === "fulfilled" ? positions.value : null);
       setDetailLoading(false);
     });
 
@@ -294,6 +319,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const value = {
     registryUrl,
     registryHealthy,
+    theme,
+    toggleTheme,
     selectedSchemaPath,
     setSelectedSchemaPath,
     schemaMetadata,
@@ -313,6 +340,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     healthReport,
     schemaStats,
     schemaLocations,
+    schemaPositions,
     detailLoading,
     resultMode,
     evaluationResult,
@@ -326,9 +354,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     debuggerOpen,
     openDebugger,
     closeDebugger,
-    customDebuggerSeed,
-    openCustomDebuggerWithSchema,
-    consumeCustomDebuggerSeed,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

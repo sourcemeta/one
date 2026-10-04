@@ -47,7 +47,7 @@ const MetadataTable = () => {
         </span>
       </Row>
       <Row label="Dialect">
-        <span className="text-[var(--text-secondary)] font-mono text-xs truncate block">
+        <span className="text-[var(--text-secondary)] text-xs truncate block">
           {schemaMetadata.dialect}
         </span>
       </Row>

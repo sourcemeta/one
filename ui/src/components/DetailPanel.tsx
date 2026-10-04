@@ -1,6 +1,51 @@
 import { useContext } from "react";
 import { AppContext, type DetailTab } from "../contexts/AppContext";
 
+// Strips the registry's own origin (and a trailing .json) off an absolute
+// schema URL so it can be used as a router path — mirrors the old UI's
+// schemaLink() helper in dependencies.js. A URL that isn't hosted by this
+// registry (an external $id) has nothing to navigate to, so it's left
+// plain. Matches on an exact origin boundary (not just a shared string
+// prefix) so an unrelated host that merely starts with the same characters
+// — e.g. https://schemas.sourcemeta.com.evil.example — isn't treated as
+// this registry.
+const resolveSchemaPath = (url: string, registryOrigin: string): string | null => {
+  const base = registryOrigin.replace(/\/+$/, "");
+  if (url !== base && !url.startsWith(`${base}/`)) return null;
+  const rest = url.slice(base.length);
+  const path = rest.endsWith(".json") ? rest.slice(0, -5) : rest;
+  return path === "" ? "/" : path;
+};
+
+const SchemaLinkCell = ({ url }: { url: string }) => {
+  const { registryUrl, schemaMetadata, setSelectedSchemaPath } = useContext(AppContext);
+  // The open schema's own identifier names the real registry a dependency
+  // URL is hosted on. That's usually the same as registryUrl, but not in
+  // dev — the dev proxy makes cross-origin API calls transparent, so
+  // registryUrl there is the local Vite origin while every $id it returns
+  // still points at the real upstream registry.
+  let registryOrigin = registryUrl;
+  try {
+    if (schemaMetadata) registryOrigin = new URL(schemaMetadata.identifier).origin;
+  } catch {
+    // Malformed identifier — fall back to registryUrl.
+  }
+  const path = resolveSchemaPath(url, registryOrigin);
+  if (!path) {
+    return <span className="break-all">{url}</span>;
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => setSelectedSchemaPath(path)}
+      title={url}
+      className="text-left break-all hover:underline hover:text-[var(--accent)]"
+    >
+      {path}
+    </button>
+  );
+};
+
 const TabButton = ({
   tab,
   label,
@@ -35,7 +80,13 @@ const TabButton = ({
   );
 };
 
-const DetailPanel = () => {
+const DetailPanel = ({
+  onFocusPointers,
+  onFocusPosition,
+}: {
+  onFocusPointers: (pointers: string[]) => void;
+  onFocusPosition: (position: [number, number, number, number]) => void;
+}) => {
   const {
     detailTab,
     dependencies,
@@ -43,6 +94,7 @@ const DetailPanel = () => {
     healthReport,
     schemaStats,
     schemaLocations,
+    schemaMetadata,
     detailLoading,
   } = useContext(AppContext);
 
@@ -109,16 +161,37 @@ const DetailPanel = () => {
                   </td>
                 </tr>
               )}
-              {dependencies?.map((edge, i) => (
-                <tr key={i} className="border-t border-[var(--border)]">
-                  <td className="py-1 pr-2 font-mono text-[var(--info)] align-top">
-                    {edge.at}
-                  </td>
-                  <td className="py-1 font-mono text-[var(--text-nav)] break-all">
-                    {edge.to}
-                  </td>
-                </tr>
-              ))}
+              {dependencies?.map((edge, i) => {
+                // /at only points into this schema for a direct edge — an
+                // indirect one names a spot in whichever intermediate schema
+                // it actually came from, which isn't open here to highlight.
+                const local = edge.from === schemaMetadata?.identifier;
+                return (
+                  <tr key={i} className="border-t border-[var(--border)]">
+                    <td className="py-1 pr-2 text-[var(--info)] align-top">
+                      {local ? (
+                        <button
+                          type="button"
+                          onClick={() => onFocusPointers([edge.at])}
+                          className="text-left hover:underline"
+                        >
+                          {edge.at}
+                        </button>
+                      ) : (
+                        // edge.at is a pointer into edge.from, not this
+                        // schema — showing it here would look like a local
+                        // origin when it isn't one.
+                        <span className="text-[var(--text-secondary)] opacity-70">
+                          Indirect
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-1 text-[var(--text-nav)] break-all">
+                      <SchemaLinkCell url={edge.to} />
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
@@ -141,10 +214,10 @@ const DetailPanel = () => {
               )}
               {dependents?.map((edge, i) => (
                 <tr key={i} className="border-t border-[var(--border)]">
-                  <td className="py-1 pr-2 font-mono text-[var(--text-nav)] break-all align-top">
-                    {edge.from}
+                  <td className="py-1 pr-2 text-[var(--text-nav)] break-all align-top">
+                    <SchemaLinkCell url={edge.from} />
                   </td>
-                  <td className="py-1 font-mono text-[var(--info)]">
+                  <td className="py-1 text-[var(--info)]">
                     {edge.at}
                   </td>
                 </tr>
@@ -165,16 +238,20 @@ const DetailPanel = () => {
                 key={i}
                 className="text-xs border border-[var(--border)] rounded-[var(--radius-sm)] px-2 py-1.5 bg-[var(--bg-inset)]/50"
               >
-                <div className="font-mono text-[var(--text-nav)]">
+                <div className="text-[var(--text-nav)]">
                   {finding.name}
                 </div>
                 <div className="text-[var(--text-secondary)] mt-0.5">
                   {finding.message}
                 </div>
                 {finding.pointers.length > 0 && finding.pointers[0] !== "" && (
-                  <div className="text-[var(--text-secondary)] opacity-70 font-mono mt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => onFocusPointers(finding.pointers)}
+                    className="text-left text-[var(--text-secondary)] opacity-70 mt-0.5 hover:underline hover:opacity-100 hover:text-[var(--accent)]"
+                  >
                     {finding.pointers.join(", ")}
-                  </div>
+                  </button>
                 )}
               </div>
             ))}
@@ -189,9 +266,9 @@ const DetailPanel = () => {
               </p>
             )}
             {statsRows.map((row, i) => (
-              <div key={i} className="text-xs">
+              <div key={i} className="text-sm">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-mono text-[var(--text-nav)] truncate">
+                  <span className="text-[var(--text-nav)] truncate">
                     {row.keyword}
                   </span>
                   <span className="text-[var(--text-secondary)] shrink-0">
@@ -205,7 +282,7 @@ const DetailPanel = () => {
                   />
                 </div>
                 <div
-                  className="text-[10px] text-[var(--text-secondary)] opacity-60 truncate mt-0.5"
+                  className="text-xs text-[var(--text-secondary)] opacity-60 truncate mt-0.5"
                   title={row.vocabulary}
                 >
                   {row.vocabulary}
@@ -234,14 +311,18 @@ const DetailPanel = () => {
                       className="text-xs border border-[var(--border)] rounded-[var(--radius-sm)] px-2 py-1 bg-[var(--bg-inset)]/50"
                       title={uri}
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-mono text-[var(--text-nav)] truncate">
+                      <button
+                        type="button"
+                        onClick={() => onFocusPosition(entry.position)}
+                        className="flex items-center justify-between gap-2 w-full text-left hover:underline"
+                      >
+                        <span className="text-[var(--text-nav)] truncate">
                           {entry.pointer || "/"}
                         </span>
                         <span className="text-[var(--text-secondary)] shrink-0">
                           {entry.type}
                         </span>
-                      </div>
+                      </button>
                       {entry.orphan && (
                         <div className="text-[10px] text-[var(--warning)] mt-0.5">
                           orphan (inside a definitions container)
@@ -264,14 +345,18 @@ const DetailPanel = () => {
                       className="text-xs border border-[var(--border)] rounded-[var(--radius-sm)] px-2 py-1 bg-[var(--bg-inset)]/50"
                       title={uri}
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-mono text-[var(--text-nav)] truncate">
+                      <button
+                        type="button"
+                        onClick={() => onFocusPosition(entry.position)}
+                        className="flex items-center justify-between gap-2 w-full text-left hover:underline"
+                      >
+                        <span className="text-[var(--text-nav)] truncate">
                           {entry.pointer || "/"}
                         </span>
                         <span className="text-[var(--text-secondary)] shrink-0">
                           {entry.type}
                         </span>
-                      </div>
+                      </button>
                     </div>
                   ))}
                 </div>

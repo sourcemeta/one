@@ -21,12 +21,12 @@ const TraceStepRow = ({ step, index }: { step: TraceStep; index: number }) => (
       >
         {step.type}
       </span>
-      <span className="font-mono truncate">{step.name}</span>
+      <span className="truncate">{step.name}</span>
       <span className="text-[10px] opacity-50 ml-auto shrink-0">
         #{index + 1}
       </span>
     </div>
-    <div className="font-mono text-[11px] opacity-70 truncate mt-1">
+    <div className="text-[11px] opacity-70 truncate mt-1">
       {step.evaluatePath}
     </div>
     {step.message && <div className="mt-0.5 break-words">{step.message}</div>}
@@ -80,7 +80,7 @@ const ResultPanel = () => {
                 key={i}
                 className="text-xs border border-[var(--danger)]/40 bg-[var(--danger-soft)] text-[var(--text)] rounded-[var(--radius-sm)] px-2 py-1.5"
               >
-                <div className="font-mono text-[11px] opacity-70">
+                <div className="text-[11px] opacity-70">
                   {err.instanceLocation || "/"}
                 </div>
                 <div className="mt-0.5 break-words">{err.error}</div>
@@ -101,7 +101,7 @@ const ResultPanel = () => {
                 No JSON-LD annotations were emitted for this instance.
               </p>
             ) : (
-              <pre className="text-xs font-mono border border-[var(--border)] bg-[var(--bg-inset)]/50 rounded-[var(--radius-sm)] px-2 py-1.5 whitespace-pre-wrap break-words">
+              <pre className="text-xs border border-[var(--border)] bg-[var(--bg-inset)]/50 rounded-[var(--radius-sm)] px-2 py-1.5 whitespace-pre-wrap break-words">
                 {JSON.stringify(rdfResult, null, 2)}
               </pre>
             )}
@@ -110,22 +110,24 @@ const ResultPanel = () => {
 
         {!resultLoading && resultMode === "trace" && traceResult && (
           <>
-            <p
-              className={`text-sm font-medium ${
-                traceResult.valid
-                  ? "text-[var(--success)]"
-                  : "text-[var(--danger)]"
-              }`}
-            >
-              {traceResult.valid ? "✓ Valid" : "✗ Invalid"} ·{" "}
-              {traceResult.steps.length} steps
-            </p>
-            <button
-              onClick={openDebugger}
-              className="h-8 px-3 text-sm rounded-[var(--radius-sm)] border border-[var(--accent)]/50 bg-[var(--accent)]/12 text-[var(--accent)] hover:bg-[var(--accent)]/20 transition-colors self-start"
-            >
-              Open Step Debugger →
-            </button>
+            <div className="flex items-center justify-between gap-2">
+              <p
+                className={`text-sm font-medium ${
+                  traceResult.valid
+                    ? "text-[var(--success)]"
+                    : "text-[var(--danger)]"
+                }`}
+              >
+                {traceResult.valid ? "✓ Valid" : "✗ Invalid"} ·{" "}
+                {traceResult.steps.length} steps
+              </p>
+              <button
+                onClick={openDebugger}
+                className="h-8 px-3 text-sm rounded-[var(--radius-sm)] border border-[var(--accent)]/50 bg-[var(--accent)]/12 text-[var(--accent)] hover:bg-[var(--accent)]/20 transition-colors shrink-0"
+              >
+                Open Step Debugger →
+              </button>
+            </div>
             {traceResult.steps.map((step, i) => (
               <TraceStepRow key={i} step={step} index={i} />
             ))}
