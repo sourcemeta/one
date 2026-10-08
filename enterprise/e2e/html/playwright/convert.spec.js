@@ -72,6 +72,7 @@ test.describe('Schema Convert Dropdown', () => {
 
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
     await expect(menu).not.toBeVisible();
+    await expect(toggle).not.toBeFocused();
   });
 
   test('pressing escape from inside the menu hands focus back to the button',
@@ -90,7 +91,8 @@ test.describe('Schema Convert Dropdown', () => {
     await expect(toggle).toBeFocused();
   });
 
-  test('tabbing past the last entry closes it', async ({ page }) => {
+  test('tabbing past the last entry closes it and keeps going',
+    async ({ page }) => {
     await page.goto('/test/draft3/string');
 
     const toggle = page.locator('[data-sourcemeta-ui-dropdown-toggle]');
@@ -104,20 +106,44 @@ test.describe('Schema Convert Dropdown', () => {
 
     await expect(toggle).toHaveAttribute('aria-expanded', 'false');
     await expect(menu).not.toBeVisible();
+
+    // Whatever follows the menu is where the walk was headed
+    await expect(page.locator('[data-sourcemeta-ui-tab-target="usage-cli"]'))
+      .toBeFocused();
+    await expect(toggle).not.toBeFocused();
   });
 
-  test('closing by clicking elsewhere leaves focus where it was put',
+  test('moving focus out of an entry lands where it was aimed',
     async ({ page }) => {
     await page.goto('/test/draft3/string');
 
     const toggle = page.locator('[data-sourcemeta-ui-dropdown-toggle]');
+    const menu = page.locator('[data-sourcemeta-ui-dropdown-menu]');
     const bundle = page.locator('a[href="/test/draft3/string.json?bundle=1"]');
     await toggle.click();
+    await page.keyboard.press('Tab');
+    await expect(menu.locator('a').first()).toBeFocused();
 
     await bundle.focus();
 
-    await expect(toggle).not.toBeFocused();
+    await expect(menu).not.toBeVisible();
     await expect(bundle).toBeFocused();
+    await expect(toggle).not.toBeFocused();
+  });
+
+  test('clicking the empty part of the menu leaves it open',
+    async ({ page }) => {
+    await page.goto('/test/draft3/string');
+
+    const toggle = page.locator('[data-sourcemeta-ui-dropdown-toggle]');
+    const menu = page.locator('[data-sourcemeta-ui-dropdown-menu]');
+    await toggle.click();
+
+    const box = await menu.boundingBox();
+    await page.mouse.click(box.x + box.width - 2, box.y + box.height - 2);
+
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(menu).toBeVisible();
   });
 
   test('an entry navigates to the converted schema', async ({ page }) => {
