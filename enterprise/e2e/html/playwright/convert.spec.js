@@ -74,6 +74,63 @@ test.describe('Schema Convert Dropdown', () => {
     await expect(menu).not.toBeVisible();
   });
 
+  test('pressing escape from inside the menu hands focus back to the button',
+    async ({ page }) => {
+    await page.goto('/test/draft3/string');
+
+    const toggle = page.locator('[data-sourcemeta-ui-dropdown-toggle]');
+    const menu = page.locator('[data-sourcemeta-ui-dropdown-menu]');
+    await toggle.click();
+    await page.keyboard.press('Tab');
+    await expect(menu.locator('a').first()).toBeFocused();
+
+    await page.keyboard.press('Escape');
+
+    await expect(menu).not.toBeVisible();
+    await expect(toggle).toBeFocused();
+  });
+
+  test('tabbing past the last entry closes it', async ({ page }) => {
+    await page.goto('/test/draft3/string');
+
+    const toggle = page.locator('[data-sourcemeta-ui-dropdown-toggle]');
+    const menu = page.locator('[data-sourcemeta-ui-dropdown-menu]');
+    await toggle.click();
+
+    // Walk out of the menu through its five entries
+    for (let index = 0; index < 6; index++) {
+      await page.keyboard.press('Tab');
+    }
+
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await expect(menu).not.toBeVisible();
+  });
+
+  test('closing by clicking elsewhere leaves focus where it was put',
+    async ({ page }) => {
+    await page.goto('/test/draft3/string');
+
+    const toggle = page.locator('[data-sourcemeta-ui-dropdown-toggle]');
+    const bundle = page.locator('a[href="/test/draft3/string.json?bundle=1"]');
+    await toggle.click();
+
+    await bundle.focus();
+
+    await expect(toggle).not.toBeFocused();
+    await expect(bundle).toBeFocused();
+  });
+
+  test('an entry navigates to the converted schema', async ({ page }) => {
+    await page.goto('/test/draft3/string');
+
+    const toggle = page.locator('[data-sourcemeta-ui-dropdown-toggle]');
+    const menu = page.locator('[data-sourcemeta-ui-dropdown-menu]');
+    await toggle.click();
+    await menu.locator('a', { hasText: '2020-12' }).click();
+
+    await expect(page).toHaveURL('/test/draft3/string.json?as=2020-12');
+  });
+
   test('pressing escape closes it', async ({ page }) => {
     await page.goto('/test/draft3/string');
 

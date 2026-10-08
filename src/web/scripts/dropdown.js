@@ -3,8 +3,14 @@ document.querySelectorAll("[data-sourcemeta-ui-dropdown]").forEach((dropdown) =>
   const menu = dropdown.querySelector("[data-sourcemeta-ui-dropdown-menu]");
 
   function close() {
+    // Whoever was reading the menu would be left standing on something that
+    // is no longer there, with no way back to the control that opened it
+    const wasInside = dropdown.contains(document.activeElement);
     menu.classList.remove("show");
     toggle.setAttribute("aria-expanded", "false");
+    if (wasInside) {
+      toggle.focus();
+    }
   }
 
   toggle.addEventListener("click", () => {
@@ -18,6 +24,12 @@ document.querySelectorAll("[data-sourcemeta-ui-dropdown]").forEach((dropdown) =>
 
   document.addEventListener("click", (event) => {
     if (!dropdown.contains(event.target)) {
+      close();
+    }
+  });
+
+  dropdown.addEventListener("focusout", (event) => {
+    if (!dropdown.contains(event.relatedTarget)) {
       close();
     }
   });

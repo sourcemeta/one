@@ -608,8 +608,8 @@ Cache-Control: no-store
 header "Vary" not exists
 jsonpath "$.valid" == true
 
-# A schema nothing can be converted into offers no conversion control, which
-# is what every schema looks like where conversions are not offered at all
+# A schema with no conversions on offer grows no conversion control. This
+# schema is a meta-schema, which is pinned where its metadata is asserted
 GET {{base}}/test/schemas/custom-meta-draft7
 Accept: text/html
 HTTP 200
