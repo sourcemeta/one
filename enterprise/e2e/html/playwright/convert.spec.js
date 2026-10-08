@@ -34,17 +34,30 @@ test.describe('Schema Convert Dropdown', () => {
       'href', '/test/draft3/string.json?as=2020-12');
   });
 
-  test('offers the dialect the schema already declares', async ({ page }) => {
-    await page.goto('/test/object');
+  test('leaves out the dialect the schema already declares',
+    async ({ page }) => {
+    await page.goto('/test/jsonld/draft7');
 
     const toggle = page.locator('[data-sourcemeta-ui-dropdown-toggle]');
     const menu = page.locator('[data-sourcemeta-ui-dropdown-menu]');
     await toggle.click();
 
     const items = menu.locator('a');
-    await expect(items).toHaveText([ '2020-12' ]);
+    await expect(items).toHaveText([ '2019-09', '2020-12' ]);
     await expect(items.nth(0)).toHaveAttribute(
-      'href', '/test/object.json?as=2020-12');
+      'href', '/test/jsonld/draft7.json?as=2019-09');
+    await expect(items.nth(1)).toHaveAttribute(
+      'href', '/test/jsonld/draft7.json?as=2020-12');
+  });
+
+  test('a schema on the newest dialect gets no control at all',
+    async ({ page }) => {
+    await page.goto('/test/object');
+
+    await expect(page.locator('[data-sourcemeta-ui-dropdown-toggle]'))
+      .toHaveCount(0);
+    await expect(page.locator('a[href="/test/object.json?bundle=1"]'))
+      .toBeVisible();
   });
 
   test('the menu sits below the button it belongs to', async ({ page }) => {

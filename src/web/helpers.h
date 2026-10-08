@@ -105,49 +105,56 @@ inline auto dialect_display_name(const std::string_view name) -> std::string {
   return result;
 }
 
+// The short name a dialect goes by, which is also the name a conversion into
+// it is asked for by
+inline auto
+dialect_short_name(const sourcemeta::core::JSON::String &base_dialect_uri)
+    -> std::string_view {
+  if (base_dialect_uri == "https://json-schema.org/draft/2020-12/schema" ||
+      base_dialect_uri ==
+          "https://json-schema.org/draft/2020-12/hyper-schema") {
+    return "2020-12";
+  }
+
+  if (base_dialect_uri == "https://json-schema.org/draft/2019-09/schema" ||
+      base_dialect_uri ==
+          "https://json-schema.org/draft/2019-09/hyper-schema") {
+    return "2019-09";
+  }
+
+  if (base_dialect_uri == "http://json-schema.org/draft-07/schema#" ||
+      base_dialect_uri == "http://json-schema.org/draft-07/hyper-schema#") {
+    return "draft7";
+  }
+
+  if (base_dialect_uri == "http://json-schema.org/draft-06/schema#" ||
+      base_dialect_uri == "http://json-schema.org/draft-06/hyper-schema#") {
+    return "draft6";
+  }
+
+  if (base_dialect_uri == "http://json-schema.org/draft-04/schema#" ||
+      base_dialect_uri == "http://json-schema.org/draft-04/hyper-schema#") {
+    return "draft4";
+  }
+
+  if (base_dialect_uri == "http://json-schema.org/draft-03/schema#" ||
+      base_dialect_uri == "http://json-schema.org/draft-03/hyper-schema#") {
+    return "draft3";
+  }
+
+  return "unknown";
+}
+
 inline auto
 make_dialect_badge(sourcemeta::core::HTMLWriter &writer,
                    const sourcemeta::core::JSON::String &base_dialect_uri)
     -> void {
-  const auto [short_name, is_current] =
-      [&base_dialect_uri]() -> std::pair<std::string, bool> {
-    if (base_dialect_uri == "https://json-schema.org/draft/2020-12/schema" ||
-        base_dialect_uri ==
-            "https://json-schema.org/draft/2020-12/hyper-schema") {
-      return {"2020-12", true};
-    }
-
-    if (base_dialect_uri == "https://json-schema.org/draft/2019-09/schema" ||
-        base_dialect_uri ==
-            "https://json-schema.org/draft/2019-09/hyper-schema") {
-      return {"2019-09", false};
-    }
-
-    if (base_dialect_uri == "http://json-schema.org/draft-07/schema#" ||
-        base_dialect_uri == "http://json-schema.org/draft-07/hyper-schema#") {
-      return {"draft7", false};
-    }
-
-    if (base_dialect_uri == "http://json-schema.org/draft-06/schema#" ||
-        base_dialect_uri == "http://json-schema.org/draft-06/hyper-schema#") {
-      return {"draft6", false};
-    }
-
-    if (base_dialect_uri == "http://json-schema.org/draft-04/schema#" ||
-        base_dialect_uri == "http://json-schema.org/draft-04/hyper-schema#") {
-      return {"draft4", false};
-    }
-
-    if (base_dialect_uri == "http://json-schema.org/draft-03/schema#" ||
-        base_dialect_uri == "http://json-schema.org/draft-03/hyper-schema#") {
-      return {"draft3", false};
-    }
-
-    return {"unknown", false};
-  }();
+  const auto short_name{dialect_short_name(base_dialect_uri)};
+  const auto is_current{short_name == "2020-12"};
 
   writer.a()
-      .attribute("href", "https://www.learnjsonschema.com/" + short_name)
+      .attribute("href",
+                 "https://www.learnjsonschema.com/" + std::string{short_name})
       .attribute("target", "_blank");
   writer.span().attribute(
       "class",

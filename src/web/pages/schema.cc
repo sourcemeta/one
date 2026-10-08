@@ -8,6 +8,7 @@
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/shared.h>
 
+#include <algorithm>  // std::ranges::any_of
 #include <cassert>    // assert
 #include <chrono>     // std::chrono
 #include <filesystem> // std::filesystem
@@ -82,9 +83,16 @@ auto GenerateWebSchema::handler(
         body.text("Bundle");
         body.close();
 
-        // Conversions are advertised only where they are offered, so a schema
-        // nothing can be converted into grows no control at all
-        if (meta.defines("conversions") && !meta.at("conversions").empty()) {
+        // A schema is already written in the dialect it declares, so offering
+        // to convert it into that one reads as a choice where there is none
+        const auto *const conversions{meta.try_at("conversions")};
+        const auto declared{
+            html::dialect_short_name(meta.at("baseDialect").to_string())};
+        if (conversions != nullptr &&
+            std::ranges::any_of(conversions->as_object(),
+                                [&declared](const auto &conversion) {
+                                  return conversion.first != declared;
+                                })) {
           body.div()
               .attribute("class", "btn-group ms-2")
               .attribute("data-sourcemeta-ui-dropdown", "");
@@ -98,7 +106,11 @@ auto GenerateWebSchema::handler(
           body.ul()
               .attribute("class", "dropdown-menu")
               .attribute("data-sourcemeta-ui-dropdown-menu", "");
-          for (const auto &conversion : meta.at("conversions").as_object()) {
+          for (const auto &conversion : conversions->as_object()) {
+            if (conversion.first == declared) {
+              continue;
+            }
+
             body.li();
             body.a()
                 .attribute("class", "dropdown-item")
