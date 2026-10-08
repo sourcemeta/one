@@ -8,6 +8,7 @@
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/shared.h>
 
+#include <algorithm>  // std::ranges::any_of
 #include <cassert>    // assert
 #include <chrono>     // std::chrono
 #include <filesystem> // std::filesystem
@@ -81,6 +82,48 @@ auto GenerateWebSchema::handler(
             .attribute("role", "button");
         body.text("Bundle");
         body.close();
+
+        // A schema is already written in the dialect it declares, so offering
+        // to convert it into that one reads as a choice where there is none
+        const auto *const conversions{meta.try_at("conversions")};
+        const auto declared{
+            html::dialect_short_name(meta.at("baseDialect").to_string())};
+        if (conversions != nullptr &&
+            std::ranges::any_of(conversions->as_object(),
+                                [&declared](const auto &conversion) {
+                                  return conversion.first != declared;
+                                })) {
+          body.div()
+              .attribute("class", "btn-group ms-2")
+              .attribute("data-sourcemeta-ui-dropdown", "");
+          body.button()
+              .attribute("class", "btn btn-secondary dropdown-toggle")
+              .attribute("type", "button")
+              .attribute("aria-expanded", "false")
+              .attribute("data-sourcemeta-ui-dropdown-toggle", "");
+          body.text("Convert");
+          body.close();
+          body.ul()
+              .attribute("class", "dropdown-menu")
+              .attribute("data-sourcemeta-ui-dropdown-menu", "");
+          for (const auto &conversion : conversions->as_object()) {
+            if (conversion.first == declared) {
+              continue;
+            }
+
+            body.li();
+            body.a()
+                .attribute("class", "dropdown-item")
+                .attribute("href", meta.at("path").to_string() +
+                                       ".json?as=" + conversion.first);
+            body.text(html::dialect_display_name(conversion.first));
+            body.close();
+            body.close();
+          }
+          body.close();
+          body.close();
+        }
+
         body.close();
 
         // Integration snippets

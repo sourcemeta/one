@@ -719,3 +719,73 @@ header "Vary" == "Accept, Accept-Encoding"
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 body contains "Draft3"
 body contains "https://www.learnjsonschema.com/draft3"
+
+# The web page offers every conversion the metadata advertises, oldest first
+GET {{base}}/test/draft3/string
+Accept: text/html
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
+[Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+xpath "string(//button[@data-sourcemeta-ui-dropdown-toggle])" == "Convert"
+xpath "string(//button[@data-sourcemeta-ui-dropdown-toggle]/@aria-expanded)" == "false"
+xpath "count(//ul[@data-sourcemeta-ui-dropdown-menu]/li/a)" == 5
+xpath "string(//ul[@data-sourcemeta-ui-dropdown-menu]/li[1]/a)" == "Draft4"
+xpath "string(//ul[@data-sourcemeta-ui-dropdown-menu]/li[1]/a/@href)" == "/test/draft3/string.json?as=draft4"
+xpath "string(//ul[@data-sourcemeta-ui-dropdown-menu]/li[2]/a)" == "Draft6"
+xpath "string(//ul[@data-sourcemeta-ui-dropdown-menu]/li[2]/a/@href)" == "/test/draft3/string.json?as=draft6"
+xpath "string(//ul[@data-sourcemeta-ui-dropdown-menu]/li[3]/a)" == "Draft7"
+xpath "string(//ul[@data-sourcemeta-ui-dropdown-menu]/li[3]/a/@href)" == "/test/draft3/string.json?as=draft7"
+xpath "string(//ul[@data-sourcemeta-ui-dropdown-menu]/li[4]/a)" == "2019-09"
+xpath "string(//ul[@data-sourcemeta-ui-dropdown-menu]/li[4]/a/@href)" == "/test/draft3/string.json?as=2019-09"
+xpath "string(//ul[@data-sourcemeta-ui-dropdown-menu]/li[5]/a)" == "2020-12"
+xpath "string(//ul[@data-sourcemeta-ui-dropdown-menu]/li[5]/a/@href)" == "/test/draft3/string.json?as=2020-12"
+
+# The dialect the schema already declares is left out, as a schema is
+# already written in it
+GET {{base}}/test/jsonld/draft7
+Accept: text/html
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
+[Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+xpath "string(//button[@data-sourcemeta-ui-dropdown-toggle])" == "Convert"
+xpath "count(//ul[@data-sourcemeta-ui-dropdown-menu]/li/a)" == 2
+xpath "string(//ul[@data-sourcemeta-ui-dropdown-menu]/li[1]/a)" == "2019-09"
+xpath "string(//ul[@data-sourcemeta-ui-dropdown-menu]/li[1]/a/@href)" == "/test/jsonld/draft7.json?as=2019-09"
+xpath "string(//ul[@data-sourcemeta-ui-dropdown-menu]/li[2]/a)" == "2020-12"
+xpath "string(//ul[@data-sourcemeta-ui-dropdown-menu]/li[2]/a/@href)" == "/test/jsonld/draft7.json?as=2020-12"
+xpath "count(//ul[@data-sourcemeta-ui-dropdown-menu]/li/a[text()='Draft7'])" == 0
+
+# A schema on the newest dialect has nothing left to be offered, even though
+# the API still serves it in that dialect
+GET {{base}}/test/object
+Accept: text/html
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: text/html; charset=utf-8
+Referrer-Policy: strict-origin-when-cross-origin
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
+[Asserts]
+header "Vary" == "Accept, Accept-Encoding"
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+xpath "count(//button[@data-sourcemeta-ui-dropdown-toggle])" == 0
+xpath "count(//ul[@data-sourcemeta-ui-dropdown-menu])" == 0
+xpath "boolean(//a[@href='/test/object.json?bundle=1'])" == true
+
+GET {{base}}/test/object.json?as=2020-12
+HTTP 200
+Content-Type: application/schema+json
+[Asserts]
+header "ETag" exists
