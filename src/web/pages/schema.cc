@@ -81,6 +81,37 @@ auto GenerateWebSchema::handler(
             .attribute("role", "button");
         body.text("Bundle");
         body.close();
+
+        // Conversions are advertised only where they are offered, so a schema
+        // nothing can be converted into grows no control at all
+        if (meta.defines("conversions") && !meta.at("conversions").empty()) {
+          body.div()
+              .attribute("class", "btn-group ms-2")
+              .attribute("data-sourcemeta-ui-dropdown", "");
+          body.button()
+              .attribute("class", "btn btn-secondary dropdown-toggle")
+              .attribute("type", "button")
+              .attribute("aria-expanded", "false")
+              .attribute("data-sourcemeta-ui-dropdown-toggle", "");
+          body.text("Convert");
+          body.close();
+          body.ul()
+              .attribute("class", "dropdown-menu")
+              .attribute("data-sourcemeta-ui-dropdown-menu", "");
+          for (const auto &conversion : meta.at("conversions").as_object()) {
+            body.li();
+            body.a()
+                .attribute("class", "dropdown-item")
+                .attribute("href", meta.at("path").to_string() +
+                                       ".json?as=" + conversion.first);
+            body.text(html::dialect_display_name(conversion.first));
+            body.close();
+            body.close();
+          }
+          body.close();
+          body.close();
+        }
+
         body.close();
 
         // Integration snippets

@@ -95,6 +95,16 @@ make_schema_health_progress_bar(sourcemeta::core::HTMLWriter &writer,
   writer.close();
 }
 
+inline auto dialect_display_name(const std::string_view name) -> std::string {
+  std::string result{name};
+  if (!result.empty()) {
+    result.front() = static_cast<char>(
+        std::toupper(static_cast<unsigned char>(result.front())));
+  }
+
+  return result;
+}
+
 inline auto
 make_dialect_badge(sourcemeta::core::HTMLWriter &writer,
                    const sourcemeta::core::JSON::String &base_dialect_uri)
@@ -136,13 +146,6 @@ make_dialect_badge(sourcemeta::core::HTMLWriter &writer,
     return {"unknown", false};
   }();
 
-  // Capitalize first character
-  std::string display_name = short_name;
-  if (!display_name.empty()) {
-    display_name[0] = static_cast<char>(
-        std::toupper(static_cast<unsigned char>(display_name[0])));
-  }
-
   writer.a()
       .attribute("href", "https://www.learnjsonschema.com/" + short_name)
       .attribute("target", "_blank");
@@ -150,7 +153,7 @@ make_dialect_badge(sourcemeta::core::HTMLWriter &writer,
       "class",
       "align-middle badge " +
           std::string(is_current ? "text-bg-primary" : "text-bg-danger"));
-  writer.text(display_name);
+  writer.text(dialect_display_name(short_name));
   writer.close();
   writer.close();
 }
