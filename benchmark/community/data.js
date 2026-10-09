@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791503557202,
+  "lastUpdate": 1791588013858,
   "repoUrl": "https://github.com/sourcemeta/one",
   "entries": {
     "Benchmark Index (community)": [
@@ -67455,6 +67455,123 @@ window.BENCHMARK_DATA = {
           {
             "name": "test/e2e/html: Schema Fetch (p99)",
             "value": 327,
+            "unit": "us"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Sumit Goyal",
+            "username": "itvi-1234",
+            "email": "rjsumit71@gmail.com"
+          },
+          "committer": {
+            "name": "GitHub",
+            "username": "web-flow",
+            "email": "noreply@github.com"
+          },
+          "id": "2af7c6bbbe1bc198745ce5333893af547f2eefc5",
+          "message": "Make the new UI's schema editor read-only (#1289)\n\nSigned-off-by: itvi-1234 <rjsumit71@gmail.com>",
+          "timestamp": "2026-10-04T23:01:12Z",
+          "url": "https://github.com/sourcemeta/one/commit/2af7c6bbbe1bc198745ce5333893af547f2eefc5"
+        },
+        "date": 1791588009748,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Add one schema (0 existing)",
+            "value": 246,
+            "unit": "ms"
+          },
+          {
+            "name": "Add one schema (100 existing)",
+            "value": 39,
+            "unit": "ms"
+          },
+          {
+            "name": "Add one schema (1000 existing)",
+            "value": 103,
+            "unit": "ms"
+          },
+          {
+            "name": "Add one schema (10000 existing)",
+            "value": 746,
+            "unit": "ms"
+          },
+          {
+            "name": "Update one schema (1 existing)",
+            "value": 35,
+            "unit": "ms"
+          },
+          {
+            "name": "Update one schema (101 existing)",
+            "value": 41,
+            "unit": "ms"
+          },
+          {
+            "name": "Update one schema (1001 existing)",
+            "value": 97,
+            "unit": "ms"
+          },
+          {
+            "name": "Update one schema (10001 existing)",
+            "value": 745,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (1 existing)",
+            "value": 10,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (101 existing)",
+            "value": 13,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (1001 existing)",
+            "value": 48,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (10001 existing)",
+            "value": 307,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 100 schemas",
+            "value": 545,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 1000 schemas",
+            "value": 1486,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 10000 schemas",
+            "value": 12906,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 10000 schemas (custom meta-schema)",
+            "value": 15567,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 10000 schemas ($ref fan-out)",
+            "value": 15707,
+            "unit": "ms"
+          },
+          {
+            "name": "test/e2e/html: Schema Fetch (p50)",
+            "value": 417,
+            "unit": "us"
+          },
+          {
+            "name": "test/e2e/html: Schema Fetch (p99)",
+            "value": 508,
             "unit": "us"
           }
         ]
