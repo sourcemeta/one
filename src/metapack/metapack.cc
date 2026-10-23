@@ -229,7 +229,7 @@ auto metapack_parse(const sourcemeta::core::FileView &view)
 
 auto metapack_read_json(const MetapackView &parsed)
     -> std::optional<sourcemeta::core::JSON> {
-  if (parsed.payload.empty()) {
+  if (parsed.header == nullptr || parsed.payload.empty()) {
     return std::nullopt;
   }
 

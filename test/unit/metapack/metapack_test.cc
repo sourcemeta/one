@@ -5,6 +5,7 @@
 #include <sourcemeta/core/test.h>
 
 #include <algorithm>   // std::ranges::equal
+#include <array>       // std::array
 #include <chrono>      // std::chrono
 #include <cstring>     // std::memcpy
 #include <filesystem>  // std::filesystem
@@ -180,6 +181,17 @@ TEST(write_and_read_json_gzip_large) {
   EXPECT_TRUE(result.value().is_object());
   EXPECT_EQ(result.value().at("key_0").to_string(), "value_0");
   EXPECT_EQ(result.value().at("key_199").to_string(), "value_199");
+}
+
+TEST(read_json_nullopt_when_the_view_has_no_header) {
+  const std::array<std::uint8_t, 2> bytes{0x7B, 0x7D};
+  const sourcemeta::one::MetapackView parsed{
+      .header = nullptr,
+      .mime = {},
+      .extension = {},
+      .payload = std::span<const std::uint8_t>{bytes}};
+
+  EXPECT_FALSE(sourcemeta::one::metapack_read_json(parsed).has_value());
 }
 
 TEST(write_text_appends_a_trailing_newline) {
