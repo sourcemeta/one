@@ -184,7 +184,7 @@ TEST(write_and_read_json_gzip_large) {
 }
 
 TEST(read_json_nullopt_when_the_view_has_no_header) {
-  const std::array<std::uint8_t, 2> bytes{0x7B, 0x7D};
+  const std::array<std::uint8_t, 2> bytes{{0x7B, 0x7D}};
   const sourcemeta::one::MetapackView parsed{
       .header = nullptr,
       .mime = {},
