@@ -109,6 +109,10 @@ auto metapack_read_json(const sourcemeta::core::FileView &view)
     -> std::optional<sourcemeta::core::JSON>;
 
 SOURCEMETA_ONE_METAPACK_EXPORT
+auto metapack_read_json(const MetapackView &parsed)
+    -> std::optional<sourcemeta::core::JSON>;
+
+SOURCEMETA_ONE_METAPACK_EXPORT
 auto metapack_checksum_hex(const MetapackHeader &header)
     -> std::array<char, METAPACK_CHECKSUM_HEX_LENGTH>;
 

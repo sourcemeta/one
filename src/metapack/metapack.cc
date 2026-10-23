@@ -227,18 +227,17 @@ auto metapack_parse(const sourcemeta::core::FileView &view)
       .payload = {base + payload_offset, view.size() - payload_offset}};
 }
 
-auto metapack_read_json(const sourcemeta::core::FileView &view)
+auto metapack_read_json(const MetapackView &parsed)
     -> std::optional<sourcemeta::core::JSON> {
-  const auto parsed{metapack_parse(view)};
-  if (!parsed.has_value() || parsed->payload.empty()) {
+  if (parsed.payload.empty()) {
     return std::nullopt;
   }
 
   // Parsing can run out of memory on a payload whose header overstates how far
   // it inflates, which is a refusal rather than a failure
   try {
-    if (parsed->header->encoding == MetapackEncoding::GZIP) {
-      const auto decompressed{inflate(parsed.value())};
+    if (parsed.header->encoding == MetapackEncoding::GZIP) {
+      const auto decompressed{inflate(parsed)};
       if (!decompressed.has_value()) {
         return std::nullopt;
       }
@@ -246,17 +245,27 @@ auto metapack_read_json(const sourcemeta::core::FileView &view)
       return sourcemeta::core::parse_json(decompressed.value());
     }
 
-    if (parsed->header->content_bytes > parsed->payload.size()) {
+    if (parsed.header->content_bytes > parsed.payload.size()) {
       return std::nullopt;
     }
 
     return sourcemeta::core::parse_json(std::string_view{
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        reinterpret_cast<const char *>(parsed->payload.data()),
-        parsed->header->content_bytes});
+        reinterpret_cast<const char *>(parsed.payload.data()),
+        parsed.header->content_bytes});
   } catch (const std::exception &) {
     return std::nullopt;
   }
+}
+
+auto metapack_read_json(const sourcemeta::core::FileView &view)
+    -> std::optional<sourcemeta::core::JSON> {
+  const auto parsed{metapack_parse(view)};
+  if (!parsed.has_value()) {
+    return std::nullopt;
+  }
+
+  return metapack_read_json(parsed.value());
 }
 
 auto metapack_read_json(const std::filesystem::path &path)

@@ -405,7 +405,7 @@ struct GenerateExplorerSchemaMetadata {
     assert(bundle_parsed.has_value());
     const auto bundle_bytes{bundle_parsed->header->content_bytes};
     const auto schema_data_option{
-        sourcemeta::one::metapack_read_json(schema_view)};
+        sourcemeta::one::metapack_read_json(schema_parsed.value())};
     assert(schema_data_option.has_value());
     const auto &schema_data{schema_data_option.value()};
     const sourcemeta::core::SchemaFrame frame{
@@ -445,7 +445,8 @@ struct GenerateExplorerSchemaMetadata {
       const auto official{
           sourcemeta::one::official_dialect(resolver_entry.dialect)};
       assert(official.has_value());
-      auto bundle_option{sourcemeta::one::metapack_read_json(bundle_view)};
+      auto bundle_option{
+          sourcemeta::one::metapack_read_json(bundle_parsed.value())};
       assert(bundle_option.has_value());
       const auto target{
           sourcemeta::one::dialect_conversions(official.value()).front()};

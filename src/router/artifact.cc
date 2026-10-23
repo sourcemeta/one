@@ -146,11 +146,6 @@ auto RouterAction::artifact_resolve_static(
   if (!sourcemeta::core::is_under_path(canonical, root)) {
     return {.path = std::nullopt};
   }
-  // Locating is what decides whether there is anything to serve, as it does
-  // for the artifacts the index produces
-  if (!std::filesystem::exists(canonical)) {
-    return {.path = std::nullopt};
-  }
   return {.path = ResolvedArtifact{std::move(canonical)}};
 }
 
@@ -195,8 +190,17 @@ auto RouterAction::artifact_serve(
     return;
   }
 
-  // Locating the artifact already established that there is a file here, so
-  // this neither asks again nor answers for a file that went away in between
+  // Not every way of naming an artifact establishes that there is a file to
+  // serve, and mapping one that is not there throws, so this is the single
+  // gate every caller passes through
+  if (!std::filesystem::exists(absolute_path)) {
+    sourcemeta::one::json_error(
+        request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
+        "urn:sourcemeta:one:not-found", "There is nothing at this URL",
+        error_schema, enable_cors ? "*" : "");
+    return;
+  }
+
   sourcemeta::core::FileView view{absolute_path};
   const auto parsed{sourcemeta::one::metapack_parse(view)};
   if (!parsed.has_value()) {
