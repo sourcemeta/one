@@ -10,6 +10,7 @@
 
 #include <array>       // std::array
 #include <chrono>      // std::chrono
+#include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t, std::uint16_t, std::uint32_t, etc.
 #include <filesystem>  // std::filesystem::path
 #include <optional>    // std::optional
@@ -20,7 +21,6 @@ namespace sourcemeta::one {
 
 static constexpr std::uint32_t METAPACK_MAGIC{0x4154454D};
 static constexpr std::uint16_t METAPACK_VERSION{2};
-static constexpr std::uint64_t METAPACK_MAX_DECOMPRESSION_RATIO{1024};
 
 enum class MetapackEncoding : std::uint8_t { Identity = 0, GZIP = 1 };
 
@@ -33,12 +33,11 @@ struct MetapackHeader {
   std::int64_t last_modified;
   std::uint64_t content_bytes;
   // The size in bytes of the artifact after applying the compression
-  // matching the supported wire content-coding. The codec is gzip
-  // today, the field name stays compression-agnostic so a future codec
-  // swap is mechanical. Precomputed at index time so the server can
-  // answer HEAD with Content-Encoding set without compressing on the
-  // fly only to discard the bytes. For compressed-storage artifacts
-  // this equals the payload size on disk.
+  // matching the supported wire content-coding, or zero for an artifact
+  // stored as it reads, which is never compressed at index time. The codec
+  // is gzip today, the field name stays compression-agnostic so a future
+  // codec swap is mechanical. For compressed-storage artifacts this equals
+  // the payload size on disk.
   std::uint64_t compressed_bytes;
   std::int64_t duration;
   std::array<std::uint8_t, 32> checksum;
@@ -46,15 +45,7 @@ struct MetapackHeader {
 };
 #pragma pack(pop)
 
-struct MetapackInfo {
-  std::string checksum_hex;
-  std::chrono::system_clock::time_point last_modified;
-  std::string mime;
-  MetapackEncoding encoding;
-  std::uint64_t content_bytes;
-  std::uint64_t compressed_bytes;
-  std::chrono::milliseconds duration;
-};
+static constexpr std::size_t METAPACK_CHECKSUM_HEX_LENGTH{64};
 
 // Writers
 
@@ -81,6 +72,13 @@ auto metapack_write_text(const std::filesystem::path &destination,
                          std::chrono::milliseconds duration) -> void;
 
 SOURCEMETA_ONE_METAPACK_EXPORT
+auto metapack_write_bytes(const std::filesystem::path &destination,
+                          std::span<const std::uint8_t> contents,
+                          std::string_view mime, MetapackEncoding encoding,
+                          std::span<const std::uint8_t> extension,
+                          std::chrono::milliseconds duration) -> void;
+
+SOURCEMETA_ONE_METAPACK_EXPORT
 auto metapack_write_file(const std::filesystem::path &destination,
                          const std::filesystem::path &source,
                          std::string_view mime, MetapackEncoding encoding,
@@ -89,43 +87,44 @@ auto metapack_write_file(const std::filesystem::path &destination,
 
 // Readers
 
+// Every part of a metapack file, located in a single pass. The views point
+// into the memory-mapped file, so they last exactly as long as it stays mapped
+struct MetapackView {
+  const MetapackHeader *header;
+  std::string_view mime;
+  std::span<const std::uint8_t> extension;
+  std::span<const std::uint8_t> payload;
+};
+
+SOURCEMETA_ONE_METAPACK_EXPORT
+auto metapack_parse(const sourcemeta::core::FileView &view)
+    -> std::optional<MetapackView>;
+
 SOURCEMETA_ONE_METAPACK_EXPORT
 auto metapack_read_json(const std::filesystem::path &path)
     -> std::optional<sourcemeta::core::JSON>;
 
 SOURCEMETA_ONE_METAPACK_EXPORT
-auto metapack_read_text(const std::filesystem::path &path)
-    -> std::optional<std::string>;
+auto metapack_read_json(const sourcemeta::core::FileView &view)
+    -> std::optional<sourcemeta::core::JSON>;
 
 SOURCEMETA_ONE_METAPACK_EXPORT
-auto metapack_info(const sourcemeta::core::FileView &view)
-    -> std::optional<MetapackInfo>;
+auto metapack_checksum_hex(const MetapackHeader &header)
+    -> std::array<char, METAPACK_CHECKSUM_HEX_LENGTH>;
 
 SOURCEMETA_ONE_METAPACK_EXPORT
-auto metapack_payload_offset(const sourcemeta::core::FileView &view)
-    -> std::optional<std::size_t>;
-
-SOURCEMETA_ONE_METAPACK_EXPORT
-auto metapack_extension_offset(const sourcemeta::core::FileView &view)
-    -> std::size_t;
-
-SOURCEMETA_ONE_METAPACK_EXPORT
-auto metapack_extension_size(const sourcemeta::core::FileView &view)
-    -> std::uint32_t;
+auto metapack_last_modified(const MetapackHeader &header)
+    -> std::chrono::system_clock::time_point;
 
 template <typename T>
-auto metapack_extension(const sourcemeta::core::FileView &view) -> const T * {
-  const auto offset{metapack_extension_offset(view)};
-  if (offset == 0) {
+auto metapack_extension_as(const std::span<const std::uint8_t> extension)
+    -> const T * {
+  if (extension.size() < sizeof(T)) {
     return nullptr;
   }
 
-  const auto size{metapack_extension_size(view)};
-  if (size < sizeof(T)) {
-    return nullptr;
-  }
-
-  return view.as<T>(offset);
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  return reinterpret_cast<const T *>(extension.data());
 }
 
 } // namespace sourcemeta::one

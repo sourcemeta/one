@@ -145,11 +145,10 @@ header "Content-Encoding" not exists
 bytes count > 0
 
 # RFC 9110 §9.3.2: a HEAD response must declare the same
-# Content-Length the matching GET would have sent. The artifact
-# is identity-stored, so the server reads the precomputed gzip
-# size from the metapack header rather than compressing on the
-# fly only to discard the bytes. Capture the GET's
-# Content-Length and check that HEAD reports the same value.
+# Content-Length the matching GET would have sent. The artifact is
+# stored compressed and asked for compressed, so neither answer runs
+# a codec. Capture the GET's Content-Length and check that HEAD
+# reports the same value.
 GET {{base}}/test/schemas/string.json
 Accept-Encoding: gzip
 HTTP 200

@@ -142,6 +142,19 @@ static auto maximum_offset_table_entries(const std::size_t payload_size)
   return (payload_size - sizeof(SearchIndexHeader)) / sizeof(std::uint32_t);
 }
 
+// Where a record begins. The table follows the index header at an offset the
+// artifact's own framing decides, which is rarely one a `std::uint32_t` may be
+// read from in place. The caller must have already bounded the index
+static auto offset_table_entry(const std::uint8_t *payload,
+                               const std::size_t index) -> std::uint32_t {
+  std::uint32_t entry{0};
+  std::memcpy(&entry,
+              payload + sizeof(SearchIndexHeader) +
+                  (index * sizeof(std::uint32_t)),
+              sizeof(entry));
+  return entry;
+}
+
 auto search(const std::uint8_t *payload, const std::size_t payload_size,
             const std::string_view query, const std::size_t limit,
             const std::uint8_t scope) -> sourcemeta::core::JSON {
@@ -164,13 +177,9 @@ auto search(const std::uint8_t *payload, const std::size_t payload_size,
     return result;
   }
 
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  const auto *offset_table{reinterpret_cast<const std::uint32_t *>(
-      payload + sizeof(SearchIndexHeader))};
-
   for (std::uint32_t entry_index{0}; entry_index < header->entry_count;
        ++entry_index) {
-    const auto record_offset{offset_table[entry_index]};
+    const auto record_offset{offset_table_entry(payload, entry_index)};
     if (record_offset + sizeof(SearchRecordHeader) > payload_size) {
       break;
     }
@@ -252,14 +261,17 @@ SearchView::SearchView(const std::filesystem::path &path) {
     return;
   }
   this->view_ = std::make_unique<sourcemeta::core::FileView>(path);
-  const auto payload_start_option{metapack_payload_offset(*this->view_)};
-  if (!payload_start_option.has_value()) {
+  const auto parsed{metapack_parse(*this->view_)};
+  if (!parsed.has_value()) {
     return;
   }
-  const auto &payload_start{payload_start_option.value()};
-  this->payload_size_ = this->view_->size() - payload_start;
+
+  // The records are read straight off the mapping rather than decompressed,
+  // so the artifact has to be stored as it reads
+  assert(parsed->header->encoding == MetapackEncoding::Identity);
+  this->payload_size_ = parsed->payload.size();
   if (this->payload_size_ > 0) {
-    this->payload_ = this->view_->as<std::uint8_t>(payload_start);
+    this->payload_ = parsed->payload.data();
   }
 }
 
@@ -309,10 +321,7 @@ auto SearchView::at(const std::size_t index) -> SearchListEntry {
     return {};
   }
 
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  const auto *offset_table{reinterpret_cast<const std::uint32_t *>(
-      this->payload_ + sizeof(SearchIndexHeader))};
-  const auto record_offset{offset_table[index]};
+  const auto record_offset{offset_table_entry(this->payload_, index)};
   if (record_offset + sizeof(SearchRecordHeader) > this->payload_size_) {
     return {};
   }
@@ -384,12 +393,8 @@ auto SearchView::for_each(
   const auto effective_count{std::min(count, remaining)};
   const auto last{offset + effective_count};
 
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  const auto *offset_table{reinterpret_cast<const std::uint32_t *>(
-      this->payload_ + sizeof(SearchIndexHeader))};
-
   for (std::size_t index{offset}; index < last; ++index) {
-    const auto record_offset{offset_table[index]};
+    const auto record_offset{offset_table_entry(this->payload_, index)};
     if (record_offset + sizeof(SearchRecordHeader) > this->payload_size_) {
       break;
     }

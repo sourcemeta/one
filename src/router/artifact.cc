@@ -146,6 +146,11 @@ auto RouterAction::artifact_resolve_static(
   if (!sourcemeta::core::is_under_path(canonical, root)) {
     return {.path = std::nullopt};
   }
+  // Locating is what decides whether there is anything to serve, as it does
+  // for the artifacts the index produces
+  if (!std::filesystem::exists(canonical)) {
+    return {.path = std::nullopt};
+  }
   return {.path = ResolvedArtifact{std::move(canonical)}};
 }
 
@@ -190,17 +195,11 @@ auto RouterAction::artifact_serve(
     return;
   }
 
-  if (!std::filesystem::exists(absolute_path)) {
-    sourcemeta::one::json_error(
-        request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
-        "urn:sourcemeta:one:not-found", "There is nothing at this URL",
-        error_schema, enable_cors ? "*" : "");
-    return;
-  }
-
+  // Locating the artifact already established that there is a file here, so
+  // this neither asks again nor answers for a file that went away in between
   sourcemeta::core::FileView view{absolute_path};
-  if (view.size() <
-      sizeof(sourcemeta::one::MetapackHeader) + sizeof(std::uint32_t)) {
+  const auto parsed{sourcemeta::one::metapack_parse(view)};
+  if (!parsed.has_value()) {
     sourcemeta::one::json_error(
         request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
         "urn:sourcemeta:one:not-found", "There is nothing at this URL",
@@ -208,14 +207,8 @@ auto RouterAction::artifact_serve(
     return;
   }
 
-  const auto info{sourcemeta::one::metapack_info(view)};
-  if (!info.has_value()) {
-    sourcemeta::one::json_error(
-        request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
-        "urn:sourcemeta:one:not-found", "There is nothing at this URL",
-        error_schema, enable_cors ? "*" : "");
-    return;
-  }
+  const auto &header{*parsed->header};
+  const auto last_modified{sourcemeta::one::metapack_last_modified(header)};
 
   // Our checksum is computed over the identity (uncompressed) payload at
   // index time. When the wire response is gzip-encoded the wire bytes are
@@ -230,9 +223,12 @@ auto RouterAction::artifact_serve(
   //
   // When the wire response is identity, the wire bytes exactly match what
   // the checksum covers, so the validator can be strong.
-  const auto &checksum{info->checksum_hex};
-  const auto etag_strong{std::format("\"{}\"", checksum)};
-  const auto etag_weak{std::format("W/\"{}\"", checksum)};
+  const auto checksum{sourcemeta::one::metapack_checksum_hex(header)};
+  const std::string_view checksum_hex{checksum.data(), checksum.size()};
+  const auto wire_is_gzip{request.response_encoding() ==
+                          sourcemeta::one::Encoding::GZIP};
+  const auto etag{wire_is_gzip ? std::format("W/\"{}\"", checksum_hex)
+                               : std::format("\"{}\"", checksum_hex)};
 
   // RFC 9110 §13.2.2 (Precedence of Preconditions): If-None-Match is
   // evaluated before If-Modified-Since. RFC 9110 §13.1.3: "A recipient
@@ -247,8 +243,13 @@ auto RouterAction::artifact_serve(
   // https://datatracker.ietf.org/doc/html/rfc9110#section-13.2.2
   // https://datatracker.ietf.org/doc/html/rfc9110#section-13.1.3
   if (request.header_exists("if-none-match")) {
+    // A caller may name either validator whatever this response would carry,
+    // so matching considers both forms rather than only the one being sent
+    const auto etag_counterpart{wire_is_gzip
+                                    ? std::format("\"{}\"", checksum_hex)
+                                    : std::format("W/\"{}\"", checksum_hex)};
     if (sourcemeta::core::http_field_list_contains_any(
-            request.header("if-none-match"), {"*", etag_strong, etag_weak})) {
+            request.header("if-none-match"), {"*", etag, etag_counterpart})) {
       response.write_status(sourcemeta::core::HTTP_STATUS_NOT_MODIFIED);
       if (enable_cors) {
         response.write_header("Access-Control-Allow-Origin", "*");
@@ -268,12 +269,9 @@ auto RouterAction::artifact_serve(
       // Content-Location, Date, ETag, Expires, and Vary." Last-Modified
       // travels too so caches refresh both validators at once.
       // https://datatracker.ietf.org/doc/html/rfc9110#section-15.4.5
-      response.write_header("Last-Modified", sourcemeta::core::to_imf_fixdate(
-                                                 info->last_modified));
-      response.write_header("ETag", request.response_encoding() ==
-                                            sourcemeta::one::Encoding::GZIP
-                                        ? etag_weak
-                                        : etag_strong);
+      response.write_header("Last-Modified",
+                            sourcemeta::core::to_imf_fixdate(last_modified));
+      response.write_header("ETag", etag);
 
       sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_NOT_MODIFIED,
                                      request, response);
@@ -289,7 +287,7 @@ auto RouterAction::artifact_serve(
     // to more consistent behavior.
     if (if_modified_since.has_value() &&
         (if_modified_since.value() + std::chrono::seconds(1)) >=
-            info->last_modified) {
+            last_modified) {
       response.write_status(sourcemeta::core::HTTP_STATUS_NOT_MODIFIED);
       if (enable_cors) {
         response.write_header("Access-Control-Allow-Origin", "*");
@@ -298,12 +296,9 @@ auto RouterAction::artifact_serve(
       // See the matching comments on the If-None-Match branch.
       response.write_header("Cache-Control", cache_control);
       response.write_header("Vary", vary);
-      response.write_header("Last-Modified", sourcemeta::core::to_imf_fixdate(
-                                                 info->last_modified));
-      response.write_header("ETag", request.response_encoding() ==
-                                            sourcemeta::one::Encoding::GZIP
-                                        ? etag_weak
-                                        : etag_strong);
+      response.write_header("Last-Modified",
+                            sourcemeta::core::to_imf_fixdate(last_modified));
+      response.write_header("ETag", etag);
 
       sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_NOT_MODIFIED,
                                      request, response);
@@ -331,7 +326,7 @@ auto RouterAction::artifact_serve(
     response.write_header("Access-Control-Expose-Headers", "Link, ETag");
   }
 
-  response.write_header("Content-Type", mime.empty() ? info->mime : mime);
+  response.write_header("Content-Type", mime.empty() ? parsed->mime : mime);
 
   if (!browser_security.referrer_policy.empty()) {
     response.write_header("Referrer-Policy", browser_security.referrer_policy);
@@ -346,12 +341,9 @@ auto RouterAction::artifact_serve(
   }
 
   response.write_header("Last-Modified",
-                        sourcemeta::core::to_imf_fixdate(info->last_modified));
+                        sourcemeta::core::to_imf_fixdate(last_modified));
 
-  response.write_header("ETag", request.response_encoding() ==
-                                        sourcemeta::one::Encoding::GZIP
-                                    ? etag_weak
-                                    : etag_strong);
+  response.write_header("ETag", etag);
 
   // RFC 9110 §12.5.5: emit Vary on cacheable responses so shared caches
   // key the entry by the request headers that select the representation.
@@ -370,18 +362,17 @@ auto RouterAction::artifact_serve(
   if (!link.empty()) {
     sourcemeta::one::write_link_header(response, link);
   } else {
+    const auto &extension{parsed->extension};
     const auto *dialect_ext{
-        sourcemeta::one::metapack_extension<DialectExtension>(view)};
-    const auto extension_total{sourcemeta::one::metapack_extension_size(view)};
+        sourcemeta::one::metapack_extension_as<DialectExtension>(extension)};
     const std::string_view dialect =
         (dialect_ext != nullptr && dialect_ext->dialect_length > 0 &&
          sizeof(DialectExtension) + dialect_ext->dialect_length <=
-             extension_total)
+             extension.size())
             ? std::string_view{
                   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-                  reinterpret_cast<const char *>(view.as<std::uint8_t>(
-                      sourcemeta::one::metapack_extension_offset(view) +
-                      sizeof(DialectExtension))),
+                  reinterpret_cast<const char *>(extension.data() +
+                                                 sizeof(DialectExtension)),
                   dialect_ext->dialect_length}
             : std::string_view{};
     if (!dialect.empty()) {
@@ -389,36 +380,34 @@ auto RouterAction::artifact_serve(
     }
   }
 
-  const auto payload_start{sourcemeta::one::metapack_payload_offset(view)};
-  if (!payload_start.has_value()) {
-    sourcemeta::one::json_error(
-        request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
-        "urn:sourcemeta:one:not-found", "There is nothing at this URL",
-        error_schema, enable_cors ? "*" : "");
-    return;
-  }
+  const std::string_view contents{
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+      reinterpret_cast<const char *>(parsed->payload.data()),
+      parsed->payload.size()};
 
-  const auto payload_size{view.size() - payload_start.value()};
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  const std::string contents{reinterpret_cast<const char *>(
-                                 view.as<std::uint8_t>(payload_start.value())),
-                             payload_size};
-
-  if (info->encoding == sourcemeta::one::MetapackEncoding::GZIP) {
-    sourcemeta::one::send_response(status, request, response, contents,
-                                   sourcemeta::one::Encoding::GZIP);
+  // The header carries both representation sizes as fixed-width `uint64_t`
+  // to keep the metapack format portable across architectures. Narrow to
+  // `std::size_t` for the uWS API. On 64-bit hosts this is a no-op, and the
+  // asserts guard a hypothetical 32-bit build from truncating a >4 GB
+  // artifact (which the indexer would never produce on realistic schema
+  // inputs). Whichever size the wire encoding calls for is the one the
+  // stored encoding does not already have on disk.
+  if (header.encoding == sourcemeta::one::MetapackEncoding::GZIP) {
+    assert(header.content_bytes <= std::numeric_limits<std::size_t>::max());
+    sourcemeta::one::send_response(
+        status, request, response, contents, sourcemeta::one::Encoding::GZIP,
+        static_cast<std::size_t>(header.content_bytes));
   } else {
-    // The header carries the compressed size as a fixed-width `uint64_t`
-    // to keep the metapack format portable across architectures. Narrow
-    // to `std::size_t` for the uWS API. On 64-bit hosts this is a no-op,
-    // and the assert guards a hypothetical 32-bit build from truncating
-    // a >4 GB artifact (which the indexer would never produce on
-    // realistic schema inputs).
-    assert(info->compressed_bytes <= std::numeric_limits<std::size_t>::max());
+    assert(header.compressed_bytes <= std::numeric_limits<std::size_t>::max());
+    // An artifact stored as it reads records no compressed size, in which case
+    // answering a compressed HEAD means compressing it after all
     sourcemeta::one::send_response(
         status, request, response, contents,
         sourcemeta::one::Encoding::Identity,
-        static_cast<std::size_t>(info->compressed_bytes));
+        header.compressed_bytes > 0
+            ? std::optional<std::size_t>{static_cast<std::size_t>(
+                  header.compressed_bytes)}
+            : std::nullopt);
   }
 }
 

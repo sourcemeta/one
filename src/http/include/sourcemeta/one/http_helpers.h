@@ -213,14 +213,14 @@ inline auto send_response(const sourcemeta::core::HTTPStatus &status,
 
 inline auto send_response(
     const sourcemeta::core::HTTPStatus &status, const HTTPRequest &request,
-    HTTPResponse &response, const std::string &message,
+    HTTPResponse &response, const std::string_view message,
     const Encoding current_encoding,
-    const std::optional<std::size_t> precomputed_compressed_size = std::nullopt)
+    const std::optional<std::size_t> precomputed_transcoded_size = std::nullopt)
     -> void {
   const auto line{
       std::format("{} {} {}", status.wire, request.method(), request.path())};
   response.send(request, message, current_encoding,
-                precomputed_compressed_size);
+                precomputed_transcoded_size);
   http_log(line);
   request.observation().record(status.code);
 }
