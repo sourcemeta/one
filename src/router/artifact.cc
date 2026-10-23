@@ -7,13 +7,13 @@
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
 
+#include <algorithm>   // std::ranges::copy
+#include <array>       // std::array
 #include <cassert>     // assert
 #include <chrono>      // std::chrono::seconds
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t, std::uint16_t, std::uint32_t
-#include <exception>   // std::exception
 #include <filesystem>  // std::filesystem
-#include <format>      // std::format
 #include <limits>      // std::numeric_limits
 #include <optional>    // std::optional
 #include <string>      // std::string
@@ -27,6 +27,28 @@ struct DialectExtension {
   std::uint16_t dialect_length;
 };
 #pragma pack(pop)
+
+// The longest form a validator takes here, which is the weak prefix, the
+// quoted checksum, and nothing else
+constexpr std::size_t ETAG_CAPACITY{
+    2 + 1 + sourcemeta::one::METAPACK_CHECKSUM_HEX_LENGTH + 1};
+
+// RFC 9110 §8.8.3 gives the weak form the `W/` prefix
+// https://datatracker.ietf.org/doc/html/rfc9110#section-8.8.3
+auto write_etag(std::array<char, ETAG_CAPACITY> &storage,
+                const std::string_view checksum_hex, const bool weak)
+    -> std::string_view {
+  auto *cursor{storage.data()};
+  if (weak) {
+    *cursor++ = 'W';
+    *cursor++ = '/';
+  }
+
+  *cursor++ = '"';
+  cursor = std::ranges::copy(checksum_hex, cursor).out;
+  *cursor++ = '"';
+  return {storage.data(), static_cast<std::size_t>(cursor - storage.data())};
+}
 
 } // namespace
 
@@ -231,8 +253,8 @@ auto RouterAction::artifact_serve(
   const std::string_view checksum_hex{checksum.data(), checksum.size()};
   const auto wire_is_gzip{request.response_encoding() ==
                           sourcemeta::one::Encoding::GZIP};
-  const auto etag{wire_is_gzip ? std::format("W/\"{}\"", checksum_hex)
-                               : std::format("\"{}\"", checksum_hex)};
+  std::array<char, ETAG_CAPACITY> etag_storage{};
+  const auto etag{write_etag(etag_storage, checksum_hex, wire_is_gzip)};
 
   // RFC 9110 §13.2.2 (Precedence of Preconditions): If-None-Match is
   // evaluated before If-Modified-Since. RFC 9110 §13.1.3: "A recipient
@@ -249,9 +271,9 @@ auto RouterAction::artifact_serve(
   if (request.header_exists("if-none-match")) {
     // A caller may name either validator whatever this response would carry,
     // so matching considers both forms rather than only the one being sent
-    const auto etag_counterpart{wire_is_gzip
-                                    ? std::format("\"{}\"", checksum_hex)
-                                    : std::format("W/\"{}\"", checksum_hex)};
+    std::array<char, ETAG_CAPACITY> counterpart_storage{};
+    const auto etag_counterpart{
+        write_etag(counterpart_storage, checksum_hex, !wire_is_gzip)};
     if (sourcemeta::core::http_field_list_contains_any(
             request.header("if-none-match"), {"*", etag, etag_counterpart})) {
       response.write_status(sourcemeta::core::HTTP_STATUS_NOT_MODIFIED);
