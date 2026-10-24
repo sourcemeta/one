@@ -15,6 +15,7 @@
 
 #include <sourcemeta/one/build.h>
 #include <sourcemeta/one/configuration.h>
+#include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/resolver.h>
 #include <sourcemeta/one/shared.h>
 #include <sourcemeta/one/web.h>
@@ -163,6 +164,33 @@ static auto print_progress(const std::size_t threads,
              title, prefix, std::this_thread::get_id(), threads);
 }
 
+// How long each artifact took to produce, for the run that produced it.
+// Nothing is kept for an artifact this run did not touch, as there is no
+// comparable time to report for one that was left alone
+namespace {
+
+class BuildTimings {
+public:
+  auto record(const std::filesystem::path &destination,
+              const std::chrono::milliseconds duration) -> void {
+    const std::scoped_lock guard{this->mutex_};
+    this->entries_.emplace_back(destination, duration);
+  }
+
+  [[nodiscard]] auto take() -> std::vector<
+      std::pair<std::filesystem::path, std::chrono::milliseconds>> {
+    const std::scoped_lock guard{this->mutex_};
+    return std::move(this->entries_);
+  }
+
+private:
+  std::vector<std::pair<std::filesystem::path, std::chrono::milliseconds>>
+      entries_;
+  std::mutex mutex_;
+};
+
+} // namespace
+
 static auto execute_plan(sourcemeta::one::BuildState &entries,
                          const std::filesystem::path &canonical_output,
                          sourcemeta::one::Resolver &resolver,
@@ -170,7 +198,8 @@ static auto execute_plan(sourcemeta::one::BuildState &entries,
                          const sourcemeta::core::JSON &raw_configuration,
                          const std::size_t concurrency,
                          sourcemeta::one::BuildPlan &plan,
-                         const std::string_view label) -> void {
+                         const std::string_view label, BuildTimings *timings)
+    -> void {
   // Give it a generous thread stack size, otherwise we might overflow
   // the small-by-default thread stack with Blaze
   constexpr auto THREAD_STACK_SIZE{8 * 1024 * 1024};
@@ -197,6 +226,11 @@ static auto execute_plan(sourcemeta::one::BuildState &entries,
           print_progress(threads, label, relative_path, current, plan.size);
           const auto handler{HANDLERS[static_cast<std::uint8_t>(action.type)]};
           assert(handler);
+          // Timed from out here so that what is reported covers everything
+          // producing the artifact takes, serialising and compressing it
+          // included, and so that every kind of artifact is measured the
+          // same way
+          const auto timestamp_start{std::chrono::steady_clock::now()};
           try {
             handler(
                 entries, action,
@@ -256,6 +290,17 @@ static auto execute_plan(sourcemeta::one::BuildState &entries,
             }
 
             throw;
+          }
+
+          // A handler is free to decide there is nothing to serve and take its
+          // destination away, and what was never left behind is not something
+          // to report a time for
+          if (timings != nullptr &&
+              std::filesystem::exists(action.destination)) {
+            timings->record(
+                action.destination,
+                std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now() - timestamp_start));
           }
 
           const auto lock{entries.take_lock()};
@@ -405,13 +450,18 @@ static auto index_main(const std::string_view &program,
   sourcemeta::one::BuildState entries;
   const auto state_path{canonical_output / "state.bin"};
   // What this build is being asked to apply: the configuration exactly as the
-  // anchor records it, and the version of the tool applying it, since a
-  // version change is what makes artifacts of an older format unusable. A
-  // fingerprint over both, so that a state describing one of them never
-  // vouches for work done under the other
+  // anchor records it, the version of the tool applying it, and the version of
+  // the artifact format it writes, since any of those changing is what makes
+  // artifacts of an earlier build unusable. The format version is named in its
+  // own right rather than left to the tool version, which a release build
+  // reports without a commit behind it, so the same release rebuilt against a
+  // newer format would otherwise keep artifacts nothing can read. A
+  // fingerprint over all of them, so that a state describing one never vouches
+  // for work done under another
   std::ostringstream inputs_text;
   sourcemeta::core::prettify(raw_configuration, inputs_text);
   inputs_text << sourcemeta::one::version();
+  inputs_text << sourcemeta::one::METAPACK_VERSION;
   const auto inputs_fingerprint{
       sourcemeta::one::BuildState::fingerprint(inputs_text.str())};
 
@@ -708,13 +758,20 @@ static auto index_main(const std::string_view &program,
 
   const auto visible{view_filter_from(gate, view_table)};
 
+  // Only collected when it is going to be reported, so an ordinary build does
+  // not hold on to a timing per artifact for nothing
+  const auto profiling_artifacts{app.contains("profile")};
+  BuildTimings timings;
+  auto *const timings_target{profiling_artifacts ? &timings : nullptr};
+
   auto produce_plan{sourcemeta::one::delta<sourcemeta::one::INDEX_RULES>(
       sourcemeta::one::BuildPhase::Produce, build_type, entries,
       canonical_output, leaves, this_version, incremental, comment, mode_label,
       limits, views, visible)};
   PROFILE_END(profiling, "Producing (Delta)");
   execute_plan(entries, canonical_output, resolver, configuration,
-               raw_configuration, concurrency, produce_plan, "Producing");
+               raw_configuration, concurrency, produce_plan, "Producing",
+               timings_target);
   PROFILE_END(profiling, "Producing (Build)");
 
   auto combine_plan{sourcemeta::one::delta<sourcemeta::one::INDEX_RULES>(
@@ -723,7 +780,8 @@ static auto index_main(const std::string_view &program,
       limits, views, visible)};
   PROFILE_END(profiling, "Combining (Delta)");
   execute_plan(entries, canonical_output, resolver, configuration,
-               raw_configuration, concurrency, combine_plan, "Combining");
+               raw_configuration, concurrency, combine_plan, "Combining",
+               timings_target);
   PROFILE_END(profiling, "Combining (Build)");
 
   /////////////////////////////////////////////////////////////////////////////
@@ -739,27 +797,9 @@ static auto index_main(const std::string_view &program,
   /////////////////////////////////////////////////////////////////////////////
 
   // TODO: Add a test for this
-  if (app.contains("profile")) {
+  if (profiling_artifacts) {
     std::println(stderr, "Profiling...");
-    std::vector<std::pair<std::filesystem::path, std::chrono::milliseconds>>
-        durations;
-    for (const auto &entry :
-         std::filesystem::recursive_directory_iterator{canonical_output}) {
-      if (entry.is_regular_file() && entry.path().extension() == ".metapack") {
-        try {
-          sourcemeta::core::FileView file_view{entry.path()};
-          const auto parsed{sourcemeta::one::metapack_parse(file_view)};
-          assert(parsed.has_value());
-          durations.emplace_back(entry.path(), std::chrono::milliseconds{
-                                                   parsed->header->duration});
-        } catch (...) {
-          std::println(stderr, "Could not profile file: {}",
-                       entry.path().string());
-          throw;
-        }
-      }
-    }
-
+    auto durations{timings.take()};
     std::ranges::sort(durations, [](const auto &left, const auto &right) {
       return left.second > right.second;
     });

@@ -16,19 +16,15 @@ auto GenerateWebNotFound::handler(
     const sourcemeta::one::BuildDynamicCallback &, sourcemeta::one::Resolver &,
     const sourcemeta::one::Configuration &configuration,
     const sourcemeta::core::JSON &) -> void {
-  const auto timestamp_start{std::chrono::steady_clock::now()};
 
   sourcemeta::core::HTMLWriter writer;
   html::make_error_page(writer, configuration, action.view, "Not Found",
                         "What you are looking for is not here",
                         "Oops! What you are looking for is not here",
                         "Are you sure the link you got is correct?");
-  const auto timestamp_end{std::chrono::steady_clock::now()};
 
   metapack_write_text(action.destination, writer.str(),
-                      "text/html; charset=utf-8", MetapackEncoding::GZIP, {},
-                      std::chrono::duration_cast<std::chrono::milliseconds>(
-                          timestamp_end - timestamp_start));
+                      "text/html; charset=utf-8", MetapackEncoding::GZIP, {});
 }
 
 } // namespace sourcemeta::one

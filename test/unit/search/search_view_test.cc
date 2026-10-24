@@ -2,7 +2,6 @@
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/search.h>
 
-#include <chrono>      // std::chrono
 #include <filesystem>  // std::filesystem
 #include <string>      // std::string
 #include <string_view> // std::string_view
@@ -25,8 +24,7 @@ static auto write_search_file(const std::filesystem::path &path,
                              payload.size()}};
   sourcemeta::one::metapack_write_text(
       path, payload_view, "application/octet-stream",
-      sourcemeta::one::MetapackEncoding::Identity, {},
-      std::chrono::milliseconds{0});
+      sourcemeta::one::MetapackEncoding::Identity, {});
 }
 
 TEST(count_single_entry) {

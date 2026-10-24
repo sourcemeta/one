@@ -2,7 +2,6 @@
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/search.h>
 
-#include <chrono>      // std::chrono
 #include <cstdint>     // std::uint8_t, std::uint32_t
 #include <filesystem>  // std::filesystem
 #include <string>      // std::string
@@ -32,8 +31,7 @@ protected:
         reinterpret_cast<const char *>(payload.data()), payload.size()};
     sourcemeta::one::metapack_write_text(
         path, payload_view, "application/octet-stream",
-        sourcemeta::one::MetapackEncoding::Identity, {},
-        std::chrono::milliseconds{0});
+        sourcemeta::one::MetapackEncoding::Identity, {});
   }
 };
 
