@@ -21,7 +21,6 @@ auto GenerateWebSchema::handler(
     const sourcemeta::one::BuildDynamicCallback &, sourcemeta::one::Resolver &,
     const sourcemeta::one::Configuration &configuration,
     const sourcemeta::core::JSON &) -> void {
-  const auto timestamp_start{std::chrono::steady_clock::now()};
 
   const auto meta_option{metapack_read_json(action.dependencies.front())};
   assert(meta_option.has_value());
@@ -472,12 +471,8 @@ auto GenerateWebSchema::handler(
         body.close();
       });
 
-  const auto timestamp_end{std::chrono::steady_clock::now()};
-
   metapack_write_text(action.destination, writer.str(),
-                      "text/html; charset=utf-8", MetapackEncoding::GZIP, {},
-                      std::chrono::duration_cast<std::chrono::milliseconds>(
-                          timestamp_end - timestamp_start));
+                      "text/html; charset=utf-8", MetapackEncoding::GZIP, {});
 }
 
 } // namespace sourcemeta::one

@@ -2,7 +2,6 @@
 #include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/search.h>
 
-#include <chrono>      // std::chrono
 #include <cstdint>     // std::uint32_t, std::uint64_t
 #include <cstring>     // std::memcpy
 #include <filesystem>  // std::filesystem
@@ -38,8 +37,7 @@ static auto write_search_file(const std::filesystem::path &path,
                              payload.size()}};
   sourcemeta::one::metapack_write_text(
       path, payload_view, "application/octet-stream",
-      sourcemeta::one::MetapackEncoding::Identity, {},
-      std::chrono::milliseconds{0});
+      sourcemeta::one::MetapackEncoding::Identity, {});
 }
 
 static auto write_raw_search_file(const std::filesystem::path &path,
@@ -53,8 +51,7 @@ static auto write_raw_search_file(const std::filesystem::path &path,
                              payload.size()}};
   sourcemeta::one::metapack_write_text(
       path, payload_view, "application/octet-stream",
-      sourcemeta::one::MetapackEncoding::Identity, {},
-      std::chrono::milliseconds{0});
+      sourcemeta::one::MetapackEncoding::Identity, {});
 }
 
 static auto collect(sourcemeta::one::SearchView &view, std::size_t offset,

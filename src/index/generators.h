@@ -223,7 +223,6 @@ struct GenerateMaterialisedSchema {
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
-    const auto timestamp_start{std::chrono::steady_clock::now()};
     auto schema{resolver(action.data)};
     assert(schema.has_value());
     const auto *declared_dialect{schema->is_object() ? schema->try_at("$schema")
@@ -265,15 +264,12 @@ struct GenerateMaterialisedSchema {
           return resolver(identifier, callback);
         },
         dialect_identifier);
-    const auto timestamp_end{std::chrono::steady_clock::now()};
 
     const auto extension_bytes{make_dialect_extension(dialect_identifier)};
     sourcemeta::one::metapack_write_pretty_json(
         action.destination, schema.value(), "application/schema+json",
         sourcemeta::one::MetapackEncoding::GZIP,
-        std::span<const std::uint8_t>{extension_bytes},
-        std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+        std::span<const std::uint8_t>{extension_bytes});
     resolver.cache_path(action.data, action.destination);
   }
 
@@ -333,7 +329,6 @@ template <sourcemeta::one::SchemaDialect Target> struct GenerateConversion {
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
-    const auto timestamp_start{std::chrono::steady_clock::now()};
     assert(!action.dependencies.empty());
     const auto &resolver_entry{resolver.entry(action.data)};
     const auto dialect{
@@ -365,15 +360,12 @@ template <sourcemeta::one::SchemaDialect Target> struct GenerateConversion {
       return;
     }
 
-    const auto timestamp_end{std::chrono::steady_clock::now()};
     const auto extension_bytes{
         make_dialect_extension(sourcemeta::one::conversion_uri(Target))};
     sourcemeta::one::metapack_write_pretty_json(
         action.destination, schema, "application/schema+json",
         sourcemeta::one::MetapackEncoding::GZIP,
-        std::span<const std::uint8_t>{extension_bytes},
-        std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+        std::span<const std::uint8_t>{extension_bytes});
   }
 };
 #endif
@@ -385,7 +377,6 @@ struct GeneratePointerPositions {
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
-    const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto schema_option{
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
     assert(schema_option.has_value());
@@ -397,12 +388,9 @@ struct GeneratePointerPositions {
     sourcemeta::core::parse_json(schema_stream.str(), parsed,
                                  std::ref(tracker));
     const auto result{sourcemeta::core::to_json(tracker)};
-    const auto timestamp_end{std::chrono::steady_clock::now()};
     sourcemeta::one::metapack_write_pretty_json(
         action.destination, result, "application/json",
-        sourcemeta::one::MetapackEncoding::GZIP, {},
-        std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+        sourcemeta::one::MetapackEncoding::GZIP, {});
   }
 };
 
@@ -413,7 +401,6 @@ struct GenerateFrameLocations {
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
-    const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto contents_option{
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
     assert(contents_option.has_value());
@@ -482,12 +469,9 @@ struct GenerateFrameLocations {
               break;
           }
         });
-    const auto timestamp_end{std::chrono::steady_clock::now()};
     sourcemeta::one::metapack_write_pretty_json(
         action.destination, result, "application/json",
-        sourcemeta::one::MetapackEncoding::GZIP, {},
-        std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+        sourcemeta::one::MetapackEncoding::GZIP, {});
   }
 };
 
@@ -498,7 +482,6 @@ struct GenerateDependencies {
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &configuration,
                       const sourcemeta::core::JSON &) -> void {
-    const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto contents_option{
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
     assert(contents_option.has_value());
@@ -564,13 +547,9 @@ struct GenerateDependencies {
       }
     }
 
-    const auto timestamp_end{std::chrono::steady_clock::now()};
-
     sourcemeta::one::metapack_write_pretty_json(
         action.destination, result, "application/json",
-        sourcemeta::one::MetapackEncoding::GZIP, {},
-        std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+        sourcemeta::one::MetapackEncoding::GZIP, {});
   }
 
 private:
@@ -591,7 +570,6 @@ struct GenerateHealth {
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
-    const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto contents_option{
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
     assert(contents_option.has_value());
@@ -641,13 +619,10 @@ struct GenerateHealth {
     }
 
     report.assign("errors", std::move(errors));
-    const auto timestamp_end{std::chrono::steady_clock::now()};
 
     sourcemeta::one::metapack_write_pretty_json(
         action.destination, report, "application/json",
-        sourcemeta::one::MetapackEncoding::GZIP, {},
-        std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+        sourcemeta::one::MetapackEncoding::GZIP, {});
   }
 
 private:
@@ -712,7 +687,6 @@ struct GenerateBundle {
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
-    const auto timestamp_start{std::chrono::steady_clock::now()};
     auto schema_option{
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
     assert(schema_option.has_value());
@@ -741,15 +715,12 @@ struct GenerateBundle {
           return resolver(identifier, callback);
         },
         dialect_identifier);
-    const auto timestamp_end{std::chrono::steady_clock::now()};
 
     const auto extension_bytes{make_dialect_extension(dialect_identifier)};
     sourcemeta::one::metapack_write_pretty_json(
         action.destination, schema, "application/schema+json",
         sourcemeta::one::MetapackEncoding::GZIP,
-        std::span<const std::uint8_t>{extension_bytes},
-        std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+        std::span<const std::uint8_t>{extension_bytes});
   }
 };
 
@@ -760,7 +731,6 @@ struct GenerateEditor {
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
-    const auto timestamp_start{std::chrono::steady_clock::now()};
     auto schema_option{
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
     assert(schema_option.has_value());
@@ -783,15 +753,12 @@ struct GenerateEditor {
           return resolver(identifier, callback);
         },
         dialect_identifier);
-    const auto timestamp_end{std::chrono::steady_clock::now()};
 
     const auto extension_bytes{make_dialect_extension(dialect_identifier)};
     sourcemeta::one::metapack_write_pretty_json(
         action.destination, schema, "application/schema+json",
         sourcemeta::one::MetapackEncoding::GZIP,
-        std::span<const std::uint8_t>{extension_bytes},
-        std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+        std::span<const std::uint8_t>{extension_bytes});
   }
 };
 
@@ -801,7 +768,6 @@ static auto generate_blaze_template(
     const sourcemeta::one::BuildDynamicCallback &callback,
     sourcemeta::one::Resolver &resolver, const sourcemeta::blaze::Mode mode)
     -> void {
-  const auto timestamp_start{std::chrono::steady_clock::now()};
   const auto contents_option{
       sourcemeta::one::metapack_read_json(dependencies.front())};
   assert(contents_option.has_value());
@@ -819,12 +785,9 @@ static auto generate_blaze_template(
       },
       sourcemeta::blaze::default_schema_compiler, frame, frame.root(), mode)};
   const auto result{sourcemeta::blaze::to_json(schema_template)};
-  const auto timestamp_end{std::chrono::steady_clock::now()};
-  sourcemeta::one::metapack_write_json(
-      destination, result, "application/json",
-      sourcemeta::one::MetapackEncoding::GZIP, {},
-      std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                            timestamp_start));
+  sourcemeta::one::metapack_write_json(destination, result, "application/json",
+                                       sourcemeta::one::MetapackEncoding::GZIP,
+                                       {});
 }
 
 struct GenerateBlazeTemplateExhaustive {
@@ -858,7 +821,6 @@ struct GenerateStats {
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
-    const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto schema_option{
         sourcemeta::one::metapack_read_json(action.dependencies.front())};
     assert(schema_option.has_value());
@@ -903,12 +865,9 @@ struct GenerateStats {
           }
         });
 
-    const auto timestamp_end{std::chrono::steady_clock::now()};
     sourcemeta::one::metapack_write_pretty_json(
         action.destination, sourcemeta::core::to_json(result),
-        "application/json", sourcemeta::one::MetapackEncoding::GZIP, {},
-        std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+        "application/json", sourcemeta::one::MetapackEncoding::GZIP, {});
   }
 };
 

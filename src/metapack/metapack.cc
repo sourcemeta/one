@@ -59,7 +59,6 @@ static auto write_binary_header(std::ostream &output,
                                 const std::string_view mime,
                                 const MetapackEncoding encoding,
                                 const std::span<const std::uint8_t> extension,
-                                const std::chrono::milliseconds duration,
                                 const std::string_view payload,
                                 const std::size_t uncompressed_size,
                                 const std::size_t compressed_size) -> void {
@@ -75,7 +74,6 @@ static auto write_binary_header(std::ostream &output,
                              .count();
   header.content_bytes = uncompressed_size;
   header.compressed_bytes = compressed_size;
-  header.duration = duration.count();
 
   header.checksum = sourcemeta::core::sha256_digest(payload);
 
@@ -101,7 +99,6 @@ static auto write_metapack(const std::filesystem::path &destination,
                            const std::string_view mime,
                            const MetapackEncoding encoding,
                            const std::span<const std::uint8_t> extension,
-                           const std::chrono::milliseconds duration,
                            const std::string_view content) -> void {
   // The codec is gzip today, the field name stays compression-agnostic so a
   // future codec swap is mechanical. An artifact stored as it reads is never
@@ -114,7 +111,7 @@ static auto write_metapack(const std::filesystem::path &destination,
                 content.size())
           : std::string{}};
   sourcemeta::core::write_file(destination, [&](std::ostream &output) -> void {
-    write_binary_header(output, mime, encoding, extension, duration, content,
+    write_binary_header(output, mime, encoding, extension, content,
                         content.size(), compressed.size());
 
     if (encoding == MetapackEncoding::GZIP) {
@@ -131,11 +128,11 @@ auto metapack_write_json(const std::filesystem::path &destination,
                          const sourcemeta::core::JSON &document,
                          const std::string_view mime,
                          const MetapackEncoding encoding,
-                         const std::span<const std::uint8_t> extension,
-                         const std::chrono::milliseconds duration) -> void {
+                         const std::span<const std::uint8_t> extension)
+    -> void {
   std::ostringstream buffer;
   sourcemeta::core::stringify(document, buffer);
-  write_metapack(destination, mime, encoding, extension, duration,
+  write_metapack(destination, mime, encoding, extension,
                  std::move(buffer).str());
 }
 
@@ -143,12 +140,11 @@ auto metapack_write_pretty_json(const std::filesystem::path &destination,
                                 const sourcemeta::core::JSON &document,
                                 const std::string_view mime,
                                 const MetapackEncoding encoding,
-                                const std::span<const std::uint8_t> extension,
-                                const std::chrono::milliseconds duration)
+                                const std::span<const std::uint8_t> extension)
     -> void {
   std::ostringstream buffer;
   sourcemeta::core::prettify(document, buffer);
-  write_metapack(destination, mime, encoding, extension, duration,
+  write_metapack(destination, mime, encoding, extension,
                  std::move(buffer).str());
 }
 
@@ -156,21 +152,21 @@ auto metapack_write_text(const std::filesystem::path &destination,
                          const std::string_view contents,
                          const std::string_view mime,
                          const MetapackEncoding encoding,
-                         const std::span<const std::uint8_t> extension,
-                         const std::chrono::milliseconds duration) -> void {
+                         const std::span<const std::uint8_t> extension)
+    -> void {
   std::string content{contents};
   content += '\n';
-  write_metapack(destination, mime, encoding, extension, duration, content);
+  write_metapack(destination, mime, encoding, extension, content);
 }
 
 auto metapack_write_bytes(const std::filesystem::path &destination,
                           const std::span<const std::uint8_t> contents,
                           const std::string_view mime,
                           const MetapackEncoding encoding,
-                          const std::span<const std::uint8_t> extension,
-                          const std::chrono::milliseconds duration) -> void {
+                          const std::span<const std::uint8_t> extension)
+    -> void {
   write_metapack(
-      destination, mime, encoding, extension, duration,
+      destination, mime, encoding, extension,
       std::string_view{
           // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
           reinterpret_cast<const char *>(contents.data()), contents.size()});
@@ -180,9 +176,9 @@ auto metapack_write_file(const std::filesystem::path &destination,
                          const std::filesystem::path &source,
                          const std::string_view mime,
                          const MetapackEncoding encoding,
-                         const std::span<const std::uint8_t> extension,
-                         const std::chrono::milliseconds duration) -> void {
-  write_metapack(destination, mime, encoding, extension, duration,
+                         const std::span<const std::uint8_t> extension)
+    -> void {
+  write_metapack(destination, mime, encoding, extension,
                  sourcemeta::core::read_file_to_string(source));
 }
 

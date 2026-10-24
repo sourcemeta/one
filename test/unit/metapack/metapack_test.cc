@@ -6,7 +6,6 @@
 
 #include <algorithm>   // std::ranges::equal
 #include <array>       // std::array
-#include <chrono>      // std::chrono
 #include <cstring>     // std::memcpy
 #include <filesystem>  // std::filesystem
 #include <format>      // std::format
@@ -26,8 +25,7 @@ TEST(write_and_read_json_identity) {
 
   sourcemeta::one::metapack_write_json(
       path, document, "application/json",
-      sourcemeta::one::MetapackEncoding::Identity, {},
-      std::chrono::milliseconds{5});
+      sourcemeta::one::MetapackEncoding::Identity, {});
 
   const auto result{sourcemeta::one::metapack_read_json(path).value()};
   EXPECT_TRUE(result.is_object());
@@ -41,7 +39,7 @@ TEST(write_and_read_json_gzip) {
 
   sourcemeta::one::metapack_write_json(path, document, "application/json",
                                        sourcemeta::one::MetapackEncoding::GZIP,
-                                       {}, std::chrono::milliseconds{10});
+                                       {});
 
   const auto result{sourcemeta::one::metapack_read_json(path).value()};
   EXPECT_TRUE(result.is_object());
@@ -56,8 +54,7 @@ TEST(write_and_read_pretty_json) {
 
   sourcemeta::one::metapack_write_pretty_json(
       path, document, "application/schema+json",
-      sourcemeta::one::MetapackEncoding::GZIP, {},
-      std::chrono::milliseconds{3});
+      sourcemeta::one::MetapackEncoding::GZIP, {});
 
   const auto result{sourcemeta::one::metapack_read_json(path).value()};
   EXPECT_EQ(result.at("key").to_string(), "value");
@@ -69,8 +66,7 @@ TEST(binary_header_magic_and_version) {
 
   sourcemeta::one::metapack_write_json(
       path, document, "application/json",
-      sourcemeta::one::MetapackEncoding::Identity, {},
-      std::chrono::milliseconds{0});
+      sourcemeta::one::MetapackEncoding::Identity, {});
 
   sourcemeta::core::FileView view{path};
   EXPECT_TRUE(view.size() >= sizeof(sourcemeta::one::MetapackHeader));
@@ -86,8 +82,7 @@ TEST(no_extension) {
 
   sourcemeta::one::metapack_write_json(
       path, document, "application/json",
-      sourcemeta::one::MetapackEncoding::Identity, {},
-      std::chrono::milliseconds{0});
+      sourcemeta::one::MetapackEncoding::Identity, {});
 
   sourcemeta::core::FileView view{path};
   const auto parsed{sourcemeta::one::metapack_parse(view).value()};
@@ -121,8 +116,7 @@ TEST(write_and_read_extension) {
   sourcemeta::one::metapack_write_json(
       path, document, "application/json",
       sourcemeta::one::MetapackEncoding::GZIP,
-      std::span<const std::uint8_t>{extension_bytes},
-      std::chrono::milliseconds{7});
+      std::span<const std::uint8_t>{extension_bytes});
 
   sourcemeta::core::FileView view{path};
   const auto parsed{sourcemeta::one::metapack_parse(view).value()};
@@ -152,8 +146,7 @@ TEST(extension_nullptr_when_too_small) {
   sourcemeta::one::metapack_write_json(
       path, document, "application/json",
       sourcemeta::one::MetapackEncoding::Identity,
-      std::span<const std::uint8_t>{small_extension},
-      std::chrono::milliseconds{0});
+      std::span<const std::uint8_t>{small_extension});
 
   sourcemeta::core::FileView view{path};
   const auto parsed{sourcemeta::one::metapack_parse(view).value()};
@@ -174,7 +167,7 @@ TEST(write_and_read_json_gzip_large) {
 
   sourcemeta::one::metapack_write_json(path, document, "application/json",
                                        sourcemeta::one::MetapackEncoding::GZIP,
-                                       {}, std::chrono::milliseconds{0});
+                                       {});
 
   const auto result{sourcemeta::one::metapack_read_json(path)};
   EXPECT_TRUE(result.has_value());
@@ -199,8 +192,7 @@ TEST(write_text_appends_a_trailing_newline) {
 
   sourcemeta::one::metapack_write_text(
       path, "Hello, world!", "text/plain",
-      sourcemeta::one::MetapackEncoding::Identity, {},
-      std::chrono::milliseconds{0});
+      sourcemeta::one::MetapackEncoding::Identity, {});
 
   sourcemeta::core::FileView view{path};
   const auto parsed{sourcemeta::one::metapack_parse(view).value()};
@@ -225,7 +217,7 @@ TEST(write_text_gzip_records_both_sizes) {
 
   sourcemeta::one::metapack_write_text(path, large_text, "text/plain",
                                        sourcemeta::one::MetapackEncoding::GZIP,
-                                       {}, std::chrono::milliseconds{0});
+                                       {});
 
   sourcemeta::core::FileView view{path};
   const auto parsed{sourcemeta::one::metapack_parse(view).value()};
@@ -243,8 +235,7 @@ TEST(write_bytes_keeps_the_payload_exact) {
 
   sourcemeta::one::metapack_write_bytes(
       path, std::span<const std::uint8_t>{contents}, "application/octet-stream",
-      sourcemeta::one::MetapackEncoding::Identity, {},
-      std::chrono::milliseconds{0});
+      sourcemeta::one::MetapackEncoding::Identity, {});
 
   sourcemeta::core::FileView view{path};
   const auto parsed{sourcemeta::one::metapack_parse(view).value()};
@@ -266,8 +257,7 @@ TEST(write_bytes_gzip_records_both_sizes) {
 
   sourcemeta::one::metapack_write_bytes(
       path, std::span<const std::uint8_t>{contents}, "application/octet-stream",
-      sourcemeta::one::MetapackEncoding::GZIP, {},
-      std::chrono::milliseconds{0});
+      sourcemeta::one::MetapackEncoding::GZIP, {});
 
   sourcemeta::core::FileView view{path};
   const auto parsed{sourcemeta::one::metapack_parse(view).value()};
@@ -286,7 +276,7 @@ TEST(compressed_bytes_matches_payload_for_gzip_encoding) {
 
   sourcemeta::one::metapack_write_json(path, document, "application/json",
                                        sourcemeta::one::MetapackEncoding::GZIP,
-                                       {}, std::chrono::milliseconds{0});
+                                       {});
 
   sourcemeta::core::FileView view{path};
   const auto parsed{sourcemeta::one::metapack_parse(view).value()};
@@ -301,8 +291,7 @@ TEST(compressed_bytes_unset_for_identity_encoding) {
 
   sourcemeta::one::metapack_write_json(
       path, document, "application/json",
-      sourcemeta::one::MetapackEncoding::Identity, {},
-      std::chrono::milliseconds{0});
+      sourcemeta::one::MetapackEncoding::Identity, {});
 
   sourcemeta::core::FileView view{path};
   const auto parsed{sourcemeta::one::metapack_parse(view).value()};
@@ -321,8 +310,7 @@ TEST(checksum_hex_renders_every_header_digest_byte) {
 
   sourcemeta::one::metapack_write_json(
       path, document, "application/json",
-      sourcemeta::one::MetapackEncoding::Identity, {},
-      std::chrono::milliseconds{0});
+      sourcemeta::one::MetapackEncoding::Identity, {});
 
   sourcemeta::core::FileView view{path};
   const auto parsed{sourcemeta::one::metapack_parse(view).value()};

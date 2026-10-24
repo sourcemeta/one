@@ -36,7 +36,6 @@ auto GenerateWebIndex::handler(
     const sourcemeta::one::BuildDynamicCallback &, sourcemeta::one::Resolver &,
     const sourcemeta::one::Configuration &configuration,
     const sourcemeta::core::JSON &) -> void {
-  const auto timestamp_start{std::chrono::steady_clock::now()};
 
   const auto directory_option{metapack_read_json(action.dependencies.front())};
   assert(directory_option.has_value());
@@ -57,11 +56,8 @@ auto GenerateWebIndex::handler(
                     html::make_file_manager(body, directory);
                   });
 
-  const auto timestamp_end{std::chrono::steady_clock::now()};
   metapack_write_text(action.destination, writer.str(),
-                      "text/html; charset=utf-8", MetapackEncoding::GZIP, {},
-                      std::chrono::duration_cast<std::chrono::milliseconds>(
-                          timestamp_end - timestamp_start));
+                      "text/html; charset=utf-8", MetapackEncoding::GZIP, {});
 }
 
 } // namespace sourcemeta::one

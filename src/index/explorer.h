@@ -387,7 +387,6 @@ struct GenerateExplorerSchemaMetadata {
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
-    const auto timestamp_start{std::chrono::steady_clock::now()};
     const auto &resolver_entry{resolver.entry(action.data)};
     // The inputs past the ones every schema reads are the schemas declaring
     // this one as their dialect
@@ -542,8 +541,6 @@ struct GenerateExplorerSchemaMetadata {
     result.assign("private",
                   make_private(authentication, result.at("path").to_string()));
 
-    const auto timestamp_end{std::chrono::steady_clock::now()};
-
     const auto schema_name{
         action.destination.parent_path().parent_path().filename().string()};
     // The binary extension format stores per-field lengths as `uint16_t`,
@@ -580,9 +577,7 @@ struct GenerateExplorerSchemaMetadata {
     sourcemeta::one::metapack_write_pretty_json(
         action.destination, result, "application/json",
         sourcemeta::one::MetapackEncoding::GZIP,
-        std::span<const std::uint8_t>{extension_bytes},
-        std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+        std::span<const std::uint8_t>{extension_bytes});
   }
 };
 
@@ -595,7 +590,6 @@ struct GenerateDependents {
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
-    const auto timestamp_start{std::chrono::steady_clock::now()};
 
     using DirectMap =
         std::unordered_map<sourcemeta::core::JSON::String,
@@ -680,13 +674,9 @@ struct GenerateDependents {
       result.push_back(std::move(object));
     }
 
-    const auto timestamp_end{std::chrono::steady_clock::now()};
-
     sourcemeta::one::metapack_write_pretty_json(
         action.destination, result, "application/json",
-        sourcemeta::one::MetapackEncoding::GZIP, {},
-        std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+        sourcemeta::one::MetapackEncoding::GZIP, {});
   }
 };
 
@@ -697,7 +687,6 @@ struct GenerateExplorerSearchIndex {
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
-    const auto timestamp_start{std::chrono::steady_clock::now()};
     std::vector<sourcemeta::one::SearchEntry> entries;
 
     for (const auto &dependency : action.dependencies) {
@@ -744,16 +733,13 @@ struct GenerateExplorerSearchIndex {
     }
 
     const auto payload{sourcemeta::one::make_search(std::move(entries))};
-    const auto timestamp_end{std::chrono::steady_clock::now()};
 
     sourcemeta::one::metapack_write_bytes(
         action.destination, std::span<const std::uint8_t>{payload},
         "application/octet-stream",
         // The records are read straight off the mapping, so this one is
         // stored exactly as it reads
-        sourcemeta::one::MetapackEncoding::Identity, {},
-        std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+        sourcemeta::one::MetapackEncoding::Identity, {});
   }
 };
 
@@ -767,7 +753,6 @@ struct GenerateLogin {
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &configuration,
                       const sourcemeta::core::JSON &) -> void {
-    const auto timestamp_start{std::chrono::steady_clock::now()};
 
     auto document{sourcemeta::core::JSON::make_object()};
     if (configuration.html.has_value()) {
@@ -795,12 +780,9 @@ struct GenerateLogin {
 
     document.assign("providers", std::move(providers));
 
-    const auto timestamp_end{std::chrono::steady_clock::now()};
     sourcemeta::one::metapack_write_pretty_json(
         action.destination, document, "application/json",
-        sourcemeta::one::MetapackEncoding::GZIP, {},
-        std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+        sourcemeta::one::MetapackEncoding::GZIP, {});
   }
 };
 
@@ -818,7 +800,6 @@ struct GenerateMCP {
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &configuration,
                       const sourcemeta::core::JSON &) -> void {
-    const auto timestamp_start{std::chrono::steady_clock::now()};
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
     constexpr std::string_view SERVER_NAME{"sourcemeta-one-enterprise"};
@@ -1013,12 +994,9 @@ struct GenerateMCP {
                       std::move(protected_resource_metadata));
     }
 
-    const auto timestamp_end{std::chrono::steady_clock::now()};
     sourcemeta::one::metapack_write_pretty_json(
         action.destination, document, "application/json",
-        sourcemeta::one::MetapackEncoding::GZIP, {},
-        std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+        sourcemeta::one::MetapackEncoding::GZIP, {});
   }
 };
 
@@ -1037,7 +1015,6 @@ struct GenerateExplorerDirectoryList {
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &configuration,
                       const sourcemeta::core::JSON &) -> void {
-    const auto timestamp_start{std::chrono::steady_clock::now()};
     auto entries{sourcemeta::core::JSON::make_array()};
     std::vector<sourcemeta::core::JSON::Integer> scores;
     std::int64_t child_schemas_total{0};
@@ -1411,13 +1388,10 @@ struct GenerateExplorerDirectoryList {
         meta.defines("github") ? meta.at("github").to_string() : "",
         meta.defines("website") ? meta.at("website").to_string() : "")};
 
-    const auto timestamp_end{std::chrono::steady_clock::now()};
     sourcemeta::one::metapack_write_pretty_json(
         action.destination, meta, "application/json",
         sourcemeta::one::MetapackEncoding::GZIP,
-        std::span<const std::uint8_t>{directory_extension_bytes},
-        std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
-                                                              timestamp_start));
+        std::span<const std::uint8_t>{directory_extension_bytes});
   }
 };
 

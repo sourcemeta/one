@@ -20,7 +20,7 @@
 namespace sourcemeta::one {
 
 static constexpr std::uint32_t METAPACK_MAGIC{0x4154454D};
-static constexpr std::uint16_t METAPACK_VERSION{2};
+static constexpr std::uint16_t METAPACK_VERSION{3};
 
 enum class MetapackEncoding : std::uint8_t { Identity = 0, GZIP = 1 };
 
@@ -39,7 +39,6 @@ struct MetapackHeader {
   // codec swap is mechanical. For compressed-storage artifacts this equals
   // the payload size on disk.
   std::uint64_t compressed_bytes;
-  std::int64_t duration;
   std::array<std::uint8_t, 32> checksum;
   std::uint16_t mime_length;
 };
@@ -53,37 +52,33 @@ SOURCEMETA_ONE_METAPACK_EXPORT
 auto metapack_write_json(const std::filesystem::path &destination,
                          const sourcemeta::core::JSON &document,
                          std::string_view mime, MetapackEncoding encoding,
-                         std::span<const std::uint8_t> extension,
-                         std::chrono::milliseconds duration) -> void;
+                         std::span<const std::uint8_t> extension) -> void;
 
 SOURCEMETA_ONE_METAPACK_EXPORT
 auto metapack_write_pretty_json(const std::filesystem::path &destination,
                                 const sourcemeta::core::JSON &document,
                                 std::string_view mime,
                                 MetapackEncoding encoding,
-                                std::span<const std::uint8_t> extension,
-                                std::chrono::milliseconds duration) -> void;
+                                std::span<const std::uint8_t> extension)
+    -> void;
 
 SOURCEMETA_ONE_METAPACK_EXPORT
 auto metapack_write_text(const std::filesystem::path &destination,
                          std::string_view contents, std::string_view mime,
                          MetapackEncoding encoding,
-                         std::span<const std::uint8_t> extension,
-                         std::chrono::milliseconds duration) -> void;
+                         std::span<const std::uint8_t> extension) -> void;
 
 SOURCEMETA_ONE_METAPACK_EXPORT
 auto metapack_write_bytes(const std::filesystem::path &destination,
                           std::span<const std::uint8_t> contents,
                           std::string_view mime, MetapackEncoding encoding,
-                          std::span<const std::uint8_t> extension,
-                          std::chrono::milliseconds duration) -> void;
+                          std::span<const std::uint8_t> extension) -> void;
 
 SOURCEMETA_ONE_METAPACK_EXPORT
 auto metapack_write_file(const std::filesystem::path &destination,
                          const std::filesystem::path &source,
                          std::string_view mime, MetapackEncoding encoding,
-                         std::span<const std::uint8_t> extension,
-                         std::chrono::milliseconds duration) -> void;
+                         std::span<const std::uint8_t> extension) -> void;
 
 // Readers
 

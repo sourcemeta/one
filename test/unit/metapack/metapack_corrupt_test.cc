@@ -2,7 +2,6 @@
 #include <sourcemeta/core/test.h>
 #include <sourcemeta/one/metapack.h>
 
-#include <chrono>     // std::chrono
 #include <cstddef>    // offsetof
 #include <cstdint>    // std::uint64_t
 #include <filesystem> // std::filesystem
@@ -53,8 +52,7 @@ TEST_F(MetapackCorruption,
 
   sourcemeta::one::metapack_write_json(
       path, document, "application/json",
-      sourcemeta::one::MetapackEncoding::Identity, {},
-      std::chrono::milliseconds{0});
+      sourcemeta::one::MetapackEncoding::Identity, {});
 
   // Advertise more payload than actually exists
   set_content_bytes(path, 999999);
@@ -70,7 +68,7 @@ TEST_F(MetapackCorruption, read_json_nullopt_on_corrupt_gzip) {
 
   sourcemeta::one::metapack_write_json(path, document, "application/json",
                                        sourcemeta::one::MetapackEncoding::GZIP,
-                                       {}, std::chrono::milliseconds{0});
+                                       {});
 
   // Damaging the trailer makes the payload fail to inflate, which must be
   // reported as a missing value rather than propagate an exception
@@ -85,8 +83,7 @@ TEST_F(MetapackCorruption, read_json_nullopt_on_invalid_json) {
 
   sourcemeta::one::metapack_write_text(
       path, "this is not json {{{", "text/plain",
-      sourcemeta::one::MetapackEncoding::Identity, {},
-      std::chrono::milliseconds{0});
+      sourcemeta::one::MetapackEncoding::Identity, {});
 
   const auto result{sourcemeta::one::metapack_read_json(path)};
   EXPECT_FALSE(result.has_value());
@@ -99,7 +96,7 @@ TEST_F(MetapackCorruption, read_json_nullopt_on_content_bytes_size_mismatch) {
 
   sourcemeta::one::metapack_write_json(path, document, "application/json",
                                        sourcemeta::one::MetapackEncoding::GZIP,
-                                       {}, std::chrono::milliseconds{0});
+                                       {});
 
   // A small `content_bytes` survives the ratio guard but no longer matches the
   // real decompressed size, so the reader must reject the payload
