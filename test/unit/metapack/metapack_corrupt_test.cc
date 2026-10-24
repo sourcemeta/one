@@ -46,17 +46,20 @@ protected:
 } // namespace
 
 TEST_F(MetapackCorruption,
-       read_text_nullopt_when_content_bytes_exceeds_payload) {
+       read_json_nullopt_when_content_bytes_exceeds_payload) {
   const auto path{test_path("bad_content_bytes.metapack")};
+  auto document{sourcemeta::core::JSON::make_object()};
+  document.assign("hello", sourcemeta::core::JSON{"world"});
 
-  sourcemeta::one::metapack_write_text(
-      path, "short", "text/plain", sourcemeta::one::MetapackEncoding::Identity,
-      {}, std::chrono::milliseconds{0});
+  sourcemeta::one::metapack_write_json(
+      path, document, "application/json",
+      sourcemeta::one::MetapackEncoding::Identity, {},
+      std::chrono::milliseconds{0});
 
   // Advertise more payload than actually exists
   set_content_bytes(path, 999999);
 
-  const auto result{sourcemeta::one::metapack_read_text(path)};
+  const auto result{sourcemeta::one::metapack_read_json(path)};
   EXPECT_FALSE(result.has_value());
 }
 
@@ -74,20 +77,6 @@ TEST_F(MetapackCorruption, read_json_nullopt_on_corrupt_gzip) {
   corrupt_last_bytes(path, 4);
 
   const auto result{sourcemeta::one::metapack_read_json(path)};
-  EXPECT_FALSE(result.has_value());
-}
-
-TEST_F(MetapackCorruption, read_text_nullopt_on_corrupt_gzip) {
-  const auto path{test_path("corrupt_gzip_text.metapack")};
-
-  sourcemeta::one::metapack_write_text(path, "Compressed text content",
-                                       "text/plain",
-                                       sourcemeta::one::MetapackEncoding::GZIP,
-                                       {}, std::chrono::milliseconds{0});
-
-  corrupt_last_bytes(path, 4);
-
-  const auto result{sourcemeta::one::metapack_read_text(path)};
   EXPECT_FALSE(result.has_value());
 }
 

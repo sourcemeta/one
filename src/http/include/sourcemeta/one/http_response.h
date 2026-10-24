@@ -12,7 +12,6 @@
 #include <optional>    // std::optional
 #include <string>      // std::string
 #include <string_view> // std::string_view
-#include <utility>     // std::move
 
 namespace sourcemeta::one {
 
@@ -37,9 +36,9 @@ public:
   auto send_without_content() -> void { this->response_->end(); }
 
   template <typename Request>
-  auto send(const Request &request, const std::string &message,
+  auto send(const Request &request, const std::string_view message,
             const Encoding current_encoding,
-            const std::optional<std::size_t> precomputed_compressed_size =
+            const std::optional<std::size_t> precomputed_transcoded_size =
                 std::nullopt) -> void {
     const auto method{request.method()};
     const auto expected_encoding{request.response_encoding()};
@@ -48,12 +47,11 @@ public:
       if (current_encoding == Encoding::Identity) {
         // RFC 9110 §9.3.2: a HEAD response must carry the same
         // representation metadata (including Content-Length) as the
-        // matching GET would. When the artifact is identity-stored
-        // but the wire encoding is gzip, the metapack carries the
-        // precomputed compressed size, so we can answer HEAD without
-        // running the compressor just to discard its output.
-        if (method == "head" && precomputed_compressed_size.has_value()) {
-          this->response_->endWithoutBody(precomputed_compressed_size);
+        // matching GET would. The size the wire encoding would reach is
+        // known ahead of time, so a HEAD never runs a codec just to
+        // discard its output.
+        if (method == "head" && precomputed_transcoded_size.has_value()) {
+          this->response_->endWithoutBody(precomputed_transcoded_size);
           this->response_->end();
         } else {
           auto effective_message{sourcemeta::core::gzip(
@@ -63,7 +61,7 @@ public:
             this->response_->endWithoutBody(effective_message.size());
             this->response_->end();
           } else {
-            this->response_->end(std::move(effective_message));
+            this->response_->end(effective_message);
           }
         }
       } else {
@@ -76,6 +74,13 @@ public:
       }
     } else if (expected_encoding == Encoding::Identity) {
       if (current_encoding == Encoding::GZIP) {
+        // See the matching comment on the gzip branch above
+        if (method == "head" && precomputed_transcoded_size.has_value()) {
+          this->response_->endWithoutBody(precomputed_transcoded_size);
+          this->response_->end();
+          return;
+        }
+
         auto effective_message{sourcemeta::core::gunzip(
             reinterpret_cast<const std::uint8_t *>(message.data()),
             message.size())};

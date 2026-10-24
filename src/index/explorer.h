@@ -395,17 +395,17 @@ struct GenerateExplorerSchemaMetadata {
     assert(action.dependencies.size() >= FIXED_INPUTS);
     const auto has_dialect_dependents{action.dependencies.size() >
                                       FIXED_INPUTS};
-    // Read the schema to get data and bytes
+    // Read the schema to get data and bytes, mapping each input once
     sourcemeta::core::FileView schema_view{action.dependencies.front()};
-    const auto schema_info_option{sourcemeta::one::metapack_info(schema_view)};
-    assert(schema_info_option.has_value());
-    const auto &schema_info{schema_info_option.value()};
+    const auto schema_parsed{sourcemeta::one::metapack_parse(schema_view)};
+    assert(schema_parsed.has_value());
+    const auto schema_bytes{schema_parsed->header->content_bytes};
     sourcemeta::core::FileView bundle_view{action.dependencies.at(3)};
-    const auto bundle_info_option{sourcemeta::one::metapack_info(bundle_view)};
-    assert(bundle_info_option.has_value());
-    const auto &bundle_info{bundle_info_option.value()};
+    const auto bundle_parsed{sourcemeta::one::metapack_parse(bundle_view)};
+    assert(bundle_parsed.has_value());
+    const auto bundle_bytes{bundle_parsed->header->content_bytes};
     const auto schema_data_option{
-        sourcemeta::one::metapack_read_json(action.dependencies.front())};
+        sourcemeta::one::metapack_read_json(schema_parsed.value())};
     assert(schema_data_option.has_value());
     const auto &schema_data{schema_data_option.value()};
     const sourcemeta::core::SchemaFrame frame{
@@ -418,11 +418,10 @@ struct GenerateExplorerSchemaMetadata {
     const auto &schema_location{frame.root_location().value().get()};
     auto result{sourcemeta::core::JSON::make_object()};
 
-    result.assign("bytes", sourcemeta::core::JSON{static_cast<std::size_t>(
-                               schema_info.content_bytes)});
-    result.assign("bytesBundled",
-                  sourcemeta::core::JSON{
-                      static_cast<std::size_t>(bundle_info.content_bytes)});
+    result.assign("bytes", sourcemeta::core::JSON{
+                               static_cast<std::size_t>(schema_bytes)});
+    result.assign("bytesBundled", sourcemeta::core::JSON{
+                                      static_cast<std::size_t>(bundle_bytes)});
     result.assign("identifier", sourcemeta::core::JSON{frame.root()});
     result.assign("path", sourcemeta::core::JSON{
                               "/" + resolver_entry.relative_path.string()});
@@ -447,7 +446,7 @@ struct GenerateExplorerSchemaMetadata {
           sourcemeta::one::official_dialect(resolver_entry.dialect)};
       assert(official.has_value());
       auto bundle_option{
-          sourcemeta::one::metapack_read_json(action.dependencies.at(3))};
+          sourcemeta::one::metapack_read_json(bundle_parsed.value())};
       assert(bundle_option.has_value());
       const auto target{
           sourcemeta::one::dialect_conversions(official.value()).front()};
@@ -569,8 +568,8 @@ struct GenerateExplorerSchemaMetadata {
                                EXTENSION_TRUNCATION_MARKER);
     const auto extension_bytes{make_explorer_schema_extension(
         result.at("health").to_integer(),
-        static_cast<std::int64_t>(schema_info.content_bytes),
-        static_cast<std::int64_t>(bundle_info.content_bytes),
+        static_cast<std::int64_t>(schema_bytes),
+        static_cast<std::int64_t>(bundle_bytes),
         result.at("dependencies").to_integer(), parse_version_info(schema_name),
         static_cast<std::uint8_t>(result.at("priority").to_integer()),
         result.at("path").to_string(), result.at("identifier").to_string(),
@@ -747,16 +746,11 @@ struct GenerateExplorerSearchIndex {
     const auto payload{sourcemeta::one::make_search(std::move(entries))};
     const auto timestamp_end{std::chrono::steady_clock::now()};
 
-    const std::string_view payload_view{
-        payload.empty()
-            ? std::string_view{}
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-            : std::string_view{reinterpret_cast<const char *>(payload.data()),
-                               payload.size()}};
-    sourcemeta::one::metapack_write_text(
-        action.destination, payload_view, "application/octet-stream",
-        // We don't want to compress this one so we can
-        // quickly skim through it while streaming it
+    sourcemeta::one::metapack_write_bytes(
+        action.destination, std::span<const std::uint8_t>{payload},
+        "application/octet-stream",
+        // The records are read straight off the mapping, so this one is
+        // stored exactly as it reads
         sourcemeta::one::MetapackEncoding::Identity, {},
         std::chrono::duration_cast<std::chrono::milliseconds>(timestamp_end -
                                                               timestamp_start));
@@ -1126,20 +1120,21 @@ struct GenerateExplorerDirectoryList {
         }
 
         sourcemeta::core::FileView directory_view{dependency};
-        const auto directory_extension_offset{
-            sourcemeta::one::metapack_extension_offset(directory_view)};
+        const auto directory_parsed{
+            sourcemeta::one::metapack_parse(directory_view)};
         const auto *directory_extension{
-            sourcemeta::one::metapack_extension<MetapackDirectoryExtension>(
-                directory_view)};
+            directory_parsed.has_value()
+                ? sourcemeta::one::metapack_extension_as<
+                      MetapackDirectoryExtension>(directory_parsed->extension)
+                : nullptr};
 
         auto entry_json{sourcemeta::core::JSON::make_object()};
         entry_json.assign("name", sourcemeta::core::JSON{child_name});
         entry_json.assign("type", sourcemeta::core::JSON{"directory"});
         MetapackVersionInfo directory_version{};
 
-        if (directory_extension != nullptr && directory_extension_offset != 0) {
-          const auto *directory_base{
-              directory_view.as<std::uint8_t>(directory_extension_offset)};
+        if (directory_extension != nullptr) {
+          const auto *directory_base{directory_parsed->extension.data()};
           directory_version = directory_extension->version;
 
           entry_json.assign(
@@ -1264,17 +1259,19 @@ struct GenerateExplorerDirectoryList {
         }
 
         sourcemeta::core::FileView dependency_view{dependency};
-        const auto extension_offset{
-            sourcemeta::one::metapack_extension_offset(dependency_view)};
-        const auto *extension{sourcemeta::one::metapack_extension<
-            MetapackExplorerSchemaExtension>(dependency_view)};
-
-        if (extension == nullptr || extension_offset == 0) {
+        const auto dependency_parsed{
+            sourcemeta::one::metapack_parse(dependency_view)};
+        if (!dependency_parsed.has_value()) {
           continue;
         }
 
-        const auto *extension_base{
-            dependency_view.as<std::uint8_t>(extension_offset)};
+        const auto *extension{sourcemeta::one::metapack_extension_as<
+            MetapackExplorerSchemaExtension>(dependency_parsed->extension)};
+        if (extension == nullptr) {
+          continue;
+        }
+
+        const auto *extension_base{dependency_parsed->extension.data()};
         auto entry_json{sourcemeta::core::JSON::make_object()};
         entry_json.assign("name", sourcemeta::core::JSON{child_name});
         entry_json.assign("type", sourcemeta::core::JSON{"schema"});

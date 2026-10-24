@@ -22,6 +22,39 @@ static_assert(std::endian::native == std::endian::little,
 
 namespace sourcemeta::one {
 
+namespace {
+
+// How far a stored payload may be allowed to inflate, so that a small
+// artifact cannot ask for an unbounded amount of memory
+constexpr std::uint64_t METAPACK_MAX_DECOMPRESSION_RATIO{1024};
+
+// The payload as it reads once the stored compression is undone
+auto inflate(const MetapackView &parsed) -> std::optional<std::string> {
+  assert(!parsed.payload.empty());
+  if (parsed.header->content_bytes / parsed.payload.size() >
+      METAPACK_MAX_DECOMPRESSION_RATIO) {
+    return std::nullopt;
+  }
+
+  try {
+    auto decompressed{sourcemeta::core::gunzip(parsed.payload.data(),
+                                               parsed.payload.size(),
+                                               parsed.header->content_bytes)};
+    // The header records the exact uncompressed size, so a payload that
+    // inflates to a different size is corrupt or a decompression bomb whose
+    // small declared size slipped past the ratio guard
+    if (decompressed.size() != parsed.header->content_bytes) {
+      return std::nullopt;
+    }
+
+    return decompressed;
+  } catch (const std::exception &) {
+    return std::nullopt;
+  }
+}
+
+} // namespace
+
 static auto write_binary_header(std::ostream &output,
                                 const std::string_view mime,
                                 const MetapackEncoding encoding,
@@ -69,14 +102,17 @@ static auto write_metapack(const std::filesystem::path &destination,
                            const MetapackEncoding encoding,
                            const std::span<const std::uint8_t> extension,
                            const std::chrono::milliseconds duration,
-                           const std::string &content) -> void {
-  // Always compute the compressed representation so the size lands in
-  // the header. The codec is gzip today, the field name stays
-  // compression-agnostic so a future codec swap is mechanical. For
-  // compressed-storage artifacts the bytes are also what we write to
-  // disk. For Identity storage only the size is kept.
-  const auto compressed{sourcemeta::core::gzip(
-      reinterpret_cast<const std::uint8_t *>(content.data()), content.size())};
+                           const std::string_view content) -> void {
+  // The codec is gzip today, the field name stays compression-agnostic so a
+  // future codec swap is mechanical. An artifact stored as it reads is never
+  // compressed here, so it records no compressed size
+  const auto compressed{
+      encoding == MetapackEncoding::GZIP
+          ? sourcemeta::core::gzip(
+                // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+                reinterpret_cast<const std::uint8_t *>(content.data()),
+                content.size())
+          : std::string{}};
   sourcemeta::core::write_file(destination, [&](std::ostream &output) -> void {
     write_binary_header(output, mime, encoding, extension, duration, content,
                         content.size(), compressed.size());
@@ -127,6 +163,19 @@ auto metapack_write_text(const std::filesystem::path &destination,
   write_metapack(destination, mime, encoding, extension, duration, content);
 }
 
+auto metapack_write_bytes(const std::filesystem::path &destination,
+                          const std::span<const std::uint8_t> contents,
+                          const std::string_view mime,
+                          const MetapackEncoding encoding,
+                          const std::span<const std::uint8_t> extension,
+                          const std::chrono::milliseconds duration) -> void {
+  write_metapack(
+      destination, mime, encoding, extension, duration,
+      std::string_view{
+          // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+          reinterpret_cast<const char *>(contents.data()), contents.size()});
+}
+
 auto metapack_write_file(const std::filesystem::path &destination,
                          const std::filesystem::path &source,
                          const std::string_view mime,
@@ -137,263 +186,116 @@ auto metapack_write_file(const std::filesystem::path &destination,
                  sourcemeta::core::read_file_to_string(source));
 }
 
-auto metapack_extension_offset(const sourcemeta::core::FileView &view)
-    -> std::size_t {
+auto metapack_parse(const sourcemeta::core::FileView &view)
+    -> std::optional<MetapackView> {
   if (view.size() < sizeof(MetapackHeader) + sizeof(std::uint32_t)) {
-    return 0;
+    return std::nullopt;
   }
 
   const auto *header{view.as<MetapackHeader>()};
   if (header->magic != METAPACK_MAGIC ||
       header->format_version != METAPACK_VERSION) {
-    return 0;
+    return std::nullopt;
   }
 
-  const auto offset_of_extension_size{sizeof(MetapackHeader) +
-                                      header->mime_length};
-  if (offset_of_extension_size + sizeof(std::uint32_t) > view.size()) {
-    return 0;
+  const auto extension_size_offset{sizeof(MetapackHeader) +
+                                   header->mime_length};
+  if (extension_size_offset + sizeof(std::uint32_t) > view.size()) {
+    return std::nullopt;
   }
 
-  const auto extension_size{*view.as<std::uint32_t>(offset_of_extension_size)};
-  if (extension_size == 0) {
-    return 0;
+  // The MIME string decides where this lands, which is rarely an offset a
+  // `std::uint32_t` may be read from in place
+  std::uint32_t extension_size{0};
+  std::memcpy(&extension_size, view.as<std::uint8_t>(extension_size_offset),
+              sizeof(extension_size));
+
+  const auto extension_offset{extension_size_offset + sizeof(std::uint32_t)};
+  if (extension_size > view.size() - extension_offset) {
+    return std::nullopt;
   }
 
-  const auto extension_data_offset{offset_of_extension_size +
-                                   sizeof(std::uint32_t)};
-  if (extension_data_offset + extension_size > view.size()) {
-    return 0;
-  }
-
-  return extension_data_offset;
+  const auto payload_offset{extension_offset + extension_size};
+  const auto *base{view.as<std::uint8_t>(0)};
+  return MetapackView{
+      .header = header,
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+      .mime = std::string_view{reinterpret_cast<const char *>(
+                                   base + sizeof(MetapackHeader)),
+                               header->mime_length},
+      .extension = {base + extension_offset, extension_size},
+      .payload = {base + payload_offset, view.size() - payload_offset}};
 }
 
-auto metapack_extension_size(const sourcemeta::core::FileView &view)
-    -> std::uint32_t {
-  if (view.size() < sizeof(MetapackHeader) + sizeof(std::uint32_t)) {
-    return 0;
-  }
-
-  const auto *header{view.as<MetapackHeader>()};
-  if (header->magic != METAPACK_MAGIC ||
-      header->format_version != METAPACK_VERSION) {
-    return 0;
-  }
-
-  const auto offset_of_extension_size{sizeof(MetapackHeader) +
-                                      header->mime_length};
-  if (offset_of_extension_size + sizeof(std::uint32_t) > view.size()) {
-    return 0;
-  }
-
-  return *view.as<std::uint32_t>(offset_of_extension_size);
-}
-
-auto metapack_read_json(const std::filesystem::path &path)
+auto metapack_read_json(const MetapackView &parsed)
     -> std::optional<sourcemeta::core::JSON> {
-  if (!std::filesystem::is_regular_file(path)) {
+  if (parsed.header == nullptr || parsed.payload.empty()) {
     return std::nullopt;
   }
 
-  sourcemeta::core::FileView view{path};
-  if (view.size() < sizeof(MetapackHeader) + sizeof(std::uint32_t)) {
-    return std::nullopt;
-  }
-
-  const auto *header{view.as<MetapackHeader>()};
-  if (header->magic != METAPACK_MAGIC ||
-      header->format_version != METAPACK_VERSION) {
-    return std::nullopt;
-  }
-
-  auto payload_offset{sizeof(MetapackHeader) + header->mime_length};
-  if (payload_offset + sizeof(std::uint32_t) > view.size()) {
-    return std::nullopt;
-  }
-
-  const auto *extension_size{view.as<std::uint32_t>(payload_offset)};
-  payload_offset += sizeof(std::uint32_t);
-  if (*extension_size > view.size() - payload_offset) {
-    return std::nullopt;
-  }
-  payload_offset += *extension_size;
-
-  const auto payload_data_size{view.size() - payload_offset};
-  if (payload_data_size == 0) {
-    return std::nullopt;
-  }
-
-  if (header->encoding == MetapackEncoding::GZIP) {
-    if (header->content_bytes / payload_data_size >
-        METAPACK_MAX_DECOMPRESSION_RATIO) {
-      return std::nullopt;
-    }
-
-    try {
-      const auto decompressed{
-          sourcemeta::core::gunzip(view.as<std::uint8_t>(payload_offset),
-                                   payload_data_size, header->content_bytes)};
-      // The header records the exact uncompressed size, so a payload that
-      // inflates to a different size is corrupt or a decompression bomb whose
-      // small declared size slipped past the ratio guard
-      if (decompressed.size() != header->content_bytes) {
+  // Parsing can run out of memory on a payload whose header overstates how far
+  // it inflates, which is a refusal rather than a failure
+  try {
+    if (parsed.header->encoding == MetapackEncoding::GZIP) {
+      const auto decompressed{inflate(parsed)};
+      if (!decompressed.has_value()) {
         return std::nullopt;
       }
 
-      return sourcemeta::core::parse_json(decompressed);
-    } catch (const std::exception &) {
+      return sourcemeta::core::parse_json(decompressed.value());
+    }
+
+    if (parsed.header->content_bytes > parsed.payload.size()) {
       return std::nullopt;
     }
-  }
 
-  if (header->content_bytes > payload_data_size) {
-    return std::nullopt;
-  }
-
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  const auto *payload_data{
-      reinterpret_cast<const char *>(view.as<std::uint8_t>(payload_offset))};
-  const std::string payload_string{payload_data, header->content_bytes};
-  try {
-    return sourcemeta::core::parse_json(payload_string);
+    return sourcemeta::core::parse_json(std::string_view{
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        reinterpret_cast<const char *>(parsed.payload.data()),
+        parsed.header->content_bytes});
   } catch (const std::exception &) {
     return std::nullopt;
   }
 }
 
-auto metapack_read_text(const std::filesystem::path &path)
-    -> std::optional<std::string> {
-  if (!std::filesystem::is_regular_file(path)) {
-    return std::nullopt;
-  }
-  sourcemeta::core::FileView view{path};
-  if (view.size() < sizeof(MetapackHeader) + sizeof(std::uint32_t)) {
+auto metapack_read_json(const sourcemeta::core::FileView &view)
+    -> std::optional<sourcemeta::core::JSON> {
+  const auto parsed{metapack_parse(view)};
+  if (!parsed.has_value()) {
     return std::nullopt;
   }
 
-  const auto *header{view.as<MetapackHeader>()};
-  if (header->magic != METAPACK_MAGIC ||
-      header->format_version != METAPACK_VERSION) {
-    return std::nullopt;
-  }
-
-  auto payload_offset{sizeof(MetapackHeader) + header->mime_length};
-  if (payload_offset + sizeof(std::uint32_t) > view.size()) {
-    return std::nullopt;
-  }
-
-  const auto *extension_size{view.as<std::uint32_t>(payload_offset)};
-  payload_offset += sizeof(std::uint32_t);
-  if (*extension_size > view.size() - payload_offset) {
-    return std::nullopt;
-  }
-  payload_offset += *extension_size;
-
-  const auto payload_data_size{view.size() - payload_offset};
-  if (payload_data_size == 0) {
-    return std::nullopt;
-  }
-
-  if (header->encoding == MetapackEncoding::GZIP) {
-    if (header->content_bytes / payload_data_size >
-        METAPACK_MAX_DECOMPRESSION_RATIO) {
-      return std::nullopt;
-    }
-
-    try {
-      auto decompressed{
-          sourcemeta::core::gunzip(view.as<std::uint8_t>(payload_offset),
-                                   payload_data_size, header->content_bytes)};
-      // The header records the exact uncompressed size, so a payload that
-      // inflates to a different size is corrupt or a decompression bomb whose
-      // small declared size slipped past the ratio guard
-      if (decompressed.size() != header->content_bytes) {
-        return std::nullopt;
-      }
-
-      return decompressed;
-    } catch (const std::exception &) {
-      return std::nullopt;
-    }
-  }
-
-  if (header->content_bytes > payload_data_size) {
-    return std::nullopt;
-  }
-
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  const auto *payload_data{
-      reinterpret_cast<const char *>(view.as<std::uint8_t>(payload_offset))};
-  return std::string{payload_data, header->content_bytes};
+  return metapack_read_json(parsed.value());
 }
 
-auto metapack_info(const sourcemeta::core::FileView &view)
-    -> std::optional<MetapackInfo> {
-  if (view.size() < sizeof(MetapackHeader) + sizeof(std::uint32_t)) {
+auto metapack_read_json(const std::filesystem::path &path)
+    -> std::optional<sourcemeta::core::JSON> {
+  try {
+    const sourcemeta::core::FileView view{path};
+    return metapack_read_json(view);
+  } catch (const sourcemeta::core::FileViewError &) {
     return std::nullopt;
   }
-
-  const auto *header{view.as<MetapackHeader>()};
-  if (header->magic != METAPACK_MAGIC ||
-      header->format_version != METAPACK_VERSION) {
-    return std::nullopt;
-  }
-
-  if (sizeof(MetapackHeader) + header->mime_length > view.size()) {
-    return std::nullopt;
-  }
-
-  std::string checksum_hex;
-  checksum_hex.reserve(64);
-  static constexpr const char *HEX_CHARS = "0123456789abcdef";
-  for (const auto byte : header->checksum) {
-    checksum_hex += HEX_CHARS[(byte >> 4) & 0x0F];
-    checksum_hex += HEX_CHARS[byte & 0x0F];
-  }
-
-  const auto nanos{std::chrono::nanoseconds{header->last_modified}};
-  const auto time_point{std::chrono::system_clock::time_point{
-      std::chrono::duration_cast<std::chrono::system_clock::duration>(nanos)}};
-
-  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  const auto *mime_data{reinterpret_cast<const char *>(
-      view.as<std::uint8_t>(sizeof(MetapackHeader)))};
-
-  return MetapackInfo{.checksum_hex = std::move(checksum_hex),
-                      .last_modified = time_point,
-                      .mime = std::string{mime_data, header->mime_length},
-                      .encoding = header->encoding,
-                      .content_bytes = header->content_bytes,
-                      .compressed_bytes = header->compressed_bytes,
-                      .duration = std::chrono::milliseconds{header->duration}};
 }
 
-auto metapack_payload_offset(const sourcemeta::core::FileView &view)
-    -> std::optional<std::size_t> {
-  if (view.size() < sizeof(MetapackHeader) + sizeof(std::uint32_t)) {
-    return std::nullopt;
+auto metapack_checksum_hex(const MetapackHeader &header)
+    -> std::array<char, METAPACK_CHECKSUM_HEX_LENGTH> {
+  static constexpr std::string_view HEX_CHARS{"0123456789abcdef"};
+  std::array<char, METAPACK_CHECKSUM_HEX_LENGTH> result{};
+  std::size_t cursor{0};
+  for (const auto byte : header.checksum) {
+    result[cursor++] = HEX_CHARS[(byte >> 4) & 0x0F];
+    result[cursor++] = HEX_CHARS[byte & 0x0F];
   }
 
-  const auto *header{view.as<MetapackHeader>()};
-  if (header->magic != METAPACK_MAGIC ||
-      header->format_version != METAPACK_VERSION) {
-    return std::nullopt;
-  }
+  return result;
+}
 
-  auto offset{sizeof(MetapackHeader) + header->mime_length};
-  if (offset + sizeof(std::uint32_t) > view.size()) {
-    return std::nullopt;
-  }
-
-  const auto *extension_size{view.as<std::uint32_t>(offset)};
-  offset += sizeof(std::uint32_t);
-  if (*extension_size > view.size() - offset) {
-    return std::nullopt;
-  }
-  offset += *extension_size;
-
-  return offset;
+auto metapack_last_modified(const MetapackHeader &header)
+    -> std::chrono::system_clock::time_point {
+  const auto nanos{std::chrono::nanoseconds{header.last_modified}};
+  return std::chrono::system_clock::time_point{
+      std::chrono::duration_cast<std::chrono::system_clock::duration>(nanos)};
 }
 
 } // namespace sourcemeta::one

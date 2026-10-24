@@ -748,11 +748,10 @@ static auto index_main(const std::string_view &program,
       if (entry.is_regular_file() && entry.path().extension() == ".metapack") {
         try {
           sourcemeta::core::FileView file_view{entry.path()};
-          const auto file_info_option{
-              sourcemeta::one::metapack_info(file_view)};
-          assert(file_info_option.has_value());
-          const auto &file_info{file_info_option.value()};
-          durations.emplace_back(entry.path(), file_info.duration);
+          const auto parsed{sourcemeta::one::metapack_parse(file_view)};
+          assert(parsed.has_value());
+          durations.emplace_back(entry.path(), std::chrono::milliseconds{
+                                                   parsed->header->duration});
         } catch (...) {
           std::println(stderr, "Could not profile file: {}",
                        entry.path().string());
