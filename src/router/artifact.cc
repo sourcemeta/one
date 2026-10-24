@@ -411,29 +411,18 @@ auto RouterAction::artifact_serve(
       reinterpret_cast<const char *>(parsed->payload.data()),
       parsed->payload.size()};
 
-  // The header carries both representation sizes as fixed-width `uint64_t`
-  // to keep the metapack format portable across architectures. Narrow to
-  // `std::size_t` for the uWS API. On 64-bit hosts this is a no-op, and the
-  // asserts guard a hypothetical 32-bit build from truncating a >4 GB
-  // artifact (which the indexer would never produce on realistic schema
-  // inputs). Whichever size the wire encoding calls for is the one the
-  // stored encoding does not already have on disk.
+  // The uncompressed size is recorded for every artifact, so one stored
+  // compressed and asked for uncompressed is answered without running the
+  // codec. No compressed size is recorded, so the opposite direction has to
+  // compress to answer
   if (header.encoding == sourcemeta::one::MetapackEncoding::GZIP) {
     assert(header.content_bytes <= std::numeric_limits<std::size_t>::max());
     sourcemeta::one::send_response(
         status, request, response, contents, sourcemeta::one::Encoding::GZIP,
         static_cast<std::size_t>(header.content_bytes));
   } else {
-    assert(header.compressed_bytes <= std::numeric_limits<std::size_t>::max());
-    // An artifact stored as it reads records no compressed size, in which case
-    // answering a compressed HEAD means compressing it after all
-    sourcemeta::one::send_response(
-        status, request, response, contents,
-        sourcemeta::one::Encoding::Identity,
-        header.compressed_bytes > 0
-            ? std::optional<std::size_t>{static_cast<std::size_t>(
-                  header.compressed_bytes)}
-            : std::nullopt);
+    sourcemeta::one::send_response(status, request, response, contents,
+                                   sourcemeta::one::Encoding::Identity);
   }
 }
 
