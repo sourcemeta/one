@@ -9,6 +9,7 @@
 #include <sourcemeta/core/json.h>
 
 #include <array>       // std::array
+#include <bit>         // std::endian
 #include <chrono>      // std::chrono
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t, std::uint16_t, std::uint32_t, etc.
@@ -16,11 +17,17 @@
 #include <optional>    // std::optional
 #include <span>        // std::span
 #include <string_view> // std::string_view
+#include <type_traits> // std::is_trivially_copyable_v
 
 namespace sourcemeta::one {
 
-static constexpr std::uint32_t METAPACK_MAGIC{0x4154454D};
-static constexpr std::uint16_t METAPACK_VERSION{4};
+// Every multi-byte field is read where it lies rather than byte-swapped, so
+// the byte order the format is written in is the only one it can be read in
+static_assert(std::endian::native == std::endian::little,
+              "The metapack format is little-endian and this host is not");
+
+inline constexpr std::uint32_t METAPACK_MAGIC{0x4154454D};
+inline constexpr std::uint16_t METAPACK_VERSION{4};
 
 enum class MetapackEncoding : std::uint8_t { Identity = 0, GZIP = 1 };
 
@@ -37,7 +44,17 @@ struct MetapackHeader {
 };
 #pragma pack(pop)
 
-static constexpr std::size_t METAPACK_CHECKSUM_HEX_LENGTH{64};
+static_assert(alignof(MetapackHeader) == 1,
+              "The header is read where it lies, so its layout must be packed");
+static_assert(sizeof(MetapackHeader) == 58,
+              "The header layout is part of the format, so moving, resizing or "
+              "adding a field means bumping METAPACK_VERSION");
+
+inline constexpr std::size_t METAPACK_CHECKSUM_HEX_LENGTH{64};
+
+static_assert(METAPACK_CHECKSUM_HEX_LENGTH ==
+                  2 * sizeof(MetapackHeader::checksum),
+              "Rendering a checksum takes two characters per byte");
 
 // Writers
 
@@ -108,9 +125,17 @@ SOURCEMETA_ONE_METAPACK_EXPORT
 auto metapack_last_modified(const MetapackHeader &header)
     -> std::chrono::system_clock::time_point;
 
+// What the extension holds, as whichever layout the artifact's own kind puts
+// there, or nothing when it is too small to hold one
 template <typename T>
 auto metapack_extension_as(const std::span<const std::uint8_t> extension)
     -> const T * {
+  static_assert(std::is_trivially_copyable_v<T>,
+                "An extension layout is read where it lies, so it has to be "
+                "trivially copyable");
+  static_assert(alignof(T) == 1,
+                "An extension begins at an offset the MIME string decides, so "
+                "its layout must be packed to be read where it lies");
   if (extension.size() < sizeof(T)) {
     return nullptr;
   }

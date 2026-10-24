@@ -411,14 +411,10 @@ auto RouterAction::artifact_serve(
       reinterpret_cast<const char *>(parsed->payload.data()),
       parsed->payload.size()};
 
-  // An artifact stored compressed records the size it reads at, so a HEAD
-  // asked for it uncompressed is answered without running the codec. The size
-  // is a fixed-width `uint64_t` to keep the metapack format portable across
-  // architectures, and narrowing it for the uWS API is a no-op on 64-bit
-  // hosts, with the assert guarding a hypothetical 32-bit build from
-  // truncating a >4 GB artifact the indexer would never produce. Nothing is
-  // recorded for the other direction, so a HEAD asked for an artifact stored
-  // as it reads compressed is answered by compressing it
+  // The uncompressed size is recorded for every artifact, so one stored
+  // compressed and asked for uncompressed is answered without running the
+  // codec. No compressed size is recorded, so the opposite direction has to
+  // compress to answer
   if (header.encoding == sourcemeta::one::MetapackEncoding::GZIP) {
     assert(header.content_bytes <= std::numeric_limits<std::size_t>::max());
     sourcemeta::one::send_response(
