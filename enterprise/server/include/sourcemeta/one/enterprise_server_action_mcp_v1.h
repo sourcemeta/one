@@ -243,16 +243,16 @@ public:
     // - If header is absent, server SHOULD assume 2025-03-26, which is the
     //   revision that predates the header
     // - If header is invalid/unsupported, server MUST respond with 400
+    // Presence is what the fallback turns on rather than whether the header
+    // carries anything, since one that is there but empty names no revision
+    // and is refused rather than read as the one that predates it
     // https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#protocol-version-header
     const auto requested_version{request.header("mcp-protocol-version")};
     const auto negotiated_version{
-        requested_version.empty()
-            ? std::optional<
-                  sourcemeta::core::MCPProtocolVersion>{sourcemeta::core::
-                                                            MCPProtocolVersion::
-                                                                V_2025_03_26}
-            : sourcemeta::core::mcp_resolve_protocol_version(
-                  requested_version)};
+        request.header_exists("mcp-protocol-version")
+            ? sourcemeta::core::mcp_resolve_protocol_version(requested_version)
+            : std::optional<sourcemeta::core::MCPProtocolVersion>{
+                  sourcemeta::core::MCPProtocolVersion::V_2025_03_26}};
     // A revision this library models is not automatically one this instance
     // serves, so what it settles on is checked against what is advertised
     if (!negotiated_version.has_value() ||
