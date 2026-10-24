@@ -60,8 +60,7 @@ static auto write_binary_header(std::ostream &output,
                                 const MetapackEncoding encoding,
                                 const std::span<const std::uint8_t> extension,
                                 const std::string_view payload,
-                                const std::size_t uncompressed_size,
-                                const std::size_t compressed_size) -> void {
+                                const std::size_t uncompressed_size) -> void {
   MetapackHeader header{};
   header.magic = METAPACK_MAGIC;
   header.format_version = METAPACK_VERSION;
@@ -73,7 +72,6 @@ static auto write_binary_header(std::ostream &output,
                              now.time_since_epoch())
                              .count();
   header.content_bytes = uncompressed_size;
-  header.compressed_bytes = compressed_size;
 
   header.checksum = sourcemeta::core::sha256_digest(payload);
 
@@ -100,9 +98,7 @@ static auto write_metapack(const std::filesystem::path &destination,
                            const MetapackEncoding encoding,
                            const std::span<const std::uint8_t> extension,
                            const std::string_view content) -> void {
-  // The codec is gzip today, the field name stays compression-agnostic so a
-  // future codec swap is mechanical. An artifact stored as it reads is never
-  // compressed here, so it records no compressed size
+  // Only an artifact that is stored compressed is compressed at all
   const auto compressed{
       encoding == MetapackEncoding::GZIP
           ? sourcemeta::core::gzip(
@@ -112,7 +108,7 @@ static auto write_metapack(const std::filesystem::path &destination,
           : std::string{}};
   sourcemeta::core::write_file(destination, [&](std::ostream &output) -> void {
     write_binary_header(output, mime, encoding, extension, content,
-                        content.size(), compressed.size());
+                        content.size());
 
     if (encoding == MetapackEncoding::GZIP) {
       output.write(compressed.data(),

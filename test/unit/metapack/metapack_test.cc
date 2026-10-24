@@ -208,7 +208,7 @@ TEST(write_text_appends_a_trailing_newline) {
   EXPECT_EQ(parsed.header->content_bytes, contents.size());
 }
 
-TEST(write_text_gzip_records_both_sizes) {
+TEST(write_text_gzip_records_the_content_size) {
   const auto path{test_path("text_gzip.metapack")};
   std::string large_text;
   for (int index = 0; index < 200; index++) {
@@ -225,7 +225,6 @@ TEST(write_text_gzip_records_both_sizes) {
   EXPECT_EQ(parsed.header->encoding, sourcemeta::one::MetapackEncoding::GZIP);
   EXPECT_TRUE(parsed.extension.empty());
   EXPECT_EQ(parsed.header->content_bytes, large_text.size() + 1);
-  EXPECT_EQ(parsed.header->compressed_bytes, parsed.payload.size());
   EXPECT_LT(parsed.payload.size(), parsed.header->content_bytes);
 }
 
@@ -248,7 +247,7 @@ TEST(write_bytes_keeps_the_payload_exact) {
   EXPECT_TRUE(std::ranges::equal(parsed.payload, contents));
 }
 
-TEST(write_bytes_gzip_records_both_sizes) {
+TEST(write_bytes_gzip_records_the_content_size) {
   const auto path{test_path("bytes_gzip.metapack")};
   std::vector<std::uint8_t> contents;
   for (std::size_t index{0}; index < 4096; index++) {
@@ -265,27 +264,11 @@ TEST(write_bytes_gzip_records_both_sizes) {
   EXPECT_EQ(parsed.header->encoding, sourcemeta::one::MetapackEncoding::GZIP);
   EXPECT_TRUE(parsed.extension.empty());
   EXPECT_EQ(parsed.header->content_bytes, contents.size());
-  EXPECT_EQ(parsed.header->compressed_bytes, parsed.payload.size());
   EXPECT_LT(parsed.payload.size(), contents.size());
 }
 
-TEST(compressed_bytes_matches_payload_for_gzip_encoding) {
-  const auto path{test_path("compressed_bytes_gzip.metapack")};
-  auto document{sourcemeta::core::JSON::make_object()};
-  document.assign("hello", sourcemeta::core::JSON{"world"});
-
-  sourcemeta::one::metapack_write_json(path, document, "application/json",
-                                       sourcemeta::one::MetapackEncoding::GZIP,
-                                       {});
-
-  sourcemeta::core::FileView view{path};
-  const auto parsed{sourcemeta::one::metapack_parse(view).value()};
-  EXPECT_EQ(parsed.header->encoding, sourcemeta::one::MetapackEncoding::GZIP);
-  EXPECT_EQ(parsed.header->compressed_bytes, parsed.payload.size());
-}
-
-TEST(compressed_bytes_unset_for_identity_encoding) {
-  const auto path{test_path("compressed_bytes_identity.metapack")};
+TEST(identity_payload_is_stored_at_its_content_size) {
+  const auto path{test_path("identity_sizes.metapack")};
   auto document{sourcemeta::core::JSON::make_object()};
   document.assign("hello", sourcemeta::core::JSON{"world"});
 
@@ -295,11 +278,10 @@ TEST(compressed_bytes_unset_for_identity_encoding) {
 
   sourcemeta::core::FileView view{path};
   const auto parsed{sourcemeta::one::metapack_parse(view).value()};
+  EXPECT_EQ(parsed.mime, "application/json");
   EXPECT_EQ(parsed.header->encoding,
             sourcemeta::one::MetapackEncoding::Identity);
-  // Storing an artifact as it reads never compresses it, so there is no
-  // compressed size to record
-  EXPECT_EQ(parsed.header->compressed_bytes, 0);
+  EXPECT_TRUE(parsed.extension.empty());
   EXPECT_EQ(parsed.header->content_bytes, parsed.payload.size());
 }
 
