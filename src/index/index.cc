@@ -15,6 +15,7 @@
 
 #include <sourcemeta/one/build.h>
 #include <sourcemeta/one/configuration.h>
+#include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/resolver.h>
 #include <sourcemeta/one/shared.h>
 #include <sourcemeta/one/web.h>
@@ -291,7 +292,11 @@ static auto execute_plan(sourcemeta::one::BuildState &entries,
             throw;
           }
 
-          if (timings != nullptr) {
+          // A handler is free to decide there is nothing to serve and take its
+          // destination away, and what was never left behind is not something
+          // to report a time for
+          if (timings != nullptr &&
+              std::filesystem::exists(action.destination)) {
             timings->record(
                 action.destination,
                 std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -445,13 +450,18 @@ static auto index_main(const std::string_view &program,
   sourcemeta::one::BuildState entries;
   const auto state_path{canonical_output / "state.bin"};
   // What this build is being asked to apply: the configuration exactly as the
-  // anchor records it, and the version of the tool applying it, since a
-  // version change is what makes artifacts of an older format unusable. A
-  // fingerprint over both, so that a state describing one of them never
-  // vouches for work done under the other
+  // anchor records it, the version of the tool applying it, and the version of
+  // the artifact format it writes, since any of those changing is what makes
+  // artifacts of an earlier build unusable. The format version is named in its
+  // own right rather than left to the tool version, which a release build
+  // reports without a commit behind it, so the same release rebuilt against a
+  // newer format would otherwise keep artifacts nothing can read. A
+  // fingerprint over all of them, so that a state describing one never vouches
+  // for work done under another
   std::ostringstream inputs_text;
   sourcemeta::core::prettify(raw_configuration, inputs_text);
   inputs_text << sourcemeta::one::version();
+  inputs_text << sourcemeta::one::METAPACK_VERSION;
   const auto inputs_fingerprint{
       sourcemeta::one::BuildState::fingerprint(inputs_text.str())};
 
