@@ -4,7 +4,10 @@
 
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonpointer.h>
+#include <sourcemeta/core/jsonschema.h>
+#include <sourcemeta/core/openapi.h>
 #include <sourcemeta/core/parallel.h>
+#include <sourcemeta/core/uri.h>
 
 // The parallel module includes windows.h, which defines DELETE as a macro
 // that would otherwise break parsing the HTTPMethod enumeration that the
@@ -13,20 +16,22 @@
 #undef DELETE
 #endif
 
-#include <algorithm> // std::find, std::distance, std::min, std::max
+#include <algorithm> // std::min, std::max
 #include <atomic>    // std::atomic
 #include <chrono>    // std::chrono
 #include <cstddef>   // std::size_t
 #include <cstdint>   // std::uint8_t
 #include <exception> // std::exception_ptr, std::current_exception, std::rethrow_exception
 #include <iostream>    // std::cout
+#include <map>         // std::map
+#include <memory>      // std::unique_ptr, std::make_unique
 #include <mutex>       // std::mutex, std::scoped_lock
 #include <optional>    // std::optional
 #include <sstream>     // std::ostringstream
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <thread>      // std::this_thread
-#include <utility>     // std::unreachable
+#include <utility>     // std::unreachable, std::move
 #include <vector>      // std::vector
 
 #include "command.h"
@@ -154,11 +159,209 @@ auto print_rdf_failure(const sourcemeta::jsonschema::InputJSON &entry,
   }
 }
 
+// A test document names its target either as a URI or as an array of them, so
+// what gets reported back is however the document spelled it
+auto format_target(const sourcemeta::core::JSON &document) -> std::string {
+  const auto *target{document.try_at("target")};
+  if (target == nullptr) {
+    return {};
+  }
+
+  if (target->is_string()) {
+    return target->to_string();
+  }
+
+  std::ostringstream result;
+  sourcemeta::core::stringify(*target, result);
+  return std::move(result).str();
+}
+
+// A test suite borrows the document and the frame that each of its targets
+// resolved to, so whatever holds those must outlive it. Targets that share a
+// base share the one entry, as all that sets them apart is where in it the
+// schema under test sits
+struct TestTargets {
+  // A document is framed as whatever it is, and only one of the two frames is
+  // ever built. A description holds many schemas and none of itself, so what
+  // the suite is handed is the frame of the schemas within it
+  struct Entry {
+    std::unique_ptr<sourcemeta::core::JSON> document;
+    std::unique_ptr<sourcemeta::core::SchemaFrame> schema;
+    std::unique_ptr<sourcemeta::core::OpenAPIFrame> description;
+
+    [[nodiscard]] auto frame() const -> const sourcemeta::core::SchemaFrame & {
+      return this->schema == nullptr ? this->description->schemas()
+                                     : *this->schema;
+    }
+
+    // A document answers to an identity it declares as well as to where it was
+    // read from, and a target may spell either. A schema is framed under the
+    // one the target used, so both reach it. A description is keyed under the
+    // single base framing settled on, which is whatever `$self` it declares,
+    // so the place the target names is carried over to that base. The same
+    // place is the same place however the document was reached, and the
+    // document answering to the target's base is what got us this far
+    // TODO: Drop this once `OpenAPIFrame` can register the retrieval identity
+    // alongside `$self`, the way `SchemaFrame` does with `default_id` and
+    // `IdentifierMode::Additional`
+    [[nodiscard]] auto
+    entrypoint(const sourcemeta::core::URI &target_uri,
+               const sourcemeta::core::JSON::String &target) const
+        -> sourcemeta::core::JSON::String {
+      if (this->description == nullptr) {
+        return target;
+      }
+
+      const auto settled{this->description->base()};
+      if (target_uri.recompose_without_fragment().value_or(target) == settled) {
+        return target;
+      }
+
+      sourcemeta::core::URI result{std::string{settled}};
+      if (target_uri.fragment().has_value()) {
+        result.fragment(std::string{target_uri.fragment().value()});
+      }
+
+      result.canonicalize();
+      return result.recompose();
+    }
+  };
+
+  std::map<sourcemeta::core::JSON::String, Entry> bases;
+};
+
+// The document was read, so what is reported is how it failed to answer to the
+// target rather than anything about reaching it. Which of the three it is tells
+// the user whether to look at the document, at the place the fragment names, or
+// at the fragment being there at all
+auto target_not_schema(const sourcemeta::core::JSON &document,
+                       const bool description,
+                       const sourcemeta::core::URI &target_uri,
+                       const sourcemeta::core::JSON::String &target)
+    -> sourcemeta::jsonschema::TestTargetNotSchemaError {
+  if (!target_uri.fragment().has_value() ||
+      target_uri.fragment().value().empty()) {
+    return {"This target names a document rather than a schema within it",
+            target, description, true};
+  }
+
+  const auto pointer{sourcemeta::core::fragment_to_pointer(target_uri)};
+  if (pointer.has_value() &&
+      sourcemeta::core::try_get(document, pointer.value()) != nullptr) {
+    return {"This target names a place of the document that is not a schema",
+            target, description, false};
+  }
+
+  return {"This target names a place that the document does not hold", target,
+          description, false};
+}
+
+// What a target names is reached the same way whatever holds it, by bundling
+// the document in and framing it under the base the target was resolved
+// against. Everything it spans has to be bundled in first, as compiling never
+// reaches for what a reference names
+auto resolve_base(const sourcemeta::core::SchemaResolver &schema_resolver,
+                  const sourcemeta::core::OpenAPIResolver &openapi_resolver,
+                  sourcemeta::jsonschema::CustomResolver &custom_resolver,
+                  const std::string &dialect,
+                  const sourcemeta::core::JSON::String &base)
+    -> TestTargets::Entry {
+  // The two resolvers are strictly separated, so a description is never
+  // reported as a schema and the other way around. Asking for a schema first
+  // still sorts whatever a fetch turns up into the right one of the two, so a
+  // description is read once however it got here
+  const auto schema{schema_resolver(base)};
+  if (schema.has_value()) {
+    auto document{std::make_unique<sourcemeta::core::JSON>(
+        sourcemeta::core::schema_bundle(
+            schema.value(), sourcemeta::core::schema_walker, schema_resolver,
+            dialect, base,
+            sourcemeta::jsonschema::bundle_references_options()))};
+
+    auto frame{std::make_unique<sourcemeta::core::SchemaFrame>(
+        sourcemeta::core::SchemaFrame::Mode::References, *document,
+        sourcemeta::core::schema_walker, schema_resolver, dialect, base)};
+
+    return {.document = std::move(document),
+            .schema = std::move(frame),
+            .description = nullptr};
+  }
+
+  const auto description{openapi_resolver(base)};
+  if (!description.has_value()) {
+    // An imported description that declares this identifier within it is the
+    // one case worth explaining, as the usual advice to import whatever names
+    // it would have the user import what they already did
+    custom_resolver.report_description_resource(base);
+    throw sourcemeta::core::SchemaResolutionError{
+        base, "Could not resolve the reference to an external schema"};
+  }
+
+  auto document{std::make_unique<sourcemeta::core::JSON>(description.value())};
+
+  // A description that names itself with `$self` answers to that as well as to
+  // where it was read from, and a target may spell either. What a relative
+  // identity and relative references resolve against is where it was read
+  // from, so that is the base rather than whichever of the two got us here
+  const auto retrieval{custom_resolver.description_retrieval(base)};
+  const auto &default_base{retrieval.has_value() ? retrieval.value() : base};
+
+  sourcemeta::core::openapi_bundle(*document, sourcemeta::core::schema_walker,
+                                   schema_resolver, openapi_resolver,
+                                   {.default_base = default_base});
+
+  auto frame{std::make_unique<sourcemeta::core::OpenAPIFrame>(
+      *document, sourcemeta::core::schema_walker, schema_resolver,
+      default_base)};
+
+  return {.document = std::move(document),
+          .schema = nullptr,
+          .description = std::move(frame)};
+}
+
+auto resolve_test_target(
+    const sourcemeta::core::SchemaResolver &schema_resolver,
+    const sourcemeta::core::OpenAPIResolver &openapi_resolver,
+    sourcemeta::jsonschema::CustomResolver &custom_resolver,
+    const std::string &dialect, const sourcemeta::core::JSON::String &target,
+    TestTargets &targets) -> sourcemeta::blaze::TestTarget {
+  // RFC 3986 Section 3.5 makes a fragment address a place within a resource
+  // rather than a resource of its own, so what the target names is looked up
+  // under the base that precedes it
+  const sourcemeta::core::URI target_uri{target};
+  const auto base{target_uri.recompose_without_fragment().value_or(target)};
+
+  auto match{targets.bases.find(base)};
+  if (match == targets.bases.cend()) {
+    match = targets.bases
+                .emplace(base, resolve_base(schema_resolver, openapi_resolver,
+                                            custom_resolver, dialect, base))
+                .first;
+  }
+
+  const auto &entry{match->second};
+  const auto entrypoint{entry.entrypoint(target_uri, target)};
+
+  // Asking here reports a target that nothing locates in terms of the document
+  // that was read for it, rather than as an entry point that whatever compiles
+  // it next does not know how to talk about
+  if (!entry.frame().traverse(entrypoint).has_value()) {
+    throw target_not_schema(*entry.document, entry.schema == nullptr,
+                            target_uri, target);
+  }
+
+  return {.document = *entry.document,
+          .frame = entry.frame(),
+          .entrypoint = entrypoint};
+}
+
 auto parse_test_suite(const sourcemeta::jsonschema::InputJSON &entry,
                       const sourcemeta::core::SchemaResolver &schema_resolver,
-                      const std::string_view dialect,
-                      const std::optional<sourcemeta::blaze::Tweaks> &tweaks)
-    -> sourcemeta::blaze::TestSuite {
+                      const sourcemeta::core::OpenAPIResolver &openapi_resolver,
+                      sourcemeta::jsonschema::CustomResolver &custom_resolver,
+                      const std::string &dialect,
+                      const std::optional<sourcemeta::blaze::Tweaks> &tweaks,
+                      TestTargets &targets) -> sourcemeta::blaze::TestSuite {
   try {
     return sourcemeta::blaze::TestSuite::parse(
         entry.second, entry.positions,
@@ -167,8 +370,36 @@ auto parse_test_suite(const sourcemeta::jsonschema::InputJSON &entry,
         // `dataPath` and `rdfPath` entries are opened from it
         entry.from_stdin ? std::filesystem::current_path()
                          : entry.resolution_base.parent_path(),
+        [&schema_resolver, &openapi_resolver, &custom_resolver, &dialect,
+         &targets](const sourcemeta::core::JSON::String &target) {
+          return resolve_test_target(schema_resolver, openapi_resolver,
+                                     custom_resolver, dialect, target, targets);
+        },
         schema_resolver, sourcemeta::core::schema_walker,
-        sourcemeta::blaze::default_schema_compiler, dialect, "", tweaks);
+        sourcemeta::blaze::default_schema_compiler, tweaks);
+  } catch (const sourcemeta::core::URIParseError &) {
+    // Blaze parses every target as a URI, so the one it choked on is whichever
+    // of them is not one. Reporting the lot keeps this from naming the wrong
+    // target, as a document may list several
+    throw sourcemeta::core::FileError<
+        sourcemeta::jsonschema::InvalidTestTargetError>{
+        entry.resolution_base, format_target(entry.second)};
+  } catch (const sourcemeta::jsonschema::TestTargetNotSchemaError &error) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::jsonschema::TestTargetNotSchemaError>{entry.resolution_base,
+                                                          error};
+  } catch (const sourcemeta::core::OpenAPIResolutionError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::core::OpenAPIResolutionError>{
+        entry.resolution_base, error};
+  } catch (const sourcemeta::core::OpenAPIReferenceError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::core::OpenAPIReferenceError>{
+        entry.resolution_base, error};
+  } catch (const sourcemeta::core::OpenAPIError &error) {
+    // No position, as what is bundled and framed here is the description the
+    // document targets while the positions on hand describe the test document
+    // itself
+    throw sourcemeta::core::FileError<sourcemeta::core::OpenAPIError>{
+        entry.resolution_base, error};
   } catch (const sourcemeta::blaze::TestParseError &error) {
     throw sourcemeta::core::FileError<sourcemeta::blaze::TestParseError>{
         entry.resolution_base, error.what(), error.location(), error.line(),
@@ -186,6 +417,12 @@ auto parse_test_suite(const sourcemeta::jsonschema::InputJSON &entry,
     // No position, as what compiles here is the schema the document targets
     // while the positions on hand describe the test document itself
     throw sourcemeta::core::FileError<sourcemeta::blaze::CompilerError>{
+        entry.resolution_base, error};
+  } catch (const sourcemeta::core::SchemaKeywordError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>{
+        entry.resolution_base, error};
+  } catch (const sourcemeta::core::SchemaFrameError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaFrameError>{
         entry.resolution_base, error};
   } catch (
       const sourcemeta::core::SchemaRelativeMetaschemaResolutionError &error) {
@@ -210,6 +447,25 @@ auto parse_test_suite(const sourcemeta::jsonschema::InputJSON &entry,
     throw sourcemeta::core::FileError<
         sourcemeta::core::SchemaAnchorCollisionError>{entry.resolution_base,
                                                       error};
+  } catch (const sourcemeta::core::SchemaDialectImpossibleError &error) {
+    // No position, as what compiles here is the schema the document targets
+    // while the positions on hand describe the test document itself
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaDialectImpossibleError>{entry.resolution_base,
+                                                        error};
+  } catch (const sourcemeta::core::SchemaReferenceError &error) {
+    // No position, as what compiles here is the schema the document targets
+    // while the positions on hand describe the test document itself
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaReferenceError>{
+        entry.resolution_base, error.identifier(), error.location(),
+        error.what()};
+  } catch (const sourcemeta::core::SchemaReferenceObjectResourceError &error) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaReferenceObjectResourceError>{
+        entry.resolution_base, error.identifier()};
+  } catch (const sourcemeta::core::SchemaError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaError>{
+        entry.resolution_base, error.what()};
   }
 }
 
@@ -256,11 +512,16 @@ auto run_suite_as_text(const sourcemeta::core::Options &options,
         sourcemeta::jsonschema::default_dialect(options, configuration)};
     const auto &schema_resolver{sourcemeta::jsonschema::resolver(
         options, options.contains("http"), dialect, configuration)};
+    const auto &openapi_resolver{sourcemeta::jsonschema::openapi_resolver(
+        options, options.contains("http"), dialect, configuration)};
+    auto &custom_resolver{sourcemeta::jsonschema::resolver_instance(
+        options, options.contains("http"), dialect, configuration)};
     const auto trace{options.contains("trace")};
 
+    TestTargets targets;
     auto test_suite{parse_test_suite(
-        entry, schema_resolver, dialect,
-        sourcemeta::jsonschema::format_assertion_tweaks(options))};
+        entry, schema_resolver, openapi_resolver, custom_resolver, dialect,
+        sourcemeta::jsonschema::format_assertion_tweaks(options), targets)};
 
     stream << sourcemeta::jsonschema::paint(
                   entry.first, HEADING_STYLE,
@@ -271,8 +532,9 @@ auto run_suite_as_text(const sourcemeta::core::Options &options,
     std::optional<sourcemeta::core::JSON::String> last_target_header;
 
     const auto suite_result{test_suite.run(
-        [&](const sourcemeta::core::JSON::String &target, std::size_t index,
-            std::size_t total, const sourcemeta::blaze::TestCase &test_case,
+        [&](const sourcemeta::core::JSON::String &target,
+            std::size_t target_index, std::size_t index, std::size_t total,
+            const sourcemeta::blaze::TestCase &test_case,
             const sourcemeta::blaze::TestOutcome &outcome,
             sourcemeta::blaze::TestTimestamp,
             sourcemeta::blaze::TestTimestamp) {
@@ -310,13 +572,7 @@ auto run_suite_as_text(const sourcemeta::core::Options &options,
               stream << "\n";
             }
           } else if (!outcome.valid) {
-            const std::string ref{"$ref"};
-            sourcemeta::blaze::SimpleOutput output{test_case.data,
-                                                   {std::cref(ref)}};
-            const auto target_index{static_cast<std::size_t>(
-                std::distance(test_suite.targets.cbegin(),
-                              std::find(test_suite.targets.cbegin(),
-                                        test_suite.targets.cend(), target)))};
+            sourcemeta::blaze::SimpleOutput output{test_case.data};
             test_suite.evaluator.validate(test_suite.exhaustive(target_index),
                                           test_case.data, std::ref(output));
 
@@ -483,16 +739,22 @@ auto run_suite_as_ctrf(const sourcemeta::core::Options &options,
         sourcemeta::jsonschema::default_dialect(options, configuration)};
     const auto &schema_resolver{sourcemeta::jsonschema::resolver(
         options, options.contains("http"), dialect, configuration)};
+    const auto &openapi_resolver{sourcemeta::jsonschema::openapi_resolver(
+        options, options.contains("http"), dialect, configuration)};
+    auto &custom_resolver{sourcemeta::jsonschema::resolver_instance(
+        options, options.contains("http"), dialect, configuration)};
 
+    TestTargets targets;
     auto test_suite{parse_test_suite(
-        entry, schema_resolver, dialect,
-        sourcemeta::jsonschema::format_assertion_tweaks(options))};
+        entry, schema_resolver, openapi_resolver, custom_resolver, dialect,
+        sourcemeta::jsonschema::format_assertion_tweaks(options), targets)};
 
     const auto file_path{entry.first};
 
     const auto suite_result{test_suite.run(
-        [&](const sourcemeta::core::JSON::String &target, std::size_t index,
-            std::size_t, const sourcemeta::blaze::TestCase &test_case,
+        [&](const sourcemeta::core::JSON::String &target,
+            std::size_t target_index, std::size_t index, std::size_t,
+            const sourcemeta::blaze::TestCase &test_case,
             const sourcemeta::blaze::TestOutcome &outcome,
             sourcemeta::blaze::TestTimestamp start,
             sourcemeta::blaze::TestTimestamp end) {
@@ -534,13 +796,7 @@ auto run_suite_as_ctrf(const sourcemeta::core::Options &options,
                                                         "expected to fail"});
             } else if (!outcome.valid) {
               std::ostringstream trace_stream;
-              const std::string ref{"$ref"};
-              sourcemeta::blaze::SimpleOutput output{test_case.data,
-                                                     {std::cref(ref)}};
-              const auto target_index{static_cast<std::size_t>(
-                  std::distance(test_suite.targets.cbegin(),
-                                std::find(test_suite.targets.cbegin(),
-                                          test_suite.targets.cend(), target)))};
+              sourcemeta::blaze::SimpleOutput output{test_case.data};
               test_suite.evaluator.validate(test_suite.exhaustive(target_index),
                                             test_case.data, std::ref(output));
               sourcemeta::jsonschema::print(output, test_case.tracker,

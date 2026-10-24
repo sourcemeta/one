@@ -107,12 +107,12 @@ public:
         this->artifact_resolve_path(caller, arguments.at("schema").to_string(),
                                     Tree::Explorer, this->artifact_)};
     if (!resolution.path.has_value()) {
-      return sourcemeta::core::mcp_make_tool_error(request_id,
+      return sourcemeta::core::mcp_make_tool_error(version, request_id,
                                                    "Schema not found");
     }
     auto contents{this->artifact_read_json(resolution.path.value())};
     if (!contents.has_value()) {
-      return sourcemeta::core::mcp_make_tool_error(request_id,
+      return sourcemeta::core::mcp_make_tool_error(version, request_id,
                                                    "Schema not found");
     }
 

@@ -11,8 +11,6 @@
 #include <iostream>    // std::cout
 #include <string>      // std::string
 #include <string_view> // std::string_view
-#include <tuple>       // std::get
-#include <utility>     // std::move
 
 #include "command.h"
 #include "configuration.h"
@@ -46,105 +44,19 @@ auto parse_target_dialect(const std::string_view value)
     return sourcemeta::blaze::ConvertTarget::Draft202012;
   }
 
+  if (value == "openapi3.1") {
+    return sourcemeta::blaze::ConvertTarget::OpenAPI31;
+  }
+
+  if (value == "openapi3.2") {
+    return sourcemeta::blaze::ConvertTarget::OpenAPI32;
+  }
+
   throw sourcemeta::jsonschema::InvalidOptionEnumerationValueError{
       "The given target dialect is not supported",
       "to",
-      {"draft4", "draft6", "draft7", "2019-09", "2020-12"}};
-}
-
-template <typename Error>
-[[noreturn]] auto
-throw_upgrade_error(const std::filesystem::path &schema_display_path,
-                    const sourcemeta::core::PointerPositionTracker &positions,
-                    sourcemeta::core::Pointer location, std::string uri)
-    -> void {
-  const auto position{positions.get(location)};
-  if (position.has_value()) {
-    throw sourcemeta::jsonschema::PositionError<Error>{
-        std::get<0>(position.value()), std::get<1>(position.value()),
-        schema_display_path, std::move(location), std::move(uri)};
-  }
-
-  throw Error{schema_display_path, std::move(location), std::move(uri)};
-}
-
-auto upgrade_schema(sourcemeta::core::JSON &schema,
-                    const sourcemeta::core::SchemaResolver &resolver,
-                    const sourcemeta::blaze::ConvertTarget target,
-                    const std::string &dialect, const std::string &default_id,
-                    const std::filesystem::path &schema_display_path,
-                    const sourcemeta::core::PointerPositionTracker &positions)
-    -> void {
-  try {
-    sourcemeta::blaze::convert(schema, sourcemeta::core::schema_walker,
-                               resolver, target, dialect, default_id);
-  } catch (const sourcemeta::blaze::ConvertUnsupportedMetaschemaError &error) {
-    throw_upgrade_error<sourcemeta::jsonschema::MetaschemaUpgradeError>(
-        schema_display_path, positions, error.location(),
-        std::string{error.identifier()});
-  } catch (const sourcemeta::blaze::ConvertUnsupportedDialectError &error) {
-    // A dialect with no conversion rules is either one we have not taught
-    // the CLI yet or one only the author of the schema knows about, which are
-    // different problems to act on. Whether JSON Schema names the dialect is
-    // what tells them apart
-    if (sourcemeta::core::schema_is_known(error.identifier())) {
-      throw_upgrade_error<
-          sourcemeta::jsonschema::UnsupportedDialectUpgradeError>(
-          schema_display_path, positions, error.location(),
-          std::string{error.identifier()});
-    }
-
-    throw_upgrade_error<sourcemeta::jsonschema::CustomMetaschemaUpgradeError>(
-        schema_display_path, positions, error.location(),
-        std::string{error.identifier()});
-  } catch (const sourcemeta::blaze::ConvertInvalidReferenceError &error) {
-    throw_upgrade_error<sourcemeta::jsonschema::InvalidReferenceUpgradeError>(
-        schema_display_path, positions, error.location(),
-        std::string{error.identifier()});
-  } catch (const sourcemeta::blaze::ConvertBrokenReferenceError &error) {
-    throw_upgrade_error<sourcemeta::jsonschema::BrokenReferenceUpgradeError>(
-        schema_display_path, positions, error.location(),
-        std::string{error.identifier()});
-  } catch (const sourcemeta::core::SchemaKeywordError &error) {
-    throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
-        schema_display_path, error);
-  } catch (const sourcemeta::core::SchemaFrameError &error) {
-    throw sourcemeta::core::FileError<sourcemeta::core::SchemaFrameError>(
-        schema_display_path, error);
-  } catch (const sourcemeta::core::SchemaAnchorCollisionError &error) {
-    const auto position{positions.get(error.location())};
-    if (position.has_value()) {
-      throw sourcemeta::jsonschema::PositionError<sourcemeta::core::FileError<
-          sourcemeta::core::SchemaAnchorCollisionError>>(
-          std::get<0>(position.value()), std::get<1>(position.value()),
-          schema_display_path, error);
-    }
-
-    throw sourcemeta::core::FileError<
-        sourcemeta::core::SchemaAnchorCollisionError>(schema_display_path,
-                                                      error);
-  } catch (const sourcemeta::core::SchemaReferenceError &error) {
-    throw sourcemeta::core::FileError<sourcemeta::core::SchemaReferenceError>(
-        schema_display_path, error.identifier(), error.location(),
-        error.what());
-  } catch (
-      const sourcemeta::core::SchemaRelativeMetaschemaResolutionError &error) {
-    throw sourcemeta::core::FileError<
-        sourcemeta::core::SchemaRelativeMetaschemaResolutionError>(
-        schema_display_path, error);
-  } catch (const sourcemeta::core::SchemaResolutionError &error) {
-    throw sourcemeta::core::FileError<sourcemeta::core::SchemaResolutionError>(
-        schema_display_path, error);
-  } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
-    throw sourcemeta::core::FileError<
-        sourcemeta::core::SchemaUnknownBaseDialectError>(schema_display_path);
-  } catch (const sourcemeta::core::SchemaUnknownDialectError &) {
-    throw sourcemeta::core::FileError<
-        sourcemeta::core::SchemaUnknownDialectError>(schema_display_path);
-  } catch (const sourcemeta::core::SchemaError &error) {
-    throw sourcemeta::core::FileError<sourcemeta::core::SchemaError>(
-        schema_display_path, error.what());
-  }
+      {"draft4", "draft6", "draft7", "2019-09", "2020-12", "openapi3.1",
+       "openapi3.2"}};
 }
 
 } // namespace
@@ -159,6 +71,7 @@ auto sourcemeta::jsonschema::upgrade(const sourcemeta::core::Options &options)
   const auto target_value{options.contains("to") ? options.at("to").front()
                                                  : std::string_view{"2020-12"}};
   const auto target_dialect{parse_target_dialect(target_value)};
+  const auto indentation{parse_optional_indentation(options)};
 
   const std::filesystem::path schema_path{options.positional().front()};
   const bool schema_from_stdin = (schema_path == "-");
@@ -177,8 +90,23 @@ auto sourcemeta::jsonschema::upgrade(const sourcemeta::core::Options &options)
   const auto &configuration{
       read_configuration(options, configuration_path, schema_config_base)};
   const auto dialect{default_dialect(options, configuration)};
-  auto parsed_schema{schema_from_stdin ? read_from_stdin()
-                                       : read_file(schema_path)};
+  auto parsed_schema{schema_from_stdin
+                         ? read_from_stdin(nullptr, InputFormatting::Preserve)
+                         : read_file(schema_path, InputFormatting::Preserve)};
+
+  if (parsed_schema.multidocument) {
+    throw MultiDocumentInputError{
+        "This command does not support input with multiple documents",
+        schema_display_path};
+  }
+
+  // An OpenAPI description is not a schema, so what it goes by wherever we
+  // report on it is an identity of its own rather than the one a schema from
+  // the same place would take
+  if (is_openapi_document(parsed_schema.document)) {
+    throw sourcemeta::core::FileError<UnsupportedOpenAPIUpgradeError>(
+        schema_from_stdin ? openapi_stdin_path() : schema_path);
+  }
 
   if (!parsed_schema.document.is_object() &&
       !parsed_schema.document.is_boolean()) {
@@ -190,13 +118,21 @@ auto sourcemeta::jsonschema::upgrade(const sourcemeta::core::Options &options)
   const auto &custom_resolver{
       resolver(options, options.contains("http"), dialect, configuration)};
 
-  upgrade_schema(
+  sourcemeta::jsonschema::upgrade_schema(
       schema, custom_resolver, target_dialect, dialect,
       sourcemeta::jsonschema::default_id(schema_path, schema_from_stdin),
       schema_display_path, parsed_schema.positions);
 
-  sourcemeta::jsonschema::format_schema(schema, custom_resolver, dialect);
+  // A boolean schema is the one shape an upgrade hands over without framing it
+  // first, as there is nothing in it to rewrite, so ordering it is where a
+  // dialect that could never be determined is first asked for
+  try {
+    sourcemeta::jsonschema::format_schema(schema, custom_resolver, dialect);
+  } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaUnknownBaseDialectError>(schema_display_path);
+  }
 
-  sourcemeta::core::prettify(schema, std::cout);
-  std::cout << "\n";
+  sourcemeta::jsonschema::write_schema(schema, std::cout, indentation,
+                                       parsed_schema.roundtrip);
 }

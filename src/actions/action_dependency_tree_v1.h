@@ -118,12 +118,12 @@ public:
         this->artifact_resolve_path(caller, arguments.at("schema").to_string(),
                                     this->tree_, this->metapack_)};
     if (!resolution.path.has_value()) {
-      return sourcemeta::core::mcp_make_tool_error(request_id,
+      return sourcemeta::core::mcp_make_tool_error(version, request_id,
                                                    "Schema not found");
     }
     auto contents{this->artifact_read_json(resolution.path.value())};
     if (!contents.has_value()) {
-      return sourcemeta::core::mcp_make_tool_error(request_id,
+      return sourcemeta::core::mcp_make_tool_error(version, request_id,
                                                    "Schema not found");
     }
 
@@ -148,9 +148,8 @@ public:
     sourcemeta::core::prettify(envelope, payload);
     content.push_back(sourcemeta::core::mcp_make_text_block(payload.str()));
     for (const auto uri : unique_uris) {
-      content.push_back(sourcemeta::core::mcp_make_resource_link(
-          version, uri, "application/schema+json",
-          uri.substr(this->server_uri().size())));
+      content.push_back(sourcemeta::one::mcp_schema_block(
+          version, uri, uri.substr(this->server_uri().size())));
     }
 
     return sourcemeta::core::mcp_make_tool_success(

@@ -557,7 +557,7 @@ auto Resolver::operator()(
   /////////////////////////////////////////////////////////////////////////////
 
   sourcemeta::core::schema_reidentify(
-      schema, *new_identifier,
+      schema, *new_identifier, sourcemeta::core::schema_walker,
       [this](
           const auto subidentifier) -> std::optional<sourcemeta::core::JSON> {
         return this->operator()(subidentifier);

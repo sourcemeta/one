@@ -170,17 +170,6 @@ static auto get_lint_callback(sourcemeta::core::JSON &errors_array,
   };
 }
 
-// An OpenAPI description declares no identifier of its own under the revisions
-// we support, so the one it is linted under is where it came from
-static auto openapi_default_id(const sourcemeta::jsonschema::InputJSON &entry)
-    -> std::string {
-  if (entry.from_stdin) {
-    return std::string{sourcemeta::jsonschema::STDIN_OPENAPI_DEFAULT_ID};
-  }
-
-  return sourcemeta::jsonschema::default_id(entry);
-}
-
 // An OpenAPI description that comes from standard input is not a schema, so it
 // goes by an identifier of its own wherever we report on it
 static auto
@@ -188,7 +177,7 @@ retag_openapi_stdin(std::vector<sourcemeta::jsonschema::InputJSON> &entries)
     -> void {
   for (auto &entry : entries) {
     if (entry.from_stdin &&
-        sourcemeta::core::openapi_version(entry.second).has_value()) {
+        sourcemeta::jsonschema::is_openapi_document(entry.second)) {
       entry.first =
           std::string{sourcemeta::jsonschema::STDIN_OPENAPI_DEFAULT_ID};
       entry.resolution_base = sourcemeta::jsonschema::openapi_stdin_path();
@@ -204,7 +193,7 @@ check_openapi(const sourcemeta::blaze::SchemaTransformer &bundle,
     -> std::pair<bool, std::uint8_t> {
   const sourcemeta::core::OpenAPIFrame frame{
       entry.second, sourcemeta::core::schema_walker, resolver,
-      openapi_default_id(entry)};
+      sourcemeta::jsonschema::openapi_default_id(entry)};
   return bundle.check(entry.second, frame.schemas(),
                       sourcemeta::core::schema_walker, resolver, callback,
                       sourcemeta::core::JSON::String{EXCLUDE_KEYWORD});
@@ -217,7 +206,7 @@ apply_openapi(const sourcemeta::blaze::SchemaTransformer &bundle,
               const sourcemeta::core::SchemaResolver &resolver,
               const sourcemeta::blaze::SchemaTransformer::Callback &callback)
     -> std::pair<bool, std::uint8_t> {
-  const auto default_base{openapi_default_id(entry)};
+  const auto default_base{sourcemeta::jsonschema::openapi_default_id(entry)};
   std::optional<sourcemeta::core::OpenAPIFrame> frame;
   return bundle.apply(
       document,
@@ -231,6 +220,19 @@ apply_openapi(const sourcemeta::blaze::SchemaTransformer &bundle,
       sourcemeta::core::JSON::String{EXCLUDE_KEYWORD});
 }
 
+static auto format_document(sourcemeta::core::JSON &document,
+                            const sourcemeta::jsonschema::InputJSON &entry,
+                            const sourcemeta::core::SchemaResolver &resolver,
+                            const std::string_view dialect,
+                            const bool is_openapi) -> void {
+  if (is_openapi) {
+    sourcemeta::jsonschema::format_openapi(
+        document, resolver, sourcemeta::jsonschema::openapi_default_id(entry));
+  } else {
+    sourcemeta::jsonschema::format_schema(document, resolver, dialect);
+  }
+}
+
 static auto load_rule(sourcemeta::blaze::SchemaTransformer &bundle,
                       std::unordered_set<std::string> &rule_names,
                       const std::filesystem::path &rule_path,
@@ -239,7 +241,14 @@ static auto load_rule(sourcemeta::blaze::SchemaTransformer &bundle,
                       const std::optional<sourcemeta::blaze::Tweaks> &tweaks,
                       const sourcemeta::blaze::SchemaRule::Scope scope)
     -> void {
-  auto rule_schema{sourcemeta::core::read_yaml_or_json(rule_path)};
+  auto parsed_rule{sourcemeta::jsonschema::read_file(rule_path)};
+  if (parsed_rule.multidocument) {
+    throw sourcemeta::jsonschema::MultiDocumentInputError{
+        "A lint rule cannot be read from input with multiple documents",
+        rule_path};
+  }
+
+  auto rule_schema{std::move(parsed_rule.document)};
   if (!rule_schema.defines("description")) {
     rule_schema.assign("description",
                        sourcemeta::core::JSON{"<no description>"});
@@ -273,6 +282,27 @@ static auto load_rule(sourcemeta::blaze::SchemaTransformer &bundle,
     throw sourcemeta::core::FileError<
         sourcemeta::blaze::CompilerReferenceTargetNotSchemaError>(rule_path,
                                                                   error);
+  } catch (const sourcemeta::blaze::CompilerInvalidRegexError &error) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::blaze::CompilerInvalidRegexError>(rule_path, error);
+  } catch (const sourcemeta::blaze::CompilerError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::blaze::CompilerError>(
+        rule_path, error);
+  } catch (const sourcemeta::core::SchemaKeywordError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
+        rule_path, error);
+  } catch (const sourcemeta::core::SchemaFrameError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaFrameError>(
+        rule_path, error);
+  } catch (const sourcemeta::core::SchemaAnchorCollisionError &error) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaAnchorCollisionError>(rule_path, error);
+  } catch (const sourcemeta::core::SchemaDialectImpossibleError &error) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaDialectImpossibleError>(rule_path, error);
+  } catch (const sourcemeta::core::SchemaReferenceError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaReferenceError>(
+        rule_path, error.identifier(), error.location(), error.what());
   } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
     throw sourcemeta::core::FileError<
         sourcemeta::core::SchemaUnknownBaseDialectError>(rule_path);
@@ -282,9 +312,21 @@ static auto load_rule(sourcemeta::blaze::SchemaTransformer &bundle,
   } catch (const sourcemeta::core::SchemaVocabularyError &error) {
     throw sourcemeta::core::FileError<sourcemeta::core::SchemaVocabularyError>(
         rule_path, error.uri(), error.what());
+  } catch (
+      const sourcemeta::core::SchemaRelativeMetaschemaResolutionError &error) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaRelativeMetaschemaResolutionError>(rule_path,
+                                                                   error);
   } catch (const sourcemeta::core::SchemaResolutionError &error) {
     throw sourcemeta::core::FileError<sourcemeta::core::SchemaResolutionError>(
         rule_path, error);
+  } catch (const sourcemeta::core::SchemaReferenceObjectResourceError &error) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaReferenceObjectResourceError>(
+        rule_path, error.identifier());
+  } catch (const sourcemeta::core::SchemaError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaError>(
+        rule_path, error.what());
   }
 }
 
@@ -472,7 +514,7 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
   const auto indentation{parse_indentation(options)};
 
   if (options.contains("fix")) {
-    auto entries = for_each_json(options);
+    auto entries = for_each_json(options, InputFormatting::Preserve);
     retag_openapi_stdin(entries);
 
     for (const auto &entry : entries) {
@@ -485,9 +527,10 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
       const auto &custom_resolver{
           resolver(options, options.contains("http"), dialect, configuration)};
       LOG_VERBOSE(options) << "Linting: " << entry.first << "\n";
-      if (entry.yaml) {
-        throw YAMLInputError{
-            "The --fix option is not supported for YAML input files",
+      if (entry.multidocument) {
+        throw MultiDocumentInputError{
+            "The --fix option is not supported for input with multiple "
+            "documents",
             entry.resolution_base};
       }
 
@@ -495,12 +538,10 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
         throw NotSchemaError{entry.resolution_base};
       }
 
+      reject_unsupported_openapi(entry.second, entry.resolution_base);
+
       const auto is_openapi{
           sourcemeta::core::openapi_version(entry.second).has_value()};
-      if (is_openapi && format_output) {
-        throw sourcemeta::core::FileError<UnsupportedOpenAPIFormatError>(
-            entry.resolution_base);
-      }
 
       auto copy = entry.second;
       bool printed_progress{false};
@@ -553,12 +594,30 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
                 std::cerr << "\n";
               }
 
+              const auto position{entry.positions.get(error.location())};
+              if (position.has_value()) {
+                throw PositionError<LintAutoFixError>{
+                    std::get<0>(position.value()),
+                    std::get<1>(position.value()), error.what(),
+                    entry.resolution_base, error.location()};
+              }
+
               throw LintAutoFixError{error.what(), entry.resolution_base,
                                      error.location()};
             } catch (
                 const sourcemeta::blaze::SchemaBrokenReferenceError &error) {
               if (printed_progress) {
                 std::cerr << "\n";
+              }
+
+              const auto position{entry.positions.get(error.location())};
+              if (position.has_value()) {
+                throw PositionError<LintAutoFixError>{
+                    std::get<0>(position.value()),
+                    std::get<1>(position.value()),
+                    "Could not autofix the schema without breaking its "
+                    "internal references",
+                    entry.resolution_base, error.location()};
               }
 
               throw LintAutoFixError{
@@ -569,6 +628,15 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
                 const sourcemeta::blaze::CompilerInvalidRegexError &error) {
               if (printed_progress) {
                 std::cerr << "\n";
+              }
+
+              const auto position{entry.positions.get(error.location())};
+              if (position.has_value()) {
+                throw PositionError<sourcemeta::core::FileError<
+                    sourcemeta::blaze::CompilerInvalidRegexError>>(
+                    std::get<0>(position.value()),
+                    std::get<1>(position.value()), entry.resolution_base,
+                    error);
               }
 
               throw sourcemeta::core::FileError<
@@ -635,6 +703,24 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
               throw sourcemeta::core::FileError<
                   sourcemeta::core::SchemaAnchorCollisionError>(
                   entry.resolution_base, error);
+            } catch (
+                const sourcemeta::core::SchemaDialectImpossibleError &error) {
+              if (printed_progress) {
+                std::cerr << "\n";
+              }
+
+              const auto position{entry.positions.get(error.location())};
+              if (position.has_value()) {
+                throw PositionError<sourcemeta::core::FileError<
+                    sourcemeta::core::SchemaDialectImpossibleError>>(
+                    std::get<0>(position.value()),
+                    std::get<1>(position.value()), entry.resolution_base,
+                    error);
+              }
+
+              throw sourcemeta::core::FileError<
+                  sourcemeta::core::SchemaDialectImpossibleError>(
+                  entry.resolution_base, error);
             } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
               if (printed_progress) {
                 std::cerr << "\n";
@@ -667,6 +753,22 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
               throw sourcemeta::core::FileError<
                   sourcemeta::core::SchemaResolutionError>(
                   entry.resolution_base, error);
+            } catch (const sourcemeta::core::SchemaReferenceObjectResourceError
+                         &error) {
+              if (printed_progress) {
+                std::cerr << "\n";
+              }
+
+              throw sourcemeta::core::FileError<
+                  sourcemeta::core::SchemaReferenceObjectResourceError>(
+                  entry.resolution_base, error.identifier());
+            } catch (const sourcemeta::core::SchemaError &error) {
+              if (printed_progress) {
+                std::cerr << "\n";
+              }
+
+              throw sourcemeta::core::FileError<sourcemeta::core::SchemaError>(
+                  entry.resolution_base, error.what());
             } catch (...) {
               if (printed_progress) {
                 std::cerr << "\n";
@@ -685,22 +787,21 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
         if (entry.from_stdin) {
           if (format_output) {
             if (!keep_ordering) {
-              sourcemeta::jsonschema::format_schema(copy, custom_resolver,
-                                                    dialect);
+              format_document(copy, entry, custom_resolver, dialect,
+                              is_openapi);
             }
           }
 
-          sourcemeta::core::prettify(copy, std::cout, indentation);
-          std::cout << "\n";
+          sourcemeta::jsonschema::write_schema(copy, std::cout, indentation,
+                                               entry.roundtrip);
         } else if (format_output) {
           if (!keep_ordering) {
-            sourcemeta::jsonschema::format_schema(copy, custom_resolver,
-                                                  dialect);
+            format_document(copy, entry, custom_resolver, dialect, is_openapi);
           }
 
           std::ostringstream expected;
-          sourcemeta::core::prettify(copy, expected, indentation);
-          expected << "\n";
+          sourcemeta::jsonschema::write_schema(copy, expected, indentation,
+                                               entry.roundtrip);
 
           const auto current{
               sourcemeta::core::read_file_to_string(entry.resolution_base)};
@@ -712,9 +813,9 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
         } else if (copy != entry.second) {
           sourcemeta::core::atomic_write_file(
               entry.resolution_base,
-              [&copy, &indentation](std::ostream &stream) -> void {
-                sourcemeta::core::prettify(copy, stream, indentation);
-                stream << "\n";
+              [&copy, &indentation, &entry](std::ostream &stream) -> void {
+                sourcemeta::jsonschema::write_schema(copy, stream, indentation,
+                                                     entry.roundtrip);
               });
         }
       } else {
@@ -736,6 +837,8 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
       if (!entry.second.is_object() && !entry.second.is_boolean()) {
         throw NotSchemaError{entry.resolution_base};
       }
+
+      reject_unsupported_openapi(entry.second, entry.resolution_base);
 
       LOG_VERBOSE(options) << "Linting: " << entry.first << "\n";
 
@@ -779,6 +882,15 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
                   entry.resolution_base, error);
             } catch (
                 const sourcemeta::blaze::CompilerInvalidRegexError &error) {
+              const auto position{entry.positions.get(error.location())};
+              if (position.has_value()) {
+                throw PositionError<sourcemeta::core::FileError<
+                    sourcemeta::blaze::CompilerInvalidRegexError>>(
+                    std::get<0>(position.value()),
+                    std::get<1>(position.value()), entry.resolution_base,
+                    error);
+              }
+
               throw sourcemeta::core::FileError<
                   sourcemeta::blaze::CompilerInvalidRegexError>(
                   entry.resolution_base, error);
@@ -823,6 +935,20 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
               throw sourcemeta::core::FileError<
                   sourcemeta::core::SchemaAnchorCollisionError>(
                   entry.resolution_base, error);
+            } catch (
+                const sourcemeta::core::SchemaDialectImpossibleError &error) {
+              const auto position{entry.positions.get(error.location())};
+              if (position.has_value()) {
+                throw PositionError<sourcemeta::core::FileError<
+                    sourcemeta::core::SchemaDialectImpossibleError>>(
+                    std::get<0>(position.value()),
+                    std::get<1>(position.value()), entry.resolution_base,
+                    error);
+              }
+
+              throw sourcemeta::core::FileError<
+                  sourcemeta::core::SchemaDialectImpossibleError>(
+                  entry.resolution_base, error);
             } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
               throw sourcemeta::core::FileError<
                   sourcemeta::core::SchemaUnknownBaseDialectError>(
@@ -839,6 +965,14 @@ auto sourcemeta::jsonschema::lint(const sourcemeta::core::Options &options)
               throw sourcemeta::core::FileError<
                   sourcemeta::core::SchemaResolutionError>(
                   entry.resolution_base, error);
+            } catch (const sourcemeta::core::SchemaReferenceObjectResourceError
+                         &error) {
+              throw sourcemeta::core::FileError<
+                  sourcemeta::core::SchemaReferenceObjectResourceError>(
+                  entry.resolution_base, error.identifier());
+            } catch (const sourcemeta::core::SchemaError &error) {
+              throw sourcemeta::core::FileError<sourcemeta::core::SchemaError>(
+                  entry.resolution_base, error.what());
             }
           });
 

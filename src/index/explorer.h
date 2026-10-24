@@ -792,6 +792,11 @@ struct GenerateLogin {
 inline constexpr std::string_view MCP_RESOURCE_MIME_TYPE{
     "application/schema+json"};
 inline constexpr std::size_t MCP_RESOURCES_PAGE_SIZE{50};
+// The descriptors are written once and answered to every caller whatever
+// revision they settle on, so they are built at the oldest one this instance
+// serves, whose shape every later one still reads
+inline constexpr auto MCP_DESCRIPTOR_VERSION{
+    sourcemeta::core::MCPProtocolVersion::V_2025_03_26};
 
 struct GenerateMCP {
   static auto handler(const sourcemeta::one::BuildState &,
@@ -841,7 +846,7 @@ struct GenerateMCP {
 
     auto resource_templates{sourcemeta::core::JSON::make_array()};
     resource_templates.push_back(sourcemeta::core::mcp_make_resource_template(
-        template_uri, "JSON Schema",
+        MCP_DESCRIPTOR_VERSION, template_uri, "JSON Schema",
         "A JSON Schema in this catalog, addressable by its canonical "
         "absolute URI under this server's origin. This instance is "
         "sovereign over its own URL namespace. Schemas whose URIs lie "
@@ -942,7 +947,8 @@ struct GenerateMCP {
               std::string uri{configuration.origin};
               uri.append(entry.path);
               resources.push_back(sourcemeta::core::mcp_make_resource(
-                  uri, entry.title.empty() ? entry.path : entry.title,
+                  MCP_DESCRIPTOR_VERSION, uri,
+                  entry.title.empty() ? entry.path : entry.title,
                   MCP_RESOURCE_MIME_TYPE, entry.description,
                   static_cast<std::size_t>(entry.bytes_raw),
                   static_cast<double>(entry.priority) / 100.0));

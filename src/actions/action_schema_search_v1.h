@@ -284,15 +284,16 @@ public:
               sourcemeta::core::parse_json(scope_argument.to_string());
         } catch (const std::exception &) {
           return sourcemeta::core::mcp_make_tool_error(
-              request_id, "The scope is not valid JSON");
+              version, request_id, "The scope is not valid JSON");
         }
         if (!parsed_scope.is_array()) {
           return sourcemeta::core::mcp_make_tool_error(
-              request_id, "The scope must be a JSON-encoded array of strings");
+              version, request_id,
+              "The scope must be a JSON-encoded array of strings");
         }
         if (parsed_scope.empty()) {
           return sourcemeta::core::mcp_make_tool_error(
-              request_id, "The scope must contain at least one item");
+              version, request_id, "The scope must contain at least one item");
         }
         scope_array = &parsed_scope;
       } else {
@@ -301,8 +302,9 @@ public:
       for (const auto &item : scope_array->as_array()) {
         if (!item.is_string() || !add_scope_token(item.to_string())) {
           return sourcemeta::core::mcp_make_tool_error(
-              request_id, "The scope items must be \"path\", \"title\", or "
-                          "\"description\"");
+              version, request_id,
+              "The scope items must be \"path\", \"title\", or "
+              "\"description\"");
         }
       }
     }
@@ -320,9 +322,8 @@ public:
 
     for (const auto &entry : envelope.at("results").as_array()) {
       const auto &title{entry.at("title").to_string()};
-      content.push_back(sourcemeta::core::mcp_make_resource_link(
+      content.push_back(sourcemeta::one::mcp_schema_block(
           version, entry.at("identifier").to_string(),
-          "application/schema+json",
           title.empty() ? entry.at("path").to_string() : title,
           entry.at("description").to_string()));
     }

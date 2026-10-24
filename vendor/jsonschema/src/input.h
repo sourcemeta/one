@@ -8,6 +8,7 @@
 #include <sourcemeta/core/jsonl.h>
 #include <sourcemeta/core/jsonpointer.h>
 #include <sourcemeta/core/options.h>
+#include <sourcemeta/core/text.h>
 #include <sourcemeta/core/yaml.h>
 
 #include "configuration.h"
@@ -24,13 +25,18 @@
 #include <optional>      // std::optional
 #include <set>           // std::set
 #include <sstream>       // std::ostringstream, std::istringstream
-#include <string>        // std::string
+#include <string>        // std::string, std::char_traits
+#include <string_view>   // std::string_view
 #include <unordered_set> // std::unordered_set
 #include <vector>        // std::vector
 
 namespace sourcemeta::jsonschema {
 
 enum class InputRequirement : std::uint8_t { Optional, NonEmpty };
+
+// Whether to collect the metadata that YAML input needs to be written back
+// out with the formatting it was read with
+enum class InputFormatting : std::uint8_t { Discard, Preserve };
 
 struct InputJSON {
   std::string first;
@@ -42,6 +48,7 @@ struct InputJSON {
   bool yaml{false};
   bool from_stdin{false};
   std::shared_ptr<std::deque<std::string>> property_storage;
+  std::optional<sourcemeta::core::YAMLRoundTrip> roundtrip{std::nullopt};
   auto operator<(const InputJSON &other) const noexcept -> bool {
     return this->first < other.first;
   }
@@ -144,6 +151,15 @@ struct ParsedJSON {
   sourcemeta::core::PointerPositionTracker positions;
   std::shared_ptr<std::deque<std::string>> property_storage;
   bool yaml{false};
+  bool multidocument{false};
+  std::optional<sourcemeta::core::YAMLRoundTrip> roundtrip{std::nullopt};
+};
+
+struct MultiDocEntry {
+  sourcemeta::core::JSON document;
+  sourcemeta::core::PointerPositionTracker positions;
+  std::shared_ptr<std::deque<std::string>> property_storage;
+  std::optional<sourcemeta::core::YAMLRoundTrip> roundtrip{std::nullopt};
 };
 
 inline auto
@@ -162,7 +178,161 @@ make_position_callback(sourcemeta::core::PointerPositionTracker &tracker,
       };
 }
 
-inline auto read_file(const std::filesystem::path &path) -> ParsedJSON {
+// RFC 8259 Section 2: "ws = *( %x20 / %x09 / %x0A / %x0D )", which is narrower
+// than the ASCII whitespace that sourcemeta::core::trim strips by default
+inline auto is_json_whitespace(const char character) noexcept -> bool {
+  return character == ' ' || character == '\t' || character == '\n' ||
+         character == '\r';
+}
+
+// Whether the buffer the stream reads from carries nothing but JSON whitespace
+// past the point the parser stopped at
+inline auto at_end_of_stream(const std::string &input, std::istream &stream)
+    -> bool {
+  const auto consumed{stream.tellg()};
+  if (consumed < 0) {
+    return false;
+  }
+
+  const auto offset{static_cast<std::size_t>(consumed)};
+  return offset >= input.size() ||
+         sourcemeta::core::strip_left(std::string_view{input}.substr(offset),
+                                      is_json_whitespace)
+             .empty();
+}
+
+// The same question of a stream whose input was never kept around, which is
+// how a file answers it without being held in memory a second time. Reading
+// stops at the first character that counts rather than walking to the end
+inline auto at_end_of_stream(std::istream &stream) -> bool {
+  if (stream.tellg() < 0) {
+    return false;
+  }
+
+  for (auto character{stream.get()}; character != std::char_traits<char>::eof();
+       character = stream.get()) {
+    if (!is_json_whitespace(static_cast<char>(character))) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+// Parse every YAML document the input holds, keeping line numbers running
+// across the documents that follow the first
+inline auto read_yaml_documents(const std::string &input,
+                                const InputFormatting formatting)
+    -> std::vector<MultiDocEntry> {
+  std::vector<MultiDocEntry> documents;
+  std::istringstream stream{input};
+  std::uint64_t line_offset{0};
+  std::size_t consumed{0};
+
+  while (stream.peek() != std::char_traits<char>::eof()) {
+    sourcemeta::core::PointerPositionTracker positions;
+    auto property_storage = std::make_shared<std::deque<std::string>>();
+    const std::uint64_t current_offset{line_offset};
+    auto callback = [&positions, &property_storage, current_offset](
+                        const sourcemeta::core::JSON::ParsePhase phase,
+                        const sourcemeta::core::JSON::Type type,
+                        const std::uint64_t line, const std::uint64_t column,
+                        const sourcemeta::core::JSON::ParseContext context,
+                        const std::size_t index,
+                        const sourcemeta::core::JSON::String &property) {
+      property_storage->emplace_back(property);
+      positions(phase, type, line + current_offset, column, context, index,
+                property_storage->back());
+    };
+    sourcemeta::core::JSON document{sourcemeta::core::JSON{nullptr}};
+    std::optional<sourcemeta::core::YAMLRoundTrip> roundtrip{std::nullopt};
+
+    if (formatting == InputFormatting::Preserve) {
+      sourcemeta::core::parse_yaml(stream, roundtrip.emplace(), document,
+                                   callback);
+    } else {
+      sourcemeta::core::parse_yaml(stream, document, callback);
+    }
+
+    documents.push_back({.document = std::move(document),
+                         .positions = std::move(positions),
+                         .property_storage = std::move(property_storage),
+                         .roundtrip = std::move(roundtrip)});
+
+    // A document that carries no values reports no lines of its own, so the
+    // lines it occupies are counted from the input it consumed
+    const auto position{stream.tellg()};
+    const auto offset{position < 0 ? input.size()
+                                   : static_cast<std::size_t>(position)};
+    line_offset += static_cast<std::uint64_t>(
+        std::count(input.cbegin() + static_cast<std::ptrdiff_t>(consumed),
+                   input.cbegin() + static_cast<std::ptrdiff_t>(offset), '\n'));
+    consumed = offset;
+  }
+
+  return documents;
+}
+
+struct ParsedYAML {
+  std::optional<sourcemeta::core::YAMLRoundTrip> roundtrip{std::nullopt};
+  bool multidocument{false};
+};
+
+// A document read off a stream, keeping what it takes to write the input back
+// out unless the caller says it does not need it
+inline auto
+parse_yaml_stream(const std::filesystem::path &path, std::istream &stream,
+                  sourcemeta::core::JSON &output,
+                  const sourcemeta::core::JSON::ParseCallback &callback,
+                  const InputFormatting formatting)
+    -> std::optional<sourcemeta::core::YAMLRoundTrip> {
+  try {
+    if (formatting == InputFormatting::Discard) {
+      sourcemeta::core::parse_yaml(stream, output, callback);
+      return std::nullopt;
+    }
+
+    sourcemeta::core::YAMLRoundTrip roundtrip;
+    sourcemeta::core::parse_yaml(stream, roundtrip, output, callback);
+    return roundtrip;
+  } catch (const sourcemeta::core::YAMLParseError &error) {
+    throw sourcemeta::core::YAMLFileParseError{path, error};
+  }
+}
+
+inline auto
+read_yaml_file(const std::filesystem::path &path,
+               sourcemeta::core::JSON &output,
+               const sourcemeta::core::JSON::ParseCallback &callback,
+               const InputFormatting formatting) -> ParsedYAML {
+  // A file that holds more than one document is still valid YAML, so the
+  // caller gets to report that rather than a parse error. Reading a document
+  // at a time is what leaves the rest of the stream to say so with, as the
+  // readers that take the whole input stop at the first document without a
+  // word about what follows it
+  //
+  // Only a regular file can be read back from where the first document ended.
+  // Anything else, a named pipe above all, gives up its position the moment it
+  // is read, so the input is kept around to ask what follows with
+  if (!std::filesystem::is_regular_file(path)) {
+    const auto input{sourcemeta::core::read_file_to_string(path)};
+    std::istringstream stream{input};
+    auto roundtrip{
+        parse_yaml_stream(path, stream, output, callback, formatting)};
+    return {.roundtrip = std::move(roundtrip),
+            .multidocument = !at_end_of_stream(input, stream)};
+  }
+
+  auto stream{sourcemeta::core::read_file(path)};
+  auto roundtrip{parse_yaml_stream(path, stream, output, callback, formatting)};
+  return {.roundtrip = std::move(roundtrip),
+          .multidocument = !at_end_of_stream(stream)};
+}
+
+inline auto
+read_file(const std::filesystem::path &path,
+          const InputFormatting formatting = InputFormatting::Discard)
+    -> ParsedJSON {
   const auto extension{path.extension()};
   sourcemeta::core::PointerPositionTracker positions;
   auto property_storage = std::make_shared<std::deque<std::string>>();
@@ -170,11 +340,13 @@ inline auto read_file(const std::filesystem::path &path) -> ParsedJSON {
 
   if (extension == ".yaml" || extension == ".yml") {
     auto callback = make_position_callback(positions, property_storage);
-    sourcemeta::core::read_yaml(path, document, callback);
+    auto parsed{read_yaml_file(path, document, callback, formatting)};
     return {.document = std::move(document),
             .positions = std::move(positions),
             .property_storage = std::move(property_storage),
-            .yaml = true};
+            .yaml = true,
+            .multidocument = parsed.multidocument,
+            .roundtrip = std::move(parsed.roundtrip)};
   }
 
   if (extension == ".json") {
@@ -196,46 +368,231 @@ inline auto read_file(const std::filesystem::path &path) -> ParsedJSON {
     auto yaml_property_storage = std::make_shared<std::deque<std::string>>();
     auto callback =
         make_position_callback(yaml_positions, yaml_property_storage);
-    sourcemeta::core::read_yaml(path, document, callback);
+    auto parsed{read_yaml_file(path, document, callback, formatting)};
     return {.document = std::move(document),
             .positions = std::move(yaml_positions),
             .property_storage = std::move(yaml_property_storage),
-            .yaml = true};
+            .yaml = true,
+            .multidocument = parsed.multidocument,
+            .roundtrip = std::move(parsed.roundtrip)};
   }
 }
 
-// Read stdin into a buffer and try JSON first, then YAML
-inline auto read_from_stdin(std::string *raw_input = nullptr) -> ParsedJSON {
+// Read standard input as the one or more YAML documents it holds, reporting
+// the JSON error that sent us here if it cannot be read that way either
+inline auto read_stdin_yaml(const std::string &input,
+                            const sourcemeta::core::JSONParseError &json_error,
+                            const InputFormatting formatting)
+    -> std::vector<ParsedJSON> {
+  std::vector<MultiDocEntry> documents;
+
+  try {
+    documents = read_yaml_documents(input, formatting);
+  } catch (...) {
+    throw sourcemeta::core::JSONFileParseError(stdin_path(), json_error);
+  }
+
+  if (documents.empty()) {
+    throw sourcemeta::core::JSONFileParseError(stdin_path(), json_error);
+  }
+
+  std::vector<ParsedJSON> result;
+  result.reserve(documents.size());
+  for (auto &entry : documents) {
+    result.push_back({.document = std::move(entry.document),
+                      .positions = std::move(entry.positions),
+                      .property_storage = std::move(entry.property_storage),
+                      .yaml = true,
+                      .roundtrip = std::move(entry.roundtrip)});
+  }
+
+  return result;
+}
+
+// Read every document the given standard input buffer holds, trying JSON
+// first, then JSONL for input that carries more than one JSON document, and
+// finally YAML
+inline auto read_stdin_documents(const std::string &input,
+                                 const InputFormatting formatting)
+    -> std::vector<ParsedJSON> {
+  std::istringstream json_stream{input};
+  sourcemeta::core::PointerPositionTracker positions;
+  auto property_storage = std::make_shared<std::deque<std::string>>();
+  sourcemeta::core::JSON document{sourcemeta::core::JSON{nullptr}};
+  auto callback = make_position_callback(positions, property_storage);
+
+  try {
+    sourcemeta::core::parse_json(json_stream, document, callback);
+  } catch (const sourcemeta::core::JSONParseError &json_error) {
+    return read_stdin_yaml(input, json_error, formatting);
+  }
+
+  if (at_end_of_stream(input, json_stream)) {
+    std::vector<ParsedJSON> result;
+    result.push_back({.document = std::move(document),
+                      .positions = std::move(positions),
+                      .property_storage = std::move(property_storage)});
+    return result;
+  }
+
+  // Standard input that carries more than one JSON document is JSONL, unless
+  // what follows the first document only reads as YAML, as a YAML stream may
+  // open with a document that is JSON and separate the rest with markers
+  std::vector<ParsedJSON> result;
+  std::istringstream jsonl_stream{input};
+  try {
+    for (const auto &entry : sourcemeta::core::JSONL{jsonl_stream}) {
+      // TODO: Get real positions for JSONL
+      sourcemeta::core::PointerPositionTracker jsonl_positions;
+      result.push_back({.document = entry,
+                        .positions = std::move(jsonl_positions),
+                        .property_storage = {}});
+    }
+  } catch (const sourcemeta::core::JSONParseError &error) {
+    return read_stdin_yaml(input, error, formatting);
+  }
+
+  return result;
+}
+
+// Read the single document standard input is expected to hold
+inline auto
+read_from_stdin(std::string *raw_input = nullptr,
+                const InputFormatting formatting = InputFormatting::Discard)
+    -> ParsedJSON {
   const auto input{sourcemeta::core::read_stdin()};
   if (raw_input != nullptr) {
     *raw_input = input;
   }
 
-  try {
-    std::istringstream json_stream{input};
-    sourcemeta::core::PointerPositionTracker positions;
-    auto property_storage = std::make_shared<std::deque<std::string>>();
-    sourcemeta::core::JSON document{sourcemeta::core::JSON{nullptr}};
-    auto callback = make_position_callback(positions, property_storage);
-    sourcemeta::core::parse_json(json_stream, document, callback);
-    return {.document = std::move(document),
-            .positions = std::move(positions),
-            .property_storage = std::move(property_storage)};
-  } catch (const sourcemeta::core::JSONParseError &json_error) {
+  auto documents{read_stdin_documents(input, formatting)};
+  assert(!documents.empty());
+  if (documents.size() > 1) {
+    throw MultiDocumentInputError{"This command does not support reading "
+                                  "multiple documents from standard input",
+                                  stdin_path()};
+  }
+
+  return std::move(documents.front());
+}
+
+inline auto
+handle_input_file(const std::filesystem::path &canonical,
+                  std::vector<sourcemeta::jsonschema::InputJSON> &result,
+                  const sourcemeta::core::Options &options,
+                  const InputFormatting formatting, std::size_t &empty_datasets)
+    -> void {
+  const auto canonical_string{canonical.generic_string()};
+  if (canonical_string.ends_with(".jsonl.gz")) {
+    LOG_VERBOSE(options) << "Interpreting input as GZIP-compressed JSONL: "
+                         << canonical_string << "\n";
+    std::ifstream stream{sourcemeta::core::canonical(canonical),
+                         std::ios::binary};
+    stream.exceptions(std::ifstream::badbit);
+    std::size_t index{0};
     try {
-      std::istringstream yaml_stream{input};
-      sourcemeta::core::PointerPositionTracker positions;
-      auto property_storage = std::make_shared<std::deque<std::string>>();
-      sourcemeta::core::JSON document{sourcemeta::core::JSON{nullptr}};
-      auto callback = make_position_callback(positions, property_storage);
-      sourcemeta::core::parse_yaml(yaml_stream, document, callback);
-      return {.document = std::move(document),
-              .positions = std::move(positions),
-              .property_storage = std::move(property_storage),
-              .yaml = true};
-    } catch (...) {
-      throw sourcemeta::core::JSONFileParseError(stdin_path(), json_error);
+      for (const auto &document : sourcemeta::core::JSONL{
+               stream, sourcemeta::core::JSONL::Mode::GZIP}) {
+        // TODO: Get real positions for JSONL
+        sourcemeta::core::PointerPositionTracker positions;
+        result.push_back({.first = canonical_string,
+                          .resolution_base = canonical,
+                          .second = document,
+                          .positions = std::move(positions),
+                          .index = index,
+                          .multidocument = true,
+                          .property_storage = {}});
+        index += 1;
+      }
+    } catch (const sourcemeta::core::GZIPError &error) {
+      throw sourcemeta::core::FileError<sourcemeta::core::GZIPError>(
+          canonical, error.what());
+    } catch (const sourcemeta::core::JSONParseError &error) {
+      throw sourcemeta::core::JSONFileParseError(canonical, error);
     }
+
+    if (index == 0) {
+      empty_datasets += 1;
+    }
+  } else if (canonical.extension() == ".jsonl") {
+    LOG_VERBOSE(options) << "Interpreting input as JSONL: " << canonical_string
+                         << "\n";
+    auto stream{sourcemeta::core::read_file(canonical)};
+    std::size_t index{0};
+    try {
+      for (const auto &document : sourcemeta::core::JSONL{stream}) {
+        // TODO: Get real positions for JSONL
+        sourcemeta::core::PointerPositionTracker positions;
+        result.push_back({.first = canonical_string,
+                          .resolution_base = canonical,
+                          .second = document,
+                          .positions = std::move(positions),
+                          .index = index,
+                          .multidocument = true,
+                          .property_storage = {}});
+        index += 1;
+      }
+    } catch (const sourcemeta::core::JSONParseError &error) {
+      throw sourcemeta::core::JSONFileParseError(canonical, error);
+    }
+
+    if (index == 0) {
+      empty_datasets += 1;
+    }
+  } else if (canonical.extension() == ".yaml" ||
+             canonical.extension() == ".yml") {
+    if (std::filesystem::is_empty(canonical)) {
+      return;
+    }
+    std::vector<MultiDocEntry> documents;
+    try {
+      documents = read_yaml_documents(
+          sourcemeta::core::read_file_to_string(canonical), formatting);
+    } catch (const sourcemeta::core::YAMLParseError &error) {
+      throw sourcemeta::core::YAMLFileParseError{canonical, error};
+    }
+
+    if (documents.size() > 1) {
+      LOG_VERBOSE(options) << "Interpreting input as YAML multi-document: "
+                           << canonical_string << "\n";
+      std::size_t index{0};
+      for (auto &entry : documents) {
+        result.push_back({.first = canonical_string,
+                          .resolution_base = canonical,
+                          .second = std::move(entry.document),
+                          .positions = std::move(entry.positions),
+                          .index = index,
+                          .multidocument = true,
+                          .yaml = true,
+                          .property_storage = std::move(entry.property_storage),
+                          .roundtrip = std::move(entry.roundtrip)});
+        index += 1;
+      }
+    } else if (documents.size() == 1) {
+      result.push_back(
+          {.first = canonical_string,
+           .resolution_base = canonical,
+           .second = std::move(documents.front().document),
+           .positions = std::move(documents.front().positions),
+           .yaml = true,
+           .property_storage = std::move(documents.front().property_storage),
+           .roundtrip = std::move(documents.front().roundtrip)});
+    }
+  } else {
+    if (std::filesystem::is_regular_file(canonical) &&
+        std::filesystem::is_empty(canonical)) {
+      return;
+    }
+    // TODO: Print a verbose message for what is getting parsed
+    auto parsed{read_file(canonical, formatting)};
+    result.push_back({.first = canonical_string,
+                      .resolution_base = canonical,
+                      .second = std::move(parsed.document),
+                      .positions = std::move(parsed.positions),
+                      .multidocument = parsed.multidocument,
+                      .yaml = parsed.yaml,
+                      .property_storage = std::move(parsed.property_storage),
+                      .roundtrip = std::move(parsed.roundtrip)});
   }
 }
 
@@ -244,17 +601,39 @@ handle_json_entry(const std::filesystem::path &entry_path,
                   const std::set<std::filesystem::path> &blacklist,
                   const std::set<std::string> &extensions,
                   std::vector<sourcemeta::jsonschema::InputJSON> &result,
-                  const sourcemeta::core::Options &options) -> void {
+                  const sourcemeta::core::Options &options,
+                  const InputFormatting formatting, std::size_t &empty_datasets)
+    -> void {
   if (entry_path == "-") {
-    auto parsed{read_from_stdin()};
+    auto documents{
+        read_stdin_documents(sourcemeta::core::read_stdin(), formatting)};
+    assert(!documents.empty());
     const auto path{stdin_path()};
-    result.push_back({.first = std::string{STDIN_DEFAULT_ID},
-                      .resolution_base = path,
-                      .second = std::move(parsed.document),
-                      .positions = std::move(parsed.positions),
-                      .yaml = parsed.yaml,
-                      .from_stdin = true,
-                      .property_storage = std::move(parsed.property_storage)});
+    const auto multidocument{documents.size() > 1};
+
+    if (multidocument) {
+      LOG_VERBOSE(options)
+          << (documents.front().yaml
+                  ? "Interpreting standard input as YAML multi-document\n"
+                  : "Interpreting standard input as JSONL\n");
+    }
+
+    std::size_t index{0};
+    for (auto &document : documents) {
+      result.push_back(
+          {.first = std::string{STDIN_DEFAULT_ID},
+           .resolution_base = path,
+           .second = std::move(document.document),
+           .positions = std::move(document.positions),
+           .index = index,
+           .multidocument = multidocument,
+           .yaml = document.yaml,
+           .from_stdin = true,
+           .property_storage = std::move(document.property_storage),
+           .roundtrip = std::move(document.roundtrip)});
+      index += 1;
+    }
+
     return;
   }
 
@@ -278,15 +657,8 @@ handle_json_entry(const std::filesystem::path &entry_path,
           continue;
         }
 
-        // TODO: Print a verbose message for what is getting parsed
-        auto parsed{read_file(canonical)};
-        result.push_back(
-            {.first = canonical.generic_string(),
-             .resolution_base = std::move(canonical),
-             .second = std::move(parsed.document),
-             .positions = std::move(parsed.positions),
-             .yaml = parsed.yaml,
-             .property_storage = std::move(parsed.property_storage)});
+        handle_input_file(canonical, result, options, formatting,
+                          empty_datasets);
       }
     }
   } else {
@@ -296,149 +668,7 @@ handle_json_entry(const std::filesystem::path &entry_path,
                        return sourcemeta::core::is_under_path(canonical,
                                                               prefix);
                      })) {
-      const auto canonical_string{canonical.generic_string()};
-      if (canonical_string.ends_with(".jsonl.gz")) {
-        LOG_VERBOSE(options) << "Interpreting input as GZIP-compressed JSONL: "
-                             << canonical_string << "\n";
-        std::ifstream stream{sourcemeta::core::canonical(canonical),
-                             std::ios::binary};
-        stream.exceptions(std::ifstream::badbit);
-        std::size_t index{0};
-        try {
-          for (const auto &document : sourcemeta::core::JSONL{
-                   stream, sourcemeta::core::JSONL::Mode::GZIP}) {
-            // TODO: Get real positions for JSONL
-            sourcemeta::core::PointerPositionTracker positions;
-            result.push_back({.first = canonical.generic_string(),
-                              .resolution_base = canonical,
-                              .second = document,
-                              .positions = std::move(positions),
-                              .index = index,
-                              .multidocument = true,
-                              .property_storage = {}});
-            index += 1;
-          }
-        } catch (const sourcemeta::core::GZIPError &error) {
-          throw sourcemeta::core::FileError<sourcemeta::core::GZIPError>(
-              canonical, error.what());
-        } catch (const sourcemeta::core::JSONParseError &error) {
-          throw sourcemeta::core::JSONFileParseError(canonical, error);
-        }
-
-        if (index == 0) {
-          LOG_WARNING() << "The JSONL file is empty\n";
-        }
-      } else if (canonical.extension() == ".jsonl") {
-        LOG_VERBOSE(options)
-            << "Interpreting input as JSONL: " << canonical.generic_string()
-            << "\n";
-        auto stream{sourcemeta::core::read_file(canonical)};
-        std::size_t index{0};
-        try {
-          for (const auto &document : sourcemeta::core::JSONL{stream}) {
-            // TODO: Get real positions for JSONL
-            sourcemeta::core::PointerPositionTracker positions;
-            result.push_back({.first = canonical.generic_string(),
-                              .resolution_base = canonical,
-                              .second = document,
-                              .positions = std::move(positions),
-                              .index = index,
-                              .multidocument = true,
-                              .property_storage = {}});
-            index += 1;
-          }
-        } catch (const sourcemeta::core::JSONParseError &error) {
-          throw sourcemeta::core::JSONFileParseError(canonical, error);
-        }
-
-        if (index == 0) {
-          LOG_WARNING() << "The JSONL file is empty\n";
-        }
-      } else if (canonical.extension() == ".yaml" ||
-                 canonical.extension() == ".yml") {
-        if (std::filesystem::is_empty(canonical)) {
-          return;
-        }
-        auto stream{sourcemeta::core::read_file(canonical)};
-        struct MultiDocEntry {
-          sourcemeta::core::JSON document;
-          sourcemeta::core::PointerPositionTracker positions;
-          std::shared_ptr<std::deque<std::string>> property_storage;
-        };
-        std::vector<MultiDocEntry> documents;
-        std::uint64_t line_offset{0};
-        std::uint64_t max_line{0};
-        while (stream.peek() != std::char_traits<char>::eof()) {
-          sourcemeta::core::PointerPositionTracker positions;
-          auto property_storage = std::make_shared<std::deque<std::string>>();
-          const std::uint64_t current_offset{line_offset};
-          max_line = 0;
-          auto callback =
-              [&positions, &property_storage, current_offset,
-               &max_line](const sourcemeta::core::JSON::ParsePhase phase,
-                          const sourcemeta::core::JSON::Type type,
-                          const std::uint64_t line, const std::uint64_t column,
-                          const sourcemeta::core::JSON::ParseContext context,
-                          const std::size_t index,
-                          const sourcemeta::core::JSON::String &property) {
-                max_line = std::max(max_line, line);
-                property_storage->emplace_back(property);
-                positions(phase, type, line + current_offset, column, context,
-                          index, property_storage->back());
-              };
-          sourcemeta::core::JSON document{sourcemeta::core::JSON{nullptr}};
-          try {
-            sourcemeta::core::parse_yaml(stream, document, callback);
-          } catch (const sourcemeta::core::YAMLParseError &error) {
-            throw sourcemeta::core::YAMLFileParseError{canonical, error};
-          }
-          documents.push_back(
-              {.document = std::move(document),
-               .positions = std::move(positions),
-               .property_storage = std::move(property_storage)});
-          line_offset += max_line > 0 ? max_line - 1 : 0;
-        }
-
-        if (documents.size() > 1) {
-          LOG_VERBOSE(options) << "Interpreting input as YAML multi-document: "
-                               << canonical.generic_string() << "\n";
-          std::size_t index{0};
-          for (auto &entry : documents) {
-            result.push_back(
-                {.first = canonical.generic_string(),
-                 .resolution_base = canonical,
-                 .second = std::move(entry.document),
-                 .positions = std::move(entry.positions),
-                 .index = index,
-                 .multidocument = true,
-                 .yaml = true,
-                 .property_storage = std::move(entry.property_storage)});
-            index += 1;
-          }
-        } else if (documents.size() == 1) {
-          result.push_back({.first = canonical.generic_string(),
-                            .resolution_base = canonical,
-                            .second = std::move(documents.front().document),
-                            .positions = std::move(documents.front().positions),
-                            .yaml = true,
-                            .property_storage =
-                                std::move(documents.front().property_storage)});
-        }
-      } else {
-        if (std::filesystem::is_regular_file(canonical) &&
-            std::filesystem::is_empty(canonical)) {
-          return;
-        }
-        // TODO: Print a verbose message for what is getting parsed
-        auto parsed{read_file(canonical)};
-        result.push_back(
-            {.first = canonical.generic_string(),
-             .resolution_base = canonical,
-             .second = std::move(parsed.document),
-             .positions = std::move(parsed.positions),
-             .yaml = parsed.yaml,
-             .property_storage = std::move(parsed.property_storage)});
-      }
+      handle_input_file(canonical, result, options, formatting, empty_datasets);
     }
   }
 }
@@ -455,7 +685,9 @@ check_no_duplicate_stdin(const std::vector<std::string_view> &arguments)
 
 inline auto for_each_json(const std::vector<std::string_view> &arguments,
                           const sourcemeta::core::Options &options,
-                          const InputRequirement requirement)
+                          const InputRequirement requirement,
+                          const InputFormatting formatting,
+                          std::size_t &empty_datasets)
     -> std::vector<InputJSON> {
   check_no_duplicate_stdin(arguments);
 
@@ -491,7 +723,8 @@ inline auto for_each_json(const std::vector<std::string_view> &arguments,
 
     const auto extensions{parse_extensions(options, configuration)};
 
-    handle_json_entry(scan_path, blacklist, extensions, result, options);
+    handle_json_entry(scan_path, blacklist, extensions, result, options,
+                      formatting, empty_datasets);
     if (result.empty() && requirement == InputRequirement::NonEmpty) {
       throw sourcemeta::core::FileError<NoInputFilesError>(scan_path);
     }
@@ -535,7 +768,8 @@ inline auto for_each_json(const std::vector<std::string_view> &arguments,
           load_configuration(options, entry_configuration_path)};
       const auto &extensions{parse_extensions(options, entry_configuration)};
       const auto before{result.size()};
-      handle_json_entry(entry, blacklist, extensions, result, options);
+      handle_json_entry(entry, blacklist, extensions, result, options,
+                        formatting, empty_datasets);
       std::sort(
           result.begin() + static_cast<std::ptrdiff_t>(before), result.end(),
           [](const auto &left, const auto &right) { return left < right; });
@@ -550,22 +784,61 @@ inline auto for_each_json(const std::vector<std::string_view> &arguments,
   return result;
 }
 
+// An empty dataset is only worth a word of its own when nothing else reports
+// it. A caller that requires input already fails with a missing input error
+// naming the very same file, while one that does not would otherwise go
+// through the motions in silence
+inline auto report_empty_datasets(const std::size_t empty_datasets) -> void {
+  for (std::size_t index = 0; index < empty_datasets; index++) {
+    LOG_WARNING() << "The JSONL file is empty\n";
+  }
+}
+
 inline auto for_each_json(const std::vector<std::string_view> &arguments,
-                          const sourcemeta::core::Options &options)
+                          const sourcemeta::core::Options &options,
+                          const InputRequirement requirement,
+                          const InputFormatting formatting)
     -> std::vector<InputJSON> {
-  return for_each_json(arguments, options, InputRequirement::Optional);
+  std::size_t empty_datasets{0};
+  auto result{for_each_json(arguments, options, requirement, formatting,
+                            empty_datasets)};
+  if (!result.empty() || requirement != InputRequirement::NonEmpty) {
+    report_empty_datasets(empty_datasets);
+  }
+
+  return result;
+}
+
+inline auto for_each_json(const std::vector<std::string_view> &arguments,
+                          const sourcemeta::core::Options &options,
+                          const InputRequirement requirement)
+    -> std::vector<InputJSON> {
+  return for_each_json(arguments, options, requirement,
+                       InputFormatting::Discard);
+}
+
+inline auto
+for_each_json(const std::vector<std::string_view> &arguments,
+              const sourcemeta::core::Options &options,
+              const InputFormatting formatting = InputFormatting::Discard)
+    -> std::vector<InputJSON> {
+  return for_each_json(arguments, options, InputRequirement::Optional,
+                       formatting);
 }
 
 inline auto for_each_json(const sourcemeta::core::Options &options,
                           const InputRequirement requirement)
     -> std::vector<InputJSON> {
-  return for_each_json(options.positional(), options, requirement);
+  return for_each_json(options.positional(), options, requirement,
+                       InputFormatting::Discard);
 }
 
-inline auto for_each_json(const sourcemeta::core::Options &options)
+inline auto
+for_each_json(const sourcemeta::core::Options &options,
+              const InputFormatting formatting = InputFormatting::Discard)
     -> std::vector<InputJSON> {
   return for_each_json(options.positional(), options,
-                       InputRequirement::Optional);
+                       InputRequirement::Optional, formatting);
 }
 
 } // namespace sourcemeta::jsonschema

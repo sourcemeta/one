@@ -20,6 +20,8 @@
 
 #include "action_jsonschema_serve_v1.h"
 
+#include <algorithm> // std::ranges::find
+#include <array>     // std::array
 #include <cassert>   // assert
 #include <exception> // std::exception, std::exception_ptr, std::rethrow_exception
 #include <filesystem>  // std::filesystem
@@ -29,6 +31,13 @@
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
+
+// The protocol revisions this instance serves. A client asking for anything
+// else is refused rather than answered under rules this does not implement
+inline constexpr std::array<sourcemeta::core::JSON::StringView, 3>
+    MCP_SUPPORTED_VERSIONS{{sourcemeta::core::MCP_PROTOCOL_VERSION_2025_03_26,
+                            sourcemeta::core::MCP_PROTOCOL_VERSION_2025_06_18,
+                            sourcemeta::core::MCP_PROTOCOL_VERSION_2025_11_25}};
 
 class ActionMCPV1 : public sourcemeta::one::RouterAction {
 public:
@@ -148,14 +157,20 @@ public:
     const auto requested_version{request.header("mcp-protocol-version")};
     const auto negotiated_version{
         sourcemeta::core::mcp_resolve_protocol_version(requested_version)};
-    if (!negotiated_version.has_value()) {
+    // A revision this library models is not automatically one this instance
+    // serves, so what it settles on is checked against what is advertised
+    if (!negotiated_version.has_value() ||
+        std::ranges::find(MCP_SUPPORTED_VERSIONS,
+                          sourcemeta::core::mcp_protocol_version_string(
+                              negotiated_version.value())) ==
+            MCP_SUPPORTED_VERSIONS.cend()) {
       auto data{sourcemeta::core::JSON::make_object()};
       data.assign("current",
                   sourcemeta::core::JSON{std::string{requested_version}});
       auto supported{sourcemeta::core::JSON::make_array()};
-      supported.push_back(sourcemeta::core::JSON{"2025-03-26"});
-      supported.push_back(sourcemeta::core::JSON{"2025-06-18"});
-      supported.push_back(sourcemeta::core::JSON{"2025-11-25"});
+      for (const auto advertised : MCP_SUPPORTED_VERSIONS) {
+        supported.push_back(sourcemeta::core::JSON{advertised});
+      }
       data.assign("supported", std::move(supported));
       this->write_envelope(request, response,
                            sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
@@ -401,7 +416,7 @@ private:
     if (method == sourcemeta::core::MCP_METHOD_INITIALIZE) {
       const auto &parts{
           this->mcp_metadata_.at(sourcemeta::core::MCP_METHOD_INITIALIZE)};
-      return sourcemeta::core::mcp_make_initialize_result(
+      return sourcemeta::core::mcp_make_initialize_response(
           request_json,
           sourcemeta::core::MCPServerCapabilities{
               .prompts = parts.at(0).to_boolean(),
@@ -417,7 +432,7 @@ private:
               .description = parts.at(8).to_string(),
               .website_url = parts.at(9).to_string(),
           },
-          parts.at(10).to_string());
+          MCP_SUPPORTED_VERSIONS, parts.at(10).to_string());
     }
 
     if (method == sourcemeta::core::MCP_METHOD_RESOURCES_TEMPLATES_LIST) {

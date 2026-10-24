@@ -22,7 +22,8 @@ public:
          SchemaVocabularies::Known::JSON_SCHEMA_DRAFT_6,
          SchemaVocabularies::Known::JSON_SCHEMA_DRAFT_4,
          SchemaVocabularies::Known::JSON_SCHEMA_DRAFT_3,
-         SchemaVocabularies::Known::JSON_SCHEMA_DRAFT_3_HYPER}));
+         SchemaVocabularies::Known::JSON_SCHEMA_DRAFT_3_HYPER,
+         SchemaVocabularies::Known::OPENAPI_3_0_BASE}));
     ONLY_CONTINUE_IF(schema.is_object() && schema.defines(KEYWORD) &&
                      schema.at(KEYWORD).is_string());
 
@@ -44,10 +45,13 @@ public:
     // Known official metaschemas are always resolvable
     ONLY_CONTINUE_IF(!schema_is_known(reference_base));
 
-    // If the base exists in the frame, the reference is internal (e.g. an
-    // embedded $id). A bad fragment on an internal base is handled by the
+    // The reference is internal when it leads back to the base this schema
+    // resolves against, which is what a reference within a wrapper document
+    // does, or when the base names a resource the document holds, such as an
+    // embedded $id. A bad fragment on an internal base is handled by the
     // unknown_local_ref rule instead
-    ONLY_CONTINUE_IF(!frame.traverse(reference_base).has_value());
+    ONLY_CONTINUE_IF(reference_base != location.base &&
+                     !frame.traverse(reference_base).has_value());
 
     const auto &has_fragment{reference_entry->get().fragment.has_value()};
     const JSON::String base_key{reference_base};

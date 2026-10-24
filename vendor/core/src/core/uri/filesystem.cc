@@ -3,6 +3,7 @@
 #include "escaping.h"
 
 #include <algorithm>   // std::ranges::equal, std::ranges::replace
+#include <cassert>     // assert
 #include <cctype>      // std::tolower
 #include <filesystem>  // std::filesystem
 #include <iterator>    // std::advance, std::next
@@ -22,9 +23,6 @@ auto is_localhost_host(const std::string_view host) -> bool {
 
 auto append_raw_segment(std::optional<std::string> &path,
                         const std::string_view segment) -> void {
-  if (segment.empty()) {
-    return;
-  }
   if (!path.has_value()) {
     path = std::string{segment};
     return;
@@ -32,9 +30,11 @@ auto append_raw_segment(std::optional<std::string> &path,
   auto &current = path.value();
   const bool current_ends_with_slash = current.ends_with('/');
   const bool segment_starts_with_slash = segment.starts_with('/');
-  if (current_ends_with_slash && segment_starts_with_slash) {
-    current.append(segment, 1);
-  } else if (!current_ends_with_slash && !segment_starts_with_slash) {
+  // Leading separators are stripped before any of this is walked, so the only
+  // segment that spells out to a separator is the one written for a position
+  // the path holds nothing at, and two such positions never follow each other
+  assert(!(current_ends_with_slash && segment_starts_with_slash));
+  if (!current_ends_with_slash && !segment_starts_with_slash) {
     current += '/';
     current.append(segment);
   } else {
@@ -114,20 +114,34 @@ auto URI::from_path(const std::filesystem::path &path) -> URI {
   URI result{"file://"};
   auto iterator = final_path.begin();
 
-  // For UNC paths, the first segment is the hostname
-  if (is_unc) {
+  // For UNC paths, the first segment is the hostname, which a root made of
+  // nothing but separators does not have
+  if (is_unc && iterator != final_path.end()) {
     result.host_ = iterator->string();
     std::advance(iterator, 1);
+  }
+
+  // A path made of nothing but separators is the root itself, and the strip
+  // above leaves no segment for the loop to walk. RFC 8089 spells the root as
+  // an empty authority followed by "/", so it is set here rather than lost
+  if (normalized.empty()) {
+    result.path_ = "/";
   }
 
   // Process remaining path segments
   for (; iterator != final_path.end(); ++iterator) {
     if (iterator->empty()) {
       append_raw_segment(result.path_, "/");
+      // A drive is a root name of its own on Windows, which leaves the
+      // separator following it as a segment rather than as the empty one that
+      // trails such a path everywhere else. Leading separators are stripped
+      // above, so nowhere else does a segment spell out to one
+#if defined(_WIN32)
     } else if (*iterator == "/") {
       if (std::next(iterator) == final_path.end()) {
         append_raw_segment(result.path_, "/");
       }
+#endif
     } else {
       // Store raw segment - escaping will happen during recompose()
       const auto segment = iterator->string();

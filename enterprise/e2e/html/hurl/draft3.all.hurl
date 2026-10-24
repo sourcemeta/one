@@ -114,10 +114,10 @@ header "ETag" exists
   "type": "object",
   "properties": {
     "tag": {
-      "$ref": "string"
+      "$ref": "{{base}}/test/draft3/string"
     },
     "latest": {
-      "$ref": "../jsonld/plain"
+      "$ref": "{{base}}/test/jsonld/plain"
     },
     "same": {
       "$ref": "#/properties/tag"

@@ -108,7 +108,7 @@ header "ETag" exists
   "type": "object",
   "properties": {
     "tag": {
-      "$ref": "string"
+      "$ref": "{{base}}/test/draft3/string"
     }
   },
   "definitions": {

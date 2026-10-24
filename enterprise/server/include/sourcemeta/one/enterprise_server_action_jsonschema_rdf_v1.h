@@ -348,13 +348,14 @@ public:
     const auto evaluation_enabled{this->artifact_resolve_path(
         caller, schema_uri, Tree::Schemas, "blaze-exhaustive")};
     if (!schema_present.path.has_value()) {
-      return sourcemeta::core::mcp_make_tool_error(request_id,
+      return sourcemeta::core::mcp_make_tool_error(version, request_id,
                                                    "Schema not found");
     }
 
     if (!evaluation_enabled.path.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(
-          request_id, "This schema was not precompiled for schema evaluation");
+          version, request_id,
+          "This schema was not precompiled for schema evaluation");
     }
 
     sourcemeta::core::JSON instance{nullptr};
@@ -363,10 +364,10 @@ public:
           arguments.at("stringifiedInstance").to_string());
     } catch (const std::exception &) {
       return sourcemeta::core::mcp_make_tool_error(
-          request_id, "The instance is not valid JSON");
+          version, request_id, "The instance is not valid JSON");
     } catch (...) {
       return sourcemeta::core::mcp_make_tool_error(
-          request_id, "The instance is not valid JSON");
+          version, request_id, "The instance is not valid JSON");
     }
 
     sourcemeta::core::JSON context{nullptr};
@@ -377,10 +378,10 @@ public:
             arguments.at("stringifiedContext").to_string());
       } catch (const std::exception &) {
         return sourcemeta::core::mcp_make_tool_error(
-            request_id, "The context is not valid JSON");
+            version, request_id, "The context is not valid JSON");
       } catch (...) {
         return sourcemeta::core::mcp_make_tool_error(
-            request_id, "The context is not valid JSON");
+            version, request_id, "The context is not valid JSON");
       }
     }
 
@@ -407,7 +408,8 @@ public:
             outcome)) {
       const auto &error{
           std::get<sourcemeta::blaze::JSONLDResolutionError>(outcome)};
-      return sourcemeta::core::mcp_make_tool_error(request_id, error.message);
+      return sourcemeta::core::mcp_make_tool_error(version, request_id,
+                                                   error.message);
     }
 
     auto document{std::get<sourcemeta::core::JSON>(std::move(outcome))};
@@ -417,7 +419,8 @@ public:
                        ? sourcemeta::core::jsonld_flatten(document, context)
                        : sourcemeta::core::jsonld_compact(document, context);
       } catch (const sourcemeta::core::JSONLDError &error) {
-        return sourcemeta::core::mcp_make_tool_error(request_id, error.what());
+        return sourcemeta::core::mcp_make_tool_error(version, request_id,
+                                                     error.what());
       }
     } else if (flatten) {
       document = sourcemeta::core::jsonld_flatten(document);

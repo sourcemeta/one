@@ -169,7 +169,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
   "$id": "{{base}}/test/extension/to-without",
   "allOf": [
     {
-      "$ref": "without"
+      "$ref": "{{base}}/test/extension/without"
     }
   ],
   "definitions": {
