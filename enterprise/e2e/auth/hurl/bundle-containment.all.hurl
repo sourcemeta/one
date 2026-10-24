@@ -23,7 +23,7 @@ Access-Control-Allow-Origin: *
   "$id": "{{base}}/reports/quarterly",
   "type": "array",
   "items": {
-    "$ref": "../public/string"
+    "$ref": "{{base}}/public/string"
   },
   "$defs": {
     "{{base}}/public/string": {

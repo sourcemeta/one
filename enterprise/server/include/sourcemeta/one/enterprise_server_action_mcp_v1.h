@@ -240,13 +240,19 @@ public:
 
     // MCP Streamable HTTP transport / Protocol Version Header:
     // - Client MUST send `MCP-Protocol-Version` on every request after init
-    // - If header is absent, server SHOULD assume 2025-03-26 (handled inside
-    //   `mcp_resolve_protocol_version`)
+    // - If header is absent, server SHOULD assume 2025-03-26, which is the
+    //   revision that predates the header
     // - If header is invalid/unsupported, server MUST respond with 400
     // https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#protocol-version-header
     const auto requested_version{request.header("mcp-protocol-version")};
     const auto negotiated_version{
-        sourcemeta::core::mcp_resolve_protocol_version(requested_version)};
+        requested_version.empty()
+            ? std::optional<
+                  sourcemeta::core::MCPProtocolVersion>{sourcemeta::core::
+                                                            MCPProtocolVersion::
+                                                                V_2025_03_26}
+            : sourcemeta::core::mcp_resolve_protocol_version(
+                  requested_version)};
     // A revision this library models is not automatically one this instance
     // serves, so what it settles on is checked against what is advertised
     if (!negotiated_version.has_value() ||
