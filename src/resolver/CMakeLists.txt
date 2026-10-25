@@ -19,4 +19,4 @@ target_link_libraries(sourcemeta_one_resolver PRIVATE
 target_link_libraries(sourcemeta_one_resolver PRIVATE
   sourcemeta::one::shared)
 target_link_libraries(sourcemeta_one_resolver PRIVATE
-  sourcemeta::one::metapack)
+  sourcemeta::core::metapack)

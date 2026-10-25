@@ -69,6 +69,8 @@ jobs:
         with:
           context: .
           file: ${{ matrix.edition.file }}
+          build-args: |
+            SOURCEMETA_ONE_REVISION=${{ github.sha }}
           platforms: linux/${{ matrix.edition.arch }}
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}

@@ -14,7 +14,7 @@ target_link_libraries(sourcemeta_one_web PUBLIC sourcemeta::one::configuration)
 target_link_libraries(sourcemeta_one_web PRIVATE sourcemeta::one::authentication)
 target_link_libraries(sourcemeta_one_web PUBLIC sourcemeta::one::resolver)
 target_link_libraries(sourcemeta_one_web PRIVATE sourcemeta::one::shared)
-target_link_libraries(sourcemeta_one_web PRIVATE sourcemeta::one::metapack)
+target_link_libraries(sourcemeta_one_web PRIVATE sourcemeta::core::metapack)
 
 sourcemeta_esbuild_bundle(
   ENTRYPOINT "${CMAKE_CURRENT_SOURCE_DIR}/scripts/main.js"

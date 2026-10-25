@@ -214,7 +214,9 @@ public:
             const sourcemeta::core::WeakPointer &pointer) const
       -> std::optional<std::reference_wrapper<const Reference>>;
 
-  /// Get a specific location entry by reference type and URI
+  /// Get a specific location entry by reference type and URI, settling the
+  /// spelling of the URI the way framing settles the one it files a location
+  /// under
   [[nodiscard]] auto location(const SchemaReferenceType type,
                               const std::string_view uri) const
       -> std::optional<std::reference_wrapper<const Location>>;
@@ -230,6 +232,13 @@ public:
 
   /// Check whether the analysed schema has no external references
   [[nodiscard]] auto standalone() const noexcept -> bool;
+
+  /// Check whether the analysed schema has no external references other than
+  /// to the dialects it declares. Callers that resolve references between
+  /// schemas but leave dialects as they are want this rather than the
+  /// stricter question, as a dialect they were never going to resolve should
+  /// not count against them
+  [[nodiscard]] auto standalone_ignoring_metaschemas() const noexcept -> bool;
 
   /// Get the root schema identifier (empty if none)
   [[nodiscard]] auto root() const noexcept
@@ -265,7 +274,7 @@ public:
   [[nodiscard]] auto
   traverse(const Location &location,
            const sourcemeta::core::WeakPointer &relative_schema_location) const
-      -> const Location &;
+      -> std::optional<std::reference_wrapper<const Location>>;
 
   /// Get the location associated with a given URI
   [[nodiscard]] auto traverse(const std::string_view uri) const

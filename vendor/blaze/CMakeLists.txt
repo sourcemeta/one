@@ -16,6 +16,7 @@ option(BLAZE_CANONICALIZER "Build the Blaze canonicalizer library" ON)
 option(BLAZE_CONVERT "Build the Blaze convert library" ON)
 option(BLAZE_EDITOR "Build the Blaze editor schema compatibility library" ON)
 option(BLAZE_DEPENDENCIES "Build the Blaze dependencies library" ON)
+option(BLAZE_BINPACK "Build the Blaze BinPack serialization library" ON)
 option(BLAZE_TESTS "Build the Blaze tests" OFF)
 option(BLAZE_BENCHMARK "Build the Blaze benchmarks" OFF)
 option(BLAZE_CONTRIB "Build the Blaze contrib programs" OFF)
@@ -99,6 +100,10 @@ if(BLAZE_DEPENDENCIES)
   add_subdirectory(src/dependencies)
 endif()
 
+if(BLAZE_BINPACK)
+  add_subdirectory(src/binpack)
+endif()
+
 if(BLAZE_CONTRIB)
   add_subdirectory(contrib)
 endif()
@@ -132,6 +137,8 @@ if(PROJECT_IS_TOP_LEVEL)
         "${PROJECT_SOURCE_DIR}/test/evaluator/evaluator_2019_09_invalid.json"
         "${PROJECT_SOURCE_DIR}/test/evaluator/evaluator_2020_12.json"
         "${PROJECT_SOURCE_DIR}/test/evaluator/evaluator_2020_12_invalid.json"
+        "${PROJECT_SOURCE_DIR}/test/evaluator/evaluator_openapi_3_0.json"
+        "${PROJECT_SOURCE_DIR}/test/evaluator/evaluator_openapi_3_0_invalid.json"
         "${PROJECT_SOURCE_DIR}/test/evaluator/evaluator_openapi_3_1.json"
         "${PROJECT_SOURCE_DIR}/test/evaluator/evaluator_openapi_3_2.json"
         "${PROJECT_SOURCE_DIR}/test/output/output_standard_basic.json"
@@ -187,6 +194,10 @@ if(BLAZE_TESTS)
 
   if(BLAZE_DEPENDENCIES)
     add_subdirectory(test/dependencies)
+  endif()
+
+  if(BLAZE_BINPACK)
+    add_subdirectory(test/binpack)
   endif()
 
   if(PROJECT_IS_TOP_LEVEL)

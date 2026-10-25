@@ -88,6 +88,60 @@ auto get_schema_template(
       positions);
 }
 
+// The schema half of the same job: bundle, frame, settle the entry point, and
+// compile
+auto get_plain_schema_template(
+    const sourcemeta::core::JSON &schema,
+    const sourcemeta::core::Options &options,
+    const sourcemeta::core::SchemaResolver &resolver,
+    const std::string &dialect, const std::string &default_id,
+    const std::filesystem::path &display_path,
+    const sourcemeta::core::PointerPositionTracker &positions,
+    const bool fast_mode) -> sourcemeta::blaze::Template {
+  const auto bundled{sourcemeta::jsonschema::bundle_for_evaluation(
+      schema, resolver, dialect, default_id, display_path, positions)};
+
+  const auto frame{sourcemeta::jsonschema::frame_for_evaluation(
+      bundled, resolver, dialect, default_id, display_path, positions)};
+
+  std::string entrypoint_uri{frame.root()};
+  if (options.contains("entrypoint") && !options.at("entrypoint").empty()) {
+    try {
+      entrypoint_uri = sourcemeta::jsonschema::resolve_entrypoint(
+          frame, options.at("entrypoint").front());
+    } catch (const sourcemeta::blaze::CompilerInvalidEntryPoint &error) {
+      throw sourcemeta::core::FileError<
+          sourcemeta::blaze::CompilerInvalidEntryPoint>(display_path, error);
+    }
+  }
+
+  return get_schema_template(bundled, resolver, frame, entrypoint_uri,
+                             fast_mode, options, display_path, positions);
+}
+
+// A description holds many schemas and no root one, so which of them to
+// validate against is the caller's to say. From the entry point onwards
+// nothing here is particular to OpenAPI
+auto get_openapi_schema_template(
+    sourcemeta::core::JSON &document, const sourcemeta::core::Options &options,
+    const sourcemeta::core::SchemaResolver &resolver,
+    const std::optional<sourcemeta::blaze::Configuration> &configuration,
+    const std::string &dialect, const std::string &openapi_base,
+    const std::filesystem::path &display_path,
+    const sourcemeta::core::PointerPositionTracker &positions,
+    const bool fast_mode) -> sourcemeta::blaze::Template {
+  return sourcemeta::jsonschema::with_openapi_entrypoint(
+      document, options, resolver,
+      sourcemeta::jsonschema::openapi_resolver(
+          options, options.contains("http"), dialect, configuration),
+      openapi_base, display_path, positions,
+      [&](const sourcemeta::core::SchemaFrame &frame,
+          const std::string &entrypoint_uri) {
+        return get_schema_template(document, resolver, frame, entrypoint_uri,
+                                   fast_mode, options, display_path, positions);
+      });
+}
+
 auto parse_loop(const sourcemeta::core::Options &options) -> std::uint64_t {
   if (options.contains("loop")) {
     return std::stoull(std::string{options.at("loop").front()});
@@ -338,10 +392,25 @@ auto sourcemeta::jsonschema::validate(const sourcemeta::core::Options &options)
   auto parsed_schema{schema_from_stdin ? read_from_stdin()
                                        : read_file(schema_path)};
 
-  if (!parsed_schema.document.is_object() &&
+  // An OpenAPI description is not a schema, so what it goes by wherever we
+  // report on it is an identity of its own rather than the one a schema from
+  // the same place would take
+  const auto is_openapi{is_openapi_document(parsed_schema.document)};
+  const auto display_path{
+      schema_from_stdin ? (is_openapi ? openapi_stdin_path() : stdin_path())
+                        : schema_resolution_base};
+
+  if (parsed_schema.multidocument) {
+    throw MultiDocumentInputError{
+        "This command does not support input with multiple documents",
+        display_path};
+  }
+
+  reject_unsupported_openapi(parsed_schema.document, display_path);
+
+  if (!is_openapi && !parsed_schema.document.is_object() &&
       !parsed_schema.document.is_boolean()) {
-    throw NotSchemaError{schema_from_stdin ? stdin_path()
-                                           : schema_resolution_base};
+    throw NotSchemaError{display_path};
   }
 
   const auto &schema{parsed_schema.document};
@@ -377,29 +446,17 @@ auto sourcemeta::jsonschema::validate(const sourcemeta::core::Options &options)
   const auto schema_default_id{sourcemeta::jsonschema::default_id(
       schema_resolution_base, schema_from_stdin)};
 
-  const auto bundled{
-      bundle_for_evaluation(schema, custom_resolver, dialect, schema_default_id,
-                            schema_resolution_base, parsed_schema.positions)};
-
-  const auto frame{
-      frame_for_evaluation(bundled, custom_resolver, dialect, schema_default_id,
-                           schema_resolution_base, parsed_schema.positions)};
-
-  std::string entrypoint_uri{frame.root()};
-  if (options.contains("entrypoint") && !options.at("entrypoint").empty()) {
-    try {
-      entrypoint_uri =
-          resolve_entrypoint(frame, options.at("entrypoint").front());
-    } catch (const sourcemeta::blaze::CompilerInvalidEntryPoint &error) {
-      throw sourcemeta::core::FileError<
-          sourcemeta::blaze::CompilerInvalidEntryPoint>(schema_resolution_base,
-                                                        error);
-    }
-  }
-
-  const auto schema_template{get_schema_template(
-      bundled, custom_resolver, frame, entrypoint_uri, fast_mode, options,
-      schema_resolution_base, parsed_schema.positions)};
+  const auto schema_template{
+      is_openapi
+          ? get_openapi_schema_template(
+                parsed_schema.document, options, custom_resolver, configuration,
+                dialect,
+                sourcemeta::jsonschema::openapi_default_id(
+                    schema_resolution_base, schema_from_stdin),
+                display_path, parsed_schema.positions, fast_mode)
+          : get_plain_schema_template(schema, options, custom_resolver, dialect,
+                                      schema_default_id, display_path,
+                                      parsed_schema.positions, fast_mode)};
 
   sourcemeta::blaze::Evaluator evaluator;
 
@@ -448,6 +505,7 @@ auto sourcemeta::jsonschema::validate(const sourcemeta::core::Options &options)
     }
   } else {
     bool proceed{true};
+    std::size_t empty_datasets{0};
     for (auto argument{instance_arguments.cbegin()};
          argument != instance_arguments.cend(); ++argument) {
       const auto &instance_path_view{*argument};
@@ -476,7 +534,9 @@ auto sourcemeta::jsonschema::validate(const sourcemeta::core::Options &options)
           instance_path.string().ends_with(".jsonl.gz") ||
           instance_path.extension() == ".yaml" ||
           instance_path.extension() == ".yml") {
-        const auto entries{for_each_json({instance_path_view}, options)};
+        const auto entries{for_each_json(
+            {instance_path_view}, options, InputRequirement::Optional,
+            InputFormatting::Discard, empty_datasets)};
         for (auto entry{entries.cbegin()}; entry != entries.cend(); ++entry) {
           if (!process_entry(*entry, evaluator, schema_template, benchmark,
                              benchmark_loop, trace, fast_mode, json_output,
@@ -572,6 +632,8 @@ auto sourcemeta::jsonschema::validate(const sourcemeta::core::Options &options)
       throw sourcemeta::core::FileError<NoInputFilesError>(
           std::filesystem::path{instance_arguments.front()});
     }
+
+    report_empty_datasets(empty_datasets);
   }
 
   if (!json_output && !trace && !benchmark) {

@@ -1,5 +1,5 @@
+#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/core/test.h>
-#include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/search.h>
 
 #include <cstdint>     // std::uint8_t, std::uint32_t
@@ -29,9 +29,9 @@ protected:
     const std::string_view payload_view{
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         reinterpret_cast<const char *>(payload.data()), payload.size()};
-    sourcemeta::one::metapack_write_text(
+    sourcemeta::core::metapack_write_text(
         path, payload_view, "application/octet-stream",
-        sourcemeta::one::MetapackEncoding::Identity, {});
+        sourcemeta::core::MetapackEncoding::Identity, {});
   }
 };
 

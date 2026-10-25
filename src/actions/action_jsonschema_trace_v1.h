@@ -6,13 +6,13 @@
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/mcp.h>
+#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/blaze/output.h>
 
 #include <sourcemeta/one/http.h>
-#include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
 #include <sourcemeta/one/shared.h>
 
@@ -114,13 +114,14 @@ public:
     const auto evaluation_enabled{this->artifact_resolve_path(
         caller, schema_uri, Tree::Schemas, "blaze-exhaustive")};
     if (!schema_present.path.has_value()) {
-      return sourcemeta::core::mcp_make_tool_error(request_id,
+      return sourcemeta::core::mcp_make_tool_error(version, request_id,
                                                    "Schema not found");
     }
 
     if (!evaluation_enabled.path.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(
-          request_id, "This schema was not precompiled for schema evaluation");
+          version, request_id,
+          "This schema was not precompiled for schema evaluation");
     }
 
     sourcemeta::core::PointerPositionTracker tracker;
@@ -131,10 +132,10 @@ public:
           std::ref(tracker));
     } catch (const std::exception &) {
       return sourcemeta::core::mcp_make_tool_error(
-          request_id, "The instance is not valid JSON");
+          version, request_id, "The instance is not valid JSON");
     } catch (...) {
       return sourcemeta::core::mcp_make_tool_error(
-          request_id, "The instance is not valid JSON");
+          version, request_id, "The instance is not valid JSON");
     }
 
     return sourcemeta::core::mcp_make_tool_success(

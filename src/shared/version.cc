@@ -6,6 +6,10 @@ namespace sourcemeta::one {
 
 auto version() noexcept -> std::string_view { return PROJECT_VERSION; }
 
+auto build_identity() noexcept -> std::string_view {
+  return PROJECT_BUILD_IDENTITY;
+}
+
 auto edition() noexcept -> std::string_view {
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
   return "Enterprise";

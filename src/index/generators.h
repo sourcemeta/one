@@ -8,7 +8,6 @@
 #include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/authentication.h>
 #include <sourcemeta/one/build.h>
-#include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/resolver.h>
 #include <sourcemeta/one/shared.h>
 
@@ -18,6 +17,7 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonpointer.h>
 #include <sourcemeta/core/jsonschema.h>
+#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/blaze/compiler.h>
@@ -266,9 +266,9 @@ struct GenerateMaterialisedSchema {
         dialect_identifier);
 
     const auto extension_bytes{make_dialect_extension(dialect_identifier)};
-    sourcemeta::one::metapack_write_pretty_json(
+    sourcemeta::core::metapack_write_json_pretty(
         action.destination, schema.value(), "application/schema+json",
-        sourcemeta::one::MetapackEncoding::GZIP,
+        sourcemeta::core::MetapackEncoding::GZIP,
         std::span<const std::uint8_t>{extension_bytes});
     resolver.cache_path(action.data, action.destination);
   }
@@ -331,11 +331,10 @@ template <sourcemeta::one::SchemaDialect Target> struct GenerateConversion {
                       const sourcemeta::core::JSON &) -> void {
     assert(!action.dependencies.empty());
     const auto &resolver_entry{resolver.entry(action.data)};
-    const auto dialect{
-        sourcemeta::one::official_dialect(resolver_entry.dialect)};
-    assert(dialect.has_value());
+    assert(
+        sourcemeta::one::official_dialect(resolver_entry.dialect).has_value());
     auto schema_option{
-        sourcemeta::one::metapack_read_json(action.dependencies.front())};
+        sourcemeta::core::metapack_read_json(action.dependencies.front())};
     assert(schema_option.has_value());
     auto &schema{schema_option.value()};
     bool converted{false};
@@ -362,9 +361,9 @@ template <sourcemeta::one::SchemaDialect Target> struct GenerateConversion {
 
     const auto extension_bytes{
         make_dialect_extension(sourcemeta::one::conversion_uri(Target))};
-    sourcemeta::one::metapack_write_pretty_json(
+    sourcemeta::core::metapack_write_json_pretty(
         action.destination, schema, "application/schema+json",
-        sourcemeta::one::MetapackEncoding::GZIP,
+        sourcemeta::core::MetapackEncoding::GZIP,
         std::span<const std::uint8_t>{extension_bytes});
   }
 };
@@ -378,7 +377,7 @@ struct GeneratePointerPositions {
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
     const auto schema_option{
-        sourcemeta::one::metapack_read_json(action.dependencies.front())};
+        sourcemeta::core::metapack_read_json(action.dependencies.front())};
     assert(schema_option.has_value());
     const auto &schema{schema_option.value()};
     std::ostringstream schema_stream;
@@ -388,9 +387,9 @@ struct GeneratePointerPositions {
     sourcemeta::core::parse_json(schema_stream.str(), parsed,
                                  std::ref(tracker));
     const auto result{sourcemeta::core::to_json(tracker)};
-    sourcemeta::one::metapack_write_pretty_json(
+    sourcemeta::core::metapack_write_json_pretty(
         action.destination, result, "application/json",
-        sourcemeta::one::MetapackEncoding::GZIP, {});
+        sourcemeta::core::MetapackEncoding::GZIP, {});
   }
 };
 
@@ -402,7 +401,7 @@ struct GenerateFrameLocations {
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
     const auto contents_option{
-        sourcemeta::one::metapack_read_json(action.dependencies.front())};
+        sourcemeta::core::metapack_read_json(action.dependencies.front())};
     assert(contents_option.has_value());
     const auto &contents{contents_option.value()};
     std::ostringstream contents_stream;
@@ -469,9 +468,9 @@ struct GenerateFrameLocations {
               break;
           }
         });
-    sourcemeta::one::metapack_write_pretty_json(
+    sourcemeta::core::metapack_write_json_pretty(
         action.destination, result, "application/json",
-        sourcemeta::one::MetapackEncoding::GZIP, {});
+        sourcemeta::core::MetapackEncoding::GZIP, {});
   }
 };
 
@@ -483,7 +482,7 @@ struct GenerateDependencies {
                       const sourcemeta::one::Configuration &configuration,
                       const sourcemeta::core::JSON &) -> void {
     const auto contents_option{
-        sourcemeta::one::metapack_read_json(action.dependencies.front())};
+        sourcemeta::core::metapack_read_json(action.dependencies.front())};
     assert(contents_option.has_value());
     const auto &contents{contents_option.value()};
     auto result{sourcemeta::core::JSON::make_array()};
@@ -547,9 +546,9 @@ struct GenerateDependencies {
       }
     }
 
-    sourcemeta::one::metapack_write_pretty_json(
+    sourcemeta::core::metapack_write_json_pretty(
         action.destination, result, "application/json",
-        sourcemeta::one::MetapackEncoding::GZIP, {});
+        sourcemeta::core::MetapackEncoding::GZIP, {});
   }
 
 private:
@@ -571,7 +570,7 @@ struct GenerateHealth {
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
     const auto contents_option{
-        sourcemeta::one::metapack_read_json(action.dependencies.front())};
+        sourcemeta::core::metapack_read_json(action.dependencies.front())};
     assert(contents_option.has_value());
     const auto &contents{contents_option.value()};
     const auto &collection{*resolver.entry(action.data).collection};
@@ -620,9 +619,9 @@ struct GenerateHealth {
 
     report.assign("errors", std::move(errors));
 
-    sourcemeta::one::metapack_write_pretty_json(
+    sourcemeta::core::metapack_write_json_pretty(
         action.destination, report, "application/json",
-        sourcemeta::one::MetapackEncoding::GZIP, {});
+        sourcemeta::core::MetapackEncoding::GZIP, {});
   }
 
 private:
@@ -688,7 +687,7 @@ struct GenerateBundle {
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
     auto schema_option{
-        sourcemeta::one::metapack_read_json(action.dependencies.front())};
+        sourcemeta::core::metapack_read_json(action.dependencies.front())};
     assert(schema_option.has_value());
     auto schema{std::move(schema_option.value())};
     // The registry serves every meta-schema a schema may declare, so
@@ -717,9 +716,9 @@ struct GenerateBundle {
         dialect_identifier);
 
     const auto extension_bytes{make_dialect_extension(dialect_identifier)};
-    sourcemeta::one::metapack_write_pretty_json(
+    sourcemeta::core::metapack_write_json_pretty(
         action.destination, schema, "application/schema+json",
-        sourcemeta::one::MetapackEncoding::GZIP,
+        sourcemeta::core::MetapackEncoding::GZIP,
         std::span<const std::uint8_t>{extension_bytes});
   }
 };
@@ -732,7 +731,7 @@ struct GenerateEditor {
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
     auto schema_option{
-        sourcemeta::one::metapack_read_json(action.dependencies.front())};
+        sourcemeta::core::metapack_read_json(action.dependencies.front())};
     assert(schema_option.has_value());
     auto schema{std::move(schema_option.value())};
     sourcemeta::blaze::for_editor(
@@ -755,9 +754,9 @@ struct GenerateEditor {
         dialect_identifier);
 
     const auto extension_bytes{make_dialect_extension(dialect_identifier)};
-    sourcemeta::one::metapack_write_pretty_json(
+    sourcemeta::core::metapack_write_json_pretty(
         action.destination, schema, "application/schema+json",
-        sourcemeta::one::MetapackEncoding::GZIP,
+        sourcemeta::core::MetapackEncoding::GZIP,
         std::span<const std::uint8_t>{extension_bytes});
   }
 };
@@ -769,7 +768,7 @@ static auto generate_blaze_template(
     sourcemeta::one::Resolver &resolver, const sourcemeta::blaze::Mode mode)
     -> void {
   const auto contents_option{
-      sourcemeta::one::metapack_read_json(dependencies.front())};
+      sourcemeta::core::metapack_read_json(dependencies.front())};
   assert(contents_option.has_value());
   const auto &contents{contents_option.value()};
   const sourcemeta::core::SchemaFrame frame{
@@ -785,9 +784,9 @@ static auto generate_blaze_template(
       },
       sourcemeta::blaze::default_schema_compiler, frame, frame.root(), mode)};
   const auto result{sourcemeta::blaze::to_json(schema_template)};
-  sourcemeta::one::metapack_write_json(destination, result, "application/json",
-                                       sourcemeta::one::MetapackEncoding::GZIP,
-                                       {});
+  sourcemeta::core::metapack_write_json(
+      destination, result, "application/json",
+      sourcemeta::core::MetapackEncoding::GZIP, {});
 }
 
 struct GenerateBlazeTemplateExhaustive {
@@ -822,7 +821,7 @@ struct GenerateStats {
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
     const auto schema_option{
-        sourcemeta::one::metapack_read_json(action.dependencies.front())};
+        sourcemeta::core::metapack_read_json(action.dependencies.front())};
     assert(schema_option.has_value());
     const auto &schema{schema_option.value()};
     std::map<sourcemeta::core::JSON::String,
@@ -865,9 +864,9 @@ struct GenerateStats {
           }
         });
 
-    sourcemeta::one::metapack_write_pretty_json(
+    sourcemeta::core::metapack_write_json_pretty(
         action.destination, sourcemeta::core::to_json(result),
-        "application/json", sourcemeta::one::MetapackEncoding::GZIP, {});
+        "application/json", sourcemeta::core::MetapackEncoding::GZIP, {});
   }
 };
 

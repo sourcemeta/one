@@ -11,16 +11,64 @@
 #include <utility>     // std::move
 
 namespace {
-inline auto wrap_identifier(const std::string_view identifier)
+// A frame keys the document it analysed by whatever identifier that document
+// declares, or by the base it was retrieved from when it declares none, so
+// what names the root of one is the frame's to say rather than ours
+inline auto frame_root(const sourcemeta::core::SchemaFrame &frame)
+    -> std::string_view {
+  const auto uri{frame.uri(sourcemeta::core::EMPTY_WEAK_POINTER)};
+  if (!uri.has_value()) {
+    return {};
+  }
+
+  return uri.value().get();
+}
+
+// A YAML file may hold more than one document, while a test case names a
+// single instance rather than a stream of them. The combined reader hands back
+// the first document and drops the rest without a word, and has no way of
+// reporting that it did, so how it picks a reader is mirrored here in order to
+// ask the YAML one what remained
+inline auto read_single_document(const std::filesystem::path &path,
+                                 bool &more_documents)
     -> sourcemeta::core::JSON {
-  auto result{sourcemeta::core::JSON::make_object()};
-  // JSON Schema 2020-12 is the first dialect that truly supports cross-dialect
-  // references In practice, others do, but we can play it safe here
-  result.assign_assume_new(
-      "$schema",
-      sourcemeta::core::JSON{"https://json-schema.org/draft/2020-12/schema"});
-  result.assign_assume_new("$ref", sourcemeta::core::JSON{identifier});
-  return result;
+  const auto extension{path.extension()};
+  if (extension == ".yaml" || extension == ".yml") {
+    return sourcemeta::core::read_yaml(path, more_documents);
+  }
+
+  if (extension == ".json") {
+    return sourcemeta::core::read_json(path);
+  }
+
+  try {
+    return sourcemeta::core::read_json(path);
+  } catch (const sourcemeta::core::JSONParseError &) {
+    return sourcemeta::core::read_yaml(path, more_documents);
+  }
+}
+
+inline auto
+read_single_document(const std::filesystem::path &path, bool &more_documents,
+                     sourcemeta::core::JSON &output,
+                     const sourcemeta::core::JSON::ParseCallback &callback)
+    -> void {
+  const auto extension{path.extension()};
+  if (extension == ".yaml" || extension == ".yml") {
+    sourcemeta::core::read_yaml(path, more_documents, output, callback);
+    return;
+  }
+
+  if (extension == ".json") {
+    sourcemeta::core::read_json(path, output, callback);
+    return;
+  }
+
+  try {
+    sourcemeta::core::read_json(path, output, callback);
+  } catch (const sourcemeta::core::JSONParseError &) {
+    sourcemeta::core::read_yaml(path, more_documents, output, callback);
+  }
 }
 
 inline auto test_error_if(
@@ -105,7 +153,11 @@ auto TestCase::parse(
   } else if (test_case_json.defines("rdfPath")) {
     const std::filesystem::path rdf_path{sourcemeta::core::weakly_canonical(
         base_path / test_case_json.at("rdfPath").to_string())};
-    rdf = sourcemeta::core::read_yaml_or_json(rdf_path);
+    bool more_documents{false};
+    rdf = read_single_document(rdf_path, more_documents);
+    test_error_if(more_documents, tracker, location.concat("rdfPath"),
+                  "The file referenced by the test case `rdfPath` property "
+                  "must hold a single document");
     test_error_if(!rdf.value().is_array(), tracker, location.concat("rdfPath"),
                   "The document referenced by the test case `rdfPath` "
                   "property must be an array");
@@ -124,7 +176,11 @@ auto TestCase::parse(
   const std::filesystem::path data_path{sourcemeta::core::weakly_canonical(
       base_path / test_case_json.at("dataPath").to_string())};
   sourcemeta::core::JSON data{nullptr};
-  sourcemeta::core::read_yaml_or_json(data_path, data, std::ref(data_tracker));
+  bool more_documents{false};
+  read_single_document(data_path, more_documents, data, std::ref(data_tracker));
+  test_error_if(more_documents, tracker, location.concat("dataPath"),
+                "The file referenced by the test case `dataPath` property "
+                "must hold a single document");
   return TestCase{.description = std::move(description),
                   .valid = test_case_json.at("valid").to_boolean(),
                   .data = std::move(data),
@@ -136,11 +192,10 @@ auto TestCase::parse(
 auto TestSuite::parse(const sourcemeta::core::JSON &document,
                       const sourcemeta::core::PointerPositionTracker &tracker,
                       const std::filesystem::path &base_path,
+                      const TestTargetResolver &target_resolver,
                       const sourcemeta::core::SchemaResolver &schema_resolver,
                       const sourcemeta::core::SchemaWalker &walker,
                       const Compiler &compiler,
-                      const std::string_view default_dialect,
-                      const std::string_view default_id,
                       const std::optional<Tweaks> &tweaks) -> TestSuite {
   assert(std::filesystem::is_directory(base_path));
   test_error_if(!document.is_object(), tracker, sourcemeta::core::EMPTY_POINTER,
@@ -224,14 +279,18 @@ auto TestSuite::parse(const sourcemeta::core::JSON &document,
   test_suite.schema_resolver_ = schema_resolver;
   test_suite.walker_ = walker;
   test_suite.compiler_ = compiler;
-  test_suite.default_dialect_ = default_dialect;
-  test_suite.default_id_ = default_id;
 
+  test_suite.resolved_targets_.reserve(test_suite.targets.size());
   test_suite.schemas_fast_.reserve(test_suite.targets.size());
   test_suite.schemas_exhaustive_.resize(test_suite.targets.size());
 
   for (std::size_t target_index = 0; target_index < test_suite.targets.size();
        ++target_index) {
+    auto resolved{target_resolver(test_suite.targets[target_index])};
+    test_suite.resolved_targets_.push_back(
+        {.document = &resolved.document,
+         .frame = &resolved.frame,
+         .entrypoint = std::move(resolved.entrypoint)});
     test_suite.schemas_fast_.push_back(
         test_suite.compile_target(target_index, Mode::FastValidation));
   }
@@ -241,23 +300,14 @@ auto TestSuite::parse(const sourcemeta::core::JSON &document,
 
 auto TestSuite::compile_target(const std::size_t target_index,
                                const Mode mode) const -> Template {
-  const auto &target{this->targets[target_index]};
-
-  try {
-    return compile(wrap_identifier(target), this->walker_,
-                   this->schema_resolver_, this->compiler_, mode,
-                   this->default_dialect_, this->default_id_, "",
-                   mode == Mode::FastValidation ? this->tweaks_fast_
-                                                : this->tweaks_exhaustive_);
-  } catch (const sourcemeta::core::SchemaReferenceError &error) {
-    if (error.location() == sourcemeta::core::Pointer{"$ref"} &&
-        error.identifier() == target) {
-      throw sourcemeta::core::SchemaResolutionError{
-          target, "Could not resolve schema under test"};
-    }
-
-    throw;
-  }
+  const auto &target{this->resolved_targets_[target_index]};
+  return compile(*target.document, this->walker_, this->schema_resolver_,
+                 this->compiler_, *target.frame,
+                 target.entrypoint.empty() ? frame_root(*target.frame)
+                                           : target.entrypoint,
+                 mode,
+                 mode == Mode::FastValidation ? this->tweaks_fast_
+                                              : this->tweaks_exhaustive_);
 }
 
 auto TestSuite::fast(const std::size_t target_index) const -> const Template & {

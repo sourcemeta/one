@@ -5,7 +5,7 @@
 
 #include <sourcemeta/core/html.h>
 #include <sourcemeta/core/markdown.h>
-#include <sourcemeta/one/metapack.h>
+#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/one/shared.h>
 
 #include <cassert>    // assert
@@ -22,7 +22,8 @@ auto GenerateWebSchema::handler(
     const sourcemeta::one::Configuration &configuration,
     const sourcemeta::core::JSON &) -> void {
 
-  const auto meta_option{metapack_read_json(action.dependencies.front())};
+  const auto meta_option{
+      sourcemeta::core::metapack_read_json(action.dependencies.front())};
   assert(meta_option.has_value());
   const auto &meta{meta_option.value()};
   const auto &canonical{meta.at("identifier").to_string()};
@@ -33,7 +34,8 @@ auto GenerateWebSchema::handler(
           ? meta.at("description").to_string()
           : ("Schemas located at " + meta.at("path").to_string())};
 
-  const auto health_option{metapack_read_json(action.dependencies.at(1))};
+  const auto health_option{
+      sourcemeta::core::metapack_read_json(action.dependencies.at(1))};
   assert(health_option.has_value());
   const auto &health{health_option.value()};
   assert(health.is_object());
@@ -471,8 +473,9 @@ auto GenerateWebSchema::handler(
         body.close();
       });
 
-  metapack_write_text(action.destination, writer.str(),
-                      "text/html; charset=utf-8", MetapackEncoding::GZIP, {});
+  sourcemeta::core::metapack_write_text(
+      action.destination, writer.str(), "text/html; charset=utf-8",
+      sourcemeta::core::MetapackEncoding::GZIP, {});
 }
 
 } // namespace sourcemeta::one

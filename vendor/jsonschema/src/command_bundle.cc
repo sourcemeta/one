@@ -22,6 +22,7 @@ auto sourcemeta::jsonschema::bundle(const sourcemeta::core::Options &options)
   }
 
   validate_http_headers(options);
+  const auto indentation{parse_optional_indentation(options)};
 
   const std::filesystem::path schema_path{options.positional().front()};
   const bool schema_from_stdin = (schema_path == "-");
@@ -32,28 +33,73 @@ auto sourcemeta::jsonschema::bundle(const sourcemeta::core::Options &options)
 
   const auto schema_config_base{
       schema_from_stdin ? std::filesystem::current_path() : schema_path};
-  const auto schema_display_path{schema_from_stdin ? stdin_path()
-                                                   : schema_path};
 
   const auto configuration_path{
       find_configuration(options, schema_config_base)};
   const auto &configuration{
       read_configuration(options, configuration_path, schema_config_base)};
   const auto dialect{default_dialect(options, configuration)};
-  auto parsed_schema{schema_from_stdin ? read_from_stdin()
-                                       : read_file(schema_path)};
+  auto parsed_schema{schema_from_stdin
+                         ? read_from_stdin(nullptr, InputFormatting::Preserve)
+                         : read_file(schema_path, InputFormatting::Preserve)};
+
+  // An OpenAPI description is not a schema, so what it goes by wherever we
+  // report on it is an identity of its own rather than the one a schema from
+  // the same place would take
+  const auto is_description{is_openapi_document(parsed_schema.document)};
+  const auto is_openapi{
+      sourcemeta::core::openapi_version(parsed_schema.document).has_value()};
+  const auto schema_display_path{
+      schema_from_stdin ? (is_description ? openapi_stdin_path() : stdin_path())
+                        : schema_path};
+
+  if (parsed_schema.multidocument) {
+    throw MultiDocumentInputError{
+        "This command does not support input with multiple documents",
+        schema_display_path};
+  }
 
   if (!parsed_schema.document.is_object() &&
       !parsed_schema.document.is_boolean()) {
     throw NotSchemaError{schema_display_path};
   }
 
+  reject_unsupported_openapi(parsed_schema.document, schema_display_path);
+
+  // Removing identifiers is a schema operation, and there is no description to
+  // read once the Schema Objects it holds can no longer say who they are
+  if (is_openapi && options.contains("without-id")) {
+    throw sourcemeta::core::FileError<UnsupportedOpenAPIWithoutIdError>(
+        schema_display_path);
+  }
+
   auto &schema{parsed_schema.document};
+
+  const auto openapi_base{sourcemeta::jsonschema::openapi_default_id(
+      schema_path, schema_from_stdin)};
+  // A description that names itself with `$self` answers to that rather than to
+  // where it was read from, and a fault in it reports that base, so both are
+  // what tells a fault of ours from one in a document bundling went and fetched
+  const auto openapi_self{
+      openapi_self_identity(parsed_schema.document, openapi_base)};
 
   const auto &custom_resolver{
       resolver(options, options.contains("http"), dialect, configuration)};
 
   try {
+    if (is_openapi) {
+      sourcemeta::core::openapi_bundle(
+          schema, sourcemeta::core::schema_walker, custom_resolver,
+          openapi_resolver(options, options.contains("http"), dialect,
+                           configuration),
+          {.default_base = openapi_base});
+      sourcemeta::jsonschema::format_openapi(schema, custom_resolver,
+                                             openapi_base);
+      sourcemeta::jsonschema::write_schema(schema, std::cout, indentation,
+                                           parsed_schema.roundtrip);
+      return;
+    }
+
     sourcemeta::core::schema_bundle(
         schema, sourcemeta::core::schema_walker, custom_resolver, dialect,
         sourcemeta::jsonschema::default_id(schema_path, schema_from_stdin));
@@ -77,6 +123,53 @@ auto sourcemeta::jsonschema::bundle(const sourcemeta::core::Options &options)
     }
 
     sourcemeta::jsonschema::format_schema(schema, custom_resolver, dialect);
+  } catch (const sourcemeta::core::OpenAPIResolutionError &error) {
+    // Only a place within the entry document is one our positions describe
+    const auto ours{
+        error.base() == openapi_base ||
+        (openapi_self.has_value() && error.base() == openapi_self.value())};
+    const auto position{ours ? parsed_schema.positions.get(error.location())
+                             : std::nullopt};
+    if (position.has_value()) {
+      throw PositionError<sourcemeta::core::FileError<
+          sourcemeta::core::OpenAPIResolutionError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          schema_display_path, error);
+    }
+
+    throw sourcemeta::core::FileError<sourcemeta::core::OpenAPIResolutionError>(
+        schema_display_path, error);
+  } catch (const sourcemeta::core::OpenAPIReferenceError &error) {
+    // Only a place within the entry document is one our positions describe
+    const auto ours{
+        error.base() == openapi_base ||
+        (openapi_self.has_value() && error.base() == openapi_self.value())};
+    const auto position{ours ? parsed_schema.positions.get(error.location())
+                             : std::nullopt};
+    if (position.has_value()) {
+      throw PositionError<
+          sourcemeta::core::FileError<sourcemeta::core::OpenAPIReferenceError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          schema_display_path, error);
+    }
+
+    throw sourcemeta::core::FileError<sourcemeta::core::OpenAPIReferenceError>(
+        schema_display_path, error);
+  } catch (const sourcemeta::core::OpenAPIError &error) {
+    const auto ours{
+        error.base() == openapi_base ||
+        (openapi_self.has_value() && error.base() == openapi_self.value())};
+    const auto position{ours ? parsed_schema.positions.get(error.location())
+                             : std::nullopt};
+    if (position.has_value()) {
+      throw PositionError<
+          sourcemeta::core::FileError<sourcemeta::core::OpenAPIError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          schema_display_path, error);
+    }
+
+    throw sourcemeta::core::FileError<sourcemeta::core::OpenAPIError>(
+        schema_display_path, error);
   } catch (const sourcemeta::core::SchemaKeywordError &error) {
     throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
         schema_display_path, error);
@@ -95,7 +188,28 @@ auto sourcemeta::jsonschema::bundle(const sourcemeta::core::Options &options)
     throw sourcemeta::core::FileError<
         sourcemeta::core::SchemaAnchorCollisionError>(schema_display_path,
                                                       error);
+  } catch (const sourcemeta::core::SchemaDialectImpossibleError &error) {
+    const auto position{parsed_schema.positions.get(error.location())};
+    if (position.has_value()) {
+      throw PositionError<sourcemeta::core::FileError<
+          sourcemeta::core::SchemaDialectImpossibleError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          schema_display_path, error);
+    }
+
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaDialectImpossibleError>(schema_display_path,
+                                                        error);
   } catch (const sourcemeta::core::SchemaReferenceError &error) {
+    const auto position{parsed_schema.positions.get(error.location())};
+    if (position.has_value()) {
+      throw PositionError<
+          sourcemeta::core::FileError<sourcemeta::core::SchemaReferenceError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          schema_display_path, error.identifier(), error.location(),
+          error.what());
+    }
+
     throw sourcemeta::core::FileError<sourcemeta::core::SchemaReferenceError>(
         schema_display_path, error.identifier(), error.location(),
         error.what());
@@ -113,11 +227,15 @@ auto sourcemeta::jsonschema::bundle(const sourcemeta::core::Options &options)
   } catch (const sourcemeta::core::SchemaUnknownDialectError &) {
     throw sourcemeta::core::FileError<
         sourcemeta::core::SchemaUnknownDialectError>(schema_display_path);
+  } catch (const sourcemeta::core::SchemaReferenceObjectResourceError &error) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaReferenceObjectResourceError>(
+        schema_display_path, error.identifier());
   } catch (const sourcemeta::core::SchemaError &error) {
     throw sourcemeta::core::FileError<sourcemeta::core::SchemaError>(
         schema_display_path, error.what());
   }
 
-  sourcemeta::core::prettify(schema, std::cout);
-  std::cout << "\n";
+  sourcemeta::jsonschema::write_schema(schema, std::cout, indentation,
+                                       parsed_schema.roundtrip);
 }

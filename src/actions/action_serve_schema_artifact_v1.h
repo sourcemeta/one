@@ -4,10 +4,10 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
+#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
-#include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
 
 #include <filesystem>  // std::filesystem
@@ -112,12 +112,12 @@ public:
         this->artifact_resolve_path(caller, arguments.at("schema").to_string(),
                                     Tree::Schemas, this->artifact_)};
     if (!resolution.path.has_value()) {
-      return sourcemeta::core::mcp_make_tool_error(request_id,
+      return sourcemeta::core::mcp_make_tool_error(version, request_id,
                                                    "Schema not found");
     }
     auto contents{this->artifact_read_json(resolution.path.value())};
     if (!contents.has_value()) {
-      return sourcemeta::core::mcp_make_tool_error(request_id,
+      return sourcemeta::core::mcp_make_tool_error(version, request_id,
                                                    "Schema not found");
     }
 

@@ -6,7 +6,6 @@
 
 #include <sourcemeta/one/authentication.h>
 #include <sourcemeta/one/configuration.h>
-#include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/resolver.h>
 #include <sourcemeta/one/search.h>
 #include <sourcemeta/one/shared.h>
@@ -14,6 +13,7 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/mcp.h>
+#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/core/semver.h>
 #include <sourcemeta/core/text.h>
 
@@ -396,15 +396,15 @@ struct GenerateExplorerSchemaMetadata {
                                       FIXED_INPUTS};
     // Read the schema to get data and bytes, mapping each input once
     sourcemeta::core::FileView schema_view{action.dependencies.front()};
-    const auto schema_parsed{sourcemeta::one::metapack_parse(schema_view)};
+    const auto schema_parsed{sourcemeta::core::metapack_parse(schema_view)};
     assert(schema_parsed.has_value());
     const auto schema_bytes{schema_parsed->header->content_bytes};
     sourcemeta::core::FileView bundle_view{action.dependencies.at(3)};
-    const auto bundle_parsed{sourcemeta::one::metapack_parse(bundle_view)};
+    const auto bundle_parsed{sourcemeta::core::metapack_parse(bundle_view)};
     assert(bundle_parsed.has_value());
     const auto bundle_bytes{bundle_parsed->header->content_bytes};
     const auto schema_data_option{
-        sourcemeta::one::metapack_read_json(schema_parsed.value())};
+        sourcemeta::core::metapack_read_json(schema_parsed.value())};
     assert(schema_data_option.has_value());
     const auto &schema_data{schema_data_option.value()};
     const sourcemeta::core::SchemaFrame frame{
@@ -445,7 +445,7 @@ struct GenerateExplorerSchemaMetadata {
           sourcemeta::one::official_dialect(resolver_entry.dialect)};
       assert(official.has_value());
       auto bundle_option{
-          sourcemeta::one::metapack_read_json(bundle_parsed.value())};
+          sourcemeta::core::metapack_read_json(bundle_parsed.value())};
       assert(bundle_option.has_value());
       const auto target{
           sourcemeta::one::dialect_conversions(official.value()).front()};
@@ -507,13 +507,13 @@ struct GenerateExplorerSchemaMetadata {
     }
 
     const auto health_option{
-        sourcemeta::one::metapack_read_json(action.dependencies.at(1))};
+        sourcemeta::core::metapack_read_json(action.dependencies.at(1))};
     assert(health_option.has_value());
     const auto &health{health_option.value()};
     result.assign("health", health.at("score"));
 
     const auto schema_dependencies_option{
-        sourcemeta::one::metapack_read_json(action.dependencies.at(2))};
+        sourcemeta::core::metapack_read_json(action.dependencies.at(2))};
     assert(schema_dependencies_option.has_value());
     const auto &schema_dependencies{schema_dependencies_option.value()};
     result.assign("dependencies",
@@ -574,9 +574,9 @@ struct GenerateExplorerSchemaMetadata {
         extension_title, extension_description,
         result.at("alert").is_string() ? result.at("alert").to_string() : "")};
 
-    sourcemeta::one::metapack_write_pretty_json(
+    sourcemeta::core::metapack_write_json_pretty(
         action.destination, result, "application/json",
-        sourcemeta::one::MetapackEncoding::GZIP,
+        sourcemeta::core::MetapackEncoding::GZIP,
         std::span<const std::uint8_t>{extension_bytes});
   }
 };
@@ -604,7 +604,7 @@ struct GenerateDependents {
       }
 
       const auto contents_option{
-          sourcemeta::one::metapack_read_json(dependency)};
+          sourcemeta::core::metapack_read_json(dependency)};
       assert(contents_option.has_value());
       const auto &contents{contents_option.value()};
       assert(contents.is_array());
@@ -674,9 +674,9 @@ struct GenerateDependents {
       result.push_back(std::move(object));
     }
 
-    sourcemeta::one::metapack_write_pretty_json(
+    sourcemeta::core::metapack_write_json_pretty(
         action.destination, result, "application/json",
-        sourcemeta::one::MetapackEncoding::GZIP, {});
+        sourcemeta::core::MetapackEncoding::GZIP, {});
   }
 };
 
@@ -691,7 +691,7 @@ struct GenerateExplorerSearchIndex {
 
     for (const auto &dependency : action.dependencies) {
       const auto directory_option{
-          sourcemeta::one::metapack_read_json(dependency)};
+          sourcemeta::core::metapack_read_json(dependency)};
       assert(directory_option.has_value());
       const auto &directory{directory_option.value()};
       assert(directory.is_object());
@@ -734,12 +734,12 @@ struct GenerateExplorerSearchIndex {
 
     const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
-    sourcemeta::one::metapack_write_bytes(
+    sourcemeta::core::metapack_write_bytes(
         action.destination, std::span<const std::uint8_t>{payload},
         "application/octet-stream",
         // The records are read straight off the mapping, so this one is
         // stored exactly as it reads
-        sourcemeta::one::MetapackEncoding::Identity, {});
+        sourcemeta::core::MetapackEncoding::Identity, {});
   }
 };
 
@@ -780,9 +780,9 @@ struct GenerateLogin {
 
     document.assign("providers", std::move(providers));
 
-    sourcemeta::one::metapack_write_pretty_json(
+    sourcemeta::core::metapack_write_json_pretty(
         action.destination, document, "application/json",
-        sourcemeta::one::MetapackEncoding::GZIP, {});
+        sourcemeta::core::MetapackEncoding::GZIP, {});
   }
 };
 
@@ -792,6 +792,11 @@ struct GenerateLogin {
 inline constexpr std::string_view MCP_RESOURCE_MIME_TYPE{
     "application/schema+json"};
 inline constexpr std::size_t MCP_RESOURCES_PAGE_SIZE{50};
+// The descriptors are written once and answered to every caller whatever
+// revision they settle on, so they are built at the oldest one this instance
+// serves, whose shape every later one still reads
+inline constexpr auto MCP_DESCRIPTOR_VERSION{
+    sourcemeta::core::MCPProtocolVersion::V_2025_03_26};
 
 struct GenerateMCP {
   static auto handler(const sourcemeta::one::BuildState &,
@@ -841,7 +846,7 @@ struct GenerateMCP {
 
     auto resource_templates{sourcemeta::core::JSON::make_array()};
     resource_templates.push_back(sourcemeta::core::mcp_make_resource_template(
-        template_uri, "JSON Schema",
+        MCP_DESCRIPTOR_VERSION, template_uri, "JSON Schema",
         "A JSON Schema in this catalog, addressable by its canonical "
         "absolute URI under this server's origin. This instance is "
         "sovereign over its own URL namespace. Schemas whose URIs lie "
@@ -942,7 +947,8 @@ struct GenerateMCP {
               std::string uri{configuration.origin};
               uri.append(entry.path);
               resources.push_back(sourcemeta::core::mcp_make_resource(
-                  uri, entry.title.empty() ? entry.path : entry.title,
+                  MCP_DESCRIPTOR_VERSION, uri,
+                  entry.title.empty() ? entry.path : entry.title,
                   MCP_RESOURCE_MIME_TYPE, entry.description,
                   static_cast<std::size_t>(entry.bytes_raw),
                   static_cast<double>(entry.priority) / 100.0));
@@ -994,9 +1000,9 @@ struct GenerateMCP {
                       std::move(protected_resource_metadata));
     }
 
-    sourcemeta::one::metapack_write_pretty_json(
+    sourcemeta::core::metapack_write_json_pretty(
         action.destination, document, "application/json",
-        sourcemeta::one::MetapackEncoding::GZIP, {});
+        sourcemeta::core::MetapackEncoding::GZIP, {});
   }
 };
 
@@ -1050,7 +1056,7 @@ struct GenerateExplorerDirectoryList {
 
     const auto old_listing{
         std::filesystem::exists(action.destination)
-            ? sourcemeta::one::metapack_read_json(action.destination)
+            ? sourcemeta::core::metapack_read_json(action.destination)
             : std::nullopt};
     std::unordered_map<std::string_view, const sourcemeta::core::JSON *>
         old_schema_entries;
@@ -1098,10 +1104,10 @@ struct GenerateExplorerDirectoryList {
 
         sourcemeta::core::FileView directory_view{dependency};
         const auto directory_parsed{
-            sourcemeta::one::metapack_parse(directory_view)};
+            sourcemeta::core::metapack_parse(directory_view)};
         const auto *directory_extension{
             directory_parsed.has_value()
-                ? sourcemeta::one::metapack_extension_as<
+                ? sourcemeta::core::metapack_extension_as<
                       MetapackDirectoryExtension>(directory_parsed->extension)
                 : nullptr};
 
@@ -1179,7 +1185,7 @@ struct GenerateExplorerDirectoryList {
           directory_version = parse_version_info(child_name);
 
           auto directory_json_option{
-              sourcemeta::one::metapack_read_json(dependency)};
+              sourcemeta::core::metapack_read_json(dependency)};
           assert(directory_json_option.has_value());
           auto directory_json{std::move(directory_json_option.value())};
           assert(directory_json.is_object());
@@ -1237,12 +1243,12 @@ struct GenerateExplorerDirectoryList {
 
         sourcemeta::core::FileView dependency_view{dependency};
         const auto dependency_parsed{
-            sourcemeta::one::metapack_parse(dependency_view)};
+            sourcemeta::core::metapack_parse(dependency_view)};
         if (!dependency_parsed.has_value()) {
           continue;
         }
 
-        const auto *extension{sourcemeta::one::metapack_extension_as<
+        const auto *extension{sourcemeta::core::metapack_extension_as<
             MetapackExplorerSchemaExtension>(dependency_parsed->extension)};
         if (extension == nullptr) {
           continue;
@@ -1388,9 +1394,9 @@ struct GenerateExplorerDirectoryList {
         meta.defines("github") ? meta.at("github").to_string() : "",
         meta.defines("website") ? meta.at("website").to_string() : "")};
 
-    sourcemeta::one::metapack_write_pretty_json(
+    sourcemeta::core::metapack_write_json_pretty(
         action.destination, meta, "application/json",
-        sourcemeta::one::MetapackEncoding::GZIP,
+        sourcemeta::core::MetapackEncoding::GZIP,
         std::span<const std::uint8_t>{directory_extension_bytes});
   }
 };

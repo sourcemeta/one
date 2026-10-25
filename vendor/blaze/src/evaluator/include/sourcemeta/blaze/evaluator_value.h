@@ -5,8 +5,6 @@
 #include <sourcemeta/core/jsonpointer.h>
 #include <sourcemeta/core/regex.h>
 
-#include <sourcemeta/blaze/evaluator_string_set.h>
-
 #include <cstdint>       // std::uint8_t
 #include <optional>      // std::optional
 #include <string>        // std::string
@@ -55,7 +53,7 @@ using ValueStrings = std::vector<ValueString>;
 
 /// @ingroup evaluator
 /// Represents a compiler step string set of values
-using ValueStringSet = StringSet;
+using ValueStringSet = sourcemeta::core::JSONPropertySet;
 
 /// @ingroup evaluator
 /// Represents a compiler step JSON types value as a bitmask
@@ -141,7 +139,8 @@ enum class ValueStringType : std::uint8_t {
   RelativeJSONPointer,
   UUID,
   Regex,
-  Color
+  Color,
+  Base64
 };
 
 /// @ingroup evaluator
@@ -191,13 +190,19 @@ using ValueObjectProperties = std::vector<
     std::tuple<ValueString, sourcemeta::core::JSON::Object::hash_type, bool>>;
 
 /// @ingroup evaluator
-using Value = std::variant<
-    ValueNone, ValueJSON, ValueSet, ValueString, ValueProperty, ValueStrings,
-    ValueStringSet, ValueTypes, ValueType, ValueRegex, ValueUnsignedInteger,
-    ValueRange, ValueBoolean, ValueNamedIndexes, ValueStringType,
-    ValueStringMap, ValuePropertyFilter, ValueIndexPair, ValuePointer,
-    ValueTypedProperties, ValueStringHashes, ValueTypedHashes,
-    ValueIntegerBounds, ValueIntegerBoundsWithSize, ValueObjectProperties>;
+/// Represents a compiler step number logical type
+enum class ValueNumberType : std::uint8_t { Float, Double };
+
+/// @ingroup evaluator
+using Value =
+    std::variant<ValueNone, ValueJSON, ValueSet, ValueString, ValueProperty,
+                 ValueStrings, ValueStringSet, ValueTypes, ValueType,
+                 ValueRegex, ValueUnsignedInteger, ValueRange, ValueBoolean,
+                 ValueNamedIndexes, ValueStringType, ValueStringMap,
+                 ValuePropertyFilter, ValueIndexPair, ValuePointer,
+                 ValueTypedProperties, ValueStringHashes, ValueTypedHashes,
+                 ValueIntegerBounds, ValueIntegerBoundsWithSize,
+                 ValueObjectProperties, ValueNumberType>;
 
 } // namespace sourcemeta::blaze
 

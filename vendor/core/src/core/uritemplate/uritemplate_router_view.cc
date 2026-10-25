@@ -195,9 +195,9 @@ inline auto walk_describe_fragment(const SerializedNode *nodes,
 
   while (true) {
     const char *segment_start = position;
-    while (position < fragment_end && *position != '/') {
-      ++position;
-    }
+    const auto *const separator = static_cast<const char *>(std::memchr(
+        position, '/', static_cast<std::size_t>(fragment_end - position)));
+    position = separator == nullptr ? fragment_end : separator;
     const auto segment_length =
         static_cast<std::uint32_t>(position - segment_start);
 
@@ -517,6 +517,11 @@ auto URITemplateRouterView::save(const URITemplateRouter &router,
                sizeof(entry.string_length));
   }
 
+  // Closing is what settles whether the data reached the file, as what the
+  // writes above hand over sits in a buffer until then, and a destination that
+  // cannot take it says so only once it is handed on. Reading the state of the
+  // file before that reports a save that wrote nothing as one that went through
+  file.close();
   if (!file) {
     throw URITemplateRouterSaveError{path,
                                      "Failed to write router data to file"};
@@ -610,9 +615,9 @@ auto URITemplateRouterView::match(
 
   while (true) {
     const char *segment_start = position;
-    while (position < path_end && *position != '/') {
-      ++position;
-    }
+    const auto *const separator = static_cast<const char *>(std::memchr(
+        position, '/', static_cast<std::size_t>(path_end - position)));
+    position = separator == nullptr ? path_end : separator;
     const auto segment_length =
         static_cast<std::uint32_t>(position - segment_start);
 
@@ -873,13 +878,11 @@ auto URITemplateRouterView::arguments(
       }
 
       switch (type_tag) {
-        case ARGUMENT_TYPE_STRING: {
-          const std::string_view string_value{
-              reinterpret_cast<const char *>(this->data_ + cursor),
-              value_length};
-          callback(name, string_value);
+        case ARGUMENT_TYPE_STRING:
+          callback(name, std::string_view{reinterpret_cast<const char *>(
+                                              this->data_ + cursor),
+                                          value_length});
           break;
-        }
 
         case ARGUMENT_TYPE_INTEGER: {
           if (value_length != 8) {

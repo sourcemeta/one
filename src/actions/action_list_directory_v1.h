@@ -5,11 +5,11 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
+#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/core/text.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
-#include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
 
 #include <filesystem>  // std::filesystem
@@ -98,12 +98,12 @@ public:
     const auto resolution{this->artifact_resolve_path(
         caller, path_arg, Tree::Explorer, "directory")};
     if (!resolution.path.has_value()) {
-      return sourcemeta::core::mcp_make_tool_error(request_id,
+      return sourcemeta::core::mcp_make_tool_error(version, request_id,
                                                    "Directory not found");
     }
     auto contents{this->artifact_read_json(resolution.path.value())};
     if (!contents.has_value()) {
-      return sourcemeta::core::mcp_make_tool_error(request_id,
+      return sourcemeta::core::mcp_make_tool_error(version, request_id,
                                                    "Directory not found");
     }
 
@@ -124,9 +124,8 @@ public:
           continue;
         }
         const auto &title{entry.at_or("title", EMPTY_STRING).to_string()};
-        content.push_back(sourcemeta::core::mcp_make_resource_link(
+        content.push_back(sourcemeta::one::mcp_schema_block(
             version, entry.at("identifier").to_string(),
-            "application/schema+json",
             title.empty() ? entry.at("path").to_string() : title,
             entry.at_or("description", EMPTY_STRING).to_string()));
       }

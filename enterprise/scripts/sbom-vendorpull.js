@@ -7,12 +7,12 @@ import { fileURLToPath } from "node:url";
 const LICENSES = {
   "core": "AGPL-3.0-or-later OR LicenseRef-Sourcemeta-Commercial",
   "blaze": "AGPL-3.0-or-later OR LicenseRef-Sourcemeta-Commercial",
-  "jsonbinpack": "AGPL-3.0-or-later OR LicenseRef-Sourcemeta-Commercial",
   "jsonschema": "AGPL-3.0-or-later OR LicenseRef-Sourcemeta-Commercial",
   "uwebsockets": "Apache-2.0",
   "bootstrap": "MIT",
   "bootstrap-icons": "MIT",
   "pcre2": "BSD-3-Clause WITH PCRE2-exception",
+  "sljit": "BSD-2-Clause",
   "unicodetools": "Unicode-3.0",
   "whatwg-html-build": "CC-BY-4.0 AND BSD-3-Clause",
   "mimalloc": "MIT"
@@ -45,6 +45,7 @@ const IGNORED = new Set([
   "jsonschema-draft0",
   "openapi",
   "openapi-test-suite-3-1",
+  "openapi-test-suite-3-2",
   "spdx",
   "iana-oauth/parameters.csv",
   "iana-oauth/extensions-error.csv",

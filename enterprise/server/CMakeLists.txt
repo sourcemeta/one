@@ -22,7 +22,7 @@ target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::cor
 target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::one::shared)
 target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::core::mcp)
 target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::core::text)
-target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::one::metapack)
+target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::core::metapack)
 target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::blaze::output)
 target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::core::jsonld)
 target_link_libraries(sourcemeta_one_enterprise_server INTERFACE sourcemeta::core::numeric)

@@ -4,7 +4,7 @@
 #include "../page.h"
 
 #include <sourcemeta/core/html.h>
-#include <sourcemeta/one/metapack.h>
+#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/one/shared.h>
 
 #include <cassert> // assert
@@ -37,7 +37,8 @@ auto GenerateWebIndex::handler(
     const sourcemeta::one::Configuration &configuration,
     const sourcemeta::core::JSON &) -> void {
 
-  const auto directory_option{metapack_read_json(action.dependencies.front())};
+  const auto directory_option{
+      sourcemeta::core::metapack_read_json(action.dependencies.front())};
   assert(directory_option.has_value());
   const auto &directory{directory_option.value()};
   const auto &canonical{directory.at("url").to_string()};
@@ -56,8 +57,9 @@ auto GenerateWebIndex::handler(
                     html::make_file_manager(body, directory);
                   });
 
-  metapack_write_text(action.destination, writer.str(),
-                      "text/html; charset=utf-8", MetapackEncoding::GZIP, {});
+  sourcemeta::core::metapack_write_text(
+      action.destination, writer.str(), "text/html; charset=utf-8",
+      sourcemeta::core::MetapackEncoding::GZIP, {});
 }
 
 } // namespace sourcemeta::one

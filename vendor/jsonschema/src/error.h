@@ -19,6 +19,7 @@
 #include <sourcemeta/core/yaml.h>
 
 #include <concepts>         // std::same_as, std::convertible_to
+#include <cstddef>          // std::size_t
 #include <cstdint>          // std::uint64_t
 #include <filesystem>       // std::filesystem
 #include <functional>       // std::function
@@ -56,6 +57,23 @@ private:
   std::uint64_t column_;
 };
 
+// Which document of a multi-document input an error came from. The libraries we
+// build on read one document at a time and have no notion of a dataset, so an
+// error that travels up from them is decorated here, where the enumeration
+// happens, rather than carrying the number itself
+template <typename T> class EntryError : public T {
+public:
+  EntryError(const std::size_t entry, T error)
+      : T{std::move(error)}, entry_{entry} {}
+
+  [[nodiscard]] auto entry() const noexcept -> std::size_t {
+    return this->entry_;
+  }
+
+private:
+  std::size_t entry_;
+};
+
 class SchemaIdentifierConflictError : public std::runtime_error {
 public:
   SchemaIdentifierConflictError(std::string identifier,
@@ -90,6 +108,81 @@ private:
   sourcemeta::core::Pointer location_;
   std::filesystem::path other_path_;
   sourcemeta::core::Pointer other_;
+};
+
+// An identifier that an imported schema merely embeds is reachable from within
+// that schema and from nowhere else, so naming it from the outside finds
+// nothing even though the file holding it was imported. Saying that outright
+// beats the generic diagnostic, which would advise importing what is already
+// imported
+class SchemaEmbeddedResourceError : public std::runtime_error {
+public:
+  SchemaEmbeddedResourceError(std::string identifier,
+                              sourcemeta::core::Pointer location)
+      : std::runtime_error{"This identifier is embedded in an imported schema, "
+                           "so only that schema can reach it"},
+        identifier_{std::move(identifier)}, location_{std::move(location)} {}
+
+  [[nodiscard]] auto identifier() const noexcept -> const std::string & {
+    return this->identifier_;
+  }
+
+  [[nodiscard]] auto location() const noexcept
+      -> const sourcemeta::core::Pointer & {
+    return this->location_;
+  }
+
+private:
+  std::string identifier_;
+  sourcemeta::core::Pointer location_;
+};
+
+// The counterpart for a description, whose Schema Objects declare their
+// identifiers within it in just the same way
+class OpenAPIEmbeddedResourceError : public std::runtime_error {
+public:
+  OpenAPIEmbeddedResourceError(std::string identifier,
+                               sourcemeta::core::Pointer location)
+      : std::runtime_error{"This identifier is declared by a Schema Object of "
+                           "an imported OpenAPI description, so only that "
+                           "description can reach it"},
+        identifier_{std::move(identifier)}, location_{std::move(location)} {}
+
+  [[nodiscard]] auto identifier() const noexcept -> const std::string & {
+    return this->identifier_;
+  }
+
+  [[nodiscard]] auto location() const noexcept
+      -> const sourcemeta::core::Pointer & {
+    return this->location_;
+  }
+
+private:
+  std::string identifier_;
+  sourcemeta::core::Pointer location_;
+};
+
+class OpenAPIIdentifierConflictError : public std::runtime_error {
+public:
+  OpenAPIIdentifierConflictError(std::string identifier,
+                                 std::filesystem::path other_path)
+      : std::runtime_error{"Conflicting OpenAPI descriptions for the same "
+                           "identifier"},
+        identifier_{std::move(identifier)}, other_path_{std::move(other_path)} {
+  }
+
+  [[nodiscard]] auto identifier() const noexcept -> const std::string & {
+    return this->identifier_;
+  }
+
+  [[nodiscard]] auto other_path() const noexcept
+      -> const std::filesystem::path & {
+    return this->other_path_;
+  }
+
+private:
+  std::string identifier_;
+  std::filesystem::path other_path_;
 };
 
 class PositionalArgumentError : public std::runtime_error {
@@ -141,6 +234,63 @@ private:
   std::string value_;
 };
 
+// A target names the schema under test by URI, and a fragment is part of that
+// URI, so a Schema Object under a templated path is named percent-encoded
+class InvalidTestTargetError : public std::runtime_error {
+public:
+  InvalidTestTargetError(std::string value)
+      : std::runtime_error{"The test document `target` property is not a valid "
+                           "URI"},
+        value_{std::move(value)} {}
+
+  [[nodiscard]] auto value() const noexcept -> const std::string & {
+    return this->value_;
+  }
+
+  // Braces are what a path template spells and are legal nowhere in a URI, so
+  // one that carries them is the case worth guiding the user through. Saying
+  // nothing beats guessing wrong for every other way of not being a URI
+  [[nodiscard]] auto templated() const noexcept -> bool {
+    return this->value_.find('{') != std::string::npos ||
+           this->value_.find('}') != std::string::npos;
+  }
+
+private:
+  std::string value_;
+};
+
+// The document that holds what a target names was read, so what went wrong is
+// that nothing within it answers to the target rather than anything about
+// reaching the document itself
+class TestTargetNotSchemaError : public std::runtime_error {
+public:
+  TestTargetNotSchemaError(const char *message, std::string identifier,
+                           const bool description, const bool names_document)
+      : std::runtime_error{message}, identifier_{std::move(identifier)},
+        description_{description}, names_document_{names_document} {}
+
+  [[nodiscard]] auto identifier() const noexcept -> const std::string & {
+    return this->identifier_;
+  }
+
+  // Whether an OpenAPI description is what holds the place the target names,
+  // which is what decides how the user is pointed at a schema within it
+  [[nodiscard]] auto description() const noexcept -> bool {
+    return this->description_;
+  }
+
+  // Whether the target settled for the document itself rather than for a place
+  // within it, which is the one case where there is no place to go looking at
+  [[nodiscard]] auto names_document() const noexcept -> bool {
+    return this->names_document_;
+  }
+
+private:
+  std::string identifier_;
+  bool description_;
+  bool names_document_;
+};
+
 class NotSchemaError : public std::runtime_error {
 public:
   NotSchemaError(std::filesystem::path path)
@@ -157,9 +307,10 @@ private:
   std::filesystem::path path_;
 };
 
-class YAMLInputError : public std::runtime_error {
+class MultiDocumentInputError : public std::runtime_error {
 public:
-  YAMLInputError(const std::string &message, std::filesystem::path path)
+  MultiDocumentInputError(const std::string &message,
+                          std::filesystem::path path)
       : std::runtime_error{message}, path_{std::move(path)} {}
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
@@ -170,11 +321,101 @@ private:
   std::filesystem::path path_;
 };
 
-class UnsupportedOpenAPIFormatError : public std::runtime_error {
+class UnsupportedOpenAPIWithoutIdError : public std::runtime_error {
 public:
-  UnsupportedOpenAPIFormatError()
-      : std::runtime_error{
-            "The --format option is not supported for OpenAPI descriptions"} {}
+  UnsupportedOpenAPIWithoutIdError()
+      : std::runtime_error{"The --without-id option is not supported for "
+                           "OpenAPI descriptions"} {}
+};
+
+// What a description holds are Schema Objects rather than one schema with
+// subschemas, so an entry point that reaches neither is told apart in those
+// terms rather than in the ones a plain schema would be
+class OpenAPIEntryPointError : public std::runtime_error {
+public:
+  OpenAPIEntryPointError(std::string identifier)
+      : std::runtime_error{"The given entry point URI does not name a Schema "
+                           "Object of the OpenAPI description"},
+        identifier_{std::move(identifier)} {}
+
+  [[nodiscard]] auto identifier() const noexcept -> const std::string & {
+    return this->identifier_;
+  }
+
+private:
+  std::string identifier_;
+};
+
+// Upgrading a description means moving every Schema Object it holds and the
+// revision it declares, which is a larger piece of work than upgrading a
+// schema, so it is turned down outright rather than half done
+class UnsupportedOpenAPIUpgradeError : public std::runtime_error {
+public:
+  UnsupportedOpenAPIUpgradeError()
+      : std::runtime_error{"Upgrading OpenAPI descriptions is not supported "
+                           "yet"} {}
+};
+
+// Generating code for a description means a type for every Schema Object it
+// holds, and a way to name each one, which is a larger piece of work than
+// generating for a schema, so it is turned down outright rather than half done
+class UnsupportedOpenAPICodegenError : public std::runtime_error {
+public:
+  UnsupportedOpenAPICodegenError()
+      : std::runtime_error{"Generating code for OpenAPI descriptions is not "
+                           "supported yet"} {}
+};
+
+// What a provider takes is a single schema, and a description holds many and
+// none of itself, so which one to send is the caller's to say. Nothing names
+// one yet, as naming a Schema Object within a description and getting a schema
+// that stands on its own is not something we can do, so this is turned down
+// outright rather than half done
+class UnsupportedOpenAPILLMError : public std::runtime_error {
+public:
+  UnsupportedOpenAPILLMError()
+      : std::runtime_error{"Sending OpenAPI descriptions to a model is not "
+                           "supported yet"} {}
+};
+
+// A boolean schema answers the same way whatever it is handed: `false` can
+// never be satisfied and `true` constrains nothing. Either way what a model
+// returns would be judged without reference to it, so there is no conformance
+// to find out about, which is the whole of what this command is for
+class BooleanSchemaLLMError : public std::runtime_error {
+public:
+  BooleanSchemaLLMError()
+      : std::runtime_error{"A boolean schema cannot be sent to a model"} {}
+};
+
+class UnsupportedOpenAPIVersionError : public std::runtime_error {
+public:
+  UnsupportedOpenAPIVersionError(std::string value)
+      : std::runtime_error{"This OpenAPI Specification revision is not "
+                           "supported"},
+        value_{std::move(value)} {}
+
+  [[nodiscard]] auto value() const noexcept -> const std::string & {
+    return this->value_;
+  }
+
+private:
+  std::string value_;
+};
+
+// An option this command cannot proceed without. What to pass is not always
+// obvious from the name, so one that would have worked travels along
+class MissingOptionError : public std::runtime_error {
+public:
+  MissingOptionError(const std::string &message, std::string example)
+      : std::runtime_error{message}, example_{std::move(example)} {}
+
+  [[nodiscard]] auto example() const noexcept -> const std::string & {
+    return this->example_;
+  }
+
+private:
+  std::string example_;
 };
 
 class OptionConflictError : public std::runtime_error {
@@ -198,6 +439,51 @@ class InvalidJobsError : public std::runtime_error {
 public:
   InvalidJobsError()
       : std::runtime_error{"The --jobs option must be a positive integer"} {}
+};
+
+class InvalidIndentationError : public std::runtime_error {
+public:
+  InvalidIndentationError()
+      : std::runtime_error{
+            "The --indentation option must be a non-negative integer"} {}
+};
+
+class InvalidTimeoutError : public std::runtime_error {
+public:
+  InvalidTimeoutError()
+      : std::runtime_error{"The --timeout option must be a positive integer "
+                           "number of seconds"} {}
+};
+
+// A parameter that is not shaped like one at all, so what it was meant to say
+// cannot be read out of it. This is the only case where showing what one looks
+// like helps, as the rest are well formed and refused on their merits
+class MalformedParameterError : public std::runtime_error {
+public:
+  MalformedParameterError(const std::string &message, std::string value)
+      : std::runtime_error{message}, value_{std::move(value)} {}
+
+  [[nodiscard]] auto value() const noexcept -> const std::string & {
+    return this->value_;
+  }
+
+private:
+  std::string value_;
+};
+
+// A parameter that reads as one but cannot be carried out, either because of
+// what sits along the way to where it writes or because of what it would write
+class InvalidParameterError : public std::runtime_error {
+public:
+  InvalidParameterError(const std::string &message, std::string value)
+      : std::runtime_error{message}, value_{std::move(value)} {}
+
+  [[nodiscard]] auto value() const noexcept -> const std::string & {
+    return this->value_;
+  }
+
+private:
+  std::string value_;
 };
 
 class InvalidLintRuleError : public std::runtime_error {
@@ -377,6 +663,41 @@ private:
   std::string dialect_;
 };
 
+// What a provider supports is a subset that differs between them and moves
+// over time, so there is little to say about it with confidence. A meta-schema
+// of one's own is the exception: nothing published suggests any of them reads a
+// dialect declaration, so a schema written against one is very unlikely to be
+// understood as written
+class CustomMetaschemaLLMError : public std::runtime_error {
+public:
+  CustomMetaschemaLLMError(std::filesystem::path path,
+                           sourcemeta::core::Pointer location,
+                           std::string dialect)
+      : std::
+            runtime_error{"Schemas that declare a custom meta-schema cannot be "
+                          "sent to a model"},
+        path_{std::move(path)}, location_{std::move(location)},
+        dialect_{std::move(dialect)} {}
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto location() const noexcept
+      -> const sourcemeta::core::Pointer & {
+    return this->location_;
+  }
+
+  [[nodiscard]] auto uri() const noexcept -> const std::string & {
+    return this->dialect_;
+  }
+
+private:
+  std::filesystem::path path_;
+  sourcemeta::core::Pointer location_;
+  std::string dialect_;
+};
+
 class RdfResolutionError : public std::runtime_error {
 public:
   RdfResolutionError(const std::string &message, std::string facet,
@@ -426,6 +747,27 @@ private:
   std::optional<std::string> conflicting_schema_location_;
   std::optional<std::string> inert_override_location_;
   std::filesystem::path path_;
+};
+
+class UnsupportedDialectCodegenError : public std::runtime_error {
+public:
+  UnsupportedDialectCodegenError(std::filesystem::path path,
+                                 std::string dialect)
+      : std::runtime_error{"This command requires the schema to declare JSON "
+                           "Schema 2020-12"},
+        path_{std::move(path)}, dialect_{std::move(dialect)} {}
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto identifier() const noexcept -> const std::string & {
+    return this->dialect_;
+  }
+
+private:
+  std::filesystem::path path_;
+  std::string dialect_;
 };
 
 class UnsupportedDialectRdfError : public std::runtime_error {
@@ -741,6 +1083,18 @@ inline auto print_exception(const bool is_json, const Exception &exception)
 
   if constexpr (requires(const Exception &current) {
                   {
+                    current.dialect()
+                  } -> std::convertible_to<std::string_view>;
+                }) {
+    if (is_json) {
+      error_json.assign("dialect", sourcemeta::core::JSON{exception.dialect()});
+    } else {
+      std::cerr << "  at dialect " << exception.dialect() << "\n";
+    }
+  }
+
+  if constexpr (requires(const Exception &current) {
+                  {
                     current.resolve_path()
                   } -> std::convertible_to<std::filesystem::path>;
                 }) {
@@ -888,6 +1242,16 @@ inline auto print_exception(const bool is_json, const Exception &exception)
     }
   }
 
+  if constexpr (requires(const Exception &current) {
+                  { current.entry() } -> std::convertible_to<std::size_t>;
+                }) {
+    if (is_json) {
+      error_json.assign("entry", sourcemeta::core::JSON{exception.entry()});
+    } else {
+      std::cerr << "  at entry #" << exception.entry() << "\n";
+    }
+  }
+
   if constexpr (requires(const Exception &current) { current.location(); }) {
     if (is_json) {
       error_json.assign("location",
@@ -987,6 +1351,20 @@ inline auto print_exception(const bool is_json, const Exception &exception)
                         sourcemeta::core::JSON{std::string{exception.url()}});
     } else {
       std::cerr << "  at url " << exception.url() << "\n";
+    }
+  }
+
+  // An OpenAPI error names which document of a description is at fault, which
+  // is not always the one the command was handed, and it spells that as a URI
+  // rather than holding one
+  if constexpr (requires(const Exception &current) {
+                  { current.base() } -> std::convertible_to<std::string_view>;
+                }) {
+    if (is_json) {
+      error_json.assign("baseURI",
+                        sourcemeta::core::JSON{std::string{exception.base()}});
+    } else {
+      std::cerr << "  at base uri " << exception.base() << "\n";
     }
   }
 
@@ -1097,6 +1475,78 @@ inline auto print_exception(const bool is_json, const Exception &exception)
   }
 }
 
+// A resolution error reaches us plain, positioned, entry-tagged, or both, and
+// every one of those needs a handler of its own for the decorated accessors to
+// take part in the output
+template <typename Error>
+inline auto print_rdf_resolution_error(const bool is_json, const Error &error)
+    -> int {
+  print_exception(is_json, error);
+  if (!is_json && error.inert_override_location().has_value()) {
+    std::cerr << "\nThe x-jsonld-override mark was ignored because it does "
+                 "not enclose the\n";
+    std::cerr << "conflicting annotation. Move the conflicting annotation, "
+                 "or the reference\n";
+    std::cerr << "that brings it in, inside the overriding object for the "
+                 "override to\n";
+    std::cerr << "take effect\n";
+  }
+
+  return EXIT_SCHEMA_INPUT_ERROR;
+}
+
+// What an invalid regular expression tells the user to do next, which is the
+// same whether or not we could point at where in the file it happened
+inline auto print_invalid_regex_guidance() -> void {
+  std::cerr << "\nRegular expressions in JSON Schema are expected to follow "
+               "ECMA-262,\nexcluding the Annex B extensions that only web "
+               "browsers implement\n"
+               "Try tools like https://regex101.com to debug further\n";
+}
+
+// The same, for a reference that lands on something that is no schema
+inline auto
+print_reference_target_guidance(const sourcemeta::core::Pointer &location)
+    -> void {
+  std::cerr << "\n";
+
+  if (!location.empty() && location.back().is_property() &&
+      location.back().to_property() == "$defs") {
+    std::cerr << "Maybe you meant to use `definitions` instead of `$defs` "
+                 "in this dialect?\n";
+  } else {
+    std::cerr << "Are you sure the reported location is a valid JSON "
+                 "Schema keyword in this dialect?\n";
+  }
+}
+
+// The same, for a schema whose dialect a provider is unlikely to have heard of
+inline auto print_custom_metaschema_llm_guidance() -> void {
+  std::cerr << "\n";
+  std::cerr << "What a provider supports differs between them and changes over "
+               "time, but a\n";
+  std::cerr << "meta-schema of your own is very unlikely to be part of any of "
+               "it. Rewrite the\n";
+  std::cerr << "schema against an official dialect and send that instead\n";
+}
+
+// What an auto-fix failure tells the user to do next, which is the same
+// whether or not we could point at where in the file it happened
+inline auto print_lint_autofix_guidance() -> void {
+  std::cerr << "\n";
+  std::cerr << "This is an unexpected error, as making the auto-fix "
+               "functionality work in all\n";
+  std::cerr << "cases is tricky. We are working hard to improve the "
+               "auto-fixing functionality\n";
+  std::cerr << "to handle all possible edge cases, but for now, try again "
+               "without `--fix/-f`\n";
+  std::cerr << "and apply the suggestions by hand.\n\n";
+  std::cerr << "Also consider consider reporting this problematic case to "
+               "the issue tracker,\n";
+  std::cerr << "so we can add it to the test suite and fix it:\n\n";
+  std::cerr << "https://github.com/sourcemeta/jsonschema/issues\n";
+}
+
 inline auto try_catch(const sourcemeta::core::Options &options,
                       const std::function<int()> &callback) noexcept -> int {
   try {
@@ -1137,14 +1587,62 @@ inline auto try_catch(const sourcemeta::core::Options &options,
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     return EXIT_SCHEMA_INPUT_ERROR;
-  } catch (const YAMLInputError &error) {
+  } catch (const MultiDocumentInputError &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     return EXIT_NOT_SUPPORTED;
   } catch (
-      const sourcemeta::core::FileError<UnsupportedOpenAPIFormatError> &error) {
+      const PositionError<
+          sourcemeta::core::FileError<UnsupportedOpenAPIVersionError>> &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
+    return EXIT_NOT_SUPPORTED;
+  } catch (const sourcemeta::core::FileError<UnsupportedOpenAPIVersionError>
+               &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_NOT_SUPPORTED;
+  } catch (const sourcemeta::core::FileError<UnsupportedOpenAPIUpgradeError>
+               &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_NOT_SUPPORTED;
+  } catch (const sourcemeta::core::FileError<UnsupportedOpenAPICodegenError>
+               &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_NOT_SUPPORTED;
+  } catch (const sourcemeta::core::FileError<BooleanSchemaLLMError> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (
+      const sourcemeta::core::FileError<UnsupportedOpenAPILLMError> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    if (!is_json) {
+      std::cerr << "\nA description holds many schemas and none of itself, and "
+                   "what a model\n";
+      std::cerr << "takes is one schema that stands on its own. Extract the "
+                   "Schema Object you\n";
+      std::cerr << "mean into a file of its own and pass that instead\n";
+    }
+
+    return EXIT_NOT_SUPPORTED;
+  } catch (const sourcemeta::core::FileError<UnsupportedOpenAPIWithoutIdError>
+               &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_NOT_SUPPORTED;
+  } catch (const UnsupportedDialectCodegenError &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    if (!is_json) {
+      std::cerr << "\nCode generation is only implemented for the 2020-12 "
+                   "dialect. Consider\n";
+      std::cerr << "running the `upgrade` command to move your schema to it\n";
+    }
+
     return EXIT_NOT_SUPPORTED;
   } catch (const PositionError<UnsupportedDialectUpgradeError> &error) {
     const auto is_json{options.contains("json")};
@@ -1154,34 +1652,14 @@ inline auto try_catch(const sourcemeta::core::Options &options,
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     return EXIT_NOT_SUPPORTED;
+  } catch (const EntryError<PositionError<RdfResolutionError>> &error) {
+    return print_rdf_resolution_error(options.contains("json"), error);
   } catch (const PositionError<RdfResolutionError> &error) {
-    const auto is_json{options.contains("json")};
-    print_exception(is_json, error);
-    if (!is_json && error.inert_override_location().has_value()) {
-      std::cerr << "\nThe x-jsonld-override mark was ignored because it does "
-                   "not enclose the\n";
-      std::cerr << "conflicting annotation. Move the conflicting annotation, "
-                   "or the reference\n";
-      std::cerr << "that brings it in, inside the overriding object for the "
-                   "override to\n";
-      std::cerr << "take effect\n";
-    }
-
-    return EXIT_SCHEMA_INPUT_ERROR;
+    return print_rdf_resolution_error(options.contains("json"), error);
+  } catch (const EntryError<RdfResolutionError> &error) {
+    return print_rdf_resolution_error(options.contains("json"), error);
   } catch (const RdfResolutionError &error) {
-    const auto is_json{options.contains("json")};
-    print_exception(is_json, error);
-    if (!is_json && error.inert_override_location().has_value()) {
-      std::cerr << "\nThe x-jsonld-override mark was ignored because it does "
-                   "not enclose the\n";
-      std::cerr << "conflicting annotation. Move the conflicting annotation, "
-                   "or the reference\n";
-      std::cerr << "that brings it in, inside the overriding object for the "
-                   "override to\n";
-      std::cerr << "take effect\n";
-    }
-
-    return EXIT_SCHEMA_INPUT_ERROR;
+    return print_rdf_resolution_error(options.contains("json"), error);
   } catch (const UnsupportedDialectRdfError &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
@@ -1221,22 +1699,19 @@ inline auto try_catch(const sourcemeta::core::Options &options,
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     return EXIT_INVALID_CLI_ARGUMENTS;
+  } catch (const PositionError<LintAutoFixError> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    if (!is_json) {
+      print_lint_autofix_guidance();
+    }
+
+    return EXIT_UNEXPECTED_ERROR;
   } catch (const LintAutoFixError &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     if (!is_json) {
-      std::cerr << "\n";
-      std::cerr << "This is an unexpected error, as making the auto-fix "
-                   "functionality work in all\n";
-      std::cerr << "cases is tricky. We are working hard to improve the "
-                   "auto-fixing functionality\n";
-      std::cerr << "to handle all possible edge cases, but for now, try again "
-                   "without `--fix/-f`\n";
-      std::cerr << "and apply the suggestions by hand.\n\n";
-      std::cerr << "Also consider consider reporting this problematic case to "
-                   "the issue tracker,\n";
-      std::cerr << "so we can add it to the test suite and fix it:\n\n";
-      std::cerr << "https://github.com/sourcemeta/jsonschema/issues\n";
+      print_lint_autofix_guidance();
     }
 
     return EXIT_UNEXPECTED_ERROR;
@@ -1342,6 +1817,47 @@ inline auto try_catch(const sourcemeta::core::Options &options,
     }
 
     return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const PositionError<CustomMetaschemaLLMError> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    if (!is_json) {
+      print_custom_metaschema_llm_guidance();
+    }
+
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const CustomMetaschemaLLMError &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    if (!is_json) {
+      print_custom_metaschema_llm_guidance();
+    }
+
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const sourcemeta::core::FileError<InvalidTestTargetError> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    if (!is_json && error.templated()) {
+      std::cerr << "\nA path template is spelled with percent-encoded braces, "
+                   "as in `%7BpetId%7D`\n";
+    }
+
+    return EXIT_OTHER_INPUT_ERROR;
+  } catch (const sourcemeta::core::FileError<TestTargetNotSchemaError> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    if (!is_json) {
+      if (error.names_document() && error.description()) {
+        std::cerr << "\nAn OpenAPI description holds many schemas and none of "
+                     "itself, so name\n";
+        std::cerr << "a Schema Object within it, as in "
+                     "`#/components/schemas/MySchema`\n";
+      } else {
+        std::cerr
+            << "\nUse the `inspect` command to find valid schema locations\n";
+      }
+    }
+
+    return EXIT_SCHEMA_INPUT_ERROR;
   } catch (const sourcemeta::core::FileError<sourcemeta::blaze::TestParseError>
                &error) {
     const auto is_json{options.contains("json")};
@@ -1354,21 +1870,31 @@ inline auto try_catch(const sourcemeta::core::Options &options,
     }
 
     return EXIT_OTHER_INPUT_ERROR;
+  } catch (
+      const PositionError<sourcemeta::core::FileError<
+          sourcemeta::blaze::CompilerReferenceTargetNotSchemaError>> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    if (!is_json) {
+      print_reference_target_guidance(error.location());
+    }
+
+    return EXIT_SCHEMA_INPUT_ERROR;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::blaze::CompilerReferenceTargetNotSchemaError> &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     if (!is_json) {
-      std::cerr << "\n";
+      print_reference_target_guidance(error.location());
+    }
 
-      if (!error.location().empty() && error.location().back().is_property() &&
-          error.location().back().to_property() == "$defs") {
-        std::cerr << "Maybe you meant to use `definitions` instead of `$defs` "
-                     "in this dialect?\n";
-      } else {
-        std::cerr << "Are you sure the reported location is a valid JSON "
-                     "Schema keyword in this dialect?\n";
-      }
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const sourcemeta::core::FileError<OpenAPIEntryPointError> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    if (!is_json) {
+      std::cerr
+          << "\nUse the `inspect` command to find valid schema locations\n";
     }
 
     return EXIT_SCHEMA_INPUT_ERROR;
@@ -1382,16 +1908,21 @@ inline auto try_catch(const sourcemeta::core::Options &options,
     }
 
     return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const PositionError<sourcemeta::core::FileError<
+               sourcemeta::blaze::CompilerInvalidRegexError>> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    if (!is_json) {
+      print_invalid_regex_guidance();
+    }
+
+    return EXIT_SCHEMA_INPUT_ERROR;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::blaze::CompilerInvalidRegexError> &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     if (!is_json) {
-      std::cerr
-          << "\nRegular expressions in JSON Schema are expected to follow "
-             "ECMA-262,\nexcluding the Annex B extensions that only web "
-             "browsers implement\n"
-             "Try tools like https://regex101.com to debug further\n";
+      print_invalid_regex_guidance();
     }
 
     return EXIT_SCHEMA_INPUT_ERROR;
@@ -1415,6 +1946,11 @@ inline auto try_catch(const sourcemeta::core::Options &options,
     }
 
     return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const PositionError<sourcemeta::core::FileError<
+               sourcemeta::core::SchemaReferenceError>> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_SCHEMA_INPUT_ERROR;
   } catch (
       const sourcemeta::core::FileError<sourcemeta::core::SchemaReferenceError>
           &error) {
@@ -1435,6 +1971,11 @@ inline auto try_catch(const sourcemeta::core::Options &options,
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     return EXIT_OTHER_INPUT_ERROR;
+  } catch (const EntryError<
+           sourcemeta::core::FileError<sourcemeta::core::JSONLDError>> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_OTHER_INPUT_ERROR;
   } catch (
       const sourcemeta::core::FileError<sourcemeta::core::JSONLDError> &error) {
     const auto is_json{options.contains("json")};
@@ -1445,6 +1986,36 @@ inline auto try_catch(const sourcemeta::core::Options &options,
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const PositionError<
+           sourcemeta::core::FileError<SchemaEmbeddedResourceError>> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (
+      const sourcemeta::core::FileError<SchemaEmbeddedResourceError> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const PositionError<
+           sourcemeta::core::FileError<OpenAPIEmbeddedResourceError>> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    if (!is_json) {
+      std::cerr << "\nName a Schema Object of the description instead, as in "
+                   "`#/components/schemas/MySchema`\n";
+    }
+
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (
+      const sourcemeta::core::FileError<OpenAPIEmbeddedResourceError> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    if (!is_json) {
+      std::cerr << "\nName a Schema Object of the description instead, as in "
+                   "`#/components/schemas/MySchema`\n";
+    }
+
+    return EXIT_SCHEMA_INPUT_ERROR;
   } catch (
       const sourcemeta::core::FileError<sourcemeta::core::SchemaResolutionError>
           &error) {
@@ -1452,7 +2023,8 @@ inline auto try_catch(const sourcemeta::core::Options &options,
     print_exception(is_json, error);
     if (!is_json) {
       if (error.identifier().starts_with("file://")) {
-        std::cerr << "\nThis is likely because the file does not exist\n";
+        std::cerr << "\nThis is likely because the file does not exist, or "
+                     "does not hold a JSON Schema\n";
       } else {
         std::cerr
             << "\nThis is likely because you forgot to import such schema "
@@ -1512,6 +2084,11 @@ inline auto try_catch(const sourcemeta::core::Options &options,
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const sourcemeta::core::FileError<OpenAPIIdentifierConflictError>
+               &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_SCHEMA_INPUT_ERROR;
   } catch (const PositionError<sourcemeta::core::FileError<
                sourcemeta::core::SchemaAnchorCollisionError>> &error) {
     const auto is_json{options.contains("json")};
@@ -1519,6 +2096,16 @@ inline auto try_catch(const sourcemeta::core::Options &options,
     return EXIT_SCHEMA_INPUT_ERROR;
   } catch (const sourcemeta::core::FileError<
            sourcemeta::core::SchemaAnchorCollisionError> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const PositionError<sourcemeta::core::FileError<
+               sourcemeta::core::SchemaDialectImpossibleError>> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const sourcemeta::core::FileError<
+           sourcemeta::core::SchemaDialectImpossibleError> &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     return EXIT_SCHEMA_INPUT_ERROR;
@@ -1530,6 +2117,27 @@ inline auto try_catch(const sourcemeta::core::Options &options,
     return EXIT_SCHEMA_INPUT_ERROR;
   } catch (const sourcemeta::core::FileError<sourcemeta::core::OpenAPIError>
                &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const PositionError<sourcemeta::core::FileError<
+               sourcemeta::core::OpenAPIResolutionError>> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const sourcemeta::core::FileError<
+           sourcemeta::core::OpenAPIResolutionError> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (const PositionError<sourcemeta::core::FileError<
+               sourcemeta::core::OpenAPIReferenceError>> &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_SCHEMA_INPUT_ERROR;
+  } catch (
+      const sourcemeta::core::FileError<sourcemeta::core::OpenAPIReferenceError>
+          &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     return EXIT_SCHEMA_INPUT_ERROR;
@@ -1592,6 +2200,14 @@ inline auto try_catch(const sourcemeta::core::Options &options,
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
     return EXIT_INVALID_CLI_ARGUMENTS;
+  } catch (const MissingOptionError &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    if (!is_json) {
+      std::cerr << "\nFor example: " << error.example() << "\n";
+    }
+
+    return EXIT_INVALID_CLI_ARGUMENTS;
   } catch (const OptionConflictError &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
@@ -1599,6 +2215,32 @@ inline auto try_catch(const sourcemeta::core::Options &options,
   } catch (const InvalidJobsError &error) {
     const auto is_json{options.contains("json")};
     print_exception(is_json, error);
+    return EXIT_INVALID_CLI_ARGUMENTS;
+  } catch (const InvalidIndentationError &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_INVALID_CLI_ARGUMENTS;
+  } catch (const InvalidTimeoutError &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    return EXIT_INVALID_CLI_ARGUMENTS;
+  } catch (const MalformedParameterError &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    if (!is_json) {
+      std::cerr << "\nFor example: --param /max_tokens=2048\n";
+    }
+
+    return EXIT_INVALID_CLI_ARGUMENTS;
+  } catch (const InvalidParameterError &error) {
+    const auto is_json{options.contains("json")};
+    print_exception(is_json, error);
+    if (!is_json) {
+      std::cerr << "\nRun this command without this parameter and with "
+                   "--dry-run/-D to see what\n";
+      std::cerr << "the request body looks like\n";
+    }
+
     return EXIT_INVALID_CLI_ARGUMENTS;
   } catch (const InvalidOptionEnumerationValueError &error) {
     const auto is_json{options.contains("json")};

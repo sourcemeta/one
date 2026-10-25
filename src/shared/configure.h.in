@@ -5,6 +5,7 @@
 
 namespace sourcemeta::one {
 constexpr std::string_view PROJECT_VERSION{"@ONE_VERSION@"};
+constexpr std::string_view PROJECT_BUILD_IDENTITY{"@ONE_BUILD_IDENTITY@"};
 }
 
 #endif

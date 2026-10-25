@@ -19,22 +19,7 @@ constexpr auto OPENAPI_HASH_DISCRIMINATOR{
 constexpr auto OPENAPI_HASH_MAPPING{JSON::Object::hash("mapping"sv)};
 constexpr auto OPENAPI_HASH_DEFAULT_MAPPING{
     JSON::Object::hash("defaultMapping"sv)};
-
-/// Where a Discriminator Object names a schema, by the name of a component or
-/// by URI. OpenAPI Specification 3.1.1, Section 4.3 lists the URI form of a
-/// `mapping` among the fields that connect the documents of a description, and
-/// Section 4.3.3 lists the name form among the connections it makes by name,
-/// so either way one of these is a place the description reaches for
-struct OpenAPIDiscriminator {
-  /// Where the mapping value sits, as a pointer from the root of the document
-  Pointer origin;
-  /// Where it points, resolved and canonicalised
-  JSON::String destination;
-  /// What it resolved against, which is the nearest identifier an enclosing
-  /// schema declares for the URI form, and the description itself for the
-  /// name form
-  JSON::String scope;
-};
+constexpr auto OPENAPI_HASH_PROPERTY_NAME{JSON::Object::hash("propertyName"sv)};
 
 // OpenAPI Specification 3.1.1, Section 4.8.25: a `mapping` entry "maps a
 // specific property value to either a different schema component name, or to a
@@ -129,7 +114,7 @@ openapi_discriminators(const JSON &document, const SchemaFrame &schemas,
 
     const auto *discriminator{
         schema->try_at("discriminator", OPENAPI_HASH_DISCRIMINATOR)};
-    if (discriminator == nullptr || !discriminator->is_object()) {
+    if (discriminator == nullptr) {
       return;
     }
 
@@ -153,9 +138,44 @@ openapi_discriminators(const JSON &document, const SchemaFrame &schemas,
     const JSON::String scope{location.base};
     origin.push_back(JSON::String{"discriminator"});
 
+    // Section 4.8.24.2 has the dialect this specification publishes hold the
+    // keyword, and the schema that dialect is written as admits nothing but a
+    // map there, so what the keyword names is an Object or it is an error. The
+    // shape is read only once the dialect is known to define the keyword at
+    // all, as a dialect that leaves it out leaves the member free
+    if (!discriminator->is_object()) {
+      throw OpenAPIError{base, std::move(origin),
+                         "The Discriminator Object must be an object"};
+    }
+
+    // Section 4.8.25 marks this one "**REQUIRED**. The name of the property in
+    // the payload that will hold the discriminating value", and 3.2.1 Section
+    // 4.25 says as much, so a Discriminator Object the dialect does define
+    // carries one or it is no such Object. The dialect 3.2 publishes leaves it
+    // out of its own list of required fields where the one 3.1 publishes keeps
+    // it, and Section 4.8 leaves the text authoritative where the two differ
+    const auto *property_name{
+        discriminator->try_at("propertyName", OPENAPI_HASH_PROPERTY_NAME)};
+    if (property_name == nullptr) {
+      throw OpenAPIError{
+          base, std::move(origin),
+          "The Discriminator Object must declare a property name"};
+    }
+
+    if (!property_name->is_string()) {
+      throw OpenAPIError{
+          base, origin.concat(JSON::String{"propertyName"}),
+          "The Discriminator Object property name must be a string"};
+    }
+
     const auto *mapping{discriminator->try_at("mapping", OPENAPI_HASH_MAPPING)};
-    if (mapping != nullptr && mapping->is_object()) {
+    if (mapping != nullptr) {
       const auto mapped{origin.concat(JSON::String{"mapping"})};
+      if (!mapping->is_object()) {
+        throw OpenAPIError{
+            base, mapped, "The Discriminator Object mapping must be an object"};
+      }
+
       for (const auto &entry : mapping->as_object()) {
         openapi_record_discriminator(result, base, mapped.concat(entry.first),
                                      entry.second, scope);
@@ -168,7 +188,7 @@ openapi_discriminators(const JSON &document, const SchemaFrame &schemas,
     // that revision defines the field, which is what settles whether there is
     // one to read rather than what the document says of itself.
     //
-    // Section 4.25.1 goes on to require one wherever the discriminating
+    // 3.2.1 Section 4.25.1 goes on to require one wherever the discriminating
     // property is optional, which is a demand on what the schema holding it
     // says of its own properties. Reading that far into a Schema Object is
     // the business of whatever understands JSON Schema, so it is left there

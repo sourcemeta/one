@@ -32,7 +32,7 @@ WRITE schemas/test.json UNTIL EOF
 }
 EOF
 
-RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+RUN --skip-banner --deterministic --concurrency 1 one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
 DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
 
 WRITE expected.txt UNTIL EOF

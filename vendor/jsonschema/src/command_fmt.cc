@@ -13,10 +13,14 @@
 #include "error.h"
 #include "input.h"
 #include "logger.h"
+#include "print.h"
 #include "resolver.h"
 #include "utils.h"
 
 namespace {
+
+using sourcemeta::jsonschema::format_validation_status;
+using sourcemeta::jsonschema::ValidationStatus;
 
 auto diff_operation_name(const sourcemeta::core::Diff::Operation::Type type)
     -> std::string_view {
@@ -75,11 +79,77 @@ auto report_check_failure(const std::string &current,
     entry.assign("diff", to_diff_json(difference));
     errors.push_back(std::move(entry));
   } else {
-    std::cerr << "fail: " << label << "\n";
-    sourcemeta::core::stringify(
-        difference, std::cerr, sourcemeta::core::Diff::Format::Unified,
-        {.original_label = "current", .modified_label = "expected"});
+    std::cerr << format_validation_status(ValidationStatus::Fail) << " "
+              << label << "\n";
+    sourcemeta::core::Diff::FormatOptions format_options{
+        .original_label = "current",
+        .modified_label = "expected",
+    };
+    if (sourcemeta::core::terminal_color_enabled(
+            sourcemeta::core::TerminalStream::Stderr)) {
+      format_options.line_writer = [](std::ostream &stream,
+                                      const sourcemeta::core::Diff::
+                                          FormatOptions::LineType type,
+                                      const std::string_view prefix,
+                                      const std::string_view content) {
+        auto style{sourcemeta::core::TerminalStyle::None};
+        switch (type) {
+          case sourcemeta::core::Diff::FormatOptions::LineType::Delete:
+            style = sourcemeta::core::TerminalStyle::Red;
+            break;
+          case sourcemeta::core::Diff::FormatOptions::LineType::Insert:
+            style = sourcemeta::core::TerminalStyle::Green;
+            break;
+          case sourcemeta::core::Diff::FormatOptions::LineType::Hunk:
+            style = sourcemeta::core::TerminalStyle::Cyan;
+            break;
+          case sourcemeta::core::Diff::FormatOptions::LineType::HeaderOriginal:
+          case sourcemeta::core::Diff::FormatOptions::LineType::HeaderModified:
+            style = sourcemeta::core::TerminalStyle::Bold;
+            break;
+          case sourcemeta::core::Diff::FormatOptions::LineType::NoNewline:
+            style = sourcemeta::core::TerminalStyle::Yellow;
+            break;
+          case sourcemeta::core::Diff::FormatOptions::LineType::Context:
+            style = sourcemeta::core::TerminalStyle::None;
+            break;
+        }
+
+        if (style == sourcemeta::core::TerminalStyle::None) {
+          stream.write(prefix.data(),
+                       static_cast<std::streamsize>(prefix.size()));
+          stream.write(content.data(),
+                       static_cast<std::streamsize>(content.size()));
+        } else {
+          std::string line;
+          line.reserve(prefix.size() + content.size());
+          line.append(prefix);
+          line.append(content);
+          stream << sourcemeta::jsonschema::paint(
+              line, style, sourcemeta::core::TerminalStream::Stderr);
+        }
+      };
+    }
+
+    sourcemeta::core::stringify(difference, std::cerr,
+                                sourcemeta::core::Diff::Format::Unified,
+                                format_options);
   }
+}
+
+auto formatted_copy(const sourcemeta::core::JSON &document,
+                    const sourcemeta::core::SchemaResolver &resolver,
+                    const std::string_view dialect,
+                    const std::string_view openapi_base, const bool is_openapi)
+    -> sourcemeta::core::JSON {
+  auto copy{document};
+  if (is_openapi) {
+    sourcemeta::jsonschema::format_openapi(copy, resolver, openapi_base);
+  } else {
+    sourcemeta::jsonschema::format_schema(copy, resolver, dialect);
+  }
+
+  return copy;
 }
 
 } // namespace
@@ -97,16 +167,21 @@ auto sourcemeta::jsonschema::fmt(const sourcemeta::core::Options &options)
     const auto configuration_path{find_configuration(options, current_path)};
     const auto &configuration{
         read_configuration(options, configuration_path, current_path)};
-    const auto display_path{stdin_path()};
 
     std::string raw_stdin;
-    const auto parsed{read_from_stdin(&raw_stdin)};
-    if (parsed.yaml) {
-      throw YAMLInputError{"This command does not support YAML input files yet",
-                           display_path};
-    }
-
+    const auto parsed{read_from_stdin(&raw_stdin, InputFormatting::Preserve)};
     const auto &document{parsed.document};
+
+    // An OpenAPI description is not a schema, so what it goes by wherever we
+    // report on it is an identity of its own rather than the one a schema from
+    // the same place would take
+    const auto display_path{is_openapi_document(document) ? openapi_stdin_path()
+                                                          : stdin_path()};
+    reject_unsupported_openapi(document, display_path);
+    const auto is_openapi{
+        sourcemeta::core::openapi_version(document).has_value()};
+    const auto openapi_base{openapi_default_id(current_path, true)};
+
     const auto dialect{default_dialect(options, configuration)};
     const auto is_test_document =
         dialect.empty() && looks_like_test_document(document);
@@ -124,17 +199,20 @@ auto sourcemeta::jsonschema::fmt(const sourcemeta::core::Options &options)
       if (options.contains("check")) {
         std::ostringstream expected;
         if (options.contains("keep-ordering")) {
-          sourcemeta::core::prettify(document, expected, indentation);
+          sourcemeta::jsonschema::write_schema(document, expected, indentation,
+                                               parsed.roundtrip);
         } else {
-          auto copy = document;
-          sourcemeta::jsonschema::format_schema(copy, custom_resolver,
-                                                effective_dialect);
-          sourcemeta::core::prettify(copy, expected, indentation);
+          sourcemeta::jsonschema::write_schema(
+              formatted_copy(document, custom_resolver, effective_dialect,
+                             openapi_base, is_openapi),
+              expected, indentation, parsed.roundtrip);
         }
-        expected << "\n";
 
         if (raw_stdin == expected.str()) {
-          LOG_VERBOSE(options) << "ok: " << stdin_label << "\n";
+          const auto status =
+              output_json ? std::string{"ok:"}
+                          : format_validation_status(ValidationStatus::Pass);
+          LOG_VERBOSE(options) << status << " " << stdin_label << "\n";
         } else {
           report_check_failure(raw_stdin, expected.str(), stdin_label,
                                output_json, errors);
@@ -142,15 +220,26 @@ auto sourcemeta::jsonschema::fmt(const sourcemeta::core::Options &options)
         }
       } else {
         if (options.contains("keep-ordering")) {
-          sourcemeta::core::prettify(document, std::cout, indentation);
+          sourcemeta::jsonschema::write_schema(document, std::cout, indentation,
+                                               parsed.roundtrip);
         } else {
-          auto copy = document;
-          sourcemeta::jsonschema::format_schema(copy, custom_resolver,
-                                                effective_dialect);
-          sourcemeta::core::prettify(copy, std::cout, indentation);
+          sourcemeta::jsonschema::write_schema(
+              formatted_copy(document, custom_resolver, effective_dialect,
+                             openapi_base, is_openapi),
+              std::cout, indentation, parsed.roundtrip);
         }
-        std::cout << "\n";
       }
+    } catch (const sourcemeta::core::OpenAPIError &error) {
+      const auto position{parsed.positions.get(error.location())};
+      if (position.has_value()) {
+        throw PositionError<
+            sourcemeta::core::FileError<sourcemeta::core::OpenAPIError>>(
+            std::get<0>(position.value()), std::get<1>(position.value()),
+            display_path, error);
+      }
+
+      throw sourcemeta::core::FileError<sourcemeta::core::OpenAPIError>(
+          display_path, error);
     } catch (const sourcemeta::core::SchemaKeywordError &error) {
       throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
           display_path, error);
@@ -168,6 +257,17 @@ auto sourcemeta::jsonschema::fmt(const sourcemeta::core::Options &options)
 
       throw sourcemeta::core::FileError<
           sourcemeta::core::SchemaAnchorCollisionError>(display_path, error);
+    } catch (const sourcemeta::core::SchemaDialectImpossibleError &error) {
+      const auto position{parsed.positions.get(error.location())};
+      if (position.has_value()) {
+        throw PositionError<sourcemeta::core::FileError<
+            sourcemeta::core::SchemaDialectImpossibleError>>(
+            std::get<0>(position.value()), std::get<1>(position.value()),
+            display_path, error);
+      }
+
+      throw sourcemeta::core::FileError<
+          sourcemeta::core::SchemaDialectImpossibleError>(display_path, error);
     } catch (const sourcemeta::core::SchemaRelativeMetaschemaResolutionError
                  &error) {
       throw sourcemeta::core::FileError<
@@ -186,14 +286,19 @@ auto sourcemeta::jsonschema::fmt(const sourcemeta::core::Options &options)
   };
 
   const auto handle_file_entry = [&](const InputJSON &entry) {
-    if (entry.yaml) {
-      throw YAMLInputError{"This command does not support YAML input files yet",
-                           entry.resolution_base};
+    if (entry.multidocument) {
+      throw MultiDocumentInputError{
+          "This command does not support input with multiple documents",
+          entry.resolution_base};
     }
 
     if (!entry.second.is_object() && !entry.second.is_boolean()) {
       throw NotSchemaError{entry.resolution_base};
     }
+
+    reject_unsupported_openapi(entry.second, entry.resolution_base);
+    const auto is_openapi{
+        sourcemeta::core::openapi_version(entry.second).has_value()};
 
     if (options.contains("check")) {
       LOG_VERBOSE(options) << "Checking: " << entry.first << "\n";
@@ -219,21 +324,24 @@ auto sourcemeta::jsonschema::fmt(const sourcemeta::core::Options &options)
 
       std::ostringstream expected;
       if (options.contains("keep-ordering")) {
-        sourcemeta::core::prettify(entry.second, expected, indentation);
+        sourcemeta::jsonschema::write_schema(entry.second, expected,
+                                             indentation, entry.roundtrip);
       } else {
-        auto copy = entry.second;
-        sourcemeta::jsonschema::format_schema(copy, custom_resolver,
-                                              effective_dialect);
-        sourcemeta::core::prettify(copy, expected, indentation);
+        sourcemeta::jsonschema::write_schema(
+            formatted_copy(entry.second, custom_resolver, effective_dialect,
+                           openapi_default_id(entry), is_openapi),
+            expected, indentation, entry.roundtrip);
       }
-      expected << "\n";
 
       const auto current{
           sourcemeta::core::read_file_to_string(entry.resolution_base)};
 
       if (options.contains("check")) {
         if (current == expected.str()) {
-          LOG_VERBOSE(options) << "ok: " << entry.first << "\n";
+          const auto status =
+              output_json ? std::string{"ok:"}
+                          : format_validation_status(ValidationStatus::Pass);
+          LOG_VERBOSE(options) << status << " " << entry.first << "\n";
         } else {
           report_check_failure(current, expected.str(), entry.first,
                                output_json, errors);
@@ -245,6 +353,17 @@ auto sourcemeta::jsonschema::fmt(const sourcemeta::core::Options &options)
                                               expected.str());
         }
       }
+    } catch (const sourcemeta::core::OpenAPIError &error) {
+      const auto position{entry.positions.get(error.location())};
+      if (position.has_value()) {
+        throw PositionError<
+            sourcemeta::core::FileError<sourcemeta::core::OpenAPIError>>(
+            std::get<0>(position.value()), std::get<1>(position.value()),
+            entry.resolution_base, error);
+      }
+
+      throw sourcemeta::core::FileError<sourcemeta::core::OpenAPIError>(
+          entry.resolution_base, error);
     } catch (const sourcemeta::core::SchemaKeywordError &error) {
       throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
           entry.resolution_base, error);
@@ -263,6 +382,18 @@ auto sourcemeta::jsonschema::fmt(const sourcemeta::core::Options &options)
       throw sourcemeta::core::FileError<
           sourcemeta::core::SchemaAnchorCollisionError>(entry.resolution_base,
                                                         error);
+    } catch (const sourcemeta::core::SchemaDialectImpossibleError &error) {
+      const auto position{entry.positions.get(error.location())};
+      if (position.has_value()) {
+        throw PositionError<sourcemeta::core::FileError<
+            sourcemeta::core::SchemaDialectImpossibleError>>(
+            std::get<0>(position.value()), std::get<1>(position.value()),
+            entry.resolution_base, error);
+      }
+
+      throw sourcemeta::core::FileError<
+          sourcemeta::core::SchemaDialectImpossibleError>(entry.resolution_base,
+                                                          error);
     } catch (const sourcemeta::core::SchemaRelativeMetaschemaResolutionError
                  &error) {
       throw sourcemeta::core::FileError<
@@ -289,7 +420,8 @@ auto sourcemeta::jsonschema::fmt(const sourcemeta::core::Options &options)
   // When no positional arguments are given, default to for_each_json(options)
   // which scans the current directory.
   if (options.positional().empty()) {
-    for (const auto &entry : for_each_json(options)) {
+    for (const auto &entry :
+         for_each_json(options, InputFormatting::Preserve)) {
       handle_file_entry(entry);
     }
   } else {
@@ -298,7 +430,8 @@ auto sourcemeta::jsonschema::fmt(const sourcemeta::core::Options &options)
       if (arg == "-") {
         handle_stdin();
       } else {
-        for (const auto &entry : for_each_json({arg}, options)) {
+        for (const auto &entry :
+             for_each_json({arg}, options, InputFormatting::Preserve)) {
           handle_file_entry(entry);
         }
       }
@@ -319,8 +452,12 @@ auto sourcemeta::jsonschema::fmt(const sourcemeta::core::Options &options)
 
   if (!result) {
     if (!output_json) {
-      std::cerr << "\nRun the `fmt` command without `--check/-c` to fix the "
-                   "formatting"
+      constexpr auto HINT_STYLE{sourcemeta::core::TerminalStyle::Bold |
+                                sourcemeta::core::TerminalStyle::Cyan};
+      std::cerr << "\n"
+                << paint("Run the `fmt` command without `--check/-c` to fix "
+                         "the formatting",
+                         HINT_STYLE, sourcemeta::core::TerminalStream::Stderr)
                 << "\n";
     }
 

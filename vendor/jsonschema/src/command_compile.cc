@@ -35,7 +35,21 @@ auto sourcemeta::jsonschema::compile(const sourcemeta::core::Options &options)
 
   auto parsed_schema{read_file(schema_path)};
 
-  if (!parsed_schema.document.is_object() &&
+  // An OpenAPI description is not a schema, so what it goes by wherever we
+  // report on it is an identity of its own rather than the one a schema from
+  // the same place would take
+  const auto is_openapi{is_openapi_document(parsed_schema.document)};
+  const std::filesystem::path display_path{schema_path};
+
+  if (parsed_schema.multidocument) {
+    throw MultiDocumentInputError{
+        "This command does not support input with multiple documents",
+        display_path};
+  }
+
+  reject_unsupported_openapi(parsed_schema.document, display_path);
+
+  if (!is_openapi && !parsed_schema.document.is_object() &&
       !parsed_schema.document.is_boolean()) {
     throw NotSchemaError{schema_path};
   }
@@ -50,7 +64,25 @@ auto sourcemeta::jsonschema::compile(const sourcemeta::core::Options &options)
 
   sourcemeta::blaze::Template schema_template;
   try {
-    if (options.contains("entrypoint") && !options.at("entrypoint").empty()) {
+    if (is_openapi) {
+      schema_template = with_openapi_entrypoint(
+          parsed_schema.document, options, custom_resolver,
+          sourcemeta::jsonschema::openapi_resolver(
+              options, options.contains("http"), dialect, configuration),
+          sourcemeta::jsonschema::openapi_default_id(schema_path, false),
+          display_path, parsed_schema.positions,
+          [&](const sourcemeta::core::SchemaFrame &frame,
+              const std::string &entrypoint_uri) {
+            return sourcemeta::blaze::compile(
+                parsed_schema.document, sourcemeta::core::schema_walker,
+                custom_resolver, sourcemeta::blaze::default_schema_compiler,
+                frame, entrypoint_uri,
+                fast_mode ? sourcemeta::blaze::Mode::FastValidation
+                          : sourcemeta::blaze::Mode::Exhaustive,
+                sourcemeta::jsonschema::format_assertion_tweaks(options));
+          });
+    } else if (options.contains("entrypoint") &&
+               !options.at("entrypoint").empty()) {
       const sourcemeta::core::JSON bundled{sourcemeta::core::schema_bundle(
           schema, sourcemeta::core::schema_walker, custom_resolver, dialect,
           schema_default_id,
@@ -92,6 +124,14 @@ auto sourcemeta::jsonschema::compile(const sourcemeta::core::Options &options)
     throw sourcemeta::core::FileError<
         sourcemeta::blaze::CompilerInvalidEntryPoint>(schema_path, error);
   } catch (const sourcemeta::blaze::CompilerInvalidRegexError &error) {
+    const auto position{parsed_schema.positions.get(error.location())};
+    if (position.has_value()) {
+      throw PositionError<sourcemeta::core::FileError<
+          sourcemeta::blaze::CompilerInvalidRegexError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          schema_path, error);
+    }
+
     throw sourcemeta::core::FileError<
         sourcemeta::blaze::CompilerInvalidRegexError>(schema_path, error);
   } catch (const sourcemeta::blaze::CompilerError &error) {
@@ -107,6 +147,14 @@ auto sourcemeta::jsonschema::compile(const sourcemeta::core::Options &options)
         schema_path, error);
   } catch (
       const sourcemeta::blaze::CompilerReferenceTargetNotSchemaError &error) {
+    const auto position{parsed_schema.positions.get(error.location())};
+    if (position.has_value()) {
+      throw PositionError<sourcemeta::core::FileError<
+          sourcemeta::blaze::CompilerReferenceTargetNotSchemaError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          schema_path, error);
+    }
+
     throw sourcemeta::core::FileError<
         sourcemeta::blaze::CompilerReferenceTargetNotSchemaError>(schema_path,
                                                                   error);
@@ -127,6 +175,28 @@ auto sourcemeta::jsonschema::compile(const sourcemeta::core::Options &options)
 
     throw sourcemeta::core::FileError<
         sourcemeta::core::SchemaAnchorCollisionError>(schema_path, error);
+  } catch (const sourcemeta::core::SchemaDialectImpossibleError &error) {
+    const auto position{parsed_schema.positions.get(error.location())};
+    if (position.has_value()) {
+      throw PositionError<sourcemeta::core::FileError<
+          sourcemeta::core::SchemaDialectImpossibleError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          schema_path, error);
+    }
+
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaDialectImpossibleError>(schema_path, error);
+  } catch (const sourcemeta::core::SchemaReferenceError &error) {
+    const auto position{parsed_schema.positions.get(error.location())};
+    if (position.has_value()) {
+      throw PositionError<
+          sourcemeta::core::FileError<sourcemeta::core::SchemaReferenceError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          schema_path, error.identifier(), error.location(), error.what());
+    }
+
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaReferenceError>(
+        schema_path, error.identifier(), error.location(), error.what());
   } catch (
       const sourcemeta::core::SchemaRelativeMetaschemaResolutionError &error) {
     throw sourcemeta::core::FileError<
@@ -144,6 +214,10 @@ auto sourcemeta::jsonschema::compile(const sourcemeta::core::Options &options)
   } catch (const sourcemeta::core::SchemaVocabularyError &error) {
     throw sourcemeta::core::FileError<sourcemeta::core::SchemaVocabularyError>(
         schema_path, error.uri(), error.what());
+  } catch (const sourcemeta::core::SchemaReferenceObjectResourceError &error) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaReferenceObjectResourceError>(
+        schema_path, error.identifier());
   } catch (const sourcemeta::core::SchemaError &error) {
     throw sourcemeta::core::FileError<sourcemeta::core::SchemaError>(
         schema_path, error.what());

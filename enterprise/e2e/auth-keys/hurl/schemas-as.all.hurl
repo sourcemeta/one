@@ -202,10 +202,10 @@ header "Last-Modified" exists
   "title": "An open schema with references",
   "properties": {
     "meta": {
-      "$ref": "meta"
+      "$ref": "{{base}}/open/meta"
     },
     "string": {
-      "$ref": "string"
+      "$ref": "{{base}}/open/string"
     }
   },
   "$defs": {
@@ -245,7 +245,7 @@ header "Last-Modified" exists
   "title": "An open schema referencing another",
   "properties": {
     "next": {
-      "$ref": "refs"
+      "$ref": "{{base}}/open/refs"
     }
   },
   "$defs": {
@@ -266,10 +266,10 @@ header "Last-Modified" exists
       "title": "An open schema with references",
       "properties": {
         "meta": {
-          "$ref": "meta"
+          "$ref": "{{base}}/open/meta"
         },
         "string": {
-          "$ref": "string"
+          "$ref": "{{base}}/open/string"
         }
       }
     }
@@ -299,10 +299,10 @@ header "Last-Modified" exists
   "title": "An open schema with references",
   "properties": {
     "meta": {
-      "$ref": "meta"
+      "$ref": "{{base}}/open/meta"
     },
     "string": {
-      "$ref": "string"
+      "$ref": "{{base}}/open/string"
     }
   },
   "definitions": {

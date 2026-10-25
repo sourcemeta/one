@@ -6,10 +6,13 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonpointer.h>
 #include <sourcemeta/core/jsonschema.h>
+#include <sourcemeta/core/openapi.h>
 #include <sourcemeta/core/options.h>
 #include <sourcemeta/core/uri.h>
+#include <sourcemeta/core/yaml.h>
 
 #include <sourcemeta/blaze/compiler.h>
+#include <sourcemeta/blaze/convert.h>
 #include <sourcemeta/blaze/output.h>
 
 #include "error.h"
@@ -27,7 +30,8 @@
 #include <string>      // std::string, std::stoull
 #include <string_view> // std::string_view
 #include <thread>      // std::thread
-#include <utility>     // std::unreachable
+#include <tuple>       // std::get
+#include <utility>     // std::move, std::unreachable
 
 namespace sourcemeta::jsonschema {
 
@@ -75,23 +79,41 @@ inline auto default_id(const InputJSON &entry) -> std::string {
   return default_id(entry.resolution_base, entry.from_stdin);
 }
 
-inline auto resolve_entrypoint(const sourcemeta::core::SchemaFrame &frame,
+// An OpenAPI description declares no identifier of its own under the revisions
+// we support, so the one it is read under is where it came from
+inline auto openapi_default_id(const std::filesystem::path &schema_path,
+                               const bool from_stdin) -> std::string {
+  if (from_stdin) {
+    return std::string{STDIN_OPENAPI_DEFAULT_ID};
+  }
+
+  return default_id(schema_path, from_stdin);
+}
+
+inline auto openapi_default_id(const InputJSON &entry) -> std::string {
+  return openapi_default_id(entry.resolution_base, entry.from_stdin);
+}
+
+// What an entry point is resolved against is whatever the caller keys its
+// locations by. A schema goes by the identifier it declares at its root, while
+// a description has no root schema and goes by the base it was read under
+inline auto resolve_entrypoint(const std::string_view base,
                                const std::string_view entrypoint)
     -> std::string {
   if (entrypoint.empty()) {
-    return std::string{frame.root()};
+    return std::string{base};
   }
 
   if (entrypoint.front() == '/' &&
       (entrypoint.size() < 2 || entrypoint[1] != '/')) {
-    sourcemeta::core::URI result{frame.root()};
+    sourcemeta::core::URI result{std::string{base}};
     result.fragment(entrypoint);
     return result.recompose();
   }
 
   if (entrypoint.front() == '#') {
     const std::string pointer_string{entrypoint.substr(1)};
-    sourcemeta::core::URI result{frame.root()};
+    sourcemeta::core::URI result{std::string{base}};
     result.fragment(pointer_string);
     return result.recompose();
   }
@@ -105,6 +127,12 @@ inline auto resolve_entrypoint(const sourcemeta::core::SchemaFrame &frame,
   }
 }
 
+inline auto resolve_entrypoint(const sourcemeta::core::SchemaFrame &frame,
+                               const std::string_view entrypoint)
+    -> std::string {
+  return resolve_entrypoint(frame.root(), entrypoint);
+}
+
 constexpr std::string_view TEST_DOCUMENT_DEFAULT_DIALECT{
     "https://json-schema.org/draft/2020-12/schema"};
 
@@ -113,6 +141,62 @@ inline auto looks_like_test_document(const sourcemeta::core::JSON &document)
   return document.is_object() && !document.defines("$schema") &&
          document.defines("target") && document.at("target").is_string() &&
          document.defines("tests") && document.at("tests").is_array();
+}
+
+// Whether a document holds an OpenAPI Description at all, whichever revision it
+// declares. The `openapi` field is what the specification identifies one by,
+// and one we cannot read is a description all the same, so this is what tells a
+// description from a schema rather than what tells a readable one from the rest
+inline auto is_openapi_document(const sourcemeta::core::JSON &document)
+    -> bool {
+  if (!document.is_object()) {
+    return false;
+  }
+
+  const auto *version{document.try_at("openapi")};
+  return version != nullptr && version->is_string();
+}
+
+// The revision an OpenAPI description declares, when it is one we cannot read.
+// A document that declares the field as anything but a string is no OpenAPI
+// description by any reading of the specification, so it goes on being read as
+// a schema rather than being turned down here
+inline auto unsupported_openapi_version(const sourcemeta::core::JSON &document)
+    -> const sourcemeta::core::JSON * {
+  if (!is_openapi_document(document)) {
+    return nullptr;
+  }
+
+  return sourcemeta::core::openapi_version(document).has_value()
+             ? nullptr
+             : document.try_at("openapi");
+}
+
+// A description of a revision we cannot read is no JSON Schema either, so it is
+// turned down rather than being taken for one. The caller that knows where the
+// document came from hands over its positions, so that the revision we cannot
+// read is pointed at rather than merely named
+inline auto reject_unsupported_openapi(
+    const sourcemeta::core::JSON &document, const std::filesystem::path &path,
+    const sourcemeta::core::PointerPositionTracker *positions = nullptr)
+    -> void {
+  const auto *version{unsupported_openapi_version(document)};
+  if (version == nullptr) {
+    return;
+  }
+
+  if (positions != nullptr) {
+    const auto position{positions->get(sourcemeta::core::Pointer{"openapi"})};
+    if (position.has_value()) {
+      throw PositionError<
+          sourcemeta::core::FileError<UnsupportedOpenAPIVersionError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()), path,
+          version->to_string());
+    }
+  }
+
+  throw sourcemeta::core::FileError<UnsupportedOpenAPIVersionError>(
+      path, version->to_string());
 }
 
 inline auto default_dialect(
@@ -160,6 +244,265 @@ inline auto format_schema(sourcemeta::core::JSON &schema,
   sourcemeta::core::schema_format(schema, frame);
 }
 
+// A description declares no dialect of its own, so where it was read from is
+// what takes the place of the one a schema would be ordered against
+inline auto format_openapi(sourcemeta::core::JSON &document,
+                           const sourcemeta::core::SchemaResolver &resolver,
+                           const std::string_view default_base) -> void {
+  const sourcemeta::core::OpenAPIFrame frame{
+      document, sourcemeta::core::schema_walker, resolver, default_base};
+  sourcemeta::core::openapi_format(document, frame);
+}
+
+// OpenAPI Specification 3.2.1, Section 4.1 lets a document name itself with
+// `$self`, "which also serves as its base URI", resolved against wherever the
+// document was retrieved from. RFC 3986 Section 5.2.2 never resolves a
+// reference against a fragment, so one written there is no part of the base
+inline auto openapi_self_identity(const sourcemeta::core::JSON &document,
+                                  const std::string &retrieval)
+    -> std::optional<std::string> {
+  if (!document.is_object()) {
+    return std::nullopt;
+  }
+
+  // 3.2 is where the field gains that meaning. Before it, `$self` is no part
+  // of the specification and names nothing, so a document that spells one
+  // goes by where it was retrieved from like any other
+  if (sourcemeta::core::openapi_version(document) !=
+      sourcemeta::core::OpenAPIVersion::OPENAPI_3_2) {
+    return std::nullopt;
+  }
+
+  const auto *self{document.try_at("$self")};
+  if (self == nullptr || !self->is_string()) {
+    return std::nullopt;
+  }
+
+  try {
+    sourcemeta::core::URI uri{self->to_string()};
+    uri.resolve_from(sourcemeta::core::URI{retrieval});
+    uri.canonicalize();
+    return uri.recompose_without_fragment();
+  } catch (const sourcemeta::core::URIParseError &) {
+    return std::nullopt;
+  }
+}
+
+// Every way of reading an OpenAPI description answers for the same failures,
+// whether it is being made whole or merely looked at, so they are settled here
+// once and each caller runs its own work through this
+template <typename Function>
+auto with_openapi_diagnostics(
+    const sourcemeta::core::JSON &document, const std::string_view entry_base,
+    const std::filesystem::path &display_path,
+    const sourcemeta::core::PointerPositionTracker &positions,
+    const Function &callback) -> decltype(callback()) {
+  // Only a place within the entry document is one our positions describe, as
+  // a description may span others that we never read
+  const auto entry_self{
+      openapi_self_identity(document, std::string{entry_base})};
+  const auto describes = [&entry_base,
+                          &entry_self](const std::string_view base) -> bool {
+    return base == entry_base ||
+           (entry_self.has_value() && base == entry_self.value());
+  };
+
+  try {
+    return callback();
+  } catch (const sourcemeta::core::OpenAPIError &error) {
+    const auto position{describes(error.base())
+                            ? positions.get(error.location())
+                            : std::nullopt};
+    if (position.has_value()) {
+      throw PositionError<
+          sourcemeta::core::FileError<sourcemeta::core::OpenAPIError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          display_path, error);
+    }
+
+    throw sourcemeta::core::FileError<sourcemeta::core::OpenAPIError>(
+        display_path, error);
+  } catch (const sourcemeta::core::OpenAPIResolutionError &error) {
+    const auto position{describes(error.base())
+                            ? positions.get(error.location())
+                            : std::nullopt};
+    if (position.has_value()) {
+      throw PositionError<sourcemeta::core::FileError<
+          sourcemeta::core::OpenAPIResolutionError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          display_path, error);
+    }
+
+    throw sourcemeta::core::FileError<sourcemeta::core::OpenAPIResolutionError>(
+        display_path, error);
+  } catch (const sourcemeta::core::OpenAPIReferenceError &error) {
+    const auto position{describes(error.base())
+                            ? positions.get(error.location())
+                            : std::nullopt};
+    if (position.has_value()) {
+      throw PositionError<
+          sourcemeta::core::FileError<sourcemeta::core::OpenAPIReferenceError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          display_path, error);
+    }
+
+    throw sourcemeta::core::FileError<sourcemeta::core::OpenAPIReferenceError>(
+        display_path, error);
+  } catch (const sourcemeta::core::SchemaKeywordError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
+        display_path, error);
+  } catch (const sourcemeta::core::SchemaFrameError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaFrameError>(
+        display_path, error);
+  } catch (const sourcemeta::core::SchemaAnchorCollisionError &error) {
+    const auto position{positions.get(error.location())};
+    if (position.has_value()) {
+      throw PositionError<sourcemeta::core::FileError<
+          sourcemeta::core::SchemaAnchorCollisionError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          display_path, error);
+    }
+
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaAnchorCollisionError>(display_path, error);
+  } catch (const sourcemeta::core::SchemaDialectImpossibleError &error) {
+    const auto position{positions.get(error.location())};
+    if (position.has_value()) {
+      throw PositionError<sourcemeta::core::FileError<
+          sourcemeta::core::SchemaDialectImpossibleError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          display_path, error);
+    }
+
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaDialectImpossibleError>(display_path, error);
+  } catch (const sourcemeta::core::SchemaReferenceError &error) {
+    const auto position{positions.get(error.location())};
+    if (position.has_value()) {
+      throw PositionError<
+          sourcemeta::core::FileError<sourcemeta::core::SchemaReferenceError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          display_path, error.identifier(), error.location(), error.what());
+    }
+
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaReferenceError>(
+        display_path, error.identifier(), error.location(), error.what());
+  } catch (
+      const sourcemeta::core::SchemaRelativeMetaschemaResolutionError &error) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaRelativeMetaschemaResolutionError>(display_path,
+                                                                   error);
+  } catch (const sourcemeta::core::SchemaResolutionError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaResolutionError>(
+        display_path, error);
+  } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaUnknownBaseDialectError>(display_path);
+  } catch (const sourcemeta::core::SchemaUnknownDialectError &) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaUnknownDialectError>(display_path);
+  } catch (const sourcemeta::core::SchemaError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaError>(
+        display_path, error.what());
+  }
+}
+
+// Blaze does not reach for what a reference names, so every document a
+// description spans has to be here before any of it can be compiled
+inline auto openapi_bundle_for_evaluation(
+    sourcemeta::core::JSON &document,
+    const sourcemeta::core::SchemaResolver &resolver,
+    const sourcemeta::core::OpenAPIResolver &openapi_resolver,
+    const std::string_view default_base,
+    const std::filesystem::path &display_path,
+    const sourcemeta::core::PointerPositionTracker &positions) -> void {
+  with_openapi_diagnostics(
+      document, default_base, display_path, positions, [&]() {
+        sourcemeta::core::openapi_bundle(
+            document, sourcemeta::core::schema_walker, resolver,
+            openapi_resolver, {.default_base = std::string{default_base}});
+      });
+}
+
+// Framing a description is what reaches both what it says of itself and the
+// Schema Objects it holds
+inline auto openapi_frame_for_evaluation(
+    const sourcemeta::core::JSON &document,
+    const sourcemeta::core::SchemaResolver &resolver,
+    const std::string_view default_base,
+    const std::filesystem::path &display_path,
+    const sourcemeta::core::PointerPositionTracker &positions)
+    -> sourcemeta::core::OpenAPIFrame {
+  return with_openapi_diagnostics(
+      document, default_base, display_path, positions, [&]() {
+        return sourcemeta::core::OpenAPIFrame{
+            document, sourcemeta::core::schema_walker, resolver, default_base};
+      });
+}
+
+// A description holds many schemas and no root one, so which of them to work
+// from is the caller's to say. Everything up to that point is the same whoever
+// asks, and the frame cannot be handed back, as it is neither copyable nor
+// movable, so the caller's work comes here instead
+template <typename Function>
+auto with_openapi_entrypoint(
+    sourcemeta::core::JSON &document, const sourcemeta::core::Options &options,
+    const sourcemeta::core::SchemaResolver &resolver,
+    const sourcemeta::core::OpenAPIResolver &openapi_resolver,
+    const std::string &openapi_base, const std::filesystem::path &display_path,
+    const sourcemeta::core::PointerPositionTracker &positions,
+    const Function &callback)
+    -> decltype(callback(std::declval<const sourcemeta::core::SchemaFrame &>(),
+                         std::declval<const std::string &>())) {
+  // An entry point given as an empty string is one nobody means, as an unset
+  // variable reaches us that way, so it counts as not having passed one at all
+  if (!options.contains("entrypoint") || options.at("entrypoint").empty() ||
+      options.at("entrypoint").front().empty()) {
+    throw OptionConflictError{
+        "You must pass an entry point using the `--entrypoint/-p` option when "
+        "the input is an OpenAPI description"};
+  }
+
+  openapi_bundle_for_evaluation(document, resolver, openapi_resolver,
+                                openapi_base, display_path, positions);
+
+  const auto frame{openapi_frame_for_evaluation(
+      document, resolver, openapi_base, display_path, positions)};
+
+  std::string entrypoint_uri;
+  try {
+    entrypoint_uri =
+        resolve_entrypoint(frame.base(), options.at("entrypoint").front());
+  } catch (const sourcemeta::blaze::CompilerInvalidEntryPoint &error) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::blaze::CompilerInvalidEntryPoint>(display_path, error);
+  }
+
+  // Asking first means the miss is reported in the description's own terms,
+  // rather than by whatever compiles it next, which only knows about schemas
+  if (!frame.schemas().traverse(entrypoint_uri).has_value()) {
+    throw sourcemeta::core::FileError<OpenAPIEntryPointError>(
+        display_path, OpenAPIEntryPointError{entrypoint_uri});
+  }
+
+  return callback(frame.schemas(), entrypoint_uri);
+}
+
+inline auto
+write_schema(const sourcemeta::core::JSON &schema, std::ostream &stream,
+             const std::optional<std::size_t> indentation,
+             const std::optional<sourcemeta::core::YAMLRoundTrip> &roundtrip)
+    -> void {
+  if (roundtrip.has_value()) {
+    sourcemeta::core::stringify_yaml(schema, stream, roundtrip.value(),
+                                     indentation);
+    return;
+  }
+
+  sourcemeta::core::prettify(schema, stream, indentation.value_or(2));
+  stream << "\n";
+}
+
 inline auto parse_jobs(const sourcemeta::core::Options &options)
     -> std::size_t {
   if (options.contains("jobs")) {
@@ -190,13 +533,31 @@ inline auto parse_jobs(const sourcemeta::core::Options &options)
                   static_cast<std::size_t>(1));
 }
 
-inline auto parse_indentation(const sourcemeta::core::Options &options)
-    -> std::size_t {
-  if (options.contains("indentation")) {
-    return std::stoull(std::string{options.at("indentation").front()});
+// The width the user asked for, or nothing when they asked for none, which
+// leaves a document that carries a width of its own keeping it
+inline auto parse_optional_indentation(const sourcemeta::core::Options &options)
+    -> std::optional<std::size_t> {
+  if (!options.contains("indentation")) {
+    return std::nullopt;
   }
 
-  return 2;
+  const std::string value{options.at("indentation").front()};
+  if (value.empty() || !std::ranges::all_of(value, [](const char character) {
+        return std::isdigit(static_cast<unsigned char>(character));
+      })) {
+    throw InvalidIndentationError{};
+  }
+
+  try {
+    return std::stoull(value);
+  } catch (const std::out_of_range &) {
+    throw InvalidIndentationError{};
+  }
+}
+
+inline auto parse_indentation(const sourcemeta::core::Options &options)
+    -> std::size_t {
+  return parse_optional_indentation(options).value_or(2);
 }
 
 inline auto format_assertion_tweaks(const sourcemeta::core::Options &options)
@@ -243,7 +604,26 @@ bundle_for_evaluation(const sourcemeta::core::JSON &schema,
 
     throw sourcemeta::core::FileError<
         sourcemeta::core::SchemaAnchorCollisionError>(resolution_base, error);
+  } catch (const sourcemeta::core::SchemaDialectImpossibleError &error) {
+    const auto position{positions.get(error.location())};
+    if (position.has_value()) {
+      throw PositionError<sourcemeta::core::FileError<
+          sourcemeta::core::SchemaDialectImpossibleError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          resolution_base, error);
+    }
+
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaDialectImpossibleError>(resolution_base, error);
   } catch (const sourcemeta::core::SchemaReferenceError &error) {
+    const auto position{positions.get(error.location())};
+    if (position.has_value()) {
+      throw PositionError<
+          sourcemeta::core::FileError<sourcemeta::core::SchemaReferenceError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          resolution_base, error.identifier(), error.location(), error.what());
+    }
+
     throw sourcemeta::core::FileError<sourcemeta::core::SchemaReferenceError>(
         resolution_base, error.identifier(), error.location(), error.what());
   } catch (
@@ -302,7 +682,26 @@ frame_for_evaluation(const sourcemeta::core::JSON &bundled,
 
     throw sourcemeta::core::FileError<
         sourcemeta::core::SchemaAnchorCollisionError>(resolution_base, error);
+  } catch (const sourcemeta::core::SchemaDialectImpossibleError &error) {
+    const auto position{positions.get(error.location())};
+    if (position.has_value()) {
+      throw PositionError<sourcemeta::core::FileError<
+          sourcemeta::core::SchemaDialectImpossibleError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          resolution_base, error);
+    }
+
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaDialectImpossibleError>(resolution_base, error);
   } catch (const sourcemeta::core::SchemaReferenceError &error) {
+    const auto position{positions.get(error.location())};
+    if (position.has_value()) {
+      throw PositionError<
+          sourcemeta::core::FileError<sourcemeta::core::SchemaReferenceError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          resolution_base, error.identifier(), error.location(), error.what());
+    }
+
     throw sourcemeta::core::FileError<sourcemeta::core::SchemaReferenceError>(
         resolution_base, error.identifier(), error.location(), error.what());
   } catch (
@@ -343,6 +742,14 @@ inline auto compile_for_evaluation(
     throw sourcemeta::core::FileError<
         sourcemeta::blaze::CompilerInvalidEntryPoint>(resolution_base, error);
   } catch (const sourcemeta::blaze::CompilerInvalidRegexError &error) {
+    const auto position{positions.get(error.location())};
+    if (position.has_value()) {
+      throw PositionError<sourcemeta::core::FileError<
+          sourcemeta::blaze::CompilerInvalidRegexError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          resolution_base, error);
+    }
+
     throw sourcemeta::core::FileError<
         sourcemeta::blaze::CompilerInvalidRegexError>(resolution_base, error);
   } catch (const sourcemeta::blaze::CompilerError &error) {
@@ -358,6 +765,14 @@ inline auto compile_for_evaluation(
         resolution_base, error);
   } catch (
       const sourcemeta::blaze::CompilerReferenceTargetNotSchemaError &error) {
+    const auto position{positions.get(error.location())};
+    if (position.has_value()) {
+      throw PositionError<sourcemeta::core::FileError<
+          sourcemeta::blaze::CompilerReferenceTargetNotSchemaError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          resolution_base, error);
+    }
+
     throw sourcemeta::core::FileError<
         sourcemeta::blaze::CompilerReferenceTargetNotSchemaError>(
         resolution_base, error);
@@ -378,7 +793,26 @@ inline auto compile_for_evaluation(
 
     throw sourcemeta::core::FileError<
         sourcemeta::core::SchemaAnchorCollisionError>(resolution_base, error);
+  } catch (const sourcemeta::core::SchemaDialectImpossibleError &error) {
+    const auto position{positions.get(error.location())};
+    if (position.has_value()) {
+      throw PositionError<sourcemeta::core::FileError<
+          sourcemeta::core::SchemaDialectImpossibleError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          resolution_base, error);
+    }
+
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaDialectImpossibleError>(resolution_base, error);
   } catch (const sourcemeta::core::SchemaReferenceError &error) {
+    const auto position{positions.get(error.location())};
+    if (position.has_value()) {
+      throw PositionError<
+          sourcemeta::core::FileError<sourcemeta::core::SchemaReferenceError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          resolution_base, error.identifier(), error.location(), error.what());
+    }
+
     throw sourcemeta::core::FileError<sourcemeta::core::SchemaReferenceError>(
         resolution_base, error.identifier(), error.location(), error.what());
   } catch (
@@ -401,6 +835,126 @@ inline auto compile_for_evaluation(
   } catch (const sourcemeta::core::SchemaError &error) {
     throw sourcemeta::core::FileError<sourcemeta::core::SchemaError>(
         resolution_base, error.what());
+  }
+}
+
+template <typename Error>
+[[noreturn]] auto
+throw_upgrade_error(const std::filesystem::path &schema_display_path,
+                    const sourcemeta::core::PointerPositionTracker &positions,
+                    sourcemeta::core::Pointer location, std::string uri)
+    -> void {
+  const auto position{positions.get(location)};
+  if (position.has_value()) {
+    throw PositionError<Error>{
+        std::get<0>(position.value()), std::get<1>(position.value()),
+        schema_display_path, std::move(location), std::move(uri)};
+  }
+
+  throw Error{schema_display_path, std::move(location), std::move(uri)};
+}
+
+// Moving a schema onto a newer dialect, with every way that can fail reported
+// against the file the schema came from. Shared by whoever asks for the move,
+// whether that is the user outright or a command that has to spell a schema the
+// way something else recognises it
+inline auto
+upgrade_schema(sourcemeta::core::JSON &schema,
+               const sourcemeta::core::SchemaResolver &resolver,
+               const sourcemeta::blaze::ConvertTarget target,
+               const std::string &dialect, const std::string &default_id,
+               const std::filesystem::path &schema_display_path,
+               const sourcemeta::core::PointerPositionTracker &positions)
+    -> void {
+  try {
+    sourcemeta::blaze::convert(schema, sourcemeta::core::schema_walker,
+                               resolver, target, dialect, default_id);
+  } catch (const sourcemeta::blaze::ConvertUnsupportedMetaschemaError &error) {
+    throw_upgrade_error<MetaschemaUpgradeError>(
+        schema_display_path, positions, error.location(),
+        std::string{error.identifier()});
+  } catch (const sourcemeta::blaze::ConvertUnsupportedDialectError &error) {
+    // A dialect with no conversion rules is either one we have not taught
+    // the CLI yet or one only the author of the schema knows about, which are
+    // different problems to act on. Whether JSON Schema names the dialect is
+    // what tells them apart
+    if (sourcemeta::core::schema_is_known(error.identifier())) {
+      throw_upgrade_error<UnsupportedDialectUpgradeError>(
+          schema_display_path, positions, error.location(),
+          std::string{error.identifier()});
+    }
+
+    throw_upgrade_error<CustomMetaschemaUpgradeError>(
+        schema_display_path, positions, error.location(),
+        std::string{error.identifier()});
+  } catch (const sourcemeta::blaze::ConvertInvalidReferenceError &error) {
+    throw_upgrade_error<InvalidReferenceUpgradeError>(
+        schema_display_path, positions, error.location(),
+        std::string{error.identifier()});
+  } catch (const sourcemeta::blaze::ConvertBrokenReferenceError &error) {
+    throw_upgrade_error<BrokenReferenceUpgradeError>(
+        schema_display_path, positions, error.location(),
+        std::string{error.identifier()});
+  } catch (const sourcemeta::core::SchemaKeywordError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
+        schema_display_path, error);
+  } catch (const sourcemeta::core::SchemaFrameError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaFrameError>(
+        schema_display_path, error);
+  } catch (const sourcemeta::core::SchemaAnchorCollisionError &error) {
+    const auto position{positions.get(error.location())};
+    if (position.has_value()) {
+      throw PositionError<sourcemeta::core::FileError<
+          sourcemeta::core::SchemaAnchorCollisionError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          schema_display_path, error);
+    }
+
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaAnchorCollisionError>(schema_display_path,
+                                                      error);
+  } catch (const sourcemeta::core::SchemaDialectImpossibleError &error) {
+    const auto position{positions.get(error.location())};
+    if (position.has_value()) {
+      throw PositionError<sourcemeta::core::FileError<
+          sourcemeta::core::SchemaDialectImpossibleError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          schema_display_path, error);
+    }
+
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaDialectImpossibleError>(schema_display_path,
+                                                        error);
+  } catch (const sourcemeta::core::SchemaReferenceError &error) {
+    const auto position{positions.get(error.location())};
+    if (position.has_value()) {
+      throw PositionError<
+          sourcemeta::core::FileError<sourcemeta::core::SchemaReferenceError>>(
+          std::get<0>(position.value()), std::get<1>(position.value()),
+          schema_display_path, error.identifier(), error.location(),
+          error.what());
+    }
+
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaReferenceError>(
+        schema_display_path, error.identifier(), error.location(),
+        error.what());
+  } catch (
+      const sourcemeta::core::SchemaRelativeMetaschemaResolutionError &error) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaRelativeMetaschemaResolutionError>(
+        schema_display_path, error);
+  } catch (const sourcemeta::core::SchemaResolutionError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaResolutionError>(
+        schema_display_path, error);
+  } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaUnknownBaseDialectError>(schema_display_path);
+  } catch (const sourcemeta::core::SchemaUnknownDialectError &) {
+    throw sourcemeta::core::FileError<
+        sourcemeta::core::SchemaUnknownDialectError>(schema_display_path);
+  } catch (const sourcemeta::core::SchemaError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaError>(
+        schema_display_path, error.what());
   }
 }
 
@@ -436,20 +990,28 @@ inline auto facet_name(const sourcemeta::blaze::JSONLDFacet facet)
   }
 }
 
+// The instance locations an evaluation reports are relative to whatever was
+// validated, so when that is a subtree of the tracked document, as a Schema
+// Object of an OpenAPI description is, the tracker only answers once the
+// position of that subtree is put back in front. Mirrors the `instance_base`
+// that Blaze's standard output takes for the same reason
 template <typename Entries>
 inline auto print(const Entries &output,
                   const sourcemeta::core::PointerPositionTracker &tracker,
                   std::ostream &stream,
-                  const std::string_view error_label = "error:") -> void {
-  stream << error_label << " Schema validation failure\n";
+                  const std::string_view error_label = "error:",
+                  const sourcemeta::core::Pointer &base = {},
+                  const std::string_view headline = "Schema validation failure")
+    -> void {
+  stream << error_label << " " << headline << "\n";
   for (const auto &entry : output) {
     stream << "  " << entry.message << "\n";
     stream << "    at instance location \"";
     sourcemeta::core::stringify(entry.instance_location, stream);
     stream << "\"";
 
-    const auto position{
-        tracker.get(sourcemeta::core::to_pointer(entry.instance_location))};
+    const auto position{tracker.get(
+        base.concat(sourcemeta::core::to_pointer(entry.instance_location)))};
     if (position.has_value()) {
       const auto [line, column, end_line, end_column] = position.value();
       stream << " (line " << line << ", column " << column << ")";

@@ -6,6 +6,7 @@
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonschema.h>
+#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/core/options.h>
 #include <sourcemeta/core/parallel.h>
 #include <sourcemeta/core/stacktrace.h>
@@ -15,7 +16,6 @@
 
 #include <sourcemeta/one/build.h>
 #include <sourcemeta/one/configuration.h>
-#include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/resolver.h>
 #include <sourcemeta/one/shared.h>
 #include <sourcemeta/one/web.h>
@@ -450,18 +450,13 @@ static auto index_main(const std::string_view &program,
   sourcemeta::one::BuildState entries;
   const auto state_path{canonical_output / "state.bin"};
   // What this build is being asked to apply: the configuration exactly as the
-  // anchor records it, the version of the tool applying it, and the version of
-  // the artifact format it writes, since any of those changing is what makes
-  // artifacts of an earlier build unusable. The format version is named in its
-  // own right rather than left to the tool version, which a release build
-  // reports without a commit behind it, so the same release rebuilt against a
-  // newer format would otherwise keep artifacts nothing can read. A
-  // fingerprint over all of them, so that a state describing one never vouches
-  // for work done under another
+  // anchor records it, and what identifies the build applying it, which
+  // accounts for the version, the dependencies it was built against and the
+  // revision it came from. A fingerprint over both, so that a state
+  // describing one never vouches for work done under another
   std::ostringstream inputs_text;
   sourcemeta::core::prettify(raw_configuration, inputs_text);
-  inputs_text << sourcemeta::one::version();
-  inputs_text << sourcemeta::one::METAPACK_VERSION;
+  inputs_text << sourcemeta::one::build_identity();
   const auto inputs_fingerprint{
       sourcemeta::one::BuildState::fingerprint(inputs_text.str())};
 

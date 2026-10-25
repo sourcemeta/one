@@ -509,7 +509,7 @@ jsonpath "$.breadcrumb[1].path" == "/test/extension/"
 jsonpath "$.entries" count == 3
 jsonpath "$.private" == false
 jsonpath "$.entries[0].bytes" == 172
-jsonpath "$.entries[0].bytesBundled" == 400
+jsonpath "$.entries[0].bytesBundled" == 437
 jsonpath "$.entries[0].baseDialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[0].dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.entries[0].identifier" == "{{base}}/test/extension/to-without"

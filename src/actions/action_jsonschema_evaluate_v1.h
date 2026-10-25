@@ -99,13 +99,14 @@ public:
     const auto evaluation_enabled{this->artifact_resolve_path(
         caller, schema_uri, Tree::Schemas, "blaze-exhaustive")};
     if (!schema_present.path.has_value()) {
-      return sourcemeta::core::mcp_make_tool_error(request_id,
+      return sourcemeta::core::mcp_make_tool_error(version, request_id,
                                                    "Schema not found");
     }
 
     if (!evaluation_enabled.path.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(
-          request_id, "This schema was not precompiled for schema evaluation");
+          version, request_id,
+          "This schema was not precompiled for schema evaluation");
     }
 
     sourcemeta::core::JSON parsed_instance{nullptr};
@@ -114,10 +115,10 @@ public:
           arguments.at("stringifiedInstance").to_string());
     } catch (const std::exception &) {
       return sourcemeta::core::mcp_make_tool_error(
-          request_id, "The instance is not valid JSON");
+          version, request_id, "The instance is not valid JSON");
     } catch (...) {
       return sourcemeta::core::mcp_make_tool_error(
-          request_id, "The instance is not valid JSON");
+          version, request_id, "The instance is not valid JSON");
     }
 
     return sourcemeta::core::mcp_make_tool_success(

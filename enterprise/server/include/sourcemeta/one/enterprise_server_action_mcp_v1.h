@@ -4,6 +4,7 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
+#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/core/numeric.h>
 #include <sourcemeta/core/text.h>
 #include <sourcemeta/core/uri.h>
@@ -12,9 +13,10 @@
 #include <sourcemeta/one/enterprise_conversion.h>
 #include <sourcemeta/one/enterprise_server_conversion.h>
 #include <sourcemeta/one/http.h>
-#include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
 
+#include <algorithm> // std::ranges::find
+#include <array>     // std::array
 #include <cassert>   // assert
 #include <cstddef>   // std::size_t, std::ptrdiff_t
 #include <cstdint>   // std::uint64_t
@@ -30,6 +32,13 @@
 #include <unordered_map> // std::unordered_map
 #include <utility>       // std::move, std::pair
 #include <vector>        // std::vector
+
+// The protocol revisions this instance serves. A client asking for anything
+// else is refused rather than answered under rules this does not implement
+inline constexpr std::array<sourcemeta::core::JSON::StringView, 3>
+    MCP_SUPPORTED_VERSIONS{{sourcemeta::core::MCP_PROTOCOL_VERSION_2025_03_26,
+                            sourcemeta::core::MCP_PROTOCOL_VERSION_2025_06_18,
+                            sourcemeta::core::MCP_PROTOCOL_VERSION_2025_11_25}};
 
 class ActionMCPV1 : public sourcemeta::one::RouterAction {
 public:
@@ -231,21 +240,33 @@ public:
 
     // MCP Streamable HTTP transport / Protocol Version Header:
     // - Client MUST send `MCP-Protocol-Version` on every request after init
-    // - If header is absent, server SHOULD assume 2025-03-26 (handled inside
-    //   `mcp_resolve_protocol_version`)
+    // - If header is absent, server SHOULD assume 2025-03-26, which is the
+    //   revision that predates the header
     // - If header is invalid/unsupported, server MUST respond with 400
+    // Presence is what the fallback turns on rather than whether the header
+    // carries anything, since one that is there but empty names no revision
+    // and is refused rather than read as the one that predates it
     // https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#protocol-version-header
     const auto requested_version{request.header("mcp-protocol-version")};
     const auto negotiated_version{
-        sourcemeta::core::mcp_resolve_protocol_version(requested_version)};
-    if (!negotiated_version.has_value()) {
+        request.header_exists("mcp-protocol-version")
+            ? sourcemeta::core::mcp_resolve_protocol_version(requested_version)
+            : std::optional<sourcemeta::core::MCPProtocolVersion>{
+                  sourcemeta::core::MCPProtocolVersion::V_2025_03_26}};
+    // A revision this library models is not automatically one this instance
+    // serves, so what it settles on is checked against what is advertised
+    if (!negotiated_version.has_value() ||
+        std::ranges::find(MCP_SUPPORTED_VERSIONS,
+                          sourcemeta::core::mcp_protocol_version_string(
+                              negotiated_version.value())) ==
+            MCP_SUPPORTED_VERSIONS.cend()) {
       auto data{sourcemeta::core::JSON::make_object()};
       data.assign("current",
                   sourcemeta::core::JSON{std::string{requested_version}});
       auto supported{sourcemeta::core::JSON::make_array()};
-      supported.push_back(sourcemeta::core::JSON{"2025-03-26"});
-      supported.push_back(sourcemeta::core::JSON{"2025-06-18"});
-      supported.push_back(sourcemeta::core::JSON{"2025-11-25"});
+      for (const auto advertised : MCP_SUPPORTED_VERSIONS) {
+        supported.push_back(sourcemeta::core::JSON{advertised});
+      }
       data.assign("supported", std::move(supported));
       this->write_envelope(request, response,
                            sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
@@ -423,7 +444,7 @@ private:
       -> sourcemeta::core::JSON {
     const auto &parts{
         this->metadata_for(view).at(sourcemeta::core::MCP_METHOD_INITIALIZE)};
-    return sourcemeta::core::mcp_make_initialize_result(
+    return sourcemeta::core::mcp_make_initialize_response(
         request_json,
         sourcemeta::core::MCPServerCapabilities{
             .prompts = parts.at(0).to_boolean(),
@@ -439,7 +460,7 @@ private:
             .description = parts.at(8).to_string(),
             .website_url = parts.at(9).to_string(),
         },
-        parts.at(10).to_string());
+        MCP_SUPPORTED_VERSIONS, parts.at(10).to_string());
   }
 
   auto on_tools_list(const sourcemeta::core::MCPProtocolVersion version,
@@ -473,7 +494,8 @@ private:
   }
 
   auto
-  on_resources_read(const sourcemeta::core::JSON &request_json,
+  on_resources_read(const sourcemeta::core::MCPProtocolVersion version,
+                    const sourcemeta::core::JSON &request_json,
                     const sourcemeta::one::Authentication::Caller &caller) const
       -> sourcemeta::core::JSON {
     const auto &request_id{request_json.at("id")};
@@ -592,8 +614,8 @@ private:
     contents.push_back(sourcemeta::core::mcp_make_resource_text_content(
         uri, MCP_TEMPLATE_MIME_TYPE, payload.str()));
     return sourcemeta::core::jsonrpc_make_success(
-        request_id,
-        sourcemeta::core::mcp_make_resources_read_result(std::move(contents)));
+        request_id, sourcemeta::core::mcp_make_resources_read_result(
+                        version, std::move(contents), {}));
   }
 
   auto on_tools_call(const sourcemeta::core::MCPProtocolVersion version,
@@ -625,7 +647,8 @@ private:
                            arguments == nullptr ? empty_arguments : *arguments,
                            caller);
     } catch (const std::exception &error) {
-      return sourcemeta::core::mcp_make_tool_error(request_id, error.what());
+      return sourcemeta::core::mcp_make_tool_error(version, request_id,
+                                                   error.what());
     }
   }
 
@@ -744,7 +767,7 @@ private:
     const auto *request_id{sourcemeta::core::jsonrpc_request_id(request_json)};
     assert(request_id != nullptr);
     const auto method{sourcemeta::core::jsonrpc_method(request_json)};
-    if (!sourcemeta::core::mcp_is_request_method(method)) {
+    if (!sourcemeta::core::mcp_is_request_method(version, method)) {
       return sourcemeta::core::jsonrpc_make_error_method_not_found(*request_id);
     }
     const auto view{caller.view()};
@@ -768,7 +791,7 @@ private:
       return this->on_resources_list(request_json, view);
     }
     if (method == sourcemeta::core::MCP_METHOD_RESOURCES_READ) {
-      return this->on_resources_read(request_json, caller);
+      return this->on_resources_read(version, request_json, caller);
     }
     if (method == sourcemeta::core::MCP_METHOD_TOOLS_CALL) {
       return this->on_tools_call(version, request_json, caller);

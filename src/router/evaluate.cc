@@ -3,8 +3,8 @@
 #include <sourcemeta/blaze/output.h>
 
 #include <sourcemeta/core/jsonschema.h>
+#include <sourcemeta/core/metapack.h>
 
-#include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
 
 #include <cassert>     // assert
@@ -183,7 +183,7 @@ auto Router::blaze_template(const ResolvedArtifact &artifact)
   return this->template_cache_.get_or_compute(
       artifact.path(), [&artifact]() -> sourcemeta::blaze::Template {
         const auto template_json{
-            sourcemeta::one::metapack_read_json(artifact.path())};
+            sourcemeta::core::metapack_read_json(artifact.path())};
         assert(template_json.has_value());
         auto compiled{sourcemeta::blaze::from_json(template_json.value())};
         assert(compiled.has_value());

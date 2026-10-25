@@ -10,16 +10,18 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
+#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/one/http.h>
-#include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
 #include <sourcemeta/one/shared.h>
 
 #include "action_jsonschema_serve_v1.h"
 
+#include <algorithm> // std::ranges::find
+#include <array>     // std::array
 #include <cassert>   // assert
 #include <exception> // std::exception, std::exception_ptr, std::rethrow_exception
 #include <filesystem>  // std::filesystem
@@ -29,6 +31,13 @@
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
+
+// The protocol revisions this instance serves. A client asking for anything
+// else is refused rather than answered under rules this does not implement
+inline constexpr std::array<sourcemeta::core::JSON::StringView, 3>
+    MCP_SUPPORTED_VERSIONS{{sourcemeta::core::MCP_PROTOCOL_VERSION_2025_03_26,
+                            sourcemeta::core::MCP_PROTOCOL_VERSION_2025_06_18,
+                            sourcemeta::core::MCP_PROTOCOL_VERSION_2025_11_25}};
 
 class ActionMCPV1 : public sourcemeta::one::RouterAction {
 public:
@@ -141,21 +150,33 @@ public:
 
     // MCP Streamable HTTP transport / Protocol Version Header:
     // - Client MUST send `MCP-Protocol-Version` on every request after init
-    // - If header is absent, server SHOULD assume 2025-03-26 (handled inside
-    //   `mcp_resolve_protocol_version`)
+    // - If header is absent, server SHOULD assume 2025-03-26, which is the
+    //   revision that predates the header
     // - If header is invalid/unsupported, server MUST respond with 400
+    // Presence is what the fallback turns on rather than whether the header
+    // carries anything, since one that is there but empty names no revision
+    // and is refused rather than read as the one that predates it
     // https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#protocol-version-header
     const auto requested_version{request.header("mcp-protocol-version")};
     const auto negotiated_version{
-        sourcemeta::core::mcp_resolve_protocol_version(requested_version)};
-    if (!negotiated_version.has_value()) {
+        request.header_exists("mcp-protocol-version")
+            ? sourcemeta::core::mcp_resolve_protocol_version(requested_version)
+            : std::optional<sourcemeta::core::MCPProtocolVersion>{
+                  sourcemeta::core::MCPProtocolVersion::V_2025_03_26}};
+    // A revision this library models is not automatically one this instance
+    // serves, so what it settles on is checked against what is advertised
+    if (!negotiated_version.has_value() ||
+        std::ranges::find(MCP_SUPPORTED_VERSIONS,
+                          sourcemeta::core::mcp_protocol_version_string(
+                              negotiated_version.value())) ==
+            MCP_SUPPORTED_VERSIONS.cend()) {
       auto data{sourcemeta::core::JSON::make_object()};
       data.assign("current",
                   sourcemeta::core::JSON{std::string{requested_version}});
       auto supported{sourcemeta::core::JSON::make_array()};
-      supported.push_back(sourcemeta::core::JSON{"2025-03-26"});
-      supported.push_back(sourcemeta::core::JSON{"2025-06-18"});
-      supported.push_back(sourcemeta::core::JSON{"2025-11-25"});
+      for (const auto advertised : MCP_SUPPORTED_VERSIONS) {
+        supported.push_back(sourcemeta::core::JSON{advertised});
+      }
       data.assign("supported", std::move(supported));
       this->write_envelope(request, response,
                            sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
@@ -401,7 +422,7 @@ private:
     if (method == sourcemeta::core::MCP_METHOD_INITIALIZE) {
       const auto &parts{
           this->mcp_metadata_.at(sourcemeta::core::MCP_METHOD_INITIALIZE)};
-      return sourcemeta::core::mcp_make_initialize_result(
+      return sourcemeta::core::mcp_make_initialize_response(
           request_json,
           sourcemeta::core::MCPServerCapabilities{
               .prompts = parts.at(0).to_boolean(),
@@ -417,7 +438,7 @@ private:
               .description = parts.at(8).to_string(),
               .website_url = parts.at(9).to_string(),
           },
-          parts.at(10).to_string());
+          MCP_SUPPORTED_VERSIONS, parts.at(10).to_string());
     }
 
     if (method == sourcemeta::core::MCP_METHOD_RESOURCES_TEMPLATES_LIST) {

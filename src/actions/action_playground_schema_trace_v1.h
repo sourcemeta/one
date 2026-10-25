@@ -116,17 +116,18 @@ public:
           arguments.at("stringifiedSchema").to_string());
     } catch (const std::exception &) {
       return sourcemeta::core::mcp_make_tool_error(
-          request_id, "The schema is not valid JSON");
+          version, request_id, "The schema is not valid JSON");
     } catch (...) {
       return sourcemeta::core::mcp_make_tool_error(
-          request_id, "The schema is not valid JSON");
+          version, request_id, "The schema is not valid JSON");
     }
 
     // What the REST surface refuses through its request schema, this refuses
     // here, since a tool argument arrives as a string rather than a document
     if (!parsed_schema.is_object() || !parsed_schema.defines("$schema")) {
       return sourcemeta::core::mcp_make_tool_error(
-          request_id, "The schema must be an object declaring its dialect");
+          version, request_id,
+          "The schema must be an object declaring its dialect");
     }
 
     sourcemeta::core::PointerPositionTracker tracker;
@@ -137,10 +138,10 @@ public:
           std::ref(tracker));
     } catch (const std::exception &) {
       return sourcemeta::core::mcp_make_tool_error(
-          request_id, "The instance is not valid JSON");
+          version, request_id, "The instance is not valid JSON");
     } catch (...) {
       return sourcemeta::core::mcp_make_tool_error(
-          request_id, "The instance is not valid JSON");
+          version, request_id, "The instance is not valid JSON");
     }
 
     try {
@@ -152,7 +153,8 @@ public:
               schema_template, parsed_instance, &tracker,
               sourcemeta::core::Pointer{}));
     } catch (const sourcemeta::one::PlaygroundSchemaError &error) {
-      return sourcemeta::core::mcp_make_tool_error(request_id, error.what());
+      return sourcemeta::core::mcp_make_tool_error(version, request_id,
+                                                   error.what());
     }
   }
 

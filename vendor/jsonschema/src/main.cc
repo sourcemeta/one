@@ -98,7 +98,6 @@ constexpr std::string_view USAGE_COMMANDS{R"EOF(   version / --version / -v
        [--indentation/-n <spaces>]
 
        Format the input schemas in-place or check they are formatted.
-       This command does not support YAML schemas yet.
 
    lint [schemas-or-directories...] [--fix/-f] [--format/-m]
         [--keep-ordering/-k] [--extension/-e <extension>]
@@ -108,7 +107,6 @@ constexpr std::string_view USAGE_COMMANDS{R"EOF(   version / --version / -v
         [--format-assertion/-F]
 
        Lint the input schemas and potentially fix the reported issues.
-       The --fix/-f option is not supported when passing YAML schemas.
        Use --format/-m with --fix to format the output even when there
        are no linting issues.
        Use --keep-ordering/-k with --format to preserve key order.
@@ -118,15 +116,18 @@ constexpr std::string_view USAGE_COMMANDS{R"EOF(   version / --version / -v
        against the document root.
 
    upgrade <schema.json|.yaml>
-           [--to/-t draft4|draft6|draft7|2019-09|2020-12]
+           [--to/-t draft4|draft6|draft7|2019-09|2020-12|openapi3.1|openapi3.2]
+           [--indentation/-n <spaces>]
 
-       Upgrade the given schema to a newer JSON Schema dialect.
-       Defaults to the latest dialect (2020-12). Schemas that declare a
-       custom meta-schema and schemas that are meta-schemas themselves
-       cannot be upgraded by this command.
+       Upgrade the given schema to a newer JSON Schema dialect, or to one
+       of the OpenAPI Schema Object dialects. Defaults to the latest JSON
+       Schema dialect (2020-12). Schemas that declare a custom meta-schema
+       and schemas that are meta-schemas themselves cannot be upgraded by
+       this command.
 
    bundle <schema.json|.yaml> [--extension/-e <extension>]
           [--ignore/-i <schemas-or-directories>] [--without-id/-w]
+          [--indentation/-n <spaces>]
 
        Perform JSON Schema Bundling on a schema to inline remote references,
        printing the result to standard output.
@@ -149,16 +150,30 @@ constexpr std::string_view USAGE_COMMANDS{R"EOF(   version / --version / -v
 
        Decode a JSON document or JSONL dataset using JSON BinPack.
 
-   rdf <schema.json|.yaml> <instance.json|.yaml> [--flatten/-l]
+   rdf <schema.json|.yaml> <instance.json|.jsonl|.jsonl.gz|.yaml> [--flatten/-l]
        [--compact/-c <context.json|.yaml>] [--fast/-f] [--format-assertion/-F]
        [--extension/-e <extension>] [--ignore/-i <schemas-or-directories>]
+       [--entrypoint/-p <pointer|uri>]
 
        Validate an instance against a schema annotated with x-jsonld-*
        keywords and, on success, print the instance promoted to expanded
        JSON-LD (Linked Data). Use --flatten/-l and/or --compact/-c to
-       post-process the output. As in `validate`, schemas compile in
-       exhaustive mode by default. Pass --fast/-f to optimise for speed at
-       the expense of validation error quality.
+       post-process the output. Datasets are promoted entry by entry, as
+       JSONL. As in `validate`, schemas compile in exhaustive mode by
+       default. Pass --fast/-f to optimise for speed at the expense of
+       validation error quality.
+
+   llm <schema.json|.yaml> --ask/-a <prompt> --url/-u <completion-url>
+       --model/-m <model> [--param/-p <pointer>=<value>] [--raw/-R]
+       [--upgrade/-U draft4|draft6|draft7|2019-09|2020-12]
+       [--timeout/-T <seconds>] [--dry-run/-D] [--trace/-t] [--without-id/-w]
+
+       Ask a model for a document conforming to the given schema.
+       Works against any endpoint taking an OpenAI Chat Completions
+       `response_format` with a nested `json_schema`.
+       The --param/-p option sets entries in the request body.
+       The --upgrade/-U option defaults to 2020-12.
+       Use --dry-run/-D to print the request instead of sending it.
 
    install [<uri> <path>] [--force/-f] [--frozen/-z]
 
@@ -285,6 +300,7 @@ auto jsonschema_main(const std::string &program, const std::string &command,
     app.flag("without-id", {"w"});
     app.option("extension", {"e"});
     app.option("ignore", {"i"});
+    app.option("indentation", {"n"});
     parse_options(app, argc, argv, {.skip = 1});
     sourcemeta::jsonschema::bundle(app);
     return EXIT_SUCCESS;
@@ -389,12 +405,30 @@ auto jsonschema_main(const std::string &program, const std::string &command,
 
   if (command == "upgrade") {
     app.option("to", {"t"});
+    app.option("indentation", {"n"});
     parse_options(app, argc, argv, {.skip = 1});
     sourcemeta::jsonschema::upgrade(app);
     return EXIT_SUCCESS;
   }
 
+  if (command == "llm") {
+    app.flag("dry-run", {"D"});
+    app.flag("raw", {"R"});
+    app.flag("trace", {"t"});
+    app.flag("without-id", {"w"});
+    app.option("ask", {"a"});
+    app.option("url", {"u"});
+    app.option("model", {"m"});
+    app.option("param", {"p"});
+    app.option("upgrade", {"U"});
+    app.option("timeout", {"T"});
+    parse_options(app, argc, argv, {.skip = 1});
+    sourcemeta::jsonschema::llm(app);
+    return EXIT_SUCCESS;
+  }
+
   if (command == "rdf") {
+    app.option("entrypoint", {"p"});
     app.flag("fast", {"f"});
     app.flag("flatten", {"l"});
     app.flag("format-assertion", {"F"});

@@ -5,7 +5,7 @@ sourcemeta_test(NAMESPACE sourcemeta PROJECT one NAME search
 target_link_libraries(sourcemeta_one_search_unit
   PRIVATE sourcemeta::one::search)
 target_link_libraries(sourcemeta_one_search_unit
-  PRIVATE sourcemeta::one::metapack)
+  PRIVATE sourcemeta::core::metapack)
 
 target_compile_definitions(sourcemeta_one_search_unit
   PRIVATE SEARCH_TEST_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}")

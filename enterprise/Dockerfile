@@ -62,6 +62,7 @@ COPY test/js /source/test/js
 
 
 ARG SOURCEMETA_ONE_BUILD_TYPE=Release
+ARG SOURCEMETA_ONE_REVISION=
 ARG SOURCEMETA_ONE_PARALLEL=2
 
 ENV CCACHE_DIR=/ccache
@@ -70,6 +71,7 @@ RUN	cmake -S /source -B ./build -G Ninja \
   -DCMAKE_C_COMPILER_LAUNCHER:STRING=ccache \
   -DCMAKE_CXX_COMPILER_LAUNCHER:STRING=ccache \
   -DCMAKE_BUILD_TYPE:STRING=${SOURCEMETA_ONE_BUILD_TYPE} \
+  -DONE_REVISION:STRING=${SOURCEMETA_ONE_REVISION} \
   -DCMAKE_COMPILE_WARNING_AS_ERROR:BOOL=ON \
   -DONE_INDEX:BOOL=ON \
   -DONE_SERVER:BOOL=ON \
@@ -160,6 +162,8 @@ COPY vendor/bootstrap-icons/LICENSE \
   /usr/share/doc/sourcemeta-one/licenses/bootstrap-icons
 COPY vendor/core/vendor/pcre2/LICENCE.md \
   /usr/share/doc/sourcemeta-one/licenses/pcre2
+COPY vendor/core/vendor/sljit/LICENSE \
+  /usr/share/doc/sourcemeta-one/licenses/sljit
 COPY vendor/core/vendor/unicodetools/LICENSE \
   /usr/share/doc/sourcemeta-one/licenses/unicodetools
 COPY vendor/core/vendor/whatwg-html-build/LICENSE \
