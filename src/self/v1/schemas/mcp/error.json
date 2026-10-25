@@ -60,7 +60,7 @@
   "additionalProperties": false,
   "$defs": {
     "standard": {
-      "$comment": "JSON-RPC reserved error codes",
+      "$comment": "Codes a specification defines rather than this implementation: the JSON-RPC reserved codes, and the ones the Model Context Protocol defines in the sub-range it reserves for itself",
       "anyOf": [
         {
           "const": {
@@ -300,7 +300,7 @@
       ]
     },
     "custom": {
-      "$comment": "Implementation-defined server-error codes within the JSON-RPC reserved range -32099..-32000",
+      "$comment": "Implementation-defined server-error codes. The Model Context Protocol partitions the JSON-RPC server-error range and leaves -32000 through -32019 to implementations, so these stay inside it and nothing new is allocated there",
       "anyOf": [
         {
           "const": {
