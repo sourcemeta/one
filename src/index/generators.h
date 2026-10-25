@@ -331,9 +331,8 @@ template <sourcemeta::one::SchemaDialect Target> struct GenerateConversion {
                       const sourcemeta::core::JSON &) -> void {
     assert(!action.dependencies.empty());
     const auto &resolver_entry{resolver.entry(action.data)};
-    const auto dialect{
-        sourcemeta::one::official_dialect(resolver_entry.dialect)};
-    assert(dialect.has_value());
+    assert(
+        sourcemeta::one::official_dialect(resolver_entry.dialect).has_value());
     auto schema_option{
         sourcemeta::core::metapack_read_json(action.dependencies.front())};
     assert(schema_option.has_value());

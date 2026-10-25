@@ -32,14 +32,23 @@ WRITE schemas/test.json UNTIL EOF
 }
 EOF
 
-RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+RUN --skip-banner --deterministic --concurrency 1 one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
 DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
-REPLACE $CWD WITH '[CWD]' IN output.txt
 
 WRITE expected.txt UNTIL EOF
-2> error: The vocabularies of a metaschema must be an object
-2>   at vocabulary https://sourcemeta.com/example/schemas/custom-meta
-2>   at path [CWD]/schemas/test.json
+2> error: The schema does not adhere to its metaschema
+2> The value was expected to be of type object but it was of type string
+2>   at instance location "/$vocabulary"
+2>   at evaluate path "/allOf/0/$ref/properties/$vocabulary/type"
+2> The object value was expected to validate against the 9 defined properties subschemas
+2>   at instance location ""
+2>   at evaluate path "/allOf/0/$ref/properties"
+2> The object value was expected to validate against the referenced schema
+2>   at instance location ""
+2>   at evaluate path "/allOf/0/$ref"
+2> The object value was expected to validate against the 7 given subschemas
+2>   at instance location ""
+2>   at evaluate path "/allOf"
 EOF
 
 COMPARE output.txt AGAINST expected.txt
