@@ -241,9 +241,10 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 jsonpath "$.valid" == true
 
 # An unsupported revision is refused before any of that, so the invariant above
-# is over the revisions this instance actually speaks
+# is over the revisions this instance actually speaks. The refusal names every
+# revision that is spoken, which is what lets a client pick one and ask again
 POST {{base}}/self/v1/mcp
-MCP-Protocol-Version: 2026-07-28
+MCP-Protocol-Version: 2024-11-05
 Content-Type: application/json
 ```
 {
@@ -256,7 +257,15 @@ Content-Type: application/json
 HTTP 400
 Cache-Control: no-store
 [Asserts]
-jsonpath "$.error.code" == -32003
+jsonpath "$.id" == 21
+jsonpath "$.error.code" == -32022
+jsonpath "$.error.message" == "Unsupported protocol version"
+jsonpath "$.error.data.requested" == "2024-11-05"
+jsonpath "$.error.data.supported" count == 4
+jsonpath "$.error.data.supported[0]" == "2025-03-26"
+jsonpath "$.error.data.supported[1]" == "2025-06-18"
+jsonpath "$.error.data.supported[2]" == "2025-11-25"
+jsonpath "$.error.data.supported[3]" == "2026-07-28"
 
 # Signing in at the provider, which is what every later request presents. The
 # cookie jar carries the session from here, so nothing below names it

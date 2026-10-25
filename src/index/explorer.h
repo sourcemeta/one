@@ -25,7 +25,6 @@
 
 #include <algorithm>     // std::ranges::sort
 #include <cassert>       // assert
-#include <chrono>        // std::chrono
 #include <cmath>         // std::lround
 #include <cstring>       // std::memcpy
 #include <filesystem>    // std::filesystem
@@ -895,24 +894,24 @@ struct GenerateMCP {
     }
 #endif
 
-    auto initialize_ingredients{sourcemeta::core::JSON::make_array()};
-    initialize_ingredients.push_back(sourcemeta::core::JSON{false});
-    initialize_ingredients.push_back(sourcemeta::core::JSON{true});
-    initialize_ingredients.push_back(sourcemeta::core::JSON{!tools.empty()});
-    initialize_ingredients.push_back(sourcemeta::core::JSON{false});
-    initialize_ingredients.push_back(sourcemeta::core::JSON{false});
-    initialize_ingredients.push_back(sourcemeta::core::JSON{SERVER_NAME});
-    initialize_ingredients.push_back(
+    auto advertisement_ingredients{sourcemeta::core::JSON::make_array()};
+    advertisement_ingredients.push_back(sourcemeta::core::JSON{false});
+    advertisement_ingredients.push_back(sourcemeta::core::JSON{true});
+    advertisement_ingredients.push_back(sourcemeta::core::JSON{!tools.empty()});
+    advertisement_ingredients.push_back(sourcemeta::core::JSON{false});
+    advertisement_ingredients.push_back(sourcemeta::core::JSON{false});
+    advertisement_ingredients.push_back(sourcemeta::core::JSON{SERVER_NAME});
+    advertisement_ingredients.push_back(
         sourcemeta::core::JSON{sourcemeta::one::version()});
-    initialize_ingredients.push_back(sourcemeta::core::JSON{SERVER_TITLE});
-    initialize_ingredients.push_back(sourcemeta::core::JSON{
+    advertisement_ingredients.push_back(sourcemeta::core::JSON{SERVER_TITLE});
+    advertisement_ingredients.push_back(sourcemeta::core::JSON{
         configuration.html.has_value()
             ? std::string_view{configuration.html->description}
             : std::string_view{}});
-    initialize_ingredients.push_back(sourcemeta::core::JSON{
+    advertisement_ingredients.push_back(sourcemeta::core::JSON{
         configuration.html.has_value() ? std::string_view{configuration.url}
                                        : std::string_view{}});
-    initialize_ingredients.push_back(
+    advertisement_ingredients.push_back(
         sourcemeta::core::JSON{instructions.str()});
 
     auto resource_templates_response{sourcemeta::core::JSON::make_object()};
@@ -983,8 +982,19 @@ struct GenerateMCP {
         "resourcePageSize",
         sourcemeta::core::JSON{static_cast<sourcemeta::core::JSON::Integer>(
             MCP_RESOURCES_PAGE_SIZE)});
-    document.assign(std::string{sourcemeta::core::MCP_METHOD_INITIALIZE},
-                    std::move(initialize_ingredients));
+    // What this instance says about itself, read by whichever of the two
+    // handshakes a caller speaks, so it is named after neither of them
+    document.assign("advertisement", std::move(advertisement_ingredients));
+    // Who may keep an answer built from this artifact. What the anonymous view
+    // holds is what a caller holding nothing sees, so sharing it between
+    // callers reveals nothing, while a view assembled for a credential is only
+    // ever that caller's to keep
+    document.assign(
+        "cacheScope",
+        sourcemeta::core::JSON{sourcemeta::core::mcp_cache_scope_string(
+            action.view == sourcemeta::one::VIEW_PUBLIC
+                ? sourcemeta::core::MCPCacheScope::Public
+                : sourcemeta::core::MCPCacheScope::Private)});
     document.assign(
         std::string{sourcemeta::core::MCP_METHOD_RESOURCES_TEMPLATES_LIST},
         std::move(resource_templates_response));

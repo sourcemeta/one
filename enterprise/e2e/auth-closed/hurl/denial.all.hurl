@@ -363,5 +363,5 @@ Cache-Control: no-store
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Allow-Methods: POST, OPTIONS
 [Asserts]
-header "Access-Control-Allow-Headers" == "Authorization, Content-Type, MCP-Protocol-Version"
+header "Access-Control-Allow-Headers" == "Authorization, Content-Type, MCP-Protocol-Version, Mcp-Method, Mcp-Name"
 bytes count == 0

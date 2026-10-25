@@ -79,7 +79,7 @@
             "inputSchema": {
               "type": "object",
               "$ref": "https://example.com/v1/self/v1/schemas/mcp/tools/call/list-directory/request",
-              "$comment": "MCP clients should resolve `$ref` references in input schemas by default. If yours does not, call `resources/read` on the `$ref` URL above to fetch the full input schema that defines this tool's parameters. This server is a JSON Schema registry, so every `$ref` URL is itself reachable as an MCP resource"
+              "$comment": "The full input schema for this tool is published at the `$ref` URL above. A client that does not resolve it can call `resources/read` on that URL to fetch it, since this server is a JSON Schema registry and every `$ref` URL is itself reachable as an MCP resource"
             },
             "outputSchema": {
               "type": "object",
@@ -166,8 +166,599 @@
         },
         {
           "$ref": "./tools/call/response.json"
+        },
+        {
+          "$ref": "#/$defs/modernDiscoverResponse"
+        },
+        {
+          "$ref": "#/$defs/modernToolsListResponse"
+        },
+        {
+          "$ref": "#/$defs/modernToolsCallResponse"
+        },
+        {
+          "$ref": "#/$defs/modernResourcesListResponse"
+        },
+        {
+          "$ref": "#/$defs/modernResourcesReadResponse"
+        },
+        {
+          "$ref": "#/$defs/modernResourceTemplatesListResponse"
         }
       ]
+    },
+    "modernResultMeta": {
+      "$comment": "Protocol revision 2026-07-28 has a server name itself on every result",
+      "x-lint-exclude": [ "simple_properties_identifiers" ],
+      "type": "object",
+      "required": [ "io.modelcontextprotocol/serverInfo" ],
+      "properties": {
+        "io.modelcontextprotocol/serverInfo": {
+          "type": "object",
+          "required": [ "name", "version" ],
+          "properties": {
+            "name": {
+              "enum": [ "sourcemeta-one", "sourcemeta-one-enterprise" ]
+            },
+            "title": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string",
+              "minLength": 1
+            },
+            "websiteUrl": {
+              "x-format-assertion": true,
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "modernToolDescriptors": {
+      "$comment": "Mirrors the same shape in the per-method response beside this one. That schema closes `result`, which is what keeps an era that adds fields to `result` from matching it, so the payload is restated here rather than shared",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": [ "name", "description", "inputSchema", "annotations" ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "inputSchema": {
+            "x-lint-exclude": [ "simple_properties_identifiers" ],
+            "type": "object",
+            "required": [ "type", "$ref", "$comment" ],
+            "properties": {
+              "type": {
+                "const": "object"
+              },
+              "$ref": {
+                "x-format-assertion": true,
+                "type": "string",
+                "format": "uri"
+              },
+              "$comment": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          "outputSchema": {
+            "x-lint-exclude": [ "simple_properties_identifiers" ],
+            "type": "object",
+            "required": [ "type", "$ref" ],
+            "properties": {
+              "type": {
+                "const": "object"
+              },
+              "$ref": {
+                "x-format-assertion": true,
+                "type": "string",
+                "format": "uri"
+              }
+            },
+            "additionalProperties": false
+          },
+          "annotations": {
+            "type": "object",
+            "required": [
+              "title",
+              "readOnlyHint",
+              "destructiveHint",
+              "idempotentHint",
+              "openWorldHint"
+            ],
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "readOnlyHint": {
+                "type": "boolean"
+              },
+              "destructiveHint": {
+                "type": "boolean"
+              },
+              "idempotentHint": {
+                "type": "boolean"
+              },
+              "openWorldHint": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "modernResourceDescriptors": {
+      "$comment": "Mirrors the same shape in the per-method response beside this one. That schema closes `result`, which is what keeps an era that adds fields to `result` from matching it, so the payload is restated here rather than shared",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": [ "uri", "name", "mimeType", "size", "annotations" ],
+        "properties": {
+          "uri": {
+            "x-format-assertion": true,
+            "type": "string",
+            "format": "uri"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "mimeType": {
+            "const": "application/schema+json"
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "annotations": {
+            "type": "object",
+            "required": [ "priority" ],
+            "properties": {
+              "priority": {
+                "type": "number",
+                "maximum": 1,
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "modernResourceTemplateDescriptors": {
+      "$comment": "Mirrors the same shape in the per-method response beside this one. That schema closes `result`, which is what keeps an era that adds fields to `result` from matching it, so the payload is restated here rather than shared",
+      "type": "array",
+      "maxItems": 1,
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [ "uriTemplate", "name", "description", "mimeType" ],
+        "properties": {
+          "uriTemplate": {
+            "x-format-assertion": true,
+            "type": "string",
+            "format": "uri-template"
+          },
+          "name": {
+            "const": "JSON Schema"
+          },
+          "description": {
+            "const": "A JSON Schema in this catalog, addressable by its canonical absolute URI under this server's origin. This instance is sovereign over its own URL namespace. Schemas whose URIs lie outside this namespace will not be served here. Substitute `{+path}` with the schema's catalog path. Include `{?bundle}` (its presence alone triggers bundling, any value is ignored) to receive the schema with every external `$ref` inlined into a single self-contained document. Alternatively, include `{?as}` with one of the keys of the `conversions` property of the schema metadata to receive the schema converted into that dialect. The URI must not contain a fragment. Use `resources/list` to discover the available schemas rather than guessing paths"
+          },
+          "mimeType": {
+            "const": "application/schema+json"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "modernResourceContents": {
+      "$comment": "Mirrors the same shape in the per-method response beside this one. That schema closes `result`, which is what keeps an era that adds fields to `result` from matching it, so the payload is restated here rather than shared",
+      "type": "array",
+      "maxItems": 1,
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [ "uri", "mimeType", "text" ],
+        "properties": {
+          "uri": {
+            "x-format-assertion": true,
+            "type": "string",
+            "format": "uri"
+          },
+          "mimeType": {
+            "const": "application/schema+json"
+          },
+          "text": {
+            "type": "string",
+            "contentEncoding": "identity",
+            "contentMediaType": "application/schema+json"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "modernToolContent": {
+      "$comment": "Mirrors the same shape in the per-method response beside this one. That schema closes `result`, which is what keeps an era that adds fields to `result` from matching it, so the payload is restated here rather than shared",
+      "type": "array",
+      "minItems": 1,
+      "prefixItems": [
+        {
+          "type": "object",
+          "required": [ "type", "text" ],
+          "properties": {
+            "type": {
+              "const": "text"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      ],
+      "items": {
+        "anyOf": [
+          {
+            "type": "object",
+            "required": [ "type", "text" ],
+            "properties": {
+              "type": {
+                "const": "text"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "$comment": "Per the Model Context Protocol specification, the ResourceLink content block requires a name (https://modelcontextprotocol.io/specification/2025-06-18/server/tools#resource-links)",
+            "type": "object",
+            "required": [ "type", "uri", "name", "mimeType" ],
+            "properties": {
+              "type": {
+                "const": "resource_link"
+              },
+              "uri": {
+                "x-format-assertion": true,
+                "type": "string",
+                "format": "uri"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "mimeType": {
+                "const": "application/schema+json"
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "modernDiscoverResponse": {
+      "$comment": "Answer to a `server/discover` request on protocol revision 2026-07-28",
+      "type": "object",
+      "required": [ "jsonrpc", "id", "result" ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [ "string", "integer" ]
+        },
+        "result": {
+          "type": "object",
+          "required": [
+            "resultType",
+            "_meta",
+            "supportedVersions",
+            "capabilities",
+            "instructions",
+            "ttlMs",
+            "cacheScope"
+          ],
+          "properties": {
+            "resultType": {
+              "const": "complete"
+            },
+            "_meta": {
+              "$ref": "#/$defs/modernResultMeta"
+            },
+            "supportedVersions": {
+              "const": [
+                "2025-03-26",
+                "2025-06-18",
+                "2025-11-25",
+                "2026-07-28"
+              ]
+            },
+            "capabilities": {
+              "type": "object",
+              "required": [ "resources" ],
+              "properties": {
+                "resources": {
+                  "type": "object",
+                  "additionalProperties": false
+                },
+                "tools": {
+                  "type": "object",
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "instructions": {
+              "type": "string",
+              "minLength": 1
+            },
+            "ttlMs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cacheScope": {
+              "enum": [ "public", "private" ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "modernToolsListResponse": {
+      "$comment": "Answer to a `tools/list` request on protocol revision 2026-07-28",
+      "type": "object",
+      "required": [ "jsonrpc", "id", "result" ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [ "string", "integer" ]
+        },
+        "result": {
+          "type": "object",
+          "required": [ "resultType", "_meta", "tools", "ttlMs", "cacheScope" ],
+          "properties": {
+            "resultType": {
+              "const": "complete"
+            },
+            "_meta": {
+              "$ref": "#/$defs/modernResultMeta"
+            },
+            "tools": {
+              "$ref": "#/$defs/modernToolDescriptors"
+            },
+            "ttlMs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cacheScope": {
+              "enum": [ "public", "private" ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "modernResourcesListResponse": {
+      "$comment": "Answer to a `resources/list` request on protocol revision 2026-07-28",
+      "type": "object",
+      "required": [ "jsonrpc", "id", "result" ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [ "string", "integer" ]
+        },
+        "result": {
+          "type": "object",
+          "required": [
+            "resultType",
+            "_meta",
+            "resources",
+            "ttlMs",
+            "cacheScope"
+          ],
+          "properties": {
+            "resultType": {
+              "const": "complete"
+            },
+            "_meta": {
+              "$ref": "#/$defs/modernResultMeta"
+            },
+            "resources": {
+              "$ref": "#/$defs/modernResourceDescriptors"
+            },
+            "nextCursor": {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$"
+            },
+            "ttlMs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cacheScope": {
+              "enum": [ "public", "private" ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "modernResourceTemplatesListResponse": {
+      "$comment": "Answer to a `resources/templates/list` request on protocol revision 2026-07-28",
+      "type": "object",
+      "required": [ "jsonrpc", "id", "result" ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [ "string", "integer" ]
+        },
+        "result": {
+          "type": "object",
+          "required": [
+            "resultType",
+            "_meta",
+            "resourceTemplates",
+            "ttlMs",
+            "cacheScope"
+          ],
+          "properties": {
+            "resultType": {
+              "const": "complete"
+            },
+            "_meta": {
+              "$ref": "#/$defs/modernResultMeta"
+            },
+            "resourceTemplates": {
+              "$ref": "#/$defs/modernResourceTemplateDescriptors"
+            },
+            "ttlMs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cacheScope": {
+              "enum": [ "public", "private" ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "modernResourcesReadResponse": {
+      "$comment": "Answer to a `resources/read` request on protocol revision 2026-07-28",
+      "type": "object",
+      "required": [ "jsonrpc", "id", "result" ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [ "string", "integer" ]
+        },
+        "result": {
+          "type": "object",
+          "required": [
+            "resultType",
+            "_meta",
+            "contents",
+            "ttlMs",
+            "cacheScope"
+          ],
+          "properties": {
+            "resultType": {
+              "const": "complete"
+            },
+            "_meta": {
+              "$ref": "#/$defs/modernResultMeta"
+            },
+            "contents": {
+              "$ref": "#/$defs/modernResourceContents"
+            },
+            "ttlMs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cacheScope": {
+              "enum": [ "public", "private" ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "modernToolsCallResponse": {
+      "$comment": "Answer to a `tools/call` request on protocol revision 2026-07-28. A tool call is not cacheable, so it carries no caching hints",
+      "type": "object",
+      "required": [ "jsonrpc", "id", "result" ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [ "string", "integer" ]
+        },
+        "result": {
+          "anyOf": [
+            {
+              "type": "object",
+              "required": [ "resultType", "_meta", "content", "isError" ],
+              "properties": {
+                "resultType": {
+                  "const": "complete"
+                },
+                "_meta": {
+                  "$ref": "#/$defs/modernResultMeta"
+                },
+                "content": {
+                  "$ref": "#/$defs/modernToolContent"
+                },
+                "structuredContent": {
+                  "type": "object"
+                },
+                "isError": {
+                  "const": false
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [ "resultType", "_meta", "content", "isError" ],
+              "properties": {
+                "resultType": {
+                  "const": "complete"
+                },
+                "_meta": {
+                  "$ref": "#/$defs/modernResultMeta"
+                },
+                "content": {
+                  "$ref": "#/$defs/modernToolContent"
+                },
+                "isError": {
+                  "const": true
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

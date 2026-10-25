@@ -23,6 +23,7 @@
 #include <algorithm> // std::ranges::find
 #include <array>     // std::array
 #include <cassert>   // assert
+#include <cstdint>   // std::int64_t
 #include <exception> // std::exception, std::exception_ptr, std::rethrow_exception
 #include <filesystem>  // std::filesystem
 #include <optional>    // std::optional
@@ -30,14 +31,72 @@
 #include <sstream>     // std::ostringstream
 #include <string>      // std::string
 #include <string_view> // std::string_view
-#include <utility>     // std::move
+#include <utility>     // std::move, std::pair
+#include <vector>      // std::vector
 
 // The protocol revisions this instance serves. A client asking for anything
 // else is refused rather than answered under rules this does not implement
-inline constexpr std::array<sourcemeta::core::JSON::StringView, 3>
+inline constexpr std::array<sourcemeta::core::JSON::StringView, 4>
     MCP_SUPPORTED_VERSIONS{{sourcemeta::core::MCP_PROTOCOL_VERSION_2025_03_26,
                             sourcemeta::core::MCP_PROTOCOL_VERSION_2025_06_18,
-                            sourcemeta::core::MCP_PROTOCOL_VERSION_2025_11_25}};
+                            sourcemeta::core::MCP_PROTOCOL_VERSION_2025_11_25,
+                            sourcemeta::core::MCP_PROTOCOL_VERSION_2026_07_28}};
+
+// How long a caller may keep an answer. What a process serves is settled before
+// it starts and cannot change under it, so what bounds this is how soon a
+// caller should notice a deployment rather than anything the catalog might do
+inline constexpr std::int64_t MCP_CACHE_TTL_MILLISECONDS{300000};
+
+// Which of the methods a revision names this instance answers. A method the
+// revision defines but nothing here serves is missing rather than malformed,
+// and saying which it is tells a caller whether to fix the request or stop
+// asking
+[[nodiscard]] constexpr auto
+mcp_serves_method(const sourcemeta::core::MCPProtocolVersion version,
+                  const sourcemeta::core::JSON::StringView method) noexcept
+    -> bool {
+  if (version == sourcemeta::core::MCPProtocolVersion::V_2026_07_28) {
+    return method == sourcemeta::core::MCP_METHOD_SERVER_DISCOVER ||
+           method == sourcemeta::core::MCP_METHOD_TOOLS_LIST ||
+           method == sourcemeta::core::MCP_METHOD_TOOLS_CALL ||
+           method == sourcemeta::core::MCP_METHOD_RESOURCES_LIST ||
+           method == sourcemeta::core::MCP_METHOD_RESOURCES_READ ||
+           method == sourcemeta::core::MCP_METHOD_RESOURCES_TEMPLATES_LIST;
+  }
+
+  return method == sourcemeta::core::MCP_METHOD_INITIALIZE ||
+         method == sourcemeta::core::MCP_METHOD_PING ||
+         method == sourcemeta::core::MCP_METHOD_TOOLS_LIST ||
+         method == sourcemeta::core::MCP_METHOD_TOOLS_CALL ||
+         method == sourcemeta::core::MCP_METHOD_RESOURCES_LIST ||
+         method == sourcemeta::core::MCP_METHOD_RESOURCES_READ ||
+         method == sourcemeta::core::MCP_METHOD_RESOURCES_TEMPLATES_LIST;
+}
+
+// What a caller is answered with when an error carries a status of its own, and
+// what it is answered with otherwise. A rejection reached before a method was
+// resolved speaks about the request, so it is a bad one, while a refusal that
+// came out of answering speaks about what was asked for and travels on a
+// successful exchange
+[[nodiscard]] inline auto
+mcp_error_status(const sourcemeta::core::MCPProtocolVersion version,
+                 const sourcemeta::core::JSON &envelope, const bool transport)
+    -> sourcemeta::core::HTTPStatus {
+  const auto *error{envelope.try_at("error")};
+  if (error != nullptr) {
+    const auto *code{error->try_at("code")};
+    if (code != nullptr && code->is_integer()) {
+      const auto mandated{sourcemeta::core::mcp_error_code_to_http_status(
+          version, code->to_integer())};
+      if (mandated.has_value()) {
+        return mandated.value();
+      }
+    }
+  }
+
+  return transport ? sourcemeta::core::HTTP_STATUS_BAD_REQUEST
+                   : sourcemeta::core::HTTP_STATUS_OK;
+}
 
 class ActionMCPV1 : public sourcemeta::one::RouterAction {
 public:
@@ -82,10 +141,12 @@ public:
       response.write_header("Access-Control-Allow-Methods", "POST, OPTIONS");
       // Without `Authorization` a browser withholds the credential at
       // preflight, so no browser-resident client could authenticate at all,
-      // whatever it holds
-      response.write_header(
-          "Access-Control-Allow-Headers",
-          "Authorization, Content-Type, MCP-Protocol-Version");
+      // whatever it holds. The routing fields are named for the same reason:
+      // a revision that requires them on every request puts them beyond a
+      // browser's reach unless they are allowed here
+      response.write_header("Access-Control-Allow-Headers",
+                            "Authorization, Content-Type, "
+                            "MCP-Protocol-Version, Mcp-Method, Mcp-Name");
       response.write_header("Access-Control-Max-Age", "3600");
       // Browser preflight cache is governed by `Access-Control-Max-Age`;
       // `no-store` keeps shared HTTP caches from storing this response.
@@ -164,27 +225,21 @@ public:
             : std::optional<sourcemeta::core::MCPProtocolVersion>{
                   sourcemeta::core::MCPProtocolVersion::V_2025_03_26}};
     // A revision this library models is not automatically one this instance
-    // serves, so what it settles on is checked against what is advertised
-    if (!negotiated_version.has_value() ||
-        std::ranges::find(MCP_SUPPORTED_VERSIONS,
-                          sourcemeta::core::mcp_protocol_version_string(
-                              negotiated_version.value())) ==
-            MCP_SUPPORTED_VERSIONS.cend()) {
-      auto data{sourcemeta::core::JSON::make_object()};
-      data.assign("current",
-                  sourcemeta::core::JSON{std::string{requested_version}});
-      auto supported{sourcemeta::core::JSON::make_array()};
-      for (const auto advertised : MCP_SUPPORTED_VERSIONS) {
-        supported.push_back(sourcemeta::core::JSON{advertised});
-      }
-      data.assign("supported", std::move(supported));
-      this->write_envelope(request, response,
-                           sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-                           sourcemeta::core::jsonrpc_make_error(
-                               nullptr, -32003, "Unsupported protocol version",
-                               std::move(data)));
-      return;
-    }
+    // serves, so what it settles on is checked against what is advertised.
+    // Nothing is refused here: a refusal has to name the request it answers,
+    // and the identifier that names it has not been read yet
+    const auto served_version{
+        negotiated_version.has_value() &&
+                std::ranges::find(MCP_SUPPORTED_VERSIONS,
+                                  sourcemeta::core::mcp_protocol_version_string(
+                                      negotiated_version.value())) !=
+                    MCP_SUPPORTED_VERSIONS.cend()
+            ? negotiated_version
+            : std::optional<sourcemeta::core::MCPProtocolVersion>{}};
+    // What a rejection decided before the body arrives echoes back, which is
+    // the revision that predates the header whenever none was settled on
+    const auto echo_version{served_version.value_or(
+        sourcemeta::core::MCPProtocolVersion::V_2025_03_26)};
 
     // RFC 9110 §10.1.1: refuse unrecognised expectations with 417 before
     // touching the body. uWS already auto-acknowledged `100-continue`
@@ -195,7 +250,7 @@ public:
           sourcemeta::core::jsonrpc_make_error(
               nullptr, -32009,
               "The Expect header carries an unsupported expectation"),
-          negotiated_version.value());
+          echo_version);
       return;
     }
 
@@ -206,129 +261,33 @@ public:
                            sourcemeta::core::HTTP_STATUS_CONTENT_TOO_LARGE,
                            sourcemeta::core::jsonrpc_make_error(
                                nullptr, -32005, "Request body is too large"),
-                           negotiated_version.value());
+                           echo_version);
       return;
     }
 
     request.body(
-        [this, version = negotiated_version.value()](
-            sourcemeta::one::HTTPRequest &callback_request,
-            sourcemeta::one::HTTPResponse &callback_response,
-            std::string &&body, bool too_big) -> void {
+        [this,
+         // Taken now rather than inside, since the request these came from is
+         // gone by the time there is a body to read them against
+         routing = sourcemeta::one::mcp_owned_routing_headers(request),
+         requested = std::string{requested_version}, served = served_version,
+         echo = echo_version](sourcemeta::one::HTTPRequest &callback_request,
+                              sourcemeta::one::HTTPResponse &callback_response,
+                              std::string &&body, bool too_big) -> void {
           if (too_big) {
             this->write_envelope(
                 callback_request, callback_response,
                 sourcemeta::core::HTTP_STATUS_CONTENT_TOO_LARGE,
                 sourcemeta::core::jsonrpc_make_error(
                     nullptr, -32005, "Request body is too large"),
-                version);
+                echo);
             return;
           }
-          sourcemeta::core::JSON request_json{nullptr};
-          try {
-            request_json = sourcemeta::core::parse_json(body);
-          } catch (const std::exception &) {
-            this->write_envelope(callback_request, callback_response,
-                                 sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-                                 sourcemeta::core::jsonrpc_make_error_parse(),
-                                 version);
-            return;
-          }
-          if (sourcemeta::core::jsonrpc_is_batch(request_json)) {
-            if (!sourcemeta::core::mcp_supports_jsonrpc_batching(version)) {
-              // MCP 2025-06-18 removed JSON-RPC batching. Any array body on
-              // a protocol version that doesn't support batching is treated
-              // as an unrecognized batch shape: per JSON-RPC 2.0 §6, a
-              // batch that fails to be recognized as a valid Array yields a
-              // single Invalid Request response.
-              // https://www.jsonrpc.org/specification#batch
-              this->write_envelope(
-                  callback_request, callback_response,
-                  sourcemeta::core::HTTP_STATUS_OK,
-                  sourcemeta::core::jsonrpc_make_error_invalid_request(nullptr),
-                  version);
-              return;
-            }
-            if (!sourcemeta::core::jsonrpc_is_valid_batch(request_json)) {
-              // JSON-RPC 2.0 §6: "If the batch rpc call itself fails to be
-              // recognized as a valid JSON or as an Array with at least one
-              // value, the response from the Server MUST be a single
-              // Response object." Empty array body falls here.
-              // https://www.jsonrpc.org/specification#batch
-              this->write_envelope(
-                  callback_request, callback_response,
-                  sourcemeta::core::HTTP_STATUS_OK,
-                  sourcemeta::core::jsonrpc_make_error_invalid_request(nullptr),
-                  version);
-              return;
-            }
-            auto responses{sourcemeta::core::JSON::make_array()};
-            for (const auto &sub : request_json.as_array()) {
-              sourcemeta::core::JSON sub_id{nullptr};
-              if (const auto *parsed_id{
-                      sourcemeta::core::jsonrpc_request_id(sub)};
-                  parsed_id != nullptr) {
-                sub_id = *parsed_id;
-              }
-              try {
-                auto envelope{this->process_one(sub)};
-                if (envelope.has_value()) {
-                  responses.push_back(std::move(envelope).value());
-                }
-              } catch (const std::exception &) {
-                responses.push_back(
-                    sourcemeta::core::jsonrpc_make_error_internal(&sub_id));
-              }
-            }
-            if (responses.empty()) {
-              // JSON-RPC 2.0 §6: "If there are no Response objects contained
-              // within the Response array as it is to be sent to the client,
-              // the server MUST NOT return an empty Array and should return
-              // nothing at all." A batch of pure notifications falls here.
-              // https://www.jsonrpc.org/specification#batch
-              callback_response.write_status(
-                  sourcemeta::core::HTTP_STATUS_ACCEPTED);
-              callback_response.write_header("Access-Control-Allow-Origin",
-                                             this->allowed_origin_);
-              callback_response.write_header("Access-Control-Expose-Headers",
-                                             "Link, ETag");
-              callback_response.write_header(
-                  "Cache-Control", sourcemeta::one::cache_control_no_store());
-              callback_response.write_header(
-                  "MCP-Protocol-Version",
-                  sourcemeta::core::mcp_protocol_version_string(version));
-              sourcemeta::one::send_response(
-                  sourcemeta::core::HTTP_STATUS_ACCEPTED, callback_request,
-                  callback_response);
-              return;
-            }
-            this->write_envelope(callback_request, callback_response,
-                                 sourcemeta::core::HTTP_STATUS_OK, responses,
-                                 version);
-            return;
-          }
-          auto envelope{this->process_one(request_json)};
-          if (envelope.has_value()) {
-            this->write_envelope(callback_request, callback_response,
-                                 sourcemeta::core::HTTP_STATUS_OK,
-                                 envelope.value(), version);
-            return;
-          }
-          callback_response.write_status(
-              sourcemeta::core::HTTP_STATUS_ACCEPTED);
-          callback_response.write_header("Access-Control-Allow-Origin",
-                                         this->allowed_origin_);
-          callback_response.write_header("Access-Control-Expose-Headers",
-                                         "Link, ETag");
-          callback_response.write_header(
-              "Cache-Control", sourcemeta::one::cache_control_no_store());
-          callback_response.write_header(
-              "MCP-Protocol-Version",
-              sourcemeta::core::mcp_protocol_version_string(version));
-          sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_ACCEPTED,
-                                         callback_request, callback_response);
+
+          this->on_message(served, requested, routing, callback_request,
+                           callback_response, std::move(body));
         },
-        [this, version = negotiated_version.value()](
+        [this, version = echo_version](
             sourcemeta::one::HTTPRequest &callback_request,
             sourcemeta::one::HTTPResponse &callback_response,
             const std::exception_ptr &error) -> void {
@@ -401,8 +360,244 @@ private:
         sourcemeta::core::JSON{MCP_ENTERPRISE_REQUIRED_DATA});
   }
 
+  // Who may keep an answer, and for how long. This edition serves one view, so
+  // what it hands out is what anybody holding nothing would be handed
+  [[nodiscard]] auto cache_policy() const -> sourcemeta::core::MCPCachePolicy {
+    const auto scope{sourcemeta::core::mcp_resolve_cache_scope(
+        this->mcp_metadata_.at("cacheScope").to_string())};
+    assert(scope.has_value());
+    return {.ttl_ms = MCP_CACHE_TTL_MILLISECONDS, .scope = scope.value()};
+  }
+
+  // What the newest revision adds to whatever a handler produced: the kind of
+  // result it is, and who produced it. Settled in one place, so that a handler
+  // answers its own question and nothing else
   [[nodiscard]] auto
-  process_one(const sourcemeta::core::JSON &request_json) const
+  decorated(const sourcemeta::core::MCPProtocolVersion version,
+            sourcemeta::core::JSON envelope) const -> sourcemeta::core::JSON {
+    if (version != sourcemeta::core::MCPProtocolVersion::V_2026_07_28) {
+      return envelope;
+    }
+
+    auto *result{envelope.try_at("result")};
+    if (result == nullptr || !result->is_object()) {
+      return envelope;
+    }
+
+    const auto &parts{this->mcp_metadata_.at("advertisement")};
+    envelope.assign("result", sourcemeta::core::mcp_decorate_result(
+                                  version, std::move(*result),
+                                  sourcemeta::core::MCPImplementation{
+                                      .name = parts.at(5).to_string(),
+                                      .version = parts.at(6).to_string(),
+                                      .title = parts.at(7).to_string(),
+                                      .description = parts.at(8).to_string(),
+                                      .website_url = parts.at(9).to_string(),
+                                  }));
+    return envelope;
+  }
+
+  [[nodiscard]] auto
+  on_server_discover(const sourcemeta::core::MCPProtocolVersion version,
+                     const sourcemeta::core::JSON &request_json) const
+      -> sourcemeta::core::JSON {
+    const auto &parts{this->mcp_metadata_.at("advertisement")};
+    return sourcemeta::core::mcp_make_server_discover_response(
+        version, request_json.at("id"),
+        sourcemeta::core::MCPServerCapabilities{
+            .prompts = parts.at(0).to_boolean(),
+            .resources = parts.at(1).to_boolean(),
+            .tools = parts.at(2).to_boolean(),
+            .logging = parts.at(3).to_boolean(),
+            .completions = parts.at(4).to_boolean(),
+        },
+        sourcemeta::core::MCPImplementation{
+            .name = parts.at(5).to_string(),
+            .version = parts.at(6).to_string(),
+            .title = parts.at(7).to_string(),
+            .description = parts.at(8).to_string(),
+            .website_url = parts.at(9).to_string(),
+        },
+        MCP_SUPPORTED_VERSIONS, parts.at(10).to_string(), this->cache_policy());
+  }
+
+  auto
+  on_message(const std::optional<sourcemeta::core::MCPProtocolVersion> served,
+             const std::string_view requested,
+             const std::span<const std::pair<std::string, std::string>> routing,
+             sourcemeta::one::HTTPRequest &request,
+             sourcemeta::one::HTTPResponse &response, std::string &&body) const
+      -> void {
+    // A refusal decided before a revision was settled speaks in the one that
+    // predates the header, since there is nothing else to speak in
+    const auto version{
+        served.value_or(sourcemeta::core::MCPProtocolVersion::V_2025_03_26)};
+
+    sourcemeta::core::JSON request_json{nullptr};
+    try {
+      request_json = sourcemeta::core::parse_json(body);
+    } catch (const std::exception &) {
+      // A body that cannot be read names no request either, so a revision
+      // this instance does not serve is still the first thing to say about it
+      if (!served.has_value()) {
+        this->write_envelope(
+            request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+            sourcemeta::core::mcp_make_error_unsupported_protocol_version(
+                sourcemeta::core::MCPProtocolVersion::V_2026_07_28, nullptr,
+                requested, MCP_SUPPORTED_VERSIONS),
+            version);
+        return;
+      }
+
+      this->write_envelope(
+          request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+          sourcemeta::core::jsonrpc_make_error_parse(), version);
+      return;
+    }
+
+    // Held back until the body was read so that the refusal names the request
+    // it answers. A revision this instance does not serve leaves the request
+    // perfectly readable, so there is an identifier to echo and no excuse for
+    // leaving it out
+    if (!served.has_value()) {
+      this->write_envelope(
+          request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+          sourcemeta::core::mcp_make_error_unsupported_protocol_version(
+              sourcemeta::core::MCPProtocolVersion::V_2026_07_28,
+              sourcemeta::core::jsonrpc_request_id(request_json), requested,
+              MCP_SUPPORTED_VERSIONS),
+          version);
+      return;
+    }
+
+    // The fields beside the body are the request's own account of where it is
+    // going, and a component that routes on one while another acts on the
+    // other is the thing this prevents, so they agree before either is used
+    if (version == sourcemeta::core::MCPProtocolVersion::V_2026_07_28) {
+      std::vector<std::pair<sourcemeta::core::JSON::StringView,
+                            sourcemeta::core::JSON::StringView>>
+          fields;
+      fields.reserve(routing.size());
+      for (const auto &field : routing) {
+        fields.emplace_back(field.first, field.second);
+      }
+
+      const auto refusal{sourcemeta::core::mcp_validate_request_headers(
+          version, fields, request_json, MCP_SUPPORTED_VERSIONS)};
+      if (refusal.has_value()) {
+        this->write_envelope(request, response,
+                             mcp_error_status(version, refusal.value(), true),
+                             refusal.value(), version);
+        return;
+      }
+    }
+
+    if (sourcemeta::core::jsonrpc_is_batch(request_json)) {
+      if (!sourcemeta::core::mcp_supports_jsonrpc_batching(version)) {
+        // MCP 2025-06-18 removed JSON-RPC batching. Any array body on a
+        // protocol version that doesn't support batching is treated as an
+        // unrecognized batch shape: per JSON-RPC 2.0 §6, a batch that fails
+        // to be recognized as a valid Array yields a single Invalid Request
+        // response.
+        // https://www.jsonrpc.org/specification#batch
+        this->write_envelope(
+            request, response, sourcemeta::core::HTTP_STATUS_OK,
+            sourcemeta::core::jsonrpc_make_error_invalid_request(nullptr),
+            version);
+        return;
+      }
+      if (!sourcemeta::core::jsonrpc_is_valid_batch(request_json)) {
+        // JSON-RPC 2.0 §6: "If the batch rpc call itself fails to be
+        // recognized as a valid JSON or as an Array with at least one value,
+        // the response from the Server MUST be a single Response object."
+        // Empty array body falls here.
+        // https://www.jsonrpc.org/specification#batch
+        this->write_envelope(
+            request, response, sourcemeta::core::HTTP_STATUS_OK,
+            sourcemeta::core::jsonrpc_make_error_invalid_request(nullptr),
+            version);
+        return;
+      }
+      auto responses{sourcemeta::core::JSON::make_array()};
+      for (const auto &sub : request_json.as_array()) {
+        sourcemeta::core::JSON sub_id{nullptr};
+        if (const auto *parsed_id{sourcemeta::core::jsonrpc_request_id(sub)};
+            parsed_id != nullptr) {
+          sub_id = *parsed_id;
+        }
+        try {
+          auto envelope{this->process_one(version, sub)};
+          if (envelope.has_value()) {
+            responses.push_back(std::move(envelope).value());
+          }
+        } catch (const std::exception &) {
+          responses.push_back(
+              sourcemeta::core::jsonrpc_make_error_internal(&sub_id));
+        }
+      }
+      if (responses.empty()) {
+        // JSON-RPC 2.0 §6: "If there are no Response objects contained within
+        // the Response array as it is to be sent to the client, the server
+        // MUST NOT return an empty Array and should return nothing at all."
+        // A batch of pure notifications falls here.
+        // https://www.jsonrpc.org/specification#batch
+        this->write_accepted(request, response, version);
+        return;
+      }
+      this->write_envelope(request, response, sourcemeta::core::HTTP_STATUS_OK,
+                           responses, version);
+      return;
+    }
+
+    std::optional<sourcemeta::core::JSON> envelope;
+    try {
+      envelope = this->process_one(version, request_json);
+      if (envelope.has_value()) {
+        envelope = this->decorated(version, std::move(envelope).value());
+      }
+    } catch (const std::exception &) {
+      // Whatever a handler would not build, the caller is still owed an answer
+      // that names the request it asked about
+      this->write_envelope(
+          request, response,
+          sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
+          sourcemeta::core::jsonrpc_make_error_internal(
+              sourcemeta::core::jsonrpc_request_id(request_json)),
+          version);
+      return;
+    }
+
+    if (envelope.has_value()) {
+      this->write_envelope(request, response,
+                           mcp_error_status(version, envelope.value(), false),
+                           envelope.value(), version);
+      return;
+    }
+
+    this->write_accepted(request, response, version);
+  }
+
+  // A notification is taken and nothing is said back, which is a body-less
+  // answer rather than an empty one
+  auto write_accepted(sourcemeta::one::HTTPRequest &request,
+                      sourcemeta::one::HTTPResponse &response,
+                      const sourcemeta::core::MCPProtocolVersion version) const
+      -> void {
+    response.write_status(sourcemeta::core::HTTP_STATUS_ACCEPTED);
+    response.write_header("Access-Control-Allow-Origin", this->allowed_origin_);
+    response.write_header("Access-Control-Expose-Headers", "Link, ETag");
+    response.write_header("Cache-Control",
+                          sourcemeta::one::cache_control_no_store());
+    response.write_header(
+        "MCP-Protocol-Version",
+        sourcemeta::core::mcp_protocol_version_string(version));
+    sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_ACCEPTED,
+                                   request, response);
+  }
+
+  [[nodiscard]] auto
+  process_one(const sourcemeta::core::MCPProtocolVersion version,
+              const sourcemeta::core::JSON &request_json) const
       -> std::optional<sourcemeta::core::JSON> {
     if (sourcemeta::core::jsonrpc_is_notification(request_json)) {
       return std::nullopt;
@@ -419,9 +614,20 @@ private:
       return this->enterprise_required(nullptr);
     }
 
+    // A method nothing here answers is missing rather than malformed, whether
+    // the revision never named it or named it and this instance declined it.
+    // Without this, a revision that retired the handshake would still be
+    // answered one
+    if (!mcp_serves_method(version, method)) {
+      return sourcemeta::core::jsonrpc_make_error_method_not_found(*request_id);
+    }
+
+    if (method == sourcemeta::core::MCP_METHOD_SERVER_DISCOVER) {
+      return this->on_server_discover(version, request_json);
+    }
+
     if (method == sourcemeta::core::MCP_METHOD_INITIALIZE) {
-      const auto &parts{
-          this->mcp_metadata_.at(sourcemeta::core::MCP_METHOD_INITIALIZE)};
+      const auto &parts{this->mcp_metadata_.at("advertisement")};
       return sourcemeta::core::mcp_make_initialize_response(
           request_json,
           sourcemeta::core::MCPServerCapabilities{
@@ -444,7 +650,11 @@ private:
     if (method == sourcemeta::core::MCP_METHOD_RESOURCES_TEMPLATES_LIST) {
       return sourcemeta::core::jsonrpc_make_success(
           *request_id,
-          this->mcp_metadata_.at(
+          sourcemeta::core::mcp_decorate_cacheable_result(
+              version,
+              this->mcp_metadata_.at(
+                  sourcemeta::core::MCP_METHOD_RESOURCES_TEMPLATES_LIST),
+              this->cache_policy(),
               sourcemeta::core::MCP_METHOD_RESOURCES_TEMPLATES_LIST));
     }
 

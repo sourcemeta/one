@@ -139,6 +139,26 @@ private:
   return result;
 }
 
+// The fields a revision mirrors beside the body, copied for a handler that
+// outlives the request. Every occurrence is kept rather than the first, since a
+// field that arrived twice is a disagreement about where the request is going
+// and not a value to pick from. The names are the lowercase ones the server
+// stores, and whoever reads them back compares without regard to case
+[[nodiscard]] inline auto mcp_owned_routing_headers(const HTTPRequest &request)
+    -> std::vector<std::pair<std::string, std::string>> {
+  std::vector<std::pair<std::string, std::string>> result;
+  for (const auto name :
+       {std::string_view{"mcp-protocol-version"},
+        std::string_view{"mcp-method"}, std::string_view{"mcp-name"}}) {
+    request.header_values(
+        name, [&result, name](const std::string_view value) -> void {
+          result.emplace_back(name, value);
+        });
+  }
+
+  return result;
+}
+
 // A schema named as a content block. A revision that has no block type for
 // naming a resource is given the same three fields as lines instead, since
 // what reads tool output is a language model rather than a display surface

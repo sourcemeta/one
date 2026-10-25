@@ -385,7 +385,7 @@ HTTP 204
 Cache-Control: no-store
 Allow: POST, OPTIONS
 [Asserts]
-header "Access-Control-Allow-Headers" == "Authorization, Content-Type, MCP-Protocol-Version"
+header "Access-Control-Allow-Headers" == "Authorization, Content-Type, MCP-Protocol-Version, Mcp-Method, Mcp-Name"
 header "Access-Control-Allow-Methods" == "POST, OPTIONS"
 header "Access-Control-Allow-Origin" == "{{base}}"
 header "Access-Control-Max-Age" == "3600"

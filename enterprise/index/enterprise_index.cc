@@ -116,15 +116,18 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
     input_schema_ref.assign("type", sourcemeta::core::JSON{"object"});
     input_schema_ref.assign(
         "$ref", sourcemeta::core::JSON{std::move(input_schema_url).value()});
+    // Where the parameters are published, rather than an instruction to go and
+    // read them. Fetching a reference while validating is something a client is
+    // told not to do, whereas asking this registry for one of its own resources
+    // is a request like any other
     input_schema_ref.assign(
         "$comment",
         sourcemeta::core::JSON{
-            "MCP clients should resolve `$ref` references in input "
-            "schemas by default. If yours does not, call `resources/read` "
-            "on the `$ref` URL above to fetch the full input schema that "
-            "defines this tool's parameters. This server is a JSON Schema "
-            "registry, so every `$ref` URL is itself reachable as an MCP "
-            "resource"});
+            "The full input schema for this tool is published at the `$ref` "
+            "URL above. A client that does not resolve it can call "
+            "`resources/read` on that URL to fetch it, since this server is a "
+            "JSON Schema registry and every `$ref` URL is itself reachable as "
+            "an MCP resource"});
 
     std::optional<sourcemeta::core::JSON> output_schema_ref;
     if (!rpc_response_schema.empty()) {
