@@ -4,9 +4,9 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
+#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/core/uritemplate.h>
 
-#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/router.h>
 

@@ -55,6 +55,12 @@ endif()
 # cannot consult git, as the context leaves it out, so continuous integration
 # passes it in instead
 set(ONE_REVISION "" CACHE STRING "The revision this build was produced from")
+# Whoever hands one over may name it in full or in short, and the same
+# revision has to read the same either way or it would look like another build
+string(LENGTH "${ONE_REVISION}" ONE_REVISION_LENGTH)
+if(ONE_REVISION_LENGTH GREATER 8)
+  string(SUBSTRING "${ONE_REVISION}" 0 8 ONE_REVISION)
+endif()
 if(NOT ONE_REVISION)
   find_program(GIT_BIN NAMES git)
   if(GIT_BIN AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
@@ -89,6 +95,11 @@ foreach(dependency_manifest IN ITEMS
     "${PROJECT_SOURCE_DIR}/vendor/blaze/DEPENDENCIES"
     "${PROJECT_SOURCE_DIR}/vendor/jsonschema/DEPENDENCIES")
   if(EXISTS "${dependency_manifest}")
+    # Reading a file does not make this run again when it changes, and an
+    # identity left over from the pins of an earlier build vouches for
+    # artifacts those produced
+    set_property(DIRECTORY APPEND PROPERTY
+      CMAKE_CONFIGURE_DEPENDS "${dependency_manifest}")
     file(READ "${dependency_manifest}" dependency_manifest_contents)
     string(APPEND ONE_IDENTITY_TEXT "${dependency_manifest_contents}")
   endif()

@@ -3,8 +3,8 @@
 #include <sourcemeta/blaze/output.h>
 
 #include <sourcemeta/core/jsonschema.h>
-
 #include <sourcemeta/core/metapack.h>
+
 #include <sourcemeta/one/router.h>
 
 #include <cassert>     // assert

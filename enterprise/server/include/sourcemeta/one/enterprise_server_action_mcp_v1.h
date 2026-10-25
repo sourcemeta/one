@@ -4,12 +4,12 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
+#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/core/numeric.h>
 #include <sourcemeta/core/text.h>
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
-#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/one/enterprise_conversion.h>
 #include <sourcemeta/one/enterprise_server_conversion.h>
 #include <sourcemeta/one/http.h>

@@ -4,7 +4,6 @@
 #include "endpoints.h"
 #include "metaschema.h"
 
-#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/one/authentication.h>
 #include <sourcemeta/one/configuration.h>
 #include <sourcemeta/one/resolver.h>
@@ -14,6 +13,7 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/mcp.h>
+#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/core/semver.h>
 #include <sourcemeta/core/text.h>
 

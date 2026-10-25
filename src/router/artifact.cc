@@ -1,10 +1,10 @@
 #include <sourcemeta/core/http.h>
 #include <sourcemeta/core/io.h>
+#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/core/text.h>
 #include <sourcemeta/core/time.h>
 #include <sourcemeta/core/uri.h>
 
-#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/one/router.h>
 
 #include <algorithm>   // std::ranges::copy

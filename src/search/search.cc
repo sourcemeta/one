@@ -1,8 +1,7 @@
 #include <sourcemeta/one/search.h>
 
-#include <sourcemeta/core/text.h>
-
 #include <sourcemeta/core/metapack.h>
+#include <sourcemeta/core/text.h>
 
 #include <algorithm>   // std::min, std::ranges::search
 #include <cassert>     // assert

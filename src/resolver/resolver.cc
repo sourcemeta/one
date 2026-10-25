@@ -1,9 +1,9 @@
-#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/one/resolver.h>
 #include <sourcemeta/one/shared.h>
 
 #include <sourcemeta/core/error.h>
 #include <sourcemeta/core/jsonschema.h>
+#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/core/text.h>
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/yaml.h>

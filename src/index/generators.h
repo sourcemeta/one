@@ -5,7 +5,6 @@
 #include "error.h"
 #include "metaschema.h"
 
-#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/one/actions.h>
 #include <sourcemeta/one/authentication.h>
 #include <sourcemeta/one/build.h>
@@ -18,6 +17,7 @@
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonpointer.h>
 #include <sourcemeta/core/jsonschema.h>
+#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/blaze/compiler.h>
