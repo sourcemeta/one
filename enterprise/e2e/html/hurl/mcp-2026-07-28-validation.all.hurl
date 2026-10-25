@@ -573,8 +573,7 @@ jsonpath "$.valid" == true
 
 # A body that is not JSON at all is refused for the body. Nothing in such a
 # body names an identifier, and this revision lets an error response leave one
-# out, so it is left out rather than sent as a null this revision does not
-# accept in its place
+# out, so it is left out rather than sent as a null identifier
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28

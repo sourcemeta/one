@@ -1049,32 +1049,26 @@ A revision this server does not implement is refused with `400` and an
 [`UnsupportedProtocolVersionError`](https://modelcontextprotocol.io/specification/2026-07-28/schema#unsupportedprotocolversionerror)
 naming every revision that it does.
 
-`2026-07-28` is a different shape rather than a larger one. It removes the
-`initialize` handshake, so a request carries the revision it speaks and what
-the client can do in its own
-[`_meta`](https://modelcontextprotocol.io/specification/2026-07-28/basic/index#meta),
-and the header must agree with what the body says there. It replaces the
-handshake with
+On `2026-07-28` the server answers
 [`server/discover`](https://modelcontextprotocol.io/specification/2026-07-28/server/discover),
-which answers what the instance is and which revisions it speaks in one
-request. Every result carries a `resultType`, and the instance names itself in
-each result's `_meta`. The operations a client may cache carry `ttlMs` and
-`cacheScope`, where a listing assembled for a credential is marked `private`
-and one that anybody would be handed is marked `public`. It also removes
-`ping`, `logging/setLevel`, protocol-level sessions and stream resumption. Of
-those, only `ping` was ever answered here, and the three earlier revisions go
-on answering it.
-
+`tools/list`, `tools/call`, `resources/list`, `resources/read` and
+`resources/templates/list`. Any other method, including
 [`subscriptions/listen`](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/subscriptions),
-which that revision introduces, is answered as an unimplemented method. This
-instance advertises neither `listChanged` nor `resources.subscribe`, so there is
-nothing a subscription could ever deliver, and the specification requires only
-`server/discover` of a server.
+is answered as an unknown method with `404`. Nothing here advertises
+`listChanged` or `resources.subscribe`, so a subscription would have nothing to
+deliver.
+
+On that revision the `MCP-Protocol-Version`, `Mcp-Method` and `Mcp-Name`
+headers must agree with the body they travel with, and a request whose headers
+and body disagree is refused with `400`. Every result names this instance in
+its [`_meta`](https://modelcontextprotocol.io/specification/2026-07-28/basic/index#meta).
+Answers a client may cache are good for five minutes, and are marked `private`
+when assembled for a credential or `public` when they are what any caller would
+be handed.
 
 We recommend connecting with the latest revision to take advantage of all
 available features, but the server gracefully degrades to support older
-clients as needed. The three earlier revisions behave exactly as they did
-before `2026-07-28` was added.
+clients as needed.
 
 **Resources.** Every JSON Schema in the catalog is offered as an MCP resource
 addressable by its canonical absolute URI, served in paginated form. The
@@ -1104,18 +1098,18 @@ long as the set of tools its credential reaches does not change.
 
 !!! warning "Tool input schemas and `$ref`"
 
-    Each tool's `inputSchema` names its parameters through a `$ref` to the
-    schema that defines them, which is itself a resource in this catalog.
-    `2026-07-28` names
-    [`$ref`](https://json-schema.org/understanding-json-schema/structuring#dollarref)
-    among the keywords an `inputSchema` may carry, so the shape is explicitly
-    permitted. That same revision also tells a client not to fetch a `$ref`
-    pointing at the network while validating, which means a client that has not
-    opted into fetching holds a schema it cannot resolve. Calling
-    `resources/read` on the `$ref` URL is the way to read it, and is a request
-    like any other rather than the automatic dereferencing the revision warns
-    about. We keep the `$ref` because the alternative is to stop describing
-    tool parameters by the schemas that already define them.
+    Each tool's `inputSchema` names its parameters through a
+    [`$ref`](https://www.learnjsonschema.com/2020-12/core/ref/) to the schema
+    that defines them, which is itself a resource in this catalog. Clients are
+    [not to resolve such a reference over the
+    network](https://modelcontextprotocol.io/specification/2026-07-28/basic/index#ref-resolution)
+    on their own, so read it by calling `resources/read` on the
+    [`$ref`](https://www.learnjsonschema.com/2020-12/core/ref/) URL, which is
+    an ordinary request rather than the automatic dereferencing a client is
+    warned off. We keep the
+    [`$ref`](https://www.learnjsonschema.com/2020-12/core/ref/) because the
+    alternative is to stop describing tool parameters by the schemas that
+    already define them.
 
 !!! warning "Tool argument stringification"
 

@@ -98,9 +98,9 @@ mcp_error_status(const sourcemeta::core::MCPProtocolVersion version,
                    : sourcemeta::core::HTTP_STATUS_OK;
 }
 
-// What answers a body that could not be read. Nothing in it names an
-// identifier, and a revision that lets an error response leave one out is owed
-// its absence rather than a stand-in value
+// What answers a body that could not be read. Nothing in such a body names an
+// identifier, so on a revision that lets an error response leave one out it is
+// left out rather than sent as a null identifier
 // https://modelcontextprotocol.io/specification/2026-07-28/basic/index#error-responses
 [[nodiscard]] inline auto
 mcp_parse_error(const sourcemeta::core::MCPProtocolVersion version)
