@@ -54,18 +54,15 @@ endif()
 # The revision this build came from, when anything knows it. An image build
 # cannot consult git, as the context leaves it out, so continuous integration
 # passes it in instead
+# Named in full, since an abbreviation is only as unique as the objects it has
+# to be told apart from, and what tells two builds apart cannot be allowed to
+# collide
 set(ONE_REVISION "" CACHE STRING "The revision this build was produced from")
-# Whoever hands one over may name it in full or in short, and the same
-# revision has to read the same either way or it would look like another build
-string(LENGTH "${ONE_REVISION}" ONE_REVISION_LENGTH)
-if(ONE_REVISION_LENGTH GREATER 8)
-  string(SUBSTRING "${ONE_REVISION}" 0 8 ONE_REVISION)
-endif()
 if(NOT ONE_REVISION)
   find_program(GIT_BIN NAMES git)
   if(GIT_BIN AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
     execute_process(
-      COMMAND "${GIT_BIN}" rev-parse --short=8 HEAD
+      COMMAND "${GIT_BIN}" rev-parse HEAD
       WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
       OUTPUT_VARIABLE ONE_REVISION
       OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -73,11 +70,18 @@ if(NOT ONE_REVISION)
   endif()
 endif()
 
+# Shortened for the eye only, where a collision costs nothing
+set(ONE_REVISION_DISPLAY "${ONE_REVISION}")
+string(LENGTH "${ONE_REVISION_DISPLAY}" ONE_REVISION_DISPLAY_LENGTH)
+if(ONE_REVISION_DISPLAY_LENGTH GREATER 8)
+  string(SUBSTRING "${ONE_REVISION_DISPLAY}" 0 8 ONE_REVISION_DISPLAY)
+endif()
+
 # A release says just its version, so what it is called carries no revision
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
   set(ONE_VERSION "${PROJECT_VERSION}")
 elseif(ONE_REVISION)
-  set(ONE_VERSION "${PROJECT_VERSION}+${ONE_REVISION}")
+  set(ONE_VERSION "${PROJECT_VERSION}+${ONE_REVISION_DISPLAY}")
 else()
   set(ONE_VERSION "${PROJECT_VERSION}+unknown")
 endif()

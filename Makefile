@@ -18,7 +18,7 @@ PREFIX ?= $(OUTPUT)/dist
 PARALLEL ?= $(shell getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)
 DOCKERFILE_TEST_REPEAT ?= 1
 # The image build cannot consult git, so the revision is handed to it
-REVISION ?= $(shell git rev-parse --short=8 HEAD 2>/dev/null)
+REVISION ?= $(shell git rev-parse HEAD 2>/dev/null)
 DOCKER_BUILD_FLAGS ?=
 SANDBOX ?= test/e2e/html
 SANDBOX_PORT ?= 8000
