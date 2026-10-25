@@ -98,6 +98,21 @@ mcp_error_status(const sourcemeta::core::MCPProtocolVersion version,
                    : sourcemeta::core::HTTP_STATUS_OK;
 }
 
+// What answers a body that could not be read. Nothing in it names an
+// identifier, and a revision that lets an error response leave one out is owed
+// its absence rather than a stand-in value
+// https://modelcontextprotocol.io/specification/2026-07-28/basic/index#error-responses
+[[nodiscard]] inline auto
+mcp_parse_error(const sourcemeta::core::MCPProtocolVersion version)
+    -> sourcemeta::core::JSON {
+  if (version == sourcemeta::core::MCPProtocolVersion::V_2026_07_28) {
+    return sourcemeta::core::mcp_make_error(
+        version, nullptr, sourcemeta::core::JSONRPC_CODE_PARSE, "Parse error");
+  }
+
+  return sourcemeta::core::jsonrpc_make_error_parse();
+}
+
 class ActionMCPV1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
@@ -449,9 +464,9 @@ private:
         return;
       }
 
-      this->write_envelope(
-          request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-          sourcemeta::core::jsonrpc_make_error_parse(), version);
+      this->write_envelope(request, response,
+                           sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+                           mcp_parse_error(version), version);
       return;
     }
 

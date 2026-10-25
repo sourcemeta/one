@@ -1061,8 +1061,9 @@ request. Every result carries a `resultType`, and the instance names itself in
 each result's `_meta`. The operations a client may cache carry `ttlMs` and
 `cacheScope`, where a listing assembled for a credential is marked `private`
 and one that anybody would be handed is marked `public`. It also removes
-`ping`, `logging/setLevel`, protocol-level sessions and stream resumption, none
-of which this server offered.
+`ping`, `logging/setLevel`, protocol-level sessions and stream resumption. Of
+those, only `ping` was ever answered here, and the three earlier revisions go
+on answering it.
 
 [`subscriptions/listen`](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/subscriptions),
 which that revision introduces, is answered as an unimplemented method. This
@@ -1096,8 +1097,10 @@ hints](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#too
 (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`).
 `tools/list` offers only the tools whose endpoint the client's credential
 admits it to, and calling one that was not listed is answered as an unknown
-tool. The listing follows a fixed order, so a client that caches it is handed
-the same list in the same order every time.
+tool. The listing is returned in a [deterministic
+order](https://modelcontextprotocol.io/specification/2026-07-28/server/tools#capabilities),
+so a client that caches it is handed the same order on every request for as
+long as the set of tools its credential reaches does not change.
 
 !!! warning "Tool input schemas and `$ref`"
 

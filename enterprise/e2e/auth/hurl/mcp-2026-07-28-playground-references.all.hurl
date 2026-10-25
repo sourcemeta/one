@@ -300,6 +300,7 @@ jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Source
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
 body not contains "additionalProperties"
 body not contains "structuredContent"
+body not contains "token"
 
 # The envelope is described by a schema this instance serves
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -776,6 +777,7 @@ jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Source
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
 body not contains "additionalProperties"
 body not contains "structuredContent"
+body not contains "token"
 
 # The envelope is described by a schema this instance serves
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -911,6 +913,7 @@ jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Source
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
 body not contains "additionalProperties"
 body not contains "structuredContent"
+body not contains "token"
 
 # The envelope is described by a schema this instance serves
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -979,6 +982,7 @@ jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Source
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
 body not contains "additionalProperties"
 body not contains "structuredContent"
+body not contains "token"
 
 # The envelope is described by a schema this instance serves
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
