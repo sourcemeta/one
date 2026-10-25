@@ -17,6 +17,8 @@ OUTPUT ?= ./build
 PREFIX ?= $(OUTPUT)/dist
 PARALLEL ?= $(shell getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)
 DOCKERFILE_TEST_REPEAT ?= 1
+# The image build cannot consult git, so the revision is handed to it
+REVISION ?= $(shell git rev-parse --short=8 HEAD 2>/dev/null)
 DOCKER_BUILD_FLAGS ?=
 SANDBOX ?= test/e2e/html
 SANDBOX_PORT ?= 8000
@@ -77,7 +79,8 @@ docker-build: $(DOCKERFILE)
 	$(DOCKER) build $(DOCKER_BUILD_FLAGS) --tag one . --file $< --progress plain \
 		--build-arg SOURCEMETA_ONE_BUILD_TYPE=$(PRESET) \
 		--build-arg SOURCEMETA_ONE_PARALLEL=$(PARALLEL) \
-		--build-arg SOURCEMETA_ONE_TEST_REPEAT=$(DOCKERFILE_TEST_REPEAT)
+		--build-arg SOURCEMETA_ONE_TEST_REPEAT=$(DOCKERFILE_TEST_REPEAT) \
+		--build-arg SOURCEMETA_ONE_REVISION=$(REVISION)
 
 # Useful to run the entire main suite in a single command
 .PHONY: test-e2e

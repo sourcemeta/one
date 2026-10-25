@@ -1,5 +1,5 @@
+#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/core/test.h>
-#include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/search.h>
 
 #include <filesystem>  // std::filesystem
@@ -22,9 +22,9 @@ static auto write_search_file(const std::filesystem::path &path,
           // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
           : std::string_view{reinterpret_cast<const char *>(payload.data()),
                              payload.size()}};
-  sourcemeta::one::metapack_write_text(
+  sourcemeta::core::metapack_write_text(
       path, payload_view, "application/octet-stream",
-      sourcemeta::one::MetapackEncoding::Identity, {});
+      sourcemeta::core::MetapackEncoding::Identity, {});
 }
 
 TEST(count_single_entry) {

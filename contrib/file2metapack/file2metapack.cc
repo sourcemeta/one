@@ -1,5 +1,5 @@
+#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/core/options.h>
-#include <sourcemeta/one/metapack.h>
 
 #include <cstdlib>    // EXIT_FAILURE, EXIT_SUCCESS
 #include <exception>  // std::exception
@@ -18,10 +18,10 @@ auto main(int argc, char *argv[]) noexcept -> int {
 
     const std::filesystem::path output{app.positional().at(2)};
     std::filesystem::create_directories(output.parent_path());
-    sourcemeta::one::metapack_write_file(
+    sourcemeta::core::metapack_write_file(
         output, app.positional().at(0), std::string{app.positional().at(1)},
-        app.contains("gzip") ? sourcemeta::one::MetapackEncoding::GZIP
-                             : sourcemeta::one::MetapackEncoding::Identity,
+        app.contains("gzip") ? sourcemeta::core::MetapackEncoding::GZIP
+                             : sourcemeta::core::MetapackEncoding::Identity,
         {});
     return EXIT_SUCCESS;
   } catch (const std::exception &error) {

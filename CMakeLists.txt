@@ -51,36 +51,57 @@ if(ONE_DEBUG_SYMBOLS)
     COMPONENT sourcemeta_jsonschema)
 endif()
 
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-  set(ONE_VERSION "${PROJECT_VERSION}")
-else()
+# The revision this build came from, when anything knows it. An image build
+# cannot consult git, as the context leaves it out, so continuous integration
+# passes it in instead
+set(ONE_REVISION "" CACHE STRING "The revision this build was produced from")
+if(NOT ONE_REVISION)
   find_program(GIT_BIN NAMES git)
-  if(GIT_BIN AND JSONSCHEMA_CONTINUOUS)
-    execute_process(COMMAND "${GIT_BIN}" rev-parse --git-dir
-      ERROR_QUIET
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-      OUTPUT_VARIABLE GIT_DIR)
-  endif()
-  if(GIT_BIN AND EXISTS "${GIT_DIR}")
+  if(GIT_BIN AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
     execute_process(
       COMMAND "${GIT_BIN}" rev-parse --short=8 HEAD
       WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-      OUTPUT_VARIABLE PROJECT_GIT_SHA
+      OUTPUT_VARIABLE ONE_REVISION
       OUTPUT_STRIP_TRAILING_WHITESPACE
-      COMMAND_ERROR_IS_FATAL ANY)
-  else()
-    set(PROJECT_GIT_SHA "unknown")
+      ERROR_QUIET)
   endif()
-  set(ONE_VERSION "${PROJECT_VERSION}+${PROJECT_GIT_SHA}")
+endif()
+
+# A release says just its version, so what it is called carries no revision
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+  set(ONE_VERSION "${PROJECT_VERSION}")
+elseif(ONE_REVISION)
+  set(ONE_VERSION "${PROJECT_VERSION}+${ONE_REVISION}")
+else()
+  set(ONE_VERSION "${PROJECT_VERSION}+unknown")
 endif()
 message(STATUS "One version: ${ONE_VERSION}")
+
+# What a build is called is a product decision. Whether artifacts an earlier
+# build left behind can still be trusted is a different question, so it is
+# answered separately and never shown. The version alone cannot tell two
+# builds of the same release apart, which is what every image published
+# between two releases is, so the dependency pins and the revision answer for
+# the code that produced those artifacts
+set(ONE_IDENTITY_TEXT "${ONE_PROJECT_VERSION}${ONE_REVISION}")
+foreach(dependency_manifest IN ITEMS
+    "${PROJECT_SOURCE_DIR}/vendor/core/DEPENDENCIES"
+    "${PROJECT_SOURCE_DIR}/vendor/blaze/DEPENDENCIES"
+    "${PROJECT_SOURCE_DIR}/vendor/jsonschema/DEPENDENCIES")
+  if(EXISTS "${dependency_manifest}")
+    file(READ "${dependency_manifest}" dependency_manifest_contents)
+    string(APPEND ONE_IDENTITY_TEXT "${dependency_manifest_contents}")
+  endif()
+endforeach()
+string(SHA256 ONE_BUILD_IDENTITY "${ONE_IDENTITY_TEXT}")
+message(STATUS "One build identity: ${ONE_BUILD_IDENTITY}")
+
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/VERSION" "${ONE_VERSION}")
 
 if(ONE_INDEX OR ONE_SERVER)
   find_package(uSockets REQUIRED)
   find_package(uWebSockets REQUIRED)
   add_subdirectory(src/shared)
-  add_subdirectory(src/metapack)
   add_subdirectory(src/authentication)
   add_subdirectory(src/search)
   add_subdirectory(src/http)
@@ -150,7 +171,6 @@ if(ONE_TESTS)
     else()
       add_subdirectory(test/unit/authentication)
     endif()
-    add_subdirectory(test/unit/metapack)
     add_subdirectory(test/unit/router)
     add_subdirectory(test/unit/search)
   endif()

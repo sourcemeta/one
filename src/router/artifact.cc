@@ -4,7 +4,7 @@
 #include <sourcemeta/core/time.h>
 #include <sourcemeta/core/uri.h>
 
-#include <sourcemeta/one/metapack.h>
+#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/one/router.h>
 
 #include <algorithm>   // std::ranges::copy
@@ -31,7 +31,7 @@ struct DialectExtension {
 // The longest form a validator takes here, which is the weak prefix, the
 // quoted checksum, and nothing else
 constexpr std::size_t ETAG_CAPACITY{
-    2 + 1 + sourcemeta::one::METAPACK_CHECKSUM_HEX_LENGTH + 1};
+    2 + 1 + sourcemeta::core::METAPACK_CHECKSUM_HEX_LENGTH + 1};
 
 // RFC 9110 §8.8.3 gives the weak form the `W/` prefix
 // https://datatracker.ietf.org/doc/html/rfc9110#section-8.8.3
@@ -173,7 +173,7 @@ auto RouterAction::artifact_resolve_static(
 
 auto RouterAction::artifact_read_json(const ResolvedArtifact &artifact) const
     -> std::optional<sourcemeta::core::JSON> {
-  return sourcemeta::one::metapack_read_json(artifact.path());
+  return sourcemeta::core::metapack_read_json(artifact.path());
 }
 
 auto RouterAction::artifact_serve(
@@ -224,7 +224,7 @@ auto RouterAction::artifact_serve(
   }
 
   sourcemeta::core::FileView view{absolute_path};
-  const auto parsed{sourcemeta::one::metapack_parse(view)};
+  const auto parsed{sourcemeta::core::metapack_parse(view)};
   if (!parsed.has_value()) {
     sourcemeta::one::json_error(
         request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
@@ -234,7 +234,7 @@ auto RouterAction::artifact_serve(
   }
 
   const auto &header{*parsed->header};
-  const auto last_modified{sourcemeta::one::metapack_last_modified(header)};
+  const auto last_modified{sourcemeta::core::metapack_last_modified(header)};
 
   // Our checksum is computed over the identity (uncompressed) payload at
   // index time. When the wire response is gzip-encoded the wire bytes are
@@ -249,7 +249,7 @@ auto RouterAction::artifact_serve(
   //
   // When the wire response is identity, the wire bytes exactly match what
   // the checksum covers, so the validator can be strong.
-  const auto checksum{sourcemeta::one::metapack_checksum_hex(header)};
+  const auto checksum{sourcemeta::core::metapack_checksum_hex(header)};
   const std::string_view checksum_hex{checksum.data(), checksum.size()};
   const auto wire_is_gzip{request.response_encoding() ==
                           sourcemeta::one::Encoding::GZIP};
@@ -352,7 +352,8 @@ auto RouterAction::artifact_serve(
     response.write_header("Access-Control-Expose-Headers", "Link, ETag");
   }
 
-  response.write_header("Content-Type", mime.empty() ? parsed->mime : mime);
+  response.write_header("Content-Type",
+                        mime.empty() ? parsed->media_type : mime);
 
   if (!browser_security.referrer_policy.empty()) {
     response.write_header("Referrer-Policy", browser_security.referrer_policy);
@@ -390,7 +391,7 @@ auto RouterAction::artifact_serve(
   } else {
     const auto &extension{parsed->extension};
     const auto *dialect_ext{
-        sourcemeta::one::metapack_extension_as<DialectExtension>(extension)};
+        sourcemeta::core::metapack_extension_as<DialectExtension>(extension)};
     const std::string_view dialect =
         (dialect_ext != nullptr && dialect_ext->dialect_length > 0 &&
          sizeof(DialectExtension) + dialect_ext->dialect_length <=
@@ -415,7 +416,7 @@ auto RouterAction::artifact_serve(
   // compressed and asked for uncompressed is answered without running the
   // codec. No compressed size is recorded, so the opposite direction has to
   // compress to answer
-  if (header.encoding == sourcemeta::one::MetapackEncoding::GZIP) {
+  if (header.encoding == sourcemeta::core::MetapackEncoding::GZIP) {
     assert(header.content_bytes <= std::numeric_limits<std::size_t>::max());
     sourcemeta::one::send_response(
         status, request, response, contents, sourcemeta::one::Encoding::GZIP,

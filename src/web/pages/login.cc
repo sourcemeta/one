@@ -4,7 +4,7 @@
 
 #include <sourcemeta/core/html.h>
 #include <sourcemeta/core/json.h>
-#include <sourcemeta/one/metapack.h>
+#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/one/shared.h>
 
 #include <cassert> // assert
@@ -61,7 +61,8 @@ auto GenerateWebLogin::handler(
 
   // Everything this page says about signing in comes from here, so the page and
   // the endpoint that serves the same answer as data cannot drift apart
-  const auto login_option{metapack_read_json(action.dependencies.front())};
+  const auto login_option{
+      sourcemeta::core::metapack_read_json(action.dependencies.front())};
   assert(login_option.has_value());
   const auto &login{login_option.value()};
 
@@ -115,8 +116,9 @@ auto GenerateWebLogin::handler(
   writer.close();
   writer.close();
 
-  metapack_write_text(action.destination, writer.str(),
-                      "text/html; charset=utf-8", MetapackEncoding::GZIP, {});
+  sourcemeta::core::metapack_write_text(
+      action.destination, writer.str(), "text/html; charset=utf-8",
+      sourcemeta::core::MetapackEncoding::GZIP, {});
 }
 
 } // namespace sourcemeta::one

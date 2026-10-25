@@ -9,10 +9,10 @@
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
+#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/one/enterprise_conversion.h>
 #include <sourcemeta/one/enterprise_server_conversion.h>
 #include <sourcemeta/one/http.h>
-#include <sourcemeta/one/metapack.h>
 #include <sourcemeta/one/router.h>
 
 #include <algorithm> // std::ranges::find

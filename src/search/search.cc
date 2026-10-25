@@ -2,7 +2,7 @@
 
 #include <sourcemeta/core/text.h>
 
-#include <sourcemeta/one/metapack.h>
+#include <sourcemeta/core/metapack.h>
 
 #include <algorithm>   // std::min, std::ranges::search
 #include <cassert>     // assert
@@ -261,14 +261,15 @@ SearchView::SearchView(const std::filesystem::path &path) {
     return;
   }
   this->view_ = std::make_unique<sourcemeta::core::FileView>(path);
-  const auto parsed{metapack_parse(*this->view_)};
+  const auto parsed{sourcemeta::core::metapack_parse(*this->view_)};
   if (!parsed.has_value()) {
     return;
   }
 
   // The records are read straight off the mapping rather than decompressed,
   // so the artifact has to be stored as it reads
-  assert(parsed->header->encoding == MetapackEncoding::Identity);
+  assert(parsed->header->encoding ==
+         sourcemeta::core::MetapackEncoding::Identity);
   this->payload_size_ = parsed->payload.size();
   if (this->payload_size_ > 0) {
     this->payload_ = parsed->payload.data();

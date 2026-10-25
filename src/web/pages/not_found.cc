@@ -3,7 +3,7 @@
 #include "../page.h"
 
 #include <sourcemeta/core/html.h>
-#include <sourcemeta/one/metapack.h>
+#include <sourcemeta/core/metapack.h>
 #include <sourcemeta/one/shared.h>
 
 #include <chrono> // std::chrono
@@ -23,8 +23,9 @@ auto GenerateWebNotFound::handler(
                         "Oops! What you are looking for is not here",
                         "Are you sure the link you got is correct?");
 
-  metapack_write_text(action.destination, writer.str(),
-                      "text/html; charset=utf-8", MetapackEncoding::GZIP, {});
+  sourcemeta::core::metapack_write_text(
+      action.destination, writer.str(), "text/html; charset=utf-8",
+      sourcemeta::core::MetapackEncoding::GZIP, {});
 }
 
 } // namespace sourcemeta::one
