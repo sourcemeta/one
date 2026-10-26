@@ -113,6 +113,14 @@ mcp_parse_error(const sourcemeta::core::MCPProtocolVersion version)
   return sourcemeta::core::jsonrpc_make_error_parse();
 }
 
+// What a client may draw beside this instance, or nothing when it offers none
+[[nodiscard]] inline auto
+mcp_advertised_icons(const sourcemeta::core::JSON &parts)
+    -> const sourcemeta::core::JSON * {
+  const auto &icons{parts.at(11)};
+  return icons.is_null() ? nullptr : &icons;
+}
+
 class ActionMCPV1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
@@ -408,6 +416,7 @@ private:
                                       .title = parts.at(7).to_string(),
                                       .description = parts.at(8).to_string(),
                                       .website_url = parts.at(9).to_string(),
+                                      .icons = mcp_advertised_icons(parts),
                                   }));
     return envelope;
   }
@@ -432,6 +441,7 @@ private:
             .title = parts.at(7).to_string(),
             .description = parts.at(8).to_string(),
             .website_url = parts.at(9).to_string(),
+            .icons = mcp_advertised_icons(parts),
         },
         MCP_SUPPORTED_VERSIONS, parts.at(10).to_string(), this->cache_policy());
   }
@@ -658,6 +668,7 @@ private:
               .title = parts.at(7).to_string(),
               .description = parts.at(8).to_string(),
               .website_url = parts.at(9).to_string(),
+              .icons = mcp_advertised_icons(parts),
           },
           MCP_SUPPORTED_VERSIONS, parts.at(10).to_string());
     }

@@ -648,7 +648,7 @@ jsonpath "$.result.resources[49].uri" == "{{base}}/self/v1/schemas/mcp/initializ
 jsonpath "$.result.resources[49].name" == "Sourcemeta One MCP Initialize Response"
 jsonpath "$.result.resources[49].description" == "Sourcemeta One's response to a client's initialization"
 jsonpath "$.result.resources[49].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[49].size" == 2524
+jsonpath "$.result.resources[49].size" == 3637
 jsonpath "$.result.resources[49].annotations.priority" == 0
 jsonpath "$.result.nextCursor" == "100"
 jsonpath "$.result.resultType" == "complete"
@@ -969,13 +969,13 @@ jsonpath "$.result.resources[41].uri" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.resources[41].name" == "Sourcemeta One MCP Response"
 jsonpath "$.result.resources[41].description" == "Any outgoing MCP response the server returns"
 jsonpath "$.result.resources[41].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[41].size" == 23116
+jsonpath "$.result.resources[41].size" == 25440
 jsonpath "$.result.resources[41].annotations.priority" == 0
 jsonpath "$.result.resources[42].uri" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
 jsonpath "$.result.resources[42].name" == "Sourcemeta One MCP Tools List Response"
 jsonpath "$.result.resources[42].description" == "Sourcemeta One's list of MCP tools"
 jsonpath "$.result.resources[42].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[42].size" == 4453
+jsonpath "$.result.resources[42].size" == 5733
 jsonpath "$.result.resources[42].annotations.priority" == 0
 jsonpath "$.result.resources[43].uri" == "{{base}}/self/v1/schemas/api/playground/schemas/trace/request"
 jsonpath "$.result.resources[43].name" == "Sourcemeta One Playground Schema Trace API Request"
@@ -1521,7 +1521,7 @@ jsonpath "$.result.resources[49].uri" == "{{base}}/self/v1/schemas/mcp/initializ
 jsonpath "$.result.resources[49].name" == "Sourcemeta One MCP Initialize Response"
 jsonpath "$.result.resources[49].description" == "Sourcemeta One's response to a client's initialization"
 jsonpath "$.result.resources[49].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[49].size" == 2524
+jsonpath "$.result.resources[49].size" == 3637
 jsonpath "$.result.resources[49].annotations.priority" == 0
 jsonpath "$.result.nextCursor" == "100"
 jsonpath "$.result.resultType" == "complete"

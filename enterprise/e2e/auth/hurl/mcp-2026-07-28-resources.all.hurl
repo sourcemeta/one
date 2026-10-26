@@ -187,7 +187,7 @@ jsonpath "$.result.resources[24].uri" == "{{base}}/self/v1/schemas/mcp/initializ
 jsonpath "$.result.resources[24].name" == "Sourcemeta One MCP Initialize Response"
 jsonpath "$.result.resources[24].description" == "Sourcemeta One's response to a client's initialization"
 jsonpath "$.result.resources[24].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[24].size" == 2524
+jsonpath "$.result.resources[24].size" == 3637
 jsonpath "$.result.resources[24].annotations.priority" == 0
 jsonpath "$.result.resources[25].uri" == "{{base}}/self/v1/schemas/mcp/notifications/cancelled"
 jsonpath "$.result.resources[25].name" == "Sourcemeta One MCP Cancelled Notification"
@@ -485,13 +485,13 @@ jsonpath "$.result.resources[16].uri" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.resources[16].name" == "Sourcemeta One MCP Response"
 jsonpath "$.result.resources[16].description" == "Any outgoing MCP response the server returns"
 jsonpath "$.result.resources[16].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[16].size" == 23116
+jsonpath "$.result.resources[16].size" == 25440
 jsonpath "$.result.resources[16].annotations.priority" == 0
 jsonpath "$.result.resources[17].uri" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
 jsonpath "$.result.resources[17].name" == "Sourcemeta One MCP Tools List Response"
 jsonpath "$.result.resources[17].description" == "Sourcemeta One's list of MCP tools"
 jsonpath "$.result.resources[17].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[17].size" == 4453
+jsonpath "$.result.resources[17].size" == 5733
 jsonpath "$.result.resources[17].annotations.priority" == 0
 jsonpath "$.result.resources[18].uri" == "{{base}}/self/v1/schemas/api/playground/schemas/trace/request"
 jsonpath "$.result.resources[18].name" == "Sourcemeta One Playground Schema Trace API Request"
@@ -699,7 +699,7 @@ jsonpath "$.result.resources[27].uri" == "{{base}}/self/v1/schemas/mcp/initializ
 jsonpath "$.result.resources[27].name" == "Sourcemeta One MCP Initialize Response"
 jsonpath "$.result.resources[27].description" == "Sourcemeta One's response to a client's initialization"
 jsonpath "$.result.resources[27].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[27].size" == 2524
+jsonpath "$.result.resources[27].size" == 3637
 jsonpath "$.result.resources[27].annotations.priority" == 0
 jsonpath "$.result.resources[28].uri" == "{{base}}/self/v1/schemas/mcp/notifications/cancelled"
 jsonpath "$.result.resources[28].name" == "Sourcemeta One MCP Cancelled Notification"
@@ -990,13 +990,13 @@ jsonpath "$.result.resources[19].uri" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.resources[19].name" == "Sourcemeta One MCP Response"
 jsonpath "$.result.resources[19].description" == "Any outgoing MCP response the server returns"
 jsonpath "$.result.resources[19].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[19].size" == 23116
+jsonpath "$.result.resources[19].size" == 25440
 jsonpath "$.result.resources[19].annotations.priority" == 0
 jsonpath "$.result.resources[20].uri" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
 jsonpath "$.result.resources[20].name" == "Sourcemeta One MCP Tools List Response"
 jsonpath "$.result.resources[20].description" == "Sourcemeta One's list of MCP tools"
 jsonpath "$.result.resources[20].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[20].size" == 4453
+jsonpath "$.result.resources[20].size" == 5733
 jsonpath "$.result.resources[20].annotations.priority" == 0
 jsonpath "$.result.resources[21].uri" == "{{base}}/self/v1/schemas/api/playground/schemas/trace/request"
 jsonpath "$.result.resources[21].name" == "Sourcemeta One Playground Schema Trace API Request"
@@ -1194,7 +1194,7 @@ jsonpath "$.result.resources[25].uri" == "{{base}}/self/v1/schemas/mcp/initializ
 jsonpath "$.result.resources[25].name" == "Sourcemeta One MCP Initialize Response"
 jsonpath "$.result.resources[25].description" == "Sourcemeta One's response to a client's initialization"
 jsonpath "$.result.resources[25].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[25].size" == 2524
+jsonpath "$.result.resources[25].size" == 3637
 jsonpath "$.result.resources[25].annotations.priority" == 0
 jsonpath "$.result.resources[26].uri" == "{{base}}/self/v1/schemas/mcp/notifications/cancelled"
 jsonpath "$.result.resources[26].name" == "Sourcemeta One MCP Cancelled Notification"
@@ -1485,13 +1485,13 @@ jsonpath "$.result.resources[17].uri" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.resources[17].name" == "Sourcemeta One MCP Response"
 jsonpath "$.result.resources[17].description" == "Any outgoing MCP response the server returns"
 jsonpath "$.result.resources[17].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[17].size" == 23116
+jsonpath "$.result.resources[17].size" == 25440
 jsonpath "$.result.resources[17].annotations.priority" == 0
 jsonpath "$.result.resources[18].uri" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
 jsonpath "$.result.resources[18].name" == "Sourcemeta One MCP Tools List Response"
 jsonpath "$.result.resources[18].description" == "Sourcemeta One's list of MCP tools"
 jsonpath "$.result.resources[18].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[18].size" == 4453
+jsonpath "$.result.resources[18].size" == 5733
 jsonpath "$.result.resources[18].annotations.priority" == 0
 jsonpath "$.result.resources[19].uri" == "{{base}}/self/v1/schemas/api/playground/schemas/trace/request"
 jsonpath "$.result.resources[19].name" == "Sourcemeta One Playground Schema Trace API Request"

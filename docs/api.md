@@ -1061,7 +1061,8 @@ deliver.
 On that revision the `MCP-Protocol-Version`, `Mcp-Method` and `Mcp-Name`
 headers must agree with the body they travel with, and a request whose headers
 and body disagree is refused with `400`. Every result names this instance in
-its [`_meta`](https://modelcontextprotocol.io/specification/2026-07-28/basic/index#meta).
+its [`_meta`](https://modelcontextprotocol.io/specification/2026-07-28/basic/index#meta),
+down to the icons a client may draw it by.
 Answers a client may cache are good for five minutes, and are marked `private`
 when assembled for a credential or `public` when they are what any caller would
 be handed.
@@ -1089,6 +1090,10 @@ content blocks, [JSON-RPC
 batching](https://www.jsonrpc.org/specification#batch), and the standard [tool
 hints](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#tool)
 (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`).
+Each tool also carries a display `title`, and on revisions that define them a
+set of [`icons`](https://modelcontextprotocol.io/specification/2026-07-28/basic/index#icons)
+a client may draw it by, which this instance serves itself and offers only when
+it is built with a web frontend to serve them from.
 `tools/list` offers only the tools whose endpoint the client's credential
 admits it to, and calling one that was not listed is answered as an unknown
 tool. The listing is returned in a [deterministic

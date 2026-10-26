@@ -91,7 +91,19 @@ header "Vary" not exists
         "version": "{{server_version}}",
         "title": "Sourcemeta One Enterprise",
         "description": "Fixtures exercising a public registry with apiKey-gated components",
-        "websiteUrl": "{{base}}"
+        "websiteUrl": "{{base}}",
+        "icons": [
+          {
+            "src": "{{base}}/self/v1/static/icon_192x192.png",
+            "mimeType": "image/png",
+            "sizes": [ "192x192" ]
+          },
+          {
+            "src": "{{base}}/self/v1/static/icon_512x512.png",
+            "mimeType": "image/png",
+            "sizes": [ "512x512" ]
+          }
+        ]
       }
     }
   }

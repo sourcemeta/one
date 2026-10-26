@@ -112,6 +112,14 @@ mcp_parse_error(const sourcemeta::core::MCPProtocolVersion version)
   return sourcemeta::core::jsonrpc_make_error_parse();
 }
 
+// What a client may draw beside this instance, or nothing when it offers none
+[[nodiscard]] inline auto
+mcp_advertised_icons(const sourcemeta::core::JSON &parts)
+    -> const sourcemeta::core::JSON * {
+  const auto &icons{parts.at(11)};
+  return icons.is_null() ? nullptr : &icons;
+}
+
 class ActionMCPV1 : public sourcemeta::one::RouterAction {
 public:
   static constexpr std::string_view DESCRIPTION{
@@ -562,6 +570,7 @@ private:
             .title = parts.at(7).to_string(),
             .description = parts.at(8).to_string(),
             .website_url = parts.at(9).to_string(),
+            .icons = mcp_advertised_icons(parts),
         },
         MCP_SUPPORTED_VERSIONS, parts.at(10).to_string(),
         this->cache_policy(metadata));
@@ -586,6 +595,7 @@ private:
             .title = parts.at(7).to_string(),
             .description = parts.at(8).to_string(),
             .website_url = parts.at(9).to_string(),
+            .icons = mcp_advertised_icons(parts),
         },
         MCP_SUPPORTED_VERSIONS, parts.at(10).to_string());
   }
@@ -594,8 +604,10 @@ private:
                      const sourcemeta::core::JSON &request_json,
                      const std::string_view view) const
       -> sourcemeta::core::JSON {
+    const auto &metadata{this->metadata_for(view)};
     const auto &precomputed{
-        this->metadata_for(view).at(sourcemeta::core::MCP_METHOD_TOOLS_LIST)};
+        metadata.at(sourcemeta::core::MCP_METHOD_TOOLS_LIST)};
+    const auto *icons{mcp_advertised_icons(metadata.at("advertisement"))};
 
     auto tools{sourcemeta::core::JSON::make_array()};
     for (const auto &tool : precomputed.as_array()) {
@@ -612,15 +624,18 @@ private:
               .destructive = tool.at(6).to_boolean(),
               .idempotent = tool.at(7).to_boolean(),
               .open_world = tool.at(8).to_boolean(),
+          },
+          sourcemeta::core::MCPDescriptorPresentation{
+              .title = tool.at(4).to_string(),
+              .icons = icons,
           }));
     }
     // The listing follows the router's own order, which is settled at build
     // time, so what a caller is handed twice is the same list in the same order
     return sourcemeta::core::jsonrpc_make_success(
-        request_json.at("id"),
-        sourcemeta::core::mcp_make_tools_list_result(
-            version, std::move(tools), std::nullopt,
-            this->cache_policy(this->metadata_for(view))));
+        request_json.at("id"), sourcemeta::core::mcp_make_tools_list_result(
+                                   version, std::move(tools), std::nullopt,
+                                   this->cache_policy(metadata)));
   }
 
   auto
@@ -811,6 +826,7 @@ private:
                                       .title = parts.at(7).to_string(),
                                       .description = parts.at(8).to_string(),
                                       .website_url = parts.at(9).to_string(),
+                                      .icons = mcp_advertised_icons(parts),
                                   }));
     return envelope;
   }

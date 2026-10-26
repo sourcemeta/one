@@ -894,6 +894,30 @@ struct GenerateMCP {
     }
 #endif
 
+    // What a client may draw beside this instance. Only what every front end
+    // this project builds carries is named here, in the one format a client
+    // that draws an icon at all reads, so an address offered resolves against
+    // whichever front end is answering, and none is offered when none of them
+    // is there to answer
+    auto icons{sourcemeta::core::JSON{nullptr}};
+    if (configuration.html.has_value()) {
+      icons = sourcemeta::core::JSON::make_array();
+      for (const auto dimensions :
+           {std::string_view{"192x192"}, std::string_view{"512x512"}}) {
+        std::string source{configuration.origin};
+        source.append("/self/v1/static/icon_");
+        source.append(dimensions);
+        source.append(".png");
+        auto sizes{sourcemeta::core::JSON::make_array()};
+        sizes.push_back(sourcemeta::core::JSON{std::string{dimensions}});
+        auto icon{sourcemeta::core::JSON::make_object()};
+        icon.assign("src", sourcemeta::core::JSON{std::move(source)});
+        icon.assign("mimeType", sourcemeta::core::JSON{"image/png"});
+        icon.assign("sizes", std::move(sizes));
+        icons.push_back(std::move(icon));
+      }
+    }
+
     auto advertisement_ingredients{sourcemeta::core::JSON::make_array()};
     advertisement_ingredients.push_back(sourcemeta::core::JSON{false});
     advertisement_ingredients.push_back(sourcemeta::core::JSON{true});
@@ -913,6 +937,7 @@ struct GenerateMCP {
                                        : std::string_view{}});
     advertisement_ingredients.push_back(
         sourcemeta::core::JSON{instructions.str()});
+    advertisement_ingredients.push_back(std::move(icons));
 
     auto resource_templates_response{sourcemeta::core::JSON::make_object()};
     resource_templates_response.assign("resourceTemplates",

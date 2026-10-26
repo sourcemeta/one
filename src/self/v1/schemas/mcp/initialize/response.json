@@ -79,6 +79,36 @@
               "x-format-assertion": true,
               "type": "string",
               "format": "uri"
+            },
+            "icons": {
+              "$comment": "The addresses a client may draw this instance by, in the one format a client that draws an icon at all must read. Absent when no front end is built to serve them",
+              "type": "array",
+              "maxItems": 2,
+              "minItems": 2,
+              "uniqueItems": true,
+              "items": {
+                "type": "object",
+                "required": [ "src", "mimeType", "sizes" ],
+                "properties": {
+                  "src": {
+                    "x-format-assertion": true,
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "mimeType": {
+                    "const": "image/png"
+                  },
+                  "sizes": {
+                    "type": "array",
+                    "maxItems": 1,
+                    "minItems": 1,
+                    "items": {
+                      "enum": [ "192x192", "512x512" ]
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
             }
           },
           "additionalProperties": false
