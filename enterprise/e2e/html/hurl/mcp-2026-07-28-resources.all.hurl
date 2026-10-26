@@ -969,13 +969,13 @@ jsonpath "$.result.resources[41].uri" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.resources[41].name" == "Sourcemeta One MCP Response"
 jsonpath "$.result.resources[41].description" == "Any outgoing MCP response the server returns"
 jsonpath "$.result.resources[41].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[41].size" == 23116
+jsonpath "$.result.resources[41].size" == 23274
 jsonpath "$.result.resources[41].annotations.priority" == 0
 jsonpath "$.result.resources[42].uri" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
 jsonpath "$.result.resources[42].name" == "Sourcemeta One MCP Tools List Response"
 jsonpath "$.result.resources[42].description" == "Sourcemeta One's list of MCP tools"
 jsonpath "$.result.resources[42].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[42].size" == 4453
+jsonpath "$.result.resources[42].size" == 4560
 jsonpath "$.result.resources[42].annotations.priority" == 0
 jsonpath "$.result.resources[43].uri" == "{{base}}/self/v1/schemas/api/playground/schemas/trace/request"
 jsonpath "$.result.resources[43].name" == "Sourcemeta One Playground Schema Trace API Request"

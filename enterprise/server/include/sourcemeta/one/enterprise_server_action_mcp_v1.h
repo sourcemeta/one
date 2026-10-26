@@ -612,6 +612,9 @@ private:
               .destructive = tool.at(6).to_boolean(),
               .idempotent = tool.at(7).to_boolean(),
               .open_world = tool.at(8).to_boolean(),
+          },
+          sourcemeta::core::MCPDescriptorPresentation{
+              .title = tool.at(4).to_string(),
           }));
     }
     // The listing follows the router's own order, which is settled at build

@@ -56,6 +56,10 @@
                 "type": "string",
                 "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$"
               },
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
               "description": {
                 "type": "string",
                 "minLength": 1
