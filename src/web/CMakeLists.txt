@@ -22,6 +22,7 @@ sourcemeta_esbuild_bundle(
   DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/scripts/main.js"
     "${CMAKE_CURRENT_SOURCE_DIR}/scripts/copy.js"
+    "${CMAKE_CURRENT_SOURCE_DIR}/scripts/dropdown.js"
     "${CMAKE_CURRENT_SOURCE_DIR}/scripts/search.js"
     "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tabs.js"
     "${CMAKE_CURRENT_SOURCE_DIR}/scripts/editor.js"

@@ -1,0 +1,200 @@
+import { test, expect } from '@playwright/test';
+
+test.describe('Schema Convert Dropdown', () => {
+  test('starts collapsed and lists every dialect the schema can be asked for',
+    async ({ page }) => {
+    await page.goto('/test/draft3/string');
+
+    const toggle = page.locator('[data-sourcemeta-ui-dropdown-toggle]');
+    const menu = page.locator('[data-sourcemeta-ui-dropdown-menu]');
+
+    // The menu is closed until asked for
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await expect(menu).not.toBeVisible();
+
+    await toggle.click();
+
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(menu).toBeVisible();
+
+    // A Draft 3 schema can be asked for in every newer official dialect
+    const items = menu.locator('a');
+    await expect(items).toHaveText([
+      'Draft4', 'Draft6', 'Draft7', '2019-09', '2020-12'
+    ]);
+    await expect(items.nth(0)).toHaveAttribute(
+      'href', '/test/draft3/string.json?as=draft4');
+    await expect(items.nth(1)).toHaveAttribute(
+      'href', '/test/draft3/string.json?as=draft6');
+    await expect(items.nth(2)).toHaveAttribute(
+      'href', '/test/draft3/string.json?as=draft7');
+    await expect(items.nth(3)).toHaveAttribute(
+      'href', '/test/draft3/string.json?as=2019-09');
+    await expect(items.nth(4)).toHaveAttribute(
+      'href', '/test/draft3/string.json?as=2020-12');
+  });
+
+  test('leaves out the dialect the schema already declares',
+    async ({ page }) => {
+    await page.goto('/test/jsonld/draft7');
+
+    const toggle = page.locator('[data-sourcemeta-ui-dropdown-toggle]');
+    const menu = page.locator('[data-sourcemeta-ui-dropdown-menu]');
+    await toggle.click();
+
+    const items = menu.locator('a');
+    await expect(items).toHaveText([ '2019-09', '2020-12' ]);
+    await expect(items.nth(0)).toHaveAttribute(
+      'href', '/test/jsonld/draft7.json?as=2019-09');
+    await expect(items.nth(1)).toHaveAttribute(
+      'href', '/test/jsonld/draft7.json?as=2020-12');
+  });
+
+  test('a schema on the newest dialect gets no control at all',
+    async ({ page }) => {
+    await page.goto('/test/object');
+
+    await expect(page.locator('[data-sourcemeta-ui-dropdown-toggle]'))
+      .toHaveCount(0);
+    await expect(page.locator('a[href="/test/object.json?bundle=1"]'))
+      .toBeVisible();
+  });
+
+  test('the menu sits below the button it belongs to', async ({ page }) => {
+    await page.goto('/test/draft3/string');
+
+    const toggle = page.locator('[data-sourcemeta-ui-dropdown-toggle]');
+    const menu = page.locator('[data-sourcemeta-ui-dropdown-menu]');
+    await toggle.click();
+
+    const toggleBox = await toggle.boundingBox();
+    const menuBox = await menu.boundingBox();
+    expect(menuBox.y).toBeGreaterThanOrEqual(toggleBox.y + toggleBox.height);
+    expect(menuBox.x).toBe(toggleBox.x);
+  });
+
+  test('clicking outside the dropdown closes it', async ({ page }) => {
+    await page.goto('/test/draft3/string');
+
+    const toggle = page.locator('[data-sourcemeta-ui-dropdown-toggle]');
+    const menu = page.locator('[data-sourcemeta-ui-dropdown-menu]');
+    await toggle.click();
+    await expect(menu).toBeVisible();
+
+    await page.locator('footer').click();
+
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await expect(menu).not.toBeVisible();
+    await expect(toggle).not.toBeFocused();
+  });
+
+  test('pressing escape from inside the menu hands focus back to the button',
+    async ({ page }) => {
+    await page.goto('/test/draft3/string');
+
+    const toggle = page.locator('[data-sourcemeta-ui-dropdown-toggle]');
+    const menu = page.locator('[data-sourcemeta-ui-dropdown-menu]');
+    await toggle.click();
+    await page.keyboard.press('Tab');
+    await expect(menu.locator('a').first()).toBeFocused();
+
+    await page.keyboard.press('Escape');
+
+    await expect(menu).not.toBeVisible();
+    await expect(toggle).toBeFocused();
+  });
+
+  test('tabbing past the last entry closes it and keeps going',
+    async ({ page }) => {
+    await page.goto('/test/draft3/string');
+
+    const toggle = page.locator('[data-sourcemeta-ui-dropdown-toggle]');
+    const menu = page.locator('[data-sourcemeta-ui-dropdown-menu]');
+    await toggle.click();
+
+    // Walk out of the menu through its five entries
+    for (let index = 0; index < 6; index++) {
+      await page.keyboard.press('Tab');
+    }
+
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await expect(menu).not.toBeVisible();
+
+    // Whatever follows the menu is where the walk was headed
+    await expect(page.locator('[data-sourcemeta-ui-tab-target="usage-cli"]'))
+      .toBeFocused();
+    await expect(toggle).not.toBeFocused();
+  });
+
+  test('moving focus out of an entry lands where it was aimed',
+    async ({ page }) => {
+    await page.goto('/test/draft3/string');
+
+    const toggle = page.locator('[data-sourcemeta-ui-dropdown-toggle]');
+    const menu = page.locator('[data-sourcemeta-ui-dropdown-menu]');
+    const bundle = page.locator('a[href="/test/draft3/string.json?bundle=1"]');
+    await toggle.click();
+    await page.keyboard.press('Tab');
+    await expect(menu.locator('a').first()).toBeFocused();
+
+    await bundle.focus();
+
+    await expect(menu).not.toBeVisible();
+    await expect(bundle).toBeFocused();
+    await expect(toggle).not.toBeFocused();
+  });
+
+  test('clicking the empty part of the menu leaves it open',
+    async ({ page }) => {
+    await page.goto('/test/draft3/string');
+
+    const toggle = page.locator('[data-sourcemeta-ui-dropdown-toggle]');
+    const menu = page.locator('[data-sourcemeta-ui-dropdown-menu]');
+    await toggle.click();
+
+    const box = await menu.boundingBox();
+    await page.mouse.click(box.x + box.width - 2, box.y + box.height - 2);
+
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(menu).toBeVisible();
+  });
+
+  test('an entry navigates to the converted schema', async ({ page }) => {
+    await page.goto('/test/draft3/string');
+
+    const toggle = page.locator('[data-sourcemeta-ui-dropdown-toggle]');
+    const menu = page.locator('[data-sourcemeta-ui-dropdown-menu]');
+    await toggle.click();
+    await menu.locator('a', { hasText: '2020-12' }).click();
+
+    await expect(page).toHaveURL('/test/draft3/string.json?as=2020-12');
+  });
+
+  test('pressing escape closes it', async ({ page }) => {
+    await page.goto('/test/draft3/string');
+
+    const toggle = page.locator('[data-sourcemeta-ui-dropdown-toggle]');
+    const menu = page.locator('[data-sourcemeta-ui-dropdown-menu]');
+    await toggle.click();
+    await expect(menu).toBeVisible();
+
+    await page.keyboard.press('Escape');
+
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await expect(menu).not.toBeVisible();
+  });
+
+  test('clicking the button again closes it', async ({ page }) => {
+    await page.goto('/test/draft3/string');
+
+    const toggle = page.locator('[data-sourcemeta-ui-dropdown-toggle]');
+    const menu = page.locator('[data-sourcemeta-ui-dropdown-menu]');
+    await toggle.click();
+    await expect(menu).toBeVisible();
+
+    await toggle.click();
+
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await expect(menu).not.toBeVisible();
+  });
+});
