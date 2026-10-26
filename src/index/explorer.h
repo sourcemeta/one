@@ -24,6 +24,7 @@
 #endif
 
 #include <algorithm>     // std::ranges::sort
+#include <array>         // std::array
 #include <cassert>       // assert
 #include <cmath>         // std::lround
 #include <cstring>       // std::memcpy
@@ -797,6 +798,20 @@ inline constexpr std::size_t MCP_RESOURCES_PAGE_SIZE{50};
 inline constexpr auto MCP_DESCRIPTOR_VERSION{
     sourcemeta::core::MCPProtocolVersion::V_2025_03_26};
 
+// The icon sizes this instance offers, and where each one answers. Only the
+// one format a client that draws an icon at all must read is offered, and only
+// in the sizes every front end this project builds carries
+inline constexpr std::array<std::string_view, 2> MCP_ICON_DIMENSIONS{
+    {"192x192", "512x512"}};
+
+[[nodiscard]] inline auto mcp_icon_path(const std::string_view dimensions)
+    -> std::string {
+  std::string result{"/self/v1/static/icon_"};
+  result.append(dimensions);
+  result.append(".png");
+  return result;
+}
+
 struct GenerateMCP {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
@@ -865,6 +880,11 @@ struct GenerateMCP {
     auto tool_routes{sourcemeta::core::JSON::make_object()};
     auto protected_resource_metadata{sourcemeta::core::JSON{nullptr}};
     std::string resource_identifier;
+    // An icon is fetched by a caller holding nothing, whatever credential
+    // reached the surface that named it, so whether one can be offered at all
+    // is a question about what the anonymous caller reaches
+    // https://modelcontextprotocol.io/specification/2026-07-28/basic/index#icons
+    bool icons_reachable{true};
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
     {
@@ -891,23 +911,32 @@ struct GenerateMCP {
           protected_resource_metadata);
       resource_identifier = sourcemeta::one::mcp_resource_identifier(
           configuration, sourcemeta::one::ENDPOINT_MCP);
+
+      const auto anonymous{authentication.view(sourcemeta::one::VIEW_PUBLIC)};
+      for (const auto dimensions : MCP_ICON_DIMENSIONS) {
+        if (!authentication.visible(
+                sourcemeta::one::Authentication::Path::relative(
+                    mcp_icon_path(dimensions)),
+                anonymous)) {
+          icons_reachable = false;
+          break;
+        }
+      }
     }
 #endif
 
     // What a client may draw beside this instance. Only what every front end
     // this project builds carries is named here, in the one format a client
     // that draws an icon at all reads, so an address offered resolves against
-    // whichever front end is answering, and none is offered when none of them
-    // is there to answer
+    // whichever front end is answering. None is offered when none of them is
+    // there to answer, nor when an answer would be refused to the caller who
+    // asks for it
     auto icons{sourcemeta::core::JSON{nullptr}};
-    if (configuration.html.has_value()) {
+    if (configuration.html.has_value() && icons_reachable) {
       icons = sourcemeta::core::JSON::make_array();
-      for (const auto dimensions :
-           {std::string_view{"192x192"}, std::string_view{"512x512"}}) {
+      for (const auto dimensions : MCP_ICON_DIMENSIONS) {
         std::string source{configuration.origin};
-        source.append("/self/v1/static/icon_");
-        source.append(dimensions);
-        source.append(".png");
+        source.append(mcp_icon_path(dimensions));
         auto sizes{sourcemeta::core::JSON::make_array()};
         sizes.push_back(sourcemeta::core::JSON{std::string{dimensions}});
         auto icon{sourcemeta::core::JSON::make_object()};
