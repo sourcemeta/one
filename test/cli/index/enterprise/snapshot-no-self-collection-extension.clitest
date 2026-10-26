@@ -81,6 +81,8 @@ WRITE expected.txt UNTIL EOF
 ./schemas/example/included/%/blaze-exhaustive.metapack
 ./schemas/example/included/%/blaze-fast.metapack
 ./schemas/example/included/%/bundle-2020-12.metapack
+./schemas/example/included/%/bundle-openapi3.1.metapack
+./schemas/example/included/%/bundle-openapi3.2.metapack
 ./schemas/example/included/%/bundle.metapack
 ./schemas/example/included/%/dependencies.metapack
 ./schemas/example/included/%/editor.metapack

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://spec.openapis.org/oas/3.1/dialect/base",
+  "$vocabulary": {
+    "https://json-schema.org/draft/2020-12/vocab/core": true,
+    "https://json-schema.org/draft/2020-12/vocab/applicator": true,
+    "https://json-schema.org/draft/2020-12/vocab/validation": true,
+    "https://spec.openapis.org/oas/3.1/vocab/base": false,
+    "tag:example.com,2026:vocab/custom": false
+  },
+  "title": "Custom OpenAPI Dialect",
+  "description": "A meta-schema extending the OpenAPI 3.1 dialect with a vocabulary of its own",
+  "$ref": "https://spec.openapis.org/oas/3.1/dialect/base",
+  "examples": [ { "type": "string" } ]
+}

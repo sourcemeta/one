@@ -8,11 +8,11 @@
 
 namespace sourcemeta::one {
 
-// The official dialect a schema declares, which is nothing at all when the
-// dialect it declares is not an official one
+// The dialect on the upgrade ladder a schema declares, which is nothing at
+// all when the dialect it declares is not one of them
 [[nodiscard]] inline auto
-declared_official_dialect(const RouterAction &action,
-                          const ResolvedArtifact &schema)
+declared_schema_dialect(const RouterAction &action,
+                        const ResolvedArtifact &schema)
     -> std::optional<SchemaDialect> {
   const auto contents{action.artifact_read_json(schema)};
   const auto *dialect{contents.has_value() && contents->is_object()
@@ -22,7 +22,7 @@ declared_official_dialect(const RouterAction &action,
     return std::nullopt;
   }
 
-  return official_dialect(dialect->to_string());
+  return schema_dialect(dialect->to_string());
 }
 
 } // namespace sourcemeta::one

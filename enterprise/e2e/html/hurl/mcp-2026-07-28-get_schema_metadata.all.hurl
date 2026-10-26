@@ -109,11 +109,15 @@ variable "text" jsonpath "$.path" == "/test/bare/01"
 jsonpath "$.result.structuredContent.dialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.metaschema" == false
-jsonpath "$.result.structuredContent.conversions.*.mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions.*" count == 3
 jsonpath "$.result.structuredContent.conversions['2020-12'].mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions['openapi3.1'].mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions['openapi3.2'].mediaType" == "application/schema+json"
 variable "text" jsonpath "$.metaschema" == false
-variable "text" jsonpath "$.conversions.*.mediaType" == "application/schema+json"
+variable "text" jsonpath "$.conversions.*" count == 3
 variable "text" jsonpath "$.conversions['2020-12'].mediaType" == "application/schema+json"
+variable "text" jsonpath "$.conversions['openapi3.1'].mediaType" == "application/schema+json"
+variable "text" jsonpath "$.conversions['openapi3.2'].mediaType" == "application/schema+json"
 jsonpath "$.result.structuredContent.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.examples" count == 0
@@ -241,11 +245,15 @@ variable "text" jsonpath "$.path" == "/test/object"
 jsonpath "$.result.structuredContent.dialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.dialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.metaschema" == false
-jsonpath "$.result.structuredContent.conversions.*.mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions.*" count == 3
 jsonpath "$.result.structuredContent.conversions['2020-12'].mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions['openapi3.1'].mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions['openapi3.2'].mediaType" == "application/schema+json"
 variable "text" jsonpath "$.metaschema" == false
-variable "text" jsonpath "$.conversions.*.mediaType" == "application/schema+json"
+variable "text" jsonpath "$.conversions.*" count == 3
 variable "text" jsonpath "$.conversions['2020-12'].mediaType" == "application/schema+json"
+variable "text" jsonpath "$.conversions['openapi3.1'].mediaType" == "application/schema+json"
+variable "text" jsonpath "$.conversions['openapi3.2'].mediaType" == "application/schema+json"
 jsonpath "$.result.structuredContent.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.title" == "My Object"
@@ -359,11 +367,15 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 802
 jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent.metaschema" == false
-jsonpath "$.result.structuredContent.conversions.*.mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions.*" count == 3
 jsonpath "$.result.structuredContent.conversions['2020-12'].mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions['openapi3.1'].mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions['openapi3.2'].mediaType" == "application/schema+json"
 variable "text" jsonpath "$.metaschema" == false
-variable "text" jsonpath "$.conversions.*.mediaType" == "application/schema+json"
+variable "text" jsonpath "$.conversions.*" count == 3
 variable "text" jsonpath "$.conversions['2020-12'].mediaType" == "application/schema+json"
+variable "text" jsonpath "$.conversions['openapi3.1'].mediaType" == "application/schema+json"
+variable "text" jsonpath "$.conversions['openapi3.2'].mediaType" == "application/schema+json"
 jsonpath "$.result.structuredContent.identifier" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.structuredContent.title" == "Sourcemeta One MCP Response"
 jsonpath "$.result.structuredContent.dependencies" == 10
@@ -753,11 +765,15 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 813
 jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent.metaschema" == false
-jsonpath "$.result.structuredContent.conversions.*.mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions.*" count == 3
 jsonpath "$.result.structuredContent.conversions['2020-12'].mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions['openapi3.1'].mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions['openapi3.2'].mediaType" == "application/schema+json"
 variable "text" jsonpath "$.metaschema" == false
-variable "text" jsonpath "$.conversions.*.mediaType" == "application/schema+json"
+variable "text" jsonpath "$.conversions.*" count == 3
 variable "text" jsonpath "$.conversions['2020-12'].mediaType" == "application/schema+json"
+variable "text" jsonpath "$.conversions['openapi3.1'].mediaType" == "application/schema+json"
+variable "text" jsonpath "$.conversions['openapi3.2'].mediaType" == "application/schema+json"
 jsonpath "$.result.structuredContent.identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.path" == "/test/object"
@@ -1444,11 +1460,15 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == "metadata-call-string-id"
 jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent.metaschema" == false
-jsonpath "$.result.structuredContent.conversions.*.mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions.*" count == 3
 jsonpath "$.result.structuredContent.conversions['2020-12'].mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions['openapi3.1'].mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions['openapi3.2'].mediaType" == "application/schema+json"
 variable "text" jsonpath "$.metaschema" == false
-variable "text" jsonpath "$.conversions.*.mediaType" == "application/schema+json"
+variable "text" jsonpath "$.conversions.*" count == 3
 variable "text" jsonpath "$.conversions['2020-12'].mediaType" == "application/schema+json"
+variable "text" jsonpath "$.conversions['openapi3.1'].mediaType" == "application/schema+json"
+variable "text" jsonpath "$.conversions['openapi3.2'].mediaType" == "application/schema+json"
 jsonpath "$.result.structuredContent.identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.title" == "My Object"
@@ -1591,8 +1611,10 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 261
 jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent.metaschema" == false
-jsonpath "$.result.structuredContent.conversions.*.mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions.*" count == 3
 jsonpath "$.result.structuredContent.conversions['2020-12'].mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions['openapi3.1'].mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions['openapi3.2'].mediaType" == "application/schema+json"
 jsonpath "$.result.content[0].text" == "{{canonical_metadata_text}}"
 jsonpath "$.result.resultType" == "complete"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
@@ -1684,8 +1706,10 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 262
 jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent.metaschema" == false
-jsonpath "$.result.structuredContent.conversions.*.mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions.*" count == 3
 jsonpath "$.result.structuredContent.conversions['2020-12'].mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions['openapi3.1'].mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions['openapi3.2'].mediaType" == "application/schema+json"
 jsonpath "$.result.content[0].text" == "{{canonical_metadata_text}}"
 jsonpath "$.result.resultType" == "complete"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
@@ -1777,8 +1801,10 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 263
 jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent.metaschema" == false
-jsonpath "$.result.structuredContent.conversions.*.mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions.*" count == 3
 jsonpath "$.result.structuredContent.conversions['2020-12'].mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions['openapi3.1'].mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions['openapi3.2'].mediaType" == "application/schema+json"
 jsonpath "$.result.content[0].text" == "{{canonical_metadata_text}}"
 jsonpath "$.result.resultType" == "complete"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"

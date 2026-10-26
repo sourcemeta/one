@@ -702,7 +702,7 @@ private:
             caller, uri, Tree::Schemas,
             sourcemeta::one::conversion_artifact(target.value()))};
         if (!converted.path.has_value()) {
-          const auto declared{sourcemeta::one::declared_official_dialect(
+          const auto declared{sourcemeta::one::declared_schema_dialect(
               *this, resolution.path.value())};
           if (!declared.has_value()) {
             return sourcemeta::core::jsonrpc_make_error(
@@ -712,7 +712,7 @@ private:
                     "their meta-schemas would need to be converted too"});
           }
 
-          // Every schema on an official dialect has an artifact for every
+          // Every schema on the upgrade ladder has an artifact for every
           // dialect newer than it, unless it is a meta-schema, which gets none
           if (sourcemeta::one::conversion_applies(declared.value(),
                                                   target.value())) {

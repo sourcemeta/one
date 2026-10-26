@@ -78,12 +78,14 @@ Connect provider.
 ## Dialect Upgrades
 
 Enterprise instances serve every schema written in an older JSON Schema dialect
-upgraded to any newer one, from Draft 3 all the way to 2020-12, through the `as`
-query parameter of the [schema endpoint](api.md#fetch) and the equivalent MCP
-resource. Teams keep authoring and reviewing schemas in the dialect they already
-have, while consumers whose tooling only understands a newer dialect fetch the
-version they need. Meta-schemas are upgraded too, declaring the vocabularies the
-newer dialect expects.
+upgraded to any newer one, from Draft 3 all the way to 2020-12 and on into the
+OpenAPI 3.1 and 3.2 Schema Object dialects, through the `as` query parameter of
+the [schema endpoint](api.md#fetch) and the equivalent MCP resource. Teams keep
+authoring and reviewing schemas in the dialect they already have, while
+consumers whose tooling only understands a newer dialect, or expects an OpenAPI
+Schema Object, fetch the version they need. A meta-schema is left alone, as
+[restating the dialect one describes is not always
+safe](api.md#fetch).
 
 ## Standard Library
 

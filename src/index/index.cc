@@ -108,6 +108,10 @@ static constexpr std::array<BuildHandlerFunction, sourcemeta::one::ACTION_COUNT>
             sourcemeta::one::SchemaDialect::Draft201909>::handler,
         &sourcemeta::one::GenerateConversion<
             sourcemeta::one::SchemaDialect::Draft202012>::handler,
+        &sourcemeta::one::GenerateConversion<
+            sourcemeta::one::SchemaDialect::OpenAPI31>::handler,
+        &sourcemeta::one::GenerateConversion<
+            sourcemeta::one::SchemaDialect::OpenAPI32>::handler,
 #endif
         // Removal is done before anything is dispatched, so it is the one
         // action with nothing to call

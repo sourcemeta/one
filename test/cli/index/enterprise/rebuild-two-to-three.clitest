@@ -60,24 +60,26 @@ DROP LINES MATCHING '^(?!.*(Producing|Combining)).*$' IN output_producing.txt
 
 WRITE expected.txt UNTIL EOF
 2> (  4%) Producing: schemas/example/schemas/c/%/schema.metapack
-2> (  9%) Producing: schemas/example/schemas/c/%/dependencies.metapack
-2> ( 14%) Producing: schemas/example/schemas/c/%/locations.metapack
-2> ( 19%) Producing: schemas/example/schemas/c/%/positions.metapack
-2> ( 23%) Producing: schemas/example/schemas/c/%/stats.metapack
-2> ( 28%) Producing: schemas/example/schemas/c/%/bundle.metapack
-2> ( 33%) Producing: schemas/example/schemas/c/%/health.metapack
-2> ( 38%) Producing: explorer/public/example/schemas/c/%/schema.metapack
-2> ( 42%) Producing: schemas/example/schemas/c/%/blaze-exhaustive.metapack
-2> ( 47%) Producing: schemas/example/schemas/c/%/blaze-fast.metapack
-2> ( 52%) Producing: schemas/example/schemas/c/%/bundle-2020-12.metapack
-2> ( 57%) Producing: schemas/example/schemas/c/%/editor.metapack
-2> ( 61%) Producing: explorer/public/example/schemas/%/directory.metapack
-2> ( 66%) Producing: explorer/public/example/schemas/c/%/schema-html.metapack
-2> ( 71%) Producing: explorer/public/example/%/directory.metapack
-2> ( 76%) Producing: explorer/public/example/schemas/%/directory-html.metapack
-2> ( 80%) Producing: explorer/public/%/directory.metapack
-2> ( 85%) Producing: explorer/public/example/%/directory-html.metapack
-2> ( 90%) Producing: explorer/public/%/directory-html.metapack
+2> (  8%) Producing: schemas/example/schemas/c/%/dependencies.metapack
+2> ( 13%) Producing: schemas/example/schemas/c/%/locations.metapack
+2> ( 17%) Producing: schemas/example/schemas/c/%/positions.metapack
+2> ( 21%) Producing: schemas/example/schemas/c/%/stats.metapack
+2> ( 26%) Producing: schemas/example/schemas/c/%/bundle.metapack
+2> ( 30%) Producing: schemas/example/schemas/c/%/health.metapack
+2> ( 34%) Producing: explorer/public/example/schemas/c/%/schema.metapack
+2> ( 39%) Producing: schemas/example/schemas/c/%/blaze-exhaustive.metapack
+2> ( 43%) Producing: schemas/example/schemas/c/%/blaze-fast.metapack
+2> ( 47%) Producing: schemas/example/schemas/c/%/bundle-2020-12.metapack
+2> ( 52%) Producing: schemas/example/schemas/c/%/bundle-openapi3.1.metapack
+2> ( 56%) Producing: schemas/example/schemas/c/%/bundle-openapi3.2.metapack
+2> ( 60%) Producing: schemas/example/schemas/c/%/editor.metapack
+2> ( 65%) Producing: explorer/public/example/schemas/%/directory.metapack
+2> ( 69%) Producing: explorer/public/example/schemas/c/%/schema-html.metapack
+2> ( 73%) Producing: explorer/public/example/%/directory.metapack
+2> ( 78%) Producing: explorer/public/example/schemas/%/directory-html.metapack
+2> ( 82%) Producing: explorer/public/%/directory.metapack
+2> ( 86%) Producing: explorer/public/example/%/directory-html.metapack
+2> ( 91%) Producing: explorer/public/%/directory-html.metapack
 2> ( 95%) Producing: explorer/public/%/search.metapack
 2> (100%) Producing: explorer/public/%/mcp.metapack
 2> (100%) Combining: explorer/public/example/schemas/c/%/dependents.metapack
@@ -659,6 +661,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/example/schemas/a/%/blaze-exhaustive.metapack
 ./schemas/example/schemas/a/%/blaze-fast.metapack
 ./schemas/example/schemas/a/%/bundle-2020-12.metapack
+./schemas/example/schemas/a/%/bundle-openapi3.1.metapack
+./schemas/example/schemas/a/%/bundle-openapi3.2.metapack
 ./schemas/example/schemas/a/%/bundle.metapack
 ./schemas/example/schemas/a/%/dependencies.metapack
 ./schemas/example/schemas/a/%/editor.metapack
@@ -672,6 +676,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/example/schemas/b/%/blaze-exhaustive.metapack
 ./schemas/example/schemas/b/%/blaze-fast.metapack
 ./schemas/example/schemas/b/%/bundle-2020-12.metapack
+./schemas/example/schemas/b/%/bundle-openapi3.1.metapack
+./schemas/example/schemas/b/%/bundle-openapi3.2.metapack
 ./schemas/example/schemas/b/%/bundle.metapack
 ./schemas/example/schemas/b/%/dependencies.metapack
 ./schemas/example/schemas/b/%/editor.metapack
@@ -685,6 +691,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/example/schemas/c/%/blaze-exhaustive.metapack
 ./schemas/example/schemas/c/%/blaze-fast.metapack
 ./schemas/example/schemas/c/%/bundle-2020-12.metapack
+./schemas/example/schemas/c/%/bundle-openapi3.1.metapack
+./schemas/example/schemas/c/%/bundle-openapi3.2.metapack
 ./schemas/example/schemas/c/%/bundle.metapack
 ./schemas/example/schemas/c/%/dependencies.metapack
 ./schemas/example/schemas/c/%/editor.metapack
@@ -704,6 +712,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/api/auth/login/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/auth/login/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/auth/login/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/api/auth/login/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/api/auth/login/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/api/auth/login/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/auth/login/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/auth/login/response/%/editor.metapack
@@ -717,6 +727,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/api/error/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/error/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/error/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/api/error/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/api/error/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/api/error/%/bundle.metapack
 ./schemas/self/v1/schemas/api/error/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/error/%/editor.metapack
@@ -731,6 +743,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/api/list/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/list/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/list/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/api/list/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/api/list/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/api/list/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/list/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/list/response/%/editor.metapack
@@ -747,6 +761,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/api/playground/schemas/trace/request/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/playground/schemas/trace/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/playground/schemas/trace/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/api/playground/schemas/trace/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/api/playground/schemas/trace/request/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/api/playground/schemas/trace/request/%/bundle.metapack
 ./schemas/self/v1/schemas/api/playground/schemas/trace/request/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/playground/schemas/trace/request/%/editor.metapack
@@ -760,6 +776,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/api/playground/schemas/trace/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/playground/schemas/trace/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/playground/schemas/trace/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/api/playground/schemas/trace/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/api/playground/schemas/trace/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/api/playground/schemas/trace/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/playground/schemas/trace/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/playground/schemas/trace/response/%/editor.metapack
@@ -775,6 +793,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/api/schemas/dependencies/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/api/schemas/dependencies/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/schemas/dependencies/response/%/editor.metapack
@@ -789,6 +809,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/api/schemas/dependents/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/schemas/dependents/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/dependents/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/api/schemas/dependents/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/api/schemas/dependents/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/api/schemas/dependents/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/dependents/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/schemas/dependents/response/%/editor.metapack
@@ -803,6 +825,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/api/schemas/evaluate/request/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/request/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/request/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/request/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/request/%/editor.metapack
@@ -816,6 +840,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/api/schemas/evaluate/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/schemas/evaluate/response/%/editor.metapack
@@ -830,6 +856,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/api/schemas/health/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/schemas/health/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/health/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/api/schemas/health/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/api/schemas/health/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/api/schemas/health/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/health/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/schemas/health/response/%/editor.metapack
@@ -844,6 +872,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/api/schemas/locations/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/schemas/locations/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/locations/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/api/schemas/locations/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/api/schemas/locations/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/api/schemas/locations/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/locations/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/schemas/locations/response/%/editor.metapack
@@ -858,6 +888,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/api/schemas/metadata/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/api/schemas/metadata/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/schemas/metadata/response/%/editor.metapack
@@ -871,6 +903,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/api/schemas/output-error/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/schemas/output-error/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/output-error/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/api/schemas/output-error/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/api/schemas/output-error/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/api/schemas/output-error/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/output-error/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/schemas/output-error/%/editor.metapack
@@ -884,6 +918,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/api/schemas/position/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/schemas/position/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/position/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/api/schemas/position/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/api/schemas/position/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/api/schemas/position/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/position/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/schemas/position/%/editor.metapack
@@ -898,6 +934,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/api/schemas/positions/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/schemas/positions/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/positions/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/api/schemas/positions/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/api/schemas/positions/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/api/schemas/positions/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/positions/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/schemas/positions/response/%/editor.metapack
@@ -912,6 +950,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/api/schemas/rdf/request/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/schemas/rdf/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/rdf/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/api/schemas/rdf/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/api/schemas/rdf/request/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/api/schemas/rdf/request/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/rdf/request/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/schemas/rdf/request/%/editor.metapack
@@ -925,6 +965,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/api/schemas/rdf/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/schemas/rdf/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/rdf/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/api/schemas/rdf/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/api/schemas/rdf/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/api/schemas/rdf/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/rdf/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/schemas/rdf/response/%/editor.metapack
@@ -939,6 +981,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/api/schemas/search/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/schemas/search/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/search/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/api/schemas/search/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/api/schemas/search/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/api/schemas/search/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/search/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/schemas/search/response/%/editor.metapack
@@ -953,6 +997,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/api/schemas/stats/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/api/schemas/stats/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/schemas/stats/response/%/editor.metapack
@@ -967,6 +1013,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/api/schemas/trace/request/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/api/schemas/trace/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/api/schemas/trace/request/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/request/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/request/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/request/%/editor.metapack
@@ -980,6 +1028,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/api/schemas/trace/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/api/schemas/trace/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/bundle.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/api/schemas/trace/response/%/editor.metapack
@@ -994,6 +1044,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/error/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/error/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/error/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/error/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/error/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/error/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/error/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/error/%/editor.metapack
@@ -1008,6 +1060,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/initialize/request/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/initialize/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/initialize/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/initialize/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/initialize/request/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/initialize/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/initialize/request/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/initialize/request/%/editor.metapack
@@ -1021,6 +1075,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/initialize/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/initialize/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/initialize/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/initialize/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/initialize/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/initialize/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/initialize/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/initialize/response/%/editor.metapack
@@ -1035,6 +1091,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/notifications/cancelled/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/notifications/cancelled/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/notifications/cancelled/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/notifications/cancelled/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/notifications/cancelled/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/notifications/cancelled/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/notifications/cancelled/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/notifications/cancelled/%/editor.metapack
@@ -1048,6 +1106,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/notifications/initialized/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/notifications/initialized/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/notifications/initialized/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/notifications/initialized/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/notifications/initialized/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/notifications/initialized/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/notifications/initialized/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/notifications/initialized/%/editor.metapack
@@ -1062,6 +1122,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/ping/request/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/ping/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/ping/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/ping/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/ping/request/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/ping/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/ping/request/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/ping/request/%/editor.metapack
@@ -1075,6 +1137,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/ping/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/ping/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/ping/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/ping/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/ping/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/ping/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/ping/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/ping/response/%/editor.metapack
@@ -1089,6 +1153,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/prm/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/prm/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/prm/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/prm/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/prm/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/prm/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/prm/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/prm/response/%/editor.metapack
@@ -1102,6 +1168,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/request/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/request/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/request/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/request/%/editor.metapack
@@ -1117,6 +1185,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/resources/list/request/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/resources/list/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/resources/list/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/resources/list/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/resources/list/request/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/resources/list/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/resources/list/request/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/resources/list/request/%/editor.metapack
@@ -1130,6 +1200,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/resources/list/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/resources/list/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/resources/list/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/resources/list/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/resources/list/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/resources/list/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/resources/list/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/resources/list/response/%/editor.metapack
@@ -1144,6 +1216,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/resources/read/request/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/resources/read/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/resources/read/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/resources/read/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/resources/read/request/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/resources/read/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/resources/read/request/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/resources/read/request/%/editor.metapack
@@ -1157,6 +1231,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/resources/read/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/resources/read/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/resources/read/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/resources/read/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/resources/read/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/resources/read/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/resources/read/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/resources/read/response/%/editor.metapack
@@ -1172,6 +1248,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/resources/templates/list/request/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/resources/templates/list/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/resources/templates/list/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/resources/templates/list/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/resources/templates/list/request/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/resources/templates/list/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/resources/templates/list/request/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/resources/templates/list/request/%/editor.metapack
@@ -1185,6 +1263,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/resources/templates/list/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/resources/templates/list/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/resources/templates/list/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/resources/templates/list/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/resources/templates/list/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/resources/templates/list/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/resources/templates/list/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/resources/templates/list/response/%/editor.metapack
@@ -1198,6 +1278,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/response/%/editor.metapack
@@ -1214,6 +1296,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/request/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/request/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/request/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/request/%/editor.metapack
@@ -1227,6 +1311,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/response/%/editor.metapack
@@ -1241,6 +1327,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request/%/editor.metapack
@@ -1254,6 +1342,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response/%/editor.metapack
@@ -1268,6 +1358,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/request/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/request/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/request/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/request/%/editor.metapack
@@ -1281,6 +1373,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependents/response/%/editor.metapack
@@ -1295,6 +1389,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/request/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/request/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/request/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/request/%/editor.metapack
@@ -1308,6 +1404,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-health/response/%/editor.metapack
@@ -1322,6 +1420,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/request/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/request/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/request/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/request/%/editor.metapack
@@ -1335,6 +1435,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-locations/response/%/editor.metapack
@@ -1349,6 +1451,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/request/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/request/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/request/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/request/%/editor.metapack
@@ -1362,6 +1466,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-metadata/response/%/editor.metapack
@@ -1376,6 +1482,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/request/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/request/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/request/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/request/%/editor.metapack
@@ -1389,6 +1497,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-positions/response/%/editor.metapack
@@ -1403,6 +1513,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/request/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/request/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/request/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/request/%/editor.metapack
@@ -1416,6 +1528,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-stats/response/%/editor.metapack
@@ -1430,6 +1544,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/request/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/request/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/request/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/request/%/editor.metapack
@@ -1443,6 +1559,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/instance-to-rdf/response/%/editor.metapack
@@ -1457,6 +1575,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/list-directory/request/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/list-directory/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/list-directory/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/list-directory/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/list-directory/request/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/list-directory/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/list-directory/request/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/list-directory/request/%/editor.metapack
@@ -1470,6 +1590,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/list-directory/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/list-directory/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/list-directory/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/list-directory/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/list-directory/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/list-directory/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/list-directory/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/list-directory/response/%/editor.metapack
@@ -1484,6 +1606,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/playground-trace-schema/request/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/playground-trace-schema/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/playground-trace-schema/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/playground-trace-schema/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/playground-trace-schema/request/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/playground-trace-schema/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/playground-trace-schema/request/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/playground-trace-schema/request/%/editor.metapack
@@ -1497,6 +1621,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/playground-trace-schema/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/playground-trace-schema/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/playground-trace-schema/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/playground-trace-schema/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/playground-trace-schema/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/playground-trace-schema/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/playground-trace-schema/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/playground-trace-schema/response/%/editor.metapack
@@ -1510,6 +1636,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/request/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/request/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/request/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/request/%/editor.metapack
@@ -1523,6 +1651,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/response/%/editor.metapack
@@ -1537,6 +1667,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/search-schemas/request/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/search-schemas/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/search-schemas/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/search-schemas/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/search-schemas/request/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/search-schemas/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/search-schemas/request/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/search-schemas/request/%/editor.metapack
@@ -1550,6 +1682,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/search-schemas/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/search-schemas/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/search-schemas/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/search-schemas/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/search-schemas/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/search-schemas/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/search-schemas/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/search-schemas/response/%/editor.metapack
@@ -1564,6 +1698,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request/%/editor.metapack
@@ -1577,6 +1713,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response/%/editor.metapack
@@ -1591,6 +1729,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/list/request/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/list/request/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/list/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/list/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/list/request/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/list/request/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/list/request/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/list/request/%/editor.metapack
@@ -1604,6 +1744,8 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/list/response/%/blaze-exhaustive.metapack
 ./schemas/self/v1/schemas/mcp/tools/list/response/%/blaze-fast.metapack
 ./schemas/self/v1/schemas/mcp/tools/list/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/list/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/list/response/%/bundle-openapi3.2.metapack
 ./schemas/self/v1/schemas/mcp/tools/list/response/%/bundle.metapack
 ./schemas/self/v1/schemas/mcp/tools/list/response/%/dependencies.metapack
 ./schemas/self/v1/schemas/mcp/tools/list/response/%/editor.metapack

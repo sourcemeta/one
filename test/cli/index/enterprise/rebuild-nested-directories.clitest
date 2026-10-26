@@ -99,24 +99,26 @@ DROP LINES MATCHING '^(?!.*(Producing|Combining)).*$' IN output_producing.txt
 // for all dependents, not just the ones whose graph actually changed.
 WRITE expected.txt UNTIL EOF
 2> (  4%) Producing: schemas/left/left-a/s5/%/schema.metapack
-2> (  9%) Producing: schemas/left/left-a/s5/%/dependencies.metapack
-2> ( 14%) Producing: schemas/left/left-a/s5/%/locations.metapack
-2> ( 19%) Producing: schemas/left/left-a/s5/%/positions.metapack
-2> ( 23%) Producing: schemas/left/left-a/s5/%/stats.metapack
-2> ( 28%) Producing: schemas/left/left-a/s5/%/bundle.metapack
-2> ( 33%) Producing: schemas/left/left-a/s5/%/health.metapack
-2> ( 38%) Producing: explorer/public/left/left-a/s5/%/schema.metapack
-2> ( 42%) Producing: schemas/left/left-a/s5/%/blaze-exhaustive.metapack
-2> ( 47%) Producing: schemas/left/left-a/s5/%/blaze-fast.metapack
-2> ( 52%) Producing: schemas/left/left-a/s5/%/bundle-2020-12.metapack
-2> ( 57%) Producing: schemas/left/left-a/s5/%/editor.metapack
-2> ( 61%) Producing: explorer/public/left/left-a/%/directory.metapack
-2> ( 66%) Producing: explorer/public/left/left-a/s5/%/schema-html.metapack
-2> ( 71%) Producing: explorer/public/left/%/directory.metapack
-2> ( 76%) Producing: explorer/public/left/left-a/%/directory-html.metapack
-2> ( 80%) Producing: explorer/public/%/directory.metapack
-2> ( 85%) Producing: explorer/public/left/%/directory-html.metapack
-2> ( 90%) Producing: explorer/public/%/directory-html.metapack
+2> (  8%) Producing: schemas/left/left-a/s5/%/dependencies.metapack
+2> ( 13%) Producing: schemas/left/left-a/s5/%/locations.metapack
+2> ( 17%) Producing: schemas/left/left-a/s5/%/positions.metapack
+2> ( 21%) Producing: schemas/left/left-a/s5/%/stats.metapack
+2> ( 26%) Producing: schemas/left/left-a/s5/%/bundle.metapack
+2> ( 30%) Producing: schemas/left/left-a/s5/%/health.metapack
+2> ( 34%) Producing: explorer/public/left/left-a/s5/%/schema.metapack
+2> ( 39%) Producing: schemas/left/left-a/s5/%/blaze-exhaustive.metapack
+2> ( 43%) Producing: schemas/left/left-a/s5/%/blaze-fast.metapack
+2> ( 47%) Producing: schemas/left/left-a/s5/%/bundle-2020-12.metapack
+2> ( 52%) Producing: schemas/left/left-a/s5/%/bundle-openapi3.1.metapack
+2> ( 56%) Producing: schemas/left/left-a/s5/%/bundle-openapi3.2.metapack
+2> ( 60%) Producing: schemas/left/left-a/s5/%/editor.metapack
+2> ( 65%) Producing: explorer/public/left/left-a/%/directory.metapack
+2> ( 69%) Producing: explorer/public/left/left-a/s5/%/schema-html.metapack
+2> ( 73%) Producing: explorer/public/left/%/directory.metapack
+2> ( 78%) Producing: explorer/public/left/left-a/%/directory-html.metapack
+2> ( 82%) Producing: explorer/public/%/directory.metapack
+2> ( 86%) Producing: explorer/public/left/%/directory-html.metapack
+2> ( 91%) Producing: explorer/public/%/directory-html.metapack
 2> ( 95%) Producing: explorer/public/%/search.metapack
 2> (100%) Producing: explorer/public/%/mcp.metapack
 2> (100%) Combining: explorer/public/left/left-a/s5/%/dependents.metapack

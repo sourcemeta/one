@@ -158,7 +158,19 @@ jsonpath "$.result.structuredContent.results[0].title" == "My Object"
 jsonpath "$.result.structuredContent.results[0].description" == "An Object Example"
 jsonpath "$.result.structuredContent.results[0].priority" == 50
 jsonpath "$.result.structuredContent.results[0].health" == 67
+variable "text" jsonpath "$.results[0].path" == "/test/object"
+variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
+variable "text" jsonpath "$.results[0].title" == "My Object"
+variable "text" jsonpath "$.results[0].description" == "An Object Example"
+variable "text" jsonpath "$.results[0].priority" == 50
+variable "text" jsonpath "$.results[0].health" == 67
 variable "text" jsonpath "$.results" count == 1
+jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
+jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.results[0].title" == "My Object"
+jsonpath "$.result.structuredContent.results[0].description" == "An Object Example"
+jsonpath "$.result.structuredContent.results[0].priority" == 50
+jsonpath "$.result.structuredContent.results[0].health" == 67
 variable "text" jsonpath "$.results[0].path" == "/test/object"
 variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.results[0].title" == "My Object"
@@ -378,54 +390,54 @@ jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 11
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
-jsonpath "$.result.content[1].uri" == "{{base}}/test/openapi/identifier"
-jsonpath "$.result.content[1].name" == "Identifier"
-jsonpath "$.result.content[1].description" == "A product identifier"
+jsonpath "$.result.content[1].uri" == "{{base}}/test/openapi/dialect"
+jsonpath "$.result.content[1].name" == "Custom OpenAPI Dialect"
+jsonpath "$.result.content[1].description" == "A meta-schema extending the OpenAPI 3.1 dialect with a vocabulary of its own"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.content[2].type" == "resource_link"
-jsonpath "$.result.content[2].uri" == "{{base}}/test/openapi/order"
-jsonpath "$.result.content[2].name" == "Order"
-jsonpath "$.result.content[2].description" == "An order on the OpenAPI 3.2 dialect that references a schema on the OpenAPI 3.1 one"
+jsonpath "$.result.content[2].uri" == "{{base}}/test/openapi/identifier"
+jsonpath "$.result.content[2].name" == "Identifier"
+jsonpath "$.result.content[2].description" == "A product identifier"
 jsonpath "$.result.content[2].mimeType" == "application/schema+json"
 jsonpath "$.result.content[3].type" == "resource_link"
-jsonpath "$.result.content[3].uri" == "{{base}}/test/openapi/product"
-jsonpath "$.result.content[3].name" == "Product"
-jsonpath "$.result.content[3].description" == "A product that exercises every keyword of the OpenAPI 3.1 base vocabulary"
+jsonpath "$.result.content[3].uri" == "{{base}}/test/openapi/order"
+jsonpath "$.result.content[3].name" == "Order"
+jsonpath "$.result.content[3].description" == "An order on the OpenAPI 3.2 dialect that references a schema on the OpenAPI 3.1 one"
 jsonpath "$.result.content[3].mimeType" == "application/schema+json"
 jsonpath "$.result.content[4].type" == "resource_link"
-jsonpath "$.result.content[4].uri" == "{{base}}/test/jsonld/product"
+jsonpath "$.result.content[4].uri" == "{{base}}/test/openapi/product"
 jsonpath "$.result.content[4].name" == "Product"
-jsonpath "$.result.content[4].description" == "A product annotated with JSON-LD mappings"
+jsonpath "$.result.content[4].description" == "A product that exercises every keyword of the OpenAPI 3.1 base vocabulary"
 jsonpath "$.result.content[4].mimeType" == "application/schema+json"
 jsonpath "$.result.content[5].type" == "resource_link"
-jsonpath "$.result.content[5].uri" == "{{base}}/test/jsonld/facets"
-jsonpath "$.result.content[5].name" == "Unresolvable Facets"
-jsonpath "$.result.content[5].description" == "A schema whose JSON-LD annotations fail on a distinct facet per property"
+jsonpath "$.result.content[5].uri" == "{{base}}/test/jsonld/product"
+jsonpath "$.result.content[5].name" == "Product"
+jsonpath "$.result.content[5].description" == "A product annotated with JSON-LD mappings"
 jsonpath "$.result.content[5].mimeType" == "application/schema+json"
 jsonpath "$.result.content[6].type" == "resource_link"
-jsonpath "$.result.content[6].uri" == "{{base}}/test/object"
-jsonpath "$.result.content[6].name" == "My Object"
-jsonpath "$.result.content[6].description" == "An Object Example"
+jsonpath "$.result.content[6].uri" == "{{base}}/test/jsonld/facets"
+jsonpath "$.result.content[6].name" == "Unresolvable Facets"
+jsonpath "$.result.content[6].description" == "A schema whose JSON-LD annotations fail on a distinct facet per property"
 jsonpath "$.result.content[6].mimeType" == "application/schema+json"
 jsonpath "$.result.content[7].type" == "resource_link"
-jsonpath "$.result.content[7].uri" == "{{base}}/test/jsonld/draft7"
-jsonpath "$.result.content[7].name" == "Legacy Dialect"
-jsonpath "$.result.content[7].description" == "A schema on a dialect without annotation support"
+jsonpath "$.result.content[7].uri" == "{{base}}/test/object"
+jsonpath "$.result.content[7].name" == "My Object"
+jsonpath "$.result.content[7].description" == "An Object Example"
 jsonpath "$.result.content[7].mimeType" == "application/schema+json"
 jsonpath "$.result.content[8].type" == "resource_link"
-jsonpath "$.result.content[8].uri" == "{{base}}/test/full/01"
-jsonpath "$.result.content[8].name" == "Full 01"
-jsonpath "$.result.content[8].description" == "A schema with both a title and a description (01)"
+jsonpath "$.result.content[8].uri" == "{{base}}/test/jsonld/draft7"
+jsonpath "$.result.content[8].name" == "Legacy Dialect"
+jsonpath "$.result.content[8].description" == "A schema on a dialect without annotation support"
 jsonpath "$.result.content[8].mimeType" == "application/schema+json"
 jsonpath "$.result.content[9].type" == "resource_link"
-jsonpath "$.result.content[9].uri" == "{{base}}/test/full/02"
-jsonpath "$.result.content[9].name" == "Full 02"
-jsonpath "$.result.content[9].description" == "A schema with both a title and a description (02)"
+jsonpath "$.result.content[9].uri" == "{{base}}/test/full/01"
+jsonpath "$.result.content[9].name" == "Full 01"
+jsonpath "$.result.content[9].description" == "A schema with both a title and a description (01)"
 jsonpath "$.result.content[9].mimeType" == "application/schema+json"
 jsonpath "$.result.content[10].type" == "resource_link"
-jsonpath "$.result.content[10].uri" == "{{base}}/test/full/03"
-jsonpath "$.result.content[10].name" == "Full 03"
-jsonpath "$.result.content[10].description" == "A schema with both a title and a description (03)"
+jsonpath "$.result.content[10].uri" == "{{base}}/test/full/02"
+jsonpath "$.result.content[10].name" == "Full 02"
+jsonpath "$.result.content[10].description" == "A schema with both a title and a description (02)"
 jsonpath "$.result.content[10].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 10
 variable "text" jsonpath "$.results" count == 10
@@ -497,9 +509,9 @@ jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 2
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
-jsonpath "$.result.content[1].uri" == "{{base}}/test/openapi/identifier"
-jsonpath "$.result.content[1].name" == "Identifier"
-jsonpath "$.result.content[1].description" == "A product identifier"
+jsonpath "$.result.content[1].uri" == "{{base}}/test/openapi/dialect"
+jsonpath "$.result.content[1].name" == "Custom OpenAPI Dialect"
+jsonpath "$.result.content[1].description" == "A meta-schema extending the OpenAPI 3.1 dialect with a vocabulary of its own"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 1
 variable "text" jsonpath "$.results" count == 1
@@ -657,6 +669,10 @@ jsonpath "$.result.structuredContent.results[0].title" == ""
 jsonpath "$.result.structuredContent.results[0].description" == "A schema with only a description (01)"
 jsonpath "$.result.structuredContent.results[0].priority" == 50
 jsonpath "$.result.structuredContent.results[0].health" == 0
+jsonpath "$.result.structuredContent.results[1].title" == ""
+jsonpath "$.result.structuredContent.results[1].description" == "A schema with only a description (02)"
+jsonpath "$.result.structuredContent.results[1].priority" == 50
+jsonpath "$.result.structuredContent.results[1].health" == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -758,6 +774,10 @@ jsonpath "$.result.structuredContent.results[0].title" == "Title Only 01"
 jsonpath "$.result.structuredContent.results[0].description" == ""
 jsonpath "$.result.structuredContent.results[0].priority" == 50
 jsonpath "$.result.structuredContent.results[0].health" == 0
+jsonpath "$.result.structuredContent.results[1].title" == "Title Only 02"
+jsonpath "$.result.structuredContent.results[1].description" == ""
+jsonpath "$.result.structuredContent.results[1].priority" == 50
+jsonpath "$.result.structuredContent.results[1].health" == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -859,6 +879,10 @@ jsonpath "$.result.structuredContent.results[0].title" == ""
 jsonpath "$.result.structuredContent.results[0].description" == ""
 jsonpath "$.result.structuredContent.results[0].priority" == 50
 jsonpath "$.result.structuredContent.results[0].health" == 0
+jsonpath "$.result.structuredContent.results[1].title" == ""
+jsonpath "$.result.structuredContent.results[1].description" == ""
+jsonpath "$.result.structuredContent.results[1].priority" == 50
+jsonpath "$.result.structuredContent.results[1].health" == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1248,29 +1272,29 @@ jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 6
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
-jsonpath "$.result.content[1].uri" == "{{base}}/test/openapi/identifier"
-jsonpath "$.result.content[1].name" == "Identifier"
-jsonpath "$.result.content[1].description" == "A product identifier"
+jsonpath "$.result.content[1].uri" == "{{base}}/test/openapi/dialect"
+jsonpath "$.result.content[1].name" == "Custom OpenAPI Dialect"
+jsonpath "$.result.content[1].description" == "A meta-schema extending the OpenAPI 3.1 dialect with a vocabulary of its own"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.content[2].type" == "resource_link"
-jsonpath "$.result.content[2].uri" == "{{base}}/test/openapi/order"
-jsonpath "$.result.content[2].name" == "Order"
-jsonpath "$.result.content[2].description" == "An order on the OpenAPI 3.2 dialect that references a schema on the OpenAPI 3.1 one"
+jsonpath "$.result.content[2].uri" == "{{base}}/test/openapi/identifier"
+jsonpath "$.result.content[2].name" == "Identifier"
+jsonpath "$.result.content[2].description" == "A product identifier"
 jsonpath "$.result.content[2].mimeType" == "application/schema+json"
 jsonpath "$.result.content[3].type" == "resource_link"
-jsonpath "$.result.content[3].uri" == "{{base}}/test/openapi/product"
-jsonpath "$.result.content[3].name" == "Product"
-jsonpath "$.result.content[3].description" == "A product that exercises every keyword of the OpenAPI 3.1 base vocabulary"
+jsonpath "$.result.content[3].uri" == "{{base}}/test/openapi/order"
+jsonpath "$.result.content[3].name" == "Order"
+jsonpath "$.result.content[3].description" == "An order on the OpenAPI 3.2 dialect that references a schema on the OpenAPI 3.1 one"
 jsonpath "$.result.content[3].mimeType" == "application/schema+json"
 jsonpath "$.result.content[4].type" == "resource_link"
-jsonpath "$.result.content[4].uri" == "{{base}}/test/jsonld/product"
+jsonpath "$.result.content[4].uri" == "{{base}}/test/openapi/product"
 jsonpath "$.result.content[4].name" == "Product"
-jsonpath "$.result.content[4].description" == "A product annotated with JSON-LD mappings"
+jsonpath "$.result.content[4].description" == "A product that exercises every keyword of the OpenAPI 3.1 base vocabulary"
 jsonpath "$.result.content[4].mimeType" == "application/schema+json"
 jsonpath "$.result.content[5].type" == "resource_link"
-jsonpath "$.result.content[5].uri" == "{{base}}/test/jsonld/facets"
-jsonpath "$.result.content[5].name" == "Unresolvable Facets"
-jsonpath "$.result.content[5].description" == "A schema whose JSON-LD annotations fail on a distinct facet per property"
+jsonpath "$.result.content[5].uri" == "{{base}}/test/jsonld/product"
+jsonpath "$.result.content[5].name" == "Product"
+jsonpath "$.result.content[5].description" == "A product annotated with JSON-LD mappings"
 jsonpath "$.result.content[5].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 5
 variable "text" jsonpath "$.results" count == 5

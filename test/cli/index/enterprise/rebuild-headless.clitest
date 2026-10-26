@@ -62,20 +62,22 @@ DROP LINES MATCHING '^(?!.*(Producing|Combining)).*$' IN output_producing.txt
 
 WRITE expected.txt UNTIL EOF
 2> (  5%) Producing: schemas/example/schemas/c/%/schema.metapack
-2> ( 11%) Producing: schemas/example/schemas/c/%/dependencies.metapack
-2> ( 17%) Producing: schemas/example/schemas/c/%/locations.metapack
-2> ( 23%) Producing: schemas/example/schemas/c/%/positions.metapack
-2> ( 29%) Producing: schemas/example/schemas/c/%/stats.metapack
-2> ( 35%) Producing: schemas/example/schemas/c/%/bundle.metapack
-2> ( 41%) Producing: schemas/example/schemas/c/%/health.metapack
-2> ( 47%) Producing: explorer/public/example/schemas/c/%/schema.metapack
-2> ( 52%) Producing: schemas/example/schemas/c/%/blaze-exhaustive.metapack
-2> ( 58%) Producing: schemas/example/schemas/c/%/blaze-fast.metapack
-2> ( 64%) Producing: schemas/example/schemas/c/%/bundle-2020-12.metapack
-2> ( 70%) Producing: schemas/example/schemas/c/%/editor.metapack
-2> ( 76%) Producing: explorer/public/example/schemas/%/directory.metapack
-2> ( 82%) Producing: explorer/public/example/%/directory.metapack
-2> ( 88%) Producing: explorer/public/%/directory.metapack
+2> ( 10%) Producing: schemas/example/schemas/c/%/dependencies.metapack
+2> ( 15%) Producing: schemas/example/schemas/c/%/locations.metapack
+2> ( 21%) Producing: schemas/example/schemas/c/%/positions.metapack
+2> ( 26%) Producing: schemas/example/schemas/c/%/stats.metapack
+2> ( 31%) Producing: schemas/example/schemas/c/%/bundle.metapack
+2> ( 36%) Producing: schemas/example/schemas/c/%/health.metapack
+2> ( 42%) Producing: explorer/public/example/schemas/c/%/schema.metapack
+2> ( 47%) Producing: schemas/example/schemas/c/%/blaze-exhaustive.metapack
+2> ( 52%) Producing: schemas/example/schemas/c/%/blaze-fast.metapack
+2> ( 57%) Producing: schemas/example/schemas/c/%/bundle-2020-12.metapack
+2> ( 63%) Producing: schemas/example/schemas/c/%/bundle-openapi3.1.metapack
+2> ( 68%) Producing: schemas/example/schemas/c/%/bundle-openapi3.2.metapack
+2> ( 73%) Producing: schemas/example/schemas/c/%/editor.metapack
+2> ( 78%) Producing: explorer/public/example/schemas/%/directory.metapack
+2> ( 84%) Producing: explorer/public/example/%/directory.metapack
+2> ( 89%) Producing: explorer/public/%/directory.metapack
 2> ( 94%) Producing: explorer/public/%/search.metapack
 2> (100%) Producing: explorer/public/%/mcp.metapack
 2> (100%) Combining: explorer/public/example/schemas/c/%/dependents.metapack

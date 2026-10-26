@@ -32,7 +32,7 @@ namespace sourcemeta::one {
 auto conversions_metadata(std::string_view dialect, bool is_metaschema)
     -> sourcemeta::core::JSON;
 
-// Convert a bundled schema into a newer official dialect, every resource it
+// Convert a bundled schema into a newer dialect, every resource it
 // holds included, reporting whether there was a conversion to make at all
 auto convert_schema(sourcemeta::core::JSON &schema, SchemaDialect target,
                     std::string_view identifier,

@@ -76,6 +76,8 @@ cat << 'EOF' > "$TMP/expected.txt"
 ./schemas/example/keep/foo/%/blaze-exhaustive.metapack
 ./schemas/example/keep/foo/%/blaze-fast.metapack
 ./schemas/example/keep/foo/%/bundle-2020-12.metapack
+./schemas/example/keep/foo/%/bundle-openapi3.1.metapack
+./schemas/example/keep/foo/%/bundle-openapi3.2.metapack
 ./schemas/example/keep/foo/%/bundle.metapack
 ./schemas/example/keep/foo/%/dependencies.metapack
 ./schemas/example/keep/foo/%/editor.metapack

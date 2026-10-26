@@ -1,4 +1,5 @@
-# A Draft 3 schema can be asked for in every newer official dialect
+# A Draft 3 schema can be asked for in every newer dialect on the ladder,
+# the OpenAPI Schema Object dialects at the top of it included
 GET {{base}}/self/v1/api/schemas/metadata/test/draft3/string
 Accept: application/json
 HTTP 200
@@ -26,12 +27,14 @@ jsonpath "$.priority" == 50
 jsonpath "$.dependencies" == 0
 jsonpath "$.dialect" == "http://json-schema.org/draft-03/schema#"
 jsonpath "$.metaschema" == false
-jsonpath "$.conversions.*" count == 5
+jsonpath "$.conversions.*" count == 7
 jsonpath "$.conversions.draft4.mediaType" == "application/schema+json"
 jsonpath "$.conversions.draft6.mediaType" == "application/schema+json"
 jsonpath "$.conversions.draft7.mediaType" == "application/schema+json"
 jsonpath "$.conversions['2019-09'].mediaType" == "application/schema+json"
 jsonpath "$.conversions['2020-12'].mediaType" == "application/schema+json"
+jsonpath "$.conversions['openapi3.1'].mediaType" == "application/schema+json"
+jsonpath "$.conversions['openapi3.2'].mediaType" == "application/schema+json"
 jsonpath "$.private" == false
 jsonpath "$.title" not exists
 jsonpath "$.description" not exists
@@ -329,10 +332,12 @@ jsonpath "$.priority" == 50
 jsonpath "$.dependencies" == 0
 jsonpath "$.dialect" == "http://json-schema.org/draft-07/schema#"
 jsonpath "$.metaschema" == false
-jsonpath "$.conversions.*" count == 3
+jsonpath "$.conversions.*" count == 5
 jsonpath "$.conversions.draft7.mediaType" == "application/schema+json"
 jsonpath "$.conversions['2019-09'].mediaType" == "application/schema+json"
 jsonpath "$.conversions['2020-12'].mediaType" == "application/schema+json"
+jsonpath "$.conversions['openapi3.1'].mediaType" == "application/schema+json"
+jsonpath "$.conversions['openapi3.2'].mediaType" == "application/schema+json"
 jsonpath "$.private" == false
 jsonpath "$.title" == "Legacy Dialect"
 jsonpath "$.description" == "A schema on a dialect without annotation support"
@@ -500,7 +505,51 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-# Nor in a dialect that is not an official one
+# The ladder is walked in one go, so the oldest dialect reaches the newest rung
+# of it, every resource the closure carries restated alongside
+GET {{base}}/test/draft3/with-ref.json?as=openapi3.2
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/schema+json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: <https://spec.openapis.org/oas/3.2/dialect/2025-09-17>; rel="describedby"
+[Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
+{
+  "$schema": "https://spec.openapis.org/oas/3.2/dialect/2025-09-17",
+  "$id": "{{base}}/test/draft3/with-ref",
+  "type": "object",
+  "properties": {
+    "tag": {
+      "$ref": "{{base}}/test/draft3/string"
+    },
+    "latest": {
+      "$ref": "{{base}}/test/jsonld/plain"
+    },
+    "same": {
+      "$ref": "#/properties/tag"
+    }
+  },
+  "$defs": {
+    "{{base}}/test/jsonld/plain": {
+      "$schema": "https://spec.openapis.org/oas/3.2/dialect/2025-09-17",
+      "$id": "{{base}}/test/jsonld/plain",
+      "title": "Plain",
+      "description": "A schema without JSON-LD annotations",
+      "type": "object"
+    },
+    "{{base}}/test/draft3/string": {
+      "$schema": "https://spec.openapis.org/oas/3.2/dialect/2025-09-17",
+      "$id": "{{base}}/test/draft3/string",
+      "type": "string"
+    }
+  }
+}
+
+# Nor in a dialect that is not on the upgrade ladder
 GET {{base}}/test/draft3/string?as=draft5
 HTTP 400
 Cache-Control: no-store

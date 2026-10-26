@@ -79,6 +79,8 @@ WRITE expected.txt UNTIL EOF
 ./schemas/schemas/a/%/bundle-2019-09.metapack
 ./schemas/schemas/a/%/bundle-2020-12.metapack
 ./schemas/schemas/a/%/bundle-draft7.metapack
+./schemas/schemas/a/%/bundle-openapi3.1.metapack
+./schemas/schemas/a/%/bundle-openapi3.2.metapack
 ./schemas/schemas/a/%/bundle.metapack
 ./schemas/schemas/a/%/dependencies.metapack
 ./schemas/schemas/a/%/editor.metapack

@@ -78,6 +78,8 @@ WRITE expected.txt UNTIL EOF
 ./schemas/example/foo/%/blaze-exhaustive.metapack
 ./schemas/example/foo/%/blaze-fast.metapack
 ./schemas/example/foo/%/bundle-2020-12.metapack
+./schemas/example/foo/%/bundle-openapi3.1.metapack
+./schemas/example/foo/%/bundle-openapi3.2.metapack
 ./schemas/example/foo/%/bundle.metapack
 ./schemas/example/foo/%/dependencies.metapack
 ./schemas/example/foo/%/editor.metapack
@@ -91,6 +93,8 @@ WRITE expected.txt UNTIL EOF
 ./schemas/example/foo/bar/%/blaze-exhaustive.metapack
 ./schemas/example/foo/bar/%/blaze-fast.metapack
 ./schemas/example/foo/bar/%/bundle-2020-12.metapack
+./schemas/example/foo/bar/%/bundle-openapi3.1.metapack
+./schemas/example/foo/bar/%/bundle-openapi3.2.metapack
 ./schemas/example/foo/bar/%/bundle.metapack
 ./schemas/example/foo/bar/%/dependencies.metapack
 ./schemas/example/foo/bar/%/editor.metapack

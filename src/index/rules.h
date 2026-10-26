@@ -43,6 +43,8 @@ enum : BuildPlan::Action::Type {
   ACTION_CONVERSION_DRAFT7,
   ACTION_CONVERSION_2019_09,
   ACTION_CONVERSION_2020_12,
+  ACTION_CONVERSION_OPENAPI_3_1,
+  ACTION_CONVERSION_OPENAPI_3_2,
 #endif
   ACTION_REMOVE,
   ACTION_COUNT
@@ -57,7 +59,7 @@ enum : BuildPlan::Action::Type {
 enum : BuildPlan::Type { MODE_HEADLESS, MODE_FULL, MODE_EXPERIMENTAL };
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
-inline constexpr std::size_t INDEX_LEAF_RULES{18};
+inline constexpr std::size_t INDEX_LEAF_RULES{20};
 #else
 inline constexpr std::size_t INDEX_LEAF_RULES{13};
 #endif
@@ -368,6 +370,42 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
                             .filename = "schema.metapack"}}},
          .dependency_count = 2,
          .selector = 4},
+
+        {.action = ACTION_CONVERSION_OPENAPI_3_1,
+         .base = 0,
+         .filename = "bundle-openapi3.1.metapack",
+         .gate = TargetGate::IfSelected,
+         .dirty = DirtyOverride::Normal,
+         .is_root = false,
+         .combine_only = false,
+         .container_target = false,
+         .tracks_dependencies = false,
+         .dependencies = {{{.source = DependencySource::Base,
+                            .base = 0,
+                            .filename = "bundle.metapack"},
+                           {.source = DependencySource::DialectDependents,
+                            .base = 0,
+                            .filename = "schema.metapack"}}},
+         .dependency_count = 2,
+         .selector = 5},
+
+        {.action = ACTION_CONVERSION_OPENAPI_3_2,
+         .base = 0,
+         .filename = "bundle-openapi3.2.metapack",
+         .gate = TargetGate::IfSelected,
+         .dirty = DirtyOverride::Normal,
+         .is_root = false,
+         .combine_only = false,
+         .container_target = false,
+         .tracks_dependencies = false,
+         .dependencies = {{{.source = DependencySource::Base,
+                            .base = 0,
+                            .filename = "bundle.metapack"},
+                           {.source = DependencySource::DialectDependents,
+                            .base = 0,
+                            .filename = "schema.metapack"}}},
+         .dependency_count = 2,
+         .selector = 6},
 #endif
     }},
     .containers = {{
