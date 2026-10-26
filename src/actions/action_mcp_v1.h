@@ -11,6 +11,7 @@
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/metapack.h>
+#include <sourcemeta/core/text.h>
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/uritemplate.h>
 
@@ -98,19 +99,21 @@ mcp_error_status(const sourcemeta::core::MCPProtocolVersion version,
                    : sourcemeta::core::HTTP_STATUS_OK;
 }
 
-// What answers a body that could not be read. Nothing in such a body names an
-// identifier, so on a revision that lets an error response leave one out it is
-// left out rather than sent as a null identifier
-// https://modelcontextprotocol.io/specification/2026-07-28/basic/index#error-responses
+// What answers a rejection settled before any identifier could be read. Such a
+// rejection names none, so it is left out on a revision that allows an error
+// response without one and carried as the transport fallback on a revision
+// that allows nothing else
+// https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http
 [[nodiscard]] inline auto
-mcp_parse_error(const sourcemeta::core::MCPProtocolVersion version)
+mcp_transport_error(const sourcemeta::core::MCPProtocolVersion version,
+                    const std::int64_t code,
+                    const sourcemeta::core::JSON::StringView message,
+                    std::optional<sourcemeta::core::JSON> data = std::nullopt)
     -> sourcemeta::core::JSON {
-  if (version == sourcemeta::core::MCPProtocolVersion::V_2026_07_28) {
-    return sourcemeta::core::mcp_make_error(
-        version, nullptr, sourcemeta::core::JSONRPC_CODE_PARSE, "Parse error");
-  }
-
-  return sourcemeta::core::jsonrpc_make_error_parse();
+  const sourcemeta::core::JSON unreadable{nullptr};
+  return sourcemeta::core::mcp_make_error(
+      version, &unreadable, code, message, std::move(data),
+      sourcemeta::core::MCPErrorContext::Transport);
 }
 
 class ActionMCPV1 : public sourcemeta::one::RouterAction {
@@ -148,82 +151,6 @@ public:
             const sourcemeta::one::Authentication::Caller &,
             sourcemeta::one::HTTPRequest &request,
             sourcemeta::one::HTTPResponse &response) -> void override {
-    if (request.method() == "options") {
-      response.write_status(sourcemeta::core::HTTP_STATUS_NO_CONTENT);
-      response.write_header("Access-Control-Allow-Origin",
-                            this->allowed_origin_);
-      response.write_header("Access-Control-Expose-Headers", "Link, ETag");
-      response.write_header("Access-Control-Allow-Methods", "POST, OPTIONS");
-      // Without `Authorization` a browser withholds the credential at
-      // preflight, so no browser-resident client could authenticate at all,
-      // whatever it holds. The routing fields are named for the same reason:
-      // a revision that requires them on every request puts them beyond a
-      // browser's reach unless they are allowed here
-      response.write_header("Access-Control-Allow-Headers",
-                            "Authorization, Content-Type, "
-                            "MCP-Protocol-Version, Mcp-Method, Mcp-Name");
-      response.write_header("Access-Control-Max-Age", "3600");
-      // Browser preflight cache is governed by `Access-Control-Max-Age`;
-      // `no-store` keeps shared HTTP caches from storing this response.
-      response.write_header("Cache-Control",
-                            sourcemeta::one::cache_control_no_store());
-      // RFC 9110 §9.3.7: OPTIONS responses SHOULD include Allow. Different
-      // audience than Access-Control-Allow-Methods (HTTP vs CORS preflight).
-      // https://datatracker.ietf.org/doc/html/rfc9110#section-9.3.7
-      response.write_header("Allow", "POST, OPTIONS");
-      // Debuggability echo (spec default, no negotiation has happened).
-      response.write_header(
-          "MCP-Protocol-Version",
-          sourcemeta::core::mcp_protocol_version_string(
-              sourcemeta::core::MCPProtocolVersion::V_2025_03_26));
-      sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_NO_CONTENT,
-                                     request, response);
-      return;
-    }
-
-    if (request.method() != "post") {
-      this->write_envelope(request, response,
-                           sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
-                           sourcemeta::core::jsonrpc_make_error(
-                               nullptr, -32004, "Method not allowed"));
-      return;
-    }
-
-    // MCP Streamable HTTP transport / Sending Messages, item 2: "The client
-    // MUST include an Accept header, listing both application/json and
-    // text/event-stream as supported content types." The MUST is on the
-    // client. Defensively rejecting clients that omit either media type
-    // catches integration bugs before SSE lands. Both types must be
-    // individually acceptable per RFC 9110 §12.5.1 (q-aware, wildcard-aware).
-    // https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#sending-messages-to-the-server
-    const auto accept{request.header("accept")};
-    if (accept.empty() ||
-        !sourcemeta::core::http_accept_includes_all(
-            accept, {"application/json", "text/event-stream"})) {
-      this->write_envelope(request, response,
-                           sourcemeta::core::HTTP_STATUS_NOT_ACCEPTABLE,
-                           sourcemeta::core::jsonrpc_make_error(
-                               nullptr, -32006,
-                               "Accept header must list application/json and "
-                               "text/event-stream"));
-      return;
-    }
-
-    // MCP requests carry a JSON-RPC body. Reject other media types up front
-    // rather than letting the parser surface a confusing -32700 (parse
-    // error). The MUST is implicit in MCP's wire spec. Parameters do not
-    // change the media-type identity, so any params (including
-    // `charset=utf-8`) are accepted.
-    if (!sourcemeta::core::http_content_type_matches(
-            request.header("content-type"), "application/json")) {
-      this->write_envelope(
-          request, response,
-          sourcemeta::core::HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE,
-          sourcemeta::core::jsonrpc_make_error(
-              nullptr, -32008, "Content-Type must be application/json"));
-      return;
-    }
-
     // MCP Streamable HTTP transport / Protocol Version Header:
     // - Client MUST send `MCP-Protocol-Version` on every request after init
     // - If header is absent, server SHOULD assume 2025-03-26, which is the
@@ -256,14 +183,117 @@ public:
     const auto echo_version{served_version.value_or(
         sourcemeta::core::MCPProtocolVersion::V_2025_03_26)};
 
+    // MCP Streamable HTTP transport / Security Warning:
+    // "Servers MUST validate the Origin header on all incoming connections
+    // to prevent DNS rebinding attacks." Mandatory per the MCP spec, not
+    // defensive-only. Do not remove this check.
+    // https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#security-warning
+    //
+    // RFC 6454 §7.3: user agents send `Origin: null` from privacy-sensitive
+    // contexts (sandboxed iframes, file://, data:). The literal "null" is
+    // never a real allowlisted origin, so the byte-compare below correctly
+    // rejects it. https://datatracker.ietf.org/doc/html/rfc6454#section-7.3
+    const auto origin_header{request.header("origin")};
+    if (!origin_header.empty()) {
+      std::string origin_canonical{origin_header};
+      sourcemeta::core::to_lowercase(origin_canonical);
+      if (origin_canonical != this->allowed_origin_) {
+        this->write_envelope(
+            request, response, sourcemeta::core::HTTP_STATUS_FORBIDDEN,
+            mcp_transport_error(
+                echo_version, -32001, "Forbidden origin",
+                sourcemeta::core::JSON{std::string{origin_header}}),
+            echo_version);
+        return;
+      }
+    }
+
+    if (request.method() == "options") {
+      response.write_status(sourcemeta::core::HTTP_STATUS_NO_CONTENT);
+      response.write_header("Access-Control-Allow-Origin",
+                            this->allowed_origin_);
+      response.write_header("Access-Control-Expose-Headers", "Link, ETag");
+      response.write_header("Access-Control-Allow-Methods", "POST, OPTIONS");
+      // Without `Authorization` a browser withholds the credential at
+      // preflight, so no browser-resident client could authenticate at all,
+      // whatever it holds. The routing fields are named for the same reason:
+      // a revision that requires them on every request puts them beyond a
+      // browser's reach unless they are allowed here
+      response.write_header("Access-Control-Allow-Headers",
+                            "Authorization, Content-Type, "
+                            "MCP-Protocol-Version, Mcp-Method, Mcp-Name");
+      response.write_header("Access-Control-Max-Age", "3600");
+      // Browser preflight cache is governed by `Access-Control-Max-Age`;
+      // `no-store` keeps shared HTTP caches from storing this response.
+      response.write_header("Cache-Control",
+                            sourcemeta::one::cache_control_no_store());
+      // RFC 9110 §9.3.7: OPTIONS responses SHOULD include Allow. Different
+      // audience than Access-Control-Allow-Methods (HTTP vs CORS preflight).
+      // https://datatracker.ietf.org/doc/html/rfc9110#section-9.3.7
+      response.write_header("Allow", "POST, OPTIONS");
+      // Debuggability echo. A preflight carries no message to settle a
+      // revision against, so it names the one that predates the header.
+      response.write_header(
+          "MCP-Protocol-Version",
+          sourcemeta::core::mcp_protocol_version_string(
+              sourcemeta::core::MCPProtocolVersion::V_2025_03_26));
+      sourcemeta::one::send_response(sourcemeta::core::HTTP_STATUS_NO_CONTENT,
+                                     request, response);
+      return;
+    }
+
+    if (request.method() != "post") {
+      this->write_envelope(
+          request, response, sourcemeta::core::HTTP_STATUS_METHOD_NOT_ALLOWED,
+          mcp_transport_error(echo_version, -32004, "Method not allowed"),
+          echo_version);
+      return;
+    }
+
+    // MCP Streamable HTTP transport / Sending Messages, item 2: "The client
+    // MUST include an Accept header, listing both application/json and
+    // text/event-stream as supported content types." The MUST is on the
+    // client. Defensively rejecting clients that omit either media type
+    // catches integration bugs before SSE lands. Both types must be
+    // individually acceptable per RFC 9110 §12.5.1 (q-aware, wildcard-aware).
+    // https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#sending-messages-to-the-server
+    const auto accept{request.header("accept")};
+    if (accept.empty() ||
+        !sourcemeta::core::http_accept_includes_all(
+            accept, {"application/json", "text/event-stream"})) {
+      this->write_envelope(
+          request, response, sourcemeta::core::HTTP_STATUS_NOT_ACCEPTABLE,
+          mcp_transport_error(echo_version, -32006,
+                              "Accept header must list application/json and "
+                              "text/event-stream"),
+          echo_version);
+      return;
+    }
+
+    // MCP requests carry a JSON-RPC body. Reject other media types up front
+    // rather than letting the parser surface a confusing -32700 (parse
+    // error). The MUST is implicit in MCP's wire spec. Parameters do not
+    // change the media-type identity, so any params (including
+    // `charset=utf-8`) are accepted.
+    if (!sourcemeta::core::http_content_type_matches(
+            request.header("content-type"), "application/json")) {
+      this->write_envelope(
+          request, response,
+          sourcemeta::core::HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE,
+          mcp_transport_error(echo_version, -32008,
+                              "Content-Type must be application/json"),
+          echo_version);
+      return;
+    }
+
     // RFC 9110 §10.1.1: refuse unrecognised expectations with 417 before
     // touching the body. uWS already auto-acknowledged `100-continue`
     // upstream, so anything left here is a value we cannot honour.
     if (sourcemeta::one::expect_header_unrecognised(request)) {
       this->write_envelope(
           request, response, sourcemeta::core::HTTP_STATUS_EXPECTATION_FAILED,
-          sourcemeta::core::jsonrpc_make_error(
-              nullptr, -32009,
+          mcp_transport_error(
+              echo_version, -32009,
               "The Expect header carries an unsupported expectation"),
           echo_version);
       return;
@@ -274,8 +304,8 @@ public:
     if (sourcemeta::one::request_body_too_large(request)) {
       this->write_envelope(request, response,
                            sourcemeta::core::HTTP_STATUS_CONTENT_TOO_LARGE,
-                           sourcemeta::core::jsonrpc_make_error(
-                               nullptr, -32005, "Request body is too large"),
+                           mcp_transport_error(echo_version, -32005,
+                                               "Request body is too large"),
                            echo_version);
       return;
     }
@@ -293,8 +323,7 @@ public:
             this->write_envelope(
                 callback_request, callback_response,
                 sourcemeta::core::HTTP_STATUS_CONTENT_TOO_LARGE,
-                sourcemeta::core::jsonrpc_make_error(
-                    nullptr, -32005, "Request body is too large"),
+                mcp_transport_error(echo, -32005, "Request body is too large"),
                 echo);
             return;
           }
@@ -464,9 +493,11 @@ private:
         return;
       }
 
-      this->write_envelope(request, response,
-                           sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-                           mcp_parse_error(version), version);
+      this->write_envelope(
+          request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+          mcp_transport_error(version, sourcemeta::core::JSONRPC_CODE_PARSE,
+                              "Parse error"),
+          version);
       return;
     }
 
