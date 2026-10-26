@@ -14,6 +14,7 @@ if(NOT uWebSockets_FOUND)
     "${UWEBSOCKETS_DIR}/src/Http3Request.h"
     "${UWEBSOCKETS_DIR}/src/Http3Response.h"
     "${UWEBSOCKETS_DIR}/src/Http3ResponseData.h"
+    "${UWEBSOCKETS_DIR}/src/HttpCache.h"
     "${UWEBSOCKETS_DIR}/src/HttpContext.h"
     "${UWEBSOCKETS_DIR}/src/HttpContextData.h"
     "${UWEBSOCKETS_DIR}/src/HttpErrors.h"
@@ -49,7 +50,7 @@ if(NOT uWebSockets_FOUND)
   target_compile_definitions(uwebsockets INTERFACE UWS_NO_ZLIB)
   target_link_libraries(uwebsockets INTERFACE uNetworking::uSockets)
 
-  target_include_directories(usockets PUBLIC
+  target_include_directories(usockets SYSTEM PUBLIC
     "$<BUILD_INTERFACE:${UWEBSOCKETS_DIR}>"
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/uwebsockets>")
 
