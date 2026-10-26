@@ -1089,6 +1089,7 @@ content blocks, [JSON-RPC
 batching](https://www.jsonrpc.org/specification#batch), and the standard [tool
 hints](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#tool)
 (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`).
+Each tool also carries a display `title` on the revisions that define one.
 `tools/list` offers only the tools whose endpoint the client's credential
 admits it to, and calling one that was not listed is answered as an unknown
 tool. The listing is returned in a [deterministic
