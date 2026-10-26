@@ -904,7 +904,7 @@ jsonpath "$.result.resources[42].uri" == "{{base}}/self/v1/schemas/mcp/tools/lis
 jsonpath "$.result.resources[42].name" == "Sourcemeta One MCP Tools List Response"
 jsonpath "$.result.resources[42].description" == "Sourcemeta One's list of MCP tools"
 jsonpath "$.result.resources[42].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[42].size" == 4560
+jsonpath "$.result.resources[42].size" == 4809
 jsonpath "$.result.resources[42].annotations.priority" == 0
 jsonpath "$.result.resources[43].uri" == "{{base}}/self/v1/schemas/api/playground/schemas/trace/request"
 jsonpath "$.result.resources[43].name" == "Sourcemeta One Playground Schema Trace API Request"
@@ -1239,7 +1239,7 @@ jsonpath "$.result.resources[42].uri" == "{{base}}/self/v1/schemas/mcp/tools/lis
 jsonpath "$.result.resources[42].name" == "Sourcemeta One MCP Tools List Response"
 jsonpath "$.result.resources[42].description" == "Sourcemeta One's list of MCP tools"
 jsonpath "$.result.resources[42].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[42].size" == 4560
+jsonpath "$.result.resources[42].size" == 4809
 jsonpath "$.result.resources[42].annotations.priority" == 0
 jsonpath "$.result.resources[43].uri" == "{{base}}/self/v1/schemas/api/playground/schemas/trace/request"
 jsonpath "$.result.resources[43].name" == "Sourcemeta One Playground Schema Trace API Request"
