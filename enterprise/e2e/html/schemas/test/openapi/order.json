@@ -1,0 +1,29 @@
+{
+  "$schema": "https://spec.openapis.org/oas/3.2/dialect/2025-09-17",
+  "title": "Order",
+  "description": "An order on the OpenAPI 3.2 dialect that references a schema on the OpenAPI 3.1 one",
+  "type": "object",
+  "required": [ "product" ],
+  "properties": {
+    "product": {
+      "$ref": "./product"
+    },
+    "quantity": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "additionalProperties": false,
+  "externalDocs": {
+    "url": "https://example.com/orders"
+  },
+  "examples": [
+    {
+      "product": {
+        "id": "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9",
+        "kind": "book"
+      },
+      "quantity": 2
+    }
+  ]
+}

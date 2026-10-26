@@ -80,6 +80,11 @@
         "draft3": {
           "baseUri": "https://example.com/draft3",
           "path": "./schemas/test/draft3"
+        },
+        "openapi": {
+          "baseUri": "https://example.com/openapi",
+          "path": "./schemas/test/openapi",
+          "defaultDialect": "https://spec.openapis.org/oas/3.1/dialect/base"
         }
       }
     }

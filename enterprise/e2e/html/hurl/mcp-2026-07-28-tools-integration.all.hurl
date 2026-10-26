@@ -112,7 +112,7 @@ MCP-Protocol-Version: 2026-07-28
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
-object_path: jsonpath "$.result.structuredContent.entries[6].path"
+object_path: jsonpath "$.result.structuredContent.entries[7].path"
 text: jsonpath "$.result.content[0].text"
 [Asserts]
 header "Vary" not exists
@@ -126,16 +126,16 @@ jsonpath "$.id" == 1201
 jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent.path" == "/test"
 variable "text" jsonpath "$.path" == "/test"
-jsonpath "$.result.structuredContent.entries[6].name" == "object"
-jsonpath "$.result.structuredContent.entries[6].private" == false
-variable "text" jsonpath "$.entries[6].name" == "object"
-variable "text" jsonpath "$.entries[6].private" == false
-jsonpath "$.result.structuredContent.entries[6].type" == "schema"
+jsonpath "$.result.structuredContent.entries[7].name" == "object"
+jsonpath "$.result.structuredContent.entries[7].private" == false
+variable "text" jsonpath "$.entries[7].name" == "object"
+variable "text" jsonpath "$.entries[7].private" == false
+jsonpath "$.result.structuredContent.entries[7].type" == "schema"
 jsonpath "$.result.resultType" == "complete"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
-variable "text" jsonpath "$.entries[6].type" == "schema"
+variable "text" jsonpath "$.entries[7].type" == "schema"
 variable "object_path" == "/test/object"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}

@@ -87,8 +87,10 @@ service whether or not for a fee, each require a
   CI/CD pipelines, tooling integration, and custom workflows. Check out the
   [documentation](api.md) to learn more
 - :octicons-versions-16: __JSON Schema Compatibility__ Full support for JSON
-  Schema Draft 3, Draft 4, Draft 6, Draft 7, 2019-09, and 2020-12, plus
-  `format` validation, custom meta-schemas, [Standard Output
+  Schema Draft 3, Draft 4, Draft 6, Draft 7, 2019-09, and 2020-12, the [OpenAPI
+  3.1](https://spec.openapis.org/oas/v3.1.0.html#schema-object) and [OpenAPI
+  3.2](https://spec.openapis.org/oas/v3.2.0.html#schema-object) Schema Object
+  dialects, plus `format` validation, custom meta-schemas, [Standard Output
   Formats](https://json-schema.org/draft/2020-12/json-schema-core#name-output-formatting),
   annotation collection, JSON Schema
   [Bundling](https://json-schema.org/blog/posts/bundling-json-schema-compound-documents),
