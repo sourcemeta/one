@@ -15,7 +15,12 @@
 #pragma GCC diagnostic ignored "-Wsign-compare"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
+// Give the time helper this library declares at namespace scope inline
+// linkage, so that every translation unit including it does not emit a copy
+// NOLINTNEXTLINE(readability-identifier-naming)
+#define time_ms inline time_ms
 #include <src/App.h>
+#undef time_ms
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #elif defined(__GNUC__)

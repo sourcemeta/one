@@ -56,6 +56,7 @@ namespace uWS {
 #include "WebSocketContext.h"
 #include "WebSocket.h"
 #include "PerMessageDeflate.h"
+#include "HttpCache.h"
 
 namespace uWS {
 
@@ -80,7 +81,9 @@ namespace uWS {
     static_assert(sizeof(struct us_socket_context_options_t) == sizeof(SocketContextOptions), "Mismatching uSockets/uWebSockets ABI");
 
 template <bool SSL>
-struct TemplatedApp {
+struct TemplatedApp : public HttpCache<TemplatedApp<SSL>> {
+    /* These will probably add over time, maybe move to a different header and just include here */
+    using HttpCache<TemplatedApp<SSL>>::get;
 private:
     /* The app always owns at least one http context, but creates websocket contexts on demand */
     HttpContext<SSL> *httpContext;
@@ -258,6 +261,7 @@ public:
         std::swap(this->topicTree, other.topicTree);
         std::swap(this->webSocketContextDeleters, other.webSocketContextDeleters);
         std::swap(this->webSocketContexts, other.webSocketContexts);
+        return *this;
     }
 
     bool constructorFailed() {
