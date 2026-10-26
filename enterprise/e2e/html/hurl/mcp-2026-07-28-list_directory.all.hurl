@@ -166,8 +166,8 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 144
-variable "text" jsonpath "$.schemas" == 144
+jsonpath "$.result.structuredContent.schemas" == 147
+variable "text" jsonpath "$.schemas" == 147
 jsonpath "$.result.structuredContent.entries" count == 4
 jsonpath "$.result.structuredContent.private" == false
 variable "text" jsonpath "$.entries" count == 4
@@ -206,10 +206,10 @@ variable "text" jsonpath "$.entries[2].name" == "test"
 variable "text" jsonpath "$.entries[2].private" == false
 jsonpath "$.result.structuredContent.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].type" == "directory"
-jsonpath "$.result.structuredContent.entries[2].health" == 21
-variable "text" jsonpath "$.entries[2].health" == 21
-jsonpath "$.result.structuredContent.entries[2].schemas" == 73
-variable "text" jsonpath "$.entries[2].schemas" == 73
+jsonpath "$.result.structuredContent.entries[2].health" == 31
+variable "text" jsonpath "$.entries[2].health" == 31
+jsonpath "$.result.structuredContent.entries[2].schemas" == 76
+variable "text" jsonpath "$.entries[2].schemas" == 76
 jsonpath "$.result.structuredContent.entries[2].path" == "/test/"
 variable "text" jsonpath "$.entries[2].path" == "/test/"
 jsonpath "$.result.structuredContent.entries[3].name" == "twins"
@@ -324,8 +324,8 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 144
-variable "text" jsonpath "$.schemas" == 144
+jsonpath "$.result.structuredContent.schemas" == 147
+variable "text" jsonpath "$.schemas" == 147
 jsonpath "$.result.structuredContent.entries" count == 4
 jsonpath "$.result.structuredContent.private" == false
 variable "text" jsonpath "$.entries" count == 4
@@ -364,10 +364,10 @@ variable "text" jsonpath "$.entries[2].name" == "test"
 variable "text" jsonpath "$.entries[2].private" == false
 jsonpath "$.result.structuredContent.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].type" == "directory"
-jsonpath "$.result.structuredContent.entries[2].health" == 21
-variable "text" jsonpath "$.entries[2].health" == 21
-jsonpath "$.result.structuredContent.entries[2].schemas" == 73
-variable "text" jsonpath "$.entries[2].schemas" == 73
+jsonpath "$.result.structuredContent.entries[2].health" == 31
+variable "text" jsonpath "$.entries[2].health" == 31
+jsonpath "$.result.structuredContent.entries[2].schemas" == 76
+variable "text" jsonpath "$.entries[2].schemas" == 76
 jsonpath "$.result.structuredContent.entries[2].path" == "/test/"
 variable "text" jsonpath "$.entries[2].path" == "/test/"
 jsonpath "$.result.structuredContent.entries[3].name" == "twins"
@@ -484,8 +484,8 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 144
-variable "text" jsonpath "$.schemas" == 144
+jsonpath "$.result.structuredContent.schemas" == 147
+variable "text" jsonpath "$.schemas" == 147
 jsonpath "$.result.structuredContent.entries" count == 4
 jsonpath "$.result.structuredContent.private" == false
 variable "text" jsonpath "$.entries" count == 4
@@ -524,10 +524,10 @@ variable "text" jsonpath "$.entries[2].name" == "test"
 variable "text" jsonpath "$.entries[2].private" == false
 jsonpath "$.result.structuredContent.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].type" == "directory"
-jsonpath "$.result.structuredContent.entries[2].health" == 21
-variable "text" jsonpath "$.entries[2].health" == 21
-jsonpath "$.result.structuredContent.entries[2].schemas" == 73
-variable "text" jsonpath "$.entries[2].schemas" == 73
+jsonpath "$.result.structuredContent.entries[2].health" == 31
+variable "text" jsonpath "$.entries[2].health" == 31
+jsonpath "$.result.structuredContent.entries[2].schemas" == 76
+variable "text" jsonpath "$.entries[2].schemas" == 76
 jsonpath "$.result.structuredContent.entries[2].path" == "/test/"
 variable "text" jsonpath "$.entries[2].path" == "/test/"
 jsonpath "$.result.structuredContent.entries[3].name" == "twins"
@@ -653,13 +653,13 @@ jsonpath "$.result.structuredContent.breadcrumb[0].name" == "test"
 variable "text" jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.result.structuredContent.breadcrumb[0].path" == "/test/"
 variable "text" jsonpath "$.breadcrumb[0].path" == "/test/"
-jsonpath "$.result.structuredContent.schemas" == 73
-variable "text" jsonpath "$.schemas" == 73
-jsonpath "$.result.structuredContent.health" == 21
-variable "text" jsonpath "$.health" == 21
-jsonpath "$.result.structuredContent.entries" count == 7
+jsonpath "$.result.structuredContent.schemas" == 76
+variable "text" jsonpath "$.schemas" == 76
+jsonpath "$.result.structuredContent.health" == 31
+variable "text" jsonpath "$.health" == 31
+jsonpath "$.result.structuredContent.entries" count == 8
 jsonpath "$.result.structuredContent.private" == false
-variable "text" jsonpath "$.entries" count == 7
+variable "text" jsonpath "$.entries" count == 8
 variable "text" jsonpath "$.private" == false
 jsonpath "$.result.structuredContent.entries[0].name" == "bare"
 jsonpath "$.result.structuredContent.entries[0].private" == false
@@ -721,40 +721,52 @@ jsonpath "$.result.structuredContent.entries[4].schemas" == 5
 variable "text" jsonpath "$.entries[4].schemas" == 5
 jsonpath "$.result.structuredContent.entries[4].path" == "/test/jsonld/"
 variable "text" jsonpath "$.entries[4].path" == "/test/jsonld/"
-jsonpath "$.result.structuredContent.entries[5].name" == "title-only"
+jsonpath "$.result.structuredContent.entries[5].name" == "openapi"
 jsonpath "$.result.structuredContent.entries[5].private" == false
-variable "text" jsonpath "$.entries[5].name" == "title-only"
+variable "text" jsonpath "$.entries[5].name" == "openapi"
 variable "text" jsonpath "$.entries[5].private" == false
 jsonpath "$.result.structuredContent.entries[5].type" == "directory"
 variable "text" jsonpath "$.entries[5].type" == "directory"
-jsonpath "$.result.structuredContent.entries[5].health" == 0
-variable "text" jsonpath "$.entries[5].health" == 0
-jsonpath "$.result.structuredContent.entries[5].schemas" == 5
-variable "text" jsonpath "$.entries[5].schemas" == 5
-jsonpath "$.result.structuredContent.entries[5].path" == "/test/title-only/"
-variable "text" jsonpath "$.entries[5].path" == "/test/title-only/"
-jsonpath "$.result.structuredContent.entries[6].name" == "object"
+jsonpath "$.result.structuredContent.entries[5].health" == 100
+variable "text" jsonpath "$.entries[5].health" == 100
+jsonpath "$.result.structuredContent.entries[5].schemas" == 3
+variable "text" jsonpath "$.entries[5].schemas" == 3
+jsonpath "$.result.structuredContent.entries[5].path" == "/test/openapi/"
+variable "text" jsonpath "$.entries[5].path" == "/test/openapi/"
+jsonpath "$.result.structuredContent.entries[6].name" == "title-only"
 jsonpath "$.result.structuredContent.entries[6].private" == false
-variable "text" jsonpath "$.entries[6].name" == "object"
+variable "text" jsonpath "$.entries[6].name" == "title-only"
 variable "text" jsonpath "$.entries[6].private" == false
-jsonpath "$.result.structuredContent.entries[6].type" == "schema"
-variable "text" jsonpath "$.entries[6].type" == "schema"
-jsonpath "$.result.structuredContent.entries[6].health" == 67
-variable "text" jsonpath "$.entries[6].health" == 67
-jsonpath "$.result.structuredContent.entries[6].path" == "/test/object"
-variable "text" jsonpath "$.entries[6].path" == "/test/object"
-jsonpath "$.result.structuredContent.entries[6].identifier" == "{{base}}/test/object"
-variable "text" jsonpath "$.entries[6].identifier" == "{{base}}/test/object"
-jsonpath "$.result.structuredContent.entries[6].title" == "My Object"
-variable "text" jsonpath "$.entries[6].title" == "My Object"
-jsonpath "$.result.structuredContent.entries[6].description" == "An Object Example"
-jsonpath "$.result.structuredContent.entries[6].priority" == 50
+jsonpath "$.result.structuredContent.entries[6].type" == "directory"
+variable "text" jsonpath "$.entries[6].type" == "directory"
+jsonpath "$.result.structuredContent.entries[6].health" == 0
+variable "text" jsonpath "$.entries[6].health" == 0
+jsonpath "$.result.structuredContent.entries[6].schemas" == 5
+variable "text" jsonpath "$.entries[6].schemas" == 5
+jsonpath "$.result.structuredContent.entries[6].path" == "/test/title-only/"
+variable "text" jsonpath "$.entries[6].path" == "/test/title-only/"
+jsonpath "$.result.structuredContent.entries[7].name" == "object"
+jsonpath "$.result.structuredContent.entries[7].private" == false
+variable "text" jsonpath "$.entries[7].name" == "object"
+variable "text" jsonpath "$.entries[7].private" == false
+jsonpath "$.result.structuredContent.entries[7].type" == "schema"
+variable "text" jsonpath "$.entries[7].type" == "schema"
+jsonpath "$.result.structuredContent.entries[7].health" == 67
+variable "text" jsonpath "$.entries[7].health" == 67
+jsonpath "$.result.structuredContent.entries[7].path" == "/test/object"
+variable "text" jsonpath "$.entries[7].path" == "/test/object"
+jsonpath "$.result.structuredContent.entries[7].identifier" == "{{base}}/test/object"
+variable "text" jsonpath "$.entries[7].identifier" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.entries[7].title" == "My Object"
+variable "text" jsonpath "$.entries[7].title" == "My Object"
+jsonpath "$.result.structuredContent.entries[7].description" == "An Object Example"
+jsonpath "$.result.structuredContent.entries[7].priority" == 50
 jsonpath "$.result.resultType" == "complete"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
-variable "text" jsonpath "$.entries[6].priority" == 50
-variable "text" jsonpath "$.entries[6].description" == "An Object Example"
+variable "text" jsonpath "$.entries[7].priority" == 50
+variable "text" jsonpath "$.entries[7].description" == "An Object Example"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -2298,32 +2310,32 @@ jsonpath "$.result.structuredContent.path" == "/test"
 variable "text" jsonpath "$.path" == "/test"
 jsonpath "$.result.structuredContent.url" == "{{base}}/test"
 variable "text" jsonpath "$.url" == "{{base}}/test"
-jsonpath "$.result.structuredContent.schemas" == 73
-variable "text" jsonpath "$.schemas" == 73
-jsonpath "$.result.structuredContent.health" == 21
-variable "text" jsonpath "$.health" == 21
-jsonpath "$.result.structuredContent.entries" count == 7
+jsonpath "$.result.structuredContent.schemas" == 76
+variable "text" jsonpath "$.schemas" == 76
+jsonpath "$.result.structuredContent.health" == 31
+variable "text" jsonpath "$.health" == 31
+jsonpath "$.result.structuredContent.entries" count == 8
 jsonpath "$.result.structuredContent.private" == false
-variable "text" jsonpath "$.entries" count == 7
+variable "text" jsonpath "$.entries" count == 8
 variable "text" jsonpath "$.private" == false
-jsonpath "$.result.structuredContent.entries[6].name" == "object"
-jsonpath "$.result.structuredContent.entries[6].private" == false
-variable "text" jsonpath "$.entries[6].name" == "object"
-variable "text" jsonpath "$.entries[6].private" == false
-jsonpath "$.result.structuredContent.entries[6].type" == "schema"
-variable "text" jsonpath "$.entries[6].type" == "schema"
-jsonpath "$.result.structuredContent.entries[6].identifier" == "{{base}}/test/object"
-variable "text" jsonpath "$.entries[6].identifier" == "{{base}}/test/object"
-jsonpath "$.result.structuredContent.entries[6].title" == "My Object"
-variable "text" jsonpath "$.entries[6].title" == "My Object"
-jsonpath "$.result.structuredContent.entries[6].description" == "An Object Example"
-jsonpath "$.result.structuredContent.entries[6].priority" == 50
+jsonpath "$.result.structuredContent.entries[7].name" == "object"
+jsonpath "$.result.structuredContent.entries[7].private" == false
+variable "text" jsonpath "$.entries[7].name" == "object"
+variable "text" jsonpath "$.entries[7].private" == false
+jsonpath "$.result.structuredContent.entries[7].type" == "schema"
+variable "text" jsonpath "$.entries[7].type" == "schema"
+jsonpath "$.result.structuredContent.entries[7].identifier" == "{{base}}/test/object"
+variable "text" jsonpath "$.entries[7].identifier" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.entries[7].title" == "My Object"
+variable "text" jsonpath "$.entries[7].title" == "My Object"
+jsonpath "$.result.structuredContent.entries[7].description" == "An Object Example"
+jsonpath "$.result.structuredContent.entries[7].priority" == 50
 jsonpath "$.result.resultType" == "complete"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
-variable "text" jsonpath "$.entries[6].priority" == 50
-variable "text" jsonpath "$.entries[6].description" == "An Object Example"
+variable "text" jsonpath "$.entries[7].priority" == 50
+variable "text" jsonpath "$.entries[7].description" == "An Object Example"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -2782,13 +2794,13 @@ jsonpath "$.result.structuredContent.breadcrumb[0].name" == "test"
 variable "text" jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.result.structuredContent.breadcrumb[0].path" == "/test/"
 variable "text" jsonpath "$.breadcrumb[0].path" == "/test/"
-jsonpath "$.result.structuredContent.schemas" == 73
-variable "text" jsonpath "$.schemas" == 73
-jsonpath "$.result.structuredContent.health" == 21
-variable "text" jsonpath "$.health" == 21
-jsonpath "$.result.structuredContent.entries" count == 7
+jsonpath "$.result.structuredContent.schemas" == 76
+variable "text" jsonpath "$.schemas" == 76
+jsonpath "$.result.structuredContent.health" == 31
+variable "text" jsonpath "$.health" == 31
+jsonpath "$.result.structuredContent.entries" count == 8
 jsonpath "$.result.structuredContent.private" == false
-variable "text" jsonpath "$.entries" count == 7
+variable "text" jsonpath "$.entries" count == 8
 variable "text" jsonpath "$.private" == false
 jsonpath "$.result.structuredContent.entries[0].name" == "bare"
 jsonpath "$.result.structuredContent.entries[0].private" == false
@@ -2850,40 +2862,52 @@ jsonpath "$.result.structuredContent.entries[4].schemas" == 5
 variable "text" jsonpath "$.entries[4].schemas" == 5
 jsonpath "$.result.structuredContent.entries[4].path" == "/test/jsonld/"
 variable "text" jsonpath "$.entries[4].path" == "/test/jsonld/"
-jsonpath "$.result.structuredContent.entries[5].name" == "title-only"
+jsonpath "$.result.structuredContent.entries[5].name" == "openapi"
 jsonpath "$.result.structuredContent.entries[5].private" == false
-variable "text" jsonpath "$.entries[5].name" == "title-only"
+variable "text" jsonpath "$.entries[5].name" == "openapi"
 variable "text" jsonpath "$.entries[5].private" == false
 jsonpath "$.result.structuredContent.entries[5].type" == "directory"
 variable "text" jsonpath "$.entries[5].type" == "directory"
-jsonpath "$.result.structuredContent.entries[5].health" == 0
-variable "text" jsonpath "$.entries[5].health" == 0
-jsonpath "$.result.structuredContent.entries[5].schemas" == 5
-variable "text" jsonpath "$.entries[5].schemas" == 5
-jsonpath "$.result.structuredContent.entries[5].path" == "/test/title-only/"
-variable "text" jsonpath "$.entries[5].path" == "/test/title-only/"
-jsonpath "$.result.structuredContent.entries[6].name" == "object"
+jsonpath "$.result.structuredContent.entries[5].health" == 100
+variable "text" jsonpath "$.entries[5].health" == 100
+jsonpath "$.result.structuredContent.entries[5].schemas" == 3
+variable "text" jsonpath "$.entries[5].schemas" == 3
+jsonpath "$.result.structuredContent.entries[5].path" == "/test/openapi/"
+variable "text" jsonpath "$.entries[5].path" == "/test/openapi/"
+jsonpath "$.result.structuredContent.entries[6].name" == "title-only"
 jsonpath "$.result.structuredContent.entries[6].private" == false
-variable "text" jsonpath "$.entries[6].name" == "object"
+variable "text" jsonpath "$.entries[6].name" == "title-only"
 variable "text" jsonpath "$.entries[6].private" == false
-jsonpath "$.result.structuredContent.entries[6].type" == "schema"
-variable "text" jsonpath "$.entries[6].type" == "schema"
-jsonpath "$.result.structuredContent.entries[6].health" == 67
-variable "text" jsonpath "$.entries[6].health" == 67
-jsonpath "$.result.structuredContent.entries[6].path" == "/test/object"
-variable "text" jsonpath "$.entries[6].path" == "/test/object"
-jsonpath "$.result.structuredContent.entries[6].identifier" == "{{base}}/test/object"
-variable "text" jsonpath "$.entries[6].identifier" == "{{base}}/test/object"
-jsonpath "$.result.structuredContent.entries[6].title" == "My Object"
-variable "text" jsonpath "$.entries[6].title" == "My Object"
-jsonpath "$.result.structuredContent.entries[6].description" == "An Object Example"
-jsonpath "$.result.structuredContent.entries[6].priority" == 50
+jsonpath "$.result.structuredContent.entries[6].type" == "directory"
+variable "text" jsonpath "$.entries[6].type" == "directory"
+jsonpath "$.result.structuredContent.entries[6].health" == 0
+variable "text" jsonpath "$.entries[6].health" == 0
+jsonpath "$.result.structuredContent.entries[6].schemas" == 5
+variable "text" jsonpath "$.entries[6].schemas" == 5
+jsonpath "$.result.structuredContent.entries[6].path" == "/test/title-only/"
+variable "text" jsonpath "$.entries[6].path" == "/test/title-only/"
+jsonpath "$.result.structuredContent.entries[7].name" == "object"
+jsonpath "$.result.structuredContent.entries[7].private" == false
+variable "text" jsonpath "$.entries[7].name" == "object"
+variable "text" jsonpath "$.entries[7].private" == false
+jsonpath "$.result.structuredContent.entries[7].type" == "schema"
+variable "text" jsonpath "$.entries[7].type" == "schema"
+jsonpath "$.result.structuredContent.entries[7].health" == 67
+variable "text" jsonpath "$.entries[7].health" == 67
+jsonpath "$.result.structuredContent.entries[7].path" == "/test/object"
+variable "text" jsonpath "$.entries[7].path" == "/test/object"
+jsonpath "$.result.structuredContent.entries[7].identifier" == "{{base}}/test/object"
+variable "text" jsonpath "$.entries[7].identifier" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.entries[7].title" == "My Object"
+variable "text" jsonpath "$.entries[7].title" == "My Object"
+jsonpath "$.result.structuredContent.entries[7].description" == "An Object Example"
+jsonpath "$.result.structuredContent.entries[7].priority" == 50
 jsonpath "$.result.resultType" == "complete"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
-variable "text" jsonpath "$.entries[6].priority" == 50
-variable "text" jsonpath "$.entries[6].description" == "An Object Example"
+variable "text" jsonpath "$.entries[7].priority" == 50
+variable "text" jsonpath "$.entries[7].description" == "An Object Example"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -2987,13 +3011,13 @@ jsonpath "$.result.structuredContent.breadcrumb[0].name" == "test"
 variable "text" jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.result.structuredContent.breadcrumb[0].path" == "/test/"
 variable "text" jsonpath "$.breadcrumb[0].path" == "/test/"
-jsonpath "$.result.structuredContent.schemas" == 73
-variable "text" jsonpath "$.schemas" == 73
-jsonpath "$.result.structuredContent.health" == 21
-variable "text" jsonpath "$.health" == 21
-jsonpath "$.result.structuredContent.entries" count == 7
+jsonpath "$.result.structuredContent.schemas" == 76
+variable "text" jsonpath "$.schemas" == 76
+jsonpath "$.result.structuredContent.health" == 31
+variable "text" jsonpath "$.health" == 31
+jsonpath "$.result.structuredContent.entries" count == 8
 jsonpath "$.result.structuredContent.private" == false
-variable "text" jsonpath "$.entries" count == 7
+variable "text" jsonpath "$.entries" count == 8
 variable "text" jsonpath "$.private" == false
 jsonpath "$.result.structuredContent.entries[0].name" == "bare"
 jsonpath "$.result.structuredContent.entries[0].private" == false
@@ -3055,40 +3079,52 @@ jsonpath "$.result.structuredContent.entries[4].schemas" == 5
 variable "text" jsonpath "$.entries[4].schemas" == 5
 jsonpath "$.result.structuredContent.entries[4].path" == "/test/jsonld/"
 variable "text" jsonpath "$.entries[4].path" == "/test/jsonld/"
-jsonpath "$.result.structuredContent.entries[5].name" == "title-only"
+jsonpath "$.result.structuredContent.entries[5].name" == "openapi"
 jsonpath "$.result.structuredContent.entries[5].private" == false
-variable "text" jsonpath "$.entries[5].name" == "title-only"
+variable "text" jsonpath "$.entries[5].name" == "openapi"
 variable "text" jsonpath "$.entries[5].private" == false
 jsonpath "$.result.structuredContent.entries[5].type" == "directory"
 variable "text" jsonpath "$.entries[5].type" == "directory"
-jsonpath "$.result.structuredContent.entries[5].health" == 0
-variable "text" jsonpath "$.entries[5].health" == 0
-jsonpath "$.result.structuredContent.entries[5].schemas" == 5
-variable "text" jsonpath "$.entries[5].schemas" == 5
-jsonpath "$.result.structuredContent.entries[5].path" == "/test/title-only/"
-variable "text" jsonpath "$.entries[5].path" == "/test/title-only/"
-jsonpath "$.result.structuredContent.entries[6].name" == "object"
+jsonpath "$.result.structuredContent.entries[5].health" == 100
+variable "text" jsonpath "$.entries[5].health" == 100
+jsonpath "$.result.structuredContent.entries[5].schemas" == 3
+variable "text" jsonpath "$.entries[5].schemas" == 3
+jsonpath "$.result.structuredContent.entries[5].path" == "/test/openapi/"
+variable "text" jsonpath "$.entries[5].path" == "/test/openapi/"
+jsonpath "$.result.structuredContent.entries[6].name" == "title-only"
 jsonpath "$.result.structuredContent.entries[6].private" == false
-variable "text" jsonpath "$.entries[6].name" == "object"
+variable "text" jsonpath "$.entries[6].name" == "title-only"
 variable "text" jsonpath "$.entries[6].private" == false
-jsonpath "$.result.structuredContent.entries[6].type" == "schema"
-variable "text" jsonpath "$.entries[6].type" == "schema"
-jsonpath "$.result.structuredContent.entries[6].health" == 67
-variable "text" jsonpath "$.entries[6].health" == 67
-jsonpath "$.result.structuredContent.entries[6].path" == "/test/object"
-variable "text" jsonpath "$.entries[6].path" == "/test/object"
-jsonpath "$.result.structuredContent.entries[6].identifier" == "{{base}}/test/object"
-variable "text" jsonpath "$.entries[6].identifier" == "{{base}}/test/object"
-jsonpath "$.result.structuredContent.entries[6].title" == "My Object"
-variable "text" jsonpath "$.entries[6].title" == "My Object"
-jsonpath "$.result.structuredContent.entries[6].description" == "An Object Example"
-jsonpath "$.result.structuredContent.entries[6].priority" == 50
+jsonpath "$.result.structuredContent.entries[6].type" == "directory"
+variable "text" jsonpath "$.entries[6].type" == "directory"
+jsonpath "$.result.structuredContent.entries[6].health" == 0
+variable "text" jsonpath "$.entries[6].health" == 0
+jsonpath "$.result.structuredContent.entries[6].schemas" == 5
+variable "text" jsonpath "$.entries[6].schemas" == 5
+jsonpath "$.result.structuredContent.entries[6].path" == "/test/title-only/"
+variable "text" jsonpath "$.entries[6].path" == "/test/title-only/"
+jsonpath "$.result.structuredContent.entries[7].name" == "object"
+jsonpath "$.result.structuredContent.entries[7].private" == false
+variable "text" jsonpath "$.entries[7].name" == "object"
+variable "text" jsonpath "$.entries[7].private" == false
+jsonpath "$.result.structuredContent.entries[7].type" == "schema"
+variable "text" jsonpath "$.entries[7].type" == "schema"
+jsonpath "$.result.structuredContent.entries[7].health" == 67
+variable "text" jsonpath "$.entries[7].health" == 67
+jsonpath "$.result.structuredContent.entries[7].path" == "/test/object"
+variable "text" jsonpath "$.entries[7].path" == "/test/object"
+jsonpath "$.result.structuredContent.entries[7].identifier" == "{{base}}/test/object"
+variable "text" jsonpath "$.entries[7].identifier" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.entries[7].title" == "My Object"
+variable "text" jsonpath "$.entries[7].title" == "My Object"
+jsonpath "$.result.structuredContent.entries[7].description" == "An Object Example"
+jsonpath "$.result.structuredContent.entries[7].priority" == 50
 jsonpath "$.result.resultType" == "complete"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
-variable "text" jsonpath "$.entries[6].priority" == 50
-variable "text" jsonpath "$.entries[6].description" == "An Object Example"
+variable "text" jsonpath "$.entries[7].priority" == 50
+variable "text" jsonpath "$.entries[7].description" == "An Object Example"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -3192,13 +3228,13 @@ jsonpath "$.result.structuredContent.breadcrumb[0].name" == "test"
 variable "text" jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.result.structuredContent.breadcrumb[0].path" == "/test/"
 variable "text" jsonpath "$.breadcrumb[0].path" == "/test/"
-jsonpath "$.result.structuredContent.schemas" == 73
-variable "text" jsonpath "$.schemas" == 73
-jsonpath "$.result.structuredContent.health" == 21
-variable "text" jsonpath "$.health" == 21
-jsonpath "$.result.structuredContent.entries" count == 7
+jsonpath "$.result.structuredContent.schemas" == 76
+variable "text" jsonpath "$.schemas" == 76
+jsonpath "$.result.structuredContent.health" == 31
+variable "text" jsonpath "$.health" == 31
+jsonpath "$.result.structuredContent.entries" count == 8
 jsonpath "$.result.structuredContent.private" == false
-variable "text" jsonpath "$.entries" count == 7
+variable "text" jsonpath "$.entries" count == 8
 variable "text" jsonpath "$.private" == false
 jsonpath "$.result.structuredContent.entries[0].name" == "bare"
 jsonpath "$.result.structuredContent.entries[0].private" == false
@@ -3260,40 +3296,52 @@ jsonpath "$.result.structuredContent.entries[4].schemas" == 5
 variable "text" jsonpath "$.entries[4].schemas" == 5
 jsonpath "$.result.structuredContent.entries[4].path" == "/test/jsonld/"
 variable "text" jsonpath "$.entries[4].path" == "/test/jsonld/"
-jsonpath "$.result.structuredContent.entries[5].name" == "title-only"
+jsonpath "$.result.structuredContent.entries[5].name" == "openapi"
 jsonpath "$.result.structuredContent.entries[5].private" == false
-variable "text" jsonpath "$.entries[5].name" == "title-only"
+variable "text" jsonpath "$.entries[5].name" == "openapi"
 variable "text" jsonpath "$.entries[5].private" == false
 jsonpath "$.result.structuredContent.entries[5].type" == "directory"
 variable "text" jsonpath "$.entries[5].type" == "directory"
-jsonpath "$.result.structuredContent.entries[5].health" == 0
-variable "text" jsonpath "$.entries[5].health" == 0
-jsonpath "$.result.structuredContent.entries[5].schemas" == 5
-variable "text" jsonpath "$.entries[5].schemas" == 5
-jsonpath "$.result.structuredContent.entries[5].path" == "/test/title-only/"
-variable "text" jsonpath "$.entries[5].path" == "/test/title-only/"
-jsonpath "$.result.structuredContent.entries[6].name" == "object"
+jsonpath "$.result.structuredContent.entries[5].health" == 100
+variable "text" jsonpath "$.entries[5].health" == 100
+jsonpath "$.result.structuredContent.entries[5].schemas" == 3
+variable "text" jsonpath "$.entries[5].schemas" == 3
+jsonpath "$.result.structuredContent.entries[5].path" == "/test/openapi/"
+variable "text" jsonpath "$.entries[5].path" == "/test/openapi/"
+jsonpath "$.result.structuredContent.entries[6].name" == "title-only"
 jsonpath "$.result.structuredContent.entries[6].private" == false
-variable "text" jsonpath "$.entries[6].name" == "object"
+variable "text" jsonpath "$.entries[6].name" == "title-only"
 variable "text" jsonpath "$.entries[6].private" == false
-jsonpath "$.result.structuredContent.entries[6].type" == "schema"
-variable "text" jsonpath "$.entries[6].type" == "schema"
-jsonpath "$.result.structuredContent.entries[6].health" == 67
-variable "text" jsonpath "$.entries[6].health" == 67
-jsonpath "$.result.structuredContent.entries[6].path" == "/test/object"
-variable "text" jsonpath "$.entries[6].path" == "/test/object"
-jsonpath "$.result.structuredContent.entries[6].identifier" == "{{base}}/test/object"
-variable "text" jsonpath "$.entries[6].identifier" == "{{base}}/test/object"
-jsonpath "$.result.structuredContent.entries[6].title" == "My Object"
-variable "text" jsonpath "$.entries[6].title" == "My Object"
-jsonpath "$.result.structuredContent.entries[6].description" == "An Object Example"
-jsonpath "$.result.structuredContent.entries[6].priority" == 50
+jsonpath "$.result.structuredContent.entries[6].type" == "directory"
+variable "text" jsonpath "$.entries[6].type" == "directory"
+jsonpath "$.result.structuredContent.entries[6].health" == 0
+variable "text" jsonpath "$.entries[6].health" == 0
+jsonpath "$.result.structuredContent.entries[6].schemas" == 5
+variable "text" jsonpath "$.entries[6].schemas" == 5
+jsonpath "$.result.structuredContent.entries[6].path" == "/test/title-only/"
+variable "text" jsonpath "$.entries[6].path" == "/test/title-only/"
+jsonpath "$.result.structuredContent.entries[7].name" == "object"
+jsonpath "$.result.structuredContent.entries[7].private" == false
+variable "text" jsonpath "$.entries[7].name" == "object"
+variable "text" jsonpath "$.entries[7].private" == false
+jsonpath "$.result.structuredContent.entries[7].type" == "schema"
+variable "text" jsonpath "$.entries[7].type" == "schema"
+jsonpath "$.result.structuredContent.entries[7].health" == 67
+variable "text" jsonpath "$.entries[7].health" == 67
+jsonpath "$.result.structuredContent.entries[7].path" == "/test/object"
+variable "text" jsonpath "$.entries[7].path" == "/test/object"
+jsonpath "$.result.structuredContent.entries[7].identifier" == "{{base}}/test/object"
+variable "text" jsonpath "$.entries[7].identifier" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.entries[7].title" == "My Object"
+variable "text" jsonpath "$.entries[7].title" == "My Object"
+jsonpath "$.result.structuredContent.entries[7].description" == "An Object Example"
+jsonpath "$.result.structuredContent.entries[7].priority" == 50
 jsonpath "$.result.resultType" == "complete"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
-variable "text" jsonpath "$.entries[6].priority" == 50
-variable "text" jsonpath "$.entries[6].description" == "An Object Example"
+variable "text" jsonpath "$.entries[7].priority" == 50
+variable "text" jsonpath "$.entries[7].description" == "An Object Example"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -3388,8 +3436,8 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 144
-variable "text" jsonpath "$.schemas" == 144
+jsonpath "$.result.structuredContent.schemas" == 147
+variable "text" jsonpath "$.schemas" == 147
 jsonpath "$.result.structuredContent.entries" count == 4
 jsonpath "$.result.structuredContent.private" == false
 variable "text" jsonpath "$.entries" count == 4
@@ -3428,10 +3476,10 @@ variable "text" jsonpath "$.entries[2].name" == "test"
 variable "text" jsonpath "$.entries[2].private" == false
 jsonpath "$.result.structuredContent.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].type" == "directory"
-jsonpath "$.result.structuredContent.entries[2].health" == 21
-variable "text" jsonpath "$.entries[2].health" == 21
-jsonpath "$.result.structuredContent.entries[2].schemas" == 73
-variable "text" jsonpath "$.entries[2].schemas" == 73
+jsonpath "$.result.structuredContent.entries[2].health" == 31
+variable "text" jsonpath "$.entries[2].health" == 31
+jsonpath "$.result.structuredContent.entries[2].schemas" == 76
+variable "text" jsonpath "$.entries[2].schemas" == 76
 jsonpath "$.result.structuredContent.entries[2].path" == "/test/"
 variable "text" jsonpath "$.entries[2].path" == "/test/"
 jsonpath "$.result.structuredContent.entries[3].name" == "twins"
@@ -3548,8 +3596,8 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 144
-variable "text" jsonpath "$.schemas" == 144
+jsonpath "$.result.structuredContent.schemas" == 147
+variable "text" jsonpath "$.schemas" == 147
 jsonpath "$.result.structuredContent.entries" count == 4
 jsonpath "$.result.structuredContent.private" == false
 variable "text" jsonpath "$.entries" count == 4
@@ -3588,10 +3636,10 @@ variable "text" jsonpath "$.entries[2].name" == "test"
 variable "text" jsonpath "$.entries[2].private" == false
 jsonpath "$.result.structuredContent.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].type" == "directory"
-jsonpath "$.result.structuredContent.entries[2].health" == 21
-variable "text" jsonpath "$.entries[2].health" == 21
-jsonpath "$.result.structuredContent.entries[2].schemas" == 73
-variable "text" jsonpath "$.entries[2].schemas" == 73
+jsonpath "$.result.structuredContent.entries[2].health" == 31
+variable "text" jsonpath "$.entries[2].health" == 31
+jsonpath "$.result.structuredContent.entries[2].schemas" == 76
+variable "text" jsonpath "$.entries[2].schemas" == 76
 jsonpath "$.result.structuredContent.entries[2].path" == "/test/"
 variable "text" jsonpath "$.entries[2].path" == "/test/"
 jsonpath "$.result.structuredContent.entries[3].name" == "twins"
@@ -3708,8 +3756,8 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 144
-variable "text" jsonpath "$.schemas" == 144
+jsonpath "$.result.structuredContent.schemas" == 147
+variable "text" jsonpath "$.schemas" == 147
 jsonpath "$.result.structuredContent.entries" count == 4
 jsonpath "$.result.structuredContent.private" == false
 variable "text" jsonpath "$.entries" count == 4
@@ -3748,10 +3796,10 @@ variable "text" jsonpath "$.entries[2].name" == "test"
 variable "text" jsonpath "$.entries[2].private" == false
 jsonpath "$.result.structuredContent.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].type" == "directory"
-jsonpath "$.result.structuredContent.entries[2].health" == 21
-variable "text" jsonpath "$.entries[2].health" == 21
-jsonpath "$.result.structuredContent.entries[2].schemas" == 73
-variable "text" jsonpath "$.entries[2].schemas" == 73
+jsonpath "$.result.structuredContent.entries[2].health" == 31
+variable "text" jsonpath "$.entries[2].health" == 31
+jsonpath "$.result.structuredContent.entries[2].schemas" == 76
+variable "text" jsonpath "$.entries[2].schemas" == 76
 jsonpath "$.result.structuredContent.entries[2].path" == "/test/"
 variable "text" jsonpath "$.entries[2].path" == "/test/"
 jsonpath "$.result.structuredContent.entries[3].name" == "twins"
@@ -3868,8 +3916,8 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 144
-variable "text" jsonpath "$.schemas" == 144
+jsonpath "$.result.structuredContent.schemas" == 147
+variable "text" jsonpath "$.schemas" == 147
 jsonpath "$.result.structuredContent.entries" count == 4
 jsonpath "$.result.structuredContent.private" == false
 variable "text" jsonpath "$.entries" count == 4
@@ -3908,10 +3956,10 @@ variable "text" jsonpath "$.entries[2].name" == "test"
 variable "text" jsonpath "$.entries[2].private" == false
 jsonpath "$.result.structuredContent.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].type" == "directory"
-jsonpath "$.result.structuredContent.entries[2].health" == 21
-variable "text" jsonpath "$.entries[2].health" == 21
-jsonpath "$.result.structuredContent.entries[2].schemas" == 73
-variable "text" jsonpath "$.entries[2].schemas" == 73
+jsonpath "$.result.structuredContent.entries[2].health" == 31
+variable "text" jsonpath "$.entries[2].health" == 31
+jsonpath "$.result.structuredContent.entries[2].schemas" == 76
+variable "text" jsonpath "$.entries[2].schemas" == 76
 jsonpath "$.result.structuredContent.entries[2].path" == "/test/"
 variable "text" jsonpath "$.entries[2].path" == "/test/"
 jsonpath "$.result.structuredContent.entries[3].name" == "twins"
@@ -4028,8 +4076,8 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 144
-variable "text" jsonpath "$.schemas" == 144
+jsonpath "$.result.structuredContent.schemas" == 147
+variable "text" jsonpath "$.schemas" == 147
 jsonpath "$.result.structuredContent.entries" count == 4
 jsonpath "$.result.structuredContent.private" == false
 variable "text" jsonpath "$.entries" count == 4
@@ -4068,10 +4116,10 @@ variable "text" jsonpath "$.entries[2].name" == "test"
 variable "text" jsonpath "$.entries[2].private" == false
 jsonpath "$.result.structuredContent.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].type" == "directory"
-jsonpath "$.result.structuredContent.entries[2].health" == 21
-variable "text" jsonpath "$.entries[2].health" == 21
-jsonpath "$.result.structuredContent.entries[2].schemas" == 73
-variable "text" jsonpath "$.entries[2].schemas" == 73
+jsonpath "$.result.structuredContent.entries[2].health" == 31
+variable "text" jsonpath "$.entries[2].health" == 31
+jsonpath "$.result.structuredContent.entries[2].schemas" == 76
+variable "text" jsonpath "$.entries[2].schemas" == 76
 jsonpath "$.result.structuredContent.entries[2].path" == "/test/"
 variable "text" jsonpath "$.entries[2].path" == "/test/"
 jsonpath "$.result.structuredContent.entries[3].name" == "twins"
@@ -4197,13 +4245,13 @@ jsonpath "$.result.structuredContent.breadcrumb[0].name" == "test"
 variable "text" jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.result.structuredContent.breadcrumb[0].path" == "/test/"
 variable "text" jsonpath "$.breadcrumb[0].path" == "/test/"
-jsonpath "$.result.structuredContent.schemas" == 73
-variable "text" jsonpath "$.schemas" == 73
-jsonpath "$.result.structuredContent.health" == 21
-variable "text" jsonpath "$.health" == 21
-jsonpath "$.result.structuredContent.entries" count == 7
+jsonpath "$.result.structuredContent.schemas" == 76
+variable "text" jsonpath "$.schemas" == 76
+jsonpath "$.result.structuredContent.health" == 31
+variable "text" jsonpath "$.health" == 31
+jsonpath "$.result.structuredContent.entries" count == 8
 jsonpath "$.result.structuredContent.private" == false
-variable "text" jsonpath "$.entries" count == 7
+variable "text" jsonpath "$.entries" count == 8
 variable "text" jsonpath "$.private" == false
 jsonpath "$.result.structuredContent.entries[0].name" == "bare"
 jsonpath "$.result.structuredContent.entries[0].private" == false
@@ -4265,40 +4313,52 @@ jsonpath "$.result.structuredContent.entries[4].schemas" == 5
 variable "text" jsonpath "$.entries[4].schemas" == 5
 jsonpath "$.result.structuredContent.entries[4].path" == "/test/jsonld/"
 variable "text" jsonpath "$.entries[4].path" == "/test/jsonld/"
-jsonpath "$.result.structuredContent.entries[5].name" == "title-only"
+jsonpath "$.result.structuredContent.entries[5].name" == "openapi"
 jsonpath "$.result.structuredContent.entries[5].private" == false
-variable "text" jsonpath "$.entries[5].name" == "title-only"
+variable "text" jsonpath "$.entries[5].name" == "openapi"
 variable "text" jsonpath "$.entries[5].private" == false
 jsonpath "$.result.structuredContent.entries[5].type" == "directory"
 variable "text" jsonpath "$.entries[5].type" == "directory"
-jsonpath "$.result.structuredContent.entries[5].health" == 0
-variable "text" jsonpath "$.entries[5].health" == 0
-jsonpath "$.result.structuredContent.entries[5].schemas" == 5
-variable "text" jsonpath "$.entries[5].schemas" == 5
-jsonpath "$.result.structuredContent.entries[5].path" == "/test/title-only/"
-variable "text" jsonpath "$.entries[5].path" == "/test/title-only/"
-jsonpath "$.result.structuredContent.entries[6].name" == "object"
+jsonpath "$.result.structuredContent.entries[5].health" == 100
+variable "text" jsonpath "$.entries[5].health" == 100
+jsonpath "$.result.structuredContent.entries[5].schemas" == 3
+variable "text" jsonpath "$.entries[5].schemas" == 3
+jsonpath "$.result.structuredContent.entries[5].path" == "/test/openapi/"
+variable "text" jsonpath "$.entries[5].path" == "/test/openapi/"
+jsonpath "$.result.structuredContent.entries[6].name" == "title-only"
 jsonpath "$.result.structuredContent.entries[6].private" == false
-variable "text" jsonpath "$.entries[6].name" == "object"
+variable "text" jsonpath "$.entries[6].name" == "title-only"
 variable "text" jsonpath "$.entries[6].private" == false
-jsonpath "$.result.structuredContent.entries[6].type" == "schema"
-variable "text" jsonpath "$.entries[6].type" == "schema"
-jsonpath "$.result.structuredContent.entries[6].health" == 67
-variable "text" jsonpath "$.entries[6].health" == 67
-jsonpath "$.result.structuredContent.entries[6].path" == "/test/object"
-variable "text" jsonpath "$.entries[6].path" == "/test/object"
-jsonpath "$.result.structuredContent.entries[6].identifier" == "{{base}}/test/object"
-variable "text" jsonpath "$.entries[6].identifier" == "{{base}}/test/object"
-jsonpath "$.result.structuredContent.entries[6].title" == "My Object"
-variable "text" jsonpath "$.entries[6].title" == "My Object"
-jsonpath "$.result.structuredContent.entries[6].description" == "An Object Example"
-jsonpath "$.result.structuredContent.entries[6].priority" == 50
+jsonpath "$.result.structuredContent.entries[6].type" == "directory"
+variable "text" jsonpath "$.entries[6].type" == "directory"
+jsonpath "$.result.structuredContent.entries[6].health" == 0
+variable "text" jsonpath "$.entries[6].health" == 0
+jsonpath "$.result.structuredContent.entries[6].schemas" == 5
+variable "text" jsonpath "$.entries[6].schemas" == 5
+jsonpath "$.result.structuredContent.entries[6].path" == "/test/title-only/"
+variable "text" jsonpath "$.entries[6].path" == "/test/title-only/"
+jsonpath "$.result.structuredContent.entries[7].name" == "object"
+jsonpath "$.result.structuredContent.entries[7].private" == false
+variable "text" jsonpath "$.entries[7].name" == "object"
+variable "text" jsonpath "$.entries[7].private" == false
+jsonpath "$.result.structuredContent.entries[7].type" == "schema"
+variable "text" jsonpath "$.entries[7].type" == "schema"
+jsonpath "$.result.structuredContent.entries[7].health" == 67
+variable "text" jsonpath "$.entries[7].health" == 67
+jsonpath "$.result.structuredContent.entries[7].path" == "/test/object"
+variable "text" jsonpath "$.entries[7].path" == "/test/object"
+jsonpath "$.result.structuredContent.entries[7].identifier" == "{{base}}/test/object"
+variable "text" jsonpath "$.entries[7].identifier" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.entries[7].title" == "My Object"
+variable "text" jsonpath "$.entries[7].title" == "My Object"
+jsonpath "$.result.structuredContent.entries[7].description" == "An Object Example"
+jsonpath "$.result.structuredContent.entries[7].priority" == 50
 jsonpath "$.result.resultType" == "complete"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
-variable "text" jsonpath "$.entries[6].priority" == 50
-variable "text" jsonpath "$.entries[6].description" == "An Object Example"
+variable "text" jsonpath "$.entries[7].priority" == 50
+variable "text" jsonpath "$.entries[7].description" == "An Object Example"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

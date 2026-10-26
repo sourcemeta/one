@@ -1,0 +1,7 @@
+{
+  "title": "Identifier",
+  "description": "A product identifier, taking its dialect from the collection rather than declaring one",
+  "type": "string",
+  "format": "uuid",
+  "examples": [ "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9" ]
+}

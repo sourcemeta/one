@@ -157,7 +157,7 @@ jsonpath "$.result.resources[19].uri" == "{{base}}/self/v1/schemas/api/schemas/s
 jsonpath "$.result.resources[19].name" == "Sourcemeta One Schema Stats API Response"
 jsonpath "$.result.resources[19].description" == "The response format for the schema statistics API endpoint"
 jsonpath "$.result.resources[19].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[19].size" == 2345
+jsonpath "$.result.resources[19].size" == 2683
 jsonpath "$.result.resources[19].annotations.priority" == 0
 jsonpath "$.result.resources[20].uri" == "{{base}}/self/v1/schemas/api/schemas/trace/request"
 jsonpath "$.result.resources[20].name" == "Sourcemeta One Schema Trace API Request"
@@ -669,7 +669,7 @@ jsonpath "$.result.resources[22].uri" == "{{base}}/self/v1/schemas/api/schemas/s
 jsonpath "$.result.resources[22].name" == "Sourcemeta One Schema Stats API Response"
 jsonpath "$.result.resources[22].description" == "The response format for the schema statistics API endpoint"
 jsonpath "$.result.resources[22].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[22].size" == 2345
+jsonpath "$.result.resources[22].size" == 2683
 jsonpath "$.result.resources[22].annotations.priority" == 0
 jsonpath "$.result.resources[23].uri" == "{{base}}/self/v1/schemas/api/schemas/trace/request"
 jsonpath "$.result.resources[23].name" == "Sourcemeta One Schema Trace API Request"
@@ -1164,7 +1164,7 @@ jsonpath "$.result.resources[20].uri" == "{{base}}/self/v1/schemas/api/schemas/s
 jsonpath "$.result.resources[20].name" == "Sourcemeta One Schema Stats API Response"
 jsonpath "$.result.resources[20].description" == "The response format for the schema statistics API endpoint"
 jsonpath "$.result.resources[20].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[20].size" == 2345
+jsonpath "$.result.resources[20].size" == 2683
 jsonpath "$.result.resources[20].annotations.priority" == 0
 jsonpath "$.result.resources[21].uri" == "{{base}}/self/v1/schemas/api/schemas/trace/request"
 jsonpath "$.result.resources[21].name" == "Sourcemeta One Schema Trace API Request"
