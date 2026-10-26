@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Sourcemeta One MCP Error Response",
-  "description": "The error response Sourcemeta One returns when an MCP request fails",
+  "description": "The error response Sourcemeta One returns when an MCP request fails. An `id` is echoed whenever the request carried a readable one, and is absent when the request was refused before one could be read",
   "examples": [
     {
       "jsonrpc": "2.0",
@@ -19,10 +19,26 @@
         "message": "Foreign URI",
         "data": "This URI lies outside this catalog's namespace. Query the appropriate registry instead"
       }
+    },
+    {
+      "jsonrpc": "2.0",
+      "error": {
+        "code": -32022,
+        "message": "Unsupported protocol version",
+        "data": {
+          "supported": [
+            "2025-03-26",
+            "2025-06-18",
+            "2025-11-25",
+            "2026-07-28"
+          ],
+          "requested": "2024-11-05"
+        }
+      }
     }
   ],
   "type": "object",
-  "required": [ "jsonrpc", "id", "error" ],
+  "required": [ "jsonrpc", "error" ],
   "properties": {
     "jsonrpc": {
       "const": "2.0"
@@ -44,7 +60,7 @@
   "additionalProperties": false,
   "$defs": {
     "standard": {
-      "$comment": "JSON-RPC reserved error codes",
+      "$comment": "Codes a specification defines rather than this implementation: the JSON-RPC reserved codes, and the ones the Model Context Protocol defines in the sub-range it reserves for itself",
       "anyOf": [
         {
           "const": {
@@ -133,11 +149,158 @@
             "code": -32002,
             "message": "Resource not found"
           }
+        },
+        {
+          "$comment": "Protocol revision 2026-07-28 requires every request to carry the revision and the client's capabilities, and a request that leaves one out is refused by this code",
+          "type": "object",
+          "required": [ "code", "message" ],
+          "properties": {
+            "code": {
+              "const": -32602
+            },
+            "message": {
+              "enum": [
+                "Invalid params",
+                "Invalid params: missing or malformed protocol metadata",
+                "Invalid params: malformed metadata field",
+                "Invalid params: missing params object",
+                "Invalid params: params must be an object",
+                "Invalid params: missing _meta object",
+                "Invalid params: _meta must be an object",
+                "Invalid params: missing protocolVersion in _meta",
+                "Invalid params: protocolVersion must be a string",
+                "Invalid params: missing clientCapabilities in _meta",
+                "Invalid params: clientCapabilities must be an object",
+                "Invalid params: clientInfo must be an object",
+                "Invalid params: missing name in clientInfo",
+                "Invalid params: clientInfo name must be a string",
+                "Invalid params: missing version in clientInfo",
+                "Invalid params: clientInfo version must be a string",
+                "Invalid params: clientInfo title must be a string",
+                "Invalid params: clientInfo description must be a string"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "const": {
+            "code": -32602,
+            "message": "Resource not found"
+          }
+        },
+        {
+          "$comment": "A routing field that is missing, repeated, or malformed",
+          "type": "object",
+          "required": [ "code", "message" ],
+          "properties": {
+            "code": {
+              "const": -32020
+            },
+            "message": {
+              "enum": [
+                "Missing or malformed MCP-Protocol-Version",
+                "Missing or malformed Mcp-Method",
+                "Duplicate routing header"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "$comment": "A routing field that disagrees with the body it travelled with",
+          "type": "object",
+          "required": [ "code", "message", "data" ],
+          "properties": {
+            "code": {
+              "const": -32020
+            },
+            "message": {
+              "const": "Header mismatch"
+            },
+            "data": {
+              "type": "object",
+              "required": [ "header", "headerValue", "bodyValue" ],
+              "properties": {
+                "header": {
+                  "enum": [ "MCP-Protocol-Version", "Mcp-Method", "Mcp-Name" ]
+                },
+                "headerValue": {
+                  "type": "string"
+                },
+                "bodyValue": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "$comment": "A routing field naming a target the request does not have",
+          "type": "object",
+          "required": [ "code", "message", "data" ],
+          "properties": {
+            "code": {
+              "const": -32020
+            },
+            "message": {
+              "const": "Header mismatch: unexpected header provided"
+            },
+            "data": {
+              "type": "object",
+              "required": [ "header", "headerValue" ],
+              "properties": {
+                "header": {
+                  "const": "Mcp-Name"
+                },
+                "headerValue": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "$comment": "The revision the request asked for is not one this instance serves. The reply names every revision that is, so that a client can pick one and ask again",
+          "type": "object",
+          "required": [ "code", "message", "data" ],
+          "properties": {
+            "code": {
+              "const": -32022
+            },
+            "message": {
+              "const": "Unsupported protocol version"
+            },
+            "data": {
+              "type": "object",
+              "required": [ "supported", "requested" ],
+              "properties": {
+                "supported": {
+                  "const": [
+                    "2025-03-26",
+                    "2025-06-18",
+                    "2025-11-25",
+                    "2026-07-28"
+                  ]
+                },
+                "requested": {
+                  "description": "The `MCP-Protocol-Version` header value the client sent, echoed back verbatim",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
         }
       ]
     },
     "custom": {
-      "$comment": "Implementation-defined server-error codes within the JSON-RPC reserved range -32099..-32000",
+      "$comment": "Implementation-defined server-error codes. The Model Context Protocol partitions the JSON-RPC server-error range and leaves -32000 through -32019 to implementations, so these stay inside it and nothing new is allocated there",
       "anyOf": [
         {
           "const": {
@@ -159,34 +322,6 @@
             "data": {
               "description": "The rejected `Origin` header value, echoed back verbatim. May be a URI or the literal string `null` per RFC 6454 §6 for opaque origins",
               "type": "string"
-            }
-          },
-          "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "required": [ "code", "message", "data" ],
-          "properties": {
-            "code": {
-              "const": -32003
-            },
-            "message": {
-              "const": "Unsupported protocol version"
-            },
-            "data": {
-              "type": "object",
-              "required": [ "current", "supported" ],
-              "properties": {
-                "current": {
-                  "description": "The `MCP-Protocol-Version` header value the client sent, echoed back verbatim",
-                  "type": "string"
-                },
-                "supported": {
-                  "description": "The protocol versions this server implements, in chronological order",
-                  "const": [ "2025-03-26", "2025-06-18", "2025-11-25" ]
-                }
-              },
-              "additionalProperties": false
             }
           },
           "additionalProperties": false

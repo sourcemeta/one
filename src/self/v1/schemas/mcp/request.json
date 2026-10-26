@@ -68,7 +68,22 @@
         "id": 101,
         "method": "resources/list"
       }
-    ]
+    ],
+    {
+      "jsonrpc": "2.0",
+      "id": "discover-1",
+      "method": "server/discover",
+      "params": {
+        "_meta": {
+          "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+          "io.modelcontextprotocol/clientCapabilities": {},
+          "io.modelcontextprotocol/clientInfo": {
+            "name": "claude-code",
+            "version": "1.0.0"
+          }
+        }
+      }
+    }
   ],
   "oneOf": [
     {
@@ -112,8 +127,246 @@
         },
         {
           "$ref": "./tools/call/request.json"
+        },
+        {
+          "$ref": "#/$defs/modernDiscover"
+        },
+        {
+          "$ref": "#/$defs/modernToolsList"
+        },
+        {
+          "$ref": "#/$defs/modernToolsCall"
+        },
+        {
+          "$ref": "#/$defs/modernResourcesList"
+        },
+        {
+          "$ref": "#/$defs/modernResourcesRead"
+        },
+        {
+          "$ref": "#/$defs/modernResourceTemplatesList"
         }
       ]
+    },
+    "modernMeta": {
+      "$comment": "Protocol revision 2026-07-28 carries the version and the client's capabilities on every request instead of settling them once",
+      "x-lint-exclude": [ "simple_properties_identifiers" ],
+      "type": "object",
+      "required": [
+        "io.modelcontextprotocol/protocolVersion",
+        "io.modelcontextprotocol/clientCapabilities"
+      ],
+      "properties": {
+        "io.modelcontextprotocol/protocolVersion": {
+          "const": "2026-07-28"
+        },
+        "io.modelcontextprotocol/clientCapabilities": {
+          "type": "object"
+        },
+        "io.modelcontextprotocol/clientInfo": {
+          "type": "object",
+          "required": [ "name", "version" ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "websiteUrl": {
+              "x-format-assertion": true,
+              "type": "string",
+              "format": "uri"
+            }
+          }
+        },
+        "io.modelcontextprotocol/logLevel": {
+          "enum": [
+            "debug",
+            "info",
+            "notice",
+            "warning",
+            "error",
+            "critical",
+            "alert",
+            "emergency"
+          ]
+        },
+        "progressToken": {
+          "type": [ "string", "integer" ]
+        }
+      }
+    },
+    "modernDiscover": {
+      "type": "object",
+      "required": [ "jsonrpc", "id", "method", "params" ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [ "string", "integer" ]
+        },
+        "method": {
+          "const": "server/discover"
+        },
+        "params": {
+          "type": "object",
+          "required": [ "_meta" ],
+          "properties": {
+            "_meta": {
+              "$ref": "#/$defs/modernMeta"
+            }
+          }
+        }
+      }
+    },
+    "modernToolsList": {
+      "type": "object",
+      "required": [ "jsonrpc", "id", "method", "params" ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [ "string", "integer" ]
+        },
+        "method": {
+          "const": "tools/list"
+        },
+        "params": {
+          "type": "object",
+          "required": [ "_meta" ],
+          "properties": {
+            "_meta": {
+              "$ref": "#/$defs/modernMeta"
+            },
+            "cursor": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "modernToolsCall": {
+      "type": "object",
+      "required": [ "jsonrpc", "id", "method", "params" ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [ "string", "integer" ]
+        },
+        "method": {
+          "const": "tools/call"
+        },
+        "params": {
+          "type": "object",
+          "required": [ "_meta", "name" ],
+          "properties": {
+            "_meta": {
+              "$ref": "#/$defs/modernMeta"
+            },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$"
+            },
+            "arguments": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "modernResourcesList": {
+      "type": "object",
+      "required": [ "jsonrpc", "id", "method", "params" ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [ "string", "integer" ]
+        },
+        "method": {
+          "const": "resources/list"
+        },
+        "params": {
+          "type": "object",
+          "required": [ "_meta" ],
+          "properties": {
+            "_meta": {
+              "$ref": "#/$defs/modernMeta"
+            },
+            "cursor": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "modernResourcesRead": {
+      "type": "object",
+      "required": [ "jsonrpc", "id", "method", "params" ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [ "string", "integer" ]
+        },
+        "method": {
+          "const": "resources/read"
+        },
+        "params": {
+          "type": "object",
+          "required": [ "_meta", "uri" ],
+          "properties": {
+            "_meta": {
+              "$ref": "#/$defs/modernMeta"
+            },
+            "uri": {
+              "x-format-assertion": true,
+              "type": "string",
+              "format": "uri"
+            }
+          }
+        }
+      }
+    },
+    "modernResourceTemplatesList": {
+      "type": "object",
+      "required": [ "jsonrpc", "id", "method", "params" ],
+      "properties": {
+        "jsonrpc": {
+          "const": "2.0"
+        },
+        "id": {
+          "type": [ "string", "integer" ]
+        },
+        "method": {
+          "const": "resources/templates/list"
+        },
+        "params": {
+          "type": "object",
+          "required": [ "_meta" ],
+          "properties": {
+            "_meta": {
+              "$ref": "#/$defs/modernMeta"
+            },
+            "cursor": {
+              "type": "string"
+            }
+          }
+        }
+      }
     }
   }
 }

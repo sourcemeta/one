@@ -1003,11 +1003,14 @@ POST /self/v1/mcp
 ```
 
 Sourcemeta One implements the [Streamable
-HTTP](https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#streamable-http)
+HTTP](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http)
 transport with full CORS support, and enforces the [`Origin` header
-validation](https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#security-warning)
+validation](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http#security--endpoint)
 principle recommended by the specification to protect against DNS rebinding
-attacks.
+attacks. On `2026-07-28` that transport also requires every request to carry
+`Mcp-Method`, and `Mcp-Name` where the method names a target, so that whatever
+sits in front of the instance can route on the same values the instance acts
+on. The two are checked against the body and a disagreement is refused.
 
 **Authorization.** The specification's
 [authorization](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization)
@@ -1033,14 +1036,36 @@ that carry no audience, an [`apiKey`](configuration.md#api-key) or a browser
 session, are unaffected. OAuth scopes are not implemented, so no `scope`
 parameter is advertised and no request is refused for want of one.
 
-**Protocol versions.** The server simultaneously supports three revisions of
+**Protocol versions.** The server simultaneously supports four revisions of
 the MCP specification:
 [`2025-03-26`](https://modelcontextprotocol.io/specification/2025-03-26),
-[`2025-06-18`](https://modelcontextprotocol.io/specification/2025-06-18), and
-[`2025-11-25`](https://modelcontextprotocol.io/specification/2025-11-25).
+[`2025-06-18`](https://modelcontextprotocol.io/specification/2025-06-18),
+[`2025-11-25`](https://modelcontextprotocol.io/specification/2025-11-25), and
+[`2026-07-28`](https://modelcontextprotocol.io/specification/2026-07-28).
 Clients pick a revision on every request via the `MCP-Protocol-Version`
 header, falling back to `2025-03-26` when omitted as the [specification
-requires](https://modelcontextprotocol.io/specification/2025-06-18/basic/transports#protocol-version-header).
+requires](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http#protocol-version-header).
+A revision this server does not implement is refused with `400` and an
+[`UnsupportedProtocolVersionError`](https://modelcontextprotocol.io/specification/2026-07-28/schema#unsupportedprotocolversionerror)
+naming every revision that it does.
+
+On `2026-07-28` the server answers
+[`server/discover`](https://modelcontextprotocol.io/specification/2026-07-28/server/discover),
+`tools/list`, `tools/call`, `resources/list`, `resources/read` and
+`resources/templates/list`. Any other method, including
+[`subscriptions/listen`](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/subscriptions),
+is answered as an unknown method with `404`. Nothing here advertises
+`listChanged` or `resources.subscribe`, so a subscription would have nothing to
+deliver.
+
+On that revision the `MCP-Protocol-Version`, `Mcp-Method` and `Mcp-Name`
+headers must agree with the body they travel with, and a request whose headers
+and body disagree is refused with `400`. Every result names this instance in
+its [`_meta`](https://modelcontextprotocol.io/specification/2026-07-28/basic/index#meta).
+Answers a client may cache are good for five minutes, and are marked `private`
+when assembled for a credential or `public` when they are what any caller would
+be handed.
+
 We recommend connecting with the latest revision to take advantage of all
 available features, but the server gracefully degrades to support older
 clients as needed.
@@ -1066,7 +1091,25 @@ hints](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#too
 (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`).
 `tools/list` offers only the tools whose endpoint the client's credential
 admits it to, and calling one that was not listed is answered as an unknown
-tool.
+tool. The listing is returned in a [deterministic
+order](https://modelcontextprotocol.io/specification/2026-07-28/server/tools#capabilities),
+so a client that caches it is handed the same order on every request for as
+long as the set of tools its credential reaches does not change.
+
+!!! warning "Tool input schemas and `$ref`"
+
+    Each tool's `inputSchema` names its parameters through a
+    [`$ref`](https://www.learnjsonschema.com/2020-12/core/ref/) to the schema
+    that defines them, which is itself a resource in this catalog. Clients are
+    [not to resolve such a reference over the
+    network](https://modelcontextprotocol.io/specification/2026-07-28/basic/index#ref-resolution)
+    on their own, so read it by calling `resources/read` on the
+    [`$ref`](https://www.learnjsonschema.com/2020-12/core/ref/) URL, which is
+    an ordinary request rather than the automatic dereferencing a client is
+    warned off. We keep the
+    [`$ref`](https://www.learnjsonschema.com/2020-12/core/ref/) because the
+    alternative is to stop describing tool parameters by the schemas that
+    already define them.
 
 !!! warning "Tool argument stringification"
 
@@ -1098,6 +1141,10 @@ tool.
 === "200"
 
     A JSON-RPC response envelope, or, on `2025-03-26`, a batch of envelopes.
+    A refusal that came out of answering the request travels here too, since
+    what it reports is the thing asked for rather than the request itself: a
+    schema that does not exist, a cursor that names no page, a tool that was
+    never listed.
 
 === "202"
 
@@ -1105,11 +1152,24 @@ tool.
 
 === "400"
 
-    The `MCP-Protocol-Version` header is not one of the supported revisions.
+    The `MCP-Protocol-Version` header is not one of the supported revisions,
+    answered with
+    [`-32022`](https://modelcontextprotocol.io/specification/2026-07-28/schema#unsupportedprotocolversionerror).
+    On `2026-07-28` also a routing field that is missing, repeated or
+    disagrees with the body, answered with
+    [`-32020`](https://modelcontextprotocol.io/specification/2026-07-28/schema#headermismatcherror),
+    and a request whose `_meta` omits the revision or the client's
+    capabilities, answered with `-32602`.
 
 === "403"
 
     The request `Origin` does not match the configured instance URL.
+
+=== "404"
+
+    On `2026-07-28`, the request names a method this instance does not
+    implement, answered with `-32601`. Earlier revisions report the same
+    refusal under `200`.
 
 === "405"
 

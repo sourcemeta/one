@@ -233,6 +233,7 @@ jsonpath "$.result.content[0].text" == "A reference in the supplied schema could
 jsonpath "$.result.structuredContent" not exists
 body not contains "additionalProperties"
 body not contains "structuredContent"
+body not contains "token"
 
 # The envelope is described by a schema this instance serves
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -655,6 +656,7 @@ jsonpath "$.result.content[0].text" == "A reference in the supplied schema could
 jsonpath "$.result.structuredContent" not exists
 body not contains "additionalProperties"
 body not contains "structuredContent"
+body not contains "token"
 
 # The envelope is described by a schema this instance serves
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -754,6 +756,7 @@ jsonpath "$.result.content[0].text" == "A reference in the supplied schema could
 jsonpath "$.result.structuredContent" not exists
 body not contains "additionalProperties"
 body not contains "structuredContent"
+body not contains "token"
 
 # The envelope is described by a schema this instance serves
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -804,6 +807,7 @@ jsonpath "$.result.content[0].text" == "A reference in the supplied schema could
 jsonpath "$.result.structuredContent" not exists
 body not contains "additionalProperties"
 body not contains "structuredContent"
+body not contains "token"
 
 # The envelope is described by a schema this instance serves
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}

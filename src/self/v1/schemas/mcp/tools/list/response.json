@@ -14,7 +14,7 @@
             "inputSchema": {
               "type": "object",
               "$ref": "https://example.com/v1/self/v1/schemas/mcp/tools/call/list-directory/request",
-              "$comment": "MCP clients should resolve `$ref` references in input schemas by default. If yours does not, call `resources/read` on the `$ref` URL above to fetch the full input schema that defines this tool's parameters. This server is a JSON Schema registry, so every `$ref` URL is itself reachable as an MCP resource"
+              "$comment": "The full input schema for this tool is published at the `$ref` URL above. A client that does not resolve it can call `resources/read` on that URL to fetch it, since this server is a JSON Schema registry and every `$ref` URL is itself reachable as an MCP resource"
             },
             "outputSchema": {
               "type": "object",

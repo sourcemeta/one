@@ -35,10 +35,82 @@
 
 // The protocol revisions this instance serves. A client asking for anything
 // else is refused rather than answered under rules this does not implement
-inline constexpr std::array<sourcemeta::core::JSON::StringView, 3>
+inline constexpr std::array<sourcemeta::core::JSON::StringView, 4>
     MCP_SUPPORTED_VERSIONS{{sourcemeta::core::MCP_PROTOCOL_VERSION_2025_03_26,
                             sourcemeta::core::MCP_PROTOCOL_VERSION_2025_06_18,
-                            sourcemeta::core::MCP_PROTOCOL_VERSION_2025_11_25}};
+                            sourcemeta::core::MCP_PROTOCOL_VERSION_2025_11_25,
+                            sourcemeta::core::MCP_PROTOCOL_VERSION_2026_07_28}};
+
+// How long a caller may keep an answer. What a process serves is settled before
+// it starts and cannot change under it, so what bounds this is how soon a
+// caller should notice a deployment rather than anything the catalog might do
+inline constexpr std::int64_t MCP_CACHE_TTL_MILLISECONDS{300000};
+
+// Which of the methods a revision names this instance answers. A method the
+// revision defines but nothing here serves is missing rather than malformed,
+// and saying which it is tells a caller whether to fix the request or stop
+// asking
+[[nodiscard]] constexpr auto
+mcp_serves_method(const sourcemeta::core::MCPProtocolVersion version,
+                  const sourcemeta::core::JSON::StringView method) noexcept
+    -> bool {
+  if (version == sourcemeta::core::MCPProtocolVersion::V_2026_07_28) {
+    return method == sourcemeta::core::MCP_METHOD_SERVER_DISCOVER ||
+           method == sourcemeta::core::MCP_METHOD_TOOLS_LIST ||
+           method == sourcemeta::core::MCP_METHOD_TOOLS_CALL ||
+           method == sourcemeta::core::MCP_METHOD_RESOURCES_LIST ||
+           method == sourcemeta::core::MCP_METHOD_RESOURCES_READ ||
+           method == sourcemeta::core::MCP_METHOD_RESOURCES_TEMPLATES_LIST;
+  }
+
+  return method == sourcemeta::core::MCP_METHOD_INITIALIZE ||
+         method == sourcemeta::core::MCP_METHOD_PING ||
+         method == sourcemeta::core::MCP_METHOD_TOOLS_LIST ||
+         method == sourcemeta::core::MCP_METHOD_TOOLS_CALL ||
+         method == sourcemeta::core::MCP_METHOD_RESOURCES_LIST ||
+         method == sourcemeta::core::MCP_METHOD_RESOURCES_READ ||
+         method == sourcemeta::core::MCP_METHOD_RESOURCES_TEMPLATES_LIST;
+}
+
+// What a caller is answered with when an error carries a status of its own, and
+// what it is answered with otherwise. A rejection reached before a method was
+// resolved speaks about the request, so it is a bad one, while a refusal that
+// came out of answering speaks about what was asked for and travels on a
+// successful exchange
+[[nodiscard]] inline auto
+mcp_error_status(const sourcemeta::core::MCPProtocolVersion version,
+                 const sourcemeta::core::JSON &envelope, const bool transport)
+    -> sourcemeta::core::HTTPStatus {
+  const auto *error{envelope.try_at("error")};
+  if (error != nullptr) {
+    const auto *code{error->try_at("code")};
+    if (code != nullptr && code->is_integer()) {
+      const auto mandated{sourcemeta::core::mcp_error_code_to_http_status(
+          version, code->to_integer())};
+      if (mandated.has_value()) {
+        return mandated.value();
+      }
+    }
+  }
+
+  return transport ? sourcemeta::core::HTTP_STATUS_BAD_REQUEST
+                   : sourcemeta::core::HTTP_STATUS_OK;
+}
+
+// What answers a body that could not be read. Nothing in such a body names an
+// identifier, so on a revision that lets an error response leave one out it is
+// left out rather than sent as a null identifier
+// https://modelcontextprotocol.io/specification/2026-07-28/basic/index#error-responses
+[[nodiscard]] inline auto
+mcp_parse_error(const sourcemeta::core::MCPProtocolVersion version)
+    -> sourcemeta::core::JSON {
+  if (version == sourcemeta::core::MCPProtocolVersion::V_2026_07_28) {
+    return sourcemeta::core::mcp_make_error(
+        version, nullptr, sourcemeta::core::JSONRPC_CODE_PARSE, "Parse error");
+  }
+
+  return sourcemeta::core::jsonrpc_make_error_parse();
+}
 
 class ActionMCPV1 : public sourcemeta::one::RouterAction {
 public:
@@ -172,10 +244,12 @@ public:
       response.write_header("Access-Control-Allow-Methods", "POST, OPTIONS");
       // Without `Authorization` a browser withholds the credential at
       // preflight, so no browser-resident client could authenticate at all,
-      // whatever it holds
-      response.write_header(
-          "Access-Control-Allow-Headers",
-          "Authorization, Content-Type, MCP-Protocol-Version");
+      // whatever it holds. The routing fields are named for the same reason:
+      // a revision that requires them on every request puts them beyond a
+      // browser's reach unless they are allowed here
+      response.write_header("Access-Control-Allow-Headers",
+                            "Authorization, Content-Type, "
+                            "MCP-Protocol-Version, Mcp-Method, Mcp-Name");
       response.write_header("Access-Control-Max-Age", "3600");
       // Browser preflight cache is governed by `Access-Control-Max-Age`;
       // `no-store` keeps shared HTTP caches from storing this response.
@@ -254,27 +328,21 @@ public:
             : std::optional<sourcemeta::core::MCPProtocolVersion>{
                   sourcemeta::core::MCPProtocolVersion::V_2025_03_26}};
     // A revision this library models is not automatically one this instance
-    // serves, so what it settles on is checked against what is advertised
-    if (!negotiated_version.has_value() ||
-        std::ranges::find(MCP_SUPPORTED_VERSIONS,
-                          sourcemeta::core::mcp_protocol_version_string(
-                              negotiated_version.value())) ==
-            MCP_SUPPORTED_VERSIONS.cend()) {
-      auto data{sourcemeta::core::JSON::make_object()};
-      data.assign("current",
-                  sourcemeta::core::JSON{std::string{requested_version}});
-      auto supported{sourcemeta::core::JSON::make_array()};
-      for (const auto advertised : MCP_SUPPORTED_VERSIONS) {
-        supported.push_back(sourcemeta::core::JSON{advertised});
-      }
-      data.assign("supported", std::move(supported));
-      this->write_envelope(request, response,
-                           sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-                           sourcemeta::core::jsonrpc_make_error(
-                               nullptr, -32003, "Unsupported protocol version",
-                               std::move(data)));
-      return;
-    }
+    // serves, so what it settles on is checked against what is advertised.
+    // Nothing is refused here: a refusal has to name the request it answers,
+    // and the identifier that names it has not been read yet
+    const auto served_version{
+        negotiated_version.has_value() &&
+                std::ranges::find(MCP_SUPPORTED_VERSIONS,
+                                  sourcemeta::core::mcp_protocol_version_string(
+                                      negotiated_version.value())) !=
+                    MCP_SUPPORTED_VERSIONS.cend()
+            ? negotiated_version
+            : std::optional<sourcemeta::core::MCPProtocolVersion>{}};
+    // What a rejection decided before the body arrives echoes back, which is
+    // the revision that predates the header whenever none was settled on
+    const auto echo_version{served_version.value_or(
+        sourcemeta::core::MCPProtocolVersion::V_2025_03_26)};
 
     // RFC 9110 §10.1.1: refuse unrecognised expectations with 417 before
     // touching the body. uWS already auto-acknowledged `100-continue`
@@ -285,7 +353,7 @@ public:
           sourcemeta::core::jsonrpc_make_error(
               nullptr, -32009,
               "The Expect header carries an unsupported expectation"),
-          negotiated_version.value());
+          echo_version);
       return;
     }
 
@@ -296,7 +364,7 @@ public:
                            sourcemeta::core::HTTP_STATUS_CONTENT_TOO_LARGE,
                            sourcemeta::core::jsonrpc_make_error(
                                nullptr, -32005, "Request body is too large"),
-                           negotiated_version.value());
+                           echo_version);
       return;
     }
 
@@ -305,17 +373,20 @@ public:
          bearer = std::string{sourcemeta::core::http_parse_bearer(
              request.header("authorization"))},
          cookies = sourcemeta::one::owned_cookies(request),
-         version = negotiated_version.value()](
-            sourcemeta::one::HTTPRequest &callback_request,
-            sourcemeta::one::HTTPResponse &callback_response,
-            std::string &&body, bool too_big) {
+         // Taken now for the same reason as the credential above, and read
+         // against the body once there is a body to read it against
+         routing = sourcemeta::one::mcp_owned_routing_headers(request),
+         requested = std::string{requested_version}, served = served_version,
+         echo = echo_version](sourcemeta::one::HTTPRequest &callback_request,
+                              sourcemeta::one::HTTPResponse &callback_response,
+                              std::string &&body, bool too_big) -> void {
           if (too_big) {
             this->write_envelope(
                 callback_request, callback_response,
                 sourcemeta::core::HTTP_STATUS_CONTENT_TOO_LARGE,
                 sourcemeta::core::jsonrpc_make_error(
                     nullptr, -32005, "Request body is too large"),
-                version);
+                echo);
             return;
           }
           const sourcemeta::one::RequestCookies fields{cookies};
@@ -323,13 +394,13 @@ public:
           // was handed points at a request that is gone by now
           const auto deferred_caller{
               this->caller_from({.bearer = bearer, .cookies = fields})};
-          this->on_message(version, callback_request, callback_response,
-                           std::move(body), deferred_caller);
+          this->on_message(served, requested, routing, callback_request,
+                           callback_response, std::move(body), deferred_caller);
         },
-        [this, version = negotiated_version.value()](
+        [this, version = echo_version](
             sourcemeta::one::HTTPRequest &callback_request,
             sourcemeta::one::HTTPResponse &callback_response,
-            const std::exception_ptr &error) {
+            const std::exception_ptr &error) -> void {
           try {
             std::rethrow_exception(error);
           } catch (const std::exception &) {
@@ -392,7 +463,19 @@ private:
                                    sourcemeta::one::Encoding::Identity);
   }
 
-  auto on_resources_list(const sourcemeta::core::JSON &request_json,
+  // Who may keep an answer assembled for this view, and for how long. The view
+  // settles the first, which is also what holds every page of one listing to
+  // the same answer, and a deployment settles the second
+  [[nodiscard]] auto cache_policy(const sourcemeta::core::JSON &metadata) const
+      -> sourcemeta::core::MCPCachePolicy {
+    const auto scope{sourcemeta::core::mcp_resolve_cache_scope(
+        metadata.at("cacheScope").to_string())};
+    assert(scope.has_value());
+    return {.ttl_ms = MCP_CACHE_TTL_MILLISECONDS, .scope = scope.value()};
+  }
+
+  auto on_resources_list(const sourcemeta::core::MCPProtocolVersion version,
+                         const sourcemeta::core::JSON &request_json,
                          const std::string_view view) const
       -> sourcemeta::core::JSON {
     const auto &request_id{request_json.at("id")};
@@ -436,14 +519,58 @@ private:
     }
 
     return sourcemeta::core::jsonrpc_make_success(
-        request_id, pages.at(static_cast<std::size_t>(index)));
+        request_id, sourcemeta::core::mcp_decorate_cacheable_result(
+                        version, pages.at(static_cast<std::size_t>(index)),
+                        this->cache_policy(metadata),
+                        sourcemeta::core::MCP_METHOD_RESOURCES_LIST));
+  }
+
+  auto
+  on_resource_templates_list(const sourcemeta::core::MCPProtocolVersion version,
+                             const sourcemeta::core::JSON &request_json,
+                             const std::string_view view) const
+      -> sourcemeta::core::JSON {
+    const auto &metadata{this->metadata_for(view)};
+    return sourcemeta::core::jsonrpc_make_success(
+        request_json.at("id"),
+        sourcemeta::core::mcp_decorate_cacheable_result(
+            version,
+            metadata.at(sourcemeta::core::MCP_METHOD_RESOURCES_TEMPLATES_LIST),
+            this->cache_policy(metadata),
+            sourcemeta::core::MCP_METHOD_RESOURCES_TEMPLATES_LIST));
+  }
+
+  [[nodiscard]] auto
+  on_server_discover(const sourcemeta::core::MCPProtocolVersion version,
+                     const sourcemeta::core::JSON &request_json,
+                     const std::string_view view) const
+      -> sourcemeta::core::JSON {
+    const auto &metadata{this->metadata_for(view)};
+    const auto &parts{metadata.at("advertisement")};
+    return sourcemeta::core::mcp_make_server_discover_response(
+        version, request_json.at("id"),
+        sourcemeta::core::MCPServerCapabilities{
+            .prompts = parts.at(0).to_boolean(),
+            .resources = parts.at(1).to_boolean(),
+            .tools = parts.at(2).to_boolean(),
+            .logging = parts.at(3).to_boolean(),
+            .completions = parts.at(4).to_boolean(),
+        },
+        sourcemeta::core::MCPImplementation{
+            .name = parts.at(5).to_string(),
+            .version = parts.at(6).to_string(),
+            .title = parts.at(7).to_string(),
+            .description = parts.at(8).to_string(),
+            .website_url = parts.at(9).to_string(),
+        },
+        MCP_SUPPORTED_VERSIONS, parts.at(10).to_string(),
+        this->cache_policy(metadata));
   }
 
   auto on_initialize(const sourcemeta::core::JSON &request_json,
                      const std::string_view view) const
       -> sourcemeta::core::JSON {
-    const auto &parts{
-        this->metadata_for(view).at(sourcemeta::core::MCP_METHOD_INITIALIZE)};
+    const auto &parts{this->metadata_for(view).at("advertisement")};
     return sourcemeta::core::mcp_make_initialize_response(
         request_json,
         sourcemeta::core::MCPServerCapabilities{
@@ -487,10 +614,13 @@ private:
               .open_world = tool.at(8).to_boolean(),
           }));
     }
-    auto result{sourcemeta::core::JSON::make_object()};
-    result.assign_assume_new(std::string{"tools"}, std::move(tools));
-    return sourcemeta::core::jsonrpc_make_success(request_json.at("id"),
-                                                  std::move(result));
+    // The listing follows the router's own order, which is settled at build
+    // time, so what a caller is handed twice is the same list in the same order
+    return sourcemeta::core::jsonrpc_make_success(
+        request_json.at("id"),
+        sourcemeta::core::mcp_make_tools_list_result(
+            version, std::move(tools), std::nullopt,
+            this->cache_policy(this->metadata_for(view))));
   }
 
   auto
@@ -547,17 +677,15 @@ private:
       bundle = request.query().has_value() &&
                request.query()->at("bundle").has_value();
     } catch (const std::exception &) {
-      return sourcemeta::core::jsonrpc_make_error(
-          &request_id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
-          "Resource not found");
+      return sourcemeta::core::mcp_make_error_resource_not_found(version,
+                                                                 &request_id);
     }
 
     auto resolution{this->artifact_resolve_path(caller, uri, Tree::Schemas,
                                                 bundle ? "bundle" : "schema")};
     if (!resolution.path.has_value()) {
-      return sourcemeta::core::jsonrpc_make_error(
-          &request_id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
-          "Resource not found");
+      return sourcemeta::core::mcp_make_error_resource_not_found(version,
+                                                                 &request_id);
     }
 
     if (conversion.has_value()) {
@@ -602,9 +730,8 @@ private:
 
     const auto schema{this->artifact_read_json(resolution.path.value())};
     if (!schema.has_value()) {
-      return sourcemeta::core::jsonrpc_make_error(
-          &request_id, sourcemeta::core::MCP_CODE_RESOURCE_NOT_FOUND,
-          "Resource not found");
+      return sourcemeta::core::mcp_make_error_resource_not_found(version,
+                                                                 &request_id);
     }
 
     std::ostringstream payload;
@@ -613,9 +740,17 @@ private:
     auto contents{sourcemeta::core::JSON::make_array()};
     contents.push_back(sourcemeta::core::mcp_make_resource_text_content(
         uri, MCP_TEMPLATE_MIME_TYPE, payload.str()));
+    // Whether this schema is one anybody reaches, which is what decides who
+    // may keep a copy of it. A listing is settled by the view it was built
+    // for, whereas a single schema is settled by itself
     return sourcemeta::core::jsonrpc_make_success(
-        request_id, sourcemeta::core::mcp_make_resources_read_result(
-                        version, std::move(contents), {}));
+        request_id,
+        sourcemeta::core::mcp_make_resources_read_result(
+            version, std::move(contents),
+            {.ttl_ms = MCP_CACHE_TTL_MILLISECONDS,
+             .scope = resolution.is_public
+                          ? sourcemeta::core::MCPCacheScope::Public
+                          : sourcemeta::core::MCPCacheScope::Private}));
   }
 
   auto on_tools_call(const sourcemeta::core::MCPProtocolVersion version,
@@ -652,19 +787,106 @@ private:
     }
   }
 
-  auto on_message(const sourcemeta::core::MCPProtocolVersion version,
-                  sourcemeta::one::HTTPRequest &request,
-                  sourcemeta::one::HTTPResponse &response, std::string &&body,
-                  const sourcemeta::one::Authentication::Caller &caller)
-      -> void {
+  // What the newest revision adds to whatever a handler produced: the kind of
+  // result it is, and who produced it. Settled in one place, so that a handler
+  // answers its own question and nothing else
+  [[nodiscard]] auto
+  decorated(const sourcemeta::core::MCPProtocolVersion version,
+            sourcemeta::core::JSON envelope) const -> sourcemeta::core::JSON {
+    if (version != sourcemeta::core::MCPProtocolVersion::V_2026_07_28) {
+      return envelope;
+    }
+
+    auto *result{envelope.try_at("result")};
+    if (result == nullptr || !result->is_object()) {
+      return envelope;
+    }
+
+    const auto &parts{this->mcp_metadata_.at("advertisement")};
+    envelope.assign("result", sourcemeta::core::mcp_decorate_result(
+                                  version, std::move(*result),
+                                  sourcemeta::core::MCPImplementation{
+                                      .name = parts.at(5).to_string(),
+                                      .version = parts.at(6).to_string(),
+                                      .title = parts.at(7).to_string(),
+                                      .description = parts.at(8).to_string(),
+                                      .website_url = parts.at(9).to_string(),
+                                  }));
+    return envelope;
+  }
+
+  auto
+  on_message(const std::optional<sourcemeta::core::MCPProtocolVersion> served,
+             const std::string_view requested,
+             const std::span<const std::pair<std::string, std::string>> routing,
+             sourcemeta::one::HTTPRequest &request,
+             sourcemeta::one::HTTPResponse &response, std::string &&body,
+             const sourcemeta::one::Authentication::Caller &caller) -> void {
+    // A refusal decided before a revision was settled speaks in the one that
+    // predates the header, since there is nothing else to speak in
+    const auto version{
+        served.value_or(sourcemeta::core::MCPProtocolVersion::V_2025_03_26)};
+
     sourcemeta::core::JSON request_json{nullptr};
     try {
       request_json = sourcemeta::core::parse_json(body);
     } catch (const std::exception &) {
-      this->write_envelope(request, response, sourcemeta::core::HTTP_STATUS_OK,
-                           sourcemeta::core::jsonrpc_make_error_parse(),
-                           version);
+      // A body that cannot be read names no request either, so a revision
+      // this instance does not serve is still the first thing to say about it
+      if (!served.has_value()) {
+        this->write_envelope(
+            request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+            sourcemeta::core::mcp_make_error_unsupported_protocol_version(
+                sourcemeta::core::MCPProtocolVersion::V_2026_07_28, nullptr,
+                requested, MCP_SUPPORTED_VERSIONS),
+            version);
+        return;
+      }
+
+      this->write_envelope(
+          request, response,
+          version == sourcemeta::core::MCPProtocolVersion::V_2026_07_28
+              ? sourcemeta::core::HTTP_STATUS_BAD_REQUEST
+              : sourcemeta::core::HTTP_STATUS_OK,
+          mcp_parse_error(version), version);
       return;
+    }
+
+    // Held back until the body was read so that the refusal names the request
+    // it answers. A revision this instance does not serve leaves the request
+    // perfectly readable, so there is an identifier to echo and no excuse for
+    // leaving it out
+    if (!served.has_value()) {
+      this->write_envelope(
+          request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+          sourcemeta::core::mcp_make_error_unsupported_protocol_version(
+              sourcemeta::core::MCPProtocolVersion::V_2026_07_28,
+              sourcemeta::core::jsonrpc_request_id(request_json), requested,
+              MCP_SUPPORTED_VERSIONS),
+          version);
+      return;
+    }
+
+    // The fields beside the body are the request's own account of where it is
+    // going, and a component that routes on one while another acts on the
+    // other is the thing this prevents, so they agree before either is used
+    if (version == sourcemeta::core::MCPProtocolVersion::V_2026_07_28) {
+      std::vector<std::pair<sourcemeta::core::JSON::StringView,
+                            sourcemeta::core::JSON::StringView>>
+          fields;
+      fields.reserve(routing.size());
+      for (const auto &field : routing) {
+        fields.emplace_back(field.first, field.second);
+      }
+
+      const auto refusal{sourcemeta::core::mcp_validate_request_headers(
+          version, fields, request_json, MCP_SUPPORTED_VERSIONS)};
+      if (refusal.has_value()) {
+        this->write_envelope(request, response,
+                             mcp_error_status(version, refusal.value(), true),
+                             refusal.value(), version);
+        return;
+      }
     }
 
     if (sourcemeta::core::jsonrpc_is_batch(request_json)) {
@@ -734,9 +956,27 @@ private:
       return;
     }
 
-    auto envelope{this->process_one(version, request_json, caller)};
+    std::optional<sourcemeta::core::JSON> envelope;
+    try {
+      envelope = this->process_one(version, request_json, caller);
+      if (envelope.has_value()) {
+        envelope = this->decorated(version, std::move(envelope).value());
+      }
+    } catch (const std::exception &) {
+      // Whatever a handler would not build, the caller is still owed an answer
+      // that names the request it asked about
+      this->write_envelope(
+          request, response,
+          sourcemeta::core::HTTP_STATUS_INTERNAL_SERVER_ERROR,
+          sourcemeta::core::jsonrpc_make_error_internal(
+              sourcemeta::core::jsonrpc_request_id(request_json)),
+          version);
+      return;
+    }
+
     if (envelope.has_value()) {
-      this->write_envelope(request, response, sourcemeta::core::HTTP_STATUS_OK,
+      this->write_envelope(request, response,
+                           mcp_error_status(version, envelope.value(), false),
                            envelope.value(), version);
       return;
     }
@@ -767,7 +1007,9 @@ private:
     const auto *request_id{sourcemeta::core::jsonrpc_request_id(request_json)};
     assert(request_id != nullptr);
     const auto method{sourcemeta::core::jsonrpc_method(request_json)};
-    if (!sourcemeta::core::mcp_is_request_method(version, method)) {
+    // A method nothing here answers is missing rather than malformed, whether
+    // the revision never named it or named it and this instance declined it
+    if (!mcp_serves_method(version, method)) {
       return sourcemeta::core::jsonrpc_make_error_method_not_found(*request_id);
     }
     const auto view{caller.view()};
@@ -781,6 +1023,9 @@ private:
     }
     // Resolved once here, since a request reaches one method and placing the
     // caller again inside each of them would repeat the reading
+    if (method == sourcemeta::core::MCP_METHOD_SERVER_DISCOVER) {
+      return this->on_server_discover(version, request_json, view);
+    }
     if (method == sourcemeta::core::MCP_METHOD_INITIALIZE) {
       return this->on_initialize(request_json, view);
     }
@@ -788,7 +1033,10 @@ private:
       return this->on_tools_list(version, request_json, view);
     }
     if (method == sourcemeta::core::MCP_METHOD_RESOURCES_LIST) {
-      return this->on_resources_list(request_json, view);
+      return this->on_resources_list(version, request_json, view);
+    }
+    if (method == sourcemeta::core::MCP_METHOD_RESOURCES_TEMPLATES_LIST) {
+      return this->on_resource_templates_list(version, request_json, view);
     }
     if (method == sourcemeta::core::MCP_METHOD_RESOURCES_READ) {
       return this->on_resources_read(version, request_json, caller);
@@ -796,10 +1044,9 @@ private:
     if (method == sourcemeta::core::MCP_METHOD_TOOLS_CALL) {
       return this->on_tools_call(version, request_json, caller);
     }
-    if (this->metadata_for(view).defines(method)) {
-      return sourcemeta::core::jsonrpc_make_success(
-          *request_id, this->metadata_for(view).at(method));
-    }
+    // Everything the gate admits is answered above, and what remains is the
+    // liveness check, which carries nothing to answer with
+    assert(method == sourcemeta::core::MCP_METHOD_PING);
     return sourcemeta::core::jsonrpc_make_success_empty(*request_id);
   }
 

@@ -151,14 +151,16 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
-jsonpath "$.id" == null
-jsonpath "$.error.code" == -32003
+jsonpath "$.id" == 1
+jsonpath "$.error.code" == -32022
 jsonpath "$.error.message" == "Unsupported protocol version"
-jsonpath "$.error.data.current" == "2024-11-05"
-jsonpath "$.error.data.supported" count == 3
+jsonpath "$.error.data.requested" == "2024-11-05"
+jsonpath "$.error.data.supported" count == 4
 jsonpath "$.error.data.supported[0]" == "2025-03-26"
 jsonpath "$.error.data.supported[1]" == "2025-06-18"
 jsonpath "$.error.data.supported[2]" == "2025-11-25"
+jsonpath "$.error.data.supported[3]" == "2026-07-28"
+jsonpath "$.error.data.current" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
