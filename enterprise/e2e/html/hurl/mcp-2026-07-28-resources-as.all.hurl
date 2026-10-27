@@ -1,4 +1,4 @@
-# A schema can be read converted into a newer dialect
+# A schema can be read and converted into a newer dialect
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28

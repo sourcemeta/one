@@ -104,7 +104,7 @@ jsonpath "$.result.resources[12].uri" == "{{base}}/self/v1/schemas/api/schemas/m
 jsonpath "$.result.resources[12].name" == "Sourcemeta One Schema Metadata API Response"
 jsonpath "$.result.resources[12].description" == "The response format for the schema metadata API endpoint"
 jsonpath "$.result.resources[12].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[12].size" == 3452
+jsonpath "$.result.resources[12].size" == 3558
 jsonpath "$.result.resources[12].annotations.priority" == 0
 jsonpath "$.result.resources[13].uri" == "{{base}}/self/v1/schemas/api/schemas/output-error"
 jsonpath "$.result.resources[13].name" == "Sourcemeta One Schema Output Error"
@@ -582,7 +582,7 @@ jsonpath "$.result.resources[15].uri" == "{{base}}/self/v1/schemas/api/schemas/m
 jsonpath "$.result.resources[15].name" == "Sourcemeta One Schema Metadata API Response"
 jsonpath "$.result.resources[15].description" == "The response format for the schema metadata API endpoint"
 jsonpath "$.result.resources[15].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[15].size" == 3452
+jsonpath "$.result.resources[15].size" == 3558
 jsonpath "$.result.resources[15].annotations.priority" == 0
 jsonpath "$.result.resources[16].uri" == "{{base}}/self/v1/schemas/api/schemas/output-error"
 jsonpath "$.result.resources[16].name" == "Sourcemeta One Schema Output Error"
@@ -1043,7 +1043,7 @@ jsonpath "$.result.resources[13].uri" == "{{base}}/self/v1/schemas/api/schemas/m
 jsonpath "$.result.resources[13].name" == "Sourcemeta One Schema Metadata API Response"
 jsonpath "$.result.resources[13].description" == "The response format for the schema metadata API endpoint"
 jsonpath "$.result.resources[13].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[13].size" == 3452
+jsonpath "$.result.resources[13].size" == 3558
 jsonpath "$.result.resources[13].annotations.priority" == 0
 jsonpath "$.result.resources[14].uri" == "{{base}}/self/v1/schemas/api/schemas/output-error"
 jsonpath "$.result.resources[14].name" == "Sourcemeta One Schema Output Error"

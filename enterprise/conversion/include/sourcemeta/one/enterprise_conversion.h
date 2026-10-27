@@ -37,7 +37,7 @@ struct SchemaDialectSpelling {
 };
 
 // Every spelling of a dialect on the ladder that Blaze recognises
-inline constexpr std::array<SchemaDialectSpelling, 28> SCHEMA_DIALECT_SPELLINGS{
+inline constexpr std::array<SchemaDialectSpelling, 30> SCHEMA_DIALECT_SPELLINGS{
     {
         {.uri = "http://json-schema.org/draft-03/schema#",
          .dialect = SchemaDialect::Draft3},
@@ -92,11 +92,15 @@ inline constexpr std::array<SchemaDialectSpelling, 28> SCHEMA_DIALECT_SPELLINGS{
         // description is free to name any of them
         {.uri = "https://spec.openapis.org/oas/3.1/dialect/base",
          .dialect = SchemaDialect::OpenAPI31},
+        {.uri = "https://spec.openapis.org/oas/3.1/dialect/base#",
+         .dialect = SchemaDialect::OpenAPI31},
         {.uri = "https://spec.openapis.org/oas/3.1/dialect/2024-11-10",
          .dialect = SchemaDialect::OpenAPI31},
         {.uri = "https://spec.openapis.org/oas/3.1/dialect/2024-10-25",
          .dialect = SchemaDialect::OpenAPI31},
         {.uri = "https://spec.openapis.org/oas/3.2/dialect/2025-09-17",
+         .dialect = SchemaDialect::OpenAPI32},
+        {.uri = "https://spec.openapis.org/oas/3.2/dialect/2025-09-17#",
          .dialect = SchemaDialect::OpenAPI32},
     }};
 

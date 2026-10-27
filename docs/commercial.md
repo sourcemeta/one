@@ -83,9 +83,9 @@ OpenAPI 3.1 and 3.2 Schema Object dialects, through the `as` query parameter of
 the [schema endpoint](api.md#fetch) and the equivalent MCP resource. Teams keep
 authoring and reviewing schemas in the dialect they already have, while
 consumers whose tooling only understands a newer dialect, or expects an OpenAPI
-Schema Object, fetch the version they need. A meta-schema is left alone, as
-[restating the dialect one describes is not always
-safe](api.md#fetch).
+Schema Object, fetch the version they need. A conversion that reaches a
+meta-schema is [refused](api.md#fetch), as converting one would change the
+dialect it is written in without restating the dialect it describes.
 
 ## Standard Library
 
