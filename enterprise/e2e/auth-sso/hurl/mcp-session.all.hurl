@@ -473,8 +473,10 @@ jsonpath "$.error" not exists
 jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent" exists
 jsonpath "$.result.structuredContent.metaschema" == false
-jsonpath "$.result.structuredContent.conversions.*.mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions.*" count == 3
 jsonpath "$.result.structuredContent.conversions['2020-12'].mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions['openapi3.1'].mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions['openapi3.2'].mediaType" == "application/schema+json"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{mcp_schema}}
 ```

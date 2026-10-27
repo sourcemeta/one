@@ -146,8 +146,10 @@ private_metadata_schema: header "Link" regex "<([^>]+)>"
 jsonpath "$.private" == true
 jsonpath "$.path" == "/vault/secret"
 jsonpath "$.metaschema" == false
-jsonpath "$.conversions.*.mediaType" == "application/schema+json"
+jsonpath "$.conversions.*" count == 3
 jsonpath "$.conversions['2020-12'].mediaType" == "application/schema+json"
+jsonpath "$.conversions['openapi3.1'].mediaType" == "application/schema+json"
+jsonpath "$.conversions['openapi3.2'].mediaType" == "application/schema+json"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{private_metadata_schema}}
 ```
@@ -173,8 +175,10 @@ public_metadata_schema: header "Link" regex "<([^>]+)>"
 jsonpath "$.private" == false
 jsonpath "$.path" == "/open/string"
 jsonpath "$.metaschema" == false
-jsonpath "$.conversions.*.mediaType" == "application/schema+json"
+jsonpath "$.conversions.*" count == 3
 jsonpath "$.conversions['2020-12'].mediaType" == "application/schema+json"
+jsonpath "$.conversions['openapi3.1'].mediaType" == "application/schema+json"
+jsonpath "$.conversions['openapi3.2'].mediaType" == "application/schema+json"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{public_metadata_schema}}
 ```
@@ -228,8 +232,10 @@ jsonpath "$.error" not exists
 jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent.private" == true
 jsonpath "$.result.structuredContent.metaschema" == false
-jsonpath "$.result.structuredContent.conversions.*.mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions.*" count == 3
 jsonpath "$.result.structuredContent.conversions['2020-12'].mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions['openapi3.1'].mediaType" == "application/schema+json"
+jsonpath "$.result.structuredContent.conversions['openapi3.2'].mediaType" == "application/schema+json"
 
 POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/mcp/response
 ```

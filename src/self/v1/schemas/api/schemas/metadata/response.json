@@ -36,7 +36,15 @@
     "conversions": {
       "type": "object",
       "propertyNames": {
-        "enum": [ "draft4", "draft6", "draft7", "2019-09", "2020-12" ]
+        "enum": [
+          "draft4",
+          "draft6",
+          "draft7",
+          "2019-09",
+          "2020-12",
+          "openapi3.1",
+          "openapi3.2"
+        ]
       },
       "additionalProperties": {
         "type": "object",

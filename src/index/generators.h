@@ -321,7 +321,7 @@ private:
 };
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
-// A schema's closure, bundled and then converted into a newer official dialect
+// A schema's closure, bundled and then converted into a newer dialect
 template <sourcemeta::one::SchemaDialect Target> struct GenerateConversion {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
@@ -331,8 +331,7 @@ template <sourcemeta::one::SchemaDialect Target> struct GenerateConversion {
                       const sourcemeta::core::JSON &) -> void {
     assert(!action.dependencies.empty());
     const auto &resolver_entry{resolver.entry(action.data)};
-    assert(
-        sourcemeta::one::official_dialect(resolver_entry.dialect).has_value());
+    assert(sourcemeta::one::schema_dialect(resolver_entry.dialect).has_value());
     auto schema_option{
         sourcemeta::core::metapack_read_json(action.dependencies.front())};
     assert(schema_option.has_value());

@@ -440,14 +440,14 @@ struct GenerateExplorerSchemaMetadata {
     // costs, which for everything but the oldest dialect applies no rules at
     // all
     if (!conversions.empty()) {
-      const auto official{
-          sourcemeta::one::official_dialect(resolver_entry.dialect)};
-      assert(official.has_value());
+      const auto declared{
+          sourcemeta::one::schema_dialect(resolver_entry.dialect)};
+      assert(declared.has_value());
       auto bundle_option{
           sourcemeta::core::metapack_read_json(bundle_parsed.value())};
       assert(bundle_option.has_value());
       const auto target{
-          sourcemeta::one::dialect_conversions(official.value()).front()};
+          sourcemeta::one::dialect_conversions(declared.value()).front()};
       bool convertible{false};
       try {
         convertible = sourcemeta::one::convert_schema(

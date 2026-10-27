@@ -160,8 +160,8 @@ private:
         return;
       }
 
-      const auto declared{sourcemeta::one::declared_official_dialect(
-          self, schema.path.value())};
+      const auto declared{
+          sourcemeta::one::declared_schema_dialect(self, schema.path.value())};
       if (!declared.has_value()) {
         sourcemeta::one::json_error(
             request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
@@ -172,7 +172,7 @@ private:
         return;
       }
 
-      // Every schema on an official dialect has an artifact for every dialect
+      // Every schema on the upgrade ladder has an artifact for every dialect
       // newer than it, unless it is a meta-schema, which gets none
       if (sourcemeta::one::conversion_applies(declared.value(),
                                               target.value())) {

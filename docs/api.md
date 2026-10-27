@@ -400,8 +400,14 @@ meta-schema that a schema may declare.
     licensing](commercial.md).
 
 If the `as` query parameter is set, the schema is served converted into another
-official dialect: `draft4`, `draft6`, `draft7`, `2019-09`, or `2020-12`. A schema
-can be asked for in the official dialect it declares with
+dialect: `draft4`, `draft6`, `draft7`, `2019-09`, `2020-12`, `openapi3.1`, or
+`openapi3.2`. The upgrade path runs through the official JSON Schema dialects up
+to 2020-12 and carries on into the [OpenAPI
+3.1](https://spec.openapis.org/oas/v3.1.0.html#schema-object) and [OpenAPI
+3.2](https://spec.openapis.org/oas/v3.2.0.html#schema-object) Schema Object
+dialects, each of which is 2020-12 plus a vocabulary of its own, so a Draft 4
+schema can be asked for as `openapi3.2`. A schema can be asked for in the
+dialect it declares with
 [`$schema`](https://www.learnjsonschema.com/2020-12/core/schema/) or in any
 newer one, and the `conversions` property of its [metadata](#metadata) lists
 exactly the values it accepts.
@@ -427,9 +433,9 @@ exactly the values it accepts.
 
 A conversion is refused when the schema, or anything its references reach, is
 something a conversion cannot move: a meta-schema, or a schema on a dialect that
-is not one of the official ones. Because the closure travels with the schema,
-one such document anywhere in it is enough, and the `conversions` property
-reports none for that schema.
+is not one of the dialects on that path. Because the closure travels with the
+schema, one such document anywhere in it is enough, and the `conversions`
+property reports none for that schema.
 
 !!! warning "Why meta-schemas are not converted"
 

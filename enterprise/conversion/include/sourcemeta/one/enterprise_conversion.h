@@ -16,24 +16,28 @@
 
 namespace sourcemeta::one {
 
-// An official JSON Schema dialect, oldest first
+// A dialect on the upgrade ladder, oldest first. The official JSON Schema
+// dialects run up to 2020-12, and the OpenAPI Schema Object dialects carry on
+// from there, each being 2020-12 plus a vocabulary of its own
 enum class SchemaDialect : std::uint8_t {
   Draft3,
   Draft4,
   Draft6,
   Draft7,
   Draft201909,
-  Draft202012
+  Draft202012,
+  OpenAPI31,
+  OpenAPI32
 };
 
-// One way of writing the identifier of an official dialect
+// One way of writing the identifier of a dialect on the ladder
 struct SchemaDialectSpelling {
   std::string_view uri;
   SchemaDialect dialect;
 };
 
-// Every spelling of an official dialect that Blaze recognises
-inline constexpr std::array<SchemaDialectSpelling, 24> SCHEMA_DIALECT_SPELLINGS{
+// Every spelling of a dialect on the ladder that Blaze recognises
+inline constexpr std::array<SchemaDialectSpelling, 30> SCHEMA_DIALECT_SPELLINGS{
     {
         {.uri = "http://json-schema.org/draft-03/schema#",
          .dialect = SchemaDialect::Draft3},
@@ -83,15 +87,31 @@ inline constexpr std::array<SchemaDialectSpelling, 24> SCHEMA_DIALECT_SPELLINGS{
          .dialect = SchemaDialect::Draft202012},
         {.uri = "http://json-schema.org/draft/2020-12/schema#",
          .dialect = SchemaDialect::Draft202012},
+        // The OpenAPI Initiative publishes a dated revision of the v3.1
+        // dialect alongside the undated one the specification names, and a
+        // description is free to name any of them
+        {.uri = "https://spec.openapis.org/oas/3.1/dialect/base",
+         .dialect = SchemaDialect::OpenAPI31},
+        {.uri = "https://spec.openapis.org/oas/3.1/dialect/base#",
+         .dialect = SchemaDialect::OpenAPI31},
+        {.uri = "https://spec.openapis.org/oas/3.1/dialect/2024-11-10",
+         .dialect = SchemaDialect::OpenAPI31},
+        {.uri = "https://spec.openapis.org/oas/3.1/dialect/2024-10-25",
+         .dialect = SchemaDialect::OpenAPI31},
+        {.uri = "https://spec.openapis.org/oas/3.2/dialect/2025-09-17",
+         .dialect = SchemaDialect::OpenAPI32},
+        {.uri = "https://spec.openapis.org/oas/3.2/dialect/2025-09-17#",
+         .dialect = SchemaDialect::OpenAPI32},
     }};
 
 // Every dialect a schema can be converted into, oldest first
-inline constexpr std::array<SchemaDialect, 5> SCHEMA_CONVERSION_TARGETS{
+inline constexpr std::array<SchemaDialect, 7> SCHEMA_CONVERSION_TARGETS{
     {SchemaDialect::Draft4, SchemaDialect::Draft6, SchemaDialect::Draft7,
-     SchemaDialect::Draft201909, SchemaDialect::Draft202012}};
+     SchemaDialect::Draft201909, SchemaDialect::Draft202012,
+     SchemaDialect::OpenAPI31, SchemaDialect::OpenAPI32}};
 
-// The official dialect a declared dialect names, in any spelling of it
-[[nodiscard]] inline auto official_dialect(const std::string_view uri)
+// The dialect on the ladder a declared dialect names, in any spelling of it
+[[nodiscard]] inline auto schema_dialect(const std::string_view uri)
     -> std::optional<SchemaDialect> {
   const auto match{std::ranges::find(SCHEMA_DIALECT_SPELLINGS, uri,
                                      &SchemaDialectSpelling::uri)};
@@ -118,6 +138,10 @@ inline constexpr std::array<SchemaDialect, 5> SCHEMA_CONVERSION_TARGETS{
       return "2019-09";
     case SchemaDialect::Draft202012:
       return "2020-12";
+    case SchemaDialect::OpenAPI31:
+      return "openapi3.1";
+    case SchemaDialect::OpenAPI32:
+      return "openapi3.2";
   }
 
   std::unreachable();
@@ -139,12 +163,16 @@ inline constexpr std::array<SchemaDialect, 5> SCHEMA_CONVERSION_TARGETS{
       return "https://json-schema.org/draft/2019-09/schema";
     case SchemaDialect::Draft202012:
       return "https://json-schema.org/draft/2020-12/schema";
+    case SchemaDialect::OpenAPI31:
+      return "https://spec.openapis.org/oas/3.1/dialect/base";
+    case SchemaDialect::OpenAPI32:
+      return "https://spec.openapis.org/oas/3.2/dialect/2025-09-17";
   }
 
   std::unreachable();
 }
 
-// The base dialect of an official dialect
+// The base dialect of a dialect on the ladder
 [[nodiscard]] inline auto conversion_base_dialect(const SchemaDialect dialect)
     -> sourcemeta::core::SchemaBaseDialect {
   switch (dialect) {
@@ -159,6 +187,10 @@ inline constexpr std::array<SchemaDialect, 5> SCHEMA_CONVERSION_TARGETS{
     case SchemaDialect::Draft201909:
       return sourcemeta::core::SchemaBaseDialect::JSON_SCHEMA_2019_09;
     case SchemaDialect::Draft202012:
+    // An OpenAPI Schema Object dialect declares the vocabularies of 2020-12
+    // alongside one of its own, so 2020-12 is what it rests on
+    case SchemaDialect::OpenAPI31:
+    case SchemaDialect::OpenAPI32:
       return sourcemeta::core::SchemaBaseDialect::JSON_SCHEMA_2020_12;
   }
 
@@ -186,10 +218,12 @@ inline constexpr std::array<SchemaDialect, 5> SCHEMA_CONVERSION_TARGETS{
     return true;
   }
 
-  const auto official{official_dialect(dialect)};
-  return declares_vocabularies && official.has_value() &&
-         (official.value() == SchemaDialect::Draft201909 ||
-          official.value() == SchemaDialect::Draft202012);
+  const auto declared{schema_dialect(dialect)};
+  return declares_vocabularies && declared.has_value() &&
+         (declared.value() == SchemaDialect::Draft201909 ||
+          declared.value() == SchemaDialect::Draft202012 ||
+          declared.value() == SchemaDialect::OpenAPI31 ||
+          declared.value() == SchemaDialect::OpenAPI32);
 }
 
 // Whether a schema declaring a dialect can be converted into another
@@ -225,13 +259,13 @@ inline constexpr std::array<SchemaDialect, 5> SCHEMA_CONVERSION_TARGETS{
 [[nodiscard]] inline auto conversion_selection(const std::string_view dialect,
                                                const bool is_metaschema)
     -> std::uint32_t {
-  const auto official{official_dialect(dialect)};
-  if (is_metaschema || !official.has_value()) {
+  const auto declared{schema_dialect(dialect)};
+  if (is_metaschema || !declared.has_value()) {
     return 0;
   }
 
   std::uint32_t result{0};
-  for (const auto target : dialect_conversions(official.value())) {
+  for (const auto target : dialect_conversions(declared.value())) {
     result |= std::uint32_t{1} << conversion_selector(target);
   }
 

@@ -25,6 +25,10 @@ auto convert_target(const sourcemeta::one::SchemaDialect dialect)
       return sourcemeta::blaze::ConvertTarget::Draft201909;
     case sourcemeta::one::SchemaDialect::Draft202012:
       return sourcemeta::blaze::ConvertTarget::Draft202012;
+    case sourcemeta::one::SchemaDialect::OpenAPI31:
+      return sourcemeta::blaze::ConvertTarget::OpenAPI31;
+    case sourcemeta::one::SchemaDialect::OpenAPI32:
+      return sourcemeta::blaze::ConvertTarget::OpenAPI32;
     case sourcemeta::one::SchemaDialect::Draft3:
       break;
   }
@@ -40,12 +44,12 @@ namespace sourcemeta::one {
 auto conversions_metadata(const std::string_view dialect,
                           const bool is_metaschema) -> sourcemeta::core::JSON {
   auto result{sourcemeta::core::JSON::make_object()};
-  const auto official{official_dialect(dialect)};
-  if (is_metaschema || !official.has_value()) {
+  const auto declared{schema_dialect(dialect)};
+  if (is_metaschema || !declared.has_value()) {
     return result;
   }
 
-  for (const auto target : dialect_conversions(official.value())) {
+  for (const auto target : dialect_conversions(declared.value())) {
     auto conversion{sourcemeta::core::JSON::make_object()};
     conversion.assign("mediaType",
                       sourcemeta::core::JSON{"application/schema+json"});
