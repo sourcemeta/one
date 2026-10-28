@@ -188,11 +188,9 @@ contain the actual schema definitions that power your instance.
 !!! note "OpenAPI 3.0 collections"
 
     [OpenAPI 3.0](https://spec.openapis.org/oas/v3.0.4.html#schema-object)
-    Schema Objects do not support `$schema` or `$id`. Set `defaultDialect` to
+    Schema Objects do not support `$schema`. Set `defaultDialect` to
     `tag:spec.openapis.org,2024-10-18:oas/3.0/dialect`, or to the equivalent
-    `tag:spec.openapis.org,2021-09-28:oas/3.0/dialect`. Such schemas are served
-    as written, with the dialect in a `Link` header instead, and without an
-    identifier, so consumers that save one must track its URL themselves.
+    `tag:spec.openapis.org,2021-09-28:oas/3.0/dialect`.
 
 !!! note "Why ingested schemas get a new `$id`"
 
