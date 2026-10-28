@@ -8,6 +8,7 @@
 #include <cassert>     // assert
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t, std::uint32_t
+#include <iterator>    // std::ranges::distance
 #include <optional>    // std::optional, std::nullopt
 #include <span>        // std::span
 #include <string>      // std::string
@@ -16,9 +17,13 @@
 
 namespace sourcemeta::one {
 
-// A dialect on the upgrade ladder, oldest first. The official JSON Schema
+// A dialect this catalog can convert between. The official JSON Schema
 // dialects run up to 2020-12, and the OpenAPI Schema Object dialects carry on
-// from there, each being 2020-12 plus a vocabulary of its own
+// from there, each being 2020-12 plus a vocabulary of its own.
+//
+// The order of these members carries no meaning. What a dialect converts into
+// is settled by whether it appears in the list of targets below, and where,
+// so a dialect may be added here at any position
 enum class SchemaDialect : std::uint8_t {
   Draft3,
   Draft4,
@@ -104,7 +109,9 @@ inline constexpr std::array<SchemaDialectSpelling, 30> SCHEMA_DIALECT_SPELLINGS{
          .dialect = SchemaDialect::OpenAPI32},
     }};
 
-// Every dialect a schema can be converted into, oldest first
+// Every dialect a schema can be converted into, oldest first. This is the one
+// place the upgrade order is written down, and a dialect left out of it is one
+// nothing converts into
 inline constexpr std::array<SchemaDialect, 7> SCHEMA_CONVERSION_TARGETS{
     {SchemaDialect::Draft4, SchemaDialect::Draft6, SchemaDialect::Draft7,
      SchemaDialect::Draft201909, SchemaDialect::Draft202012,
@@ -197,14 +204,33 @@ inline constexpr std::array<SchemaDialect, 7> SCHEMA_CONVERSION_TARGETS{
   std::unreachable();
 }
 
+// Where a dialect sits among the targets, which is nothing at all for one that
+// is only ever converted from
+[[nodiscard]] inline auto conversion_rung(const SchemaDialect dialect)
+    -> std::optional<std::size_t> {
+  const auto match{std::ranges::find(SCHEMA_CONVERSION_TARGETS, dialect)};
+  if (match == SCHEMA_CONVERSION_TARGETS.cend()) {
+    return std::nullopt;
+  }
+
+  return static_cast<std::size_t>(
+      std::ranges::distance(SCHEMA_CONVERSION_TARGETS.cbegin(), match));
+}
+
 // The dialects a schema declaring a dialect can be converted into, oldest
 // first, including the one it declares, as what it references may still be
-// older than that. Nothing converts into the oldest dialect
+// older than that.
+//
+// A dialect nothing converts into is one the upgrade order starts from rather
+// than passes through, so every target is newer than it and all of them are
+// reachable. More than one dialect can start the order this way, which is why
+// they are not ranked against each other: Draft 3 and the OpenAPI 3.0 Schema
+// Object both convert into Draft 4 and upwards, and neither converts into the
+// other
 [[nodiscard]] inline auto dialect_conversions(const SchemaDialect dialect)
     -> std::span<const SchemaDialect> {
   return std::span<const SchemaDialect>{SCHEMA_CONVERSION_TARGETS}.subspan(
-      dialect == SchemaDialect::Draft3 ? 0
-                                       : static_cast<std::size_t>(dialect) - 1);
+      conversion_rung(dialect).value_or(0));
 }
 
 // Whether a schema is a meta-schema, which is what its metadata reports. A
@@ -246,11 +272,13 @@ inline constexpr std::array<SchemaDialect, 7> SCHEMA_CONVERSION_TARGETS{
   return *match;
 }
 
-// The selection bit of a conversion into a dialect
+// The selection bit of a conversion into a dialect, which a dialect nothing
+// converts into has none of
 [[nodiscard]] inline auto conversion_selector(const SchemaDialect dialect)
     -> std::uint8_t {
-  assert(dialect != SchemaDialect::Draft3);
-  return static_cast<std::uint8_t>(static_cast<std::uint8_t>(dialect) - 1);
+  const auto rung{conversion_rung(dialect)};
+  assert(rung.has_value());
+  return static_cast<std::uint8_t>(rung.value());
 }
 
 // The selection bits of every conversion a schema declaring a dialect gets.
