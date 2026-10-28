@@ -760,7 +760,7 @@ struct GenerateEditor {
 static auto generate_blaze_template(
     const std::filesystem::path &destination,
     const sourcemeta::one::BuildPlan::Action::Dependencies &dependencies,
-    const std::string_view identifier, const std::string_view dialect,
+    const std::string_view schema_identifier, const std::string_view dialect,
     const sourcemeta::one::BuildDynamicCallback &callback,
     sourcemeta::one::Resolver &resolver, const sourcemeta::blaze::Mode mode)
     -> void {
@@ -772,11 +772,11 @@ static auto generate_blaze_template(
       sourcemeta::core::SchemaFrame::Mode::References,
       contents,
       sourcemeta::core::schema_walker,
-      [&callback, &resolver](const auto subidentifier) {
-        return resolver(subidentifier, callback);
+      [&callback, &resolver](const auto identifier) {
+        return resolver(identifier, callback);
       },
       dialect,
-      identifier};
+      schema_identifier};
   const auto schema_template{sourcemeta::blaze::compile(
       contents, sourcemeta::core::schema_walker,
       [&callback, &resolver](const auto identifier) {
