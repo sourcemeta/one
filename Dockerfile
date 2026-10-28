@@ -23,7 +23,6 @@ COPY test/cli /source/test/cli
 COPY test/unit /source/test/unit
 COPY test/js /source/test/js
 
-
 ARG SOURCEMETA_ONE_BUILD_TYPE=Release
 ARG SOURCEMETA_ONE_REVISION=
 ARG SOURCEMETA_ONE_PARALLEL=2

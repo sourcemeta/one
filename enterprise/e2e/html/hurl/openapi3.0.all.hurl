@@ -496,7 +496,6 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
   ]
 }
 
-
 # No conversion is offered, since nothing upgrades into an OpenAPI 3.0 Schema
 # Object and it is not a conversion source either. Asking for one is refused on
 # that ground rather than for carrying a dialect of the catalog's own, which it
