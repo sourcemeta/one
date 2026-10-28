@@ -116,7 +116,6 @@ way](evolution.md#redirecting-consumers-when-schemas-move). For example:
       v1.json
 ```
 
-
 *The only thing we strongly recommend at this stage is the use of a version in
 every schema path.* A JSON Schema is uniquely identified by its URI, which
 means the version must be part of the file path. If you create

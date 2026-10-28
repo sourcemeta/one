@@ -1,0 +1,46 @@
+{
+  "title": "Product",
+  "description": "A product that exercises the keywords OpenAPI 3.0 adds to Draft 4",
+  "type": "object",
+  "required": [ "id", "kind" ],
+  "properties": {
+    "id": {
+      "$ref": "./identifier"
+    },
+    "kind": {
+      "enum": [ "book", "film" ]
+    },
+    "price": {
+      "type": "number",
+      "minimum": 0,
+      "exclusiveMinimum": true
+    },
+    "label": {
+      "type": "string",
+      "nullable": true
+    },
+    "legacy": {
+      "type": "boolean",
+      "deprecated": true
+    },
+    "slug": {
+      "type": "string",
+      "readOnly": true
+    }
+  },
+  "additionalProperties": false,
+  "discriminator": {
+    "propertyName": "kind"
+  },
+  "externalDocs": {
+    "url": "https://example.com/products",
+    "description": "Product documentation"
+  },
+  "example": {
+    "id": "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9",
+    "kind": "book"
+  },
+  "xml": {
+    "name": "Product"
+  }
+}

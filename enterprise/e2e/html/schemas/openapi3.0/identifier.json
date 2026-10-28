@@ -1,0 +1,7 @@
+{
+  "title": "Identifier",
+  "description": "A product identifier, which cannot declare a dialect of its own",
+  "type": "string",
+  "format": "uuid",
+  "example": "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9"
+}

@@ -98,33 +98,33 @@ jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 1
 variable "text" jsonpath "$.results" count == 1
 jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
-jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
+jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.results[0].title" == "My Object"
 variable "text" jsonpath "$.results[0].title" == "My Object"
 jsonpath "$.result.structuredContent.results[0].description" == "An Object Example"
 variable "text" jsonpath "$.results[0].description" == "An Object Example"
 jsonpath "$.result.structuredContent.results[0].priority" == 50
-jsonpath "$.result.structuredContent.results[0].health" == 67
 variable "text" jsonpath "$.results[0].priority" == 50
+jsonpath "$.result.structuredContent.results[0].health" == 67
+variable "text" jsonpath "$.results[0].health" == 67
+jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
+variable "text" jsonpath "$.results[0].path" == "/test/object"
+jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
+variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.results[0].title" == "My Object"
+variable "text" jsonpath "$.results[0].title" == "My Object"
+jsonpath "$.result.structuredContent.results[0].description" == "An Object Example"
+variable "text" jsonpath "$.results[0].description" == "An Object Example"
+jsonpath "$.result.structuredContent.results[0].priority" == 50
+variable "text" jsonpath "$.results[0].priority" == 50
+jsonpath "$.result.structuredContent.results[0].health" == 67
 variable "text" jsonpath "$.results[0].health" == 67
 jsonpath "$.result.resultType" == "complete"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
-jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
-jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
-variable "text" jsonpath "$.results[0].path" == "/test/object"
-variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
-jsonpath "$.result.structuredContent.results[0].title" == "My Object"
-variable "text" jsonpath "$.results[0].title" == "My Object"
-jsonpath "$.result.structuredContent.results[0].description" == "An Object Example"
-variable "text" jsonpath "$.results[0].description" == "An Object Example"
-jsonpath "$.result.structuredContent.results[0].priority" == 50
-jsonpath "$.result.structuredContent.results[0].health" == 67
-variable "text" jsonpath "$.results[0].priority" == 50
-variable "text" jsonpath "$.results[0].health" == 67
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -430,25 +430,25 @@ jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 1
 variable "text" jsonpath "$.results" count == 1
 jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
-jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
+jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.results[0].priority" == 50
-jsonpath "$.result.structuredContent.results[0].health" == 67
 variable "text" jsonpath "$.results[0].priority" == 50
+jsonpath "$.result.structuredContent.results[0].health" == 67
+variable "text" jsonpath "$.results[0].health" == 67
+jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
+variable "text" jsonpath "$.results[0].path" == "/test/object"
+jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
+variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.results[0].priority" == 50
+variable "text" jsonpath "$.results[0].priority" == 50
+jsonpath "$.result.structuredContent.results[0].health" == 67
 variable "text" jsonpath "$.results[0].health" == 67
 jsonpath "$.result.resultType" == "complete"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
-jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
-jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
-variable "text" jsonpath "$.results[0].path" == "/test/object"
-variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
-jsonpath "$.result.structuredContent.results[0].priority" == 50
-jsonpath "$.result.structuredContent.results[0].health" == 67
-variable "text" jsonpath "$.results[0].priority" == 50
-variable "text" jsonpath "$.results[0].health" == 67
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -2705,25 +2705,25 @@ jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 1
 variable "text" jsonpath "$.results" count == 1
 jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
-jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
+jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.results[0].priority" == 50
-jsonpath "$.result.structuredContent.results[0].health" == 67
 variable "text" jsonpath "$.results[0].priority" == 50
+jsonpath "$.result.structuredContent.results[0].health" == 67
+variable "text" jsonpath "$.results[0].health" == 67
+jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
+variable "text" jsonpath "$.results[0].path" == "/test/object"
+jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
+variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.results[0].priority" == 50
+variable "text" jsonpath "$.results[0].priority" == 50
+jsonpath "$.result.structuredContent.results[0].health" == 67
 variable "text" jsonpath "$.results[0].health" == 67
 jsonpath "$.result.resultType" == "complete"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
-jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
-jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
-variable "text" jsonpath "$.results[0].path" == "/test/object"
-variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
-jsonpath "$.result.structuredContent.results[0].priority" == 50
-jsonpath "$.result.structuredContent.results[0].health" == 67
-variable "text" jsonpath "$.results[0].priority" == 50
-variable "text" jsonpath "$.results[0].health" == 67
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

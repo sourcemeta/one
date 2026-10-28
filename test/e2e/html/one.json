@@ -85,6 +85,14 @@
           "baseUri": "https://example.com/openapi",
           "path": "./schemas/test/openapi",
           "defaultDialect": "https://spec.openapis.org/oas/3.1/dialect/base"
+        },
+        "openapi3.0": {
+          "baseUri": "https://example.com/openapi3.0",
+          "path": "./schemas/test/openapi3.0",
+          "defaultDialect": "tag:spec.openapis.org,2024-10-18:oas/3.0/dialect",
+          "lint": {
+            "exclude": [ "top_level_examples" ]
+          }
         }
       }
     }

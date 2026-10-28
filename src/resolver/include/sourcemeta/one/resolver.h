@@ -86,6 +86,12 @@ public:
 
   [[nodiscard]] auto entry(std::string_view identifier) const -> const Entry &;
 
+  // The dialect this instance serves the given schema as, or nothing at all
+  // for a schema it does not serve. A schema whose dialect reserves no keyword
+  // to declare one carries it nowhere else
+  [[nodiscard]] auto dialect_of(std::string_view identifier) const
+      -> std::string_view;
+
   // Whether any schema in the catalog declares the given URI as its dialect
   [[nodiscard]] auto is_dialect(std::string_view uri) const -> bool;
 

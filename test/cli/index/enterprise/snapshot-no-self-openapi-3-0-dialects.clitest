@@ -1,0 +1,141 @@
+MAKE DIRECTORY dated
+MAKE DIRECTORY original
+
+WRITE dated/product.json UNTIL EOF
+{
+  "title": "Product",
+  "description": "A Schema Object that declares neither a dialect nor an identifier",
+  "type": "object",
+  "properties": {
+    "price": {
+      "type": "number",
+      "minimum": 0,
+      "exclusiveMinimum": true
+    },
+    "label": {
+      "type": "string",
+      "nullable": true
+    }
+  }
+}
+EOF
+
+WRITE original/product.json UNTIL EOF
+{
+  "title": "Product",
+  "description": "The same, under the dialect URI that the older revision minted",
+  "type": "object",
+  "properties": {
+    "price": {
+      "type": "number",
+      "minimum": 0,
+      "exclusiveMinimum": true
+    },
+    "label": {
+      "type": "string",
+      "nullable": true
+    }
+  }
+}
+EOF
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "dated": {
+      "path": "./dated",
+      "defaultDialect": "tag:spec.openapis.org,2024-10-18:oas/3.0/dialect",
+      "lint": {
+        "exclude": [ "top_level_examples" ]
+      }
+    },
+    "original": {
+      "path": "./original",
+      "defaultDialect": "tag:spec.openapis.org,2021-09-28:oas/3.0/dialect",
+      "lint": {
+        "exclude": [ "top_level_examples" ]
+      }
+    }
+  }
+}
+EOF
+RUN one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+DROP LINES MATCHING '^[12]> \([ 0-9]+%\) ' IN log_1.txt
+DROP LINES CONTAINING $ONE_PREFIX IN log_1.txt
+REPLACE MATCHING ' \(#[0-9]+\)' WITH '' IN log_1.txt
+REPLACE $CWD WITH '[CWD]' IN log_1.txt
+REPLACE $EDITION WITH '[EDITION]' IN log_1.txt
+REPLACE $VERSION WITH '[VERSION]' IN log_1.txt
+SORT log_1.txt
+WRITE expected_log_1.txt UNTIL EOF
+2> Detecting: [CWD]/dated/product.json
+2> Detecting: [CWD]/original/product.json
+2> Sourcemeta One [EDITION] v[VERSION]
+2> Using configuration: [CWD]/one.json
+2> Writing output to: [CWD]/output
+EOF
+COMPARE log_1.txt AGAINST expected_log_1.txt
+
+TREE output INTO manifest.txt
+DROP LINES MATCHING '^\./schemas/self(/.*)?$' IN manifest.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN manifest.txt
+
+WRITE expected.txt UNTIL EOF
+./authentication.bin
+./configuration.json
+./explorer
+./explorer/public
+./explorer/public/%
+./explorer/public/%/directory.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/dated
+./explorer/public/dated/%
+./explorer/public/dated/%/directory.metapack
+./explorer/public/dated/product
+./explorer/public/dated/product/%
+./explorer/public/dated/product/%/dependents.metapack
+./explorer/public/dated/product/%/schema.metapack
+./explorer/public/original
+./explorer/public/original/%
+./explorer/public/original/%/directory.metapack
+./explorer/public/original/product
+./explorer/public/original/product/%
+./explorer/public/original/product/%/dependents.metapack
+./explorer/public/original/product/%/schema.metapack
+./routes.bin
+./schemas
+./schemas/dated
+./schemas/dated/product
+./schemas/dated/product/%
+./schemas/dated/product/%/blaze-exhaustive.metapack
+./schemas/dated/product/%/blaze-fast.metapack
+./schemas/dated/product/%/bundle.metapack
+./schemas/dated/product/%/dependencies.metapack
+./schemas/dated/product/%/editor.metapack
+./schemas/dated/product/%/health.metapack
+./schemas/dated/product/%/locations.metapack
+./schemas/dated/product/%/positions.metapack
+./schemas/dated/product/%/schema.metapack
+./schemas/dated/product/%/stats.metapack
+./schemas/original
+./schemas/original/product
+./schemas/original/product/%
+./schemas/original/product/%/blaze-exhaustive.metapack
+./schemas/original/product/%/blaze-fast.metapack
+./schemas/original/product/%/bundle.metapack
+./schemas/original/product/%/dependencies.metapack
+./schemas/original/product/%/editor.metapack
+./schemas/original/product/%/health.metapack
+./schemas/original/product/%/locations.metapack
+./schemas/original/product/%/positions.metapack
+./schemas/original/product/%/schema.metapack
+./schemas/original/product/%/stats.metapack
+./state.bin
+./version.json
+EOF
+
+COMPARE manifest.txt AGAINST expected.txt

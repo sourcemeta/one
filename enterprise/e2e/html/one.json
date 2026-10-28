@@ -10,6 +10,15 @@
         ]
       }
     },
+    "openapi3.0": {
+      "title": "OpenAPI 3.0",
+      "description": "Schemas that take their dialect from this collection, since they cannot declare one",
+      "path": "./schemas/openapi3.0",
+      "defaultDialect": "tag:spec.openapis.org,2024-10-18:oas/3.0/dialect",
+      "lint": {
+        "exclude": [ "top_level_examples" ]
+      }
+    },
     "twins": {
       "title": "Twins",
       "description": "Schemas whose base name collides with a sibling directory",

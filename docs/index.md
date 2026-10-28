@@ -88,6 +88,7 @@ service whether or not for a fee, each require a
   [documentation](api.md) to learn more
 - :octicons-versions-16: __JSON Schema Compatibility__ Full support for JSON
   Schema Draft 3, Draft 4, Draft 6, Draft 7, 2019-09, and 2020-12, the [OpenAPI
+  3.0](https://spec.openapis.org/oas/v3.0.4.html#schema-object), [OpenAPI
   3.1](https://spec.openapis.org/oas/v3.1.0.html#schema-object) and [OpenAPI
   3.2](https://spec.openapis.org/oas/v3.2.0.html#schema-object) Schema Object
   dialects, plus `format` validation, custom meta-schemas, [Standard Output

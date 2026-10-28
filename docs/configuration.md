@@ -185,6 +185,13 @@ contain the actual schema definitions that power your instance.
 | `/x-sourcemeta-one:alert`      | String  | No  | N/A | When set, provide a human-readable alert on both the API and the HTML explorer for every schema in the collection. This is useful to provide any important message to consumers. The web explorer renders this as Markdown |
 | `/x-sourcemeta-one:priority`      | Integer  | No  | `50` | A hint, from `0` (least important) to `100` (most important), that signals the relative importance of this collection compared to others in the same instance. Consumers may use this to rank or filter collections |
 
+!!! note "OpenAPI 3.0 collections"
+
+    [OpenAPI 3.0](https://spec.openapis.org/oas/v3.0.4.html#schema-object)
+    Schema Objects do not support `$schema`. Set `defaultDialect` to
+    `tag:spec.openapis.org,2024-10-18:oas/3.0/dialect`, or to the equivalent
+    `tag:spec.openapis.org,2021-09-28:oas/3.0/dialect`.
+
 !!! note "Why ingested schemas get a new `$id`"
 
     Sourcemeta One always serves a schema under an identifier rooted at the

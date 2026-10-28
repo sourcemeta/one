@@ -122,15 +122,15 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 148
-variable "text" jsonpath "$.schemas" == 148
-jsonpath "$.result.structuredContent.entries" count == 4
+jsonpath "$.result.structuredContent.schemas" == 151
+variable "text" jsonpath "$.schemas" == 151
+jsonpath "$.result.structuredContent.entries" count == 5
 jsonpath "$.result.structuredContent.private" == false
-variable "text" jsonpath "$.entries" count == 4
+variable "text" jsonpath "$.entries" count == 5
 variable "text" jsonpath "$.private" == false
 jsonpath "$.result.structuredContent.entries[0].name" == "no-blaze"
-jsonpath "$.result.structuredContent.entries[0].private" == false
 variable "text" jsonpath "$.entries[0].name" == "no-blaze"
+jsonpath "$.result.structuredContent.entries[0].private" == false
 variable "text" jsonpath "$.entries[0].private" == false
 jsonpath "$.result.structuredContent.entries[0].type" == "directory"
 variable "text" jsonpath "$.entries[0].type" == "directory"
@@ -140,50 +140,66 @@ jsonpath "$.result.structuredContent.entries[0].schemas" == 2
 variable "text" jsonpath "$.entries[0].schemas" == 2
 jsonpath "$.result.structuredContent.entries[0].path" == "/no-blaze/"
 variable "text" jsonpath "$.entries[0].path" == "/no-blaze/"
-jsonpath "$.result.structuredContent.entries[1].name" == "self"
+jsonpath "$.result.structuredContent.entries[1].name" == "openapi3.0"
+variable "text" jsonpath "$.entries[1].name" == "openapi3.0"
 jsonpath "$.result.structuredContent.entries[1].private" == false
-variable "text" jsonpath "$.entries[1].name" == "self"
 variable "text" jsonpath "$.entries[1].private" == false
-jsonpath "$.result.structuredContent.entries[1].title" == "Self"
-variable "text" jsonpath "$.entries[1].title" == "Self"
-jsonpath "$.result.structuredContent.entries[1].description" == "The schemas that define the current version of this instance"
-variable "text" jsonpath "$.entries[1].description" == "The schemas that define the current version of this instance"
+jsonpath "$.result.structuredContent.entries[1].title" == "OpenAPI 3.0"
+variable "text" jsonpath "$.entries[1].title" == "OpenAPI 3.0"
+jsonpath "$.result.structuredContent.entries[1].description" == "Schemas that take their dialect from this collection, since they cannot declare one"
+variable "text" jsonpath "$.entries[1].description" == "Schemas that take their dialect from this collection, since they cannot declare one"
 jsonpath "$.result.structuredContent.entries[1].type" == "directory"
 variable "text" jsonpath "$.entries[1].type" == "directory"
-jsonpath "$.result.structuredContent.entries[1].health" == 99
-variable "text" jsonpath "$.entries[1].health" == 99
-jsonpath "$.result.structuredContent.entries[1].schemas" == 67
-variable "text" jsonpath "$.entries[1].schemas" == 67
-jsonpath "$.result.structuredContent.entries[1].path" == "/self/"
-variable "text" jsonpath "$.entries[1].path" == "/self/"
-jsonpath "$.result.structuredContent.entries[2].name" == "test"
+jsonpath "$.result.structuredContent.entries[1].health" == 67
+variable "text" jsonpath "$.entries[1].health" == 67
+jsonpath "$.result.structuredContent.entries[1].schemas" == 3
+variable "text" jsonpath "$.entries[1].schemas" == 3
+jsonpath "$.result.structuredContent.entries[1].path" == "/openapi3.0/"
+variable "text" jsonpath "$.entries[1].path" == "/openapi3.0/"
+jsonpath "$.result.structuredContent.entries[2].name" == "self"
+variable "text" jsonpath "$.entries[2].name" == "self"
 jsonpath "$.result.structuredContent.entries[2].private" == false
-variable "text" jsonpath "$.entries[2].name" == "test"
 variable "text" jsonpath "$.entries[2].private" == false
+jsonpath "$.result.structuredContent.entries[2].title" == "Self"
+variable "text" jsonpath "$.entries[2].title" == "Self"
+jsonpath "$.result.structuredContent.entries[2].description" == "The schemas that define the current version of this instance"
+variable "text" jsonpath "$.entries[2].description" == "The schemas that define the current version of this instance"
 jsonpath "$.result.structuredContent.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].type" == "directory"
-jsonpath "$.result.structuredContent.entries[2].health" == 31
-variable "text" jsonpath "$.entries[2].health" == 31
-jsonpath "$.result.structuredContent.entries[2].schemas" == 77
-variable "text" jsonpath "$.entries[2].schemas" == 77
-jsonpath "$.result.structuredContent.entries[2].path" == "/test/"
-variable "text" jsonpath "$.entries[2].path" == "/test/"
-jsonpath "$.result.structuredContent.entries[3].name" == "twins"
+jsonpath "$.result.structuredContent.entries[2].health" == 99
+variable "text" jsonpath "$.entries[2].health" == 99
+jsonpath "$.result.structuredContent.entries[2].schemas" == 67
+variable "text" jsonpath "$.entries[2].schemas" == 67
+jsonpath "$.result.structuredContent.entries[2].path" == "/self/"
+variable "text" jsonpath "$.entries[2].path" == "/self/"
+jsonpath "$.result.structuredContent.entries[3].name" == "test"
+variable "text" jsonpath "$.entries[3].name" == "test"
 jsonpath "$.result.structuredContent.entries[3].private" == false
-variable "text" jsonpath "$.entries[3].name" == "twins"
 variable "text" jsonpath "$.entries[3].private" == false
-jsonpath "$.result.structuredContent.entries[3].title" == "Twins"
-variable "text" jsonpath "$.entries[3].title" == "Twins"
-jsonpath "$.result.structuredContent.entries[3].description" == "Schemas whose base name collides with a sibling directory"
-variable "text" jsonpath "$.entries[3].description" == "Schemas whose base name collides with a sibling directory"
 jsonpath "$.result.structuredContent.entries[3].type" == "directory"
 variable "text" jsonpath "$.entries[3].type" == "directory"
-jsonpath "$.result.structuredContent.entries[3].health" == 100
-variable "text" jsonpath "$.entries[3].health" == 100
-jsonpath "$.result.structuredContent.entries[3].schemas" == 2
-variable "text" jsonpath "$.entries[3].schemas" == 2
-jsonpath "$.result.structuredContent.entries[3].path" == "/twins/"
-variable "text" jsonpath "$.entries[3].path" == "/twins/"
+jsonpath "$.result.structuredContent.entries[3].health" == 31
+variable "text" jsonpath "$.entries[3].health" == 31
+jsonpath "$.result.structuredContent.entries[3].schemas" == 77
+variable "text" jsonpath "$.entries[3].schemas" == 77
+jsonpath "$.result.structuredContent.entries[3].path" == "/test/"
+variable "text" jsonpath "$.entries[3].path" == "/test/"
+jsonpath "$.result.structuredContent.entries[4].name" == "twins"
+variable "text" jsonpath "$.entries[4].name" == "twins"
+jsonpath "$.result.structuredContent.entries[4].private" == false
+variable "text" jsonpath "$.entries[4].private" == false
+jsonpath "$.result.structuredContent.entries[4].title" == "Twins"
+variable "text" jsonpath "$.entries[4].title" == "Twins"
+jsonpath "$.result.structuredContent.entries[4].description" == "Schemas whose base name collides with a sibling directory"
+variable "text" jsonpath "$.entries[4].description" == "Schemas whose base name collides with a sibling directory"
+jsonpath "$.result.structuredContent.entries[4].type" == "directory"
+variable "text" jsonpath "$.entries[4].type" == "directory"
+jsonpath "$.result.structuredContent.entries[4].health" == 100
+variable "text" jsonpath "$.entries[4].health" == 100
+jsonpath "$.result.structuredContent.entries[4].schemas" == 2
+variable "text" jsonpath "$.entries[4].schemas" == 2
+jsonpath "$.result.structuredContent.entries[4].path" == "/twins/"
+variable "text" jsonpath "$.entries[4].path" == "/twins/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -257,15 +273,15 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 148
-variable "text" jsonpath "$.schemas" == 148
-jsonpath "$.result.structuredContent.entries" count == 4
+jsonpath "$.result.structuredContent.schemas" == 151
+variable "text" jsonpath "$.schemas" == 151
+jsonpath "$.result.structuredContent.entries" count == 5
 jsonpath "$.result.structuredContent.private" == false
-variable "text" jsonpath "$.entries" count == 4
+variable "text" jsonpath "$.entries" count == 5
 variable "text" jsonpath "$.private" == false
 jsonpath "$.result.structuredContent.entries[0].name" == "no-blaze"
-jsonpath "$.result.structuredContent.entries[0].private" == false
 variable "text" jsonpath "$.entries[0].name" == "no-blaze"
+jsonpath "$.result.structuredContent.entries[0].private" == false
 variable "text" jsonpath "$.entries[0].private" == false
 jsonpath "$.result.structuredContent.entries[0].type" == "directory"
 variable "text" jsonpath "$.entries[0].type" == "directory"
@@ -275,50 +291,66 @@ jsonpath "$.result.structuredContent.entries[0].schemas" == 2
 variable "text" jsonpath "$.entries[0].schemas" == 2
 jsonpath "$.result.structuredContent.entries[0].path" == "/no-blaze/"
 variable "text" jsonpath "$.entries[0].path" == "/no-blaze/"
-jsonpath "$.result.structuredContent.entries[1].name" == "self"
+jsonpath "$.result.structuredContent.entries[1].name" == "openapi3.0"
+variable "text" jsonpath "$.entries[1].name" == "openapi3.0"
 jsonpath "$.result.structuredContent.entries[1].private" == false
-variable "text" jsonpath "$.entries[1].name" == "self"
 variable "text" jsonpath "$.entries[1].private" == false
-jsonpath "$.result.structuredContent.entries[1].title" == "Self"
-variable "text" jsonpath "$.entries[1].title" == "Self"
-jsonpath "$.result.structuredContent.entries[1].description" == "The schemas that define the current version of this instance"
-variable "text" jsonpath "$.entries[1].description" == "The schemas that define the current version of this instance"
+jsonpath "$.result.structuredContent.entries[1].title" == "OpenAPI 3.0"
+variable "text" jsonpath "$.entries[1].title" == "OpenAPI 3.0"
+jsonpath "$.result.structuredContent.entries[1].description" == "Schemas that take their dialect from this collection, since they cannot declare one"
+variable "text" jsonpath "$.entries[1].description" == "Schemas that take their dialect from this collection, since they cannot declare one"
 jsonpath "$.result.structuredContent.entries[1].type" == "directory"
 variable "text" jsonpath "$.entries[1].type" == "directory"
-jsonpath "$.result.structuredContent.entries[1].health" == 99
-variable "text" jsonpath "$.entries[1].health" == 99
-jsonpath "$.result.structuredContent.entries[1].schemas" == 67
-variable "text" jsonpath "$.entries[1].schemas" == 67
-jsonpath "$.result.structuredContent.entries[1].path" == "/self/"
-variable "text" jsonpath "$.entries[1].path" == "/self/"
-jsonpath "$.result.structuredContent.entries[2].name" == "test"
+jsonpath "$.result.structuredContent.entries[1].health" == 67
+variable "text" jsonpath "$.entries[1].health" == 67
+jsonpath "$.result.structuredContent.entries[1].schemas" == 3
+variable "text" jsonpath "$.entries[1].schemas" == 3
+jsonpath "$.result.structuredContent.entries[1].path" == "/openapi3.0/"
+variable "text" jsonpath "$.entries[1].path" == "/openapi3.0/"
+jsonpath "$.result.structuredContent.entries[2].name" == "self"
+variable "text" jsonpath "$.entries[2].name" == "self"
 jsonpath "$.result.structuredContent.entries[2].private" == false
-variable "text" jsonpath "$.entries[2].name" == "test"
 variable "text" jsonpath "$.entries[2].private" == false
+jsonpath "$.result.structuredContent.entries[2].title" == "Self"
+variable "text" jsonpath "$.entries[2].title" == "Self"
+jsonpath "$.result.structuredContent.entries[2].description" == "The schemas that define the current version of this instance"
+variable "text" jsonpath "$.entries[2].description" == "The schemas that define the current version of this instance"
 jsonpath "$.result.structuredContent.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].type" == "directory"
-jsonpath "$.result.structuredContent.entries[2].health" == 31
-variable "text" jsonpath "$.entries[2].health" == 31
-jsonpath "$.result.structuredContent.entries[2].schemas" == 77
-variable "text" jsonpath "$.entries[2].schemas" == 77
-jsonpath "$.result.structuredContent.entries[2].path" == "/test/"
-variable "text" jsonpath "$.entries[2].path" == "/test/"
-jsonpath "$.result.structuredContent.entries[3].name" == "twins"
+jsonpath "$.result.structuredContent.entries[2].health" == 99
+variable "text" jsonpath "$.entries[2].health" == 99
+jsonpath "$.result.structuredContent.entries[2].schemas" == 67
+variable "text" jsonpath "$.entries[2].schemas" == 67
+jsonpath "$.result.structuredContent.entries[2].path" == "/self/"
+variable "text" jsonpath "$.entries[2].path" == "/self/"
+jsonpath "$.result.structuredContent.entries[3].name" == "test"
+variable "text" jsonpath "$.entries[3].name" == "test"
 jsonpath "$.result.structuredContent.entries[3].private" == false
-variable "text" jsonpath "$.entries[3].name" == "twins"
 variable "text" jsonpath "$.entries[3].private" == false
-jsonpath "$.result.structuredContent.entries[3].title" == "Twins"
-variable "text" jsonpath "$.entries[3].title" == "Twins"
-jsonpath "$.result.structuredContent.entries[3].description" == "Schemas whose base name collides with a sibling directory"
-variable "text" jsonpath "$.entries[3].description" == "Schemas whose base name collides with a sibling directory"
 jsonpath "$.result.structuredContent.entries[3].type" == "directory"
 variable "text" jsonpath "$.entries[3].type" == "directory"
-jsonpath "$.result.structuredContent.entries[3].health" == 100
-variable "text" jsonpath "$.entries[3].health" == 100
-jsonpath "$.result.structuredContent.entries[3].schemas" == 2
-variable "text" jsonpath "$.entries[3].schemas" == 2
-jsonpath "$.result.structuredContent.entries[3].path" == "/twins/"
-variable "text" jsonpath "$.entries[3].path" == "/twins/"
+jsonpath "$.result.structuredContent.entries[3].health" == 31
+variable "text" jsonpath "$.entries[3].health" == 31
+jsonpath "$.result.structuredContent.entries[3].schemas" == 77
+variable "text" jsonpath "$.entries[3].schemas" == 77
+jsonpath "$.result.structuredContent.entries[3].path" == "/test/"
+variable "text" jsonpath "$.entries[3].path" == "/test/"
+jsonpath "$.result.structuredContent.entries[4].name" == "twins"
+variable "text" jsonpath "$.entries[4].name" == "twins"
+jsonpath "$.result.structuredContent.entries[4].private" == false
+variable "text" jsonpath "$.entries[4].private" == false
+jsonpath "$.result.structuredContent.entries[4].title" == "Twins"
+variable "text" jsonpath "$.entries[4].title" == "Twins"
+jsonpath "$.result.structuredContent.entries[4].description" == "Schemas whose base name collides with a sibling directory"
+variable "text" jsonpath "$.entries[4].description" == "Schemas whose base name collides with a sibling directory"
+jsonpath "$.result.structuredContent.entries[4].type" == "directory"
+variable "text" jsonpath "$.entries[4].type" == "directory"
+jsonpath "$.result.structuredContent.entries[4].health" == 100
+variable "text" jsonpath "$.entries[4].health" == 100
+jsonpath "$.result.structuredContent.entries[4].schemas" == 2
+variable "text" jsonpath "$.entries[4].schemas" == 2
+jsonpath "$.result.structuredContent.entries[4].path" == "/twins/"
+variable "text" jsonpath "$.entries[4].path" == "/twins/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -392,15 +424,15 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 148
-variable "text" jsonpath "$.schemas" == 148
-jsonpath "$.result.structuredContent.entries" count == 4
+jsonpath "$.result.structuredContent.schemas" == 151
+variable "text" jsonpath "$.schemas" == 151
+jsonpath "$.result.structuredContent.entries" count == 5
 jsonpath "$.result.structuredContent.private" == false
-variable "text" jsonpath "$.entries" count == 4
+variable "text" jsonpath "$.entries" count == 5
 variable "text" jsonpath "$.private" == false
 jsonpath "$.result.structuredContent.entries[0].name" == "no-blaze"
-jsonpath "$.result.structuredContent.entries[0].private" == false
 variable "text" jsonpath "$.entries[0].name" == "no-blaze"
+jsonpath "$.result.structuredContent.entries[0].private" == false
 variable "text" jsonpath "$.entries[0].private" == false
 jsonpath "$.result.structuredContent.entries[0].type" == "directory"
 variable "text" jsonpath "$.entries[0].type" == "directory"
@@ -410,50 +442,66 @@ jsonpath "$.result.structuredContent.entries[0].schemas" == 2
 variable "text" jsonpath "$.entries[0].schemas" == 2
 jsonpath "$.result.structuredContent.entries[0].path" == "/no-blaze/"
 variable "text" jsonpath "$.entries[0].path" == "/no-blaze/"
-jsonpath "$.result.structuredContent.entries[1].name" == "self"
+jsonpath "$.result.structuredContent.entries[1].name" == "openapi3.0"
+variable "text" jsonpath "$.entries[1].name" == "openapi3.0"
 jsonpath "$.result.structuredContent.entries[1].private" == false
-variable "text" jsonpath "$.entries[1].name" == "self"
 variable "text" jsonpath "$.entries[1].private" == false
 jsonpath "$.result.structuredContent.entries[1].type" == "directory"
 variable "text" jsonpath "$.entries[1].type" == "directory"
-jsonpath "$.result.structuredContent.entries[1].health" == 99
-variable "text" jsonpath "$.entries[1].health" == 99
-jsonpath "$.result.structuredContent.entries[1].schemas" == 67
-variable "text" jsonpath "$.entries[1].schemas" == 67
-jsonpath "$.result.structuredContent.entries[1].path" == "/self/"
-variable "text" jsonpath "$.entries[1].path" == "/self/"
-jsonpath "$.result.structuredContent.entries[1].title" == "Self"
-variable "text" jsonpath "$.entries[1].title" == "Self"
-jsonpath "$.result.structuredContent.entries[1].description" == "The schemas that define the current version of this instance"
-variable "text" jsonpath "$.entries[1].description" == "The schemas that define the current version of this instance"
-jsonpath "$.result.structuredContent.entries[2].name" == "test"
+jsonpath "$.result.structuredContent.entries[1].health" == 67
+variable "text" jsonpath "$.entries[1].health" == 67
+jsonpath "$.result.structuredContent.entries[1].schemas" == 3
+variable "text" jsonpath "$.entries[1].schemas" == 3
+jsonpath "$.result.structuredContent.entries[1].path" == "/openapi3.0/"
+variable "text" jsonpath "$.entries[1].path" == "/openapi3.0/"
+jsonpath "$.result.structuredContent.entries[1].title" == "OpenAPI 3.0"
+variable "text" jsonpath "$.entries[1].title" == "OpenAPI 3.0"
+jsonpath "$.result.structuredContent.entries[1].description" == "Schemas that take their dialect from this collection, since they cannot declare one"
+variable "text" jsonpath "$.entries[1].description" == "Schemas that take their dialect from this collection, since they cannot declare one"
+jsonpath "$.result.structuredContent.entries[2].name" == "self"
+variable "text" jsonpath "$.entries[2].name" == "self"
 jsonpath "$.result.structuredContent.entries[2].private" == false
-variable "text" jsonpath "$.entries[2].name" == "test"
 variable "text" jsonpath "$.entries[2].private" == false
 jsonpath "$.result.structuredContent.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].type" == "directory"
-jsonpath "$.result.structuredContent.entries[2].health" == 31
-variable "text" jsonpath "$.entries[2].health" == 31
-jsonpath "$.result.structuredContent.entries[2].schemas" == 77
-variable "text" jsonpath "$.entries[2].schemas" == 77
-jsonpath "$.result.structuredContent.entries[2].path" == "/test/"
-variable "text" jsonpath "$.entries[2].path" == "/test/"
-jsonpath "$.result.structuredContent.entries[3].name" == "twins"
+jsonpath "$.result.structuredContent.entries[2].health" == 99
+variable "text" jsonpath "$.entries[2].health" == 99
+jsonpath "$.result.structuredContent.entries[2].schemas" == 67
+variable "text" jsonpath "$.entries[2].schemas" == 67
+jsonpath "$.result.structuredContent.entries[2].path" == "/self/"
+variable "text" jsonpath "$.entries[2].path" == "/self/"
+jsonpath "$.result.structuredContent.entries[2].title" == "Self"
+variable "text" jsonpath "$.entries[2].title" == "Self"
+jsonpath "$.result.structuredContent.entries[2].description" == "The schemas that define the current version of this instance"
+variable "text" jsonpath "$.entries[2].description" == "The schemas that define the current version of this instance"
+jsonpath "$.result.structuredContent.entries[3].name" == "test"
+variable "text" jsonpath "$.entries[3].name" == "test"
 jsonpath "$.result.structuredContent.entries[3].private" == false
-variable "text" jsonpath "$.entries[3].name" == "twins"
 variable "text" jsonpath "$.entries[3].private" == false
-jsonpath "$.result.structuredContent.entries[3].title" == "Twins"
-variable "text" jsonpath "$.entries[3].title" == "Twins"
-jsonpath "$.result.structuredContent.entries[3].description" == "Schemas whose base name collides with a sibling directory"
-variable "text" jsonpath "$.entries[3].description" == "Schemas whose base name collides with a sibling directory"
 jsonpath "$.result.structuredContent.entries[3].type" == "directory"
 variable "text" jsonpath "$.entries[3].type" == "directory"
-jsonpath "$.result.structuredContent.entries[3].health" == 100
-variable "text" jsonpath "$.entries[3].health" == 100
-jsonpath "$.result.structuredContent.entries[3].schemas" == 2
-variable "text" jsonpath "$.entries[3].schemas" == 2
-jsonpath "$.result.structuredContent.entries[3].path" == "/twins/"
-variable "text" jsonpath "$.entries[3].path" == "/twins/"
+jsonpath "$.result.structuredContent.entries[3].health" == 31
+variable "text" jsonpath "$.entries[3].health" == 31
+jsonpath "$.result.structuredContent.entries[3].schemas" == 77
+variable "text" jsonpath "$.entries[3].schemas" == 77
+jsonpath "$.result.structuredContent.entries[3].path" == "/test/"
+variable "text" jsonpath "$.entries[3].path" == "/test/"
+jsonpath "$.result.structuredContent.entries[4].name" == "twins"
+variable "text" jsonpath "$.entries[4].name" == "twins"
+jsonpath "$.result.structuredContent.entries[4].private" == false
+variable "text" jsonpath "$.entries[4].private" == false
+jsonpath "$.result.structuredContent.entries[4].type" == "directory"
+variable "text" jsonpath "$.entries[4].type" == "directory"
+jsonpath "$.result.structuredContent.entries[4].health" == 100
+variable "text" jsonpath "$.entries[4].health" == 100
+jsonpath "$.result.structuredContent.entries[4].schemas" == 2
+variable "text" jsonpath "$.entries[4].schemas" == 2
+jsonpath "$.result.structuredContent.entries[4].path" == "/twins/"
+variable "text" jsonpath "$.entries[4].path" == "/twins/"
+jsonpath "$.result.structuredContent.entries[4].title" == "Twins"
+variable "text" jsonpath "$.entries[4].title" == "Twins"
+jsonpath "$.result.structuredContent.entries[4].description" == "Schemas whose base name collides with a sibling directory"
+variable "text" jsonpath "$.entries[4].description" == "Schemas whose base name collides with a sibling directory"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -3085,15 +3133,15 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 148
-variable "text" jsonpath "$.schemas" == 148
-jsonpath "$.result.structuredContent.entries" count == 4
+jsonpath "$.result.structuredContent.schemas" == 151
+variable "text" jsonpath "$.schemas" == 151
+jsonpath "$.result.structuredContent.entries" count == 5
 jsonpath "$.result.structuredContent.private" == false
-variable "text" jsonpath "$.entries" count == 4
+variable "text" jsonpath "$.entries" count == 5
 variable "text" jsonpath "$.private" == false
 jsonpath "$.result.structuredContent.entries[0].name" == "no-blaze"
-jsonpath "$.result.structuredContent.entries[0].private" == false
 variable "text" jsonpath "$.entries[0].name" == "no-blaze"
+jsonpath "$.result.structuredContent.entries[0].private" == false
 variable "text" jsonpath "$.entries[0].private" == false
 jsonpath "$.result.structuredContent.entries[0].type" == "directory"
 variable "text" jsonpath "$.entries[0].type" == "directory"
@@ -3103,50 +3151,66 @@ jsonpath "$.result.structuredContent.entries[0].schemas" == 2
 variable "text" jsonpath "$.entries[0].schemas" == 2
 jsonpath "$.result.structuredContent.entries[0].path" == "/no-blaze/"
 variable "text" jsonpath "$.entries[0].path" == "/no-blaze/"
-jsonpath "$.result.structuredContent.entries[1].name" == "self"
+jsonpath "$.result.structuredContent.entries[1].name" == "openapi3.0"
+variable "text" jsonpath "$.entries[1].name" == "openapi3.0"
 jsonpath "$.result.structuredContent.entries[1].private" == false
-variable "text" jsonpath "$.entries[1].name" == "self"
 variable "text" jsonpath "$.entries[1].private" == false
-jsonpath "$.result.structuredContent.entries[1].title" == "Self"
-variable "text" jsonpath "$.entries[1].title" == "Self"
-jsonpath "$.result.structuredContent.entries[1].description" == "The schemas that define the current version of this instance"
-variable "text" jsonpath "$.entries[1].description" == "The schemas that define the current version of this instance"
+jsonpath "$.result.structuredContent.entries[1].title" == "OpenAPI 3.0"
+variable "text" jsonpath "$.entries[1].title" == "OpenAPI 3.0"
+jsonpath "$.result.structuredContent.entries[1].description" == "Schemas that take their dialect from this collection, since they cannot declare one"
+variable "text" jsonpath "$.entries[1].description" == "Schemas that take their dialect from this collection, since they cannot declare one"
 jsonpath "$.result.structuredContent.entries[1].type" == "directory"
 variable "text" jsonpath "$.entries[1].type" == "directory"
-jsonpath "$.result.structuredContent.entries[1].health" == 99
-variable "text" jsonpath "$.entries[1].health" == 99
-jsonpath "$.result.structuredContent.entries[1].schemas" == 67
-variable "text" jsonpath "$.entries[1].schemas" == 67
-jsonpath "$.result.structuredContent.entries[1].path" == "/self/"
-variable "text" jsonpath "$.entries[1].path" == "/self/"
-jsonpath "$.result.structuredContent.entries[2].name" == "test"
+jsonpath "$.result.structuredContent.entries[1].health" == 67
+variable "text" jsonpath "$.entries[1].health" == 67
+jsonpath "$.result.structuredContent.entries[1].schemas" == 3
+variable "text" jsonpath "$.entries[1].schemas" == 3
+jsonpath "$.result.structuredContent.entries[1].path" == "/openapi3.0/"
+variable "text" jsonpath "$.entries[1].path" == "/openapi3.0/"
+jsonpath "$.result.structuredContent.entries[2].name" == "self"
+variable "text" jsonpath "$.entries[2].name" == "self"
 jsonpath "$.result.structuredContent.entries[2].private" == false
-variable "text" jsonpath "$.entries[2].name" == "test"
 variable "text" jsonpath "$.entries[2].private" == false
+jsonpath "$.result.structuredContent.entries[2].title" == "Self"
+variable "text" jsonpath "$.entries[2].title" == "Self"
+jsonpath "$.result.structuredContent.entries[2].description" == "The schemas that define the current version of this instance"
+variable "text" jsonpath "$.entries[2].description" == "The schemas that define the current version of this instance"
 jsonpath "$.result.structuredContent.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].type" == "directory"
-jsonpath "$.result.structuredContent.entries[2].health" == 31
-variable "text" jsonpath "$.entries[2].health" == 31
-jsonpath "$.result.structuredContent.entries[2].schemas" == 77
-variable "text" jsonpath "$.entries[2].schemas" == 77
-jsonpath "$.result.structuredContent.entries[2].path" == "/test/"
-variable "text" jsonpath "$.entries[2].path" == "/test/"
-jsonpath "$.result.structuredContent.entries[3].name" == "twins"
+jsonpath "$.result.structuredContent.entries[2].health" == 99
+variable "text" jsonpath "$.entries[2].health" == 99
+jsonpath "$.result.structuredContent.entries[2].schemas" == 67
+variable "text" jsonpath "$.entries[2].schemas" == 67
+jsonpath "$.result.structuredContent.entries[2].path" == "/self/"
+variable "text" jsonpath "$.entries[2].path" == "/self/"
+jsonpath "$.result.structuredContent.entries[3].name" == "test"
+variable "text" jsonpath "$.entries[3].name" == "test"
 jsonpath "$.result.structuredContent.entries[3].private" == false
-variable "text" jsonpath "$.entries[3].name" == "twins"
 variable "text" jsonpath "$.entries[3].private" == false
-jsonpath "$.result.structuredContent.entries[3].title" == "Twins"
-variable "text" jsonpath "$.entries[3].title" == "Twins"
-jsonpath "$.result.structuredContent.entries[3].description" == "Schemas whose base name collides with a sibling directory"
-variable "text" jsonpath "$.entries[3].description" == "Schemas whose base name collides with a sibling directory"
 jsonpath "$.result.structuredContent.entries[3].type" == "directory"
 variable "text" jsonpath "$.entries[3].type" == "directory"
-jsonpath "$.result.structuredContent.entries[3].health" == 100
-variable "text" jsonpath "$.entries[3].health" == 100
-jsonpath "$.result.structuredContent.entries[3].schemas" == 2
-variable "text" jsonpath "$.entries[3].schemas" == 2
-jsonpath "$.result.structuredContent.entries[3].path" == "/twins/"
-variable "text" jsonpath "$.entries[3].path" == "/twins/"
+jsonpath "$.result.structuredContent.entries[3].health" == 31
+variable "text" jsonpath "$.entries[3].health" == 31
+jsonpath "$.result.structuredContent.entries[3].schemas" == 77
+variable "text" jsonpath "$.entries[3].schemas" == 77
+jsonpath "$.result.structuredContent.entries[3].path" == "/test/"
+variable "text" jsonpath "$.entries[3].path" == "/test/"
+jsonpath "$.result.structuredContent.entries[4].name" == "twins"
+variable "text" jsonpath "$.entries[4].name" == "twins"
+jsonpath "$.result.structuredContent.entries[4].private" == false
+variable "text" jsonpath "$.entries[4].private" == false
+jsonpath "$.result.structuredContent.entries[4].title" == "Twins"
+variable "text" jsonpath "$.entries[4].title" == "Twins"
+jsonpath "$.result.structuredContent.entries[4].description" == "Schemas whose base name collides with a sibling directory"
+variable "text" jsonpath "$.entries[4].description" == "Schemas whose base name collides with a sibling directory"
+jsonpath "$.result.structuredContent.entries[4].type" == "directory"
+variable "text" jsonpath "$.entries[4].type" == "directory"
+jsonpath "$.result.structuredContent.entries[4].health" == 100
+variable "text" jsonpath "$.entries[4].health" == 100
+jsonpath "$.result.structuredContent.entries[4].schemas" == 2
+variable "text" jsonpath "$.entries[4].schemas" == 2
+jsonpath "$.result.structuredContent.entries[4].path" == "/twins/"
+variable "text" jsonpath "$.entries[4].path" == "/twins/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -3220,15 +3284,15 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 148
-variable "text" jsonpath "$.schemas" == 148
-jsonpath "$.result.structuredContent.entries" count == 4
+jsonpath "$.result.structuredContent.schemas" == 151
+variable "text" jsonpath "$.schemas" == 151
+jsonpath "$.result.structuredContent.entries" count == 5
 jsonpath "$.result.structuredContent.private" == false
-variable "text" jsonpath "$.entries" count == 4
+variable "text" jsonpath "$.entries" count == 5
 variable "text" jsonpath "$.private" == false
 jsonpath "$.result.structuredContent.entries[0].name" == "no-blaze"
-jsonpath "$.result.structuredContent.entries[0].private" == false
 variable "text" jsonpath "$.entries[0].name" == "no-blaze"
+jsonpath "$.result.structuredContent.entries[0].private" == false
 variable "text" jsonpath "$.entries[0].private" == false
 jsonpath "$.result.structuredContent.entries[0].type" == "directory"
 variable "text" jsonpath "$.entries[0].type" == "directory"
@@ -3238,50 +3302,66 @@ jsonpath "$.result.structuredContent.entries[0].schemas" == 2
 variable "text" jsonpath "$.entries[0].schemas" == 2
 jsonpath "$.result.structuredContent.entries[0].path" == "/no-blaze/"
 variable "text" jsonpath "$.entries[0].path" == "/no-blaze/"
-jsonpath "$.result.structuredContent.entries[1].name" == "self"
+jsonpath "$.result.structuredContent.entries[1].name" == "openapi3.0"
+variable "text" jsonpath "$.entries[1].name" == "openapi3.0"
 jsonpath "$.result.structuredContent.entries[1].private" == false
-variable "text" jsonpath "$.entries[1].name" == "self"
 variable "text" jsonpath "$.entries[1].private" == false
-jsonpath "$.result.structuredContent.entries[1].title" == "Self"
-variable "text" jsonpath "$.entries[1].title" == "Self"
-jsonpath "$.result.structuredContent.entries[1].description" == "The schemas that define the current version of this instance"
-variable "text" jsonpath "$.entries[1].description" == "The schemas that define the current version of this instance"
+jsonpath "$.result.structuredContent.entries[1].title" == "OpenAPI 3.0"
+variable "text" jsonpath "$.entries[1].title" == "OpenAPI 3.0"
+jsonpath "$.result.structuredContent.entries[1].description" == "Schemas that take their dialect from this collection, since they cannot declare one"
+variable "text" jsonpath "$.entries[1].description" == "Schemas that take their dialect from this collection, since they cannot declare one"
 jsonpath "$.result.structuredContent.entries[1].type" == "directory"
 variable "text" jsonpath "$.entries[1].type" == "directory"
-jsonpath "$.result.structuredContent.entries[1].health" == 99
-variable "text" jsonpath "$.entries[1].health" == 99
-jsonpath "$.result.structuredContent.entries[1].schemas" == 67
-variable "text" jsonpath "$.entries[1].schemas" == 67
-jsonpath "$.result.structuredContent.entries[1].path" == "/self/"
-variable "text" jsonpath "$.entries[1].path" == "/self/"
-jsonpath "$.result.structuredContent.entries[2].name" == "test"
+jsonpath "$.result.structuredContent.entries[1].health" == 67
+variable "text" jsonpath "$.entries[1].health" == 67
+jsonpath "$.result.structuredContent.entries[1].schemas" == 3
+variable "text" jsonpath "$.entries[1].schemas" == 3
+jsonpath "$.result.structuredContent.entries[1].path" == "/openapi3.0/"
+variable "text" jsonpath "$.entries[1].path" == "/openapi3.0/"
+jsonpath "$.result.structuredContent.entries[2].name" == "self"
+variable "text" jsonpath "$.entries[2].name" == "self"
 jsonpath "$.result.structuredContent.entries[2].private" == false
-variable "text" jsonpath "$.entries[2].name" == "test"
 variable "text" jsonpath "$.entries[2].private" == false
+jsonpath "$.result.structuredContent.entries[2].title" == "Self"
+variable "text" jsonpath "$.entries[2].title" == "Self"
+jsonpath "$.result.structuredContent.entries[2].description" == "The schemas that define the current version of this instance"
+variable "text" jsonpath "$.entries[2].description" == "The schemas that define the current version of this instance"
 jsonpath "$.result.structuredContent.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].type" == "directory"
-jsonpath "$.result.structuredContent.entries[2].health" == 31
-variable "text" jsonpath "$.entries[2].health" == 31
-jsonpath "$.result.structuredContent.entries[2].schemas" == 77
-variable "text" jsonpath "$.entries[2].schemas" == 77
-jsonpath "$.result.structuredContent.entries[2].path" == "/test/"
-variable "text" jsonpath "$.entries[2].path" == "/test/"
-jsonpath "$.result.structuredContent.entries[3].name" == "twins"
+jsonpath "$.result.structuredContent.entries[2].health" == 99
+variable "text" jsonpath "$.entries[2].health" == 99
+jsonpath "$.result.structuredContent.entries[2].schemas" == 67
+variable "text" jsonpath "$.entries[2].schemas" == 67
+jsonpath "$.result.structuredContent.entries[2].path" == "/self/"
+variable "text" jsonpath "$.entries[2].path" == "/self/"
+jsonpath "$.result.structuredContent.entries[3].name" == "test"
+variable "text" jsonpath "$.entries[3].name" == "test"
 jsonpath "$.result.structuredContent.entries[3].private" == false
-variable "text" jsonpath "$.entries[3].name" == "twins"
 variable "text" jsonpath "$.entries[3].private" == false
-jsonpath "$.result.structuredContent.entries[3].title" == "Twins"
-variable "text" jsonpath "$.entries[3].title" == "Twins"
-jsonpath "$.result.structuredContent.entries[3].description" == "Schemas whose base name collides with a sibling directory"
-variable "text" jsonpath "$.entries[3].description" == "Schemas whose base name collides with a sibling directory"
 jsonpath "$.result.structuredContent.entries[3].type" == "directory"
 variable "text" jsonpath "$.entries[3].type" == "directory"
-jsonpath "$.result.structuredContent.entries[3].health" == 100
-variable "text" jsonpath "$.entries[3].health" == 100
-jsonpath "$.result.structuredContent.entries[3].schemas" == 2
-variable "text" jsonpath "$.entries[3].schemas" == 2
-jsonpath "$.result.structuredContent.entries[3].path" == "/twins/"
-variable "text" jsonpath "$.entries[3].path" == "/twins/"
+jsonpath "$.result.structuredContent.entries[3].health" == 31
+variable "text" jsonpath "$.entries[3].health" == 31
+jsonpath "$.result.structuredContent.entries[3].schemas" == 77
+variable "text" jsonpath "$.entries[3].schemas" == 77
+jsonpath "$.result.structuredContent.entries[3].path" == "/test/"
+variable "text" jsonpath "$.entries[3].path" == "/test/"
+jsonpath "$.result.structuredContent.entries[4].name" == "twins"
+variable "text" jsonpath "$.entries[4].name" == "twins"
+jsonpath "$.result.structuredContent.entries[4].private" == false
+variable "text" jsonpath "$.entries[4].private" == false
+jsonpath "$.result.structuredContent.entries[4].title" == "Twins"
+variable "text" jsonpath "$.entries[4].title" == "Twins"
+jsonpath "$.result.structuredContent.entries[4].description" == "Schemas whose base name collides with a sibling directory"
+variable "text" jsonpath "$.entries[4].description" == "Schemas whose base name collides with a sibling directory"
+jsonpath "$.result.structuredContent.entries[4].type" == "directory"
+variable "text" jsonpath "$.entries[4].type" == "directory"
+jsonpath "$.result.structuredContent.entries[4].health" == 100
+variable "text" jsonpath "$.entries[4].health" == 100
+jsonpath "$.result.structuredContent.entries[4].schemas" == 2
+variable "text" jsonpath "$.entries[4].schemas" == 2
+jsonpath "$.result.structuredContent.entries[4].path" == "/twins/"
+variable "text" jsonpath "$.entries[4].path" == "/twins/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -3355,15 +3435,15 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 148
-variable "text" jsonpath "$.schemas" == 148
-jsonpath "$.result.structuredContent.entries" count == 4
+jsonpath "$.result.structuredContent.schemas" == 151
+variable "text" jsonpath "$.schemas" == 151
+jsonpath "$.result.structuredContent.entries" count == 5
 jsonpath "$.result.structuredContent.private" == false
-variable "text" jsonpath "$.entries" count == 4
+variable "text" jsonpath "$.entries" count == 5
 variable "text" jsonpath "$.private" == false
 jsonpath "$.result.structuredContent.entries[0].name" == "no-blaze"
-jsonpath "$.result.structuredContent.entries[0].private" == false
 variable "text" jsonpath "$.entries[0].name" == "no-blaze"
+jsonpath "$.result.structuredContent.entries[0].private" == false
 variable "text" jsonpath "$.entries[0].private" == false
 jsonpath "$.result.structuredContent.entries[0].type" == "directory"
 variable "text" jsonpath "$.entries[0].type" == "directory"
@@ -3373,50 +3453,66 @@ jsonpath "$.result.structuredContent.entries[0].schemas" == 2
 variable "text" jsonpath "$.entries[0].schemas" == 2
 jsonpath "$.result.structuredContent.entries[0].path" == "/no-blaze/"
 variable "text" jsonpath "$.entries[0].path" == "/no-blaze/"
-jsonpath "$.result.structuredContent.entries[1].name" == "self"
+jsonpath "$.result.structuredContent.entries[1].name" == "openapi3.0"
+variable "text" jsonpath "$.entries[1].name" == "openapi3.0"
 jsonpath "$.result.structuredContent.entries[1].private" == false
-variable "text" jsonpath "$.entries[1].name" == "self"
 variable "text" jsonpath "$.entries[1].private" == false
-jsonpath "$.result.structuredContent.entries[1].title" == "Self"
-variable "text" jsonpath "$.entries[1].title" == "Self"
-jsonpath "$.result.structuredContent.entries[1].description" == "The schemas that define the current version of this instance"
-variable "text" jsonpath "$.entries[1].description" == "The schemas that define the current version of this instance"
+jsonpath "$.result.structuredContent.entries[1].title" == "OpenAPI 3.0"
+variable "text" jsonpath "$.entries[1].title" == "OpenAPI 3.0"
+jsonpath "$.result.structuredContent.entries[1].description" == "Schemas that take their dialect from this collection, since they cannot declare one"
+variable "text" jsonpath "$.entries[1].description" == "Schemas that take their dialect from this collection, since they cannot declare one"
 jsonpath "$.result.structuredContent.entries[1].type" == "directory"
 variable "text" jsonpath "$.entries[1].type" == "directory"
-jsonpath "$.result.structuredContent.entries[1].health" == 99
-variable "text" jsonpath "$.entries[1].health" == 99
-jsonpath "$.result.structuredContent.entries[1].schemas" == 67
-variable "text" jsonpath "$.entries[1].schemas" == 67
-jsonpath "$.result.structuredContent.entries[1].path" == "/self/"
-variable "text" jsonpath "$.entries[1].path" == "/self/"
-jsonpath "$.result.structuredContent.entries[2].name" == "test"
+jsonpath "$.result.structuredContent.entries[1].health" == 67
+variable "text" jsonpath "$.entries[1].health" == 67
+jsonpath "$.result.structuredContent.entries[1].schemas" == 3
+variable "text" jsonpath "$.entries[1].schemas" == 3
+jsonpath "$.result.structuredContent.entries[1].path" == "/openapi3.0/"
+variable "text" jsonpath "$.entries[1].path" == "/openapi3.0/"
+jsonpath "$.result.structuredContent.entries[2].name" == "self"
+variable "text" jsonpath "$.entries[2].name" == "self"
 jsonpath "$.result.structuredContent.entries[2].private" == false
-variable "text" jsonpath "$.entries[2].name" == "test"
 variable "text" jsonpath "$.entries[2].private" == false
+jsonpath "$.result.structuredContent.entries[2].title" == "Self"
+variable "text" jsonpath "$.entries[2].title" == "Self"
+jsonpath "$.result.structuredContent.entries[2].description" == "The schemas that define the current version of this instance"
+variable "text" jsonpath "$.entries[2].description" == "The schemas that define the current version of this instance"
 jsonpath "$.result.structuredContent.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].type" == "directory"
-jsonpath "$.result.structuredContent.entries[2].health" == 31
-variable "text" jsonpath "$.entries[2].health" == 31
-jsonpath "$.result.structuredContent.entries[2].schemas" == 77
-variable "text" jsonpath "$.entries[2].schemas" == 77
-jsonpath "$.result.structuredContent.entries[2].path" == "/test/"
-variable "text" jsonpath "$.entries[2].path" == "/test/"
-jsonpath "$.result.structuredContent.entries[3].name" == "twins"
+jsonpath "$.result.structuredContent.entries[2].health" == 99
+variable "text" jsonpath "$.entries[2].health" == 99
+jsonpath "$.result.structuredContent.entries[2].schemas" == 67
+variable "text" jsonpath "$.entries[2].schemas" == 67
+jsonpath "$.result.structuredContent.entries[2].path" == "/self/"
+variable "text" jsonpath "$.entries[2].path" == "/self/"
+jsonpath "$.result.structuredContent.entries[3].name" == "test"
+variable "text" jsonpath "$.entries[3].name" == "test"
 jsonpath "$.result.structuredContent.entries[3].private" == false
-variable "text" jsonpath "$.entries[3].name" == "twins"
 variable "text" jsonpath "$.entries[3].private" == false
-jsonpath "$.result.structuredContent.entries[3].title" == "Twins"
-variable "text" jsonpath "$.entries[3].title" == "Twins"
-jsonpath "$.result.structuredContent.entries[3].description" == "Schemas whose base name collides with a sibling directory"
-variable "text" jsonpath "$.entries[3].description" == "Schemas whose base name collides with a sibling directory"
 jsonpath "$.result.structuredContent.entries[3].type" == "directory"
 variable "text" jsonpath "$.entries[3].type" == "directory"
-jsonpath "$.result.structuredContent.entries[3].health" == 100
-variable "text" jsonpath "$.entries[3].health" == 100
-jsonpath "$.result.structuredContent.entries[3].schemas" == 2
-variable "text" jsonpath "$.entries[3].schemas" == 2
-jsonpath "$.result.structuredContent.entries[3].path" == "/twins/"
-variable "text" jsonpath "$.entries[3].path" == "/twins/"
+jsonpath "$.result.structuredContent.entries[3].health" == 31
+variable "text" jsonpath "$.entries[3].health" == 31
+jsonpath "$.result.structuredContent.entries[3].schemas" == 77
+variable "text" jsonpath "$.entries[3].schemas" == 77
+jsonpath "$.result.structuredContent.entries[3].path" == "/test/"
+variable "text" jsonpath "$.entries[3].path" == "/test/"
+jsonpath "$.result.structuredContent.entries[4].name" == "twins"
+variable "text" jsonpath "$.entries[4].name" == "twins"
+jsonpath "$.result.structuredContent.entries[4].private" == false
+variable "text" jsonpath "$.entries[4].private" == false
+jsonpath "$.result.structuredContent.entries[4].title" == "Twins"
+variable "text" jsonpath "$.entries[4].title" == "Twins"
+jsonpath "$.result.structuredContent.entries[4].description" == "Schemas whose base name collides with a sibling directory"
+variable "text" jsonpath "$.entries[4].description" == "Schemas whose base name collides with a sibling directory"
+jsonpath "$.result.structuredContent.entries[4].type" == "directory"
+variable "text" jsonpath "$.entries[4].type" == "directory"
+jsonpath "$.result.structuredContent.entries[4].health" == 100
+variable "text" jsonpath "$.entries[4].health" == 100
+jsonpath "$.result.structuredContent.entries[4].schemas" == 2
+variable "text" jsonpath "$.entries[4].schemas" == 2
+jsonpath "$.result.structuredContent.entries[4].path" == "/twins/"
+variable "text" jsonpath "$.entries[4].path" == "/twins/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -3490,15 +3586,15 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 148
-variable "text" jsonpath "$.schemas" == 148
-jsonpath "$.result.structuredContent.entries" count == 4
+jsonpath "$.result.structuredContent.schemas" == 151
+variable "text" jsonpath "$.schemas" == 151
+jsonpath "$.result.structuredContent.entries" count == 5
 jsonpath "$.result.structuredContent.private" == false
-variable "text" jsonpath "$.entries" count == 4
+variable "text" jsonpath "$.entries" count == 5
 variable "text" jsonpath "$.private" == false
 jsonpath "$.result.structuredContent.entries[0].name" == "no-blaze"
-jsonpath "$.result.structuredContent.entries[0].private" == false
 variable "text" jsonpath "$.entries[0].name" == "no-blaze"
+jsonpath "$.result.structuredContent.entries[0].private" == false
 variable "text" jsonpath "$.entries[0].private" == false
 jsonpath "$.result.structuredContent.entries[0].type" == "directory"
 variable "text" jsonpath "$.entries[0].type" == "directory"
@@ -3508,50 +3604,66 @@ jsonpath "$.result.structuredContent.entries[0].schemas" == 2
 variable "text" jsonpath "$.entries[0].schemas" == 2
 jsonpath "$.result.structuredContent.entries[0].path" == "/no-blaze/"
 variable "text" jsonpath "$.entries[0].path" == "/no-blaze/"
-jsonpath "$.result.structuredContent.entries[1].name" == "self"
+jsonpath "$.result.structuredContent.entries[1].name" == "openapi3.0"
+variable "text" jsonpath "$.entries[1].name" == "openapi3.0"
 jsonpath "$.result.structuredContent.entries[1].private" == false
-variable "text" jsonpath "$.entries[1].name" == "self"
 variable "text" jsonpath "$.entries[1].private" == false
 jsonpath "$.result.structuredContent.entries[1].type" == "directory"
 variable "text" jsonpath "$.entries[1].type" == "directory"
-jsonpath "$.result.structuredContent.entries[1].health" == 99
-variable "text" jsonpath "$.entries[1].health" == 99
-jsonpath "$.result.structuredContent.entries[1].schemas" == 67
-variable "text" jsonpath "$.entries[1].schemas" == 67
-jsonpath "$.result.structuredContent.entries[1].path" == "/self/"
-variable "text" jsonpath "$.entries[1].path" == "/self/"
-jsonpath "$.result.structuredContent.entries[1].title" == "Self"
-variable "text" jsonpath "$.entries[1].title" == "Self"
-jsonpath "$.result.structuredContent.entries[1].description" == "The schemas that define the current version of this instance"
-variable "text" jsonpath "$.entries[1].description" == "The schemas that define the current version of this instance"
-jsonpath "$.result.structuredContent.entries[2].name" == "test"
+jsonpath "$.result.structuredContent.entries[1].health" == 67
+variable "text" jsonpath "$.entries[1].health" == 67
+jsonpath "$.result.structuredContent.entries[1].schemas" == 3
+variable "text" jsonpath "$.entries[1].schemas" == 3
+jsonpath "$.result.structuredContent.entries[1].path" == "/openapi3.0/"
+variable "text" jsonpath "$.entries[1].path" == "/openapi3.0/"
+jsonpath "$.result.structuredContent.entries[1].title" == "OpenAPI 3.0"
+variable "text" jsonpath "$.entries[1].title" == "OpenAPI 3.0"
+jsonpath "$.result.structuredContent.entries[1].description" == "Schemas that take their dialect from this collection, since they cannot declare one"
+variable "text" jsonpath "$.entries[1].description" == "Schemas that take their dialect from this collection, since they cannot declare one"
+jsonpath "$.result.structuredContent.entries[2].name" == "self"
+variable "text" jsonpath "$.entries[2].name" == "self"
 jsonpath "$.result.structuredContent.entries[2].private" == false
-variable "text" jsonpath "$.entries[2].name" == "test"
 variable "text" jsonpath "$.entries[2].private" == false
 jsonpath "$.result.structuredContent.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].type" == "directory"
-jsonpath "$.result.structuredContent.entries[2].health" == 31
-variable "text" jsonpath "$.entries[2].health" == 31
-jsonpath "$.result.structuredContent.entries[2].schemas" == 77
-variable "text" jsonpath "$.entries[2].schemas" == 77
-jsonpath "$.result.structuredContent.entries[2].path" == "/test/"
-variable "text" jsonpath "$.entries[2].path" == "/test/"
-jsonpath "$.result.structuredContent.entries[3].name" == "twins"
+jsonpath "$.result.structuredContent.entries[2].health" == 99
+variable "text" jsonpath "$.entries[2].health" == 99
+jsonpath "$.result.structuredContent.entries[2].schemas" == 67
+variable "text" jsonpath "$.entries[2].schemas" == 67
+jsonpath "$.result.structuredContent.entries[2].path" == "/self/"
+variable "text" jsonpath "$.entries[2].path" == "/self/"
+jsonpath "$.result.structuredContent.entries[2].title" == "Self"
+variable "text" jsonpath "$.entries[2].title" == "Self"
+jsonpath "$.result.structuredContent.entries[2].description" == "The schemas that define the current version of this instance"
+variable "text" jsonpath "$.entries[2].description" == "The schemas that define the current version of this instance"
+jsonpath "$.result.structuredContent.entries[3].name" == "test"
+variable "text" jsonpath "$.entries[3].name" == "test"
 jsonpath "$.result.structuredContent.entries[3].private" == false
-variable "text" jsonpath "$.entries[3].name" == "twins"
 variable "text" jsonpath "$.entries[3].private" == false
-jsonpath "$.result.structuredContent.entries[3].title" == "Twins"
-variable "text" jsonpath "$.entries[3].title" == "Twins"
-jsonpath "$.result.structuredContent.entries[3].description" == "Schemas whose base name collides with a sibling directory"
-variable "text" jsonpath "$.entries[3].description" == "Schemas whose base name collides with a sibling directory"
 jsonpath "$.result.structuredContent.entries[3].type" == "directory"
 variable "text" jsonpath "$.entries[3].type" == "directory"
-jsonpath "$.result.structuredContent.entries[3].health" == 100
-variable "text" jsonpath "$.entries[3].health" == 100
-jsonpath "$.result.structuredContent.entries[3].schemas" == 2
-variable "text" jsonpath "$.entries[3].schemas" == 2
-jsonpath "$.result.structuredContent.entries[3].path" == "/twins/"
-variable "text" jsonpath "$.entries[3].path" == "/twins/"
+jsonpath "$.result.structuredContent.entries[3].health" == 31
+variable "text" jsonpath "$.entries[3].health" == 31
+jsonpath "$.result.structuredContent.entries[3].schemas" == 77
+variable "text" jsonpath "$.entries[3].schemas" == 77
+jsonpath "$.result.structuredContent.entries[3].path" == "/test/"
+variable "text" jsonpath "$.entries[3].path" == "/test/"
+jsonpath "$.result.structuredContent.entries[4].name" == "twins"
+variable "text" jsonpath "$.entries[4].name" == "twins"
+jsonpath "$.result.structuredContent.entries[4].private" == false
+variable "text" jsonpath "$.entries[4].private" == false
+jsonpath "$.result.structuredContent.entries[4].type" == "directory"
+variable "text" jsonpath "$.entries[4].type" == "directory"
+jsonpath "$.result.structuredContent.entries[4].health" == 100
+variable "text" jsonpath "$.entries[4].health" == 100
+jsonpath "$.result.structuredContent.entries[4].schemas" == 2
+variable "text" jsonpath "$.entries[4].schemas" == 2
+jsonpath "$.result.structuredContent.entries[4].path" == "/twins/"
+variable "text" jsonpath "$.entries[4].path" == "/twins/"
+jsonpath "$.result.structuredContent.entries[4].title" == "Twins"
+variable "text" jsonpath "$.entries[4].title" == "Twins"
+jsonpath "$.result.structuredContent.entries[4].description" == "Schemas whose base name collides with a sibling directory"
+variable "text" jsonpath "$.entries[4].description" == "Schemas whose base name collides with a sibling directory"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -3625,15 +3737,15 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 148
-variable "text" jsonpath "$.schemas" == 148
-jsonpath "$.result.structuredContent.entries" count == 4
+jsonpath "$.result.structuredContent.schemas" == 151
+variable "text" jsonpath "$.schemas" == 151
+jsonpath "$.result.structuredContent.entries" count == 5
 jsonpath "$.result.structuredContent.private" == false
-variable "text" jsonpath "$.entries" count == 4
+variable "text" jsonpath "$.entries" count == 5
 variable "text" jsonpath "$.private" == false
 jsonpath "$.result.structuredContent.entries[0].name" == "no-blaze"
-jsonpath "$.result.structuredContent.entries[0].private" == false
 variable "text" jsonpath "$.entries[0].name" == "no-blaze"
+jsonpath "$.result.structuredContent.entries[0].private" == false
 variable "text" jsonpath "$.entries[0].private" == false
 jsonpath "$.result.structuredContent.entries[0].type" == "directory"
 variable "text" jsonpath "$.entries[0].type" == "directory"
@@ -3643,50 +3755,66 @@ jsonpath "$.result.structuredContent.entries[0].schemas" == 2
 variable "text" jsonpath "$.entries[0].schemas" == 2
 jsonpath "$.result.structuredContent.entries[0].path" == "/no-blaze/"
 variable "text" jsonpath "$.entries[0].path" == "/no-blaze/"
-jsonpath "$.result.structuredContent.entries[1].name" == "self"
+jsonpath "$.result.structuredContent.entries[1].name" == "openapi3.0"
+variable "text" jsonpath "$.entries[1].name" == "openapi3.0"
 jsonpath "$.result.structuredContent.entries[1].private" == false
-variable "text" jsonpath "$.entries[1].name" == "self"
 variable "text" jsonpath "$.entries[1].private" == false
 jsonpath "$.result.structuredContent.entries[1].type" == "directory"
 variable "text" jsonpath "$.entries[1].type" == "directory"
-jsonpath "$.result.structuredContent.entries[1].health" == 99
-variable "text" jsonpath "$.entries[1].health" == 99
-jsonpath "$.result.structuredContent.entries[1].schemas" == 67
-variable "text" jsonpath "$.entries[1].schemas" == 67
-jsonpath "$.result.structuredContent.entries[1].path" == "/self/"
-variable "text" jsonpath "$.entries[1].path" == "/self/"
-jsonpath "$.result.structuredContent.entries[1].title" == "Self"
-variable "text" jsonpath "$.entries[1].title" == "Self"
-jsonpath "$.result.structuredContent.entries[1].description" == "The schemas that define the current version of this instance"
-variable "text" jsonpath "$.entries[1].description" == "The schemas that define the current version of this instance"
-jsonpath "$.result.structuredContent.entries[2].name" == "test"
+jsonpath "$.result.structuredContent.entries[1].health" == 67
+variable "text" jsonpath "$.entries[1].health" == 67
+jsonpath "$.result.structuredContent.entries[1].schemas" == 3
+variable "text" jsonpath "$.entries[1].schemas" == 3
+jsonpath "$.result.structuredContent.entries[1].path" == "/openapi3.0/"
+variable "text" jsonpath "$.entries[1].path" == "/openapi3.0/"
+jsonpath "$.result.structuredContent.entries[1].title" == "OpenAPI 3.0"
+variable "text" jsonpath "$.entries[1].title" == "OpenAPI 3.0"
+jsonpath "$.result.structuredContent.entries[1].description" == "Schemas that take their dialect from this collection, since they cannot declare one"
+variable "text" jsonpath "$.entries[1].description" == "Schemas that take their dialect from this collection, since they cannot declare one"
+jsonpath "$.result.structuredContent.entries[2].name" == "self"
+variable "text" jsonpath "$.entries[2].name" == "self"
 jsonpath "$.result.structuredContent.entries[2].private" == false
-variable "text" jsonpath "$.entries[2].name" == "test"
 variable "text" jsonpath "$.entries[2].private" == false
 jsonpath "$.result.structuredContent.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].type" == "directory"
-jsonpath "$.result.structuredContent.entries[2].health" == 31
-variable "text" jsonpath "$.entries[2].health" == 31
-jsonpath "$.result.structuredContent.entries[2].schemas" == 77
-variable "text" jsonpath "$.entries[2].schemas" == 77
-jsonpath "$.result.structuredContent.entries[2].path" == "/test/"
-variable "text" jsonpath "$.entries[2].path" == "/test/"
-jsonpath "$.result.structuredContent.entries[3].name" == "twins"
+jsonpath "$.result.structuredContent.entries[2].health" == 99
+variable "text" jsonpath "$.entries[2].health" == 99
+jsonpath "$.result.structuredContent.entries[2].schemas" == 67
+variable "text" jsonpath "$.entries[2].schemas" == 67
+jsonpath "$.result.structuredContent.entries[2].path" == "/self/"
+variable "text" jsonpath "$.entries[2].path" == "/self/"
+jsonpath "$.result.structuredContent.entries[2].title" == "Self"
+variable "text" jsonpath "$.entries[2].title" == "Self"
+jsonpath "$.result.structuredContent.entries[2].description" == "The schemas that define the current version of this instance"
+variable "text" jsonpath "$.entries[2].description" == "The schemas that define the current version of this instance"
+jsonpath "$.result.structuredContent.entries[3].name" == "test"
+variable "text" jsonpath "$.entries[3].name" == "test"
 jsonpath "$.result.structuredContent.entries[3].private" == false
-variable "text" jsonpath "$.entries[3].name" == "twins"
 variable "text" jsonpath "$.entries[3].private" == false
-jsonpath "$.result.structuredContent.entries[3].title" == "Twins"
-variable "text" jsonpath "$.entries[3].title" == "Twins"
-jsonpath "$.result.structuredContent.entries[3].description" == "Schemas whose base name collides with a sibling directory"
-variable "text" jsonpath "$.entries[3].description" == "Schemas whose base name collides with a sibling directory"
 jsonpath "$.result.structuredContent.entries[3].type" == "directory"
 variable "text" jsonpath "$.entries[3].type" == "directory"
-jsonpath "$.result.structuredContent.entries[3].health" == 100
-variable "text" jsonpath "$.entries[3].health" == 100
-jsonpath "$.result.structuredContent.entries[3].schemas" == 2
-variable "text" jsonpath "$.entries[3].schemas" == 2
-jsonpath "$.result.structuredContent.entries[3].path" == "/twins/"
-variable "text" jsonpath "$.entries[3].path" == "/twins/"
+jsonpath "$.result.structuredContent.entries[3].health" == 31
+variable "text" jsonpath "$.entries[3].health" == 31
+jsonpath "$.result.structuredContent.entries[3].schemas" == 77
+variable "text" jsonpath "$.entries[3].schemas" == 77
+jsonpath "$.result.structuredContent.entries[3].path" == "/test/"
+variable "text" jsonpath "$.entries[3].path" == "/test/"
+jsonpath "$.result.structuredContent.entries[4].name" == "twins"
+variable "text" jsonpath "$.entries[4].name" == "twins"
+jsonpath "$.result.structuredContent.entries[4].private" == false
+variable "text" jsonpath "$.entries[4].private" == false
+jsonpath "$.result.structuredContent.entries[4].type" == "directory"
+variable "text" jsonpath "$.entries[4].type" == "directory"
+jsonpath "$.result.structuredContent.entries[4].health" == 100
+variable "text" jsonpath "$.entries[4].health" == 100
+jsonpath "$.result.structuredContent.entries[4].schemas" == 2
+variable "text" jsonpath "$.entries[4].schemas" == 2
+jsonpath "$.result.structuredContent.entries[4].path" == "/twins/"
+variable "text" jsonpath "$.entries[4].path" == "/twins/"
+jsonpath "$.result.structuredContent.entries[4].title" == "Twins"
+variable "text" jsonpath "$.entries[4].title" == "Twins"
+jsonpath "$.result.structuredContent.entries[4].description" == "Schemas whose base name collides with a sibling directory"
+variable "text" jsonpath "$.entries[4].description" == "Schemas whose base name collides with a sibling directory"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
