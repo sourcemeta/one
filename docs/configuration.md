@@ -185,24 +185,14 @@ contain the actual schema definitions that power your instance.
 | `/x-sourcemeta-one:alert`      | String  | No  | N/A | When set, provide a human-readable alert on both the API and the HTML explorer for every schema in the collection. This is useful to provide any important message to consumers. The web explorer renders this as Markdown |
 | `/x-sourcemeta-one:priority`      | Integer  | No  | `50` | A hint, from `0` (least important) to `100` (most important), that signals the relative importance of this collection compared to others in the same instance. Consumers may use this to rank or filter collections |
 
-!!! note "Dialects that a schema cannot declare for itself"
+!!! note "OpenAPI 3.0 collections"
 
-    The [OpenAPI
-    3.0](https://spec.openapis.org/oas/v3.0.4.html#schema-object) Schema Object
-    admits no member beyond the keywords it defines and anything prefixed with
-    `x-`, which leaves it no way to state either its dialect or its identifier.
-    A collection of such schemas must therefore name the dialect from the
-    outside, by setting `defaultDialect` to
-    `tag:spec.openapis.org,2024-10-18:oas/3.0/dialect`, and Sourcemeta One
-    serves each schema exactly as written, conveying the dialect through a
-    `Link` header with `rel="describedby"` rather than through the document.
-
-    Two consequences are worth planning around. Such a schema is served
-    without an identifier, so a consumer that saves the response loses the
-    binding to the URL it came from and has to remember it separately. And
-    because `defaultDialect` applies only where a schema declares no dialect
-    of its own, a collection set to an OpenAPI 3.0 dialect may still hold
-    schemas that declare a different one, and those keep what they declare.
+    [OpenAPI 3.0](https://spec.openapis.org/oas/v3.0.4.html#schema-object)
+    Schema Objects do not support `$schema` or `$id`. Set `defaultDialect` to
+    `tag:spec.openapis.org,2024-10-18:oas/3.0/dialect`, or to the equivalent
+    `tag:spec.openapis.org,2021-09-28:oas/3.0/dialect`. Such schemas are served
+    as written, with the dialect in a `Link` header instead, and without an
+    identifier, so consumers that save one must track its URL themselves.
 
 !!! note "Why ingested schemas get a new `$id`"
 
