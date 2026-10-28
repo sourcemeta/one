@@ -407,10 +407,14 @@ to 2020-12 and carries on into the [OpenAPI
 3.2](https://spec.openapis.org/oas/v3.2.0.html#schema-object) Schema Object
 dialects, each of which is 2020-12 plus a vocabulary of its own, so a Draft 4
 schema can be asked for as `openapi3.2`. A schema can be asked for in the
-dialect it declares with
-[`$schema`](https://www.learnjsonschema.com/2020-12/core/schema/) or in any
-newer one, and the `conversions` property of its [metadata](#metadata) lists
-exactly the values it accepts.
+dialect it is served as or in any newer one, and the `conversions` property of
+its [metadata](#metadata) lists exactly the values it accepts.
+
+An [OpenAPI
+3.0](https://spec.openapis.org/oas/v3.0.4.html#schema-object) Schema Object can
+be asked for as any of them, even though it declares no dialect of its own, as
+the collection it belongs to names that dialect on its behalf. It is not itself
+one of the values `as` accepts, since nothing is converted into it.
 
 !!! note "A conversion is always bundled"
 

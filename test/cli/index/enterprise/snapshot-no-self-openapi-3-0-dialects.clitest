@@ -113,6 +113,13 @@ WRITE expected.txt UNTIL EOF
 ./schemas/dated/product/%
 ./schemas/dated/product/%/blaze-exhaustive.metapack
 ./schemas/dated/product/%/blaze-fast.metapack
+./schemas/dated/product/%/bundle-2019-09.metapack
+./schemas/dated/product/%/bundle-2020-12.metapack
+./schemas/dated/product/%/bundle-draft4.metapack
+./schemas/dated/product/%/bundle-draft6.metapack
+./schemas/dated/product/%/bundle-draft7.metapack
+./schemas/dated/product/%/bundle-openapi3.1.metapack
+./schemas/dated/product/%/bundle-openapi3.2.metapack
 ./schemas/dated/product/%/bundle.metapack
 ./schemas/dated/product/%/dependencies.metapack
 ./schemas/dated/product/%/editor.metapack
@@ -126,6 +133,13 @@ WRITE expected.txt UNTIL EOF
 ./schemas/original/product/%
 ./schemas/original/product/%/blaze-exhaustive.metapack
 ./schemas/original/product/%/blaze-fast.metapack
+./schemas/original/product/%/bundle-2019-09.metapack
+./schemas/original/product/%/bundle-2020-12.metapack
+./schemas/original/product/%/bundle-draft4.metapack
+./schemas/original/product/%/bundle-draft6.metapack
+./schemas/original/product/%/bundle-draft7.metapack
+./schemas/original/product/%/bundle-openapi3.1.metapack
+./schemas/original/product/%/bundle-openapi3.2.metapack
 ./schemas/original/product/%/bundle.metapack
 ./schemas/original/product/%/dependencies.metapack
 ./schemas/original/product/%/editor.metapack

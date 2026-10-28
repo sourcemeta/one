@@ -33,9 +33,11 @@ auto conversions_metadata(std::string_view dialect, bool is_metaschema)
     -> sourcemeta::core::JSON;
 
 // Convert a bundled schema into a newer dialect, every resource it
-// holds included, reporting whether there was a conversion to make at all
+// holds included, reporting whether there was a conversion to make at all.
+// The dialect to convert from is named rather than read, as a schema whose
+// dialect reserves no keyword to declare it carries it nowhere
 auto convert_schema(sourcemeta::core::JSON &schema, SchemaDialect target,
-                    std::string_view identifier,
+                    std::string_view identifier, std::string_view dialect,
                     const sourcemeta::core::SchemaResolver &resolver) -> bool;
 
 // A schema that could not be converted into a dialect

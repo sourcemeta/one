@@ -552,3 +552,66 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
+
+# A Schema Object carries no dialect of its own, so the conversion a reader
+# asks for here is one this instance settles from what it serves the schema as
+POST {{base}}/self/v1/mcp
+Accept: application/json, text/event-stream
+MCP-Protocol-Version: 2026-07-28
+Mcp-Method: resources/read
+Mcp-Name: {{base}}/openapi3.0/identifier?as=openapi3.2
+Content-Type: application/json
+```
+{
+  "jsonrpc": "2.0",
+  "id": 908,
+  "method": "resources/read",
+  "params": {
+    "uri": "{{base}}/openapi3.0/identifier?as=openapi3.2",
+    "_meta": {
+      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+      "io.modelcontextprotocol/clientCapabilities": {},
+      "io.modelcontextprotocol/clientInfo": {
+        "name": "hurl",
+        "version": "1.0.0"
+      }
+    }
+  }
+}
+```
+HTTP 200
+Cache-Control: no-store
+Content-Type: application/json
+Access-Control-Allow-Origin: {{base}}
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/mcp/response>; rel="describedby"
+MCP-Protocol-Version: 2026-07-28
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "Vary" not exists
+header "Mcp-Session-Id" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.jsonrpc" == "2.0"
+jsonpath "$.id" == 908
+jsonpath "$.result.contents" count == 1
+jsonpath "$.result.contents[0].uri" == "{{base}}/openapi3.0/identifier?as=openapi3.2"
+jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
+jsonpath "$.result.contents[0].text" == "{\n  \"$schema\": \"https://spec.openapis.org/oas/3.2/dialect/2025-09-17\",\n  \"title\": \"Identifier\",\n  \"description\": \"A product identifier, which cannot declare a dialect of its own\",\n  \"example\": \"0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9\",\n  \"type\": \"string\",\n  \"format\": \"uuid\"\n}"
+jsonpath "$.error" not exists
+jsonpath "$.result.resultType" == "complete"
+jsonpath "$.result.ttlMs" == 300000
+jsonpath "$.result.cacheScope" == "public"
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+header "Vary" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.valid" == true

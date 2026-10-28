@@ -173,7 +173,8 @@ header "ETag" exists
   }
 }
 
-# The dialect is reported as declared and the base dialect it rests on
+# The dialect is reported as declared, the base dialect it rests on, and every
+# dialect this instance can convert it into
 GET {{base}}/self/v1/api/schemas/metadata/openapi3.0/product
 Accept: application/json
 HTTP 200
@@ -198,7 +199,29 @@ header "Last-Modified" exists
   "baseDialect": "http://json-schema.org/draft-04/schema#",
   "dialect": "tag:spec.openapis.org,2024-10-18:oas/3.0/dialect",
   "metaschema": false,
-  "conversions": {},
+  "conversions": {
+    "draft4": {
+      "mediaType": "application/schema+json"
+    },
+    "draft6": {
+      "mediaType": "application/schema+json"
+    },
+    "draft7": {
+      "mediaType": "application/schema+json"
+    },
+    "2019-09": {
+      "mediaType": "application/schema+json"
+    },
+    "2020-12": {
+      "mediaType": "application/schema+json"
+    },
+    "openapi3.1": {
+      "mediaType": "application/schema+json"
+    },
+    "openapi3.2": {
+      "mediaType": "application/schema+json"
+    }
+  },
   "title": "Product",
   "description": "A product that exercises the keywords OpenAPI 3.0 adds to Draft 4",
   "examples": [],
@@ -496,22 +519,481 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
   ]
 }
 
-# No conversion is offered, since nothing upgrades into an OpenAPI 3.0 Schema
-# Object and it is not a conversion source either. Asking for one is refused on
-# that ground rather than for carrying a dialect of the catalog's own, which it
-# does not
-GET {{base}}/openapi3.0/product.json?as=2020-12
-HTTP 400
-Content-Type: application/problem+json
-Cache-Control: no-store
+# Converted into draft4, the oldest dialect anything converts into, where
+# every keyword OpenAPI 3.0 adds has to be set aside and an exclusive bound
+# is still a flag on another
+GET {{base}}/openapi3.0/product.json?as=draft4
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/schema+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/error>; rel="describedby"
+Link: <http://json-schema.org/draft-04/schema\#>; rel="describedby"
 [Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
 {
-  "type": "urn:sourcemeta:one:invalid-conversion",
-  "title": "Bad Request",
-  "status": 400,
-  "detail": "The schema cannot be converted into this dialect"
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Product",
+  "description": "A product that exercises the keywords OpenAPI 3.0 adds to Draft 4",
+  "x-discriminator": {
+    "propertyName": "kind"
+  },
+  "x-example": {
+    "id": "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9",
+    "kind": "book"
+  },
+  "x-externalDocs": {
+    "url": "https://example.com/products",
+    "description": "Product documentation"
+  },
+  "x-xml": {
+    "name": "Product"
+  },
+  "type": "object",
+  "required": [ "id", "kind" ],
+  "properties": {
+    "id": {
+      "$ref": "#/definitions/http:~1~1localhost:8000~1openapi3.0~1identifier"
+    },
+    "kind": {
+      "enum": [ "book", "film" ]
+    },
+    "price": {
+      "type": "number",
+      "exclusiveMinimum": true,
+      "minimum": 0
+    },
+    "label": {
+      "type": [ "string", "null" ]
+    },
+    "legacy": {
+      "x-deprecated": true,
+      "type": "boolean"
+    },
+    "slug": {
+      "x-readOnly": true,
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "{{base}}/openapi3.0/identifier": {
+      "title": "Identifier",
+      "description": "A product identifier, which cannot declare a dialect of its own",
+      "x-example": "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9",
+      "type": "string",
+      "format": "uuid"
+    }
+  }
 }
+
+# Converted into draft6, where an exclusive bound becomes a number in its
+# own right
+GET {{base}}/openapi3.0/product.json?as=draft6
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/schema+json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: <http://json-schema.org/draft-06/schema\#>; rel="describedby"
+[Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "title": "Product",
+  "description": "A product that exercises the keywords OpenAPI 3.0 adds to Draft 4",
+  "x-discriminator": {
+    "propertyName": "kind"
+  },
+  "x-example": {
+    "id": "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9",
+    "kind": "book"
+  },
+  "x-externalDocs": {
+    "url": "https://example.com/products",
+    "description": "Product documentation"
+  },
+  "x-xml": {
+    "name": "Product"
+  },
+  "type": "object",
+  "required": [ "id", "kind" ],
+  "properties": {
+    "id": {
+      "$ref": "#/definitions/http:~1~1localhost:8000~1openapi3.0~1identifier"
+    },
+    "kind": {
+      "enum": [ "book", "film" ]
+    },
+    "price": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "label": {
+      "type": [ "string", "null" ]
+    },
+    "legacy": {
+      "x-deprecated": true,
+      "type": "boolean"
+    },
+    "slug": {
+      "x-readOnly": true,
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "{{base}}/openapi3.0/identifier": {
+      "title": "Identifier",
+      "description": "A product identifier, which cannot declare a dialect of its own",
+      "x-example": "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9",
+      "type": "string",
+      "format": "uuid"
+    }
+  }
+}
+
+# Converted into draft7, where `readOnly` becomes a keyword of the dialect
+# rather than an extension
+GET {{base}}/openapi3.0/product.json?as=draft7
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/schema+json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: <http://json-schema.org/draft-07/schema\#>; rel="describedby"
+[Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Product",
+  "description": "A product that exercises the keywords OpenAPI 3.0 adds to Draft 4",
+  "x-discriminator": {
+    "propertyName": "kind"
+  },
+  "x-example": {
+    "id": "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9",
+    "kind": "book"
+  },
+  "x-externalDocs": {
+    "url": "https://example.com/products",
+    "description": "Product documentation"
+  },
+  "x-xml": {
+    "name": "Product"
+  },
+  "type": "object",
+  "required": [ "id", "kind" ],
+  "properties": {
+    "id": {
+      "$ref": "#/definitions/http:~1~1localhost:8000~1openapi3.0~1identifier"
+    },
+    "kind": {
+      "enum": [ "book", "film" ]
+    },
+    "price": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "label": {
+      "type": [ "string", "null" ]
+    },
+    "legacy": {
+      "x-deprecated": true,
+      "type": "boolean"
+    },
+    "slug": {
+      "readOnly": true,
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "{{base}}/openapi3.0/identifier": {
+      "title": "Identifier",
+      "description": "A product identifier, which cannot declare a dialect of its own",
+      "x-example": "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9",
+      "type": "string",
+      "format": "uuid"
+    }
+  }
+}
+
+# Converted into 2019-09, where `deprecated` becomes a keyword of the
+# dialect too
+GET {{base}}/openapi3.0/product.json?as=2019-09
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/schema+json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: <https://json-schema.org/draft/2019-09/schema>; rel="describedby"
+[Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "title": "Product",
+  "description": "A product that exercises the keywords OpenAPI 3.0 adds to Draft 4",
+  "x-discriminator": {
+    "propertyName": "kind"
+  },
+  "x-example": {
+    "id": "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9",
+    "kind": "book"
+  },
+  "x-externalDocs": {
+    "url": "https://example.com/products",
+    "description": "Product documentation"
+  },
+  "x-xml": {
+    "name": "Product"
+  },
+  "type": "object",
+  "required": [ "id", "kind" ],
+  "properties": {
+    "id": {
+      "$ref": "#/$defs/http:~1~1localhost:8000~1openapi3.0~1identifier"
+    },
+    "kind": {
+      "enum": [ "book", "film" ]
+    },
+    "price": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "label": {
+      "type": [ "string", "null" ]
+    },
+    "legacy": {
+      "deprecated": true,
+      "type": "boolean"
+    },
+    "slug": {
+      "readOnly": true,
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "{{base}}/openapi3.0/identifier": {
+      "title": "Identifier",
+      "description": "A product identifier, which cannot declare a dialect of its own",
+      "x-example": "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9",
+      "type": "string",
+      "format": "uuid"
+    }
+  }
+}
+
+# Converted into 2020-12, the newest dialect of JSON Schema itself, which
+# still gives the OpenAPI keywords no meaning
+GET {{base}}/openapi3.0/product.json?as=2020-12
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/schema+json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: <https://json-schema.org/draft/2020-12/schema>; rel="describedby"
+[Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Product",
+  "description": "A product that exercises the keywords OpenAPI 3.0 adds to Draft 4",
+  "x-discriminator": {
+    "propertyName": "kind"
+  },
+  "x-example": {
+    "id": "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9",
+    "kind": "book"
+  },
+  "x-externalDocs": {
+    "url": "https://example.com/products",
+    "description": "Product documentation"
+  },
+  "x-xml": {
+    "name": "Product"
+  },
+  "type": "object",
+  "required": [ "id", "kind" ],
+  "properties": {
+    "id": {
+      "$ref": "#/$defs/http:~1~1localhost:8000~1openapi3.0~1identifier"
+    },
+    "kind": {
+      "enum": [ "book", "film" ]
+    },
+    "price": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "label": {
+      "type": [ "string", "null" ]
+    },
+    "legacy": {
+      "deprecated": true,
+      "type": "boolean"
+    },
+    "slug": {
+      "readOnly": true,
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "{{base}}/openapi3.0/identifier": {
+      "title": "Identifier",
+      "description": "A product identifier, which cannot declare a dialect of its own",
+      "x-example": "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9",
+      "type": "string",
+      "format": "uuid"
+    }
+  }
+}
+
+# Converted into openapi3.1, the first dialect that defines the OpenAPI
+# keywords, so they are carried over as they were written rather than set
+# aside
+GET {{base}}/openapi3.0/product.json?as=openapi3.1
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/schema+json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: <https://spec.openapis.org/oas/3.1/dialect/base>; rel="describedby"
+[Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
+{
+  "$schema": "https://spec.openapis.org/oas/3.1/dialect/base",
+  "title": "Product",
+  "description": "A product that exercises the keywords OpenAPI 3.0 adds to Draft 4",
+  "example": {
+    "id": "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9",
+    "kind": "book"
+  },
+  "externalDocs": {
+    "url": "https://example.com/products",
+    "description": "Product documentation"
+  },
+  "type": "object",
+  "discriminator": {
+    "propertyName": "kind"
+  },
+  "required": [ "id", "kind" ],
+  "properties": {
+    "id": {
+      "$ref": "#/$defs/http:~1~1localhost:8000~1openapi3.0~1identifier"
+    },
+    "kind": {
+      "enum": [ "book", "film" ]
+    },
+    "price": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "label": {
+      "type": [ "string", "null" ]
+    },
+    "legacy": {
+      "deprecated": true,
+      "type": "boolean"
+    },
+    "slug": {
+      "readOnly": true,
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "xml": {
+    "name": "Product"
+  },
+  "$defs": {
+    "{{base}}/openapi3.0/identifier": {
+      "title": "Identifier",
+      "description": "A product identifier, which cannot declare a dialect of its own",
+      "example": "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9",
+      "type": "string",
+      "format": "uuid"
+    }
+  }
+}
+
+# Converted into openapi3.2, and the same holds one revision later
+GET {{base}}/openapi3.0/product.json?as=openapi3.2
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/schema+json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: <https://spec.openapis.org/oas/3.2/dialect/2025-09-17>; rel="describedby"
+[Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
+{
+  "$schema": "https://spec.openapis.org/oas/3.2/dialect/2025-09-17",
+  "title": "Product",
+  "description": "A product that exercises the keywords OpenAPI 3.0 adds to Draft 4",
+  "example": {
+    "id": "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9",
+    "kind": "book"
+  },
+  "externalDocs": {
+    "url": "https://example.com/products",
+    "description": "Product documentation"
+  },
+  "type": "object",
+  "discriminator": {
+    "propertyName": "kind"
+  },
+  "required": [ "id", "kind" ],
+  "properties": {
+    "id": {
+      "$ref": "#/$defs/http:~1~1localhost:8000~1openapi3.0~1identifier"
+    },
+    "kind": {
+      "enum": [ "book", "film" ]
+    },
+    "price": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "label": {
+      "type": [ "string", "null" ]
+    },
+    "legacy": {
+      "deprecated": true,
+      "type": "boolean"
+    },
+    "slug": {
+      "readOnly": true,
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "xml": {
+    "name": "Product"
+  },
+  "$defs": {
+    "{{base}}/openapi3.0/identifier": {
+      "title": "Identifier",
+      "description": "A product identifier, which cannot declare a dialect of its own",
+      "example": "0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9",
+      "type": "string",
+      "format": "uuid"
+    }
+  }
+}
+

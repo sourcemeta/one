@@ -454,7 +454,7 @@ struct GenerateExplorerSchemaMetadata {
       bool convertible{false};
       try {
         convertible = sourcemeta::one::convert_schema(
-            bundle_option.value(), target, frame.root(),
+            bundle_option.value(), target, frame.root(), resolver_entry.dialect,
             [&callback, &resolver](const auto identifier) {
               return resolver(identifier, callback);
             });

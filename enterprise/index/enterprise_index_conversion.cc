@@ -30,10 +30,11 @@ auto convert_target(const sourcemeta::one::SchemaDialect dialect)
     case sourcemeta::one::SchemaDialect::OpenAPI32:
       return sourcemeta::blaze::ConvertTarget::OpenAPI32;
     case sourcemeta::one::SchemaDialect::Draft3:
+    case sourcemeta::one::SchemaDialect::OpenAPI30:
       break;
   }
 
-  // Nothing is ever converted into the oldest dialect
+  // A dialect nothing converts into is only ever converted from
   std::unreachable();
 }
 
@@ -61,6 +62,7 @@ auto conversions_metadata(const std::string_view dialect,
 
 auto convert_schema(sourcemeta::core::JSON &schema, const SchemaDialect target,
                     const std::string_view identifier,
+                    const std::string_view dialect,
                     const sourcemeta::core::SchemaResolver &resolver) -> bool {
   // A meta-schema names the keywords that conversion renames, and a dialect
   // off the ladder has no rules to move a schema from, so a closure holding
@@ -69,7 +71,7 @@ auto convert_schema(sourcemeta::core::JSON &schema, const SchemaDialect target,
   // quietly pass over
   try {
     sourcemeta::blaze::convert(schema, sourcemeta::core::schema_walker,
-                               resolver, convert_target(target), "",
+                               resolver, convert_target(target), dialect,
                                identifier);
   } catch (const sourcemeta::blaze::ConvertUnsupportedMetaschemaError &) {
     return false;
@@ -78,8 +80,12 @@ auto convert_schema(sourcemeta::core::JSON &schema, const SchemaDialect target,
   }
 
   const sourcemeta::core::SchemaFrame frame{
-      sourcemeta::core::SchemaFrame::Mode::Locations, schema,
-      sourcemeta::core::schema_walker, resolver, conversion_uri(target)};
+      sourcemeta::core::SchemaFrame::Mode::Locations,
+      schema,
+      sourcemeta::core::schema_walker,
+      resolver,
+      conversion_uri(target),
+      identifier};
   sourcemeta::core::schema_format(schema, frame);
   return true;
 }
