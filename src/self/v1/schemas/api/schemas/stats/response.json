@@ -61,6 +61,7 @@
       "http://json-schema.org/draft-03/hyper-schema#",
       "https://spec.openapis.org/oas/3.2/vocab/base",
       "https://spec.openapis.org/oas/3.1/vocab/base",
+      "tag:spec.openapis.org,2017:oas/3.0/vocab/base",
       "unknown"
     ]
   },

@@ -407,11 +407,14 @@ struct GenerateExplorerSchemaMetadata {
     assert(schema_data_option.has_value());
     const auto &schema_data{schema_data_option.value()};
     const sourcemeta::core::SchemaFrame frame{
-        sourcemeta::core::SchemaFrame::Mode::Root, schema_data,
+        sourcemeta::core::SchemaFrame::Mode::Root,
+        schema_data,
         sourcemeta::core::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
-        }};
+        },
+        resolver_entry.dialect,
+        action.data};
     assert(!frame.root().empty());
     const auto &schema_location{frame.root_location().value().get()};
     auto result{sourcemeta::core::JSON::make_object()};
@@ -657,11 +660,14 @@ struct GenerateDependents {
         const auto schema{resolver(from, callback)};
         assert(schema.has_value());
         const sourcemeta::core::SchemaFrame frame{
-            sourcemeta::core::SchemaFrame::Mode::Root, schema.value(),
+            sourcemeta::core::SchemaFrame::Mode::Root,
+            schema.value(),
             sourcemeta::core::schema_walker,
             [&callback, &resolver](const auto identifier) {
               return resolver(identifier, callback);
-            }};
+            },
+            resolver.dialect_of(from),
+            from};
         auto base_dialect{std::format(
             "{}", frame.root_location().value().get().base_dialect)};
         object.assign("baseDialect", sourcemeta::core::JSON{base_dialect});

@@ -19,8 +19,8 @@ header "Last-Modified" exists
 jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
-jsonpath "$.schemas" == 148
-jsonpath "$.entries" count == 4
+jsonpath "$.schemas" == 151
+jsonpath "$.entries" count == 5
 jsonpath "$.private" == false
 jsonpath "$.entries[0].name" == "no-blaze"
 jsonpath "$.entries[0].private" == false
@@ -28,27 +28,35 @@ jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].health" == 0
 jsonpath "$.entries[0].schemas" == 2
 jsonpath "$.entries[0].path" == "/no-blaze/"
-jsonpath "$.entries[1].name" == "self"
+jsonpath "$.entries[1].name" == "openapi3.0"
 jsonpath "$.entries[1].private" == false
-jsonpath "$.entries[1].title" == "Self"
-jsonpath "$.entries[1].description" == "The schemas that define the current version of this instance"
+jsonpath "$.entries[1].title" == "OpenAPI 3.0"
+jsonpath "$.entries[1].description" == "Schemas that take their dialect from this collection, since they cannot declare one"
 jsonpath "$.entries[1].type" == "directory"
-jsonpath "$.entries[1].health" == 99
-jsonpath "$.entries[1].schemas" == 67
-jsonpath "$.entries[1].path" == "/self/"
-jsonpath "$.entries[2].name" == "test"
+jsonpath "$.entries[1].health" == 67
+jsonpath "$.entries[1].schemas" == 3
+jsonpath "$.entries[1].path" == "/openapi3.0/"
+jsonpath "$.entries[2].name" == "self"
 jsonpath "$.entries[2].private" == false
+jsonpath "$.entries[2].title" == "Self"
+jsonpath "$.entries[2].description" == "The schemas that define the current version of this instance"
 jsonpath "$.entries[2].type" == "directory"
-jsonpath "$.entries[2].health" == 31
-jsonpath "$.entries[2].schemas" == 77
-jsonpath "$.entries[2].path" == "/test/"
-jsonpath "$.entries[3].name" == "twins"
+jsonpath "$.entries[2].health" == 99
+jsonpath "$.entries[2].schemas" == 67
+jsonpath "$.entries[2].path" == "/self/"
+jsonpath "$.entries[3].name" == "test"
 jsonpath "$.entries[3].private" == false
-jsonpath "$.entries[3].title" == "Twins"
-jsonpath "$.entries[3].description" == "Schemas whose base name collides with a sibling directory"
 jsonpath "$.entries[3].type" == "directory"
-jsonpath "$.entries[3].schemas" == 2
-jsonpath "$.entries[3].path" == "/twins/"
+jsonpath "$.entries[3].health" == 31
+jsonpath "$.entries[3].schemas" == 77
+jsonpath "$.entries[3].path" == "/test/"
+jsonpath "$.entries[4].name" == "twins"
+jsonpath "$.entries[4].private" == false
+jsonpath "$.entries[4].title" == "Twins"
+jsonpath "$.entries[4].description" == "Schemas whose base name collides with a sibling directory"
+jsonpath "$.entries[4].type" == "directory"
+jsonpath "$.entries[4].schemas" == 2
+jsonpath "$.entries[4].path" == "/twins/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

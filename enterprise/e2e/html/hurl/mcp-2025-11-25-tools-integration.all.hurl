@@ -23,7 +23,7 @@ MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
-test_path: jsonpath "$.result.structuredContent.entries[2].path"
+test_path: jsonpath "$.result.structuredContent.entries[3].path"
 text: jsonpath "$.result.content[0].text"
 [Asserts]
 header "Vary" not exists
@@ -36,9 +36,9 @@ jsonpath "$.id" == 1200
 jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent.path" == "/"
 variable "text" jsonpath "$.path" == "/"
-jsonpath "$.result.structuredContent.entries[2].name" == "test"
+jsonpath "$.result.structuredContent.entries[2].name" == "self"
 jsonpath "$.result.structuredContent.entries[2].private" == false
-variable "text" jsonpath "$.entries[2].name" == "test"
+variable "text" jsonpath "$.entries[2].name" == "self"
 variable "text" jsonpath "$.entries[2].private" == false
 variable "test_path" == "/test/"
 

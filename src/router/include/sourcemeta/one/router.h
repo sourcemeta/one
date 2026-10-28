@@ -357,6 +357,11 @@ public:
   [[nodiscard]] auto artifact_read_json(const ResolvedArtifact &artifact) const
       -> std::optional<sourcemeta::core::JSON>;
 
+  // The dialect an artifact records alongside its contents, which is where a
+  // schema that reserves no keyword to declare one carries it
+  [[nodiscard]] auto artifact_dialect(const ResolvedArtifact &artifact) const
+      -> std::optional<sourcemeta::core::JSON::String>;
+
   auto artifact_serve(const ResolvedArtifact &artifact,
                       const sourcemeta::core::HTTPStatus &status,
                       bool enable_cors, std::string_view mime,

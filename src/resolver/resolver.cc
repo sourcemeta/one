@@ -144,6 +144,16 @@ declared_identifier(const sourcemeta::core::JSON &schema,
   }
 }
 
+// Whether the dialect in force gives a keyword any meaning at all, which is
+// what the vocabularies it draws on say rather than what its base dialect
+// happens to name
+static auto
+dialect_defines(const sourcemeta::core::SchemaVocabularies &vocabularies,
+                const std::string_view keyword) -> bool {
+  return sourcemeta::core::schema_walker(keyword, vocabularies).type !=
+         sourcemeta::core::SchemaKeywordType::Unknown;
+}
+
 static auto normalise_identifier(const std::string_view identifier)
     -> std::string {
   std::string lowercase{identifier};
@@ -496,25 +506,31 @@ auto Resolver::operator()(
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  // (4) Make sure the schema explicitly declares the intended dialect
+  // (4) Stop the schema from declaring a dialect, so that the one this
+  // instance serves it as is named from the outside
   /////////////////////////////////////////////////////////////////////////////
 
-  // Note that we have to do this before attempting to analyse the schema, so
-  // we can internally resolve any potential custom meta-schema
-  schema.assign("$schema", sourcemeta::core::JSON{view->dialect});
+  // What the schema calls its dialect was already settled at registration,
+  // where it was also rebased, so the entry rather than the document is what
+  // every step below reads. A dialect that reserves no keyword to declare it
+  // cannot be analysed with one written in at all
+  schema.erase("$schema");
 
   /////////////////////////////////////////////////////////////////////////////
   // (5) Normalise all references, if any, to match the new identifier
   /////////////////////////////////////////////////////////////////////////////
 
+  const sourcemeta::core::SchemaResolver subresolver{
+      [this](
+          const auto subidentifier) -> std::optional<sourcemeta::core::JSON> {
+        return this->operator()(subidentifier);
+      }};
+
   const sourcemeta::core::SchemaFrame frame{
       sourcemeta::core::SchemaFrame::Mode::Locations,
       schema,
       sourcemeta::core::schema_walker,
-      [this](
-          const auto subidentifier) -> std::optional<sourcemeta::core::JSON> {
-        return this->operator()(subidentifier);
-      },
+      subresolver,
       view->dialect,
       view->original_identifier,
       sourcemeta::core::SchemaFrame::IdentifierMode::Fallback};
@@ -553,16 +569,24 @@ auto Resolver::operator()(
   });
 
   /////////////////////////////////////////////////////////////////////////////
-  // (6) Assign the new final identifier to the schema
+  // (6) Declare the dialect and the new final identifier, as far as the
+  // dialect in force reserves the keywords to do so
   /////////////////////////////////////////////////////////////////////////////
 
-  sourcemeta::core::schema_reidentify(
-      schema, *new_identifier, sourcemeta::core::schema_walker,
-      [this](
-          const auto subidentifier) -> std::optional<sourcemeta::core::JSON> {
-        return this->operator()(subidentifier);
-      },
-      view->dialect);
+  const auto &root_location{frame.root_location().value().get()};
+  const auto &root_vocabularies{frame.vocabularies(root_location, subresolver)};
+
+  if (dialect_defines(root_vocabularies, "$schema")) {
+    schema.assign("$schema", sourcemeta::core::JSON{view->dialect});
+  }
+
+  if (dialect_defines(root_vocabularies,
+                      sourcemeta::core::schema_identifier_keyword(
+                          root_location.base_dialect))) {
+    sourcemeta::core::schema_reidentify(schema, *new_identifier,
+                                        sourcemeta::core::schema_walker,
+                                        subresolver, view->dialect);
+  }
 
   this->cache_dialect(identifier, schema);
   return schema;
@@ -789,6 +813,14 @@ auto Resolver::entry(const std::string_view identifier) const -> const Entry & {
   assert(!result->second.original_identifier.empty());
   assert(result->second.collection != nullptr);
   return result->second;
+}
+
+auto Resolver::dialect_of(const std::string_view identifier) const
+    -> std::string_view {
+  const auto result{this->views_.find(std::string{identifier})};
+  return result == this->views_.cend()
+             ? std::string_view{}
+             : std::string_view{result->second.dialect};
 }
 
 auto Resolver::cache_path(const std::string_view uri,

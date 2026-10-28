@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Modern",
+  "description": "A schema that declares its own dialect, so the collection default does not apply to it",
+  "type": "integer",
+  "exclusiveMinimum": 0,
+  "examples": [ 1 ]
+}

@@ -16,6 +16,7 @@
 #include <filesystem>  // std::filesystem
 #include <limits>      // std::numeric_limits
 #include <optional>    // std::optional
+#include <span>        // std::span
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
@@ -27,6 +28,22 @@ struct DialectExtension {
   std::uint16_t dialect_length;
 };
 #pragma pack(pop)
+
+auto dialect_of(const std::span<const std::uint8_t> extension)
+    -> std::string_view {
+  const auto *header{
+      sourcemeta::core::metapack_extension_as<DialectExtension>(extension)};
+  if (header == nullptr || header->dialect_length == 0 ||
+      sizeof(DialectExtension) + header->dialect_length > extension.size()) {
+    return {};
+  }
+
+  return std::string_view{
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+      reinterpret_cast<const char *>(extension.data() +
+                                     sizeof(DialectExtension)),
+      header->dialect_length};
+}
 
 // The longest form a validator takes here, which is the weak prefix, the
 // quoted checksum, and nothing else
@@ -174,6 +191,22 @@ auto RouterAction::artifact_resolve_static(
 auto RouterAction::artifact_read_json(const ResolvedArtifact &artifact) const
     -> std::optional<sourcemeta::core::JSON> {
   return sourcemeta::core::metapack_read_json(artifact.path());
+}
+
+auto RouterAction::artifact_dialect(const ResolvedArtifact &artifact) const
+    -> std::optional<sourcemeta::core::JSON::String> {
+  sourcemeta::core::FileView view{artifact.path()};
+  const auto parsed{sourcemeta::core::metapack_parse(view)};
+  if (!parsed.has_value()) {
+    return std::nullopt;
+  }
+
+  const auto dialect{dialect_of(parsed->extension)};
+  if (dialect.empty()) {
+    return std::nullopt;
+  }
+
+  return sourcemeta::core::JSON::String{dialect};
 }
 
 auto RouterAction::artifact_serve(
@@ -389,19 +422,7 @@ auto RouterAction::artifact_serve(
   if (!link.empty()) {
     sourcemeta::one::write_link_header(response, link);
   } else {
-    const auto &extension{parsed->extension};
-    const auto *dialect_ext{
-        sourcemeta::core::metapack_extension_as<DialectExtension>(extension)};
-    const std::string_view dialect =
-        (dialect_ext != nullptr && dialect_ext->dialect_length > 0 &&
-         sizeof(DialectExtension) + dialect_ext->dialect_length <=
-             extension.size())
-            ? std::string_view{
-                  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-                  reinterpret_cast<const char *>(extension.data() +
-                                                 sizeof(DialectExtension)),
-                  dialect_ext->dialect_length}
-            : std::string_view{};
+    const auto dialect{dialect_of(parsed->extension)};
     if (!dialect.empty()) {
       sourcemeta::one::write_link_header(response, dialect);
     }

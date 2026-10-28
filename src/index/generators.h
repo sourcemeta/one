@@ -225,13 +225,8 @@ struct GenerateMaterialisedSchema {
                       const sourcemeta::core::JSON &) -> void {
     auto schema{resolver(action.data)};
     assert(schema.has_value());
-    const auto *declared_dialect{schema->is_object() ? schema->try_at("$schema")
-                                                     : nullptr};
     const std::string_view dialect_identifier{
-        declared_dialect != nullptr && declared_dialect->is_string()
-            ? std::string_view{declared_dialect->to_string()}
-            : std::string_view{}};
-    assert(!dialect_identifier.empty());
+        resolver.entry(action.data).dialect};
     const auto metaschema{resolver(dialect_identifier, callback)};
     assert(metaschema.has_value());
 
@@ -414,8 +409,12 @@ struct GenerateFrameLocations {
           return resolver(identifier, callback);
         }};
     const sourcemeta::core::SchemaFrame frame{
-        sourcemeta::core::SchemaFrame::Mode::Locations, contents,
-        sourcemeta::core::schema_walker, schema_resolver};
+        sourcemeta::core::SchemaFrame::Mode::Locations,
+        contents,
+        sourcemeta::core::schema_walker,
+        schema_resolver,
+        resolver.entry(action.data).dialect,
+        action.data};
     auto result{sourcemeta::core::JSON::make_object()};
     result.assign("static", sourcemeta::core::JSON::make_object());
     result.assign("dynamic", sourcemeta::core::JSON::make_object());
@@ -490,6 +489,7 @@ struct GenerateDependencies {
     std::unordered_map<sourcemeta::core::JSON::String,
                        sourcemeta::core::JSON::String>
         base_dialects;
+    const auto &schema_entry{resolver.entry(action.data)};
     sourcemeta::blaze::dependencies(
         contents, sourcemeta::core::schema_walker,
         [&callback, &resolver](const auto identifier) {
@@ -507,11 +507,14 @@ struct GenerateDependencies {
           const auto match{base_dialects.find(target_uri)};
           if (match == base_dialects.cend()) {
             const sourcemeta::core::SchemaFrame frame{
-                sourcemeta::core::SchemaFrame::Mode::Root, schema,
+                sourcemeta::core::SchemaFrame::Mode::Root,
+                schema,
                 sourcemeta::core::schema_walker,
                 [&callback, &resolver](const auto identifier) {
                   return resolver(identifier, callback);
-                }};
+                },
+                resolver.dialect_of(target),
+                target};
             auto base_dialect{std::format(
                 "{}", frame.root_location().value().get().base_dialect)};
             trace.assign("baseDialect", sourcemeta::core::JSON{base_dialect});
@@ -522,7 +525,8 @@ struct GenerateDependencies {
           }
 
           result.push_back(std::move(trace));
-        });
+        },
+        schema_entry.dialect, action.data);
     // Otherwise we are returning non-sense
     assert(result.unique());
 
@@ -572,7 +576,8 @@ struct GenerateHealth {
         sourcemeta::core::metapack_read_json(action.dependencies.front())};
     assert(contents_option.has_value());
     const auto &contents{contents_option.value()};
-    const auto &collection{*resolver.entry(action.data).collection};
+    const auto &schema_entry{resolver.entry(action.data)};
+    const auto &collection{*schema_entry.collection};
     auto errors{sourcemeta::core::JSON::make_array()};
     auto report{sourcemeta::core::JSON::make_object()};
 
@@ -612,7 +617,8 @@ struct GenerateHealth {
 
             entry.assign("pointers", std::move(pointers));
             errors.push_back(std::move(entry));
-          })};
+          },
+          schema_entry.dialect, action.data)};
       report.assign("score", sourcemeta::core::to_json(result.second));
     }
 
@@ -694,19 +700,14 @@ struct GenerateBundle {
     sourcemeta::core::SchemaBundleOptions bundle_options;
     bundle_options.mode =
         sourcemeta::core::SchemaBundleOptions::Mode::References;
+    const std::string_view dialect_identifier{
+        resolver.entry(action.data).dialect};
     sourcemeta::core::schema_bundle(
         schema, sourcemeta::core::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
-        "", "", bundle_options);
-    const auto *declared_dialect{schema.is_object() ? schema.try_at("$schema")
-                                                    : nullptr};
-    const std::string_view dialect_identifier{
-        declared_dialect != nullptr && declared_dialect->is_string()
-            ? std::string_view{declared_dialect->to_string()}
-            : std::string_view{}};
-    assert(!dialect_identifier.empty());
+        dialect_identifier, action.data, bundle_options);
     format_schema(
         schema,
         [&callback, &resolver](const auto identifier) {
@@ -733,18 +734,14 @@ struct GenerateEditor {
         sourcemeta::core::metapack_read_json(action.dependencies.front())};
     assert(schema_option.has_value());
     auto schema{std::move(schema_option.value())};
+    const std::string_view dialect_identifier{
+        resolver.entry(action.data).dialect};
     sourcemeta::blaze::for_editor(
         schema, sourcemeta::core::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
-        });
-    const auto *declared_dialect{schema.is_object() ? schema.try_at("$schema")
-                                                    : nullptr};
-    const std::string_view dialect_identifier{
-        declared_dialect != nullptr && declared_dialect->is_string()
-            ? std::string_view{declared_dialect->to_string()}
-            : std::string_view{}};
-    assert(!dialect_identifier.empty());
+        },
+        dialect_identifier);
     format_schema(
         schema,
         [&callback, &resolver](const auto identifier) {
@@ -763,6 +760,7 @@ struct GenerateEditor {
 static auto generate_blaze_template(
     const std::filesystem::path &destination,
     const sourcemeta::one::BuildPlan::Action::Dependencies &dependencies,
+    const std::string_view identifier, const std::string_view dialect,
     const sourcemeta::one::BuildDynamicCallback &callback,
     sourcemeta::one::Resolver &resolver, const sourcemeta::blaze::Mode mode)
     -> void {
@@ -771,11 +769,14 @@ static auto generate_blaze_template(
   assert(contents_option.has_value());
   const auto &contents{contents_option.value()};
   const sourcemeta::core::SchemaFrame frame{
-      sourcemeta::core::SchemaFrame::Mode::References, contents,
+      sourcemeta::core::SchemaFrame::Mode::References,
+      contents,
       sourcemeta::core::schema_walker,
-      [&callback, &resolver](const auto identifier) {
-        return resolver(identifier, callback);
-      }};
+      [&callback, &resolver](const auto subidentifier) {
+        return resolver(subidentifier, callback);
+      },
+      dialect,
+      identifier};
   const auto schema_template{sourcemeta::blaze::compile(
       contents, sourcemeta::core::schema_walker,
       [&callback, &resolver](const auto identifier) {
@@ -795,8 +796,10 @@ struct GenerateBlazeTemplateExhaustive {
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
-    generate_blaze_template(action.destination, action.dependencies, callback,
-                            resolver, sourcemeta::blaze::Mode::Exhaustive);
+    generate_blaze_template(action.destination, action.dependencies,
+                            action.data, resolver.entry(action.data).dialect,
+                            callback, resolver,
+                            sourcemeta::blaze::Mode::Exhaustive);
   }
 };
 
@@ -807,8 +810,10 @@ struct GenerateBlazeTemplateFast {
                       sourcemeta::one::Resolver &resolver,
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
-    generate_blaze_template(action.destination, action.dependencies, callback,
-                            resolver, sourcemeta::blaze::Mode::FastValidation);
+    generate_blaze_template(action.destination, action.dependencies,
+                            action.data, resolver.entry(action.data).dialect,
+                            callback, resolver,
+                            sourcemeta::blaze::Mode::FastValidation);
   }
 };
 
@@ -831,8 +836,12 @@ struct GenerateStats {
           return resolver(identifier, callback);
         }};
     const sourcemeta::core::SchemaFrame frame{
-        sourcemeta::core::SchemaFrame::Mode::Locations, schema,
-        sourcemeta::core::schema_walker, schema_resolver};
+        sourcemeta::core::SchemaFrame::Mode::Locations,
+        schema,
+        sourcemeta::core::schema_walker,
+        schema_resolver,
+        resolver.entry(action.data).dialect,
+        action.data};
 
     // A subschema is located once for every URI that reaches it, and what is
     // counted here is the keywords it holds rather than the names it answers
