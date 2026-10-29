@@ -80,12 +80,14 @@ Connect provider.
 Enterprise instances serve every schema written in an older JSON Schema dialect
 upgraded to any newer one, from Draft 3 all the way to 2020-12 and on into the
 OpenAPI 3.1 and 3.2 Schema Object dialects, through the `as` query parameter of
-the [schema endpoint](api.md#fetch) and the equivalent MCP resource. Teams keep
-authoring and reviewing schemas in the dialect they already have, while
-consumers whose tooling only understands a newer dialect, or expects an OpenAPI
-Schema Object, fetch the version they need. A conversion that reaches a
-meta-schema is [refused](api.md#fetch), as converting one would change the
-dialect it is written in without restating the dialect it describes.
+the [schema endpoint](api.md#fetch) and the equivalent MCP resource. An OpenAPI
+3.0 Schema Object is upgraded the same way, reaching every one of those
+dialects. Teams keep authoring and reviewing schemas in the dialect they
+already have, while consumers whose tooling only understands a newer dialect,
+or expects an OpenAPI Schema Object, fetch the version they need. A conversion
+that reaches a meta-schema is [refused](api.md#fetch), as converting one would
+change the dialect it is written in without restating the dialect it
+describes.
 
 ## Standard Library
 

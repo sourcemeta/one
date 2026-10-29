@@ -334,7 +334,7 @@ template <sourcemeta::one::SchemaDialect Target> struct GenerateConversion {
     bool converted{false};
     try {
       converted = sourcemeta::one::convert_schema(
-          schema, Target, action.data,
+          schema, Target, action.data, resolver_entry.dialect,
           [&callback, &resolver](const auto identifier) {
             return resolver(identifier, callback);
           });

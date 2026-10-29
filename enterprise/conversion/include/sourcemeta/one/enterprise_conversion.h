@@ -26,6 +26,7 @@ namespace sourcemeta::one {
 // so a dialect may be added here at any position
 enum class SchemaDialect : std::uint8_t {
   Draft3,
+  OpenAPI30,
   Draft4,
   Draft6,
   Draft7,
@@ -42,8 +43,15 @@ struct SchemaDialectSpelling {
 };
 
 // Every spelling of a dialect on the ladder that Blaze recognises
-inline constexpr std::array<SchemaDialectSpelling, 30> SCHEMA_DIALECT_SPELLINGS{
+inline constexpr std::array<SchemaDialectSpelling, 32> SCHEMA_DIALECT_SPELLINGS{
     {
+        // The OpenAPI Initiative mints a dialect URI per revision of the v3.0
+        // Schema Object, and the two it has minted so far describe the same
+        // keywords
+        {.uri = "tag:spec.openapis.org,2024-10-18:oas/3.0/dialect",
+         .dialect = SchemaDialect::OpenAPI30},
+        {.uri = "tag:spec.openapis.org,2021-09-28:oas/3.0/dialect",
+         .dialect = SchemaDialect::OpenAPI30},
         {.uri = "http://json-schema.org/draft-03/schema#",
          .dialect = SchemaDialect::Draft3},
         {.uri = "http://json-schema.org/draft-03/schema",
@@ -135,6 +143,8 @@ inline constexpr std::array<SchemaDialect, 7> SCHEMA_CONVERSION_TARGETS{
   switch (dialect) {
     case SchemaDialect::Draft3:
       return "draft3";
+    case SchemaDialect::OpenAPI30:
+      return "openapi3.0";
     case SchemaDialect::Draft4:
       return "draft4";
     case SchemaDialect::Draft6:
@@ -160,6 +170,8 @@ inline constexpr std::array<SchemaDialect, 7> SCHEMA_CONVERSION_TARGETS{
   switch (dialect) {
     case SchemaDialect::Draft3:
       return "http://json-schema.org/draft-03/schema#";
+    case SchemaDialect::OpenAPI30:
+      return "tag:spec.openapis.org,2024-10-18:oas/3.0/dialect";
     case SchemaDialect::Draft4:
       return "http://json-schema.org/draft-04/schema#";
     case SchemaDialect::Draft6:
@@ -185,6 +197,9 @@ inline constexpr std::array<SchemaDialect, 7> SCHEMA_CONVERSION_TARGETS{
   switch (dialect) {
     case SchemaDialect::Draft3:
       return sourcemeta::core::SchemaBaseDialect::JSON_SCHEMA_DRAFT_3;
+    // The OpenAPI v3.0 Schema Object describes itself through a Draft 4
+    // meta-schema, so Draft 4 is what it rests on
+    case SchemaDialect::OpenAPI30:
     case SchemaDialect::Draft4:
       return sourcemeta::core::SchemaBaseDialect::JSON_SCHEMA_DRAFT_4;
     case SchemaDialect::Draft6:
