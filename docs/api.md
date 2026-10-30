@@ -408,7 +408,9 @@ to 2020-12 and carries on into the [OpenAPI
 dialects, each of which is 2020-12 plus a vocabulary of its own, so a Draft 4
 schema can be asked for as `openapi3.2`. A schema can be asked for in the
 dialect it is served as or in any newer one, and the `conversions` property of
-its [metadata](#metadata) lists exactly the values it accepts.
+its [metadata](#metadata) lists exactly the values it accepts. Learn more about
+this approach in [Solving the JSON Schema dialect fragmentation problem with
+auto-upgrades](https://www.sourcemeta.com/blog/json-schema-dialect-auto-upgrade/).
 
 !!! note "A conversion is always bundled"
 

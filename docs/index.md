@@ -112,7 +112,9 @@ service whether or not for a fee, each require a
 - :material-update: __Dialect Upgrades (Enterprise)__ Serve a schema that
   declares an official dialect [upgraded](api.md#fetch) to a newer JSON Schema
   dialect on request, so consumers get the dialect their tooling understands
-  without anybody maintaining converted copies in Git
+  without anybody maintaining converted copies in Git, [solving dialect
+  fragmentation with
+  auto-upgrades](https://www.sourcemeta.com/blog/json-schema-dialect-auto-upgrade/)
 - :material-lock: __Access Control (Enterprise)__ Gate part of your catalog, or
   the entire instance, behind [authentication](configuration.md#authentication)
   policies, keeping schemas private to the consumers you choose
