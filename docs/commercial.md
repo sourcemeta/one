@@ -87,7 +87,9 @@ already have, while consumers whose tooling only understands a newer dialect,
 or expects an OpenAPI Schema Object, fetch the version they need. A conversion
 that reaches a meta-schema is [refused](api.md#fetch), as converting one would
 change the dialect it is written in without restating the dialect it
-describes.
+describes. Learn more about this approach in [Solving the JSON Schema dialect
+fragmentation problem with
+auto-upgrades](https://www.sourcemeta.com/blog/json-schema-dialect-auto-upgrade/).
 
 ## Standard Library
 
