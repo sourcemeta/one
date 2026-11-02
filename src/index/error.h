@@ -3,18 +3,20 @@
 
 #include <sourcemeta/blaze/output.h>
 
+#include <sourcemeta/core/error.h>
 #include <sourcemeta/core/jsonpointer.h>
 
-#include <exception> // std::exception
-#include <format>    // std::format
-#include <sstream>   // std::ostringstream
-#include <string>    // std::string
+#include <format>  // std::format
+#include <sstream> // std::ostringstream
+#include <string>  // std::string
 
 namespace sourcemeta::one {
 
-class MetaschemaError : public std::exception {
+class MetaschemaError : public sourcemeta::core::Error {
 public:
-  MetaschemaError(const sourcemeta::blaze::SimpleOutput &output) {
+  MetaschemaError(const sourcemeta::blaze::SimpleOutput &output)
+      : sourcemeta::core::Error{
+            "The schema does not adhere to its metaschema"} {
     std::string result;
     for (const auto &entry : output) {
       std::ostringstream instance_location_stream;
@@ -30,10 +32,6 @@ public:
     this->stacktrace_ = std::move(result);
   }
 
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "The schema does not adhere to its metaschema";
-  }
-
   [[nodiscard]] auto stacktrace() const noexcept -> const std::string & {
     return this->stacktrace_;
   }
@@ -42,14 +40,11 @@ private:
   std::string stacktrace_;
 };
 
-class OptionInvalidNumericValueError : public std::exception {
+class OptionInvalidNumericValueError : public sourcemeta::core::Error {
 public:
   OptionInvalidNumericValueError(std::string option, std::string value)
-      : option_{std::move(option)}, value_{std::move(value)} {}
-
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "Expected a valid numeric value for option";
-  }
+      : sourcemeta::core::Error{"Expected a valid numeric value for option"},
+        option_{std::move(option)}, value_{std::move(value)} {}
 
   [[nodiscard]] auto option() const noexcept -> const std::string & {
     return this->option_;
@@ -64,14 +59,11 @@ private:
   std::string value_;
 };
 
-class OptionInvalidURIValueError : public std::exception {
+class OptionInvalidURIValueError : public sourcemeta::core::Error {
 public:
   OptionInvalidURIValueError(std::string option, std::string value)
-      : option_{std::move(option)}, value_{std::move(value)} {}
-
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "Expected a valid URI value for option";
-  }
+      : sourcemeta::core::Error{"Expected a valid URI value for option"},
+        option_{std::move(option)}, value_{std::move(value)} {}
 
   [[nodiscard]] auto option() const noexcept -> const std::string & {
     return this->option_;
@@ -86,17 +78,14 @@ private:
   std::string value_;
 };
 
-class CrossPolicyReferenceError : public std::exception {
+class CrossPolicyReferenceError : public sourcemeta::core::Error {
 public:
   CrossPolicyReferenceError(std::filesystem::path path, std::string referrer,
                             std::string referent)
-      : path_{std::move(path)}, referrer_{std::move(referrer)},
+      : sourcemeta::core::Error{"A schema cannot reference a schema behind a "
+                                "stricter authentication policy"},
+        path_{std::move(path)}, referrer_{std::move(referrer)},
         referent_{std::move(referent)} {}
-
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "A schema cannot reference a schema behind a stricter "
-           "authentication policy";
-  }
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
     return this->path_;

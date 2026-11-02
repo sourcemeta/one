@@ -3,9 +3,9 @@
 
 #include <sourcemeta/blaze/output.h>
 
+#include <sourcemeta/core/error.h>
 #include <sourcemeta/core/jsonpointer.h>
 
-#include <exception>  // std::exception
 #include <filesystem> // std::filesystem::path
 #include <format>     // std::format
 #include <sstream>    // std::ostringstream
@@ -14,11 +14,12 @@
 
 namespace sourcemeta::one {
 
-class ConfigurationValidationError : public std::exception {
+class ConfigurationValidationError : public sourcemeta::core::Error {
 public:
   ConfigurationValidationError(std::filesystem::path path,
                                const sourcemeta::blaze::SimpleOutput &output)
-      : path_{std::move(path)} {
+      : sourcemeta::core::Error{"Invalid configuration"},
+        path_{std::move(path)} {
     std::string result;
     for (const auto &entry : output) {
       std::ostringstream instance_location_stream;
@@ -34,10 +35,6 @@ public:
     this->stacktrace_ = std::move(result);
   }
 
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "Invalid configuration";
-  }
-
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
     return this->path_;
   }
@@ -51,17 +48,14 @@ private:
   std::string stacktrace_;
 };
 
-class ConfigurationReadError : public std::exception {
+class ConfigurationReadError : public sourcemeta::core::Error {
 public:
   ConfigurationReadError(std::filesystem::path from,
                          sourcemeta::core::Pointer location,
                          std::filesystem::path target)
-      : from_{std::move(from)}, location_{std::move(location)},
+      : sourcemeta::core::Error{"Could not read referenced file"},
+        from_{std::move(from)}, location_{std::move(location)},
         target_{std::move(target)} {}
-
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "Could not read referenced file";
-  }
 
   [[nodiscard]] auto from() const noexcept -> const auto & {
     return this->from_;
@@ -81,15 +75,14 @@ private:
   std::filesystem::path target_;
 };
 
-class ConfigurationDuplicateAuthenticationNameError : public std::exception {
+class ConfigurationDuplicateAuthenticationNameError
+    : public sourcemeta::core::Error {
 public:
   ConfigurationDuplicateAuthenticationNameError(std::filesystem::path path,
                                                 std::string name)
-      : path_{std::move(path)}, name_{std::move(name)} {}
-
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "An authentication policy name is used more than once";
-  }
+      : sourcemeta::core::
+            Error{"An authentication policy name is used more than once"},
+        path_{std::move(path)}, name_{std::move(name)} {}
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
     return this->path_;
@@ -104,17 +97,16 @@ private:
   std::string name_;
 };
 
-class ConfigurationSharedAuthenticationKeyError : public std::exception {
+class ConfigurationSharedAuthenticationKeyError
+    : public sourcemeta::core::Error {
 public:
   ConfigurationSharedAuthenticationKeyError(std::filesystem::path path,
                                             std::string name,
                                             std::string variable)
-      : path_{std::move(path)}, name_{std::move(name)},
+      : sourcemeta::core::
+            Error{"An authentication policy key is used more than once"},
+        path_{std::move(path)}, name_{std::move(name)},
         variable_{std::move(variable)} {}
-
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "An authentication policy key is used more than once";
-  }
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
     return this->path_;
@@ -134,15 +126,14 @@ private:
   std::string variable_;
 };
 
-class ConfigurationReservedAuthenticationNameError : public std::exception {
+class ConfigurationReservedAuthenticationNameError
+    : public sourcemeta::core::Error {
 public:
   ConfigurationReservedAuthenticationNameError(std::filesystem::path path,
                                                std::string name)
-      : path_{std::move(path)}, name_{std::move(name)} {}
-
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "An authentication policy may not use a reserved name";
-  }
+      : sourcemeta::core::
+            Error{"An authentication policy may not use a reserved name"},
+        path_{std::move(path)}, name_{std::move(name)} {}
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
     return this->path_;
@@ -157,17 +148,14 @@ private:
   std::string name_;
 };
 
-class ConfigurationCyclicReferenceError : public std::exception {
+class ConfigurationCyclicReferenceError : public sourcemeta::core::Error {
 public:
   ConfigurationCyclicReferenceError(std::filesystem::path from,
                                     sourcemeta::core::Pointer location,
                                     std::filesystem::path target)
-      : from_{std::move(from)}, location_{std::move(location)},
+      : sourcemeta::core::Error{"Circular reference detected in configuration"},
+        from_{std::move(from)}, location_{std::move(location)},
         target_{std::move(target)} {}
-
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "Circular reference detected in configuration";
-  }
 
   [[nodiscard]] auto from() const noexcept -> const std::filesystem::path & {
     return this->from_;
@@ -191,16 +179,15 @@ private:
 // Raised when an interactive authentication policy is declared on an instance
 // a browser would not treat as a trustworthy origin, which means https, or
 // plain HTTP on a loopback address or the special-use localhost name
-class ConfigurationInsecureAuthenticationURLError : public std::exception {
+class ConfigurationInsecureAuthenticationURLError
+    : public sourcemeta::core::Error {
 public:
   ConfigurationInsecureAuthenticationURLError(std::filesystem::path path,
                                               std::string name, std::string url)
-      : path_{std::move(path)}, name_{std::move(name)}, url_{std::move(url)} {}
-
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "An interactive authentication policy requires an https instance, "
-           "or a loopback one for local development";
-  }
+      : sourcemeta::core::Error{"An interactive authentication policy requires "
+                                "an https instance, or a loopback one for "
+                                "local development"},
+        path_{std::move(path)}, name_{std::move(name)}, url_{std::move(url)} {}
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
     return this->path_;
@@ -225,14 +212,11 @@ private:
 // else (RFC 8615 Section 3), so an instance mounted under a path cannot serve
 // the locations standards derive from its own identifiers, and cannot take
 // part in any mechanism built on them
-class ConfigurationInstancePathError : public std::exception {
+class ConfigurationInstancePathError : public sourcemeta::core::Error {
 public:
   ConfigurationInstancePathError(std::filesystem::path path, std::string url)
-      : path_{std::move(path)}, url_{std::move(url)} {}
-
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "The instance URL must contain no path";
-  }
+      : sourcemeta::core::Error{"The instance URL must contain no path"},
+        path_{std::move(path)}, url_{std::move(url)} {}
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
     return this->path_;
@@ -252,14 +236,12 @@ private:
 // against this URL, so a query or a fragment would travel into identifiers
 // that name no resource, and credentials would travel into every identifier
 // the instance publishes
-class ConfigurationInstanceOriginError : public std::exception {
+class ConfigurationInstanceOriginError : public sourcemeta::core::Error {
 public:
   ConfigurationInstanceOriginError(std::filesystem::path path, std::string url)
-      : path_{std::move(path)}, url_{std::move(url)} {}
-
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "The instance URL must contain no credentials, query, or fragment";
-  }
+      : sourcemeta::core::Error{"The instance URL must contain no credentials, "
+                                "query, or fragment"},
+        path_{std::move(path)}, url_{std::move(url)} {}
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
     return this->path_;
@@ -276,17 +258,16 @@ private:
 
 // Raised when an authentication policy names an issuer that this instance
 // could never complete a discovery exchange against
-class ConfigurationInvalidAuthenticationIssuerError : public std::exception {
+class ConfigurationInvalidAuthenticationIssuerError
+    : public sourcemeta::core::Error {
 public:
   ConfigurationInvalidAuthenticationIssuerError(std::filesystem::path path,
                                                 std::string name,
                                                 std::string issuer)
-      : path_{std::move(path)}, name_{std::move(name)},
+      : sourcemeta::core::
+            Error{"An authentication policy issuer must be an https URL"},
+        path_{std::move(path)}, name_{std::move(name)},
         issuer_{std::move(issuer)} {}
-
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "An authentication policy issuer must be an https URL";
-  }
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
     return this->path_;

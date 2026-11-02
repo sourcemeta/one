@@ -5,24 +5,24 @@
 #include <sourcemeta/one/authentication_export.h>
 #endif
 
+#include <sourcemeta/core/error.h>
+
 #include <cstddef>    // std::size_t
-#include <exception>  // std::exception
 #include <filesystem> // std::filesystem::path
 #include <string>     // std::string
 #include <utility>    // std::move
 
 namespace sourcemeta::one {
 
+SOURCEMETA_CORE_ERROR_WARNINGS_PUSH
+
 // Raised when a configured feature is only available on the enterprise edition
 class SOURCEMETA_ONE_AUTHENTICATION_EXPORT EnterpriseOnlyFeatureError
-    : public std::exception {
+    : public sourcemeta::core::Error {
 public:
-  EnterpriseOnlyFeatureError(std::filesystem::path path, std::string message)
-      : path_{std::move(path)}, message_{std::move(message)} {}
-
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return this->message_.c_str();
-  }
+  EnterpriseOnlyFeatureError(std::filesystem::path path,
+                             const sourcemeta::core::StaticString message)
+      : sourcemeta::core::Error{message}, path_{std::move(path)} {}
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
     return this->path_;
@@ -30,21 +30,17 @@ public:
 
 private:
   std::filesystem::path path_;
-  std::string message_;
 };
 
 // Raised when an authentication policy is scoped to a path that is neither a
 // declared collection or page (nor a namespace above one) nor a known route
 class SOURCEMETA_ONE_AUTHENTICATION_EXPORT AuthenticationUnknownPathError
-    : public std::exception {
+    : public sourcemeta::core::Error {
 public:
   AuthenticationUnknownPathError(std::filesystem::path path, std::string scope)
-      : path_{std::move(path)}, scope_{std::move(scope)} {}
-
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "An authentication policy matches no known collection, page, or "
-           "route";
-  }
+      : sourcemeta::core::Error{"An authentication policy matches no known "
+                                "collection, page, or route"},
+        path_{std::move(path)}, scope_{std::move(scope)} {}
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
     return this->path_;
@@ -63,14 +59,12 @@ private:
 // them cannot be produced. Not a statement about what a build can afford, which
 // is known where the views are built rather than where they are named
 class SOURCEMETA_ONE_AUTHENTICATION_EXPORT AuthenticationTooManyViewsError
-    : public std::exception {
+    : public sourcemeta::core::Error {
 public:
   AuthenticationTooManyViewsError(std::string issuer, const std::size_t count)
-      : issuer_{std::move(issuer)}, count_{count} {}
-
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "Too many authentication policies share an issuer";
-  }
+      : sourcemeta::core::
+            Error{"Too many authentication policies share an issuer"},
+        issuer_{std::move(issuer)}, count_{count} {}
 
   [[nodiscard]] auto issuer() const noexcept -> const std::string & {
     return this->issuer_;
@@ -90,14 +84,12 @@ private:
 // view is named after the policies it comprises, so any of the three leaves a
 // view naming somewhere else or nowhere
 class SOURCEMETA_ONE_AUTHENTICATION_EXPORT AuthenticationPolicyNameError
-    : public std::exception {
+    : public sourcemeta::core::Error {
 public:
   AuthenticationPolicyNameError(std::filesystem::path path, std::string name)
-      : path_{std::move(path)}, name_{std::move(name)} {}
-
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "An authentication policy requires a name of its own";
-  }
+      : sourcemeta::core::
+            Error{"An authentication policy requires a name of its own"},
+        path_{std::move(path)}, name_{std::move(name)} {}
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
     return this->path_;
@@ -115,15 +107,12 @@ private:
 // Raised when more policies are declared than one policy set has bits to name,
 // since each occupies one of them
 class SOURCEMETA_ONE_AUTHENTICATION_EXPORT AuthenticationTooManyPoliciesError
-    : public std::exception {
+    : public sourcemeta::core::Error {
 public:
   AuthenticationTooManyPoliciesError(std::filesystem::path path,
                                      const std::size_t count)
-      : path_{std::move(path)}, count_{count} {}
-
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "Too many authentication policies";
-  }
+      : sourcemeta::core::Error{"Too many authentication policies"},
+        path_{std::move(path)}, count_{count} {}
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
     return this->path_;
@@ -141,14 +130,12 @@ private:
 // Raised when a policy that signs people in names no secret to seal their
 // session with, which could neither mint one nor read one back
 class SOURCEMETA_ONE_AUTHENTICATION_EXPORT AuthenticationMissingSecretError
-    : public std::exception {
+    : public sourcemeta::core::Error {
 public:
   AuthenticationMissingSecretError(std::filesystem::path path, std::string name)
-      : path_{std::move(path)}, name_{std::move(name)} {}
-
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "An interactive authentication policy requires a session secret";
-  }
+      : sourcemeta::core::Error{"An interactive authentication policy requires "
+                                "a session secret"},
+        path_{std::move(path)}, name_{std::move(name)} {}
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
     return this->path_;
@@ -166,16 +153,13 @@ private:
 // Raised when a policy is named exactly as the view over some combination of
 // others is spelled, which would serve two sets of policies from one directory
 class SOURCEMETA_ONE_AUTHENTICATION_EXPORT AuthenticationViewNameCollisionError
-    : public std::exception {
+    : public sourcemeta::core::Error {
 public:
   AuthenticationViewNameCollisionError(std::filesystem::path path,
                                        std::string name)
-      : path_{std::move(path)}, name_{std::move(name)} {}
-
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "An authentication policy name collides with a combination of "
-           "others";
-  }
+      : sourcemeta::core::Error{"An authentication policy name collides with a "
+                                "combination of others"},
+        path_{std::move(path)}, name_{std::move(name)} {}
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
     return this->path_;
@@ -189,6 +173,8 @@ private:
   std::filesystem::path path_;
   std::string name_;
 };
+
+SOURCEMETA_CORE_ERROR_WARNINGS_POP
 
 } // namespace sourcemeta::one
 

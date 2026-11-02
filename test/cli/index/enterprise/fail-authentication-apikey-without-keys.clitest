@@ -15,7 +15,7 @@ WRITE expected.txt UNTIL EOF
 2> Using configuration: [CWD]/one.json
 2> error: Invalid configuration
 2>   at path [CWD]/one.json
-2> The array value was expected to contain at least 1 item but it contained 0 items
+2> The array value was expected to contain at least 1 item but its size was 0
 2>   at instance location "/authentication/0/keys"
 2>   at evaluate path "/properties/authentication/items/anyOf/0/properties/keys/minItems"
 2> The object value was expected to validate against the defined properties subschemas

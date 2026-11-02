@@ -184,7 +184,7 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
       sourcemeta::core::parse_json(CONFIGURATION))};
   assert(compiled_schema.has_value());
   sourcemeta::blaze::Evaluator evaluator;
-  sourcemeta::blaze::SimpleOutput output{data};
+  sourcemeta::blaze::SimpleOutput output{compiled_schema.value(), data};
   if (!evaluator.validate(compiled_schema.value(), data, std::ref(output))) {
     throw ConfigurationValidationError(configuration_path, output);
   }

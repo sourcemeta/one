@@ -1,6 +1,7 @@
 #ifndef SOURCEMETA_ONE_ACTIONS_JSONSCHEMA_TRACE_V1_H
 #define SOURCEMETA_ONE_ACTIONS_JSONSCHEMA_TRACE_V1_H
 
+#include <sourcemeta/core/error.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonpointer.h>
 #include <sourcemeta/core/jsonrpc.h>
@@ -21,10 +22,17 @@
 #include <filesystem>  // std::filesystem::path
 #include <functional>  // std::ref
 #include <span>        // std::span
-#include <stdexcept>   // std::runtime_error
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
+
+// The tracker is built over the document the trace reports on, so a location
+// it cannot place means the two came apart
+class TraceInstancePositionError : public sourcemeta::core::Error {
+public:
+  TraceInstancePositionError()
+      : sourcemeta::core::Error{"Failed to resolve instance positions"} {}
+};
 
 class ActionJSONSchemaTraceV1 : public sourcemeta::one::RouterAction {
 public:
@@ -159,7 +167,7 @@ public:
     auto steps{sourcemeta::core::JSON::make_array()};
 
     const sourcemeta::blaze::TraceOutput::Callback callback{
-        [&steps, tracker, &instance_prefix, &instance_json](
+        [&steps, tracker, &instance_prefix, &instance_json, &schema_template](
             const sourcemeta::blaze::TraceOutput::Entry &entry) -> void {
           auto step{sourcemeta::core::JSON::make_object()};
 
@@ -185,7 +193,7 @@ public:
                 // here?
                 sourcemeta::core::to_pointer(entry.instance_location)))};
             if (!instance_positions.has_value()) {
-              throw std::runtime_error{"Failed to resolve instance positions"};
+              throw TraceInstancePositionError{};
             }
             step.assign("instancePositions",
                         sourcemeta::core::to_json(
@@ -201,6 +209,7 @@ public:
             step.assign(
                 "message",
                 sourcemeta::core::JSON{sourcemeta::blaze::describe(
+                    schema_template,
                     entry.type !=
                         sourcemeta::blaze::TraceOutput::EntryType::Fail,
                     entry.step, entry.evaluate_path, entry.instance_location,

@@ -756,14 +756,16 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
     lock.unlock();
     if (!result.second && result.first->second.path != path) {
       throw sourcemeta::core::FileError<sourcemeta::core::SchemaFrameError>(
-          path, result.first->first,
-          "Cannot register the same identifier twice");
+          path,
+          sourcemeta::core::StaticString{
+              "Cannot register the same identifier twice"},
+          result.first->first);
     }
     this->track_dialect(result.first->second.dialect);
     return {result.first->first, result.first->second};
   } catch (const sourcemeta::core::SchemaKeywordError &error) {
     throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
-        path, error.keyword(), error.value(), error.what());
+        path, error);
   } catch (const sourcemeta::core::SchemaUnknownDialectError &) {
     throw sourcemeta::core::FileError<
         sourcemeta::core::SchemaUnknownDialectError>(path);
@@ -773,11 +775,13 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
     std::ostringstream value_stream;
     sourcemeta::core::stringify(reread.at(id_keyword), value_stream);
     throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
-        path, id_keyword, value_stream.str(),
-        "The schema identifier is not a valid URI");
+        path,
+        sourcemeta::core::StaticString{
+            "The schema identifier is not a valid URI"},
+        id_keyword, value_stream.str());
   } catch (const sourcemeta::core::YAMLParseError &error) {
-    throw sourcemeta::core::FileError<sourcemeta::core::YAMLParseError>(
-        path, error.line(), error.column(), error.what());
+    throw sourcemeta::core::FileError<sourcemeta::core::YAMLParseError>(path,
+                                                                        error);
   }
 }
 
@@ -801,7 +805,7 @@ auto Resolver::emplace(std::string new_identifier, Entry entry) -> void {
       this->views_.emplace(std::move(new_identifier), std::move(entry))};
   if (!result.second && result.first->second.path != path) {
     throw sourcemeta::core::SchemaFrameError(
-        result.first->first, "Cannot register the same identifier twice");
+        "Cannot register the same identifier twice", result.first->first);
   }
   this->track_dialect(result.first->second.dialect);
 }

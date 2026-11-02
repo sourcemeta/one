@@ -83,7 +83,7 @@ WRITE expected.txt UNTIL EOF
 2> Using configuration: [CWD]/one.json
 2> error: Invalid configuration
 2>   at path [CWD]/one.json
-2> The array value was expected to contain at most 64 items but it contained 65 items
+2> The array value was expected to contain at most 64 items but its size was 65
 2>   at instance location "/authentication"
 2>   at evaluate path "/properties/authentication/maxItems"
 2> The object value was expected to validate against the 6 defined properties subschemas

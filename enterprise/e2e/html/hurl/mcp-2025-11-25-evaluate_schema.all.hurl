@@ -791,7 +791,7 @@ jsonpath "$.error.data.errors" count == 1
 jsonpath "$.error.data.errors[0].keywordLocation" == "/required"
 jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/evaluate-schema/request#/required"
 jsonpath "$.error.data.errors[0].instanceLocation" == ""
-jsonpath "$.error.data.errors[0].error" == "The object value was expected to only define properties \"schema\", and \"stringifiedInstance\", but it also defines the property \"extra\""
+jsonpath "$.error.data.errors[0].error" == "The object value was expected to only define properties \"schema\", and \"stringifiedInstance\", but it also defines \"extra\""
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
