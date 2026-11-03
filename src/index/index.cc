@@ -1057,6 +1057,13 @@ auto main(int argc, char *argv[]) noexcept -> int {
     std::print(stderr, "error: {}\n  at path {}\n", error.what(),
                error.path().string());
     return EXIT_FAILURE;
+  } catch (const sourcemeta::one::ResolverOpenAPIDescriptionError &error) {
+    std::print(stderr,
+               "error: {}\n  at path {}\n\n"
+               "OpenAPI descriptions are not supported yet, so exclude this "
+               "file using the collection's ignore option\n",
+               error.what(), error.path().string());
+    return EXIT_FAILURE;
   } catch (const sourcemeta::one::ResolverOutsideBaseError &error) {
     std::print(stderr,
                "error: {}\n  at path {}\n  at identifier {}\n  with base {}\n",

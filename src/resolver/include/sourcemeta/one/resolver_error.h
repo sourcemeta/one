@@ -40,6 +40,23 @@ private:
   std::filesystem::path path_;
 };
 
+// A description declares itself with an `openapi` member, which no JSON Schema
+// dialect gives a meaning to
+class ResolverOpenAPIDescriptionError : public sourcemeta::core::Error {
+public:
+  ResolverOpenAPIDescriptionError(std::filesystem::path path)
+      : sourcemeta::core::Error{"The file contains an OpenAPI description "
+                                "rather than a JSON Schema"},
+        path_{std::move(path)} {}
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+private:
+  std::filesystem::path path_;
+};
+
 // The output directory belongs to the indexer, so a recorded artifact that is
 // gone from disk means something else modified the directory, which is the one
 // assumption the build cannot recover from on its own

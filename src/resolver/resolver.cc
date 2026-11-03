@@ -4,6 +4,7 @@
 #include <sourcemeta/core/error.h>
 #include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/metapack.h>
+#include <sourcemeta/core/openapi.h>
 #include <sourcemeta/core/text.h>
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/yaml.h>
@@ -673,6 +674,10 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
 
     if (!schema.is_object()) {
       throw ResolverNotASchemaError(path);
+    }
+
+    if (sourcemeta::core::openapi_is_document(schema)) {
+      throw ResolverOpenAPIDescriptionError(path);
     }
 
     const std::string default_dialect_str{

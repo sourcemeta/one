@@ -144,6 +144,34 @@ TEST(case_insensitive_lookup) {
   })JSON");
 }
 
+TEST(example_openapi_description) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  try {
+    RESOLVER_IMPORT(resolver, "example", "openapi-description.json");
+    FAIL();
+  } catch (const sourcemeta::one::ResolverOpenAPIDescriptionError &error) {
+    EXPECT_EQ(error.path(), std::filesystem::path{SCHEMAS_PATH} / "example" /
+                                "openapi-description.json");
+  }
+}
+
+// An `openapi` member of any other type declares no revision, so the file goes
+// on being read as a schema
+TEST(example_openapi_non_string_version) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  RESOLVER_ADD(resolver, "example", "openapi-non-string-version.json",
+               "https://example.com/schemas/openapi-non-string-version",
+               "http://localhost:8000/example/openapi-non-string-version",
+               R"JSON({
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://localhost:8000/example/openapi-non-string-version",
+    "openapi": 3.1,
+    "type": "string"
+  })JSON");
+}
+
 TEST(example_official_2020_12_meta) {
   sourcemeta::one::Resolver resolver{shared_configuration().url};
   const auto resolved{resolver("https://json-schema.org/draft/2020-12/schema")};
