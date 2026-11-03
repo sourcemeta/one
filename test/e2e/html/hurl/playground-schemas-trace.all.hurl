@@ -942,7 +942,7 @@ jsonpath "$.steps[2].keywordLocation" == "{{base}}/self/v1/schemas/api/schemas/t
 jsonpath "$.steps[2].annotation" count == 1
 jsonpath "$.steps[2].annotation[0].valid" == true
 jsonpath "$.steps[2].annotation[0].steps" count == 0
-jsonpath "$.steps[2].message" == "Examples of the instance were and {\"valid\":true,\"steps\":[]}"
+jsonpath "$.steps[2].message" == "Examples of the instance were {\"valid\":true,\"steps\":[]}"
 jsonpath "$.steps[2].vocabulary" == "https://json-schema.org/draft/2020-12/vocab/meta-data"
 jsonpath "$.steps[3].type" == "push"
 jsonpath "$.steps[3].name" == "AssertionDefinesExactly"
@@ -2241,7 +2241,7 @@ jsonpath "$.steps[8].instancePositions[2]" == 4
 jsonpath "$.steps[8].instancePositions[3]" == 3
 jsonpath "$.steps[8].keywordLocation" == "https://example.com/d#/items"
 jsonpath "$.steps[8].annotation" == null
-jsonpath "$.steps[8].message" == "The array value contains 1 additional item not described by related keywords"
+jsonpath "$.steps[8].message" == "The array value contains additional items not described by related keywords"
 jsonpath "$.steps[8].vocabulary" == "https://json-schema.org/draft/2020-12/vocab/applicator"
 jsonpath "$.steps[9].type" == "push"
 jsonpath "$.steps[9].name" == "AssertionTypeStrict"

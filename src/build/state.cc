@@ -1249,14 +1249,9 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
                 reinterpret_cast<const std::byte *>(this->string_pool_),
                 old_pool_size);
           }
-          if (!pool.empty()) {
-            writer.put_bytes(reinterpret_cast<const std::byte *>(pool.data()),
-                             pool.size());
-          }
+          writer.put_string(pool);
 
-          writer.put_bytes(
-              reinterpret_cast<const std::byte *>(leaf_index_buffer.data()),
-              leaf_index_buffer.size());
+          writer.put_string(leaf_index_buffer);
         });
   }
 }

@@ -167,7 +167,7 @@ static auto throw_if_unknown_required_vocabulary(
     vocabulary.insert(entry.first, true);
     if (vocabulary.has_unknown()) {
       throw sourcemeta::core::SchemaVocabularyError(
-          entry.first, "The metaschema requires an unrecognised vocabulary");
+          "The metaschema requires an unrecognised vocabulary", entry.first);
     }
   }
 }
@@ -231,12 +231,12 @@ struct GenerateMaterialisedSchema {
     assert(metaschema.has_value());
 
     // Validate the schemas against their meta-schemas
-    sourcemeta::blaze::SimpleOutput output{schema.value()};
+    const auto &schema_template{GenerateMaterialisedSchema::compile(
+        std::string{dialect_identifier}, metaschema.value(), resolver)};
+    sourcemeta::blaze::SimpleOutput output{schema_template, schema.value()};
     sourcemeta::blaze::Evaluator evaluator;
-    const auto result{evaluator.validate(
-        GenerateMaterialisedSchema::compile(std::string{dialect_identifier},
-                                            metaschema.value(), resolver),
-        schema.value(), std::ref(output))};
+    const auto result{
+        evaluator.validate(schema_template, schema.value(), std::ref(output))};
     if (!result) {
       throw MetaschemaError(output);
     }

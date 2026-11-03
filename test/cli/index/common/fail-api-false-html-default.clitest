@@ -21,7 +21,7 @@ WRITE expected.txt UNTIL EOF
 2> The object value defined the property "api"
 2>   at instance location ""
 2>   at evaluate path "/dependentSchemas"
-2> Because the object value defined the property "api", it was also expected to validate against the corresponding subschema
+2> Because the object value defined "api", it was also expected to validate against the corresponding subschemas
 2>   at instance location ""
 2>   at evaluate path "/dependentSchemas"
 EOF

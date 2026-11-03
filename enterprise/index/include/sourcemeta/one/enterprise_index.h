@@ -10,13 +10,13 @@
 #include <sourcemeta/blaze/alterschema.h>
 #include <sourcemeta/blaze/configuration.h>
 
+#include <sourcemeta/core/error.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <cstddef>       // std::size_t
 #include <cstdint>       // std::uint32_t
-#include <exception>     // std::exception
 #include <filesystem>    // std::filesystem::path
 #include <functional>    // std::function
 #include <string>        // std::string
@@ -41,16 +41,13 @@ auto convert_schema(sourcemeta::core::JSON &schema, SchemaDialect target,
                     const sourcemeta::core::SchemaResolver &resolver) -> bool;
 
 // A schema that could not be converted into a dialect
-class SchemaConversionError : public std::exception {
+class SchemaConversionError : public sourcemeta::core::Error {
 public:
   SchemaConversionError(std::filesystem::path path,
-                        const std::string_view dialect, std::string message)
-      : path_{std::move(path)}, dialect_{dialect},
-        message_{std::move(message)} {}
-
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "The schema could not be converted into another dialect";
-  }
+                        const std::string_view dialect, std::string reason)
+      : sourcemeta::core::
+            Error{"The schema could not be converted into another dialect"},
+        path_{std::move(path)}, dialect_{dialect}, reason_{std::move(reason)} {}
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
     return this->path_;
@@ -60,14 +57,14 @@ public:
     return this->dialect_;
   }
 
-  [[nodiscard]] auto message() const noexcept -> const std::string & {
-    return this->message_;
+  [[nodiscard]] auto reason() const noexcept -> const std::string & {
+    return this->reason_;
   }
 
 private:
   std::filesystem::path path_;
   std::string_view dialect_;
-  std::string message_;
+  std::string reason_;
 };
 
 auto load_custom_lint_rules(

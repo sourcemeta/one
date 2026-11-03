@@ -4,6 +4,7 @@
 #include <sourcemeta/blaze/compiler.h>
 #include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/blaze/output.h>
+#include <sourcemeta/core/error.h>
 #include <sourcemeta/core/json.h>
 #include <sourcemeta/core/jsonrpc.h>
 #include <sourcemeta/core/mcp.h>
@@ -31,25 +32,22 @@ class Router;
 class RouterAction;
 
 // The body did not match what the route accepts
-struct SchemaPostRequestError final : std::exception {
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return "The request body does not match the expected schema";
-  }
+struct SchemaPostRequestError final : sourcemeta::core::Error {
+  SchemaPostRequestError()
+      : sourcemeta::core::Error{
+            "The request body does not match the expected schema"} {}
 };
 
 // What a playground compilation refused, carried out of the deferred body so
 // the answer names the reason rather than reporting a generic failure
-class PlaygroundSchemaError final : public std::exception {
+class PlaygroundSchemaError final : public sourcemeta::core::Error {
 public:
   PlaygroundSchemaError(const sourcemeta::core::HTTPStatus &status,
-                        const std::string_view type, const char *detail,
+                        const std::string_view type,
+                        const sourcemeta::core::StaticString detail,
                         std::string reference = {}, std::string location = {})
-      : status_{status}, type_{type}, detail_{detail},
+      : sourcemeta::core::Error{detail}, status_{status}, type_{type},
         reference_{std::move(reference)}, location_{std::move(location)} {}
-
-  [[nodiscard]] auto what() const noexcept -> const char * override {
-    return this->detail_;
-  }
 
   [[nodiscard]] auto status() const noexcept
       -> const sourcemeta::core::HTTPStatus & {
@@ -74,7 +72,6 @@ public:
 private:
   sourcemeta::core::HTTPStatus status_;
   std::string_view type_;
-  const char *detail_;
   std::string reference_;
   std::string location_;
 };

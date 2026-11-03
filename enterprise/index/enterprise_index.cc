@@ -51,12 +51,11 @@ auto load_custom_lint_rules(
     } catch (
         const sourcemeta::blaze::SchemaRuleInvalidNamePatternError &error) {
       throw sourcemeta::core::FileError<
-          sourcemeta::blaze::SchemaRuleInvalidNamePatternError>(
-          rule.path, error.identifier(), error.regex());
+          sourcemeta::blaze::SchemaRuleInvalidNamePatternError>(rule.path,
+                                                                error);
     } catch (const sourcemeta::blaze::SchemaRuleInvalidNameError &error) {
       throw sourcemeta::core::FileError<
-          sourcemeta::blaze::SchemaRuleInvalidNameError>(
-          rule.path, error.identifier(), error.what());
+          sourcemeta::blaze::SchemaRuleInvalidNameError>(rule.path, error);
     } catch (const sourcemeta::blaze::SchemaRuleMissingNameError &) {
       throw sourcemeta::core::FileError<
           sourcemeta::blaze::SchemaRuleMissingNameError>(rule.path);

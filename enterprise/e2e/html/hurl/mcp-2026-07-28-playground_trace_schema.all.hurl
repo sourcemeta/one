@@ -482,8 +482,8 @@ jsonpath "$.result.structuredContent.steps[2].annotation" count == 1
 variable "text" jsonpath "$.steps[2].annotation" count == 1
 jsonpath "$.result.structuredContent.steps[2].annotation[0]" == "hello"
 variable "text" jsonpath "$.steps[2].annotation[0]" == "hello"
-jsonpath "$.result.structuredContent.steps[2].message" == "Examples of the instance were and \"hello\""
-variable "text" jsonpath "$.steps[2].message" == "Examples of the instance were and \"hello\""
+jsonpath "$.result.structuredContent.steps[2].message" == "Examples of the instance were \"hello\""
+variable "text" jsonpath "$.steps[2].message" == "Examples of the instance were \"hello\""
 jsonpath "$.result.structuredContent.steps[2].vocabulary" == "https://json-schema.org/draft/2020-12/vocab/meta-data"
 variable "text" jsonpath "$.steps[2].vocabulary" == "https://json-schema.org/draft/2020-12/vocab/meta-data"
 jsonpath "$.result.structuredContent.steps[3].type" == "pass"

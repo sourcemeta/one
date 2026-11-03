@@ -247,8 +247,7 @@ static auto execute_plan(sourcemeta::one::BuildState &entries,
                 action.data.empty() ? nullptr : &resolver.entry(action.data)};
             if (entry) {
               throw sourcemeta::core::FileError<
-                  sourcemeta::core::SchemaResolutionError>(
-                  entry->path, error.identifier(), error.what());
+                  sourcemeta::core::SchemaResolutionError>(entry->path, error);
             }
 
             throw;
@@ -257,9 +256,7 @@ static auto execute_plan(sourcemeta::one::BuildState &entries,
                 action.data.empty() ? nullptr : &resolver.entry(action.data)};
             if (entry) {
               throw sourcemeta::core::FileError<
-                  sourcemeta::core::SchemaReferenceError>(
-                  entry->path, error.identifier(), error.location(),
-                  error.what());
+                  sourcemeta::core::SchemaReferenceError>(entry->path, error);
             }
 
             throw;
@@ -270,7 +267,7 @@ static auto execute_plan(sourcemeta::one::BuildState &entries,
             if (entry) {
               throw sourcemeta::core::FileError<
                   sourcemeta::core::SchemaReferenceObjectResourceError>(
-                  entry->path, error.identifier());
+                  entry->path, error);
             }
 
             throw;
@@ -279,8 +276,7 @@ static auto execute_plan(sourcemeta::one::BuildState &entries,
                 action.data.empty() ? nullptr : &resolver.entry(action.data)};
             if (entry) {
               throw sourcemeta::core::FileError<
-                  sourcemeta::core::SchemaVocabularyError>(
-                  entry->path, error.uri(), error.what());
+                  sourcemeta::core::SchemaVocabularyError>(entry->path, error);
             }
 
             throw;
@@ -289,8 +285,8 @@ static auto execute_plan(sourcemeta::one::BuildState &entries,
                 action.data.empty() ? nullptr : &resolver.entry(action.data)};
             if (entry) {
               throw sourcemeta::core::FileError<
-                  sourcemeta::blaze::CompilerInvalidRegexError>(
-                  entry->path, error.base(), error.location(), error.regex());
+                  sourcemeta::blaze::CompilerInvalidRegexError>(entry->path,
+                                                                error);
             }
 
             throw;
@@ -961,7 +957,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
   } catch (const sourcemeta::one::SchemaConversionError &error) {
     std::print(
         stderr, "error: {}\n  to dialect {}\n  at path {}\n  with reason {}\n",
-        error.what(), error.dialect(), error.path().string(), error.message());
+        error.what(), error.dialect(), error.path().string(), error.reason());
     return EXIT_FAILURE;
 #endif
   } catch (const sourcemeta::one::CrossPolicyReferenceError &error) {
