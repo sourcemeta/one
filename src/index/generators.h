@@ -51,12 +51,6 @@
 
 namespace sourcemeta::one {
 
-#pragma pack(push, 1)
-struct MetapackDialectExtension {
-  std::uint16_t dialect_length;
-};
-#pragma pack(pop)
-
 static auto format_schema(sourcemeta::core::JSON &schema,
                           const sourcemeta::core::SchemaResolver &resolver,
                           const std::string_view dialect) -> void {
@@ -64,18 +58,6 @@ static auto format_schema(sourcemeta::core::JSON &schema,
       sourcemeta::core::SchemaFrame::Mode::Locations, schema,
       sourcemeta::core::schema_walker, resolver, dialect};
   sourcemeta::core::schema_format(schema, frame);
-}
-
-static auto make_dialect_extension(const std::string_view dialect)
-    -> std::vector<std::uint8_t> {
-  assert(dialect.size() <= std::numeric_limits<std::uint16_t>::max());
-  std::vector<std::uint8_t> result;
-  result.resize(sizeof(MetapackDialectExtension) + dialect.size());
-  MetapackDialectExtension header{};
-  header.dialect_length = static_cast<std::uint16_t>(dialect.size());
-  std::memcpy(result.data(), &header, sizeof(header));
-  std::memcpy(result.data() + sizeof(header), dialect.data(), dialect.size());
-  return result;
 }
 
 // The name a location kind answers to outside this program, which is a name
@@ -260,7 +242,8 @@ struct GenerateMaterialisedSchema {
         },
         dialect_identifier);
 
-    const auto extension_bytes{make_dialect_extension(dialect_identifier)};
+    const auto extension_bytes{
+        sourcemeta::one::make_metapack_schema_extension(dialect_identifier)};
     sourcemeta::core::metapack_write_json_pretty(
         action.destination, schema.value(), "application/schema+json",
         sourcemeta::core::MetapackEncoding::GZIP,
@@ -353,8 +336,8 @@ template <sourcemeta::one::SchemaDialect Target> struct GenerateConversion {
       return;
     }
 
-    const auto extension_bytes{
-        make_dialect_extension(sourcemeta::one::conversion_uri(Target))};
+    const auto extension_bytes{sourcemeta::one::make_metapack_schema_extension(
+        sourcemeta::one::conversion_uri(Target))};
     sourcemeta::core::metapack_write_json_pretty(
         action.destination, schema, "application/schema+json",
         sourcemeta::core::MetapackEncoding::GZIP,
@@ -715,7 +698,8 @@ struct GenerateBundle {
         },
         dialect_identifier);
 
-    const auto extension_bytes{make_dialect_extension(dialect_identifier)};
+    const auto extension_bytes{
+        sourcemeta::one::make_metapack_schema_extension(dialect_identifier)};
     sourcemeta::core::metapack_write_json_pretty(
         action.destination, schema, "application/schema+json",
         sourcemeta::core::MetapackEncoding::GZIP,
@@ -749,7 +733,8 @@ struct GenerateEditor {
         },
         dialect_identifier);
 
-    const auto extension_bytes{make_dialect_extension(dialect_identifier)};
+    const auto extension_bytes{
+        sourcemeta::one::make_metapack_schema_extension(dialect_identifier)};
     sourcemeta::core::metapack_write_json_pretty(
         action.destination, schema, "application/schema+json",
         sourcemeta::core::MetapackEncoding::GZIP,
