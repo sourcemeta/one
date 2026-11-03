@@ -23,28 +23,6 @@
 
 namespace {
 
-#pragma pack(push, 1)
-struct DialectExtension {
-  std::uint16_t dialect_length;
-};
-#pragma pack(pop)
-
-auto dialect_of(const std::span<const std::uint8_t> extension)
-    -> std::string_view {
-  const auto *header{
-      sourcemeta::core::metapack_extension_as<DialectExtension>(extension)};
-  if (header == nullptr || header->dialect_length == 0 ||
-      sizeof(DialectExtension) + header->dialect_length > extension.size()) {
-    return {};
-  }
-
-  return std::string_view{
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-      reinterpret_cast<const char *>(extension.data() +
-                                     sizeof(DialectExtension)),
-      header->dialect_length};
-}
-
 // The longest form a validator takes here, which is the weak prefix, the
 // quoted checksum, and nothing else
 constexpr std::size_t ETAG_CAPACITY{
@@ -201,7 +179,8 @@ auto RouterAction::artifact_dialect(const ResolvedArtifact &artifact) const
     return std::nullopt;
   }
 
-  const auto dialect{dialect_of(parsed->extension)};
+  const auto dialect{
+      sourcemeta::one::metapack_schema_dialect(parsed->extension)};
   if (dialect.empty()) {
     return std::nullopt;
   }
@@ -422,7 +401,8 @@ auto RouterAction::artifact_serve(
   if (!link.empty()) {
     sourcemeta::one::write_link_header(response, link);
   } else {
-    const auto dialect{dialect_of(parsed->extension)};
+    const auto dialect{
+        sourcemeta::one::metapack_schema_dialect(parsed->extension)};
     if (!dialect.empty()) {
       sourcemeta::one::write_link_header(response, dialect);
     }

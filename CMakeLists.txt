@@ -189,6 +189,7 @@ if(ONE_TESTS)
     endif()
     add_subdirectory(test/unit/router)
     add_subdirectory(test/unit/search)
+    add_subdirectory(test/unit/shared)
   endif()
 
   if(ONE_INDEX)

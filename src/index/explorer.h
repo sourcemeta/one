@@ -143,6 +143,7 @@ struct MetapackVersionInfo {
 };
 
 struct MetapackExplorerSchemaExtension {
+  MetapackLeafExtension leaf;
   std::int64_t health;
   std::int64_t bytes;
   std::int64_t bytes_bundled;
@@ -345,6 +346,7 @@ static auto make_explorer_schema_extension(
   result.resize(sizeof(MetapackExplorerSchemaExtension) + strings_size);
 
   MetapackExplorerSchemaExtension header{};
+  header.leaf.kind = sourcemeta::one::MetapackLeafKind::Schema;
   header.health = health;
   header.bytes = bytes;
   header.bytes_bundled = bytes_bundled;
@@ -1264,8 +1266,10 @@ struct GenerateExplorerDirectoryList {
           continue;
         }
 
-        const auto *extension{sourcemeta::core::metapack_extension_as<
-            MetapackExplorerSchemaExtension>(dependency_parsed->extension)};
+        const auto *extension{sourcemeta::one::metapack_leaf_extension_as<
+            MetapackExplorerSchemaExtension>(
+            dependency_parsed->extension,
+            sourcemeta::one::MetapackLeafKind::Schema)};
         if (extension == nullptr) {
           continue;
         }
