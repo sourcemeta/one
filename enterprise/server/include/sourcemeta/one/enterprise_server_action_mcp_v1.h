@@ -689,7 +689,7 @@ private:
     }
 
     auto resolution{this->artifact_resolve_path(caller, uri, Tree::Schemas,
-                                                bundle ? "bundle" : "schema")};
+                                                bundle ? "bundle" : "data")};
     if (!resolution.path.has_value()) {
       return sourcemeta::core::mcp_make_error_resource_not_found(version,
                                                                  &request_id);

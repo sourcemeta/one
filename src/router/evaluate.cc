@@ -45,7 +45,7 @@ public:
   [[nodiscard]] auto operator()(const std::string_view identifier) const
       -> sourcemeta::core::SchemaResolverResult {
     const auto resolution{this->action_->artifact_resolve_path(
-        *this->caller_, identifier, RouterAction::Tree::Schemas, "schema")};
+        *this->caller_, identifier, RouterAction::Tree::Schemas, "data")};
     if (resolution.path.has_value()) {
       auto schema{this->action_->artifact_read_json(resolution.path.value())};
       if (schema.has_value()) {

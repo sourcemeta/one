@@ -80,7 +80,7 @@ WRITE expected.txt UNTIL EOF
 ./explorer/public/example/foo
 ./explorer/public/example/foo/%
 ./explorer/public/example/foo/%/dependents.metapack
-./explorer/public/example/foo/%/schema.metapack
+./explorer/public/example/foo/%/metadata.metapack
 ./routes.bin
 ./schemas
 ./schemas/example
@@ -89,12 +89,12 @@ WRITE expected.txt UNTIL EOF
 ./schemas/example/foo/%/blaze-exhaustive.metapack
 ./schemas/example/foo/%/blaze-fast.metapack
 ./schemas/example/foo/%/bundle.metapack
+./schemas/example/foo/%/data.metapack
 ./schemas/example/foo/%/dependencies.metapack
 ./schemas/example/foo/%/editor.metapack
 ./schemas/example/foo/%/health.metapack
 ./schemas/example/foo/%/locations.metapack
 ./schemas/example/foo/%/positions.metapack
-./schemas/example/foo/%/schema.metapack
 ./schemas/example/foo/%/stats.metapack
 ./state.bin
 ./version.json

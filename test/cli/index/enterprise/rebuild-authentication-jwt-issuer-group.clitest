@@ -83,9 +83,9 @@ WRITE expected-before.txt UNTIL EOF
 ./explorer/oncall+platform/schemas/%/directory.metapack
 ./explorer/oncall+platform/schemas/a
 ./explorer/oncall+platform/schemas/a/%
+./explorer/oncall+platform/schemas/a/%/data-html.metapack
 ./explorer/oncall+platform/schemas/a/%/dependents.metapack
-./explorer/oncall+platform/schemas/a/%/schema-html.metapack
-./explorer/oncall+platform/schemas/a/%/schema.metapack
+./explorer/oncall+platform/schemas/a/%/metadata.metapack
 ./explorer/oncall/%
 ./explorer/oncall/%/404.metapack
 ./explorer/oncall/%/directory-html.metapack
@@ -98,9 +98,9 @@ WRITE expected-before.txt UNTIL EOF
 ./explorer/oncall/schemas/%/directory.metapack
 ./explorer/oncall/schemas/a
 ./explorer/oncall/schemas/a/%
+./explorer/oncall/schemas/a/%/data-html.metapack
 ./explorer/oncall/schemas/a/%/dependents.metapack
-./explorer/oncall/schemas/a/%/schema-html.metapack
-./explorer/oncall/schemas/a/%/schema.metapack
+./explorer/oncall/schemas/a/%/metadata.metapack
 ./explorer/platform
 ./explorer/platform/%
 ./explorer/platform/%/404.metapack
@@ -114,9 +114,9 @@ WRITE expected-before.txt UNTIL EOF
 ./explorer/platform/schemas/%/directory.metapack
 ./explorer/platform/schemas/a
 ./explorer/platform/schemas/a/%
+./explorer/platform/schemas/a/%/data-html.metapack
 ./explorer/platform/schemas/a/%/dependents.metapack
-./explorer/platform/schemas/a/%/schema-html.metapack
-./explorer/platform/schemas/a/%/schema.metapack
+./explorer/platform/schemas/a/%/metadata.metapack
 ./explorer/public
 ./explorer/public/%
 ./explorer/public/%/404.metapack
@@ -187,9 +187,9 @@ WRITE expected-after.txt UNTIL EOF
 ./explorer/platform/schemas/%/directory.metapack
 ./explorer/platform/schemas/a
 ./explorer/platform/schemas/a/%
+./explorer/platform/schemas/a/%/data-html.metapack
 ./explorer/platform/schemas/a/%/dependents.metapack
-./explorer/platform/schemas/a/%/schema-html.metapack
-./explorer/platform/schemas/a/%/schema.metapack
+./explorer/platform/schemas/a/%/metadata.metapack
 ./explorer/public
 ./explorer/public/%
 ./explorer/public/%/404.metapack

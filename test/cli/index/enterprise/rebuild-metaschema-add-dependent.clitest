@@ -62,8 +62,8 @@ DROP LINES MATCHING '^(?!.*(Producing|Combining)).*$' IN produced.txt
 // The schema declared as the dialect is rebuilt along with the new one, while
 // the unrelated one is left alone
 WRITE expected-produced.txt UNTIL EOF
-2> (  2%) Producing: schemas/example/schemas/meta/%/schema.metapack
-2> (  5%) Producing: schemas/example/schemas/user/%/schema.metapack
+2> (  2%) Producing: schemas/example/schemas/meta/%/data.metapack
+2> (  5%) Producing: schemas/example/schemas/user/%/data.metapack
 2> (  8%) Producing: schemas/example/schemas/meta/%/dependencies.metapack
 2> ( 10%) Producing: schemas/example/schemas/meta/%/locations.metapack
 2> ( 13%) Producing: schemas/example/schemas/meta/%/positions.metapack
@@ -76,8 +76,8 @@ WRITE expected-produced.txt UNTIL EOF
 2> ( 32%) Producing: schemas/example/schemas/meta/%/health.metapack
 2> ( 35%) Producing: schemas/example/schemas/user/%/bundle.metapack
 2> ( 37%) Producing: schemas/example/schemas/user/%/health.metapack
-2> ( 40%) Producing: explorer/public/example/schemas/meta/%/schema.metapack
-2> ( 43%) Producing: explorer/public/example/schemas/user/%/schema.metapack
+2> ( 40%) Producing: explorer/public/example/schemas/meta/%/metadata.metapack
+2> ( 43%) Producing: explorer/public/example/schemas/user/%/metadata.metapack
 2> ( 45%) Producing: schemas/example/schemas/meta/%/blaze-exhaustive.metapack
 2> ( 48%) Producing: schemas/example/schemas/meta/%/blaze-fast.metapack
 2> ( 51%) Producing: schemas/example/schemas/meta/%/editor.metapack
@@ -85,8 +85,8 @@ WRITE expected-produced.txt UNTIL EOF
 2> ( 56%) Producing: schemas/example/schemas/user/%/blaze-fast.metapack
 2> ( 59%) Producing: schemas/example/schemas/user/%/editor.metapack
 2> ( 62%) Producing: explorer/public/example/schemas/%/directory.metapack
-2> ( 64%) Producing: explorer/public/example/schemas/meta/%/schema-html.metapack
-2> ( 67%) Producing: explorer/public/example/schemas/user/%/schema-html.metapack
+2> ( 64%) Producing: explorer/public/example/schemas/meta/%/data-html.metapack
+2> ( 67%) Producing: explorer/public/example/schemas/user/%/data-html.metapack
 2> ( 70%) Producing: explorer/public/example/%/directory.metapack
 2> ( 72%) Producing: explorer/public/example/schemas/%/directory-html.metapack
 2> ( 75%) Producing: explorer/public/%/directory.metapack

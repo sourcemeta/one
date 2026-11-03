@@ -62,21 +62,21 @@ DROP LINES MATCHING '^(?!.*(Producing|Combining)).*$' IN produced.txt
 // The schema declared as the dialect is rebuilt along with the new one, while
 // the unrelated one is left alone
 WRITE expected-produced.txt UNTIL EOF
-2> (  4%) Producing: schemas/example/schemas/user/%/schema.metapack
-2> (  9%) Producing: explorer/public/example/schemas/meta/%/schema.metapack
+2> (  4%) Producing: schemas/example/schemas/user/%/data.metapack
+2> (  9%) Producing: explorer/public/example/schemas/meta/%/metadata.metapack
 2> ( 13%) Producing: schemas/example/schemas/user/%/dependencies.metapack
 2> ( 18%) Producing: schemas/example/schemas/user/%/locations.metapack
 2> ( 22%) Producing: schemas/example/schemas/user/%/positions.metapack
 2> ( 27%) Producing: schemas/example/schemas/user/%/stats.metapack
-2> ( 31%) Producing: explorer/public/example/schemas/meta/%/schema-html.metapack
+2> ( 31%) Producing: explorer/public/example/schemas/meta/%/data-html.metapack
 2> ( 36%) Producing: schemas/example/schemas/user/%/bundle.metapack
 2> ( 40%) Producing: schemas/example/schemas/user/%/health.metapack
-2> ( 45%) Producing: explorer/public/example/schemas/user/%/schema.metapack
+2> ( 45%) Producing: explorer/public/example/schemas/user/%/metadata.metapack
 2> ( 50%) Producing: schemas/example/schemas/user/%/blaze-exhaustive.metapack
 2> ( 54%) Producing: schemas/example/schemas/user/%/blaze-fast.metapack
 2> ( 59%) Producing: schemas/example/schemas/user/%/editor.metapack
 2> ( 63%) Producing: explorer/public/example/schemas/%/directory.metapack
-2> ( 68%) Producing: explorer/public/example/schemas/user/%/schema-html.metapack
+2> ( 68%) Producing: explorer/public/example/schemas/user/%/data-html.metapack
 2> ( 72%) Producing: explorer/public/example/%/directory.metapack
 2> ( 77%) Producing: explorer/public/example/schemas/%/directory-html.metapack
 2> ( 81%) Producing: explorer/public/%/directory.metapack

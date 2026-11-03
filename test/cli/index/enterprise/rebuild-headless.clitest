@@ -61,14 +61,14 @@ COPY output.txt TO output_producing.txt
 DROP LINES MATCHING '^(?!.*(Producing|Combining)).*$' IN output_producing.txt
 
 WRITE expected.txt UNTIL EOF
-2> (  5%) Producing: schemas/example/schemas/c/%/schema.metapack
+2> (  5%) Producing: schemas/example/schemas/c/%/data.metapack
 2> ( 10%) Producing: schemas/example/schemas/c/%/dependencies.metapack
 2> ( 15%) Producing: schemas/example/schemas/c/%/locations.metapack
 2> ( 21%) Producing: schemas/example/schemas/c/%/positions.metapack
 2> ( 26%) Producing: schemas/example/schemas/c/%/stats.metapack
 2> ( 31%) Producing: schemas/example/schemas/c/%/bundle.metapack
 2> ( 36%) Producing: schemas/example/schemas/c/%/health.metapack
-2> ( 42%) Producing: explorer/public/example/schemas/c/%/schema.metapack
+2> ( 42%) Producing: explorer/public/example/schemas/c/%/metadata.metapack
 2> ( 47%) Producing: schemas/example/schemas/c/%/blaze-exhaustive.metapack
 2> ( 52%) Producing: schemas/example/schemas/c/%/blaze-fast.metapack
 2> ( 57%) Producing: schemas/example/schemas/c/%/bundle-2020-12.metapack

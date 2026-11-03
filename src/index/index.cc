@@ -639,7 +639,7 @@ static auto index_main(const std::string_view &program,
               .evaluate =
                   sourcemeta::one::Configuration::should_evaluate(collection),
               .cache_path = canonical_output / "schemas" /
-                            cached->relative_path / "%" / "schema.metapack",
+                            cached->relative_path / "%" / "data.metapack",
               .dialect = cached->dialect,
               .vocabularies = cached->vocabularies,
               .original_identifier = cached->original_identifier,

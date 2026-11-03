@@ -62,14 +62,14 @@ COPY output.txt TO output_producing.txt
 DROP LINES MATCHING '^(?!.*(Producing|Combining)).*$' IN output_producing.txt
 
 WRITE expected.txt UNTIL EOF
-2> (  4%) Producing: schemas/example/schemas/c/%/schema.metapack
+2> (  4%) Producing: schemas/example/schemas/c/%/data.metapack
 2> (  8%) Producing: schemas/example/schemas/c/%/dependencies.metapack
 2> ( 13%) Producing: schemas/example/schemas/c/%/locations.metapack
 2> ( 17%) Producing: schemas/example/schemas/c/%/positions.metapack
 2> ( 21%) Producing: schemas/example/schemas/c/%/stats.metapack
 2> ( 26%) Producing: schemas/example/schemas/c/%/bundle.metapack
 2> ( 30%) Producing: schemas/example/schemas/c/%/health.metapack
-2> ( 34%) Producing: explorer/public/example/schemas/c/%/schema.metapack
+2> ( 34%) Producing: explorer/public/example/schemas/c/%/metadata.metapack
 2> ( 39%) Producing: schemas/example/schemas/c/%/blaze-exhaustive.metapack
 2> ( 43%) Producing: schemas/example/schemas/c/%/blaze-fast.metapack
 2> ( 47%) Producing: schemas/example/schemas/c/%/bundle-2020-12.metapack
@@ -77,7 +77,7 @@ WRITE expected.txt UNTIL EOF
 2> ( 56%) Producing: schemas/example/schemas/c/%/bundle-openapi3.2.metapack
 2> ( 60%) Producing: schemas/example/schemas/c/%/editor.metapack
 2> ( 65%) Producing: explorer/public/example/schemas/%/directory.metapack
-2> ( 69%) Producing: explorer/public/example/schemas/c/%/schema-html.metapack
+2> ( 69%) Producing: explorer/public/example/schemas/c/%/data-html.metapack
 2> ( 73%) Producing: explorer/public/example/%/directory.metapack
 2> ( 78%) Producing: explorer/public/example/schemas/%/directory-html.metapack
 2> ( 82%) Producing: explorer/public/%/directory.metapack

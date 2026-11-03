@@ -98,19 +98,19 @@ DROP LINES MATCHING '^(?!.*(Producing|Combining)).*$' IN output_producing.txt
 // The dependency-tree.metapack global aggregate triggers ForceOnGraphChange
 // for all dependents, not just the ones whose graph actually changed.
 WRITE expected.txt UNTIL EOF
-2> (  5%) Producing: schemas/left/left-a/s5/%/schema.metapack
+2> (  5%) Producing: schemas/left/left-a/s5/%/data.metapack
 2> ( 10%) Producing: schemas/left/left-a/s5/%/dependencies.metapack
 2> ( 15%) Producing: schemas/left/left-a/s5/%/locations.metapack
 2> ( 20%) Producing: schemas/left/left-a/s5/%/positions.metapack
 2> ( 25%) Producing: schemas/left/left-a/s5/%/stats.metapack
 2> ( 30%) Producing: schemas/left/left-a/s5/%/bundle.metapack
 2> ( 35%) Producing: schemas/left/left-a/s5/%/health.metapack
-2> ( 40%) Producing: explorer/public/left/left-a/s5/%/schema.metapack
+2> ( 40%) Producing: explorer/public/left/left-a/s5/%/metadata.metapack
 2> ( 45%) Producing: schemas/left/left-a/s5/%/blaze-exhaustive.metapack
 2> ( 50%) Producing: schemas/left/left-a/s5/%/blaze-fast.metapack
 2> ( 55%) Producing: schemas/left/left-a/s5/%/editor.metapack
 2> ( 60%) Producing: explorer/public/left/left-a/%/directory.metapack
-2> ( 65%) Producing: explorer/public/left/left-a/s5/%/schema-html.metapack
+2> ( 65%) Producing: explorer/public/left/left-a/s5/%/data-html.metapack
 2> ( 70%) Producing: explorer/public/left/%/directory.metapack
 2> ( 75%) Producing: explorer/public/left/left-a/%/directory-html.metapack
 2> ( 80%) Producing: explorer/public/%/directory.metapack

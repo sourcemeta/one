@@ -1241,7 +1241,7 @@ struct GenerateExplorerDirectoryList {
                                      .name = {}});
         directory_entries.back().name =
             directory_entries.back().json.at("name").to_string();
-      } else if (filename == "schema.metapack") {
+      } else if (filename == "metadata.metapack") {
         if (old_listing.has_value() &&
             !in_overlay_synchronised(state, dependency.native())) {
           const auto match{old_schema_entries.find(child_name)};

@@ -22,7 +22,7 @@ public:
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
       sourcemeta::one::Router &dispatcher)
-      : ActionServeExplorerArtifactV1{base, router, identifier, "schema",
+      : ActionServeExplorerArtifactV1{base, router, identifier, "metadata",
                                       dispatcher} {}
 };
 

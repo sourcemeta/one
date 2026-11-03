@@ -70,19 +70,19 @@ DROP LINES MATCHING '^(?!.*(Producing|Combining)).*$' IN produced.txt
 
 // Nothing describing the schema declared as the dialect is rebuilt
 WRITE expected-produced.txt UNTIL EOF
-2> (  5%) Producing: schemas/example/schemas/other/%/schema.metapack
+2> (  5%) Producing: schemas/example/schemas/other/%/data.metapack
 2> ( 10%) Producing: schemas/example/schemas/other/%/dependencies.metapack
 2> ( 15%) Producing: schemas/example/schemas/other/%/locations.metapack
 2> ( 20%) Producing: schemas/example/schemas/other/%/positions.metapack
 2> ( 25%) Producing: schemas/example/schemas/other/%/stats.metapack
 2> ( 30%) Producing: schemas/example/schemas/other/%/bundle.metapack
 2> ( 35%) Producing: schemas/example/schemas/other/%/health.metapack
-2> ( 40%) Producing: explorer/public/example/schemas/other/%/schema.metapack
+2> ( 40%) Producing: explorer/public/example/schemas/other/%/metadata.metapack
 2> ( 45%) Producing: schemas/example/schemas/other/%/blaze-exhaustive.metapack
 2> ( 50%) Producing: schemas/example/schemas/other/%/blaze-fast.metapack
 2> ( 55%) Producing: schemas/example/schemas/other/%/editor.metapack
 2> ( 60%) Producing: explorer/public/example/schemas/%/directory.metapack
-2> ( 65%) Producing: explorer/public/example/schemas/other/%/schema-html.metapack
+2> ( 65%) Producing: explorer/public/example/schemas/other/%/data-html.metapack
 2> ( 70%) Producing: explorer/public/example/%/directory.metapack
 2> ( 75%) Producing: explorer/public/example/schemas/%/directory-html.metapack
 2> ( 80%) Producing: explorer/public/%/directory.metapack

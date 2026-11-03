@@ -62,9 +62,9 @@ WRITE expected.txt UNTIL EOF
 ./explorer/public/bar/bar/%/directory.metapack
 ./explorer/public/bar/bar/test
 ./explorer/public/bar/bar/test/%
+./explorer/public/bar/bar/test/%/data-html.metapack
 ./explorer/public/bar/bar/test/%/dependents.metapack
-./explorer/public/bar/bar/test/%/schema-html.metapack
-./explorer/public/bar/bar/test/%/schema.metapack
+./explorer/public/bar/bar/test/%/metadata.metapack
 ./routes.bin
 ./schemas
 ./schemas/bar
@@ -77,12 +77,12 @@ WRITE expected.txt UNTIL EOF
 ./schemas/bar/bar/test/%/bundle-openapi3.1.metapack
 ./schemas/bar/bar/test/%/bundle-openapi3.2.metapack
 ./schemas/bar/bar/test/%/bundle.metapack
+./schemas/bar/bar/test/%/data.metapack
 ./schemas/bar/bar/test/%/dependencies.metapack
 ./schemas/bar/bar/test/%/editor.metapack
 ./schemas/bar/bar/test/%/health.metapack
 ./schemas/bar/bar/test/%/locations.metapack
 ./schemas/bar/bar/test/%/positions.metapack
-./schemas/bar/bar/test/%/schema.metapack
 ./schemas/bar/bar/test/%/stats.metapack
 ./state.bin
 ./version.json
