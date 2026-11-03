@@ -43,7 +43,7 @@ TEST(leaf_extension_as_of_another_kind) {
   EXPECT_TRUE(sourcemeta::one::metapack_leaf_extension_as<
                   sourcemeta::one::MetapackSchemaExtension>(
                   std::span<const std::uint8_t>{bytes},
-                  sourcemeta::one::MetapackLeafKind::Schema) == nullptr);
+                  sourcemeta::one::LeafKind::Schema) == nullptr);
 }
 
 TEST(leaf_extension_as_of_the_expected_kind) {
@@ -51,5 +51,5 @@ TEST(leaf_extension_as_of_the_expected_kind) {
   EXPECT_TRUE(sourcemeta::one::metapack_leaf_extension_as<
                   sourcemeta::one::MetapackSchemaExtension>(
                   std::span<const std::uint8_t>{bytes},
-                  sourcemeta::one::MetapackLeafKind::Schema) != nullptr);
+                  sourcemeta::one::LeafKind::Schema) != nullptr);
 }

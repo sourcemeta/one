@@ -16,7 +16,7 @@ target_link_libraries(sourcemeta_one_resolver PRIVATE
   sourcemeta::core::yaml)
 target_link_libraries(sourcemeta_one_resolver PRIVATE
   sourcemeta::core::text)
-target_link_libraries(sourcemeta_one_resolver PRIVATE
+target_link_libraries(sourcemeta_one_resolver PUBLIC
   sourcemeta::one::shared)
 target_link_libraries(sourcemeta_one_resolver PRIVATE
   sourcemeta::core::metapack)

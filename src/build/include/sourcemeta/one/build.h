@@ -39,6 +39,8 @@ struct LeafView {
   std::string_view dialect{};
   // The selection bits this leaf sets
   std::uint32_t selected{0};
+  // What this leaf holds, which decides which rules write for it
+  LeafKind kind{LeafKind::Schema};
 };
 
 using LeafSet = std::span<const std::pair<std::string_view, LeafView>>;
@@ -171,6 +173,7 @@ template <const auto &RuleSet>
     fingerprint_text(hash, rule.filename);
     fingerprint_mix(hash, static_cast<std::uint8_t>(rule.gate));
     fingerprint_mix(hash, rule.selector);
+    fingerprint_mix(hash, static_cast<std::uint8_t>(rule.kind));
     fingerprint_mix(hash, static_cast<std::uint8_t>(rule.dirty));
     fingerprint_mix(hash, static_cast<std::uint8_t>(rule.is_root));
     fingerprint_mix(hash, static_cast<std::uint8_t>(rule.combine_only));

@@ -643,7 +643,8 @@ static auto index_main(const std::string_view &program,
               .dialect = cached->dialect,
               .vocabularies = cached->vocabularies,
               .original_identifier = cached->original_identifier,
-              .collection = &collection});
+              .collection = &collection,
+              .kind = cached->kind});
     } else {
       uncached_schemas.emplace_back(detected);
     }
@@ -676,7 +677,8 @@ static auto index_main(const std::string_view &program,
                                  std::string{resolved.original_identifier},
                              .dialect = std::string{resolved.dialect},
                              .relative_path = resolved.relative_path.string(),
-                             .vocabularies = resolved.vocabularies});
+                             .vocabularies = resolved.vocabularies,
+                             .kind = resolved.kind});
         }
 
         if (app.contains("verbose")) {
@@ -716,8 +718,9 @@ static auto index_main(const std::string_view &program,
             .selected = sourcemeta::one::conversion_selection(
                 entry.dialect, sourcemeta::one::is_metaschema(
                                    entry.dialect, entry.vocabularies,
-                                   resolver.is_dialect(uri)))
+                                   resolver.is_dialect(uri))),
 #endif
+            .kind = entry.kind,
         });
   }
   const sourcemeta::one::LeafSet leaves{leaves_storage};

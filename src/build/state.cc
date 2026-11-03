@@ -16,7 +16,7 @@
 namespace {
 
 constexpr std::uint32_t STATE_MAGIC{0x44455053};
-constexpr std::uint32_t STATE_VERSION{6};
+constexpr std::uint32_t STATE_VERSION{7};
 constexpr std::uint32_t LEAF_INDEX_MAGIC{0x58444953};
 constexpr std::size_t HEADER_SIZE{36};
 
@@ -343,6 +343,8 @@ auto BuildState::parse_slot_resolver_entry(const std::uint8_t *slot) const
   cached.dialect = read_pool_string(this->string_pool_, offset);
   cached.relative_path = read_pool_string(this->string_pool_, offset);
   cached.vocabularies = !read_pool_string(this->string_pool_, offset).empty();
+  cached.kind = static_cast<LeafKind>(
+      read_pool_string(this->string_pool_, offset).front() - '0');
 
   return cached;
 }
@@ -1005,8 +1007,11 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
     append_pool_string(pool, cache_entry.dialect);
     append_pool_string(pool, cache_entry.relative_path);
     append_pool_string(pool, cache_entry.vocabularies ? "1" : "");
+    const std::string kind_text{
+        static_cast<char>('0' + static_cast<std::uint8_t>(cache_entry.kind))};
+    append_pool_string(pool, kind_text);
 
-    write_new_slot(source_path, timestamp, data_offset, 5, KIND_RESOLVER,
+    write_new_slot(source_path, timestamp, data_offset, 6, KIND_RESOLVER,
                    resolver_updates.contains(source_path));
   }
 

@@ -5,6 +5,7 @@
 #include <sourcemeta/core/uri.h>
 
 #include <sourcemeta/one/configuration.h>
+#include <sourcemeta/one/shared_leaf.h>
 
 #include <sourcemeta/one/resolver_error.h>
 
@@ -62,6 +63,8 @@ public:
     bool vocabularies{false};
     sourcemeta::core::JSON::String original_identifier{};
     const Configuration::Collection *collection{nullptr};
+    // What this entry holds, which decides what the build writes for it
+    LeafKind kind{LeafKind::Schema};
   };
 
   using Result =

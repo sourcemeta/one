@@ -757,7 +757,8 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
               .dialect = std::move(current_dialect),
               .vocabularies = declares_vocabularies,
               .original_identifier = identifier,
-              .collection = &collection})};
+              .collection = &collection,
+              .kind = LeafKind::Schema})};
     lock.unlock();
     if (!result.second && result.first->second.path != path) {
       throw sourcemeta::core::FileError<sourcemeta::core::SchemaFrameError>(

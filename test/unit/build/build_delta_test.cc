@@ -66,6 +66,60 @@ TEST(full_empty_registry) {
                      output / "secondary" / "public" / "%" / "listing.bin");
 }
 
+// A rule that applies to another kind of leaf writes nothing for this one,
+// while every rule that does apply still does
+TEST(full_leaf_rule_of_another_kind_is_not_declared) {
+  const std::filesystem::path output{"/output"};
+  sourcemeta::one::BuildState entries;
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(100)}};
+
+  entries.configure(
+      test_rules::KIND_RULES.leaves, test_rules::KIND_RULES.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::KIND_RULES>(), INPUTS,
+      test_rules::KIND_RULES.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::KIND_RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, schemas, "1.0.0", false, "", "Full", {}, VIEWS, everything())};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 6, 7);
+
+  EXPECT_ACTION(plan, 0, 0, 2, test_rules::ACTION_CONFIGURATION,
+                output / "configuration.json", "");
+  EXPECT_ACTION(plan, 0, 1, 2, test_rules::ACTION_VERSION,
+                output / "version.json", "1.0.0");
+
+  EXPECT_ACTION(plan, 1, 0, 1, test_rules::ACTION_ROUTES, output / "routes.bin",
+                "Full", output / "configuration.json");
+
+  EXPECT_ACTION(plan, 2, 0, 1, test_rules::ACTION_GATE, output / "gate.bin", "",
+                output / "routes.bin");
+
+  EXPECT_ACTION(plan, 3, 0, 1, test_rules::ACTION_PRIMARY,
+                output / "primary" / "foo" / "%" / "primary.bin",
+                "https://example.com/foo",
+                std::filesystem::path{"/"} / "src" / "foo.json",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 4, 0, 1, test_rules::ACTION_METADATA,
+                output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+                "https://example.com/foo",
+                output / "primary" / "foo" / "%" / "primary.bin");
+
+  EXPECT_ACTION(plan, 5, 0, 1, test_rules::ACTION_LISTING,
+                output / "secondary" / "public" / "%" / "listing.bin", "",
+                output / "secondary" / "public" / "foo" / "%" / "metadata.bin");
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      output / "routes.bin", output / "gate.bin",
+      output / "primary" / "foo" / "%" / "primary.bin",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "%" / "listing.bin");
+}
+
 TEST(full_single_leaf) {
   const std::filesystem::path output{"/output"};
   sourcemeta::one::BuildState entries;
@@ -593,6 +647,40 @@ TEST(incremental_cached_globals_are_omitted) {
       output / "secondary" / "public" / "foo" / "%" / "web.bin",
       "https://example.com/foo",
       output / "secondary" / "public" / "foo" / "%" / "metadata.bin");
+}
+
+// The fast path decides a leaf is clean by comparing what it holds against
+// what the rules ask of it, so a rule of another kind must be absent from both
+// sides of that comparison rather than only from what gets declared
+TEST(incremental_unchanged_leaf_is_not_dirtied_by_a_rule_of_another_kind) {
+  const auto output{delta_path("kind_fast_path")};
+  WRITE_GLOBAL_OUTPUTS(output);
+  sourcemeta::one::BuildState entries;
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(50)}};
+  ADD_LEAF_ENTRIES(entries, output, "foo", false, MTIME(150));
+  ADD_GLOBAL_ENTRIES(entries, output, MTIME(150));
+  entries.emplace(output / "secondary" / "public" / "%" / "listing.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+
+  entries.configure(
+      test_rules::KIND_RULES.leaves, test_rules::KIND_RULES.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::KIND_RULES>(), INPUTS,
+      test_rules::KIND_RULES.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::KIND_RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS, everything())};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 0, 0);
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      output / "routes.bin", output / "gate.bin",
+      output / "primary" / "foo" / "%" / "primary.bin",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "%" / "listing.bin");
 }
 
 TEST(incremental_only_the_new_leaf_is_built_beside_an_unchanged_one) {

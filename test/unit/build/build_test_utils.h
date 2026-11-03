@@ -26,6 +26,7 @@ struct TestLeafEntry {
   bool evaluate{true};
   std::string dialect{};
   std::uint32_t selected{0};
+  sourcemeta::one::LeafKind kind{sourcemeta::one::LeafKind::Schema};
 };
 
 class TestLeaves {
@@ -42,7 +43,8 @@ public:
                                     .mtime = entry.mtime,
                                     .evaluate = entry.evaluate,
                                     .dialect = entry.dialect,
-                                    .selected = entry.selected});
+                                    .selected = entry.selected,
+                                    .kind = entry.kind});
     }
   }
 
