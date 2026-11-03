@@ -78,9 +78,9 @@ WRITE expected-before.txt UNTIL EOF
 ./explorer/corporate/schemas/%/directory.metapack
 ./explorer/corporate/schemas/a
 ./explorer/corporate/schemas/a/%
+./explorer/corporate/schemas/a/%/data-html.metapack
 ./explorer/corporate/schemas/a/%/dependents.metapack
-./explorer/corporate/schemas/a/%/schema-html.metapack
-./explorer/corporate/schemas/a/%/schema.metapack
+./explorer/corporate/schemas/a/%/metadata.metapack
 ./explorer/public
 ./explorer/public/%
 ./explorer/public/%/404.metapack
@@ -103,9 +103,9 @@ WRITE expected-before.txt UNTIL EOF
 ./explorer/vault/schemas/%/directory.metapack
 ./explorer/vault/schemas/a
 ./explorer/vault/schemas/a/%
+./explorer/vault/schemas/a/%/data-html.metapack
 ./explorer/vault/schemas/a/%/dependents.metapack
-./explorer/vault/schemas/a/%/schema-html.metapack
-./explorer/vault/schemas/a/%/schema.metapack
+./explorer/vault/schemas/a/%/metadata.metapack
 EOF
 
 COMPARE before.txt AGAINST expected-before.txt
@@ -174,9 +174,9 @@ WRITE expected-after.txt UNTIL EOF
 ./explorer/vault/schemas/%/directory.metapack
 ./explorer/vault/schemas/a
 ./explorer/vault/schemas/a/%
+./explorer/vault/schemas/a/%/data-html.metapack
 ./explorer/vault/schemas/a/%/dependents.metapack
-./explorer/vault/schemas/a/%/schema-html.metapack
-./explorer/vault/schemas/a/%/schema.metapack
+./explorer/vault/schemas/a/%/metadata.metapack
 EOF
 
 COMPARE after.txt AGAINST expected-after.txt

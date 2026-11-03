@@ -80,28 +80,28 @@ DROP LINES MATCHING '^(?!.*(Producing|Combining)).*$' IN produced.txt
 // that cannot see the changed schema
 WRITE expected-produced.txt UNTIL EOF
 2> (  3%) Producing: explorer/public/schemas/%/directory.metapack
-2> (  6%) Producing: schemas/schemas/closed/user/%/schema.metapack
-2> ( 10%) Producing: explorer/alpha/schemas/open/meta/%/schema.metapack
+2> (  6%) Producing: schemas/schemas/closed/user/%/data.metapack
+2> ( 10%) Producing: explorer/alpha/schemas/open/meta/%/metadata.metapack
 2> ( 13%) Producing: explorer/public/%/directory.metapack
 2> ( 16%) Producing: explorer/public/schemas/%/directory-html.metapack
-2> ( 20%) Producing: explorer/public/schemas/open/meta/%/schema.metapack
+2> ( 20%) Producing: explorer/public/schemas/open/meta/%/metadata.metapack
 2> ( 23%) Producing: schemas/schemas/closed/user/%/dependencies.metapack
 2> ( 26%) Producing: schemas/schemas/closed/user/%/locations.metapack
 2> ( 30%) Producing: schemas/schemas/closed/user/%/positions.metapack
 2> ( 33%) Producing: schemas/schemas/closed/user/%/stats.metapack
-2> ( 36%) Producing: explorer/alpha/schemas/open/meta/%/schema-html.metapack
+2> ( 36%) Producing: explorer/alpha/schemas/open/meta/%/data-html.metapack
 2> ( 40%) Producing: explorer/public/%/directory-html.metapack
 2> ( 43%) Producing: explorer/public/%/search.metapack
-2> ( 46%) Producing: explorer/public/schemas/open/meta/%/schema-html.metapack
+2> ( 46%) Producing: explorer/public/schemas/open/meta/%/data-html.metapack
 2> ( 50%) Producing: schemas/schemas/closed/user/%/bundle.metapack
 2> ( 53%) Producing: schemas/schemas/closed/user/%/health.metapack
-2> ( 56%) Producing: explorer/alpha/schemas/closed/user/%/schema.metapack
+2> ( 56%) Producing: explorer/alpha/schemas/closed/user/%/metadata.metapack
 2> ( 60%) Producing: explorer/public/%/mcp.metapack
 2> ( 63%) Producing: schemas/schemas/closed/user/%/blaze-exhaustive.metapack
 2> ( 66%) Producing: schemas/schemas/closed/user/%/blaze-fast.metapack
 2> ( 70%) Producing: schemas/schemas/closed/user/%/editor.metapack
 2> ( 73%) Producing: explorer/alpha/schemas/closed/%/directory.metapack
-2> ( 76%) Producing: explorer/alpha/schemas/closed/user/%/schema-html.metapack
+2> ( 76%) Producing: explorer/alpha/schemas/closed/user/%/data-html.metapack
 2> ( 80%) Producing: explorer/alpha/schemas/%/directory.metapack
 2> ( 83%) Producing: explorer/alpha/schemas/closed/%/directory-html.metapack
 2> ( 86%) Producing: explorer/alpha/%/directory.metapack

@@ -70,9 +70,9 @@ WRITE expected.txt UNTIL EOF
 ./explorer/public/example/schemas/%/directory.metapack
 ./explorer/public/example/schemas/test
 ./explorer/public/example/schemas/test/%
+./explorer/public/example/schemas/test/%/data-html.metapack
 ./explorer/public/example/schemas/test/%/dependents.metapack
-./explorer/public/example/schemas/test/%/schema-html.metapack
-./explorer/public/example/schemas/test/%/schema.metapack
+./explorer/public/example/schemas/test/%/metadata.metapack
 ./routes.bin
 ./schemas
 ./schemas/example
@@ -89,12 +89,12 @@ WRITE expected.txt UNTIL EOF
 ./schemas/example/schemas/test/%/bundle-openapi3.1.metapack
 ./schemas/example/schemas/test/%/bundle-openapi3.2.metapack
 ./schemas/example/schemas/test/%/bundle.metapack
+./schemas/example/schemas/test/%/data.metapack
 ./schemas/example/schemas/test/%/dependencies.metapack
 ./schemas/example/schemas/test/%/editor.metapack
 ./schemas/example/schemas/test/%/health.metapack
 ./schemas/example/schemas/test/%/locations.metapack
 ./schemas/example/schemas/test/%/positions.metapack
-./schemas/example/schemas/test/%/schema.metapack
 ./schemas/example/schemas/test/%/stats.metapack
 ./state.bin
 ./version.json

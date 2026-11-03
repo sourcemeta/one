@@ -75,14 +75,14 @@ WRITE expected-before.txt UNTIL EOF
 ./explorer/alpha/schemas/%/directory.metapack
 ./explorer/alpha/schemas/a
 ./explorer/alpha/schemas/a/%
+./explorer/alpha/schemas/a/%/data-html.metapack
 ./explorer/alpha/schemas/a/%/dependents.metapack
-./explorer/alpha/schemas/a/%/schema-html.metapack
-./explorer/alpha/schemas/a/%/schema.metapack
+./explorer/alpha/schemas/a/%/metadata.metapack
 ./explorer/alpha/schemas/b
 ./explorer/alpha/schemas/b/%
+./explorer/alpha/schemas/b/%/data-html.metapack
 ./explorer/alpha/schemas/b/%/dependents.metapack
-./explorer/alpha/schemas/b/%/schema-html.metapack
-./explorer/alpha/schemas/b/%/schema.metapack
+./explorer/alpha/schemas/b/%/metadata.metapack
 ./explorer/public
 ./explorer/public/%
 ./explorer/public/%/404.metapack
@@ -144,14 +144,14 @@ WRITE expected-after.txt UNTIL EOF
 ./explorer/public/schemas/%/directory.metapack
 ./explorer/public/schemas/a
 ./explorer/public/schemas/a/%
+./explorer/public/schemas/a/%/data-html.metapack
 ./explorer/public/schemas/a/%/dependents.metapack
-./explorer/public/schemas/a/%/schema-html.metapack
-./explorer/public/schemas/a/%/schema.metapack
+./explorer/public/schemas/a/%/metadata.metapack
 ./explorer/public/schemas/b
 ./explorer/public/schemas/b/%
+./explorer/public/schemas/b/%/data-html.metapack
 ./explorer/public/schemas/b/%/dependents.metapack
-./explorer/public/schemas/b/%/schema-html.metapack
-./explorer/public/schemas/b/%/schema.metapack
+./explorer/public/schemas/b/%/metadata.metapack
 EOF
 
 COMPARE after.txt AGAINST expected-after.txt

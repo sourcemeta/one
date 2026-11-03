@@ -56,7 +56,7 @@ WRITE expected.txt UNTIL EOF
 ./explorer/public/example/.period
 ./explorer/public/example/.period/%
 ./explorer/public/example/.period/%/dependents.metapack
-./explorer/public/example/.period/%/schema.metapack
+./explorer/public/example/.period/%/metadata.metapack
 ./routes.bin
 ./schemas
 ./schemas/example
@@ -68,12 +68,12 @@ WRITE expected.txt UNTIL EOF
 ./schemas/example/.period/%/bundle-openapi3.1.metapack
 ./schemas/example/.period/%/bundle-openapi3.2.metapack
 ./schemas/example/.period/%/bundle.metapack
+./schemas/example/.period/%/data.metapack
 ./schemas/example/.period/%/dependencies.metapack
 ./schemas/example/.period/%/editor.metapack
 ./schemas/example/.period/%/health.metapack
 ./schemas/example/.period/%/locations.metapack
 ./schemas/example/.period/%/positions.metapack
-./schemas/example/.period/%/schema.metapack
 ./schemas/example/.period/%/stats.metapack
 ./state.bin
 ./version.json

@@ -61,9 +61,9 @@ WRITE expected.txt UNTIL EOF
 ./explorer/public/baz/baz/%/directory.metapack
 ./explorer/public/baz/baz/test
 ./explorer/public/baz/baz/test/%
+./explorer/public/baz/baz/test/%/data-html.metapack
 ./explorer/public/baz/baz/test/%/dependents.metapack
-./explorer/public/baz/baz/test/%/schema-html.metapack
-./explorer/public/baz/baz/test/%/schema.metapack
+./explorer/public/baz/baz/test/%/metadata.metapack
 ./routes.bin
 ./schemas
 ./schemas/baz
@@ -76,12 +76,12 @@ WRITE expected.txt UNTIL EOF
 ./schemas/baz/baz/test/%/bundle-openapi3.1.metapack
 ./schemas/baz/baz/test/%/bundle-openapi3.2.metapack
 ./schemas/baz/baz/test/%/bundle.metapack
+./schemas/baz/baz/test/%/data.metapack
 ./schemas/baz/baz/test/%/dependencies.metapack
 ./schemas/baz/baz/test/%/editor.metapack
 ./schemas/baz/baz/test/%/health.metapack
 ./schemas/baz/baz/test/%/locations.metapack
 ./schemas/baz/baz/test/%/positions.metapack
-./schemas/baz/baz/test/%/schema.metapack
 ./schemas/baz/baz/test/%/stats.metapack
 ./state.bin
 ./version.json

@@ -77,9 +77,9 @@ WRITE expected.txt UNTIL EOF
 ./explorer/partner/schemas/%/directory.metapack
 ./explorer/partner/schemas/a
 ./explorer/partner/schemas/a/%
+./explorer/partner/schemas/a/%/data-html.metapack
 ./explorer/partner/schemas/a/%/dependents.metapack
-./explorer/partner/schemas/a/%/schema-html.metapack
-./explorer/partner/schemas/a/%/schema.metapack
+./explorer/partner/schemas/a/%/metadata.metapack
 ./explorer/public
 ./explorer/public/%
 ./explorer/public/%/404.metapack
@@ -102,9 +102,9 @@ WRITE expected.txt UNTIL EOF
 ./explorer/staff/schemas/%/directory.metapack
 ./explorer/staff/schemas/a
 ./explorer/staff/schemas/a/%
+./explorer/staff/schemas/a/%/data-html.metapack
 ./explorer/staff/schemas/a/%/dependents.metapack
-./explorer/staff/schemas/a/%/schema-html.metapack
-./explorer/staff/schemas/a/%/schema.metapack
+./explorer/staff/schemas/a/%/metadata.metapack
 EOF
 
 COMPARE manifest.txt AGAINST expected.txt

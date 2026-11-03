@@ -57,9 +57,9 @@ WRITE expected.txt UNTIL EOF
 ./explorer/alpha/schemas/%/directory.metapack
 ./explorer/alpha/schemas/a
 ./explorer/alpha/schemas/a/%
+./explorer/alpha/schemas/a/%/data-html.metapack
 ./explorer/alpha/schemas/a/%/dependents.metapack
-./explorer/alpha/schemas/a/%/schema-html.metapack
-./explorer/alpha/schemas/a/%/schema.metapack
+./explorer/alpha/schemas/a/%/metadata.metapack
 ./explorer/public
 ./explorer/public/%
 ./explorer/public/%/404.metapack
@@ -82,12 +82,12 @@ WRITE expected.txt UNTIL EOF
 ./schemas/schemas/a/%/bundle-openapi3.1.metapack
 ./schemas/schemas/a/%/bundle-openapi3.2.metapack
 ./schemas/schemas/a/%/bundle.metapack
+./schemas/schemas/a/%/data.metapack
 ./schemas/schemas/a/%/dependencies.metapack
 ./schemas/schemas/a/%/editor.metapack
 ./schemas/schemas/a/%/health.metapack
 ./schemas/schemas/a/%/locations.metapack
 ./schemas/schemas/a/%/positions.metapack
-./schemas/schemas/a/%/schema.metapack
 ./schemas/schemas/a/%/stats.metapack
 ./state.bin
 ./version.json

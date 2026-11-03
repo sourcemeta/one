@@ -58,7 +58,7 @@ DROP LINES MATCHING '^(?!.*(Producing|Combining)).*$' IN produced.txt
 // its own changed
 WRITE expected-produced.txt UNTIL EOF
 2> (  7%) Producing: explorer/public/%/directory.metapack
-2> ( 15%) Producing: explorer/public/example/schemas/meta/%/schema.metapack
+2> ( 15%) Producing: explorer/public/example/schemas/meta/%/metadata.metapack
 2> ( 23%) Producing: schemas/example/schemas/meta/%/bundle-2019-09.metapack
 2> ( 30%) Producing: schemas/example/schemas/meta/%/bundle-2020-12.metapack
 2> ( 38%) Producing: schemas/example/schemas/meta/%/bundle-draft7.metapack
@@ -66,7 +66,7 @@ WRITE expected-produced.txt UNTIL EOF
 2> ( 53%) Producing: schemas/example/schemas/meta/%/bundle-openapi3.2.metapack
 2> ( 61%) Producing: explorer/public/%/directory-html.metapack
 2> ( 69%) Producing: explorer/public/%/search.metapack
-2> ( 76%) Producing: explorer/public/example/schemas/meta/%/schema-html.metapack
+2> ( 76%) Producing: explorer/public/example/schemas/meta/%/data-html.metapack
 2> ( 84%) Producing: explorer/public/%/mcp.metapack
 2> (100%) Combining: explorer/public/example/schemas/meta/%/dependents.metapack
 EOF

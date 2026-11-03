@@ -94,8 +94,8 @@ public:
     }
 
     const auto &schema_uri{arguments.at("schema").to_string()};
-    const auto schema_present{this->artifact_resolve_path(
-        caller, schema_uri, Tree::Schemas, "schema")};
+    const auto schema_present{
+        this->artifact_resolve_path(caller, schema_uri, Tree::Schemas, "data")};
     const auto evaluation_enabled{this->artifact_resolve_path(
         caller, schema_uri, Tree::Schemas, "blaze-exhaustive")};
     if (!schema_present.path.has_value()) {
@@ -161,7 +161,7 @@ public:
     schema_uri.append(path);
     const auto schema_present{self.artifact_resolve_path(
         caller, schema_uri, sourcemeta::one::RouterAction::Tree::Schemas,
-        "schema")};
+        "data")};
     const auto evaluation_enabled{self.artifact_resolve_path(
         caller, schema_uri, sourcemeta::one::RouterAction::Tree::Schemas,
         "blaze-exhaustive")};

@@ -138,7 +138,7 @@ public:
       // the response must be 405 with Allow listing what is supported.
       // https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.6
       const auto schema_json{
-          this->artifact_resolve_path(caller, path, Tree::Schemas, "schema")};
+          this->artifact_resolve_path(caller, path, Tree::Schemas, "data")};
       const auto schema_html{this->artifact_resolve_path(
           caller, path, Tree::Explorer, this->schema_artifact())};
       const auto directory_html{this->artifact_resolve_path(
@@ -220,7 +220,7 @@ private:
   // pages themselves are gone in the experimental mode, so what is asked for
   // is the metadata every location has either way
   [[nodiscard]] auto schema_artifact() const noexcept -> std::string_view {
-    return this->experimental_root_.empty() ? "schema-html" : "schema";
+    return this->experimental_root_.empty() ? "data-html" : "metadata";
   }
 
   [[nodiscard]] auto html_artifact() const noexcept -> std::string_view {

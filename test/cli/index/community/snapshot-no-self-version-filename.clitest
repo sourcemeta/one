@@ -56,7 +56,7 @@ WRITE expected.txt UNTIL EOF
 ./explorer/public/example/v1.2.3
 ./explorer/public/example/v1.2.3/%
 ./explorer/public/example/v1.2.3/%/dependents.metapack
-./explorer/public/example/v1.2.3/%/schema.metapack
+./explorer/public/example/v1.2.3/%/metadata.metapack
 ./routes.bin
 ./schemas
 ./schemas/example
@@ -65,12 +65,12 @@ WRITE expected.txt UNTIL EOF
 ./schemas/example/v1.2.3/%/blaze-exhaustive.metapack
 ./schemas/example/v1.2.3/%/blaze-fast.metapack
 ./schemas/example/v1.2.3/%/bundle.metapack
+./schemas/example/v1.2.3/%/data.metapack
 ./schemas/example/v1.2.3/%/dependencies.metapack
 ./schemas/example/v1.2.3/%/editor.metapack
 ./schemas/example/v1.2.3/%/health.metapack
 ./schemas/example/v1.2.3/%/locations.metapack
 ./schemas/example/v1.2.3/%/positions.metapack
-./schemas/example/v1.2.3/%/schema.metapack
 ./schemas/example/v1.2.3/%/stats.metapack
 ./state.bin
 ./version.json

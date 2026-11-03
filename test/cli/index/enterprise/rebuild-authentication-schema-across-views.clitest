@@ -74,7 +74,7 @@ DROP LINES MATCHING '^(?!.*(Producing|Combining)).*$' IN produced.txt
 // what a view left holding the previous contents would be missing from
 WRITE expected-produced.txt UNTIL EOF
 2> (  2%) Producing: explorer/public/%/directory.metapack
-2> (  5%) Producing: schemas/schemas/a/%/schema.metapack
+2> (  5%) Producing: schemas/schemas/a/%/data.metapack
 2> (  8%) Producing: schemas/schemas/b/%/dependencies.metapack
 2> ( 11%) Producing: explorer/public/%/directory-html.metapack
 2> ( 13%) Producing: explorer/public/%/search.metapack
@@ -84,7 +84,7 @@ WRITE expected-produced.txt UNTIL EOF
 2> ( 25%) Producing: schemas/schemas/a/%/stats.metapack
 2> ( 27%) Producing: schemas/schemas/b/%/bundle.metapack
 2> ( 30%) Producing: schemas/schemas/b/%/health.metapack
-2> ( 33%) Producing: explorer/alpha/schemas/b/%/schema.metapack
+2> ( 33%) Producing: explorer/alpha/schemas/b/%/metadata.metapack
 2> ( 36%) Producing: explorer/public/%/mcp.metapack
 2> ( 38%) Producing: schemas/schemas/a/%/bundle.metapack
 2> ( 41%) Producing: schemas/schemas/a/%/health.metapack
@@ -94,8 +94,8 @@ WRITE expected-produced.txt UNTIL EOF
 2> ( 52%) Producing: schemas/schemas/b/%/bundle-openapi3.1.metapack
 2> ( 55%) Producing: schemas/schemas/b/%/bundle-openapi3.2.metapack
 2> ( 58%) Producing: schemas/schemas/b/%/editor.metapack
-2> ( 61%) Producing: explorer/alpha/schemas/a/%/schema.metapack
-2> ( 63%) Producing: explorer/alpha/schemas/b/%/schema-html.metapack
+2> ( 61%) Producing: explorer/alpha/schemas/a/%/metadata.metapack
+2> ( 63%) Producing: explorer/alpha/schemas/b/%/data-html.metapack
 2> ( 66%) Producing: schemas/schemas/a/%/blaze-exhaustive.metapack
 2> ( 69%) Producing: schemas/schemas/a/%/blaze-fast.metapack
 2> ( 72%) Producing: schemas/schemas/a/%/bundle-2020-12.metapack
@@ -103,7 +103,7 @@ WRITE expected-produced.txt UNTIL EOF
 2> ( 77%) Producing: schemas/schemas/a/%/bundle-openapi3.2.metapack
 2> ( 80%) Producing: schemas/schemas/a/%/editor.metapack
 2> ( 83%) Producing: explorer/alpha/schemas/%/directory.metapack
-2> ( 86%) Producing: explorer/alpha/schemas/a/%/schema-html.metapack
+2> ( 86%) Producing: explorer/alpha/schemas/a/%/data-html.metapack
 2> ( 88%) Producing: explorer/alpha/%/directory.metapack
 2> ( 91%) Producing: explorer/alpha/schemas/%/directory-html.metapack
 2> ( 94%) Producing: explorer/alpha/%/directory-html.metapack
@@ -132,14 +132,14 @@ WRITE expected-manifest.txt UNTIL EOF
 ./explorer/alpha/schemas/%/directory.metapack
 ./explorer/alpha/schemas/a
 ./explorer/alpha/schemas/a/%
+./explorer/alpha/schemas/a/%/data-html.metapack
 ./explorer/alpha/schemas/a/%/dependents.metapack
-./explorer/alpha/schemas/a/%/schema-html.metapack
-./explorer/alpha/schemas/a/%/schema.metapack
+./explorer/alpha/schemas/a/%/metadata.metapack
 ./explorer/alpha/schemas/b
 ./explorer/alpha/schemas/b/%
+./explorer/alpha/schemas/b/%/data-html.metapack
 ./explorer/alpha/schemas/b/%/dependents.metapack
-./explorer/alpha/schemas/b/%/schema-html.metapack
-./explorer/alpha/schemas/b/%/schema.metapack
+./explorer/alpha/schemas/b/%/metadata.metapack
 ./explorer/public
 ./explorer/public/%
 ./explorer/public/%/404.metapack

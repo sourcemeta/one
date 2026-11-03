@@ -68,7 +68,7 @@ WRITE expected.txt UNTIL EOF
 ./explorer/public/example/foobar/baz
 ./explorer/public/example/foobar/baz/%
 ./explorer/public/example/foobar/baz/%/dependents.metapack
-./explorer/public/example/foobar/baz/%/schema.metapack
+./explorer/public/example/foobar/baz/%/metadata.metapack
 ./routes.bin
 ./schemas
 ./schemas/example
@@ -81,12 +81,12 @@ WRITE expected.txt UNTIL EOF
 ./schemas/example/foobar/baz/%/bundle-openapi3.1.metapack
 ./schemas/example/foobar/baz/%/bundle-openapi3.2.metapack
 ./schemas/example/foobar/baz/%/bundle.metapack
+./schemas/example/foobar/baz/%/data.metapack
 ./schemas/example/foobar/baz/%/dependencies.metapack
 ./schemas/example/foobar/baz/%/editor.metapack
 ./schemas/example/foobar/baz/%/health.metapack
 ./schemas/example/foobar/baz/%/locations.metapack
 ./schemas/example/foobar/baz/%/positions.metapack
-./schemas/example/foobar/baz/%/schema.metapack
 ./schemas/example/foobar/baz/%/stats.metapack
 ./state.bin
 ./version.json

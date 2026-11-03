@@ -73,7 +73,7 @@ public:
     const std::string_view artifact{is_vscode ? std::string_view{"editor"}
                                     : (bundle || is_deno)
                                         ? std::string_view{"bundle"}
-                                        : std::string_view{"schema"}};
+                                        : std::string_view{"data"}};
     const auto resolution{self.artifact_resolve_path(
         caller, schema_path, sourcemeta::one::RouterAction::Tree::Schemas,
         artifact)};

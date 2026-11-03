@@ -67,7 +67,7 @@ public:
     const std::string_view artifact{is_vscode ? std::string_view{"editor"}
                                     : (bundle || is_deno)
                                         ? std::string_view{"bundle"}
-                                        : std::string_view{"schema"}};
+                                        : std::string_view{"data"}};
     const auto resolution{self.artifact_resolve_path(
         caller, schema_path, sourcemeta::one::RouterAction::Tree::Schemas,
         artifact)};
@@ -124,7 +124,7 @@ private:
                   const std::string_view error_schema) -> void {
     const auto schema{self.artifact_resolve_path(
         caller, schema_path, sourcemeta::one::RouterAction::Tree::Schemas,
-        "schema")};
+        "data")};
     if (!schema.path.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,

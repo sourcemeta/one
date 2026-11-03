@@ -98,14 +98,14 @@ DROP LINES MATCHING '^(?!.*(Producing|Combining)).*$' IN output_producing.txt
 // The dependency-tree.metapack global aggregate triggers ForceOnGraphChange
 // for all dependents, not just the ones whose graph actually changed.
 WRITE expected.txt UNTIL EOF
-2> (  4%) Producing: schemas/left/left-a/s5/%/schema.metapack
+2> (  4%) Producing: schemas/left/left-a/s5/%/data.metapack
 2> (  8%) Producing: schemas/left/left-a/s5/%/dependencies.metapack
 2> ( 13%) Producing: schemas/left/left-a/s5/%/locations.metapack
 2> ( 17%) Producing: schemas/left/left-a/s5/%/positions.metapack
 2> ( 21%) Producing: schemas/left/left-a/s5/%/stats.metapack
 2> ( 26%) Producing: schemas/left/left-a/s5/%/bundle.metapack
 2> ( 30%) Producing: schemas/left/left-a/s5/%/health.metapack
-2> ( 34%) Producing: explorer/public/left/left-a/s5/%/schema.metapack
+2> ( 34%) Producing: explorer/public/left/left-a/s5/%/metadata.metapack
 2> ( 39%) Producing: schemas/left/left-a/s5/%/blaze-exhaustive.metapack
 2> ( 43%) Producing: schemas/left/left-a/s5/%/blaze-fast.metapack
 2> ( 47%) Producing: schemas/left/left-a/s5/%/bundle-2020-12.metapack
@@ -113,7 +113,7 @@ WRITE expected.txt UNTIL EOF
 2> ( 56%) Producing: schemas/left/left-a/s5/%/bundle-openapi3.2.metapack
 2> ( 60%) Producing: schemas/left/left-a/s5/%/editor.metapack
 2> ( 65%) Producing: explorer/public/left/left-a/%/directory.metapack
-2> ( 69%) Producing: explorer/public/left/left-a/s5/%/schema-html.metapack
+2> ( 69%) Producing: explorer/public/left/left-a/s5/%/data-html.metapack
 2> ( 73%) Producing: explorer/public/left/%/directory.metapack
 2> ( 78%) Producing: explorer/public/left/left-a/%/directory-html.metapack
 2> ( 82%) Producing: explorer/public/%/directory.metapack

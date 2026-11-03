@@ -56,7 +56,7 @@ WRITE expected.txt UNTIL EOF
 ./explorer/public/example/test
 ./explorer/public/example/test/%
 ./explorer/public/example/test/%/dependents.metapack
-./explorer/public/example/test/%/schema.metapack
+./explorer/public/example/test/%/metadata.metapack
 ./routes.bin
 ./schemas
 ./schemas/example
@@ -68,12 +68,12 @@ WRITE expected.txt UNTIL EOF
 ./schemas/example/test/%/bundle-openapi3.1.metapack
 ./schemas/example/test/%/bundle-openapi3.2.metapack
 ./schemas/example/test/%/bundle.metapack
+./schemas/example/test/%/data.metapack
 ./schemas/example/test/%/dependencies.metapack
 ./schemas/example/test/%/editor.metapack
 ./schemas/example/test/%/health.metapack
 ./schemas/example/test/%/locations.metapack
 ./schemas/example/test/%/positions.metapack
-./schemas/example/test/%/schema.metapack
 ./schemas/example/test/%/stats.metapack
 ./state.bin
 ./version.json
