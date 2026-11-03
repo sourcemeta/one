@@ -20,3 +20,5 @@ target_link_libraries(sourcemeta_one_resolver PRIVATE
   sourcemeta::one::shared)
 target_link_libraries(sourcemeta_one_resolver PRIVATE
   sourcemeta::core::metapack)
+target_link_libraries(sourcemeta_one_resolver PRIVATE
+  sourcemeta::core::openapi)
