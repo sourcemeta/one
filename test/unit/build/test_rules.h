@@ -362,13 +362,18 @@ inline constexpr std::array<const char *, 18> WIDE_FILENAMES{
 
 inline constexpr auto WIDE_RULES{rules_with_eighteen_leaves()};
 
+// A kind the catalog does not hold, which is all it takes to say that a rule
+// writes nothing for a leaf of another kind. The underlying type is fixed, so
+// every value of it is a value of the enumeration whether or not it is named
+inline constexpr auto FOREIGN_KIND{static_cast<sourcemeta::one::LeafKind>(1)};
+
 // The same set with the web leaf applying to another kind of leaf. That leaf
 // is gated on the full mode already, so this also says that a kind and a gate
 // are two dimensions rather than one
 [[nodiscard]] consteval auto rules_with_a_leaf_of_another_kind()
     -> sourcemeta::one::DeltaRuleSet<3, 1, 5, 2> {
   auto result{RULES};
-  result.leaves[2].kind = sourcemeta::one::LeafKind::OpenAPI;
+  result.leaves[2].kind = FOREIGN_KIND;
   return result;
 }
 
