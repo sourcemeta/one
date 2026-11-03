@@ -649,6 +649,40 @@ TEST(incremental_cached_globals_are_omitted) {
       output / "secondary" / "public" / "foo" / "%" / "metadata.bin");
 }
 
+// The fast path decides a leaf is clean by comparing what it holds against
+// what the rules ask of it, so a rule of another kind must be absent from both
+// sides of that comparison rather than only from what gets declared
+TEST(incremental_unchanged_leaf_is_not_dirtied_by_a_rule_of_another_kind) {
+  const auto output{delta_path("kind_fast_path")};
+  WRITE_GLOBAL_OUTPUTS(output);
+  sourcemeta::one::BuildState entries;
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(50)}};
+  ADD_LEAF_ENTRIES(entries, output, "foo", false, MTIME(150));
+  ADD_GLOBAL_ENTRIES(entries, output, MTIME(150));
+  entries.emplace(output / "secondary" / "public" / "%" / "listing.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+
+  entries.configure(
+      test_rules::KIND_RULES.leaves, test_rules::KIND_RULES.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::KIND_RULES>(), INPUTS,
+      test_rules::KIND_RULES.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::KIND_RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS, everything())};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 0, 0);
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      output / "routes.bin", output / "gate.bin",
+      output / "primary" / "foo" / "%" / "primary.bin",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "%" / "listing.bin");
+}
+
 TEST(incremental_only_the_new_leaf_is_built_beside_an_unchanged_one) {
   const auto output{delta_path("new_leaf_alongside")};
   WRITE_GLOBAL_OUTPUTS(output);

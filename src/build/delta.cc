@@ -777,6 +777,10 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
         for (std::size_t rule_index{0}; rule_index < leaf_rules.size();
              rule_index++) {
           const auto &rule{leaf_rules[rule_index]};
+          if (rule.kind != info.kind) {
+            continue;
+          }
+
           if (rule.gate == TargetGate::IfEvaluate && !info.evaluate) {
             continue;
           }
