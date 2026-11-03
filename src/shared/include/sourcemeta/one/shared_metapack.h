@@ -3,6 +3,8 @@
 
 #include <sourcemeta/core/metapack.h>
 
+#include <sourcemeta/one/shared_leaf.h>
+
 #include <cassert>     // assert
 #include <cstdint>     // std::uint8_t, std::uint16_t
 #include <cstring>     // std::memcpy
@@ -13,14 +15,10 @@
 
 namespace sourcemeta::one {
 
-// What a leaf of the catalog holds, which decides both which artifacts sit
-// beside it and how to read what each one carries
-enum class MetapackLeafKind : std::uint8_t { Schema = 0 };
-
 #pragma pack(push, 1)
 // The extension area of every leaf-scoped artifact begins with this
 struct MetapackLeafExtension {
-  MetapackLeafKind kind;
+  LeafKind kind;
 };
 
 // The extension area of an artifact holding a schema, which is where the
@@ -46,7 +44,7 @@ static_assert(sizeof(MetapackSchemaExtension) == 3,
 template <typename T>
 [[nodiscard]] auto
 metapack_leaf_extension_as(const std::span<const std::uint8_t> extension,
-                           const MetapackLeafKind kind) -> const T * {
+                           const LeafKind kind) -> const T * {
   const auto *leaf{
       sourcemeta::core::metapack_extension_as<MetapackLeafExtension>(
           extension)};
@@ -65,7 +63,7 @@ make_metapack_schema_extension(const std::string_view dialect)
   std::vector<std::uint8_t> result;
   result.resize(sizeof(MetapackSchemaExtension) + dialect.size());
   MetapackSchemaExtension layout{};
-  layout.leaf.kind = MetapackLeafKind::Schema;
+  layout.leaf.kind = LeafKind::Schema;
   layout.dialect_length = static_cast<std::uint16_t>(dialect.size());
   std::memcpy(result.data(), &layout, sizeof(layout));
   std::memcpy(result.data() + sizeof(layout), dialect.data(), dialect.size());
@@ -78,7 +76,7 @@ make_metapack_schema_extension(const std::string_view dialect)
 metapack_schema_dialect(const std::span<const std::uint8_t> extension)
     -> std::string_view {
   const auto *layout{metapack_leaf_extension_as<MetapackSchemaExtension>(
-      extension, MetapackLeafKind::Schema)};
+      extension, LeafKind::Schema)};
   if (layout == nullptr || layout->dialect_length == 0 ||
       sizeof(MetapackSchemaExtension) + layout->dialect_length >
           extension.size()) {

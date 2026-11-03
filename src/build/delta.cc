@@ -223,7 +223,7 @@ static auto is_deselected(const LeafRule &rule, const std::uint32_t selected)
 static auto declare_leaf_targets(
     TargetMap &targets, std::span<const std::string> bases,
     const std::string &output_string, const std::string &source_string,
-    const bool evaluate, const std::uint32_t selected,
+    const bool evaluate, const std::uint32_t selected, const LeafKind kind,
     const BuildPlan::Type build_type, const BuildPlan::Type full_mode,
     const std::string &configuration_string, const std::string_view uri,
     const BuildPhase phase, std::span<const LeafRule> leaf_rules,
@@ -243,6 +243,10 @@ static auto declare_leaf_targets(
 
     // And a leaf no view holds has only what sits outside that tree
     if (only_primary && rule.base != 0) {
+      continue;
+    }
+
+    if (rule.kind != kind) {
       continue;
     }
 
@@ -1024,11 +1028,12 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
 
         const std::array<std::string, 2> bases{
             {primary_base, secondary_bases[view]}};
-        declare_leaf_targets(
-            targets, bases, output_string, info.path->native(), info.evaluate,
-            info.selected, build_type, full_mode, configuration_string, uri,
-            phase, leaf_rules, primary_directory, sentinel,
-            leaf_dialect_dependents, secondary_views[view], declared_primary);
+        declare_leaf_targets(targets, bases, output_string, info.path->native(),
+                             info.evaluate, info.selected, info.kind,
+                             build_type, full_mode, configuration_string, uri,
+                             phase, leaf_rules, primary_directory, sentinel,
+                             leaf_dialect_dependents, secondary_views[view],
+                             declared_primary);
         declared_primary = true;
       }
 
@@ -1037,9 +1042,9 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
       if (!declared_primary) {
         const std::array<std::string, 2> bases{{primary_base, std::string{}}};
         declare_leaf_targets(targets, bases, output_string, info.path->native(),
-                             info.evaluate, info.selected, build_type,
-                             full_mode, configuration_string, uri, phase,
-                             leaf_rules, primary_directory, sentinel,
+                             info.evaluate, info.selected, info.kind,
+                             build_type, full_mode, configuration_string, uri,
+                             phase, leaf_rules, primary_directory, sentinel,
                              leaf_dialect_dependents, {}, false, true);
       }
     }
@@ -1631,6 +1636,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
         // What a leaf no longer gets goes away, whether it stopped evaluating
         // or stopped selecting it
         const auto excluded{
+            rule.kind != leaf.info->kind ||
             (rule.gate == TargetGate::IfEvaluate && !leaf.info->evaluate) ||
             is_deselected(rule, leaf.info->selected)};
         if (!excluded) {

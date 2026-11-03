@@ -346,7 +346,7 @@ static auto make_explorer_schema_extension(
   result.resize(sizeof(MetapackExplorerSchemaExtension) + strings_size);
 
   MetapackExplorerSchemaExtension header{};
-  header.leaf.kind = sourcemeta::one::MetapackLeafKind::Schema;
+  header.leaf.kind = sourcemeta::one::LeafKind::Schema;
   header.health = health;
   header.bytes = bytes;
   header.bytes_bundled = bytes_bundled;
@@ -1268,8 +1268,7 @@ struct GenerateExplorerDirectoryList {
 
         const auto *extension{sourcemeta::one::metapack_leaf_extension_as<
             MetapackExplorerSchemaExtension>(
-            dependency_parsed->extension,
-            sourcemeta::one::MetapackLeafKind::Schema)};
+            dependency_parsed->extension, sourcemeta::one::LeafKind::Schema)};
         if (extension == nullptr) {
           continue;
         }

@@ -7,6 +7,8 @@
 
 #include <sourcemeta/core/io.h>
 
+#include <sourcemeta/one/shared_leaf.h>
+
 #include <array>       // std::array
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t, std::uint16_t, std::uint32_t
@@ -90,6 +92,9 @@ struct LeafRule {
   std::uint8_t dependency_count;
   // Which selection bit a rule gated on selection reads
   std::uint8_t selector{0};
+  // Which kind of leaf this rule writes for, which is a dimension of its own
+  // rather than one of the gates above, since a rule may be gated on both
+  LeafKind kind{LeafKind::Schema};
 };
 
 enum class ContainerScope : std::uint8_t {
@@ -182,6 +187,7 @@ public:
     std::string dialect;
     std::string relative_path;
     bool vocabularies{false};
+    LeafKind kind{LeafKind::Schema};
   };
 
   BuildState() = default;

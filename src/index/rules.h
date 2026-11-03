@@ -81,7 +81,8 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
                            {.source = DependencySource::ExternalConfig,
                             .base = 0,
                             .filename = nullptr}}},
-         .dependency_count = 2},
+         .dependency_count = 2,
+         .kind = LeafKind::Schema},
 
         {.action = ACTION_POSITIONS,
          .base = 0,
@@ -95,7 +96,8 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
          .dependencies = {{{.source = DependencySource::Base,
                             .base = 0,
                             .filename = "data.metapack"}}},
-         .dependency_count = 1},
+         .dependency_count = 1,
+         .kind = LeafKind::Schema},
 
         {.action = ACTION_LOCATIONS,
          .base = 0,
@@ -109,7 +111,8 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
          .dependencies = {{{.source = DependencySource::Base,
                             .base = 0,
                             .filename = "data.metapack"}}},
-         .dependency_count = 1},
+         .dependency_count = 1,
+         .kind = LeafKind::Schema},
 
         {.action = ACTION_DEPENDENCIES,
          .base = 0,
@@ -126,7 +129,8 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
                            {.source = DependencySource::GlobalOutput,
                             .base = 0,
                             .filename = "authentication.bin"}}},
-         .dependency_count = 2},
+         .dependency_count = 2,
+         .kind = LeafKind::Schema},
 
         {.action = ACTION_STATS,
          .base = 0,
@@ -140,7 +144,8 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
          .dependencies = {{{.source = DependencySource::Base,
                             .base = 0,
                             .filename = "data.metapack"}}},
-         .dependency_count = 1},
+         .dependency_count = 1,
+         .kind = LeafKind::Schema},
 
         {.action = ACTION_HEALTH,
          .base = 0,
@@ -157,7 +162,8 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
                            {.source = DependencySource::Base,
                             .base = 0,
                             .filename = "dependencies.metapack"}}},
-         .dependency_count = 2},
+         .dependency_count = 2,
+         .kind = LeafKind::Schema},
 
         {.action = ACTION_BUNDLE,
          .base = 0,
@@ -174,7 +180,8 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
                            {.source = DependencySource::Base,
                             .base = 0,
                             .filename = "dependencies.metapack"}}},
-         .dependency_count = 2},
+         .dependency_count = 2,
+         .kind = LeafKind::Schema},
 
         {.action = ACTION_EDITOR,
          .base = 0,
@@ -188,7 +195,8 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
          .dependencies = {{{.source = DependencySource::Base,
                             .base = 0,
                             .filename = "bundle.metapack"}}},
-         .dependency_count = 1},
+         .dependency_count = 1,
+         .kind = LeafKind::Schema},
 
         {.action = ACTION_BLAZE_EXHAUSTIVE,
          .base = 0,
@@ -202,7 +210,8 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
          .dependencies = {{{.source = DependencySource::Base,
                             .base = 0,
                             .filename = "bundle.metapack"}}},
-         .dependency_count = 1},
+         .dependency_count = 1,
+         .kind = LeafKind::Schema},
 
         {.action = ACTION_BLAZE_FAST,
          .base = 0,
@@ -216,7 +225,8 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
          .dependencies = {{{.source = DependencySource::Base,
                             .base = 0,
                             .filename = "bundle.metapack"}}},
-         .dependency_count = 1},
+         .dependency_count = 1,
+         .kind = LeafKind::Schema},
 
         {.action = ACTION_SCHEMA_METADATA,
          .base = 1,
@@ -245,7 +255,8 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
                            {.source = DependencySource::DialectDependents,
                             .base = 0,
                             .filename = "data.metapack"}}},
-         .dependency_count = 6},
+         .dependency_count = 6,
+         .kind = LeafKind::Schema},
 
         {.action = ACTION_DEPENDENTS,
          .base = 1,
@@ -262,7 +273,8 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
                            {.source = DependencySource::GlobalOutput,
                             .base = 0,
                             .filename = "authentication.bin"}}},
-         .dependency_count = 2},
+         .dependency_count = 2,
+         .kind = LeafKind::Schema},
 
         {.action = ACTION_WEB_SCHEMA,
          .base = 1,
@@ -279,7 +291,8 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
                            {.source = DependencySource::Base,
                             .base = 0,
                             .filename = "health.metapack"}}},
-         .dependency_count = 2},
+         .dependency_count = 2,
+         .kind = LeafKind::Schema},
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
         {.action = ACTION_CONVERSION_DRAFT4,
          .base = 0,
@@ -297,7 +310,8 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
                             .base = 0,
                             .filename = "data.metapack"}}},
          .dependency_count = 2,
-         .selector = 0},
+         .selector = 0,
+         .kind = LeafKind::Schema},
 
         {.action = ACTION_CONVERSION_DRAFT6,
          .base = 0,
@@ -315,7 +329,8 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
                             .base = 0,
                             .filename = "data.metapack"}}},
          .dependency_count = 2,
-         .selector = 1},
+         .selector = 1,
+         .kind = LeafKind::Schema},
 
         {.action = ACTION_CONVERSION_DRAFT7,
          .base = 0,
@@ -333,7 +348,8 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
                             .base = 0,
                             .filename = "data.metapack"}}},
          .dependency_count = 2,
-         .selector = 2},
+         .selector = 2,
+         .kind = LeafKind::Schema},
 
         {.action = ACTION_CONVERSION_2019_09,
          .base = 0,
@@ -351,7 +367,8 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
                             .base = 0,
                             .filename = "data.metapack"}}},
          .dependency_count = 2,
-         .selector = 3},
+         .selector = 3,
+         .kind = LeafKind::Schema},
 
         {.action = ACTION_CONVERSION_2020_12,
          .base = 0,
@@ -369,7 +386,8 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
                             .base = 0,
                             .filename = "data.metapack"}}},
          .dependency_count = 2,
-         .selector = 4},
+         .selector = 4,
+         .kind = LeafKind::Schema},
 
         {.action = ACTION_CONVERSION_OPENAPI_3_1,
          .base = 0,
@@ -387,7 +405,8 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
                             .base = 0,
                             .filename = "data.metapack"}}},
          .dependency_count = 2,
-         .selector = 5},
+         .selector = 5,
+         .kind = LeafKind::Schema},
 
         {.action = ACTION_CONVERSION_OPENAPI_3_2,
          .base = 0,
@@ -405,7 +424,8 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
                             .base = 0,
                             .filename = "data.metapack"}}},
          .dependency_count = 2,
-         .selector = 6},
+         .selector = 6,
+         .kind = LeafKind::Schema},
 #endif
     }},
     .containers = {{
