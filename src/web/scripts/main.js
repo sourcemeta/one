@@ -1,5 +1,6 @@
 import "./tabs.js";
 import "./copy.js";
+import "./dropdown.js";
 import "./search.js";
 import "./dependencies.js";
 
