@@ -122,7 +122,7 @@
             "additionalProperties": false
           },
           {
-            "$ref": "../schemas/metadata/response.json#base",
+            "$ref": "../catalog-entry.json",
             "required": [ "type", "name" ],
             "properties": {
               "type": {
