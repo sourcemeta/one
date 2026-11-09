@@ -23,7 +23,7 @@
       "examples": []
     }
   ],
-  "$ref": "#base",
+  "$ref": "../../catalog-entry.json",
   "required": [ "breadcrumb", "examples", "metaschema" ],
   "properties": {
     "examples": {
@@ -76,78 +76,5 @@
       }
     }
   },
-  "unevaluatedProperties": false,
-  "$defs": {
-    "base": {
-      "$anchor": "base",
-      "type": "object",
-      "required": [
-        "bytes",
-        "bytesBundled",
-        "identifier",
-        "path",
-        "baseDialect",
-        "dialect",
-        "health",
-        "priority",
-        "private"
-      ],
-      "properties": {
-        "title": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "dependencies": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "alert": {
-          "type": [ "string", "null" ]
-        },
-        "baseDialect": {
-          "x-format-assertion": true,
-          "type": "string",
-          "format": "uri"
-        },
-        "bytes": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "bytesBundled": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "dialect": {
-          "x-format-assertion": true,
-          "type": "string",
-          "format": "uri"
-        },
-        "health": {
-          "type": "integer",
-          "maximum": 100,
-          "minimum": 0
-        },
-        "priority": {
-          "type": "integer",
-          "maximum": 100,
-          "minimum": 0
-        },
-        "private": {
-          "type": "boolean"
-        },
-        "identifier": {
-          "x-format-assertion": true,
-          "type": "string",
-          "format": "uri"
-        },
-        "path": {
-          "x-format-assertion": true,
-          "type": "string",
-          "format": "uri-reference"
-        }
-      }
-    }
-  }
+  "unevaluatedProperties": false
 }

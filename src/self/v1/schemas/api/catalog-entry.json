@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Catalog Entry",
+  "description": "The metadata that every entry of the catalog carries, whatever kind of entry it is",
+  "examples": [
+    {
+      "bytes": 512,
+      "bytesBundled": 1024,
+      "identifier": "https://example.com/schemas/user.json",
+      "path": "/schemas/user.json",
+      "baseDialect": "https://json-schema.org/draft/2020-12/schema",
+      "dialect": "https://json-schema.org/draft/2020-12/schema",
+      "health": 100,
+      "priority": 100,
+      "private": false
+    }
+  ],
+  "type": "object",
+  "required": [
+    "bytes",
+    "bytesBundled",
+    "identifier",
+    "path",
+    "baseDialect",
+    "dialect",
+    "health",
+    "priority",
+    "private"
+  ],
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "dependencies": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "alert": {
+      "type": [ "string", "null" ]
+    },
+    "baseDialect": {
+      "x-format-assertion": true,
+      "type": "string",
+      "format": "uri"
+    },
+    "bytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "bytesBundled": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "dialect": {
+      "x-format-assertion": true,
+      "type": "string",
+      "format": "uri"
+    },
+    "health": {
+      "type": "integer",
+      "maximum": 100,
+      "minimum": 0
+    },
+    "priority": {
+      "type": "integer",
+      "maximum": 100,
+      "minimum": 0
+    },
+    "private": {
+      "type": "boolean"
+    },
+    "identifier": {
+      "x-format-assertion": true,
+      "type": "string",
+      "format": "uri"
+    },
+    "path": {
+      "x-format-assertion": true,
+      "type": "string",
+      "format": "uri-reference"
+    }
+  }
+}
