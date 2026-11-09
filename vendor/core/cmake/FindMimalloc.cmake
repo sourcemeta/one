@@ -31,11 +31,11 @@ if(NOT Mimalloc_FOUND)
   else()
     # This library ships one source that includes every other, precisely so
     # that a program takes all of the allocator or none of it. An archive
-    # hands a linker its members one at a time, which would keep the entry
-    # points that a program refers to by name and drop the ones nothing does,
-    # such as the registration that this platform's allocation path goes
-    # through. The two entry point sets that this platform's shared builds
-    # rely on cannot share a translation unit, so this applies here only
+    # hands a linker its members one at a time, which would keep the parts
+    # that something refers to by name and drop the ones nothing does, such
+    # as the registration that this platform's allocation path goes through.
+    # The two ways into that path that this platform's shared builds rely on
+    # cannot share a translation unit, so this applies here only
     set(MIMALLOC_SOURCES "${MIMALLOC_SOURCE_DIR}/static.c")
   endif()
 
@@ -60,10 +60,14 @@ if(NOT Mimalloc_FOUND)
   target_include_directories(mimalloc PUBLIC
     "$<BUILD_INTERFACE:${MIMALLOC_DIR}/include>")
 
-  # Define the standard allocation entry points, so that every allocation
-  # in the program goes through this library rather than through the
-  # allocator that the platform happens to ship with
-  target_compile_definitions(mimalloc PRIVATE MI_MALLOC_OVERRIDE)
+  # Take the hook into the platform's own allocation path, so that every
+  # allocation in the program goes through this library rather than through
+  # the allocator that the platform happens to ship with. The standard entry
+  # points that the same definition would otherwise bring along are defined by
+  # the library that carries this one instead, which is where the interface
+  # contract they add up to is written down
+  target_compile_definitions(mimalloc PRIVATE
+    MI_MALLOC_OVERRIDE MI_NO_MALLOC_OVERRIDE_ENTRYPOINTS)
 
   # This project compiles its optimised debuggable configuration without
   # disabling assertions, which this library would otherwise read as a
@@ -116,6 +120,13 @@ if(NOT Mimalloc_FOUND)
 
   if(SOURCEMETA_COMPILER_LLVM)
     target_compile_options(mimalloc PRIVATE -Wno-comma)
+  endif()
+
+  if(SOURCEMETA_OS_LINUX AND CMAKE_C_COMPILER_ID STREQUAL "Clang" AND
+     CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 23)
+    # Clang 23 warns about the pointer constness mismatch in mimalloc's
+    # malloc_usable_size alias. Keep the diagnostic visible in strict builds.
+    target_compile_options(mimalloc PRIVATE -Wno-error=attribute-alias)
   endif()
 
   add_library(Mimalloc::Mimalloc ALIAS mimalloc)

@@ -64,11 +64,6 @@ option(SOURCEMETA_CORE_USE_SYSTEM_ALLOCATOR "Always use the system allocator" OF
 
 include(Sourcemeta)
 
-# Don't force downstream consumers on this
-if(PROJECT_IS_TOP_LEVEL)
-  sourcemeta_enable_simd()
-endif()
-
 # The compiler cache has to be in place before we declare any target
 if(PROJECT_IS_TOP_LEVEL)
   sourcemeta_ccache_attempt_enable(DIRECTORY "${PROJECT_SOURCE_DIR}/.ccache")
@@ -331,7 +326,7 @@ endif()
 
 if(PROJECT_IS_TOP_LEVEL)
   sourcemeta_target_clang_format(SOURCES
-    src/*.h src/*.cc
+    src/*.h src/*.c src/*.cc
     benchmark/*.h benchmark/*.cc
     test/*.h test/*.cc)
 endif()

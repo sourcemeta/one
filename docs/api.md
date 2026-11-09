@@ -768,6 +768,10 @@ Schema located at the specified `{path}` parameter.*
 GET /self/v1/api/schemas/dependencies/{path}
 ```
 
+Every other schema that this one reaches is reported once, so a chain of
+references that leads back to the schema itself does not list the schema among
+its own dependencies.
+
 === "200"
 
     | Property | Type | Required | Description |

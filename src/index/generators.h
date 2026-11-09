@@ -22,7 +22,6 @@
 
 #include <sourcemeta/blaze/compiler.h>
 #include <sourcemeta/blaze/configuration.h>
-#include <sourcemeta/blaze/dependencies.h>
 #include <sourcemeta/blaze/evaluator.h>
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
@@ -473,14 +472,17 @@ struct GenerateDependencies {
                        sourcemeta::core::JSON::String>
         base_dialects;
     const auto &schema_entry{resolver.entry(action.data)};
-    sourcemeta::blaze::dependencies(
+    sourcemeta::core::schema_dependencies(
         contents, sourcemeta::core::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
         [&result, &base_dialects, &callback,
-         &resolver](const auto &origin, const auto &pointer, const auto &target,
-                    const auto &schema) {
+         &resolver](const sourcemeta::core::SchemaDependency &dependency) {
+          const auto &origin{dependency.origin};
+          const auto &pointer{dependency.pointer};
+          const auto &target{dependency.destination};
+          const auto &schema{dependency.document};
           auto trace{sourcemeta::core::JSON::make_object()};
           trace.assign("from", without_json_extension(origin));
           trace.assign("to", without_json_extension(target));
@@ -509,7 +511,7 @@ struct GenerateDependencies {
 
           result.push_back(std::move(trace));
         },
-        schema_entry.dialect, action.data);
+        {.default_dialect = schema_entry.dialect, .default_id = action.data});
     // Otherwise we are returning non-sense
     assert(result.unique());
 

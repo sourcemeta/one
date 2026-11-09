@@ -217,7 +217,7 @@ TEST(valid_004) {
   EXPECT_COLLECTION(configuration, "example", absolute_path,
                     std::filesystem::path{STUB_DIRECTORY} / "schemas" /
                         "example" / "extension");
-  EXPECT_COLLECTION(configuration, "example", base, "http://localhost:8000");
+  EXPECT_COLLECTION(configuration, "example", base, "http://localhost:8000/");
   EXPECT_COLLECTION(configuration, "example", default_dialect, std::nullopt);
   EXPECT_COLLECTION(configuration, "example", resolve.size(), 0);
   EXPECT_COLLECTION(configuration, "example", extension.size(), 3);
@@ -1233,7 +1233,7 @@ TEST(lint_rules_accept_the_object_form_from_an_included_manifest) {
   EXPECT_COLLECTION(configuration, "example", absolute_path,
                     std::filesystem::path{STUB_DIRECTORY} / "collections" /
                         "lint" / "schemas");
-  EXPECT_COLLECTION(configuration, "example", base, "http://localhost:8000");
+  EXPECT_COLLECTION(configuration, "example", base, "http://localhost:8000/");
   EXPECT_COLLECTION(configuration, "example", default_dialect, std::nullopt);
   EXPECT_COLLECTION(configuration, "example", resolve.size(), 0);
   EXPECT_COLLECTION(configuration, "example", lint.rules.size(), 1);

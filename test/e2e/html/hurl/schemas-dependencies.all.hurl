@@ -160,7 +160,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" exists
 header "Last-Modified" exists
-jsonpath "$" count == 3
+jsonpath "$" count == 2
 jsonpath "$[0].from" == "{{base}}/test/schemas/cycle/foo"
 jsonpath "$[0].to" == "{{base}}/test/schemas/cycle/bar"
 jsonpath "$[0].at" == "/additionalProperties/$ref"
@@ -169,10 +169,6 @@ jsonpath "$[1].from" == "{{base}}/test/schemas/cycle/bar"
 jsonpath "$[1].to" == "{{base}}/test/schemas/cycle/baz"
 jsonpath "$[1].at" == "/additionalProperties/$ref"
 jsonpath "$[1].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$[2].from" == "{{base}}/test/schemas/cycle/baz"
-jsonpath "$[2].to" == "{{base}}/test/schemas/cycle/foo"
-jsonpath "$[2].at" == "/additionalProperties/$ref"
-jsonpath "$[2].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
