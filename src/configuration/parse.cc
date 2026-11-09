@@ -193,14 +193,15 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
   assert(configuration_path.is_absolute());
   result.path = configuration_path;
   sourcemeta::core::URI server_url{data.at("url").to_string()};
-  server_url.canonicalize();
-  result.url = server_url.recompose();
 
   // A well-known URI is rooted at the top of a path hierarchy and is not
   // well-known anywhere else (RFC 8615 Section 3), so an instance below the
   // origin cannot serve the locations standards derive from its own
   // identifiers. One spelling is admitted rather than several normalised into
-  // one, since there is then nothing to normalise and nothing left untested
+  // one, since there is then nothing to normalise and nothing left untested.
+  // That is what this reads the declared spelling for, as RFC 3986 Section
+  // 6.2.3 gives an authority with an empty path a canonical path of "/" and
+  // so leaves the two spellings telling nothing apart
   const auto server_path{server_url.path()};
   if (server_path.has_value() && !server_path.value().empty()) {
     throw ConfigurationInstancePathError(configuration_path,
@@ -216,11 +217,19 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
                                            data.at("url").to_string());
   }
 
+  // Canonicalising comes first, so that the host and the scheme are settled
+  // and a default port is elided, and the path it leaves behind is dropped
+  // afterwards, since an instance names a bare origin and every identifier
+  // composed against one carries its own leading separator
+  server_url.canonicalize();
   server_url.path("");
+  result.url = server_url.recompose();
+
   server_url.userinfo("");
   server_url.query("");
   server_url.fragment("");
   server_url.canonicalize();
+  server_url.path("");
   result.origin = server_url.recompose();
 
   if (data.defines("html")) {
