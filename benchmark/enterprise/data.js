@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794009992492,
+  "lastUpdate": 1794249383471,
   "repoUrl": "https://github.com/sourcemeta/one",
   "entries": {
     "Benchmark Index (enterprise)": [
@@ -76434,6 +76434,165 @@ window.BENCHMARK_DATA = {
           {
             "name": "test/e2e/html: Schema Fetch (p99)",
             "value": 487,
+            "unit": "us"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jv@jviotti.com",
+            "name": "Juan Cruz Viotti",
+            "username": "jviotti"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "39a4882d744a75bf5e11ca5d2665ef4b20b3faa3",
+          "message": "Upgrade all Sourcemeta dependencies (#1318)\n\nSigned-off-by: Juan Cruz Viotti <jv@jviotti.com>",
+          "timestamp": "2026-11-09T15:04:32-03:00",
+          "tree_id": "e0ebb4f42e73afacdb4b92c6e3cf01c9dff0cb15",
+          "url": "https://github.com/sourcemeta/one/commit/39a4882d744a75bf5e11ca5d2665ef4b20b3faa3"
+        },
+        "date": 1794249378245,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Add one schema (0 existing)",
+            "value": 532,
+            "unit": "ms"
+          },
+          {
+            "name": "Add one schema (100 existing)",
+            "value": 124,
+            "unit": "ms"
+          },
+          {
+            "name": "Add one schema (1000 existing)",
+            "value": 181,
+            "unit": "ms"
+          },
+          {
+            "name": "Add one schema (10000 existing)",
+            "value": 1039,
+            "unit": "ms"
+          },
+          {
+            "name": "Update one schema (1 existing)",
+            "value": 109,
+            "unit": "ms"
+          },
+          {
+            "name": "Update one schema (101 existing)",
+            "value": 123,
+            "unit": "ms"
+          },
+          {
+            "name": "Update one schema (1001 existing)",
+            "value": 182,
+            "unit": "ms"
+          },
+          {
+            "name": "Update one schema (10001 existing)",
+            "value": 962,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (1 existing)",
+            "value": 14,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (101 existing)",
+            "value": 17,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (1001 existing)",
+            "value": 56,
+            "unit": "ms"
+          },
+          {
+            "name": "Cached rebuild (10001 existing)",
+            "value": 385,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 100 schemas",
+            "value": 803,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 1000 schemas",
+            "value": 1893,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 10000 schemas",
+            "value": 16484,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 10000 schemas (custom meta-schema)",
+            "value": 16291,
+            "unit": "ms"
+          },
+          {
+            "name": "Index 10000 schemas ($ref fan-out)",
+            "value": 22287,
+            "unit": "ms"
+          },
+          {
+            "name": "enterprise/e2e/auth: Schema Anonymous (p50)",
+            "value": 388,
+            "unit": "us"
+          },
+          {
+            "name": "enterprise/e2e/auth: Schema Anonymous (p99)",
+            "value": 496,
+            "unit": "us"
+          },
+          {
+            "name": "enterprise/e2e/auth: Schema API Key Identity (p50)",
+            "value": 391,
+            "unit": "us"
+          },
+          {
+            "name": "enterprise/e2e/auth: Schema API Key Identity (p99)",
+            "value": 504,
+            "unit": "us"
+          },
+          {
+            "name": "enterprise/e2e/auth: Schema API Key SHA256 (p50)",
+            "value": 397,
+            "unit": "us"
+          },
+          {
+            "name": "enterprise/e2e/auth: Schema API Key SHA256 (p99)",
+            "value": 511,
+            "unit": "us"
+          },
+          {
+            "name": "enterprise/e2e/auth: Schema JWT (p50)",
+            "value": 523,
+            "unit": "us"
+          },
+          {
+            "name": "enterprise/e2e/auth: Schema JWT (p99)",
+            "value": 679,
+            "unit": "us"
+          },
+          {
+            "name": "test/e2e/html: Schema Fetch (p50)",
+            "value": 394,
+            "unit": "us"
+          },
+          {
+            "name": "test/e2e/html: Schema Fetch (p99)",
+            "value": 468,
             "unit": "us"
           }
         ]
