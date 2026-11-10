@@ -3,6 +3,7 @@
 
 #include "test_rules.h"
 
+#include <array>      // std::array
 #include <chrono>     // std::chrono::nanoseconds, std::chrono::duration_cast
 #include <cstdint>    // std::uint32_t, std::uint64_t
 #include <filesystem> // std::filesystem::path
@@ -332,9 +333,13 @@ TEST(artifacts_shared_by_two_rules_answer_to_one_bit) {
 // The same filename in another base is another artifact, since what a leaf
 // holds in the unit tree and what it holds in a view are two files
 TEST(artifacts_of_one_filename_in_two_bases_are_distinct) {
-  const auto artifacts{
-      sourcemeta::one::leaf_artifacts(test_rules::RULES.leaves)};
-  EXPECT_EQ(test_rules::RULES.leaves[0].base, 0);
-  EXPECT_EQ(test_rules::RULES.leaves[1].base, 1);
+  std::array<sourcemeta::one::LeafRule, 2> rules{test_rules::RULES.leaves[0],
+                                                 test_rules::RULES.leaves[0]};
+  rules[1].base = 1;
+
+  const auto artifacts{sourcemeta::one::leaf_artifacts(rules)};
+  EXPECT_EQ(artifacts.count, 2);
+  EXPECT_EQ(artifacts.bit[0], 0);
+  EXPECT_EQ(artifacts.bit[1], 1);
   EXPECT_NE(artifacts.mask(0), artifacts.mask(1));
 }
