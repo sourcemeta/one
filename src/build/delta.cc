@@ -415,6 +415,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
                                        std::string{sentinel} + "/"};
   const std::string dependencies_suffix{
       sentinel_separator + leaf_rules[indices.dependencies].filename};
+  const auto artifacts{leaf_artifacts(leaf_rules)};
 
   if (phase == BuildPhase::Combine) {
     const auto &output_string{output.native()};
@@ -794,7 +795,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
             continue;
           }
 
-          expected_bitmap |= std::uint32_t{1} << rule_index;
+          expected_bitmap |= artifacts.mask(rule_index);
         }
 
         if ((leaf_entry->target_bitmap & expected_bitmap) != expected_bitmap) {
@@ -981,6 +982,9 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
       for (std::size_t rule_index{0}; rule_index < leaf_rules.size();
            rule_index++) {
         const auto &rule{leaf_rules[rule_index]};
+        if (rule.kind != info.kind) {
+          continue;
+        }
         if (rule.gate == TargetGate::IfEvaluate && !info.evaluate) {
           continue;
         }
@@ -991,7 +995,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
             build_type != full_mode) {
           continue;
         }
-        expected_bitmap |= std::uint32_t{1} << rule_index;
+        expected_bitmap |= artifacts.mask(rule_index);
       }
       has_missing_targets = (cached_leaf_state->target_bitmap &
                              expected_bitmap) != expected_bitmap;
@@ -1183,7 +1187,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
               if (target_filename == rule.filename &&
                   ((rule.base == 1) == in_secondary)) {
                 target_known = (leaf_entry->target_bitmap &
-                                (std::uint32_t{1} << rule_index)) != 0;
+                                artifacts.mask(rule_index)) != 0;
                 break;
               }
             }

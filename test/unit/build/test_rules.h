@@ -379,6 +379,37 @@ inline constexpr auto FOREIGN_KIND{static_cast<sourcemeta::one::LeafKind>(1)};
 
 inline constexpr auto KIND_RULES{rules_with_a_leaf_of_another_kind()};
 
+// The same set with a twin of the primary and metadata leaves for another kind
+// of leaf, each writing the filename its counterpart writes. Five rules over
+// three artifacts, which is what a kind sharing an artifact with another kind
+// looks like, and the only shape under which a rule index stops naming an
+// artifact
+[[nodiscard]] consteval auto rules_with_a_shared_artifact()
+    -> sourcemeta::one::DeltaRuleSet<5, 1, 5, 2> {
+  sourcemeta::one::DeltaRuleSet<5, 1, 5, 2> result{};
+  result.leaves[0] = RULES.leaves[0];
+  result.leaves[1] = RULES.leaves[1];
+  result.leaves[2] = RULES.leaves[2];
+
+  result.leaves[3] = RULES.leaves[0];
+  result.leaves[3].action = ACTION_VARIANT;
+  result.leaves[3].kind = FOREIGN_KIND;
+
+  result.leaves[4] = RULES.leaves[1];
+  result.leaves[4].action = ACTION_REFERENCES;
+  result.leaves[4].kind = FOREIGN_KIND;
+
+  result.containers = RULES.containers;
+  result.globals = RULES.globals;
+  result.directories = RULES.directories;
+  result.sentinel = RULES.sentinel;
+  result.remove_action = RULES.remove_action;
+  result.full_mode = RULES.full_mode;
+  return result;
+}
+
+inline constexpr auto SHARED_ARTIFACT_RULES{rules_with_a_shared_artifact()};
+
 } // namespace test_rules
 
 #endif

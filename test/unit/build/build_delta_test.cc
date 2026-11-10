@@ -683,6 +683,148 @@ TEST(incremental_unchanged_leaf_is_not_dirtied_by_a_rule_of_another_kind) {
       output / "secondary" / "public" / "%" / "listing.bin");
 }
 
+// A leaf of a kind sharing its artifacts with another kind is built by the
+// rules of its own kind, writing the filenames its counterpart writes
+TEST(full_shared_artifact_is_written_by_the_rule_of_its_kind) {
+  const std::filesystem::path output{"/output"};
+  sourcemeta::one::BuildState entries;
+  const TestLeaves descriptions{{.identifier = "https://example.com/foo",
+                                 .path = "/src/foo.json",
+                                 .relative_path = "foo",
+                                 .mtime = MTIME(100),
+                                 .kind = test_rules::FOREIGN_KIND}};
+
+  entries.configure(
+      test_rules::SHARED_ARTIFACT_RULES.leaves,
+      test_rules::SHARED_ARTIFACT_RULES.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::SHARED_ARTIFACT_RULES>(),
+      INPUTS, test_rules::SHARED_ARTIFACT_RULES.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::SHARED_ARTIFACT_RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, descriptions, "1.0.0", false, "", "Full", {}, VIEWS,
+      everything())};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 6, 7);
+
+  EXPECT_ACTION(plan, 0, 0, 2, test_rules::ACTION_CONFIGURATION,
+                output / "configuration.json", "");
+  EXPECT_ACTION(plan, 0, 1, 2, test_rules::ACTION_VERSION,
+                output / "version.json", "1.0.0");
+
+  EXPECT_ACTION(plan, 1, 0, 1, test_rules::ACTION_ROUTES, output / "routes.bin",
+                "Full", output / "configuration.json");
+
+  EXPECT_ACTION(plan, 2, 0, 1, test_rules::ACTION_GATE, output / "gate.bin", "",
+                output / "routes.bin");
+
+  EXPECT_ACTION(plan, 3, 0, 1, test_rules::ACTION_VARIANT,
+                output / "primary" / "foo" / "%" / "primary.bin",
+                "https://example.com/foo",
+                std::filesystem::path{"/"} / "src" / "foo.json",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 4, 0, 1, test_rules::ACTION_REFERENCES,
+                output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+                "https://example.com/foo",
+                output / "primary" / "foo" / "%" / "primary.bin");
+
+  EXPECT_ACTION(plan, 5, 0, 1, test_rules::ACTION_LISTING,
+                output / "secondary" / "public" / "%" / "listing.bin", "",
+                output / "secondary" / "public" / "foo" / "%" / "metadata.bin");
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      output / "routes.bin", output / "gate.bin",
+      output / "primary" / "foo" / "%" / "primary.bin",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "%" / "listing.bin");
+}
+
+// What a walk of the tree records from a filename has to be what a walk of the
+// rules expects of the leaf holding it. A bit per rule made those disagree
+// wherever two rules write one artifact, since the walk of the tree stops at
+// the first rule naming the filename while the walk of the rules keeps only the
+// rules of the leaf's own kind. The leaf then reported a missing artifact and a
+// stale one at once, over one correct file, on every build
+TEST(incremental_unchanged_leaf_sharing_an_artifact_is_not_dirtied) {
+  const auto output{delta_path("shared_artifact_fast_path")};
+  WRITE_GLOBAL_OUTPUTS(output);
+  sourcemeta::one::BuildState entries;
+  const TestLeaves descriptions{{.identifier = "https://example.com/foo",
+                                 .path = "/src/foo.json",
+                                 .relative_path = "foo",
+                                 .mtime = MTIME(50),
+                                 .kind = test_rules::FOREIGN_KIND}};
+  ADD_LEAF_ENTRIES(entries, output, "foo", false, MTIME(150));
+  ADD_GLOBAL_ENTRIES(entries, output, MTIME(150));
+  entries.emplace(output / "secondary" / "public" / "%" / "listing.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+
+  entries.configure(
+      test_rules::SHARED_ARTIFACT_RULES.leaves,
+      test_rules::SHARED_ARTIFACT_RULES.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::SHARED_ARTIFACT_RULES>(),
+      INPUTS, test_rules::SHARED_ARTIFACT_RULES.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::SHARED_ARTIFACT_RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, descriptions, "1.0.0", true, "", "Full", {}, VIEWS,
+      everything())};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 0, 0);
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      output / "routes.bin", output / "gate.bin",
+      output / "primary" / "foo" / "%" / "primary.bin",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "%" / "listing.bin");
+}
+
+// A leaf of one kind is clean beside a leaf of another sharing its artifacts,
+// which is what says the two kinds do not read each other's rules as their own
+TEST(incremental_leaves_of_both_kinds_sharing_artifacts_are_not_dirtied) {
+  const auto output{delta_path("shared_artifact_both_kinds")};
+  WRITE_GLOBAL_OUTPUTS(output);
+  sourcemeta::one::BuildState entries;
+  const TestLeaves leaves{{.identifier = "https://example.com/foo",
+                           .path = "/src/foo.json",
+                           .relative_path = "foo",
+                           .mtime = MTIME(50)},
+                          {.identifier = "https://example.com/bar",
+                           .path = "/src/bar.json",
+                           .relative_path = "bar",
+                           .mtime = MTIME(50),
+                           .kind = test_rules::FOREIGN_KIND}};
+  // The web leaf belongs to the first kind alone, so only the leaf of that kind
+  // holds one, which is the asymmetry two kinds sharing two artifacts have
+  ADD_LEAF_ENTRIES(entries, output, "foo", true, MTIME(150));
+  ADD_LEAF_ENTRIES(entries, output, "bar", false, MTIME(150));
+  ADD_GLOBAL_ENTRIES(entries, output, MTIME(150));
+  entries.emplace(output / "secondary" / "public" / "%" / "listing.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+
+  entries.configure(
+      test_rules::SHARED_ARTIFACT_RULES.leaves,
+      test_rules::SHARED_ARTIFACT_RULES.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::SHARED_ARTIFACT_RULES>(),
+      INPUTS, test_rules::SHARED_ARTIFACT_RULES.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::SHARED_ARTIFACT_RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, leaves, "1.0.0", true, "", "Full", {}, VIEWS, everything())};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 0, 0);
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      output / "routes.bin", output / "gate.bin",
+      output / "primary" / "foo" / "%" / "primary.bin",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "foo" / "%" / "web.bin",
+      output / "primary" / "bar" / "%" / "primary.bin",
+      output / "secondary" / "public" / "bar" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "%" / "listing.bin");
+}
+
 TEST(incremental_only_the_new_leaf_is_built_beside_an_unchanged_one) {
   const auto output{delta_path("new_leaf_alongside")};
   WRITE_GLOBAL_OUTPUTS(output);
