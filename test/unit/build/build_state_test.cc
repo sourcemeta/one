@@ -3,6 +3,7 @@
 
 #include "test_rules.h"
 
+#include <array>      // std::array
 #include <chrono>     // std::chrono::nanoseconds, std::chrono::duration_cast
 #include <cstdint>    // std::uint32_t, std::uint64_t
 #include <filesystem> // std::filesystem::path
@@ -297,4 +298,48 @@ TEST(round_trip_target_bitmap_beyond_sixteen_bits) {
   EXPECT_NE(leaf_entry, nullptr);
   EXPECT_EQ(leaf_entry->target_bitmap,
             (std::uint32_t{1} << 0) | (std::uint32_t{1} << 17));
+}
+
+// A rule set where each rule writes an artifact of its own numbers every rule
+// after its own index, which is what makes the numbering invisible until two
+// rules share an artifact
+TEST(artifacts_of_distinct_rules_are_numbered_by_rule) {
+  const auto artifacts{
+      sourcemeta::one::leaf_artifacts(test_rules::RULES.leaves)};
+  EXPECT_EQ(artifacts.count, 3);
+  EXPECT_EQ(artifacts.bit[0], 0);
+  EXPECT_EQ(artifacts.bit[1], 1);
+  EXPECT_EQ(artifacts.bit[2], 2);
+  EXPECT_EQ(artifacts.mask(0), std::uint32_t{1} << 0);
+  EXPECT_EQ(artifacts.mask(1), std::uint32_t{1} << 1);
+  EXPECT_EQ(artifacts.mask(2), std::uint32_t{1} << 2);
+}
+
+// Two rules writing one filename in one base write one artifact, so they share
+// one bit rather than taking a bit each
+TEST(artifacts_shared_by_two_rules_answer_to_one_bit) {
+  const auto artifacts{sourcemeta::one::leaf_artifacts(
+      test_rules::SHARED_ARTIFACT_RULES.leaves)};
+  EXPECT_EQ(artifacts.count, 3);
+  EXPECT_EQ(artifacts.bit[0], 0);
+  EXPECT_EQ(artifacts.bit[1], 1);
+  EXPECT_EQ(artifacts.bit[2], 2);
+  EXPECT_EQ(artifacts.bit[3], 0);
+  EXPECT_EQ(artifacts.bit[4], 1);
+  EXPECT_EQ(artifacts.mask(3), artifacts.mask(0));
+  EXPECT_EQ(artifacts.mask(4), artifacts.mask(1));
+}
+
+// The same filename in another base is another artifact, since what a leaf
+// holds in the unit tree and what it holds in a view are two files
+TEST(artifacts_of_one_filename_in_two_bases_are_distinct) {
+  std::array<sourcemeta::one::LeafRule, 2> rules{
+      {test_rules::RULES.leaves[0], test_rules::RULES.leaves[0]}};
+  rules[1].base = 1;
+
+  const auto artifacts{sourcemeta::one::leaf_artifacts(rules)};
+  EXPECT_EQ(artifacts.count, 2);
+  EXPECT_EQ(artifacts.bit[0], 0);
+  EXPECT_EQ(artifacts.bit[1], 1);
+  EXPECT_NE(artifacts.mask(0), artifacts.mask(1));
 }

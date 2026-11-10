@@ -157,7 +157,10 @@ auto BuildState::configure(
     const BuildState::InputsFingerprint &inputs_fingerprint,
     std::string_view sentinel) -> void {
   assert(directories.size() >= 2);
+  assert(leaf_rules.size() <= MAX_LEAF_RULES);
   this->leaf_rules_ = leaf_rules;
+  this->leaf_artifacts_ = leaf_artifacts(leaf_rules);
+  assert(this->leaf_artifacts_.count <= MAX_LEAF_ARTIFACTS);
   this->directories_ = directories;
   this->rules_fingerprint_ = rules_fingerprint;
   this->inputs_fingerprint_ = inputs_fingerprint;
@@ -595,7 +598,7 @@ auto BuildState::index_leaf_target(std::filesystem::file_time_type mtime,
        rule_index++) {
     const auto &rule{this->leaf_rules_[rule_index]};
     if (filename == rule.filename && ((rule.base == 1) == is_explorer)) {
-      leaf_entry.target_bitmap |= std::uint32_t{1} << rule_index;
+      leaf_entry.target_bitmap |= this->leaf_artifacts_.mask(rule_index);
       if (rule.is_root) {
         leaf_entry.root_mtime = mtime;
       }
@@ -1122,7 +1125,8 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
             const auto &rule{this->leaf_rules_[rule_index]};
             if (filename == rule.filename &&
                 ((rule.base == 1) == is_explorer)) {
-              leaf_entry.target_bitmap |= std::uint32_t{1} << rule_index;
+              leaf_entry.target_bitmap |=
+                  this->leaf_artifacts_.mask(rule_index);
               if (rule.is_root) {
                 const auto nanoseconds{
                     read_field<std::int64_t>(slot, SLOT_TIMESTAMP)};
@@ -1177,7 +1181,7 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
              rule_index++) {
           const auto &rule{this->leaf_rules_[rule_index]};
           if (filename == rule.filename && ((rule.base == 1) == is_explorer)) {
-            leaf_entry.target_bitmap |= std::uint32_t{1} << rule_index;
+            leaf_entry.target_bitmap |= this->leaf_artifacts_.mask(rule_index);
             if (rule.is_root) {
               const auto nanoseconds{
                   read_field<std::int64_t>(slot, SLOT_TIMESTAMP)};

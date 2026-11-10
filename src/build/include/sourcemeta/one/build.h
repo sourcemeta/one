@@ -14,7 +14,6 @@
 #include <cstdint>    // std::uint8_t, std::uint32_t, std::uint64_t, std::size_t
 #include <filesystem> // std::filesystem::path, std::filesystem::file_time_type
 #include <functional> // std::function
-#include <limits>     // std::numeric_limits
 #include <span>       // std::span
 #include <string>     // std::string
 #include <string_view> // std::string_view
@@ -47,10 +46,12 @@ using LeafSet = std::span<const std::pair<std::string_view, LeafView>>;
 
 template <std::size_t S, std::size_t D, std::size_t G, std::size_t B>
 struct DeltaRuleSet {
-  // Each leaf rule's index is shifted into a std::uint32_t target bitmap, so
-  // more rules than the bitmap has bits would silently truncate 1 << index
-  static_assert(S <= std::numeric_limits<std::uint32_t>::digits,
-                "Too many leaf rules for the target bitmap width");
+  // Every leaf rule is numbered for the artifact it writes, and that numbering
+  // is held per rule, so more rules than it has room for would read past it.
+  // What the target bitmap bounds is the artifact count rather than this, since
+  // rules sharing an artifact share a bit, and delta() asserts that separately
+  static_assert(S <= MAX_LEAF_RULES,
+                "Too many leaf rules for the artifact numbering");
   std::array<LeafRule, S> leaves;
   std::array<ContainerRule, D> containers;
   std::array<GlobalRule, G> globals;
@@ -262,6 +263,11 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
            const std::string_view mode_label, const BuildLimits &limits,
            const std::span<const std::string_view> views,
            const ViewFilter &visible) -> BuildPlan {
+  // A bit per artifact, so this bounds the rules only where each writes one of
+  // its own
+  static_assert(leaf_artifacts(RuleSet.leaves).count <= MAX_LEAF_ARTIFACTS,
+                "Too many leaf artifacts for the target bitmap width");
+
   constexpr DeltaRuleIndices INDICES{
       .root = find_root_leaf_index<RuleSet>(),
       .metadata = find_container_target_leaf_index<RuleSet>(),

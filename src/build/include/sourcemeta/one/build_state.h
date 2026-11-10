@@ -13,6 +13,7 @@
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t, std::uint16_t, std::uint32_t
 #include <filesystem>  // std::filesystem::path, std::filesystem::file_time_type
+#include <limits>      // std::numeric_limits
 #include <memory>      // std::unique_ptr
 #include <mutex>       // std::mutex, std::unique_lock
 #include <span>        // std::span
@@ -96,6 +97,52 @@ struct LeafRule {
   // rather than one of the gates above, since a rule may be gated on both
   LeafKind kind{LeafKind::Schema};
 };
+
+inline constexpr std::size_t MAX_LEAF_RULES = 64;
+inline constexpr std::size_t MAX_LEAF_ARTIFACTS =
+    std::numeric_limits<std::uint32_t>::digits;
+
+// Which bit of a leaf's target bitmap every rule answers to. More than one rule
+// may write one artifact, as two rules sharing a filename under disjoint kind
+// gates do, and the bitmap says which artifacts a leaf holds rather than which
+// rules ran for it. Those rules therefore share a bit, which is what keeps the
+// two ways of reading the bitmap in agreement: what a walk of the tree records
+// from a filename, and what a walk of the rules expects of a leaf
+struct LeafArtifacts {
+  std::array<std::uint8_t, MAX_LEAF_RULES> bit{};
+  std::size_t count{0};
+
+  [[nodiscard]] constexpr auto mask(const std::size_t rule_index) const
+      -> std::uint32_t {
+    return std::uint32_t{1} << this->bit[rule_index];
+  }
+};
+
+// An artifact is what a filename in a base names, so the rules writing one are
+// those agreeing on both. Numbered by first appearance, which is the same
+// answer a walk of the tree arrives at by stopping at the first rule matching a
+// filename
+[[nodiscard]] constexpr auto leaf_artifacts(std::span<const LeafRule> rules)
+    -> LeafArtifacts {
+  LeafArtifacts result{};
+  for (std::size_t index{0}; index < rules.size(); index++) {
+    std::size_t canonical{index};
+    for (std::size_t other{0}; other < index; other++) {
+      if (rules[other].base == rules[index].base &&
+          std::string_view{rules[other].filename} ==
+              std::string_view{rules[index].filename}) {
+        canonical = other;
+        break;
+      }
+    }
+
+    result.bit[index] = (canonical == index)
+                            ? static_cast<std::uint8_t>(result.count++)
+                            : result.bit[canonical];
+  }
+
+  return result;
+}
 
 enum class ContainerScope : std::uint8_t {
   AllContainers,
@@ -328,6 +375,10 @@ private:
   std::uint32_t persisted_leaf_count_{0};
 
   std::span<const LeafRule> leaf_rules_{};
+  // Which bit every rule's artifact owns, derived from the rules rather than
+  // recorded, since a rule index stops naming an artifact as soon as two rules
+  // write one
+  LeafArtifacts leaf_artifacts_{};
   // Where the trees live and which of them carry a view, so that a leaf is
   // identified the same way whichever tree an artifact of it sits in
   std::span<const DirectoryRule> directories_{};
