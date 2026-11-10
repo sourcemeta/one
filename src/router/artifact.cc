@@ -188,6 +188,17 @@ auto RouterAction::artifact_dialect(const ResolvedArtifact &artifact) const
   return sourcemeta::core::JSON::String{dialect};
 }
 
+auto RouterAction::artifact_kind(const ResolvedArtifact &artifact) const
+    -> std::optional<LeafKind> {
+  sourcemeta::core::FileView view{artifact.path()};
+  const auto parsed{sourcemeta::core::metapack_parse(view)};
+  if (!parsed.has_value()) {
+    return std::nullopt;
+  }
+
+  return sourcemeta::one::metapack_leaf_kind(parsed->extension);
+}
+
 auto RouterAction::artifact_serve(
     const ResolvedArtifact &artifact,
     const sourcemeta::core::HTTPStatus &status, const bool enable_cors,

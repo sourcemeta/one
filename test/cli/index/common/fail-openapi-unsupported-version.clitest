@@ -19,7 +19,7 @@ MAKE DIRECTORY schemas
 
 WRITE schemas/petstore.json UNTIL EOF
 {
-  "openapi": "3.1.1",
+  "openapi": "4.0.0",
   "info": {
     "title": "Petstore",
     "version": "1.0.0"
@@ -32,10 +32,9 @@ RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING
 DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
 
 WRITE expected.txt UNTIL EOF
-2> error: The file contains an OpenAPI description rather than a JSON Schema
+2> error: The OpenAPI description declares a revision that is not supported
 2>   at path [CWD]/schemas/petstore.json
-2>
-2> OpenAPI descriptions are not supported yet, so exclude this file using the collection's ignore option
+2>   at revision 4.0.0
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt

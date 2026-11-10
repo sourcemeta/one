@@ -18,6 +18,7 @@
 #include <sourcemeta/core/jsonpointer.h>
 #include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/metapack.h>
+#include <sourcemeta/core/openapi.h>
 #include <sourcemeta/core/uritemplate.h>
 
 #include <sourcemeta/blaze/compiler.h>
@@ -153,6 +154,53 @@ static auto throw_if_unknown_required_vocabulary(
   }
 }
 
+// The template a dialect is held to, compiled once per dialect however many
+// documents ask for it. Wave 0 is exclusively materialisation, so a single lock
+// across the exhaustive compile would serialise every worker. A shared lock
+// lets cache hits proceed without contending, and a per-dialect `once_flag`
+// compiles each dialect exactly once while distinct dialects compile
+// concurrently
+static auto compiled_metaschema(const std::string &cache_key,
+                                const sourcemeta::core::JSON &schema,
+                                const sourcemeta::one::Resolver &resolver)
+    -> const sourcemeta::blaze::Template & {
+  struct Slot {
+    std::once_flag flag;
+    sourcemeta::blaze::Template value;
+  };
+
+  static std::shared_mutex mutex;
+  static std::unordered_map<std::string, std::unique_ptr<Slot>> cache;
+
+  Slot *slot{nullptr};
+  {
+    const std::shared_lock lock{mutex};
+    const auto match{cache.find(cache_key)};
+    if (match != cache.cend()) {
+      slot = match->second.get();
+    }
+  }
+
+  if (slot == nullptr) {
+    const std::unique_lock lock{mutex};
+    auto &entry{cache[cache_key]};
+    if (!entry) {
+      entry = std::make_unique<Slot>();
+    }
+    slot = entry.get();
+  }
+
+  std::call_once(slot->flag, [&] {
+    slot->value = sourcemeta::blaze::compile(
+        schema, sourcemeta::core::schema_walker,
+        [&resolver](const auto identifier) { return resolver(identifier); },
+        sourcemeta::blaze::default_schema_compiler,
+        // The point of this is to show nice errors to the user
+        sourcemeta::blaze::Mode::Exhaustive);
+  });
+  return slot->value;
+}
+
 struct GenerateVersion {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
@@ -212,7 +260,7 @@ struct GenerateMaterialisedSchema {
     assert(metaschema.has_value());
 
     // Validate the schemas against their meta-schemas
-    const auto &schema_template{GenerateMaterialisedSchema::compile(
+    const auto &schema_template{compiled_metaschema(
         std::string{dialect_identifier}, metaschema.value(), resolver)};
     sourcemeta::blaze::SimpleOutput output{schema_template, schema.value()};
     sourcemeta::blaze::Evaluator evaluator;
@@ -249,51 +297,70 @@ struct GenerateMaterialisedSchema {
         std::span<const std::uint8_t>{extension_bytes});
     resolver.cache_path(action.data, action.destination);
   }
+};
 
-private:
-  static auto compile(const std::string &cache_key,
-                      const sourcemeta::core::JSON &schema,
-                      const sourcemeta::one::Resolver &resolver)
-      -> const sourcemeta::blaze::Template & {
-    struct Slot {
-      std::once_flag flag;
-      sourcemeta::blaze::Template value;
-    };
+// An OpenAPI description, rewritten to be served by this instance. Nothing here
+// branches on the revision it declares: which field carries the identity and
+// which dialect a Schema Object answers to are the resolver's and core's to
+// settle respectively
+struct GenerateMaterialisedOpenAPI {
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
+                      const sourcemeta::one::BuildDynamicCallback &callback,
+                      sourcemeta::one::Resolver &resolver,
+                      const sourcemeta::one::Configuration &,
+                      const sourcemeta::core::JSON &) -> void {
+    const auto document{resolver.openapi(action.data, callback)};
+    assert(document.has_value());
 
-    // Wave 0 is exclusively schema materialisation, so a single lock across the
-    // exhaustive compile would serialise every worker. A shared lock lets cache
-    // hits proceed without contending, and a per-dialect `once_flag` compiles
-    // each dialect exactly once while distinct dialects compile concurrently
-    static std::shared_mutex mutex;
-    static std::unordered_map<std::string, std::unique_ptr<Slot>> cache;
+    const sourcemeta::core::SchemaResolver schema_resolver{
+        [&callback, &resolver](
+            const auto identifier) -> std::optional<sourcemeta::core::JSON> {
+          return resolver(identifier, callback);
+        }};
+    const sourcemeta::core::OpenAPIFrame frame{document.value(),
+                                               sourcemeta::core::schema_walker,
+                                               schema_resolver, action.data};
 
-    Slot *slot{nullptr};
-    {
-      const std::shared_lock lock{mutex};
-      const auto match{cache.find(cache_key)};
-      if (match != cache.cend()) {
-        slot = match->second.get();
+    // The reason a description is worth hosting in a schema registry is the
+    // schemas inside it, so a catalog that refuses an invalid standalone schema
+    // and serves an invalid one inside a description keeps its promise only
+    // half the time
+    for (const auto &entry : frame.locations()) {
+      if (entry.second.type !=
+          sourcemeta::core::OpenAPIFrame::ObjectKind::Schema) {
+        continue;
+      }
+
+      const auto &schema{
+          sourcemeta::core::get(document.value(), entry.second.pointer)};
+      const auto *declared{schema.is_object() ? schema.try_at("$schema")
+                                              : nullptr};
+      // What a schema declares for itself overrides the default in force where
+      // it sits, which is what the revision and the document say between them
+      const std::string dialect{declared != nullptr && declared->is_string()
+                                    ? declared->to_string()
+                                    : entry.second.default_dialect};
+      const auto metaschema{resolver(dialect, callback)};
+      assert(metaschema.has_value());
+
+      const auto &schema_template{
+          compiled_metaschema(dialect, metaschema.value(), resolver)};
+      sourcemeta::blaze::SimpleOutput output{schema_template, schema};
+      sourcemeta::blaze::Evaluator evaluator;
+      if (!evaluator.validate(schema_template, schema, std::ref(output))) {
+        throw OpenAPISchemaObjectError(output, resolver.entry(action.data).path,
+                                       entry.second.pointer, dialect);
       }
     }
 
-    if (slot == nullptr) {
-      const std::unique_lock lock{mutex};
-      auto &entry{cache[cache_key]};
-      if (!entry) {
-        entry = std::make_unique<Slot>();
-      }
-      slot = entry.get();
-    }
-
-    std::call_once(slot->flag, [&] {
-      slot->value = sourcemeta::blaze::compile(
-          schema, sourcemeta::core::schema_walker,
-          [&resolver](const auto identifier) { return resolver(identifier); },
-          sourcemeta::blaze::default_schema_compiler,
-          // The point of this class is to show nice errors to the user
-          sourcemeta::blaze::Mode::Exhaustive);
-    });
-    return slot->value;
+    const auto extension_bytes{
+        sourcemeta::one::make_metapack_openapi_extension()};
+    sourcemeta::core::metapack_write_json_pretty(
+        action.destination, document.value(), "application/openapi+json",
+        sourcemeta::core::MetapackEncoding::GZIP,
+        std::span<const std::uint8_t>{extension_bytes});
+    resolver.cache_path(action.data, action.destination);
   }
 };
 

@@ -410,6 +410,33 @@ inline constexpr auto KIND_RULES{rules_with_a_leaf_of_another_kind()};
 
 inline constexpr auto SHARED_ARTIFACT_RULES{rules_with_a_shared_artifact()};
 
+// The same set with a twin of the primary leaf for another kind and nothing
+// else, so that a leaf of that kind holds the artifact it is addressed by and
+// not the one a listing is built from. A listing naming the second anyway would
+// wait on something nothing produces
+[[nodiscard]] consteval auto rules_with_a_kind_the_listing_cannot_read()
+    -> sourcemeta::one::DeltaRuleSet<4, 1, 5, 2> {
+  sourcemeta::one::DeltaRuleSet<4, 1, 5, 2> result{};
+  result.leaves[0] = RULES.leaves[0];
+  result.leaves[1] = RULES.leaves[1];
+  result.leaves[2] = RULES.leaves[2];
+
+  result.leaves[3] = RULES.leaves[0];
+  result.leaves[3].action = ACTION_VARIANT;
+  result.leaves[3].kind = FOREIGN_KIND;
+
+  result.containers = RULES.containers;
+  result.globals = RULES.globals;
+  result.directories = RULES.directories;
+  result.sentinel = RULES.sentinel;
+  result.remove_action = RULES.remove_action;
+  result.full_mode = RULES.full_mode;
+  return result;
+}
+
+inline constexpr auto UNLISTED_KIND_RULES{
+    rules_with_a_kind_the_listing_cannot_read()};
+
 } // namespace test_rules
 
 #endif

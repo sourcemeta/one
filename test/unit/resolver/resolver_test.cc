@@ -49,6 +49,23 @@ auto shared_configuration() -> const sourcemeta::one::Configuration & {
     RESOLVER_EXPECT(resolver, (result.first.get()), (expected_schema));        \
   }
 
+#define RESOLVER_ADD_OPENAPI(resolver, collection_name, relative_path,         \
+                             expected_current_uri, expected_final_uri,         \
+                             expected_document)                                \
+  {                                                                            \
+    const auto result{                                                         \
+        RESOLVER_IMPORT(resolver, (collection_name), (relative_path))};        \
+    EXPECT_EQ(result.second.get().kind,                                        \
+              sourcemeta::one::LeafKind::Description);                         \
+    EXPECT_EQ(result.second.get().original_identifier,                         \
+              (expected_current_uri));                                         \
+    EXPECT_EQ(result.first.get(), (expected_final_uri));                       \
+    const auto document{(resolver).openapi(result.first.get())};               \
+    EXPECT_TRUE(document.has_value());                                         \
+    EXPECT_EQ(document.value(),                                                \
+              sourcemeta::core::parse_json(expected_document));                \
+  }
+
 TEST(idempotent) {
   sourcemeta::one::Resolver resolver{shared_configuration().url};
 
@@ -144,16 +161,205 @@ TEST(case_insensitive_lookup) {
   })JSON");
 }
 
-TEST(example_openapi_description) {
+// The collection declares draft-07 as its default dialect, which has no say
+// over a description, as the dialect of a Schema Object is fixed by the
+// revision with `jsonSchemaDialect` as the only override
+TEST(example_openapi_3_1) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  RESOLVER_ADD_OPENAPI(resolver, "example", "openapi-description.json",
+                       "https://example.com/schemas/openapi-description",
+                       "http://localhost:8000/example/openapi-description",
+                       R"JSON({
+    "openapi": "3.1.1",
+    "info": {
+      "title": "Petstore",
+      "version": "1.0.0"
+    },
+    "paths": {}
+  })JSON");
+}
+
+TEST(example_openapi_3_0) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  RESOLVER_ADD_OPENAPI(resolver, "example", "openapi-3-0.json",
+                       "https://example.com/schemas/openapi-3-0",
+                       "http://localhost:8000/example/openapi-3-0",
+                       R"JSON({
+    "openapi": "3.0.4",
+    "info": {
+      "title": "Petstore",
+      "version": "1.0.0"
+    },
+    "paths": {}
+  })JSON");
+}
+
+// The identity is written back absolute and always, including where the
+// document declared none, or every relative reference in the served document
+// would resolve against the wrong origin
+TEST(example_openapi_3_2_without_self) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  RESOLVER_ADD_OPENAPI(resolver, "example", "openapi-3-2.json",
+                       "https://example.com/schemas/openapi-3-2",
+                       "http://localhost:8000/example/openapi-3-2",
+                       R"JSON({
+    "openapi": "3.2.0",
+    "$self": "http://localhost:8000/example/openapi-3-2",
+    "info": {
+      "title": "Petstore",
+      "version": "1.0.0"
+    },
+    "paths": {}
+  })JSON");
+}
+
+TEST(example_openapi_3_2_with_self) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  RESOLVER_ADD_OPENAPI(resolver, "example", "openapi-3-2-self.json",
+                       "https://example.com/schemas/petstore-api",
+                       "http://localhost:8000/example/petstore-api",
+                       R"JSON({
+    "openapi": "3.2.0",
+    "$self": "http://localhost:8000/example/petstore-api",
+    "info": {
+      "title": "Petstore",
+      "version": "1.0.0"
+    },
+    "paths": {}
+  })JSON");
+}
+
+TEST(example_openapi_3_2_with_relative_self) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  RESOLVER_ADD_OPENAPI(resolver, "example", "openapi-3-2-self-relative.json",
+                       "https://example.com/schemas/relative-api",
+                       "http://localhost:8000/example/relative-api",
+                       R"JSON({
+    "openapi": "3.2.0",
+    "$self": "http://localhost:8000/example/relative-api",
+    "info": {
+      "title": "Petstore",
+      "version": "1.0.0"
+    },
+    "paths": {}
+  })JSON");
+}
+
+TEST(example_openapi_3_2_with_self_outside_base) {
   sourcemeta::one::Resolver resolver{shared_configuration().url};
 
   try {
-    RESOLVER_IMPORT(resolver, "example", "openapi-description.json");
+    RESOLVER_IMPORT(resolver, "example", "openapi-3-2-self-outside-base.json");
     FAIL();
-  } catch (const sourcemeta::one::ResolverOpenAPIDescriptionError &error) {
+  } catch (const sourcemeta::one::ResolverOutsideBaseError &error) {
     EXPECT_EQ(error.path(), std::filesystem::path{SCHEMAS_PATH} / "example" /
-                                "openapi-description.json");
+                                "openapi-3-2-self-outside-base.json");
+    EXPECT_EQ(error.uri(), "https://other.com/api");
+    EXPECT_EQ(error.base(), "https://example.com/schemas");
   }
+}
+
+TEST(example_openapi_unsupported_version) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  try {
+    RESOLVER_IMPORT(resolver, "example", "openapi-unsupported-version.json");
+    FAIL();
+  } catch (
+      const sourcemeta::one::ResolverUnsupportedOpenAPIVersionError &error) {
+    EXPECT_EQ(error.path(), std::filesystem::path{SCHEMAS_PATH} / "example" /
+                                "openapi-unsupported-version.json");
+    EXPECT_EQ(error.version(), "4.0.0");
+  }
+}
+
+// Without bundling there is nothing to make a split description whole
+TEST(example_openapi_external_reference) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  const auto result{
+      RESOLVER_IMPORT(resolver, "example", "openapi-external-reference.json")};
+  try {
+    EXPECT_FALSE(resolver.openapi(result.first.get()).has_value());
+    FAIL();
+  } catch (
+      const sourcemeta::one::ResolverExternalOpenAPIReferenceError &error) {
+    EXPECT_EQ(error.path(), std::filesystem::path{SCHEMAS_PATH} / "example" /
+                                "openapi-external-reference.json");
+  }
+}
+
+// A reference a description makes into itself by its own absolute identity
+// would lead nowhere once the identity is the one this instance serves it
+// under, so it is relativised the way a schema reference is
+TEST(example_openapi_absolute_self_reference) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  RESOLVER_ADD_OPENAPI(
+      resolver, "example", "openapi-absolute-self-reference.json",
+      "https://example.com/schemas/openapi-absolute-self-reference",
+      "http://localhost:8000/example/openapi-absolute-self-reference",
+      R"JSON({
+    "openapi": "3.1.1",
+    "info": {
+      "title": "Petstore",
+      "version": "1.0.0"
+    },
+    "paths": {},
+    "components": {
+      "schemas": {
+        "Pet": {
+          "$ref": "#/components/schemas/Tag"
+        },
+        "Tag": {
+          "type": "string"
+        }
+      }
+    }
+  })JSON");
+}
+
+// A collection that declares no base takes the instance URL as one, so a
+// description has an absolute retrieval URI to be addressed by either way
+TEST(no_base_openapi) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  RESOLVER_ADD_OPENAPI(resolver, "no-base", "openapi.json",
+                       "http://localhost:8000/openapi",
+                       "http://localhost:8000/no-base/openapi",
+                       R"JSON({
+    "openapi": "3.1.1",
+    "info": {
+      "title": "Petstore",
+      "version": "1.0.0"
+    },
+    "paths": {}
+  })JSON");
+}
+
+// The schema half of the resolver answers for no description, which is what
+// makes a catalog schema referencing into one fail the way a reference to
+// nothing fails
+TEST(example_openapi_is_no_schema) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  const auto result{
+      RESOLVER_IMPORT(resolver, "example", "openapi-description.json")};
+  EXPECT_FALSE(resolver(result.first.get()).has_value());
+}
+
+// And the OpenAPI half answers for no schema
+TEST(example_schema_is_no_openapi) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  const auto result{
+      RESOLVER_IMPORT(resolver, "example", "2020-12-with-id.json")};
+  EXPECT_FALSE(resolver.openapi(result.first.get()).has_value());
 }
 
 // An `openapi` member of any other type declares no revision, so the file goes

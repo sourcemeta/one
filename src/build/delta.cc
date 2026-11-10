@@ -220,6 +220,25 @@ static auto is_deselected(const LeafRule &rule, const std::uint32_t selected)
          (selected & (std::uint32_t{1} << rule.selector)) == 0;
 }
 
+// Which kinds of leaf hold the artifact a listing is built from, as a bit per
+// kind. Asked of the rules rather than of one of them, since an artifact two
+// kinds share is written by a rule per kind
+static auto container_target_kinds(std::span<const LeafRule> rules)
+    -> std::uint32_t {
+  std::uint32_t result{0};
+  for (const auto &rule : rules) {
+    if (rule.container_target) {
+      result |= std::uint32_t{1} << static_cast<std::uint8_t>(rule.kind);
+    }
+  }
+
+  return result;
+}
+
+static auto holds_kind(const std::uint32_t kinds, const LeafKind kind) -> bool {
+  return (kinds & (std::uint32_t{1} << static_cast<std::uint8_t>(kind))) != 0;
+}
+
 // The rule a leaf of the given kind derives its reverse edges by, or nothing at
 // all for a kind no rule derives any for. Asked per leaf rather than once,
 // since an artifact two kinds share is written by a rule per kind and what
@@ -431,6 +450,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
   const std::string dependencies_suffix{
       sentinel_separator + leaf_rules[indices.dependencies].filename};
   const auto artifacts{leaf_artifacts(leaf_rules)};
+  const auto metadata_kinds{container_target_kinds(leaf_rules)};
 
   if (phase == BuildPhase::Combine) {
     const auto &output_string{output.native()};
@@ -927,6 +947,10 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
   active_leaves.reserve(leaves.size());
   std::vector<std::filesystem::path> all_relative_paths;
   all_relative_paths.reserve(leaves.size());
+  // Positionally alongside the above, so that a listing can tell whether a
+  // leaf holds the artifact it is built from
+  std::vector<LeafKind> all_relative_kinds;
+  all_relative_kinds.reserve(leaves.size());
 
   // Which leaves declare each leaf as their dialect, and which dialects a
   // changed leaf declares, gathered only when some rule reads them
@@ -968,6 +992,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
   for (const auto &[uri, info] : leaves) {
     const auto &relative_string{info.relative_path->native()};
     all_relative_paths.emplace_back(*info.relative_path);
+    all_relative_kinds.push_back(info.kind);
 
     auto primary_base{make_base_string(output_string, primary_directory, {},
                                        relative_string, sentinel)};
@@ -1513,11 +1538,16 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
             const auto &dependency{rule.dependencies[dependency_index]};
             switch (dependency.kind) {
               case ContainerDependencyKind::LeafMetadata:
-                for (const auto &leaf_relative : all_relative_paths) {
+                for (std::size_t leaf_index{0};
+                     leaf_index < all_relative_paths.size(); leaf_index++) {
+                  const auto &leaf_relative{all_relative_paths[leaf_index]};
                   // A listing is built from what its view holds, so a leaf the
                   // view is without is not read here either. Naming one anyway
-                  // would have this wait on something nothing produces
-                  if (!visible(view, leaf_relative.native())) {
+                  // would have this wait on something nothing produces, and so
+                  // would naming a leaf of a kind no rule describes
+                  if (!visible(view, leaf_relative.native()) ||
+                      !holds_kind(metadata_kinds,
+                                  all_relative_kinds[leaf_index])) {
                     continue;
                   }
 

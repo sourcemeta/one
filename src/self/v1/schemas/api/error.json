@@ -99,6 +99,14 @@
     },
     {
       "const": {
+        "type": "urn:sourcemeta:one:openapi-description-conversion",
+        "title": "Bad Request",
+        "status": 400,
+        "detail": "An OpenAPI description cannot be converted into a JSON Schema dialect"
+      }
+    },
+    {
+      "const": {
         "type": "urn:sourcemeta:one:missing-search-query",
         "title": "Bad Request",
         "status": 400,

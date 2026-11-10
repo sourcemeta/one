@@ -359,6 +359,13 @@ public:
   [[nodiscard]] auto artifact_dialect(const ResolvedArtifact &artifact) const
       -> std::optional<sourcemeta::core::JSON::String>;
 
+  // What a leaf artifact holds, which is what decides the surfaces that answer
+  // one kind of leaf and not the other. Read where that decision is made rather
+  // than on the way to serving an artifact, as what is served at a leaf's own
+  // path is the same artifact whatever it holds
+  [[nodiscard]] auto artifact_kind(const ResolvedArtifact &artifact) const
+      -> std::optional<LeafKind>;
+
   auto artifact_serve(const ResolvedArtifact &artifact,
                       const sourcemeta::core::HTTPStatus &status,
                       bool enable_cors, std::string_view mime,

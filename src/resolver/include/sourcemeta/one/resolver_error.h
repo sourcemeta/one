@@ -40,13 +40,38 @@ private:
   std::filesystem::path path_;
 };
 
-// A description declares itself with an `openapi` member, which no JSON Schema
-// dialect gives a meaning to
-class ResolverOpenAPIDescriptionError : public sourcemeta::core::Error {
+// A file declaring an `openapi` member is a description by the only test the
+// specification gives, whichever revision it names, so one naming a revision
+// this build cannot read is a description it cannot serve rather than a schema
+class ResolverUnsupportedOpenAPIVersionError : public sourcemeta::core::Error {
 public:
-  ResolverOpenAPIDescriptionError(std::filesystem::path path)
-      : sourcemeta::core::Error{"The file contains an OpenAPI description "
-                                "rather than a JSON Schema"},
+  ResolverUnsupportedOpenAPIVersionError(std::filesystem::path path,
+                                         sourcemeta::core::JSON::String version)
+      : sourcemeta::core::Error{"The OpenAPI description declares a revision "
+                                "that is not supported"},
+        path_{std::move(path)}, version_{std::move(version)} {}
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto version() const noexcept
+      -> const sourcemeta::core::JSON::String & {
+    return this->version_;
+  }
+
+private:
+  std::filesystem::path path_;
+  sourcemeta::core::JSON::String version_;
+};
+
+// A description reaching for another document has to be made whole before it
+// describes anything, and nothing bundles one yet
+class ResolverExternalOpenAPIReferenceError : public sourcemeta::core::Error {
+public:
+  ResolverExternalOpenAPIReferenceError(std::filesystem::path path)
+      : sourcemeta::core::Error{"The OpenAPI description references another "
+                                "document, which is not supported yet"},
         path_{std::move(path)} {}
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {

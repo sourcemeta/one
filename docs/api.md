@@ -393,6 +393,22 @@ meta-schema that a schema may declare.
     `?bundle=0`, and `?bundle=false` all trigger bundling. To disable
     bundling, omit the parameter entirely.
 
+!!! info "OpenAPI descriptions"
+
+    A collection may hold an OpenAPI description beside the schemas it
+    references. This endpoint serves one whole, at its own path, with a
+    `Content-Type` of `application/openapi+json` and no `Link` header, as a
+    description declares the dialect of the schemas it holds within itself. A
+    description is served whole rather than per Schema Object, so a reference
+    into one, such as
+    `http://localhost:8000/example/petstore#/components/schemas/Pet`, is a
+    fetch of the path followed by a client-side
+    [JSON Pointer](https://datatracker.ietf.org/doc/html/rfc6901).
+
+    The `bundle` and `as` query parameters are schema concerns and neither
+    answers for a description. So are the Visual Studio Code and Deno
+    workarounds below, which a description falls through.
+
 !!! success "Enterprise"
 
     The `as` query parameter is only available in the
@@ -493,7 +509,12 @@ property reports none for that schema.
 === "400"
 
     The `as` query parameter names a dialect the schema cannot be converted
-    into, or is combined with a query parameter other than `bundle`.
+    into, is combined with a query parameter other than `bundle`, or is set on
+    an OpenAPI description. Converting a description into a JSON Schema dialect
+    is not a thing it has, as
+    [`as=openapi3.2`](https://spec.openapis.org/oas/v3.2.0.html) already means
+    "this schema, rewritten in the OpenAPI 3.2 Schema Object dialect", which is
+    a different thing from migrating a document to OpenAPI 3.2.
 
 === "403"
 

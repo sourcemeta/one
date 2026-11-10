@@ -1,0 +1,12 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Petstore",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/pets": {
+      "$ref": "https://other.com/shared#/paths/~1pets"
+    }
+  }
+}

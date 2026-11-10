@@ -48,6 +48,14 @@ public:
                   const Callback &callback = nullptr) const
       -> std::optional<sourcemeta::core::JSON>;
 
+  // The OpenAPI half of the resolver. The two are kept apart because what a
+  // reference expects to find at the far end is fixed by where it sits, so a
+  // reference landing on the other kind is something the caller reports rather
+  // than something resolution hides by answering nothing
+  [[nodiscard]] auto openapi(std::string_view identifier,
+                             const Callback &callback = nullptr) const
+      -> std::optional<sourcemeta::core::JSON>;
+
   auto cache_path(std::string_view uri, const std::filesystem::path &path)
       -> void;
 
@@ -99,6 +107,12 @@ public:
   [[nodiscard]] auto is_dialect(std::string_view uri) const -> bool;
 
 private:
+  auto add_openapi(const std::filesystem::path &collection_relative_path,
+                   const Configuration::Collection &collection,
+                   const std::filesystem::path &path,
+                   std::filesystem::file_time_type mtime,
+                   const sourcemeta::core::JSON &document) -> Result;
+
   Views views_;
   // Resolution is a const operation that runs concurrently with the
   // writers that commit cached materialisation paths, so readers must
