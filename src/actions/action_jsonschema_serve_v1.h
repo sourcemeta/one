@@ -152,7 +152,7 @@ private:
         "data")};
     return resolution.path.has_value() &&
            self.artifact_kind(resolution.path.value()) ==
-               sourcemeta::one::LeafKind::Description;
+               sourcemeta::one::LeafKind::OpenAPI;
   }
 
   std::string_view error_schema_;

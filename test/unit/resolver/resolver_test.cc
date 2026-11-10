@@ -55,8 +55,7 @@ auto shared_configuration() -> const sourcemeta::one::Configuration & {
   {                                                                            \
     const auto result{                                                         \
         RESOLVER_IMPORT(resolver, (collection_name), (relative_path))};        \
-    EXPECT_EQ(result.second.get().kind,                                        \
-              sourcemeta::one::LeafKind::Description);                         \
+    EXPECT_EQ(result.second.get().kind, sourcemeta::one::LeafKind::OpenAPI);   \
     EXPECT_EQ(result.second.get().original_identifier,                         \
               (expected_current_uri));                                         \
     EXPECT_EQ(result.first.get(), (expected_final_uri));                       \

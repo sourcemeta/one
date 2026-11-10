@@ -146,7 +146,7 @@ private:
         "data")};
     return resolution.path.has_value() &&
            self.artifact_kind(resolution.path.value()) ==
-               sourcemeta::one::LeafKind::Description;
+               sourcemeta::one::LeafKind::OpenAPI;
   }
 
   static auto

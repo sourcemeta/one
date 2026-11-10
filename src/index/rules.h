@@ -101,7 +101,7 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
                             .base = 0,
                             .filename = nullptr}}},
          .dependency_count = 2,
-         .kind = LeafKind::Description},
+         .kind = LeafKind::OpenAPI},
 
         {.action = ACTION_POSITIONS,
          .base = 0,

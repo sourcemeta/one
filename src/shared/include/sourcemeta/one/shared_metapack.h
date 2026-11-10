@@ -94,7 +94,7 @@ make_metapack_schema_extension(const std::string_view dialect)
     -> std::vector<std::uint8_t> {
   std::vector<std::uint8_t> result;
   result.resize(sizeof(MetapackLeafExtension));
-  const MetapackLeafExtension layout{.kind = LeafKind::Description};
+  const MetapackLeafExtension layout{.kind = LeafKind::OpenAPI};
   std::memcpy(result.data(), &layout, sizeof(layout));
   return result;
 }

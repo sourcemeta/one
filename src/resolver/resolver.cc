@@ -712,7 +712,7 @@ auto Resolver::openapi(const std::string_view raw_identifier,
     cached_path = result->second.cache_path;
   }
 
-  if (view->kind != LeafKind::Description) {
+  if (view->kind != LeafKind::OpenAPI) {
     return std::nullopt;
   }
 
@@ -1093,7 +1093,7 @@ auto Resolver::add_openapi(
             .vocabularies = false,
             .original_identifier = identity.current,
             .collection = &collection,
-            .kind = LeafKind::Description})};
+            .kind = LeafKind::OpenAPI})};
   lock.unlock();
   if (!result.second && result.first->second.path != path) {
     throw sourcemeta::core::FileError<sourcemeta::core::SchemaFrameError>(
@@ -1137,7 +1137,7 @@ auto Resolver::entry(const std::string_view identifier) const -> const Entry & {
   assert(result != this->views_.cend());
   // A description whose revision reserves no field to declare a dialect, or
   // that declares none, carries one nowhere
-  assert(result->second.kind == LeafKind::Description ||
+  assert(result->second.kind == LeafKind::OpenAPI ||
          !result->second.dialect.empty());
   assert(!result->second.original_identifier.empty());
   assert(result->second.collection != nullptr);
