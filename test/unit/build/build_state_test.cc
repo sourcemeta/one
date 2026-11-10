@@ -333,8 +333,8 @@ TEST(artifacts_shared_by_two_rules_answer_to_one_bit) {
 // The same filename in another base is another artifact, since what a leaf
 // holds in the unit tree and what it holds in a view are two files
 TEST(artifacts_of_one_filename_in_two_bases_are_distinct) {
-  std::array<sourcemeta::one::LeafRule, 2> rules{test_rules::RULES.leaves[0],
-                                                 test_rules::RULES.leaves[0]};
+  std::array<sourcemeta::one::LeafRule, 2> rules{
+      {test_rules::RULES.leaves[0], test_rules::RULES.leaves[0]}};
   rules[1].base = 1;
 
   const auto artifacts{sourcemeta::one::leaf_artifacts(rules)};
