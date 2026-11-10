@@ -267,6 +267,8 @@ auto delta(const BuildPhase phase, const BuildPlan::Type build_type,
   // its own
   static_assert(leaf_artifacts(RuleSet.leaves).count <= MAX_LEAF_ARTIFACTS,
                 "Too many leaf artifacts for the target bitmap width");
+  static_assert(leaf_artifacts_agree(RuleSet.leaves),
+                "Rules writing one leaf artifact must agree about it");
 
   constexpr DeltaRuleIndices INDICES{
       .root = find_root_leaf_index<RuleSet>(),

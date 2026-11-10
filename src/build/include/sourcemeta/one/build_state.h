@@ -144,6 +144,34 @@ struct LeafArtifacts {
   return result;
 }
 
+// Whether every rule writing one artifact agrees about what that artifact is to
+// the build. A walk of the output tree reads these off the first rule matching
+// a filename, since a filename on disk says which artifact it is and nothing
+// about which rule wrote it, so rules sharing one disagreeing here would have
+// the build read the wrong answer for whichever of them did not come first
+[[nodiscard]] constexpr auto
+leaf_artifacts_agree(std::span<const LeafRule> rules) -> bool {
+  for (std::size_t index{0}; index < rules.size(); index++) {
+    for (std::size_t other{0}; other < index; other++) {
+      if (rules[other].base != rules[index].base ||
+          std::string_view{rules[other].filename} !=
+              std::string_view{rules[index].filename}) {
+        continue;
+      }
+
+      if (rules[other].is_root != rules[index].is_root ||
+          rules[other].combine_only != rules[index].combine_only ||
+          rules[other].container_target != rules[index].container_target ||
+          rules[other].tracks_dependencies !=
+              rules[index].tracks_dependencies) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 enum class ContainerScope : std::uint8_t {
   AllContainers,
   NonRoot,

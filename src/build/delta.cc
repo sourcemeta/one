@@ -220,6 +220,21 @@ static auto is_deselected(const LeafRule &rule, const std::uint32_t selected)
          (selected & (std::uint32_t{1} << rule.selector)) == 0;
 }
 
+// The rule a leaf of the given kind derives its reverse edges by, or nothing at
+// all for a kind no rule derives any for. Asked per leaf rather than once,
+// since an artifact two kinds share is written by a rule per kind and what
+// those differ in is the action writing it
+static auto combine_only_rule(std::span<const LeafRule> rules,
+                              const LeafKind kind) -> const LeafRule * {
+  for (const auto &rule : rules) {
+    if (rule.combine_only && rule.kind == kind) {
+      return &rule;
+    }
+  }
+
+  return nullptr;
+}
+
 static auto declare_leaf_targets(
     TargetMap &targets, std::span<const std::string> bases,
     const std::string &output_string, const std::string &source_string,
@@ -534,24 +549,26 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
       // above notices it. The same is true of a view that keeps its name but
       // widens, since a leaf it could not reach before arrives with no
       // artifact behind it either
-      const auto &missing_rule{leaf_rules[indices.dependents]};
-      if (missing_rule.base != 0) {
-        for (const auto &[uri, info] : leaves) {
-          const auto &relative_string{info.relative_path->native()};
-          if (affected_leaves.contains(relative_string)) {
-            continue;
-          }
+      for (const auto &[uri, info] : leaves) {
+        const auto *missing_rule{combine_only_rule(leaf_rules, info.kind)};
+        if (missing_rule == nullptr || missing_rule->base == 0) {
+          continue;
+        }
 
-          for (std::size_t view{0}; view < secondary_views.size(); view++) {
-            if (visible(view, relative_string) &&
-                !entries.contains(append_filename(
-                    make_base_string(output.native(), secondary_directory,
-                                     secondary_views[view], relative_string,
-                                     sentinel),
-                    missing_rule.filename))) {
-              affected_leaves.insert(relative_string);
-              break;
-            }
+        const auto &relative_string{info.relative_path->native()};
+        if (affected_leaves.contains(relative_string)) {
+          continue;
+        }
+
+        for (std::size_t view{0}; view < secondary_views.size(); view++) {
+          if (visible(view, relative_string) &&
+              !entries.contains(append_filename(
+                  make_base_string(output.native(), secondary_directory,
+                                   secondary_views[view], relative_string,
+                                   sentinel),
+                  missing_rule->filename))) {
+            affected_leaves.insert(relative_string);
+            break;
           }
         }
       }
@@ -597,16 +614,21 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
         dependency_keys.erase(first, last);
       }
 
-      const auto &dependents_rule{leaf_rules[indices.dependents]};
-      const auto in_secondary{dependents_rule.base != 0};
-      const auto destination_directory{in_secondary ? secondary_directory
-                                                    : primary_directory};
-      const std::span<const std::string_view> destination_views{
-          in_secondary ? secondary_views
-                       : std::span<const std::string_view>{UNNAMESPACED}};
-
       std::vector<BuildPlan::Action> dependents_wave;
       for (const auto &[uri, info] : leaves) {
+        const auto *rule{combine_only_rule(leaf_rules, info.kind)};
+        if (rule == nullptr) {
+          continue;
+        }
+
+        const auto &dependents_rule{*rule};
+        const auto in_secondary{dependents_rule.base != 0};
+        const auto destination_directory{in_secondary ? secondary_directory
+                                                      : primary_directory};
+        const std::span<const std::string_view> destination_views{
+            in_secondary ? secondary_views
+                         : std::span<const std::string_view>{UNNAMESPACED}};
+
         const auto &relative_string{info.relative_path->native()};
         if (!affected_leaves.contains(relative_string)) {
           continue;
@@ -1639,35 +1661,53 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
 
   for (const auto &leaf : active_leaves) {
     const auto leaf_dirty{dirty_set.contains(leaf.root_path)};
-    if (leaf_dirty || is_full) {
-      for (const auto &rule : leaf_rules) {
-        // What a leaf no longer gets goes away, whether it stopped evaluating
-        // or stopped selecting it
-        const auto excluded{
-            rule.kind != leaf.info->kind ||
-            (rule.gate == TargetGate::IfEvaluate && !leaf.info->evaluate) ||
-            is_deselected(rule, leaf.info->selected)};
-        if (!excluded) {
+    if (!leaf_dirty && !is_full) {
+      continue;
+    }
+
+    // What a leaf no longer gets goes away, whether it stopped evaluating, it
+    // stopped selecting it, or it is held by a kind the leaf no longer is.
+    // Asked of the artifact rather than of the rule, since two rules may write
+    // one artifact under disjoint kinds, and a rule that does not apply is then
+    // no evidence that what it would have written is not there to stay
+    std::uint32_t retained{0};
+    for (std::size_t rule_index{0}; rule_index < leaf_rules.size();
+         rule_index++) {
+      const auto &rule{leaf_rules[rule_index]};
+      if (rule.kind != leaf.info->kind ||
+          (rule.gate == TargetGate::IfEvaluate && !leaf.info->evaluate) ||
+          is_deselected(rule, leaf.info->selected)) {
+        continue;
+      }
+
+      retained |= artifacts.mask(rule_index);
+    }
+
+    std::uint32_t disposed{0};
+    for (std::size_t rule_index{0}; rule_index < leaf_rules.size();
+         rule_index++) {
+      const auto mask{artifacts.mask(rule_index)};
+      if ((retained & mask) != 0 || (disposed & mask) != 0) {
+        continue;
+      }
+
+      disposed |= mask;
+      const auto &rule{leaf_rules[rule_index]};
+      const std::span<const std::string> target_bases{
+          rule.base == 0 ? std::span<const std::string>{&leaf.primary_base, 1}
+                         : std::span<const std::string>{leaf.secondary_bases}};
+      for (const auto &target_base : target_bases) {
+        if (target_base.empty()) {
           continue;
         }
 
-        const std::span<const std::string> target_bases{
-            rule.base == 0
-                ? std::span<const std::string>{&leaf.primary_base, 1}
-                : std::span<const std::string>{leaf.secondary_bases}};
-        for (const auto &target_base : target_bases) {
-          if (target_base.empty()) {
-            continue;
-          }
-
-          auto target_path{append_filename(target_base, rule.filename)};
-          if (entries.contains(target_path)) {
-            remove_wave.push_back(
-                {.type = remove_action,
-                 .destination = std::filesystem::path{std::move(target_path)},
-                 .dependencies = {},
-                 .data = {}});
-          }
+        auto target_path{append_filename(target_base, rule.filename)};
+        if (entries.contains(target_path)) {
+          remove_wave.push_back(
+              {.type = remove_action,
+               .destination = std::filesystem::path{std::move(target_path)},
+               .dependencies = {},
+               .data = {}});
         }
       }
     }

@@ -825,6 +825,120 @@ TEST(incremental_leaves_of_both_kinds_sharing_artifacts_are_not_dirtied) {
       output / "secondary" / "public" / "%" / "listing.bin");
 }
 
+// What a leaf no longer gets has to go away, and what decides that is the
+// artifact rather than the rule. A bit per rule had a leaf of one kind dispose
+// of every artifact a rule of the other kind writes, so the artifact the two
+// kinds share was removed in the very plan that wrote it
+TEST(incremental_a_dirty_leaf_keeps_an_artifact_another_kind_also_writes) {
+  const auto output{delta_path("shared_artifact_kept_when_dirty")};
+  WRITE_GLOBAL_OUTPUTS(output);
+  sourcemeta::one::BuildState entries;
+  const TestLeaves descriptions{{.identifier = "https://example.com/foo",
+                                 .path = "/src/foo.json",
+                                 .relative_path = "foo",
+                                 .mtime = MTIME(200),
+                                 .kind = test_rules::FOREIGN_KIND}};
+  ADD_LEAF_ENTRIES(entries, output, "foo", false, MTIME(150));
+  ADD_GLOBAL_ENTRIES(entries, output, MTIME(150));
+  entries.emplace(output / "secondary" / "public" / "%" / "listing.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+
+  entries.configure(
+      test_rules::SHARED_ARTIFACT_RULES.leaves,
+      test_rules::SHARED_ARTIFACT_RULES.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::SHARED_ARTIFACT_RULES>(),
+      INPUTS, test_rules::SHARED_ARTIFACT_RULES.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::SHARED_ARTIFACT_RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, descriptions, "1.0.0", true, "", "Full", {}, VIEWS,
+      everything())};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 4, 4);
+
+  // The only leaf this registry holds is of a kind that holds no page, so the
+  // build reads the one kind that does as the whole registry gaining pages
+  EXPECT_ACTION(plan, 0, 0, 1, test_rules::ACTION_ROUTES, output / "routes.bin",
+                "Full", output / "configuration.json");
+
+  EXPECT_ACTION(plan, 1, 0, 1, test_rules::ACTION_VARIANT,
+                output / "primary" / "foo" / "%" / "primary.bin",
+                "https://example.com/foo",
+                std::filesystem::path{"/"} / "src" / "foo.json",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 2, 0, 1, test_rules::ACTION_REFERENCES,
+                output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+                "https://example.com/foo",
+                output / "primary" / "foo" / "%" / "primary.bin");
+
+  EXPECT_ACTION(plan, 3, 0, 1, test_rules::ACTION_LISTING,
+                output / "secondary" / "public" / "%" / "listing.bin", "",
+                output / "secondary" / "public" / "foo" / "%" / "metadata.bin");
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      output / "routes.bin", output / "gate.bin",
+      output / "primary" / "foo" / "%" / "primary.bin",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "%" / "listing.bin");
+}
+
+// And an artifact no rule of the leaf's kind writes still goes, which is what
+// says the fix above did not simply stop disposing of anything
+TEST(incremental_a_dirty_leaf_disposes_of_what_its_kind_does_not_write) {
+  const auto output{delta_path("shared_artifact_disposed_when_dirty")};
+  WRITE_GLOBAL_OUTPUTS(output);
+  sourcemeta::one::BuildState entries;
+  const TestLeaves descriptions{{.identifier = "https://example.com/foo",
+                                 .path = "/src/foo.json",
+                                 .relative_path = "foo",
+                                 .mtime = MTIME(200),
+                                 .kind = test_rules::FOREIGN_KIND}};
+  // The web leaf belongs to the first kind alone, so what this leaf holds is
+  // what it would have held before the file became one of another kind
+  ADD_LEAF_ENTRIES(entries, output, "foo", true, MTIME(150));
+  ADD_GLOBAL_ENTRIES(entries, output, MTIME(150));
+  entries.emplace(output / "secondary" / "public" / "%" / "listing.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+
+  entries.configure(
+      test_rules::SHARED_ARTIFACT_RULES.leaves,
+      test_rules::SHARED_ARTIFACT_RULES.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::SHARED_ARTIFACT_RULES>(),
+      INPUTS, test_rules::SHARED_ARTIFACT_RULES.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::SHARED_ARTIFACT_RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, descriptions, "1.0.0", true, "", "Full", {}, VIEWS,
+      everything())};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 4, 4);
+
+  EXPECT_ACTION(plan, 0, 0, 1, test_rules::ACTION_VARIANT,
+                output / "primary" / "foo" / "%" / "primary.bin",
+                "https://example.com/foo",
+                std::filesystem::path{"/"} / "src" / "foo.json",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 1, 0, 1, test_rules::ACTION_REFERENCES,
+                output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+                "https://example.com/foo",
+                output / "primary" / "foo" / "%" / "primary.bin");
+
+  EXPECT_ACTION(plan, 2, 0, 1, test_rules::ACTION_LISTING,
+                output / "secondary" / "public" / "%" / "listing.bin", "",
+                output / "secondary" / "public" / "foo" / "%" / "metadata.bin");
+
+  EXPECT_ACTION(plan, 3, 0, 1, test_rules::ACTION_REMOVE,
+                output / "secondary" / "public" / "foo" / "%" / "web.bin", "");
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      output / "routes.bin", output / "gate.bin",
+      output / "primary" / "foo" / "%" / "primary.bin",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "%" / "listing.bin");
+}
+
 TEST(incremental_only_the_new_leaf_is_built_beside_an_unchanged_one) {
   const auto output{delta_path("new_leaf_alongside")};
   WRITE_GLOBAL_OUTPUTS(output);
@@ -1470,6 +1584,44 @@ TEST(combine_destination_follows_the_tree_the_rule_names) {
   EXPECT_TOTAL_FILES(
       plan, entries, output / "primary" / "foo" / "%" / "references.bin",
       output / "secondary" / "public" / "foo" / "%" / "reverse.bin");
+}
+
+// The combine phase read the rule deriving reverse edges once and applied it to
+// every leaf, so a leaf of a kind no rule derives any for was given them all
+// the same. The rule is now resolved per leaf kind
+TEST(combine_a_leaf_of_a_kind_no_rule_derives_edges_for_gets_none) {
+  const auto output{delta_path("combine_foreign_kind")};
+  std::filesystem::remove_all(output);
+  std::filesystem::create_directories(output);
+  sourcemeta::one::BuildState entries;
+  const TestLeaves leaves{{.identifier = "https://example.com/foo",
+                           .path = "/src/foo.json",
+                           .relative_path = "foo",
+                           .mtime = MTIME(100)},
+                          {.identifier = "https://example.com/bar",
+                           .path = "/src/bar.json",
+                           .relative_path = "bar",
+                           .mtime = MTIME(100),
+                           .kind = test_rules::FOREIGN_KIND}};
+
+  entries.configure(
+      test_rules::COMBINE_RULES_SECONDARY.leaves,
+      test_rules::COMBINE_RULES_SECONDARY.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::COMBINE_RULES_SECONDARY>(),
+      INPUTS, test_rules::COMBINE_RULES_SECONDARY.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::COMBINE_RULES_SECONDARY>(
+      sourcemeta::one::BuildPhase::Combine, test_rules::MODE_FULL, entries,
+      output, leaves, "1.0.0", true, "", "Full", {}, VIEWS, everything())};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 1, 1);
+
+  EXPECT_ACTION(plan, 0, 0, 1, test_rules::ACTION_REVERSE,
+                output / "secondary" / "public" / "foo" / "%" / "reverse.bin",
+                "https://example.com/foo");
+
+  EXPECT_TOTAL_FILES(plan, entries,
+                     output / "secondary" / "public" / "foo" / "%" /
+                         "reverse.bin");
 }
 
 TEST(limits_exceeded_throws) {
