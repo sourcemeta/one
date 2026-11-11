@@ -1,0 +1,51 @@
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "Spellings",
+    "version": "1.0.0"
+  },
+  "security": [
+    {
+      "https://example.com/schemas/openapi-spellings-target#/components/securitySchemes/Key": []
+    }
+  ],
+  "paths": {
+    "/pets": {
+      "$ref": "openapi-spellings-target#/components/pathItems/Pets"
+    },
+    "/dogs": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "./openapi-spellings-target#/components/parameters/Page"
+          }
+        ],
+        "responses": {
+          "404": {
+            "$ref": "openapi-spellings-target.json#/components/responses/NotFound"
+          },
+          "200": {
+            "description": "Every dog",
+            "headers": {
+              "X-Limit": {
+                "$ref": "OPENAPI-SPELLINGS-TARGET#/components/headers/Limit"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Dog": {
+        "type": "object",
+        "properties": {
+          "pet": {
+            "$ref": "http://localhost:8000/example/openapi-spellings-target#/components/schemas/Pet"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,110 @@
+// A YAML file is read as an OpenAPI description the way a YAML file is read as
+// a schema, under either extension, and a description written in one format
+// reaches one written in the other without either knowing the difference. The
+// catalog serves every one of them as JSON.
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "api": {
+      "baseUri": "https://example.com/",
+      "path": "./api"
+    }
+  }
+}
+EOF
+
+MAKE DIRECTORY api
+
+WRITE api/shared.yaml UNTIL EOF
+openapi: 3.1.1
+info:
+  title: Shared
+  version: 1.0.0
+paths: {}
+components:
+  pathItems:
+    Pets:
+      get:
+        responses:
+          "200":
+            description: Every pet
+  schemas:
+    Pet:
+      type: object
+EOF
+
+WRITE api/entry.json UNTIL EOF
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Entry",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/pets": {
+      "$ref": "https://example.com/shared#/components/pathItems/Pets"
+    }
+  }
+}
+EOF
+
+WRITE api/other.yml UNTIL EOF
+openapi: 3.1.1
+info:
+  title: Other
+  version: 1.0.0
+paths:
+  /dogs:
+    $ref: "https://example.com/shared#/components/pathItems/Pets"
+components:
+  schemas:
+    Dog:
+      $ref: "shared#/components/schemas/Pet"
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 0
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
+
+WRITE expected_output.txt UNTIL EOF
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected_output.txt
+
+TREE output INTO manifest.txt
+DROP LINES MATCHING '^\./schemas/self(/.*)?$' IN manifest.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN manifest.txt
+
+WRITE expected.txt UNTIL EOF
+./authentication.bin
+./configuration.json
+./explorer
+./explorer/public
+./explorer/public/%
+./explorer/public/%/directory.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/api
+./explorer/public/api/%
+./explorer/public/api/%/directory.metapack
+./routes.bin
+./schemas
+./schemas/api
+./schemas/api/entry
+./schemas/api/entry/%
+./schemas/api/entry/%/data.metapack
+./schemas/api/other
+./schemas/api/other/%
+./schemas/api/other/%/data.metapack
+./schemas/api/shared
+./schemas/api/shared/%
+./schemas/api/shared/%/data.metapack
+./state.bin
+./version.json
+EOF
+
+COMPARE manifest.txt AGAINST expected.txt

@@ -1,0 +1,108 @@
+// An OpenAPI description may be built out of documents held by different
+// collections, each declaring a base of its own, as long as the reference
+// names what this instance serves rather than what the other document came
+// with. A schema reaches across the same way.
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "api": {
+      "baseUri": "https://api.example.com/",
+      "path": "./api"
+    },
+    "shared": {
+      "baseUri": "https://shared.example.com/",
+      "path": "./shared"
+    }
+  }
+}
+EOF
+
+MAKE DIRECTORY api
+MAKE DIRECTORY shared
+
+WRITE shared/common.json UNTIL EOF
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Shared",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "pathItems": {
+      "Pets": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "Every pet"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+EOF
+
+WRITE api/petstore.json UNTIL EOF
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Petstore",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/pets": {
+      "$ref": "/shared/common#/components/pathItems/Pets"
+    }
+  }
+}
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 0
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
+
+WRITE expected_output.txt UNTIL EOF
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected_output.txt
+
+TREE output INTO manifest.txt
+DROP LINES MATCHING '^\./schemas/self(/.*)?$' IN manifest.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN manifest.txt
+
+WRITE expected.txt UNTIL EOF
+./authentication.bin
+./configuration.json
+./explorer
+./explorer/public
+./explorer/public/%
+./explorer/public/%/directory.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/api
+./explorer/public/api/%
+./explorer/public/api/%/directory.metapack
+./explorer/public/shared
+./explorer/public/shared/%
+./explorer/public/shared/%/directory.metapack
+./routes.bin
+./schemas
+./schemas/api
+./schemas/api/petstore
+./schemas/api/petstore/%
+./schemas/api/petstore/%/data.metapack
+./schemas/shared
+./schemas/shared/common
+./schemas/shared/common/%
+./schemas/shared/common/%/data.metapack
+./state.bin
+./version.json
+EOF
+
+COMPARE manifest.txt AGAINST expected.txt

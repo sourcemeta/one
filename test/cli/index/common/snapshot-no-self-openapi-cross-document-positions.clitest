@@ -1,0 +1,226 @@
+// Every position the specification lets a reference sit in may reach another
+// document, the key of a Security Requirement Object included, and each one is
+// rewritten to name what this instance serves rather than what the document
+// came with.
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "api": {
+      "baseUri": "https://example.com/",
+      "path": "./api"
+    }
+  }
+}
+EOF
+
+MAKE DIRECTORY api
+
+WRITE api/shared.json UNTIL EOF
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "Shared",
+    "version": "1.0.0"
+  },
+  "components": {
+    "pathItems": {
+      "Pets": {
+        "get": {
+          "operationId": "shared",
+          "responses": {
+            "200": {
+              "description": "Every pet"
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "schema": {
+          "type": "integer"
+        }
+      }
+    },
+    "requestBodies": {
+      "Pet": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "NotFound": {
+        "description": "Missing"
+      }
+    },
+    "headers": {
+      "Limit": {
+        "description": "How many",
+        "schema": {
+          "type": "integer"
+        }
+      }
+    },
+    "links": {
+      "Self": {
+        "operationId": "shared"
+      }
+    },
+    "callbacks": {
+      "OnData": {
+        "{$request.query.url}": {
+          "post": {
+            "responses": {
+              "200": {
+                "description": "Taken"
+              }
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "Key": {
+        "type": "apiKey",
+        "name": "key",
+        "in": "header"
+      }
+    },
+    "mediaTypes": {
+      "Json": {
+        "schema": {
+          "type": "object"
+        }
+      }
+    },
+    "schemas": {
+      "Pet": {
+        "type": "object"
+      }
+    }
+  }
+}
+EOF
+
+WRITE api/entry.json UNTIL EOF
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "Entry",
+    "version": "1.0.0"
+  },
+  "security": [
+    {
+      "https://example.com/shared#/components/securitySchemes/Key": []
+    }
+  ],
+  "paths": {
+    "/pets": {
+      "$ref": "https://example.com/shared#/components/pathItems/Pets"
+    },
+    "/dogs": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "https://example.com/shared#/components/parameters/Page"
+          }
+        ],
+        "requestBody": {
+          "$ref": "https://example.com/shared#/components/requestBodies/Pet"
+        },
+        "responses": {
+          "404": {
+            "$ref": "https://example.com/shared#/components/responses/NotFound"
+          },
+          "200": {
+            "description": "Every dog",
+            "headers": {
+              "X-Limit": {
+                "$ref": "https://example.com/shared#/components/headers/Limit"
+              }
+            },
+            "content": {
+              "application/json": {
+                "$ref": "https://example.com/shared#/components/mediaTypes/Json"
+              }
+            },
+            "links": {
+              "self": {
+                "$ref": "https://example.com/shared#/components/links/Self"
+              }
+            }
+          }
+        },
+        "callbacks": {
+          "onData": {
+            "$ref": "https://example.com/shared#/components/callbacks/OnData"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Dog": {
+        "type": "object",
+        "properties": {
+          "pet": {
+            "$ref": "https://example.com/shared#/components/schemas/Pet"
+          }
+        }
+      }
+    }
+  }
+}
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 0
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
+
+WRITE expected_output.txt UNTIL EOF
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected_output.txt
+
+TREE output INTO manifest.txt
+DROP LINES MATCHING '^\./schemas/self(/.*)?$' IN manifest.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN manifest.txt
+
+WRITE expected.txt UNTIL EOF
+./authentication.bin
+./configuration.json
+./explorer
+./explorer/public
+./explorer/public/%
+./explorer/public/%/directory.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/api
+./explorer/public/api/%
+./explorer/public/api/%/directory.metapack
+./routes.bin
+./schemas
+./schemas/api
+./schemas/api/entry
+./schemas/api/entry/%
+./schemas/api/entry/%/data.metapack
+./schemas/api/shared
+./schemas/api/shared/%
+./schemas/api/shared/%/data.metapack
+./state.bin
+./version.json
+EOF
+
+COMPARE manifest.txt AGAINST expected.txt

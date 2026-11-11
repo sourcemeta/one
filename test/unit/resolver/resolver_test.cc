@@ -343,6 +343,72 @@ TEST(example_openapi_sibling_reference) {
   })JSON");
 }
 
+// Every spelling a reference may take reaches the same document, and each one
+// is rewritten into what a reader of the served document resolves against the
+// identity it is served under. A reference written against the root of this
+// instance is already in those terms, so it is left exactly as it was
+TEST(example_openapi_reference_spellings) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  RESOLVER_IMPORT(resolver, "example", "openapi-spellings-target.json");
+  RESOLVER_ADD_OPENAPI(
+      resolver, "example", "openapi-reference-spellings.json",
+      "https://example.com/schemas/openapi-reference-spellings",
+      "http://localhost:8000/example/openapi-reference-spellings",
+      R"JSON({
+    "openapi": "3.2.0",
+    "$self": "http://localhost:8000/example/openapi-reference-spellings",
+    "info": {
+      "title": "Spellings",
+      "version": "1.0.0"
+    },
+    "security": [
+      {
+        "openapi-spellings-target#/components/securitySchemes/Key": []
+      }
+    ],
+    "paths": {
+      "/dogs": {
+        "get": {
+          "parameters": [
+            {
+              "$ref": "./openapi-spellings-target#/components/parameters/Page"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Every dog",
+              "headers": {
+                "X-Limit": {
+                  "$ref": "openapi-spellings-target#/components/headers/Limit"
+                }
+              }
+            },
+            "404": {
+              "$ref": "openapi-spellings-target#/components/responses/NotFound"
+            }
+          }
+        }
+      },
+      "/pets": {
+        "$ref": "openapi-spellings-target#/components/pathItems/Pets"
+      }
+    },
+    "components": {
+      "schemas": {
+        "Dog": {
+          "type": "object",
+          "properties": {
+            "pet": {
+              "$ref": "http://localhost:8000/example/openapi-spellings-target#/components/schemas/Pet"
+            }
+          }
+        }
+      }
+    }
+  })JSON");
+}
+
 // A reference an OpenAPI description makes into itself by its own absolute
 // identity would lead nowhere once the identity is the one this instance serves
 // it under, so it is relativised the way a schema reference is

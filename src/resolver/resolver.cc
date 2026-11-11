@@ -695,17 +695,17 @@ auto Resolver::operator()(
 // What an OpenAPI description reaches for and does not hold, as the document
 // spells it and where it spells it, with nothing named at all where the frame
 // measures it incomplete without saying which one place makes it so. The
-// document is whatever the reference resolves to ahead of its fragment, which
-// is the document's own identity for one that names a position of itself,
-// and nothing at all where the frame reports no document side
+// document is where the reference lands once the document is served, ahead of
+// any fragment, which is the served identity itself for one that names a
+// position of the document it already sits in
 struct OpenAPIDanglingConnection {
   sourcemeta::core::JSON::String reference;
   sourcemeta::core::JSON::String document;
   sourcemeta::core::Pointer location;
 };
 
-// What a destination names ahead of its fragment, which a frame reports as the
-// two sides of one string
+// What a destination names ahead of its fragment, which a reference carries as
+// the two sides of one string
 static auto
 destination_document(const sourcemeta::core::JSON::StringView destination)
     -> sourcemeta::core::JSON::String {
@@ -725,35 +725,34 @@ struct OpenAPIReferenceBase {
   const sourcemeta::core::URI &served;
 };
 
-// Where the document side of a connection lands once the reference that spells
-// it names what this instance serves. The rewrite that follows settles every
-// reference exactly this way, so the two cannot come to different answers
-// about where one points
-static auto
-connection_document(const OpenAPIReferenceBase &identity,
-                    const sourcemeta::core::URI &server,
-                    const sourcemeta::core::JSON::StringView destination)
+// Where a reference of an OpenAPI description lands once the document is
+// served, which is the reference as the rewrite will write it resolved against
+// the identity this instance serves the document under.
+//
+// This reads what the author wrote rather than what the frame resolved,
+// because a frame measures a reference against the identity the document came
+// with. One written against the root of this instance therefore resolves, in
+// the frame, to a place that never meant anything, while the rewrite leaves it
+// alone and a reader of the served document lands where the author meant
+static auto reference_lands_at(const OpenAPIReferenceBase &identity,
+                               const sourcemeta::core::URI &server,
+                               const sourcemeta::core::JSON::String &reference)
     -> sourcemeta::core::JSON::String {
-  const auto document{destination_document(destination)};
-  if (document.empty()) {
-    return document;
-  }
-
   const auto rewritten{rebase_reference(identity.collection, identity.original,
-                                        document, server)};
-  sourcemeta::core::URI target{rewritten.value_or(document)};
+                                        reference, server)};
+  sourcemeta::core::URI target{rewritten.value_or(reference)};
   if (target.is_relative()) {
     target.resolve_from(identity.served);
   }
 
-  return target.recompose();
+  return destination_document(target.recompose());
 }
 
 // Whether a connection of an OpenAPI description reaches another document that
 // this instance serves, which is what lets one built out of several be served
-// as the documents it is made of. A connection naming a position of the
-// description's own body reaches no other document at all, however the frame
-// spells out where it resolved to, so one of those is never reaching anything
+// as the documents it is made of. A connection landing back on the document
+// that spells it reaches no other document at all, so one of those is never
+// reaching anything
 static auto reaches_served_document(const sourcemeta::one::Resolver &resolver,
                                     const sourcemeta::core::URI &served,
                                     const OpenAPIDanglingConnection &connection)
@@ -787,8 +786,7 @@ first_unreached_connection(const sourcemeta::one::Resolver &resolver,
 
     const OpenAPIDanglingConnection connection{
         .reference = entry.second.original,
-        .document =
-            connection_document(identity, server, entry.second.destination),
+        .document = reference_lands_at(identity, server, entry.second.original),
         .location = entry.second.origin};
     if (!reaches_served_document(resolver, identity.served, connection)) {
       return connection;
@@ -804,8 +802,7 @@ first_unreached_connection(const sourcemeta::one::Resolver &resolver,
 
     const OpenAPIDanglingConnection connection{
         .reference = entry.second.original,
-        .document =
-            connection_document(identity, server, entry.second.destination),
+        .document = reference_lands_at(identity, server, entry.second.original),
         .location = entry.second.origin};
     if (!reaches_served_document(resolver, identity.served, connection)) {
       return connection;
@@ -822,11 +819,11 @@ first_unreached_connection(const sourcemeta::one::Resolver &resolver,
     }
 
     const auto &mapping{sourcemeta::core::get(document, discriminator.origin)};
+    const sourcemeta::core::JSON::String written{
+        mapping.is_string() ? mapping.to_string() : discriminator.destination};
     const OpenAPIDanglingConnection connection{
-        .reference = mapping.is_string() ? mapping.to_string()
-                                         : discriminator.destination,
-        .document =
-            connection_document(identity, server, discriminator.destination),
+        .reference = written,
+        .document = reference_lands_at(identity, server, written),
         .location = discriminator.origin};
     if (!reaches_served_document(resolver, identity.served, connection)) {
       return connection;
@@ -849,9 +846,10 @@ first_unreached_connection(const sourcemeta::one::Resolver &resolver,
           return;
         }
 
+        const sourcemeta::core::JSON::String written{reference.original};
         const OpenAPIDanglingConnection connection{
-            .reference = sourcemeta::core::JSON::String{reference.original},
-            .document = connection_document(identity, server, reference.base),
+            .reference = written,
+            .document = reference_lands_at(identity, server, written),
             .location = sourcemeta::core::to_pointer(pointer)};
         if (!reaches_served_document(resolver, identity.served, connection)) {
           result = connection;
