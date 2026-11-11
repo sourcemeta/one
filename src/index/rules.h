@@ -12,6 +12,7 @@ namespace sourcemeta::one {
 // NOLINTNEXTLINE(cppcoreguidelines-use-enum-class)
 enum : BuildPlan::Action::Type {
   ACTION_MATERIALISE,
+  ACTION_OPENAPI_MATERIALISE,
   ACTION_POSITIONS,
   ACTION_LOCATIONS,
   ACTION_DEPENDENCIES,
@@ -59,9 +60,9 @@ enum : BuildPlan::Action::Type {
 enum : BuildPlan::Type { MODE_HEADLESS, MODE_FULL, MODE_EXPERIMENTAL };
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
-inline constexpr std::size_t INDEX_LEAF_RULES{20};
+inline constexpr std::size_t INDEX_LEAF_RULES{21};
 #else
-inline constexpr std::size_t INDEX_LEAF_RULES{13};
+inline constexpr std::size_t INDEX_LEAF_RULES{14};
 #endif
 
 inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
@@ -83,6 +84,24 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
                             .filename = nullptr}}},
          .dependency_count = 2,
          .kind = LeafKind::Schema},
+
+        {.action = ACTION_OPENAPI_MATERIALISE,
+         .base = 0,
+         .filename = "data.metapack",
+         .gate = TargetGate::Always,
+         .dirty = DirtyOverride::Normal,
+         .is_root = true,
+         .combine_only = false,
+         .container_target = false,
+         .tracks_dependencies = false,
+         .dependencies = {{{.source = DependencySource::ExternalSource,
+                            .base = 0,
+                            .filename = nullptr},
+                           {.source = DependencySource::ExternalConfig,
+                            .base = 0,
+                            .filename = nullptr}}},
+         .dependency_count = 2,
+         .kind = LeafKind::OpenAPI},
 
         {.action = ACTION_POSITIONS,
          .base = 0,

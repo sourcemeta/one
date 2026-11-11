@@ -8,7 +8,7 @@ namespace sourcemeta::one {
 // What a leaf of the catalog holds, which decides which artifacts the build
 // writes for it, how to read what each one carries, and what the server serves
 // from it
-enum class LeafKind : std::uint8_t { Schema = 0 };
+enum class LeafKind : std::uint8_t { Schema = 0, OpenAPI = 1 };
 
 } // namespace sourcemeta::one
 

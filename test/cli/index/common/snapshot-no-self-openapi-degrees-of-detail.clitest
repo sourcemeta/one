@@ -1,0 +1,271 @@
+// An OpenAPI description holding every kind of connection the shell makes,
+// beside one holding nothing but an empty Paths Object, so that what the
+// catalog writes for one does not turn on how much it says.
+
+MAKE DIRECTORY api
+
+WRITE api/minimal.json UNTIL EOF
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "Minimal",
+    "version": "1.0.0"
+  },
+  "paths": {}
+}
+EOF
+
+WRITE api/petstore.json UNTIL EOF
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "Petstore in full",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.example.com"
+    }
+  ],
+  "tags": [
+    {
+      "name": "pets"
+    },
+    {
+      "name": "dogs",
+      "parent": "pets"
+    }
+  ],
+  "security": [
+    {
+      "Key": []
+    }
+  ],
+  "paths": {
+    "/pets": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Page"
+        }
+      ],
+      "get": {
+        "operationId": "listPets",
+        "tags": [
+          "pets"
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Pets"
+          }
+        },
+        "callbacks": {
+          "onData": {
+            "{$request.query.callbackUrl}": {
+              "$ref": "#/components/pathItems/Ping"
+            }
+          }
+        }
+      },
+      "post": {
+        "requestBody": {
+          "$ref": "#/components/requestBodies/NewPet"
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "headers": {
+              "Location": {
+                "$ref": "#/components/headers/Location"
+              }
+            },
+            "links": {
+              "self": {
+                "operationId": "listPets"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pets/{id}": {
+      "$ref": "#/components/pathItems/Pet"
+    }
+  },
+  "webhooks": {
+    "petAdded": {
+      "$ref": "#/components/pathItems/Ping"
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Key": {
+        "type": "apiKey",
+        "name": "X-Key",
+        "in": "header"
+      }
+    },
+    "parameters": {
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "schema": {
+          "type": "integer"
+        }
+      }
+    },
+    "headers": {
+      "Location": {
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "requestBodies": {
+      "NewPet": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Pet"
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "Pets": {
+        "description": "Every pet",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Pet"
+              }
+            }
+          }
+        }
+      }
+    },
+    "pathItems": {
+      "Ping": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "Pong"
+            }
+          }
+        }
+      },
+      "Pet": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "One pet",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Pet"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "schemas": {
+      "Pet": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "dog": "#/components/schemas/Dog"
+          }
+        },
+        "properties": {
+          "kind": {
+            "type": "string"
+          }
+        }
+      },
+      "Dog": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Pet"
+          }
+        ]
+      }
+    }
+  }
+}
+EOF
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "api": {
+      "path": "./api"
+    }
+  }
+}
+EOF
+RUN one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+DROP LINES MATCHING '^[12]> \([ 0-9]+%\) ' IN log_1.txt
+DROP LINES CONTAINING $ONE_PREFIX IN log_1.txt
+REPLACE MATCHING ' \(#[0-9]+\)' WITH '' IN log_1.txt
+REPLACE $CWD WITH '[CWD]' IN log_1.txt
+REPLACE $EDITION WITH '[EDITION]' IN log_1.txt
+REPLACE $VERSION WITH '[VERSION]' IN log_1.txt
+SORT log_1.txt
+WRITE expected_log_1.txt UNTIL EOF
+2> Detecting: [CWD]/api/minimal.json
+2> Detecting: [CWD]/api/petstore.json
+2> Sourcemeta One [EDITION] v[VERSION]
+2> Using configuration: [CWD]/one.json
+2> Writing output to: [CWD]/output
+EOF
+COMPARE log_1.txt AGAINST expected_log_1.txt
+
+TREE output INTO manifest.txt
+DROP LINES MATCHING '^\./schemas/self(/.*)?$' IN manifest.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN manifest.txt
+
+WRITE expected.txt UNTIL EOF
+./authentication.bin
+./configuration.json
+./explorer
+./explorer/public
+./explorer/public/%
+./explorer/public/%/directory.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/api
+./explorer/public/api/%
+./explorer/public/api/%/directory.metapack
+./routes.bin
+./schemas
+./schemas/api
+./schemas/api/minimal
+./schemas/api/minimal/%
+./schemas/api/minimal/%/data.metapack
+./schemas/api/petstore
+./schemas/api/petstore/%
+./schemas/api/petstore/%/data.metapack
+./state.bin
+./version.json
+EOF
+
+COMPARE manifest.txt AGAINST expected.txt

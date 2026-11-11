@@ -72,6 +72,7 @@ using BuildHandlerFunction = auto (*)(
 static constexpr std::array<BuildHandlerFunction, sourcemeta::one::ACTION_COUNT>
     HANDLERS{{
         &sourcemeta::one::GenerateMaterialisedSchema::handler,
+        &sourcemeta::one::GenerateMaterialisedOpenAPI::handler,
         &sourcemeta::one::GeneratePointerPositions::handler,
         &sourcemeta::one::GenerateFrameLocations::handler,
         &sourcemeta::one::GenerateDependencies::handler,
@@ -267,6 +268,15 @@ static auto execute_plan(sourcemeta::one::BuildState &entries,
             if (entry) {
               throw sourcemeta::core::FileError<
                   sourcemeta::core::SchemaReferenceObjectResourceError>(
+                  entry->path, error);
+            }
+
+            throw;
+          } catch (const sourcemeta::core::OpenAPIError &error) {
+            const auto *entry{
+                action.data.empty() ? nullptr : &resolver.entry(action.data)};
+            if (entry) {
+              throw sourcemeta::core::FileError<sourcemeta::core::OpenAPIError>(
                   entry->path, error);
             }
 
@@ -1060,12 +1070,56 @@ auto main(int argc, char *argv[]) noexcept -> int {
     std::print(stderr, "error: {}\n  at path {}\n", error.what(),
                error.path().string());
     return EXIT_FAILURE;
-  } catch (const sourcemeta::one::ResolverOpenAPIDescriptionError &error) {
+  } catch (
+      const sourcemeta::one::ResolverUnsupportedOpenAPIVersionError &error) {
+    std::print(stderr, "error: {}\n  at path {}\n  at revision {}\n",
+               error.what(), error.path().string(), error.version());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::one::ResolverMultiDocumentOpenAPIError &error) {
+    std::print(stderr, "error: {}\n  at path {}\n", error.what(),
+               error.path().string());
+    if (!error.reference().empty()) {
+      std::print(stderr, "  at reference {}\n  at location \"{}\"\n",
+                 error.reference(),
+                 sourcemeta::core::to_string(error.location()));
+    }
+
+    return EXIT_FAILURE;
+  } catch (
+      const sourcemeta::one::ResolverUnresolvableOpenAPIReferenceError &error) {
     std::print(stderr,
-               "error: {}\n  at path {}\n\n"
-               "OpenAPI descriptions are not supported yet, so exclude this "
-               "file using the collection's ignore option\n",
-               error.what(), error.path().string());
+               "error: {}\n  at path {}\n  at reference {}\n"
+               "  at location \"{}\"\n",
+               error.what(), error.path().string(), error.reference(),
+               sourcemeta::core::to_string(error.location()));
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::one::OpenAPISchemaObjectError &error) {
+    std::print(stderr,
+               "error: {}\n  at path {}\n  at location \"{}\"\n"
+               "  at dialect {}\n{}",
+               error.what(), error.path().string(),
+               sourcemeta::core::to_string(error.location()), error.dialect(),
+               error.stacktrace());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::core::FileError<sourcemeta::core::OpenAPIError>
+               &error) {
+    std::print(stderr,
+               "error: {}\n  at path {}\n  at location \"{}\"\n"
+               "  at base {}\n",
+               error.what(), error.path().string(),
+               sourcemeta::core::to_string(error.location()), error.base());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::core::OpenAPIError &error) {
+    std::print(stderr, "error: {}\n  at location \"{}\"\n  at base {}\n",
+               error.what(), sourcemeta::core::to_string(error.location()),
+               error.base());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::core::OpenAPIResolutionError &error) {
+    std::print(stderr,
+               "error: {}\n  at identifier {}\n  at location \"{}\"\n"
+               "  at base {}\n",
+               error.what(), error.identifier(),
+               sourcemeta::core::to_string(error.location()), error.base());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ResolverOutsideBaseError &error) {
     std::print(stderr,

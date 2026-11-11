@@ -118,6 +118,18 @@ public:
       return;
     }
 
+    // An OpenAPI description is a leaf nothing compiles, so what it is answers
+    // for the request ahead of whether a template was written for it
+    if (this->artifact_kind(schema_present.path.value()) ==
+        sourcemeta::one::LeafKind::OpenAPI) {
+      sourcemeta::one::json_error(
+          request, response, sourcemeta::core::HTTP_STATUS_NOT_IMPLEMENTED,
+          "urn:sourcemeta:one:openapi-description-unsupported",
+          "This operation is not supported on an OpenAPI description yet",
+          this->error_schema_, "*");
+      return;
+    }
+
     if (!evaluation_enabled.path.has_value()) {
       // RFC 9110 §15.5.6: Allow lists the methods this specific target
       // resource currently supports. POST hits this very branch (returns
@@ -350,6 +362,15 @@ public:
     if (!schema_present.path.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(version, request_id,
                                                    "Schema not found");
+    }
+
+    // An OpenAPI description is a leaf nothing compiles, so what it is answers
+    // for the request ahead of whether a template was written for it
+    if (this->artifact_kind(schema_present.path.value()) ==
+        sourcemeta::one::LeafKind::OpenAPI) {
+      return sourcemeta::core::mcp_make_tool_error(
+          version, request_id,
+          "This operation is not supported on an OpenAPI description yet");
     }
 
     if (!evaluation_enabled.path.has_value()) {

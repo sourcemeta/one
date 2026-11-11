@@ -1,0 +1,47 @@
+WRITE one.json UNTIL EOF
+{
+  "url": "https://sourcemeta.com",
+  "contents": {
+    "example": {
+      "contents": {
+        "schemas": {
+          "baseUri": "https://example.com/",
+          "path": "./schemas",
+          "defaultDialect": "https://json-schema.org/draft/2020-12/schema"
+        }
+      }
+    }
+  }
+}
+EOF
+
+MAKE DIRECTORY schemas
+
+WRITE schemas/petstore.json UNTIL EOF
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "Petstore",
+    "version": "1.0.0"
+  },
+  "security": [
+    {
+      "https://other.com/auth#/components/securitySchemes/Key": []
+    }
+  ],
+  "paths": {}
+}
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
+
+WRITE expected.txt UNTIL EOF
+2> error: Could not resolve a reference in the OpenAPI description
+2>   at path [CWD]/schemas/petstore.json
+2>   at reference https://other.com/auth#/components/securitySchemes/Key
+2>   at location "/security/0/https:~1~1other.com~1auth#~1components~1securitySchemes~1Key"
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected.txt

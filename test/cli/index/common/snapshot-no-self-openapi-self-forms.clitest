@@ -1,0 +1,110 @@
+// What an OpenAPI description calls itself decides where the catalog holds
+// it, whether it writes that absolute or relative to where it was read from.
+// One that leaves the field empty names nothing, so the file it came from
+// decides instead.
+
+MAKE DIRECTORY api
+
+WRITE api/absolute.json UNTIL EOF
+{
+  "openapi": "3.2.0",
+  "$self": "http://localhost:8000/api/absolute",
+  "info": {
+    "title": "Absolute",
+    "version": "1.0.0"
+  },
+  "paths": {}
+}
+EOF
+
+WRITE api/relative.json UNTIL EOF
+{
+  "openapi": "3.2.0",
+  "$self": "./elsewhere",
+  "info": {
+    "title": "Relative",
+    "version": "1.0.0"
+  },
+  "paths": {}
+}
+EOF
+
+WRITE api/fragment.json UNTIL EOF
+{
+  "openapi": "3.2.0",
+  "$self": "",
+  "info": {
+    "title": "Empty",
+    "version": "1.0.0"
+  },
+  "paths": {}
+}
+EOF
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "api": {
+      "path": "./api"
+    }
+  }
+}
+EOF
+RUN one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+DROP LINES MATCHING '^[12]> \([ 0-9]+%\) ' IN log_1.txt
+DROP LINES CONTAINING $ONE_PREFIX IN log_1.txt
+REPLACE MATCHING ' \(#[0-9]+\)' WITH '' IN log_1.txt
+REPLACE $CWD WITH '[CWD]' IN log_1.txt
+REPLACE $EDITION WITH '[EDITION]' IN log_1.txt
+REPLACE $VERSION WITH '[VERSION]' IN log_1.txt
+SORT log_1.txt
+WRITE expected_log_1.txt UNTIL EOF
+2> Detecting: [CWD]/api/absolute.json
+2> Detecting: [CWD]/api/fragment.json
+2> Detecting: [CWD]/api/relative.json
+2> Sourcemeta One [EDITION] v[VERSION]
+2> Using configuration: [CWD]/one.json
+2> Writing output to: [CWD]/output
+EOF
+COMPARE log_1.txt AGAINST expected_log_1.txt
+
+TREE output INTO manifest.txt
+DROP LINES MATCHING '^\./schemas/self(/.*)?$' IN manifest.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN manifest.txt
+
+WRITE expected.txt UNTIL EOF
+./authentication.bin
+./configuration.json
+./explorer
+./explorer/public
+./explorer/public/%
+./explorer/public/%/directory.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/api
+./explorer/public/api/%
+./explorer/public/api/%/directory.metapack
+./explorer/public/api/api
+./explorer/public/api/api/%
+./explorer/public/api/api/%/directory.metapack
+./routes.bin
+./schemas
+./schemas/api
+./schemas/api/api
+./schemas/api/api/absolute
+./schemas/api/api/absolute/%
+./schemas/api/api/absolute/%/data.metapack
+./schemas/api/elsewhere
+./schemas/api/elsewhere/%
+./schemas/api/elsewhere/%/data.metapack
+./schemas/api/fragment
+./schemas/api/fragment/%
+./schemas/api/fragment/%/data.metapack
+./state.bin
+./version.json
+EOF
+
+COMPARE manifest.txt AGAINST expected.txt

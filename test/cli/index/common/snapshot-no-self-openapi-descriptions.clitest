@@ -1,0 +1,142 @@
+MAKE DIRECTORY api
+
+WRITE api/petstore-3-0.json UNTIL EOF
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "Petstore",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "Pet": {
+        "type": "object"
+      }
+    }
+  }
+}
+EOF
+
+WRITE api/petstore-3-1.json UNTIL EOF
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Petstore",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "Pet": {
+        "$ref": "#/components/schemas/Tag"
+      },
+      "Tag": {
+        "type": "string"
+      }
+    }
+  }
+}
+EOF
+
+WRITE api/petstore-3-2.json UNTIL EOF
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "Petstore",
+    "version": "1.0.0"
+  },
+  "paths": {}
+}
+EOF
+
+WRITE api/meta.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$vocabulary": {
+    "https://json-schema.org/draft/2020-12/vocab/core": true
+  },
+  "$dynamicAnchor": "meta"
+}
+EOF
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "api": {
+      "path": "./api"
+    }
+  }
+}
+EOF
+RUN one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+DROP LINES MATCHING '^[12]> \([ 0-9]+%\) ' IN log_1.txt
+DROP LINES CONTAINING $ONE_PREFIX IN log_1.txt
+REPLACE MATCHING ' \(#[0-9]+\)' WITH '' IN log_1.txt
+REPLACE $CWD WITH '[CWD]' IN log_1.txt
+REPLACE $EDITION WITH '[EDITION]' IN log_1.txt
+REPLACE $VERSION WITH '[VERSION]' IN log_1.txt
+SORT log_1.txt
+WRITE expected_log_1.txt UNTIL EOF
+2> Detecting: [CWD]/api/meta.json
+2> Detecting: [CWD]/api/petstore-3-0.json
+2> Detecting: [CWD]/api/petstore-3-1.json
+2> Detecting: [CWD]/api/petstore-3-2.json
+2> Sourcemeta One [EDITION] v[VERSION]
+2> Using configuration: [CWD]/one.json
+2> Writing output to: [CWD]/output
+EOF
+COMPARE log_1.txt AGAINST expected_log_1.txt
+
+TREE output INTO manifest.txt
+DROP LINES MATCHING '^\./schemas/self(/.*)?$' IN manifest.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN manifest.txt
+
+WRITE expected.txt UNTIL EOF
+./authentication.bin
+./configuration.json
+./explorer
+./explorer/public
+./explorer/public/%
+./explorer/public/%/directory.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/api
+./explorer/public/api/%
+./explorer/public/api/%/directory.metapack
+./explorer/public/api/meta
+./explorer/public/api/meta/%
+./explorer/public/api/meta/%/dependents.metapack
+./explorer/public/api/meta/%/metadata.metapack
+./routes.bin
+./schemas
+./schemas/api
+./schemas/api/meta
+./schemas/api/meta/%
+./schemas/api/meta/%/blaze-exhaustive.metapack
+./schemas/api/meta/%/blaze-fast.metapack
+./schemas/api/meta/%/bundle.metapack
+./schemas/api/meta/%/data.metapack
+./schemas/api/meta/%/dependencies.metapack
+./schemas/api/meta/%/editor.metapack
+./schemas/api/meta/%/health.metapack
+./schemas/api/meta/%/locations.metapack
+./schemas/api/meta/%/positions.metapack
+./schemas/api/meta/%/stats.metapack
+./schemas/api/petstore-3-0
+./schemas/api/petstore-3-0/%
+./schemas/api/petstore-3-0/%/data.metapack
+./schemas/api/petstore-3-1
+./schemas/api/petstore-3-1/%
+./schemas/api/petstore-3-1/%/data.metapack
+./schemas/api/petstore-3-2
+./schemas/api/petstore-3-2/%
+./schemas/api/petstore-3-2/%/data.metapack
+./state.bin
+./version.json
+EOF
+
+COMPARE manifest.txt AGAINST expected.txt

@@ -1,0 +1,54 @@
+WRITE one.json UNTIL EOF
+{
+  "url": "https://sourcemeta.com",
+  "contents": {
+    "example": {
+      "contents": {
+        "schemas": {
+          "baseUri": "https://example.com/",
+          "path": "./schemas",
+          "defaultDialect": "https://json-schema.org/draft/2020-12/schema"
+        }
+      }
+    }
+  }
+}
+EOF
+
+MAKE DIRECTORY schemas
+
+WRITE schemas/petstore.json UNTIL EOF
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Petstore",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "Pet": {
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "dog": "https://other.com/dog"
+          }
+        }
+      }
+    }
+  }
+}
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
+
+WRITE expected.txt UNTIL EOF
+2> error: Could not resolve a reference in the OpenAPI description
+2>   at path [CWD]/schemas/petstore.json
+2>   at reference https://other.com/dog
+2>   at location "/components/schemas/Pet/discriminator/mapping/dog"
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected.txt

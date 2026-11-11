@@ -177,16 +177,20 @@ static auto normalise_identifier(const std::string_view identifier)
   return lowercase;
 }
 
+// What a reference becomes once it names what this instance serves, or nothing
+// at all for one to leave exactly as it was written. Both kinds of leaf rebase
+// a reference through here, as what a reference means does not depend on the
+// kind of document that spells it
 static auto
-normalise_ref(const sourcemeta::one::Configuration::Collection &collection,
-              const sourcemeta::core::URI &base, sourcemeta::core::JSON &schema,
-              const sourcemeta::core::JSON::String &keyword,
-              const sourcemeta::core::JSON::String &reference,
-              const sourcemeta::core::URI &server) -> void {
+rebase_reference(const sourcemeta::one::Configuration::Collection &collection,
+                 const sourcemeta::core::URI &base,
+                 const sourcemeta::core::JSON::String &reference,
+                 const sourcemeta::core::URI &server)
+    -> std::optional<sourcemeta::core::JSON::String> {
   // We never want to mess with internal references.
   // We assume those are always well formed
   if (reference.starts_with('#')) {
-    return;
+    return std::nullopt;
   }
 
   // If we have a match in the configuration resolver, then trust that.
@@ -207,12 +211,10 @@ normalise_ref(const sourcemeta::one::Configuration::Collection &collection,
     // deployments. For foreign authorities, keep the full URI so reference
     // resolution sees it as-is (and fails honestly if unregistered).
     if (target.has_same_authority(server)) {
-      schema.assign(keyword,
-                    sourcemeta::core::JSON{target.recompose_relative()});
-    } else {
-      schema.assign(keyword, sourcemeta::core::JSON{target.recompose()});
+      return target.recompose_relative();
     }
-    return;
+
+    return target.recompose();
   }
 
   sourcemeta::core::URI value{reference};
@@ -230,7 +232,52 @@ normalise_ref(const sourcemeta::one::Configuration::Collection &collection,
     value.relative_to(base);
   }
 
-  schema.assign(keyword, sourcemeta::core::JSON{value.recompose()});
+  return value.recompose();
+}
+
+// What this instance serves a declared dialect as, which is what a document is
+// analysed against rather than whatever it happened to name. Both kinds of leaf
+// settle it this way, as a document that names a dialect this catalog holds
+// names it the way the collection writes it either way
+static auto
+served_dialect(const sourcemeta::one::Configuration::Collection &collection,
+               const std::filesystem::path &location,
+               const std::string_view declared,
+               const sourcemeta::core::URI &server) -> std::string {
+  std::string raw{declared};
+  auto rewritten{pre_resolve(collection, raw, server)};
+  bool resolved_to_instance{false};
+  if (rewritten.has_value()) {
+    raw = std::move(*rewritten);
+    // If pre_resolve yielded a URI already in the instance URL's authority,
+    // it is already in the canonical registry form. The rebase machinery
+    // exists to translate baseUri-canonical identifiers into server-URL
+    // form, and would only mangle a URI that is already there.
+    resolved_to_instance =
+        sourcemeta::core::URI{raw}.has_same_authority(server);
+  }
+
+  if (resolved_to_instance) {
+    return normalise_identifier(raw);
+  }
+
+  if (sourcemeta::core::schema_is_known(raw)) {
+    return raw;
+  }
+
+  return rebase(collection, normalise_identifier(raw), server, location);
+}
+
+static auto
+normalise_ref(const sourcemeta::one::Configuration::Collection &collection,
+              const sourcemeta::core::URI &base, sourcemeta::core::JSON &schema,
+              const sourcemeta::core::JSON::String &keyword,
+              const sourcemeta::core::JSON::String &reference,
+              const sourcemeta::core::URI &server) -> void {
+  const auto rewritten{rebase_reference(collection, base, reference, server)};
+  if (rewritten.has_value()) {
+    schema.assign(keyword, sourcemeta::core::JSON{rewritten.value()});
+  }
 }
 
 // What a schema calls itself, and what this instance serves it as. Both are
@@ -240,23 +287,30 @@ struct SchemaIdentity {
   sourcemeta::core::JSON::String served;
 };
 
+// The identifier a file takes from where it sits, which is what it is served
+// as wherever it names nothing of its own
+static auto default_identifier_of(
+    const sourcemeta::one::Configuration::Collection &collection,
+    const std::filesystem::path &path) -> sourcemeta::core::JSON::String {
+  return sourcemeta::core::URI{collection.base_uri}
+      .append_path(normalise_identifier(
+          std::filesystem::relative(path, collection.absolute_path).string()))
+      .canonicalize()
+      .recompose();
+}
+
+// What this instance serves a file as, given what the file calls itself. Every
+// step from here down is the same whatever the file holds, so both kinds of
+// leaf settle their identity through this rather than each spelling the steps
+// out for itself
 static auto
-schema_identity(const sourcemeta::one::Configuration::Collection &collection,
+settle_identity(const sourcemeta::one::Configuration::Collection &collection,
                 const std::filesystem::path &location,
                 const std::filesystem::path &path,
-                const sourcemeta::core::JSON &schema,
-                const sourcemeta::core::SchemaResolver &resolver,
+                const sourcemeta::core::JSON::String &declared,
+                const sourcemeta::core::JSON::String &default_identifier,
                 const sourcemeta::core::URI &server) -> SchemaIdentity {
-  const auto default_identifier{
-      sourcemeta::core::URI{collection.base_uri}
-          .append_path(normalise_identifier(
-              std::filesystem::relative(path, collection.absolute_path)
-                  .string()))
-          .canonicalize()
-          .recompose()};
-  sourcemeta::core::URI identifier_uri{normalise_identifier(declared_identifier(
-      schema, resolver, collection.default_dialect.value_or(""),
-      default_identifier))};
+  sourcemeta::core::URI identifier_uri{normalise_identifier(declared)};
   identifier_uri.canonicalize();
   auto identifier{identifier_uri.is_relative()
                       ? sourcemeta::core::URI{collection.base_uri}
@@ -283,6 +337,39 @@ schema_identity(const sourcemeta::one::Configuration::Collection &collection,
   // Otherwise we have things like "../" that should not be there
   assert(served.find("..") == std::string::npos);
   return {.current = std::move(identifier), .served = std::move(served)};
+}
+
+static auto
+schema_identity(const sourcemeta::one::Configuration::Collection &collection,
+                const std::filesystem::path &location,
+                const std::filesystem::path &path,
+                const sourcemeta::core::JSON &schema,
+                const sourcemeta::core::SchemaResolver &resolver,
+                const sourcemeta::core::URI &server) -> SchemaIdentity {
+  const auto default_identifier{default_identifier_of(collection, path)};
+  return settle_identity(
+      collection, location, path,
+      declared_identifier(schema, resolver,
+                          collection.default_dialect.value_or(""),
+                          default_identifier),
+      default_identifier, server);
+}
+
+// The same, for an OpenAPI description. The identity keyword a revision
+// reserves is what differs, and the collection's default dialect plays no part,
+// as the dialect of a Schema Object is fixed by the revision with
+// `jsonSchemaDialect` as the only override
+static auto
+openapi_identity(const sourcemeta::one::Configuration::Collection &collection,
+                 const std::filesystem::path &location,
+                 const std::filesystem::path &path,
+                 const sourcemeta::core::JSON &document,
+                 const sourcemeta::core::URI &server) -> SchemaIdentity {
+  const auto default_identifier{default_identifier_of(collection, path)};
+  return settle_identity(
+      collection, location, path,
+      sourcemeta::core::openapi_base(document, default_identifier),
+      default_identifier, server);
 }
 
 // Whether a collection would take this file in when it walks its directory,
@@ -377,10 +464,15 @@ auto rebase_resolve_targets(Configuration &configuration) -> void {
         throw ResolverTargetNotASchemaError(declared_path, pair.first, target);
       }
 
-      result.emplace(pair.first,
-                     schema_identity(*owner, *owner_location, target, contents,
-                                     sourcemeta::core::schema_resolver, server)
-                         .served);
+      result.emplace(
+          pair.first,
+          sourcemeta::core::openapi_is_document(contents)
+              ? openapi_identity(*owner, *owner_location, target, contents,
+                                 server)
+                    .served
+              : schema_identity(*owner, *owner_location, target, contents,
+                                sourcemeta::core::schema_resolver, server)
+                    .served);
     }
 
     collection->resolve = std::move(result);
@@ -450,6 +542,13 @@ auto Resolver::operator()(
       new_identifier = &result->first;
       cached_path = result->second.cache_path;
     }
+  }
+
+  // This is the schema half of the resolver, so an OpenAPI description is
+  // nothing it answers for. A catalog schema referencing into one therefore
+  // fails the way a reference to nothing fails, naming the file that spelled it
+  if (view != nullptr && view->kind != LeafKind::Schema) {
+    return std::nullopt;
   }
 
   // If we don't recognise the schema, try a fallback as a last resort
@@ -593,8 +692,289 @@ auto Resolver::operator()(
   return schema;
 }
 
+// What an OpenAPI description reaches for and does not hold, as the document
+// spells it and where it spells it, with nothing named at all where the frame
+// measures it incomplete without saying which one place makes it so. The
+// document is whatever the reference resolves to ahead of its fragment, which
+// is the document's own identity for one that names a position of itself,
+// and nothing at all where the frame reports no document side
+struct OpenAPIDanglingConnection {
+  sourcemeta::core::JSON::String reference;
+  sourcemeta::core::JSON::String document;
+  sourcemeta::core::Pointer location;
+};
+
+// What a destination names ahead of its fragment, which a frame reports as the
+// two sides of one string
+static auto
+destination_document(const sourcemeta::core::JSON::StringView destination)
+    -> sourcemeta::core::JSON::String {
+  const auto fragment{destination.find('#')};
+  return sourcemeta::core::JSON::String{
+      fragment == sourcemeta::core::JSON::StringView::npos
+          ? destination
+          : destination.substr(0, fragment)};
+}
+
+// The first connection an OpenAPI description makes that leads nowhere it
+// holds, which is what a frame measuring it incomplete comes down to. A frame
+// settles every connection of its own ahead of what the Schema Objects make,
+// and reports each one as landing or not, so this reads them in that same order
+static auto
+first_dangling_connection(const sourcemeta::core::OpenAPIFrame &frame,
+                          const sourcemeta::core::JSON &document)
+    -> OpenAPIDanglingConnection {
+  for (const auto &entry : frame.references()) {
+    if (entry.second.dangling) {
+      return {.reference = entry.second.original,
+              .document = destination_document(entry.second.destination),
+              .location = entry.second.origin};
+    }
+  }
+
+  for (const auto &entry : frame.security_references()) {
+    if (entry.second.dangling) {
+      return {.reference = entry.second.original,
+              .document = destination_document(entry.second.destination),
+              .location = entry.second.origin};
+    }
+  }
+
+  // A Discriminator Object names a schema by the value of a member rather than
+  // by a field of its own, so what the author wrote is read off the document
+  for (const auto &discriminator : frame.discriminators()) {
+    if (!discriminator.dangling) {
+      continue;
+    }
+
+    const auto &mapping{sourcemeta::core::get(document, discriminator.origin)};
+    return {.reference = mapping.is_string() ? mapping.to_string()
+                                             : discriminator.destination,
+            .document = destination_document(discriminator.destination),
+            .location = discriminator.origin};
+  }
+
+  OpenAPIDanglingConnection result;
+  frame.schemas().for_each_unresolved_reference(
+      [&result](const auto &pointer, const auto &reference) -> void {
+        // Naming a dialect this build already comes with asks nothing of
+        // whoever reads the OpenAPI description, so it is the one reference
+        // out of a Schema Object that leaves one whole
+        if (!result.reference.empty() ||
+            (pointer.back().is_property() &&
+             pointer.back().to_property() == "$schema" &&
+             sourcemeta::core::schema_is_known(reference.destination))) {
+          return;
+        }
+
+        result.reference = sourcemeta::core::JSON::String{reference.original};
+        result.document = sourcemeta::core::JSON::String{reference.base};
+        result.location = sourcemeta::core::to_pointer(pointer);
+      });
+
+  return result;
+}
+
+auto Resolver::openapi(const std::string_view raw_identifier,
+                       const Callback &callback) const
+    -> std::optional<sourcemeta::core::JSON> {
+  const auto identifier{normalise_identifier(raw_identifier)};
+
+  const Entry *view{nullptr};
+  const sourcemeta::core::JSON::String *new_identifier{nullptr};
+  std::optional<std::filesystem::path> cached_path;
+  {
+    std::shared_lock lock{this->mutex_};
+    const auto result{this->views_.find(identifier)};
+    if (result == this->views_.cend()) {
+      return std::nullopt;
+    }
+
+    view = &result->second;
+    new_identifier = &result->first;
+    cached_path = result->second.cache_path;
+  }
+
+  if (view->kind != LeafKind::OpenAPI) {
+    return std::nullopt;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // (1) Avoid rebasing on the fly if possible
+  /////////////////////////////////////////////////////////////////////////////
+
+  if (cached_path.has_value()) {
+    auto document_option{
+        sourcemeta::core::metapack_read_json(cached_path.value())};
+    assert(document_option.has_value());
+    if (callback) {
+      callback(cached_path.value());
+    }
+
+    return document_option;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // (2) Read the original description file
+  /////////////////////////////////////////////////////////////////////////////
+
+  auto document{sourcemeta::core::read_yaml_or_json(view->path)};
+  assert(document.is_object());
+  if (callback) {
+    callback(view->path);
+  }
+
+  const sourcemeta::core::SchemaResolver subresolver{
+      [this, &callback](
+          const auto subidentifier) -> std::optional<sourcemeta::core::JSON> {
+        return this->operator()(subidentifier, callback);
+      }};
+
+  /////////////////////////////////////////////////////////////////////////////
+  // (3) Declare what the OpenAPI description calls itself, where the revision
+  // reserves a field for it, so that the base every reference below is measured
+  // against is the one the document came with and so that the formatter ranks
+  // the field where the specification puts it. What this instance serves the
+  // OpenAPI description as is written into the same field once the frame has
+  // been read
+  /////////////////////////////////////////////////////////////////////////////
+
+  const auto declares_identity{
+      sourcemeta::core::openapi_version(document).value() >=
+      sourcemeta::core::OpenAPIVersion::OPENAPI_3_2};
+  if (declares_identity) {
+    document.assign("$self", sourcemeta::core::JSON{view->original_identifier});
+  }
+
+  const sourcemeta::core::OpenAPIFrame frame{
+      document, sourcemeta::core::schema_walker, subresolver,
+      view->original_identifier};
+
+  // Reaching a document this catalog holds is an OpenAPI description built out
+  // of several, which this version refuses whole rather than serving in part,
+  // since without bundling there is nothing to make one whole. Reaching
+  // anywhere else is a reference that resolves nowhere, which is an error
+  // whatever this version goes on to support
+  if (!frame.standalone()) {
+    auto dangling{first_dangling_connection(frame, document)};
+    // A reference naming a position of the OpenAPI description itself reaches
+    // no other document at all, however the frame spells out where it resolved
+    // to
+    const auto destination{normalise_identifier(dangling.document)};
+    const auto elsewhere{!dangling.document.empty() &&
+                         destination != normalise_identifier(frame.base())};
+    if (dangling.reference.empty() ||
+        (elsewhere && this->holds_identity(destination))) {
+      throw ResolverMultiDocumentOpenAPIError(view->path,
+                                              std::move(dangling.reference),
+                                              std::move(dangling.location));
+    }
+
+    throw ResolverUnresolvableOpenAPIReferenceError(
+        view->path, std::move(dangling.reference),
+        std::move(dangling.location));
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // (4) Normalise every reference to match the new identifier
+  /////////////////////////////////////////////////////////////////////////////
+
+  const sourcemeta::core::URI base{view->original_identifier};
+  const auto &collection{*view->collection};
+
+  // A Security Requirement Object names a scheme by the key of a member rather
+  // than by its value, so this is the one rewrite that moves a member
+  frame.for_each_security_reference([this, &collection, &base,
+                                     &document](const auto &,
+                                                const auto &reference) -> void {
+    const auto rewritten{rebase_reference(collection, base, reference.original,
+                                          this->server_uri_)};
+    if (!rewritten.has_value() || rewritten.value() == reference.original) {
+      return;
+    }
+
+    auto &holder{sourcemeta::core::get(document, reference.origin.initial())};
+    auto scopes{holder.at(reference.original)};
+    holder.erase(reference.original);
+    holder.assign(rewritten.value(), std::move(scopes));
+  });
+
+  frame.for_each_reference([this, &collection, &base, &document](
+                               const auto &, const auto &reference) -> void {
+    const auto rewritten{rebase_reference(collection, base, reference.original,
+                                          this->server_uri_)};
+    if (rewritten.has_value()) {
+      sourcemeta::core::get(document, reference.origin) =
+          sourcemeta::core::JSON{rewritten.value()};
+    }
+  });
+
+  const auto ref_hash{document.as_object().hash("$ref")};
+  const auto dynamic_ref_hash{document.as_object().hash("$dynamicRef")};
+  frame.schemas().for_each_subschema(
+      [this, &collection, &document, ref_hash,
+       dynamic_ref_hash](const auto &location) -> void {
+        auto &subschema{sourcemeta::core::get(document, location.pointer)};
+        if (!subschema.is_object()) {
+          return;
+        }
+
+        const auto maybe_ref{subschema.try_at("$ref", ref_hash)};
+        const auto maybe_dynamic_ref{
+            location.base_dialect ==
+                    sourcemeta::core::SchemaBaseDialect::JSON_SCHEMA_2020_12
+                ? subschema.try_at("$dynamicRef", dynamic_ref_hash)
+                : nullptr};
+        const auto has_ref{maybe_ref && maybe_ref->is_string()};
+        const auto has_dynamic_ref{maybe_dynamic_ref &&
+                                   maybe_dynamic_ref->is_string()};
+        if (!has_ref && !has_dynamic_ref) {
+          return;
+        }
+
+        const sourcemeta::core::URI subschema_base{std::string{location.base}};
+        if (has_ref) {
+          normalise_ref(collection, subschema_base, subschema, "$ref",
+                        maybe_ref->to_string(), this->server_uri_);
+        }
+        if (has_dynamic_ref) {
+          normalise_ref(collection, subschema_base, subschema, "$dynamicRef",
+                        maybe_dynamic_ref->to_string(), this->server_uri_);
+        }
+      });
+
+  /////////////////////////////////////////////////////////////////////////////
+  // (5) Declare the dialect the Schema Objects are held to, as far as the
+  // revision reserves the field to do so
+  /////////////////////////////////////////////////////////////////////////////
+
+  if (!view->dialect.empty()) {
+    document.assign("jsonSchemaDialect", sourcemeta::core::JSON{view->dialect});
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // (6) Settle the order of the document, and only then the identity, as
+  // formatting reads the frame and the frame points into the document
+  /////////////////////////////////////////////////////////////////////////////
+
+  sourcemeta::core::openapi_format(document, frame);
+
+  if (declares_identity) {
+    document.assign("$self", sourcemeta::core::JSON{*new_identifier});
+  }
+
+  return document;
+}
+
 auto Resolver::track_dialect(const sourcemeta::core::JSON::String &dialect)
     -> void {
+  // A leaf whose dialect is fixed by something other than a field of its own
+  // declares none here, and nothing is tracked for a document that names
+  // nothing
+  if (dialect.empty()) {
+    return;
+  }
+
   // Official dialects are resolved through the static fallback resolver
   // rather than through this resolver, so we never get the chance to cache
   // them anyway
@@ -677,7 +1057,8 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
     }
 
     if (sourcemeta::core::openapi_is_document(schema)) {
-      throw ResolverOpenAPIDescriptionError(path);
+      return this->add_openapi(collection_relative_path, collection, path,
+                               mtime, schema);
     }
 
     const std::string default_dialect_str{
@@ -710,26 +1091,8 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
     if (raw_dialect.empty()) {
       throw sourcemeta::core::SchemaUnknownDialectError();
     }
-    auto rewritten{pre_resolve(collection, raw_dialect, this->server_uri_)};
-    bool resolved_to_instance{false};
-    if (rewritten.has_value()) {
-      raw_dialect = std::move(*rewritten);
-      // If pre_resolve yielded a URI already in the instance URL's authority,
-      // it is already in the canonical registry form. The rebase machinery
-      // exists to translate baseUri-canonical identifiers into server-URL
-      // form, and would only mangle a URI that is already there.
-      resolved_to_instance =
-          sourcemeta::core::URI{raw_dialect}.has_same_authority(
-              this->server_uri_);
-    }
-    const auto is_known_dialect{!resolved_to_instance &&
-                                sourcemeta::core::schema_is_known(raw_dialect)};
-    auto current_dialect{
-        resolved_to_instance ? normalise_identifier(raw_dialect)
-        : is_known_dialect
-            ? raw_dialect
-            : rebase(collection, normalise_identifier(raw_dialect),
-                     this->server_uri_, collection_relative_path)};
+    auto current_dialect{served_dialect(collection, collection_relative_path,
+                                        raw_dialect, this->server_uri_)};
     // Otherwise we messed things up
     assert(!current_dialect.ends_with("#.json"));
 
@@ -791,6 +1154,61 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
   }
 }
 
+auto Resolver::add_openapi(
+    const std::filesystem::path &collection_relative_path,
+    const Configuration::Collection &collection,
+    const std::filesystem::path &path,
+    const std::filesystem::file_time_type mtime,
+    const sourcemeta::core::JSON &document) -> Result {
+  // A revision this build cannot read is still an OpenAPI description, so
+  // quoting back what the file named is the only thing to do with it
+  if (!sourcemeta::core::openapi_version(document).has_value()) {
+    throw ResolverUnsupportedOpenAPIVersionError(
+        path, sourcemeta::core::JSON::String{
+                  sourcemeta::core::openapi_version_string(document).value()});
+  }
+
+  const auto identity{openapi_identity(collection, collection_relative_path,
+                                       path, document, this->server_uri_)};
+
+  // The collection's default dialect plays no part here, as the dialect of a
+  // Schema Object is fixed by the revision with this field as the only
+  // override. A revision that reserves no such field declares nothing
+  const auto *declared_dialect{document.try_at("jsonSchemaDialect")};
+  auto dialect{declared_dialect != nullptr && declared_dialect->is_string()
+                   ? served_dialect(collection, collection_relative_path,
+                                    declared_dialect->to_string(),
+                                    this->server_uri_)
+                   : std::string{}};
+
+  std::unique_lock lock{this->mutex_};
+  auto result{this->views_.emplace(
+      identity.served,
+      Entry{.path = path,
+            .relative_path = sourcemeta::core::URI{identity.served}
+                                 .relative_to(this->server_uri_)
+                                 .recompose(),
+            .mtime = mtime,
+            .evaluate = Configuration::should_evaluate(collection),
+            .cache_path = std::nullopt,
+            .dialect = std::move(dialect),
+            .vocabularies = false,
+            .original_identifier = identity.current,
+            .collection = &collection,
+            .kind = LeafKind::OpenAPI})};
+  lock.unlock();
+  if (!result.second && result.first->second.path != path) {
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaFrameError>(
+        path,
+        sourcemeta::core::StaticString{
+            "Cannot register the same identifier twice"},
+        result.first->first);
+  }
+
+  this->track_dialect(result.first->second.dialect);
+  return {result.first->first, result.first->second};
+}
+
 auto Resolver::emplace(std::string new_identifier, Entry entry) -> void {
   assert(std::filesystem::exists(entry.path));
   assert(entry.cache_path.has_value());
@@ -819,10 +1237,22 @@ auto Resolver::emplace(std::string new_identifier, Entry entry) -> void {
 auto Resolver::entry(const std::string_view identifier) const -> const Entry & {
   const auto result{this->views_.find(std::string{identifier})};
   assert(result != this->views_.cend());
-  assert(!result->second.dialect.empty());
+  // An OpenAPI description whose revision reserves no field to declare a
+  // dialect, or that declares none, carries one nowhere
+  assert(result->second.kind == LeafKind::OpenAPI ||
+         !result->second.dialect.empty());
   assert(!result->second.original_identifier.empty());
   assert(result->second.collection != nullptr);
   return result->second;
+}
+
+auto Resolver::holds_identity(
+    const sourcemeta::core::JSON::String &identifier) const -> bool {
+  std::shared_lock lock{this->mutex_};
+  return std::ranges::any_of(this->views_, [&identifier](const auto &entry) {
+    return entry.first == identifier ||
+           entry.second.original_identifier == identifier;
+  });
 }
 
 auto Resolver::dialect_of(const std::string_view identifier) const

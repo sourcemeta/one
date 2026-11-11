@@ -9,6 +9,7 @@
 #include <cstdint>     // std::uint8_t, std::uint16_t
 #include <cstring>     // std::memcpy
 #include <limits>      // std::numeric_limits
+#include <optional>    // std::optional, std::nullopt
 #include <span>        // std::span
 #include <string_view> // std::string_view
 #include <vector>      // std::vector
@@ -36,6 +37,22 @@ static_assert(sizeof(MetapackLeafExtension) == 1,
 static_assert(sizeof(MetapackSchemaExtension) == 3,
               "The layout is part of the format, so moving, resizing or "
               "adding a field means every artifact has to be written again");
+
+// What a leaf-scoped artifact holds, or nothing at all for an extension area
+// too small to say. This is the one read that asks rather than asserts, for a
+// caller whose next step is what the answer decides
+[[nodiscard]] inline auto
+metapack_leaf_kind(const std::span<const std::uint8_t> extension)
+    -> std::optional<LeafKind> {
+  const auto *leaf{
+      sourcemeta::core::metapack_extension_as<MetapackLeafExtension>(
+          extension)};
+  if (leaf == nullptr) {
+    return std::nullopt;
+  }
+
+  return leaf->kind;
+}
 
 // The extension area as the layout that the given kind lays out, or nothing
 // when it holds another kind or is too small to hold that layout at all. Every
@@ -67,6 +84,18 @@ make_metapack_schema_extension(const std::string_view dialect)
   layout.dialect_length = static_cast<std::uint16_t>(dialect.size());
   std::memcpy(result.data(), &layout, sizeof(layout));
   std::memcpy(result.data() + sizeof(layout), dialect.data(), dialect.size());
+  return result;
+}
+
+// The extension area of an artifact holding an OpenAPI description, which is
+// the tag and nothing more, as everything it records about itself is in the
+// document
+[[nodiscard]] inline auto make_metapack_openapi_extension()
+    -> std::vector<std::uint8_t> {
+  std::vector<std::uint8_t> result;
+  result.resize(sizeof(MetapackLeafExtension));
+  const MetapackLeafExtension layout{.kind = LeafKind::OpenAPI};
+  std::memcpy(result.data(), &layout, sizeof(layout));
   return result;
 }
 

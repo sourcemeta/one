@@ -99,6 +99,14 @@
     },
     {
       "const": {
+        "type": "urn:sourcemeta:one:openapi-description-conversion",
+        "title": "Bad Request",
+        "status": 400,
+        "detail": "An OpenAPI description cannot be converted into a JSON Schema dialect"
+      }
+    },
+    {
+      "const": {
         "type": "urn:sourcemeta:one:missing-search-query",
         "title": "Bad Request",
         "status": 400,
@@ -248,6 +256,14 @@
         "title": "Not Implemented",
         "status": 501,
         "detail": "This version does not implement such action handler for this URL"
+      }
+    },
+    {
+      "const": {
+        "type": "urn:sourcemeta:one:openapi-description-unsupported",
+        "title": "Not Implemented",
+        "status": 501,
+        "detail": "This operation is not supported on an OpenAPI description yet"
       }
     },
     {

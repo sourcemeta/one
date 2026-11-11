@@ -3,6 +3,7 @@
 
 #include <sourcemeta/core/error.h>
 #include <sourcemeta/core/json.h>
+#include <sourcemeta/core/jsonpointer.h>
 
 #include <filesystem> // std::filesystem::path
 #include <utility>    // std::move
@@ -40,21 +41,105 @@ private:
   std::filesystem::path path_;
 };
 
-// A description declares itself with an `openapi` member, which no JSON Schema
-// dialect gives a meaning to
-class ResolverOpenAPIDescriptionError : public sourcemeta::core::Error {
+// A file declaring an `openapi` member is an OpenAPI description by the only
+// test the specification gives, whichever revision it names, so one naming a
+// revision this build cannot read is one it cannot serve rather than a schema
+class ResolverUnsupportedOpenAPIVersionError : public sourcemeta::core::Error {
 public:
-  ResolverOpenAPIDescriptionError(std::filesystem::path path)
-      : sourcemeta::core::Error{"The file contains an OpenAPI description "
-                                "rather than a JSON Schema"},
-        path_{std::move(path)} {}
+  ResolverUnsupportedOpenAPIVersionError(std::filesystem::path path,
+                                         sourcemeta::core::JSON::String version)
+      : sourcemeta::core::Error{"The OpenAPI description declares a revision "
+                                "that is not supported"},
+        path_{std::move(path)}, version_{std::move(version)} {}
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
     return this->path_;
   }
 
+  [[nodiscard]] auto version() const noexcept
+      -> const sourcemeta::core::JSON::String & {
+    return this->version_;
+  }
+
 private:
   std::filesystem::path path_;
+  sourcemeta::core::JSON::String version_;
+};
+
+// An OpenAPI description built out of several documents has to be made whole
+// before it describes anything, and nothing bundles one yet. This is a
+// restriction of this version rather than anything wrong with the document, so
+// it says so
+class ResolverMultiDocumentOpenAPIError : public sourcemeta::core::Error {
+public:
+  ResolverMultiDocumentOpenAPIError(std::filesystem::path path,
+                                    sourcemeta::core::JSON::String reference,
+                                    sourcemeta::core::Pointer location)
+      : sourcemeta::core::Error{"An OpenAPI description spanning more than one "
+                                "document is not supported yet"},
+        path_{std::move(path)}, reference_{std::move(reference)},
+        location_{std::move(location)} {}
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  // The connection that reaches the other document, as the OpenAPI
+  // description spells it. Empty where it was measured incomplete without one
+  // place being named for it, since nothing is named that the author did not
+  // write
+  [[nodiscard]] auto reference() const noexcept
+      -> const sourcemeta::core::JSON::String & {
+    return this->reference_;
+  }
+
+  // Where the member that spells it sits, alongside the reference it locates
+  [[nodiscard]] auto location() const noexcept
+      -> const sourcemeta::core::Pointer & {
+    return this->location_;
+  }
+
+private:
+  std::filesystem::path path_;
+  sourcemeta::core::JSON::String reference_;
+  sourcemeta::core::Pointer location_;
+};
+
+// A reference of an OpenAPI description that reaches neither a position it
+// holds nor a document this catalog does. Nothing about this one turns on what
+// this version supports, so it reads the way an unresolvable reference of a
+// schema already does
+class ResolverUnresolvableOpenAPIReferenceError
+    : public sourcemeta::core::Error {
+public:
+  ResolverUnresolvableOpenAPIReferenceError(
+      std::filesystem::path path, sourcemeta::core::JSON::String reference,
+      sourcemeta::core::Pointer location)
+      : sourcemeta::core::Error{"Could not resolve a reference in the OpenAPI "
+                                "description"},
+        path_{std::move(path)}, reference_{std::move(reference)},
+        location_{std::move(location)} {}
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  // The reference that resolves nowhere, as the OpenAPI description spells it
+  [[nodiscard]] auto reference() const noexcept
+      -> const sourcemeta::core::JSON::String & {
+    return this->reference_;
+  }
+
+  // Where the member that spells it sits
+  [[nodiscard]] auto location() const noexcept
+      -> const sourcemeta::core::Pointer & {
+    return this->location_;
+  }
+
+private:
+  std::filesystem::path path_;
+  sourcemeta::core::JSON::String reference_;
+  sourcemeta::core::Pointer location_;
 };
 
 // The output directory belongs to the indexer, so a recorded artifact that is

@@ -6,30 +6,71 @@
 #include <sourcemeta/core/error.h>
 #include <sourcemeta/core/jsonpointer.h>
 
-#include <format>  // std::format
-#include <sstream> // std::ostringstream
-#include <string>  // std::string
+#include <filesystem> // std::filesystem::path
+#include <format>     // std::format
+#include <sstream>    // std::ostringstream
+#include <string>     // std::string
 
 namespace sourcemeta::one {
+
+// Where every evaluation that did not hold sits, as a block to print under the
+// message naming what was being validated
+static auto describe_output(const sourcemeta::blaze::SimpleOutput &output)
+    -> std::string {
+  std::string result;
+  for (const auto &entry : output) {
+    std::ostringstream instance_location_stream;
+    sourcemeta::core::stringify(entry.instance_location,
+                                instance_location_stream);
+    std::ostringstream evaluate_path_stream;
+    sourcemeta::core::stringify(entry.evaluate_path, evaluate_path_stream);
+    result += std::format("{}\n  at instance location \"{}\"\n"
+                          "  at evaluate path \"{}\"\n",
+                          entry.message, instance_location_stream.str(),
+                          evaluate_path_stream.str());
+  }
+
+  return result;
+}
 
 class MetaschemaError : public sourcemeta::core::Error {
 public:
   MetaschemaError(const sourcemeta::blaze::SimpleOutput &output)
-      : sourcemeta::core::Error{
-            "The schema does not adhere to its metaschema"} {
-    std::string result;
-    for (const auto &entry : output) {
-      std::ostringstream instance_location_stream;
-      sourcemeta::core::stringify(entry.instance_location,
-                                  instance_location_stream);
-      std::ostringstream evaluate_path_stream;
-      sourcemeta::core::stringify(entry.evaluate_path, evaluate_path_stream);
-      result += std::format("{}\n  at instance location \"{}\"\n"
-                            "  at evaluate path \"{}\"\n",
-                            entry.message, instance_location_stream.str(),
-                            evaluate_path_stream.str());
-    }
-    this->stacktrace_ = std::move(result);
+      : sourcemeta::core::Error{"The schema does not adhere to its metaschema"},
+        stacktrace_{describe_output(output)} {}
+
+  [[nodiscard]] auto stacktrace() const noexcept -> const std::string & {
+    return this->stacktrace_;
+  }
+
+private:
+  std::string stacktrace_;
+};
+
+// Which of the schemas an OpenAPI description holds is at fault, as one may
+// hold hundreds and saying only that one of them is invalid is unusable
+class OpenAPISchemaObjectError : public sourcemeta::core::Error {
+public:
+  OpenAPISchemaObjectError(const sourcemeta::blaze::SimpleOutput &output,
+                           std::filesystem::path path,
+                           sourcemeta::core::Pointer location,
+                           std::string dialect)
+      : sourcemeta::core::Error{"The OpenAPI description holds a schema that "
+                                "does not adhere to its dialect"},
+        path_{std::move(path)}, location_{std::move(location)},
+        dialect_{std::move(dialect)}, stacktrace_{describe_output(output)} {}
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto location() const noexcept
+      -> const sourcemeta::core::Pointer & {
+    return this->location_;
+  }
+
+  [[nodiscard]] auto dialect() const noexcept -> const std::string & {
+    return this->dialect_;
   }
 
   [[nodiscard]] auto stacktrace() const noexcept -> const std::string & {
@@ -37,6 +78,9 @@ public:
   }
 
 private:
+  std::filesystem::path path_;
+  sourcemeta::core::Pointer location_;
+  std::string dialect_;
   std::string stacktrace_;
 };
 

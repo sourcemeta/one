@@ -939,6 +939,247 @@ TEST(incremental_a_dirty_leaf_disposes_of_what_its_kind_does_not_write) {
       output / "secondary" / "public" / "%" / "listing.bin");
 }
 
+// A listing is built from an artifact only one kind of leaf holds, so a
+// directory holding both kinds names the leaf that holds one and leaves the
+// other out. Naming it anyway would have the listing wait on something nothing
+// produces
+TEST(full_a_mixed_directory_names_the_leaves_the_listing_can_read) {
+  const std::filesystem::path output{"/output"};
+  sourcemeta::one::BuildState entries;
+  const TestLeaves leaves{{.identifier = "https://example.com/foo",
+                           .path = "/src/foo.json",
+                           .relative_path = "foo",
+                           .mtime = MTIME(100)},
+                          {.identifier = "https://example.com/bar",
+                           .path = "/src/bar.json",
+                           .relative_path = "bar",
+                           .mtime = MTIME(100),
+                           .kind = test_rules::FOREIGN_KIND}};
+
+  entries.configure(
+      test_rules::UNLISTED_KIND_RULES.leaves,
+      test_rules::UNLISTED_KIND_RULES.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::UNLISTED_KIND_RULES>(),
+      INPUTS, test_rules::UNLISTED_KIND_RULES.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::UNLISTED_KIND_RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, leaves, "1.0.0", false, "", "Full", {}, VIEWS, everything())};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 6, 9);
+
+  EXPECT_ACTION(plan, 0, 0, 2, test_rules::ACTION_CONFIGURATION,
+                output / "configuration.json", "");
+  EXPECT_ACTION(plan, 0, 1, 2, test_rules::ACTION_VERSION,
+                output / "version.json", "1.0.0");
+
+  EXPECT_ACTION(plan, 1, 0, 1, test_rules::ACTION_ROUTES, output / "routes.bin",
+                "Full", output / "configuration.json");
+
+  EXPECT_ACTION(plan, 2, 0, 1, test_rules::ACTION_GATE, output / "gate.bin", "",
+                output / "routes.bin");
+
+  EXPECT_ACTION_UNORDERED(plan, 3, 0, 2, test_rules::ACTION_VARIANT,
+                          output / "primary" / "bar" / "%" / "primary.bin",
+                          "https://example.com/bar",
+                          std::filesystem::path{"/"} / "src" / "bar.json",
+                          output / "configuration.json");
+  EXPECT_ACTION_UNORDERED(plan, 3, 1, 2, test_rules::ACTION_PRIMARY,
+                          output / "primary" / "foo" / "%" / "primary.bin",
+                          "https://example.com/foo",
+                          std::filesystem::path{"/"} / "src" / "foo.json",
+                          output / "configuration.json");
+
+  EXPECT_ACTION(plan, 4, 0, 1, test_rules::ACTION_METADATA,
+                output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+                "https://example.com/foo",
+                output / "primary" / "foo" / "%" / "primary.bin");
+
+  EXPECT_ACTION_UNORDERED(
+      plan, 5, 0, 2, test_rules::ACTION_LISTING,
+      output / "secondary" / "public" / "%" / "listing.bin", "",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin");
+  EXPECT_ACTION_UNORDERED(
+      plan, 5, 1, 2, test_rules::ACTION_WEB,
+      output / "secondary" / "public" / "foo" / "%" / "web.bin",
+      "https://example.com/foo",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin");
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      output / "routes.bin", output / "gate.bin",
+      output / "primary" / "foo" / "%" / "primary.bin",
+      output / "primary" / "bar" / "%" / "primary.bin",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "foo" / "%" / "web.bin",
+      output / "secondary" / "public" / "%" / "listing.bin");
+}
+
+// And a directory holding nothing but leaves of that kind names none of them
+TEST(full_a_directory_the_listing_cannot_read_names_no_leaf) {
+  const std::filesystem::path output{"/output"};
+  sourcemeta::one::BuildState entries;
+  const TestLeaves descriptions{{.identifier = "https://example.com/foo",
+                                 .path = "/src/foo.json",
+                                 .relative_path = "foo",
+                                 .mtime = MTIME(100),
+                                 .kind = test_rules::FOREIGN_KIND}};
+
+  entries.configure(
+      test_rules::UNLISTED_KIND_RULES.leaves,
+      test_rules::UNLISTED_KIND_RULES.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::UNLISTED_KIND_RULES>(),
+      INPUTS, test_rules::UNLISTED_KIND_RULES.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::UNLISTED_KIND_RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, descriptions, "1.0.0", false, "", "Full", {}, VIEWS,
+      everything())};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 4, 6);
+
+  EXPECT_ACTION(plan, 0, 0, 2, test_rules::ACTION_CONFIGURATION,
+                output / "configuration.json", "");
+  EXPECT_ACTION(plan, 0, 1, 2, test_rules::ACTION_VERSION,
+                output / "version.json", "1.0.0");
+
+  EXPECT_ACTION(plan, 1, 0, 1, test_rules::ACTION_ROUTES, output / "routes.bin",
+                "Full", output / "configuration.json");
+
+  EXPECT_ACTION(plan, 2, 0, 1, test_rules::ACTION_GATE, output / "gate.bin", "",
+                output / "routes.bin");
+
+  // The listing waits on nothing the leaf produces, so it is planned beside it
+  EXPECT_ACTION_UNORDERED(plan, 3, 0, 2, test_rules::ACTION_VARIANT,
+                          output / "primary" / "foo" / "%" / "primary.bin",
+                          "https://example.com/foo",
+                          std::filesystem::path{"/"} / "src" / "foo.json",
+                          output / "configuration.json");
+  EXPECT_ACTION_UNORDERED(plan, 3, 1, 2, test_rules::ACTION_LISTING,
+                          output / "secondary" / "public" / "%" / "listing.bin",
+                          "");
+
+  EXPECT_TOTAL_FILES(plan, entries, output / "configuration.json",
+                     output / "version.json", output / "routes.bin",
+                     output / "gate.bin",
+                     output / "primary" / "foo" / "%" / "primary.bin",
+                     output / "secondary" / "public" / "%" / "listing.bin");
+}
+
+// A file edited from one kind into another keeps its place in the catalog and
+// changes what the build writes for it, so what the kind it left behind held
+// has to go rather than linger
+TEST(incremental_a_leaf_of_a_new_kind_sheds_what_that_kind_is_without) {
+  const auto output{delta_path("leaf_kind_flip")};
+  WRITE_GLOBAL_OUTPUTS(output);
+  sourcemeta::one::BuildState entries;
+  const TestLeaves descriptions{{.identifier = "https://example.com/foo",
+                                 .path = "/src/foo.json",
+                                 .relative_path = "foo",
+                                 .mtime = MTIME(200),
+                                 .kind = test_rules::FOREIGN_KIND}};
+  ADD_LEAF_ENTRIES(entries, output, "foo", true, MTIME(150));
+  ADD_GLOBAL_ENTRIES(entries, output, MTIME(150));
+  entries.emplace(output / "secondary" / "public" / "%" / "listing.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+
+  entries.configure(
+      test_rules::UNLISTED_KIND_RULES.leaves,
+      test_rules::UNLISTED_KIND_RULES.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::UNLISTED_KIND_RULES>(),
+      INPUTS, test_rules::UNLISTED_KIND_RULES.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::UNLISTED_KIND_RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, descriptions, "1.0.0", true, "", "Full", {}, VIEWS,
+      everything())};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 2, 4);
+
+  // The artifact both kinds write stays, written now by the rule of the kind
+  // the leaf became
+  EXPECT_ACTION_UNORDERED(plan, 0, 0, 2, test_rules::ACTION_VARIANT,
+                          output / "primary" / "foo" / "%" / "primary.bin",
+                          "https://example.com/foo",
+                          std::filesystem::path{"/"} / "src" / "foo.json",
+                          output / "configuration.json");
+  EXPECT_ACTION_UNORDERED(plan, 0, 1, 2, test_rules::ACTION_LISTING,
+                          output / "secondary" / "public" / "%" / "listing.bin",
+                          "");
+
+  EXPECT_ACTION_UNORDERED(
+      plan, 1, 0, 2, test_rules::ACTION_REMOVE,
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin", "");
+  EXPECT_ACTION_UNORDERED(
+      plan, 1, 1, 2, test_rules::ACTION_REMOVE,
+      output / "secondary" / "public" / "foo" / "%" / "web.bin", "");
+
+  EXPECT_TOTAL_FILES(plan, entries, output / "configuration.json",
+                     output / "version.json", output / "routes.bin",
+                     output / "gate.bin",
+                     output / "primary" / "foo" / "%" / "primary.bin",
+                     output / "secondary" / "public" / "%" / "listing.bin");
+}
+
+// And editing it back gains everything the kind it returned to holds
+TEST(incremental_a_leaf_turning_back_gains_what_its_kind_holds) {
+  const auto output{delta_path("leaf_kind_flip_back")};
+  WRITE_GLOBAL_OUTPUTS(output);
+  sourcemeta::one::BuildState entries;
+  const TestLeaves schemas{{.identifier = "https://example.com/foo",
+                            .path = "/src/foo.json",
+                            .relative_path = "foo",
+                            .mtime = MTIME(200)}};
+  // What the other kind held is the shared artifact and nothing else
+  entries.emplace(output / "primary" / "foo" / "%" / "primary.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+  ADD_GLOBAL_ENTRIES(entries, output, MTIME(150));
+  entries.emplace(output / "secondary" / "public" / "%" / "listing.bin",
+                  {.file_mark = MTIME(150), .dependencies = {}});
+
+  entries.configure(
+      test_rules::UNLISTED_KIND_RULES.leaves,
+      test_rules::UNLISTED_KIND_RULES.directories,
+      sourcemeta::one::rules_fingerprint<test_rules::UNLISTED_KIND_RULES>(),
+      INPUTS, test_rules::UNLISTED_KIND_RULES.sentinel);
+  const auto plan{sourcemeta::one::delta<test_rules::UNLISTED_KIND_RULES>(
+      sourcemeta::one::BuildPhase::Produce, test_rules::MODE_FULL, entries,
+      output, schemas, "1.0.0", true, "", "Full", {}, VIEWS, everything())};
+
+  EXPECT_CONSISTENT_PLAN(plan, entries, output, test_rules::MODE_FULL, 4, 5);
+
+  // The only leaf this registry holds held no page, so the build reads one
+  // arriving as the whole registry gaining pages
+  EXPECT_ACTION(plan, 0, 0, 1, test_rules::ACTION_ROUTES, output / "routes.bin",
+                "Full", output / "configuration.json");
+
+  EXPECT_ACTION(plan, 1, 0, 1, test_rules::ACTION_PRIMARY,
+                output / "primary" / "foo" / "%" / "primary.bin",
+                "https://example.com/foo",
+                std::filesystem::path{"/"} / "src" / "foo.json",
+                output / "configuration.json");
+
+  EXPECT_ACTION(plan, 2, 0, 1, test_rules::ACTION_METADATA,
+                output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+                "https://example.com/foo",
+                output / "primary" / "foo" / "%" / "primary.bin");
+
+  EXPECT_ACTION_UNORDERED(
+      plan, 3, 0, 2, test_rules::ACTION_LISTING,
+      output / "secondary" / "public" / "%" / "listing.bin", "",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin");
+  EXPECT_ACTION_UNORDERED(
+      plan, 3, 1, 2, test_rules::ACTION_WEB,
+      output / "secondary" / "public" / "foo" / "%" / "web.bin",
+      "https://example.com/foo",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin");
+
+  EXPECT_TOTAL_FILES(
+      plan, entries, output / "configuration.json", output / "version.json",
+      output / "routes.bin", output / "gate.bin",
+      output / "primary" / "foo" / "%" / "primary.bin",
+      output / "secondary" / "public" / "foo" / "%" / "metadata.bin",
+      output / "secondary" / "public" / "foo" / "%" / "web.bin",
+      output / "secondary" / "public" / "%" / "listing.bin");
+}
+
 TEST(incremental_only_the_new_leaf_is_built_beside_an_unchanged_one) {
   const auto output{delta_path("new_leaf_alongside")};
   WRITE_GLOBAL_OUTPUTS(output);
