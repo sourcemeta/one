@@ -1023,17 +1023,17 @@ schema.
 
     The [configuration file](configuration.md) marks the schema collection as listed but not served.
 
+=== "501"
+
+    The `{path}` parameter names an OpenAPI description. Nothing records this
+    about a description yet.
+
 ## Playground
 
 Everything under `/self/v1/api/playground` evaluates a document the caller
 supplies in the request rather than one this instance holds. An [authentication
 policy](configuration.md) naming `/self/v1/api/playground` governs the whole
 namespace, including operations added to it later.
-
-=== "501"
-
-    The `{path}` parameter names an OpenAPI description. Nothing records this
-    about a description yet.
 
 ### Schema Trace
 

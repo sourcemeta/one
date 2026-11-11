@@ -364,8 +364,10 @@ inline constexpr auto WIDE_RULES{rules_with_eighteen_leaves()};
 
 // A kind the catalog does not hold, which is all it takes to say that a rule
 // writes nothing for a leaf of another kind. The underlying type is fixed, so
-// every value of it is a value of the enumeration whether or not it is named
-inline constexpr auto FOREIGN_KIND{static_cast<sourcemeta::one::LeafKind>(1)};
+// every value of it is a value of the enumeration whether or not it is named,
+// and this one is deliberately past the last that is, so that a rule set built
+// here never aliases one the catalog really holds
+inline constexpr auto FOREIGN_KIND{static_cast<sourcemeta::one::LeafKind>(2)};
 
 // The same set with the web leaf applying to another kind of leaf. That leaf
 // is gated on the full mode already, so this also says that a kind and a gate

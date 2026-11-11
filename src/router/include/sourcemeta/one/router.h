@@ -13,6 +13,7 @@
 #include <sourcemeta/one/authentication.h>
 #include <sourcemeta/one/http.h>
 #include <sourcemeta/one/router_lru.h>
+#include <sourcemeta/one/shared.h>
 
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t
