@@ -716,28 +716,102 @@ destination_document(const sourcemeta::core::JSON::StringView destination)
           : destination.substr(0, fragment)};
 }
 
-// The first connection an OpenAPI description makes that leads nowhere it
-// holds, which is what a frame measuring it incomplete comes down to. A frame
-// settles every connection of its own ahead of what the Schema Objects make,
-// and reports each one as landing or not, so this reads them in that same order
+// What the references of one OpenAPI description are measured against, which
+// is the collection that spells them, the identity the document came with and
+// the identity this instance serves it as
+struct OpenAPIReferenceBase {
+  const sourcemeta::one::Configuration::Collection &collection;
+  const sourcemeta::core::URI &original;
+  const sourcemeta::core::URI &served;
+};
+
+// Where the document side of a connection lands once the reference that spells
+// it names what this instance serves. The rewrite that follows settles every
+// reference exactly this way, so the two cannot come to different answers
+// about where one points
 static auto
-first_dangling_connection(const sourcemeta::core::OpenAPIFrame &frame,
-                          const sourcemeta::core::JSON &document)
-    -> OpenAPIDanglingConnection {
+connection_document(const OpenAPIReferenceBase &identity,
+                    const sourcemeta::core::URI &server,
+                    const sourcemeta::core::JSON::StringView destination)
+    -> sourcemeta::core::JSON::String {
+  const auto document{destination_document(destination)};
+  if (document.empty()) {
+    return document;
+  }
+
+  const auto rewritten{rebase_reference(identity.collection, identity.original,
+                                        document, server)};
+  sourcemeta::core::URI target{rewritten.value_or(document)};
+  if (target.is_relative()) {
+    target.resolve_from(identity.served);
+  }
+
+  return target.recompose();
+}
+
+// Whether a connection of an OpenAPI description reaches another document that
+// this instance serves, which is what lets one built out of several be served
+// as the documents it is made of. A connection naming a position of the
+// description's own body reaches no other document at all, however the frame
+// spells out where it resolved to, so one of those is never reaching anything
+static auto reaches_served_document(const sourcemeta::one::Resolver &resolver,
+                                    const sourcemeta::core::URI &served,
+                                    const OpenAPIDanglingConnection &connection)
+    -> bool {
+  return !connection.document.empty() &&
+         normalise_identifier(connection.document) !=
+             normalise_identifier(served.recompose()) &&
+         resolver.serves_identity(connection.document);
+}
+
+// The first connection an OpenAPI description makes that reaches no document
+// this catalog holds, which is the one thing that stops one built out of
+// several from being served. Nothing at all where every connection of it
+// reaches a document the catalog holds, and a connection naming nothing where
+// the frame measures the description incomplete without saying which place
+// makes it so. A frame settles every connection of its own ahead of what the
+// Schema Objects make, and reports each one as landing or not, so this reads
+// them in that same order
+static auto
+first_unreached_connection(const sourcemeta::one::Resolver &resolver,
+                           const OpenAPIReferenceBase &identity,
+                           const sourcemeta::core::URI &server,
+                           const sourcemeta::core::OpenAPIFrame &frame,
+                           const sourcemeta::core::JSON &document)
+    -> std::optional<OpenAPIDanglingConnection> {
+  auto held{false};
   for (const auto &entry : frame.references()) {
-    if (entry.second.dangling) {
-      return {.reference = entry.second.original,
-              .document = destination_document(entry.second.destination),
-              .location = entry.second.origin};
+    if (!entry.second.dangling) {
+      continue;
     }
+
+    const OpenAPIDanglingConnection connection{
+        .reference = entry.second.original,
+        .document =
+            connection_document(identity, server, entry.second.destination),
+        .location = entry.second.origin};
+    if (!reaches_served_document(resolver, identity.served, connection)) {
+      return connection;
+    }
+
+    held = true;
   }
 
   for (const auto &entry : frame.security_references()) {
-    if (entry.second.dangling) {
-      return {.reference = entry.second.original,
-              .document = destination_document(entry.second.destination),
-              .location = entry.second.origin};
+    if (!entry.second.dangling) {
+      continue;
     }
+
+    const OpenAPIDanglingConnection connection{
+        .reference = entry.second.original,
+        .document =
+            connection_document(identity, server, entry.second.destination),
+        .location = entry.second.origin};
+    if (!reaches_served_document(resolver, identity.served, connection)) {
+      return connection;
+    }
+
+    held = true;
   }
 
   // A Discriminator Object names a schema by the value of a member rather than
@@ -748,31 +822,54 @@ first_dangling_connection(const sourcemeta::core::OpenAPIFrame &frame,
     }
 
     const auto &mapping{sourcemeta::core::get(document, discriminator.origin)};
-    return {.reference = mapping.is_string() ? mapping.to_string()
-                                             : discriminator.destination,
-            .document = destination_document(discriminator.destination),
-            .location = discriminator.origin};
+    const OpenAPIDanglingConnection connection{
+        .reference = mapping.is_string() ? mapping.to_string()
+                                         : discriminator.destination,
+        .document =
+            connection_document(identity, server, discriminator.destination),
+        .location = discriminator.origin};
+    if (!reaches_served_document(resolver, identity.served, connection)) {
+      return connection;
+    }
+
+    held = true;
   }
 
-  OpenAPIDanglingConnection result;
+  std::optional<OpenAPIDanglingConnection> result;
   frame.schemas().for_each_unresolved_reference(
-      [&result](const auto &pointer, const auto &reference) -> void {
+      [&resolver, &identity, &server, &result,
+       &held](const auto &pointer, const auto &reference) -> void {
         // Naming a dialect this build already comes with asks nothing of
         // whoever reads the OpenAPI description, so it is the one reference
         // out of a Schema Object that leaves one whole
-        if (!result.reference.empty() ||
+        if (result.has_value() ||
             (pointer.back().is_property() &&
              pointer.back().to_property() == "$schema" &&
              sourcemeta::core::schema_is_known(reference.destination))) {
           return;
         }
 
-        result.reference = sourcemeta::core::JSON::String{reference.original};
-        result.document = sourcemeta::core::JSON::String{reference.base};
-        result.location = sourcemeta::core::to_pointer(pointer);
+        const OpenAPIDanglingConnection connection{
+            .reference = sourcemeta::core::JSON::String{reference.original},
+            .document = connection_document(identity, server, reference.base),
+            .location = sourcemeta::core::to_pointer(pointer)};
+        if (!reaches_served_document(resolver, identity.served, connection)) {
+          result = connection;
+          return;
+        }
+
+        held = true;
       });
 
-  return result;
+  if (result.has_value()) {
+    return result;
+  }
+
+  // A frame reporting an incomplete OpenAPI description that this walk finds
+  // every connection of is a frame reading something this walk cannot see, so
+  // the refusal stands and names nothing
+  return held ? std::nullopt
+              : std::optional<OpenAPIDanglingConnection>{std::in_place};
 }
 
 auto Resolver::openapi(const std::string_view raw_identifier,
@@ -795,8 +892,11 @@ auto Resolver::openapi(const std::string_view raw_identifier,
     cached_path = result->second.cache_path;
   }
 
+  // A Schema Object of an OpenAPI description may reach a schema of this
+  // catalog, and what comes back then is a schema rather than a description,
+  // which is the one case where the two halves of the resolver meet
   if (view->kind != LeafKind::OpenAPI) {
-    return std::nullopt;
+    return this->operator()(identifier, callback);
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -850,37 +950,29 @@ auto Resolver::openapi(const std::string_view raw_identifier,
       document, sourcemeta::core::schema_walker, subresolver,
       view->original_identifier};
 
-  // Reaching a document this catalog holds is an OpenAPI description built out
-  // of several, which this version refuses whole rather than serving in part,
-  // since without bundling there is nothing to make one whole. Reaching
-  // anywhere else is a reference that resolves nowhere, which is an error
-  // whatever this version goes on to support
-  if (!frame.standalone()) {
-    auto dangling{first_dangling_connection(frame, document)};
-    // A reference naming a position of the OpenAPI description itself reaches
-    // no other document at all, however the frame spells out where it resolved
-    // to
-    const auto destination{normalise_identifier(dangling.document)};
-    const auto elsewhere{!dangling.document.empty() &&
-                         destination != normalise_identifier(frame.base())};
-    if (dangling.reference.empty() ||
-        (elsewhere && this->holds_identity(destination))) {
-      throw ResolverMultiDocumentOpenAPIError(view->path,
-                                              std::move(dangling.reference),
-                                              std::move(dangling.location));
-    }
+  const sourcemeta::core::URI base{view->original_identifier};
+  const sourcemeta::core::URI served{*new_identifier};
+  const auto &collection{*view->collection};
+  const OpenAPIReferenceBase identity{
+      .collection = collection, .original = base, .served = served};
 
-    throw ResolverUnresolvableOpenAPIReferenceError(
-        view->path, std::move(dangling.reference),
-        std::move(dangling.location));
+  // An OpenAPI description may be built out of several documents, so reaching
+  // beyond this one is only an error where what it reaches is not something
+  // this instance serves. A reference naming a position of the OpenAPI
+  // description itself reaches the document it already sits in
+  if (!frame.standalone()) {
+    auto unreached{first_unreached_connection(
+        *this, identity, this->server_uri_, frame, document)};
+    if (unreached.has_value()) {
+      throw ResolverUnresolvableOpenAPIReferenceError(
+          view->path, std::move(unreached->reference),
+          std::move(unreached->location));
+    }
   }
 
   /////////////////////////////////////////////////////////////////////////////
   // (4) Normalise every reference to match the new identifier
   /////////////////////////////////////////////////////////////////////////////
-
-  const sourcemeta::core::URI base{view->original_identifier};
-  const auto &collection{*view->collection};
 
   // A Security Requirement Object names a scheme by the key of a member rather
   // than by its value, so this is the one rewrite that moves a member
@@ -1246,13 +1338,10 @@ auto Resolver::entry(const std::string_view identifier) const -> const Entry & {
   return result->second;
 }
 
-auto Resolver::holds_identity(
+auto Resolver::serves_identity(
     const sourcemeta::core::JSON::String &identifier) const -> bool {
   std::shared_lock lock{this->mutex_};
-  return std::ranges::any_of(this->views_, [&identifier](const auto &entry) {
-    return entry.first == identifier ||
-           entry.second.original_identifier == identifier;
-  });
+  return this->views_.contains(normalise_identifier(identifier));
 }
 
 auto Resolver::dialect_of(const std::string_view identifier) const

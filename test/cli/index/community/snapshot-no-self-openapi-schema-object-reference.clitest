@@ -1,0 +1,101 @@
+// A Schema Object of an OpenAPI description may reach a schema of this
+// catalog, which is a leaf of its own and goes on being served as one.
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "example": {
+      "baseUri": "https://example.com/",
+      "path": "./schemas",
+      "defaultDialect": "https://json-schema.org/draft/2020-12/schema"
+    }
+  }
+}
+EOF
+
+MAKE DIRECTORY schemas
+
+WRITE schemas/tag.json UNTIL EOF
+{
+  "type": "string"
+}
+EOF
+
+WRITE schemas/petstore.json UNTIL EOF
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Petstore",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "Pet": {
+        "type": "object",
+        "properties": {
+          "tag": {
+            "$ref": "https://example.com/tag"
+          }
+        }
+      }
+    }
+  }
+}
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 0
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
+
+WRITE expected_output.txt UNTIL EOF
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected_output.txt
+
+TREE output INTO manifest.txt
+DROP LINES MATCHING '^\./schemas/self(/.*)?$' IN manifest.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN manifest.txt
+
+WRITE expected.txt UNTIL EOF
+./authentication.bin
+./configuration.json
+./explorer
+./explorer/public
+./explorer/public/%
+./explorer/public/%/directory.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/example
+./explorer/public/example/%
+./explorer/public/example/%/directory.metapack
+./explorer/public/example/tag
+./explorer/public/example/tag/%
+./explorer/public/example/tag/%/dependents.metapack
+./explorer/public/example/tag/%/metadata.metapack
+./routes.bin
+./schemas
+./schemas/example
+./schemas/example/petstore
+./schemas/example/petstore/%
+./schemas/example/petstore/%/data.metapack
+./schemas/example/tag
+./schemas/example/tag/%
+./schemas/example/tag/%/blaze-exhaustive.metapack
+./schemas/example/tag/%/blaze-fast.metapack
+./schemas/example/tag/%/bundle.metapack
+./schemas/example/tag/%/data.metapack
+./schemas/example/tag/%/dependencies.metapack
+./schemas/example/tag/%/editor.metapack
+./schemas/example/tag/%/health.metapack
+./schemas/example/tag/%/locations.metapack
+./schemas/example/tag/%/positions.metapack
+./schemas/example/tag/%/stats.metapack
+./state.bin
+./version.json
+EOF
+
+COMPARE manifest.txt AGAINST expected.txt

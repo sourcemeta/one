@@ -318,26 +318,29 @@ TEST(example_openapi_internal_dangling_reference) {
 }
 
 // A reference reaching a document this catalog does hold is an OpenAPI
-// description built out of several, which is a shape this version refuses whole
-// rather than a reference that leads nowhere
+// description built out of several, which is served as the documents it is
+// made of, each of them reaching the others under the identity this instance
+// gives them
 TEST(example_openapi_sibling_reference) {
   sourcemeta::one::Resolver resolver{shared_configuration().url};
 
   RESOLVER_IMPORT(resolver, "example", "openapi-sibling-target.json");
-  const auto result{
-      RESOLVER_IMPORT(resolver, "example", "openapi-sibling-reference.json")};
-  try {
-    EXPECT_FALSE(resolver.openapi(result.first.get()).has_value());
-    FAIL();
-  } catch (const sourcemeta::one::ResolverMultiDocumentOpenAPIError &error) {
-    EXPECT_EQ(error.path(), std::filesystem::path{SCHEMAS_PATH} / "example" /
-                                "openapi-sibling-reference.json");
-    EXPECT_EQ(error.reference(), "https://example.com/schemas/"
-                                 "openapi-sibling-target#/components/"
-                                 "pathItems/Pets");
-    EXPECT_EQ(sourcemeta::core::to_string(error.location()),
-              "/paths/~1pets/$ref");
-  }
+  RESOLVER_ADD_OPENAPI(
+      resolver, "example", "openapi-sibling-reference.json",
+      "https://example.com/schemas/openapi-sibling-reference",
+      "http://localhost:8000/example/openapi-sibling-reference",
+      R"JSON({
+    "openapi": "3.1.1",
+    "info": {
+      "title": "Petstore",
+      "version": "1.0.0"
+    },
+    "paths": {
+      "/pets": {
+        "$ref": "openapi-sibling-target#/components/pathItems/Pets"
+      }
+    }
+  })JSON");
 }
 
 // A reference an OpenAPI description makes into itself by its own absolute
@@ -399,13 +402,19 @@ TEST(example_openapi_is_no_schema) {
   EXPECT_FALSE(resolver(result.first.get()).has_value());
 }
 
-// And the OpenAPI half answers for no schema
-TEST(example_schema_is_no_openapi) {
+// The OpenAPI half answers for a schema too, which is what a Schema Object of
+// an OpenAPI description reaching one of this catalog needs of it
+TEST(example_openapi_answers_for_a_schema) {
   sourcemeta::one::Resolver resolver{shared_configuration().url};
 
   const auto result{
       RESOLVER_IMPORT(resolver, "example", "2020-12-with-id.json")};
-  EXPECT_FALSE(resolver.openapi(result.first.get()).has_value());
+  const auto schema{resolver.openapi(result.first.get())};
+  EXPECT_TRUE(schema.has_value());
+  EXPECT_EQ(schema.value(), sourcemeta::core::parse_json(R"JSON({
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "http://localhost:8000/example/2020-12-with-id"
+  })JSON"));
 }
 
 // An `openapi` member of any other type declares no revision, so the file goes

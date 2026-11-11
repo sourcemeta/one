@@ -355,6 +355,101 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/sche
   }
 }
 
+# An OpenAPI description built out of several documents is served as the
+# documents it is made of, each of them reaching the others under the identity
+# this instance gives them rather than the one they came with
+GET {{base}}/test/schemas/openapi-split-entry
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/openapi+json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
+header "Link" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
+body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"http://localhost:8000/test/schemas/openapi-split-entry\",\n"
+{
+  "openapi": "3.2.0",
+  "$self": "http://localhost:8000/test/schemas/openapi-split-entry",
+  "info": {
+    "title": "Split",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/pets": {
+      "$ref": "openapi-split-shared#/components/pathItems/Pets"
+    }
+  },
+  "components": {
+    "schemas": {
+      "Dog": {
+        "type": "object",
+        "properties": {
+          "pet": {
+            "$ref": "openapi-split-shared#/components/schemas/Pet"
+          }
+        }
+      }
+    }
+  }
+}
+
+# And the document it reaches is a leaf of its own, served at the identity the
+# references above now name
+GET {{base}}/test/schemas/openapi-split-shared
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/openapi+json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
+header "Link" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
+body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"http://localhost:8000/test/schemas/openapi-split-shared\",\n"
+{
+  "openapi": "3.2.0",
+  "$self": "http://localhost:8000/test/schemas/openapi-split-shared",
+  "info": {
+    "title": "Shared",
+    "version": "1.0.0"
+  },
+  "components": {
+    "pathItems": {
+      "Pets": {
+        "get": {
+          "operationId": "listSharedPets",
+          "responses": {
+            "200": {
+              "description": "Every pet"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Pet": {
+        "type": "object",
+        "required": [ "name" ],
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
+
 # The `.json` suffix names the same leaf, as it does for a schema
 GET {{base}}/test/schemas/openapi-3-0.json
 HTTP 200

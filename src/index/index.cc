@@ -1075,7 +1075,8 @@ auto main(int argc, char *argv[]) noexcept -> int {
     std::print(stderr, "error: {}\n  at path {}\n  at revision {}\n",
                error.what(), error.path().string(), error.version());
     return EXIT_FAILURE;
-  } catch (const sourcemeta::one::ResolverMultiDocumentOpenAPIError &error) {
+  } catch (
+      const sourcemeta::one::ResolverUnresolvableOpenAPIReferenceError &error) {
     std::print(stderr, "error: {}\n  at path {}\n", error.what(),
                error.path().string());
     if (!error.reference().empty()) {
@@ -1084,14 +1085,6 @@ auto main(int argc, char *argv[]) noexcept -> int {
                  sourcemeta::core::to_string(error.location()));
     }
 
-    return EXIT_FAILURE;
-  } catch (
-      const sourcemeta::one::ResolverUnresolvableOpenAPIReferenceError &error) {
-    std::print(stderr,
-               "error: {}\n  at path {}\n  at reference {}\n"
-               "  at location \"{}\"\n",
-               error.what(), error.path().string(), error.reference(),
-               sourcemeta::core::to_string(error.location()));
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::OpenAPISchemaObjectError &error) {
     std::print(stderr,

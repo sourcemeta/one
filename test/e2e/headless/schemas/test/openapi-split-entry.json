@@ -1,0 +1,24 @@
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "Split",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/pets": {
+      "$ref": "https://example.com/schemas/openapi-split-shared#/components/pathItems/Pets"
+    }
+  },
+  "components": {
+    "schemas": {
+      "Dog": {
+        "type": "object",
+        "properties": {
+          "pet": {
+            "$ref": "https://example.com/schemas/openapi-split-shared#/components/schemas/Pet"
+          }
+        }
+      }
+    }
+  }
+}
