@@ -74,9 +74,9 @@ public:
     const auto resolution{this->artifact_resolve_path(
         caller, path_match, Tree::Explorer, this->artifact_)};
     if (!resolution.path.has_value()) {
-      // Nothing records anything about an OpenAPI description yet, so a leaf
-      // that is one is a leaf this surface has no answer for rather than a path
-      // with nothing at it
+      // No navigation artifact is written for an OpenAPI description yet, so
+      // a leaf that is one is a leaf this surface has no answer for rather
+      // than a path with nothing at it
       if (this->describes_api(caller, path_match)) {
         sourcemeta::one::json_error(
             request, response, sourcemeta::core::HTTP_STATUS_NOT_IMPLEMENTED,
