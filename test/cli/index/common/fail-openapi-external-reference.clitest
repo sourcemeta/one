@@ -38,6 +38,8 @@ DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([
 WRITE expected.txt UNTIL EOF
 2> error: The OpenAPI description references another document, which is not supported yet
 2>   at path [CWD]/schemas/petstore.json
+2>   at reference https://other.com/shared#/paths/~1pets
+2>   at location "/paths/~1pets/$ref"
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt

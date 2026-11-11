@@ -1,0 +1,192 @@
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "Petstore in full",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.example.com"
+    }
+  ],
+  "tags": [
+    {
+      "name": "pets"
+    },
+    {
+      "name": "dogs",
+      "parent": "pets"
+    }
+  ],
+  "security": [
+    {
+      "Key": []
+    }
+  ],
+  "paths": {
+    "/pets": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/Page"
+        }
+      ],
+      "get": {
+        "operationId": "listPets",
+        "tags": [
+          "pets"
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Pets"
+          }
+        },
+        "callbacks": {
+          "onData": {
+            "{$request.query.callbackUrl}": {
+              "$ref": "#/components/pathItems/Ping"
+            }
+          }
+        }
+      },
+      "post": {
+        "requestBody": {
+          "$ref": "#/components/requestBodies/NewPet"
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "headers": {
+              "Location": {
+                "$ref": "#/components/headers/Location"
+              }
+            },
+            "links": {
+              "self": {
+                "operationId": "listPets"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pets/{id}": {
+      "$ref": "#/components/pathItems/Pet"
+    }
+  },
+  "webhooks": {
+    "petAdded": {
+      "$ref": "#/components/pathItems/Ping"
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Key": {
+        "type": "apiKey",
+        "name": "X-Key",
+        "in": "header"
+      }
+    },
+    "parameters": {
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "schema": {
+          "type": "integer"
+        }
+      }
+    },
+    "headers": {
+      "Location": {
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "requestBodies": {
+      "NewPet": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Pet"
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "Pets": {
+        "description": "Every pet",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/Pet"
+              }
+            }
+          }
+        }
+      }
+    },
+    "pathItems": {
+      "Ping": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "Pong"
+            }
+          }
+        }
+      },
+      "Pet": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "One pet",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/Pet"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "schemas": {
+      "Pet": {
+        "type": "object",
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "dog": "#/components/schemas/Dog"
+          }
+        },
+        "properties": {
+          "kind": {
+            "type": "string"
+          }
+        }
+      },
+      "Dog": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Pet"
+          }
+        ]
+      }
+    }
+  }
+}

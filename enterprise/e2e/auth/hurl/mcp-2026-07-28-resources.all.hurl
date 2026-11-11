@@ -67,7 +67,7 @@ jsonpath "$.result.resources[4].uri" == "{{base}}/self/v1/schemas/api/error"
 jsonpath "$.result.resources[4].name" == "Sourcemeta One API Error"
 jsonpath "$.result.resources[4].description" == "The error response format returned by the Sourcemeta One API endpoints"
 jsonpath "$.result.resources[4].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[4].size" == 12491
+jsonpath "$.result.resources[4].size" == 12740
 jsonpath "$.result.resources[4].annotations.priority" == 0
 jsonpath "$.result.resources[5].uri" == "{{base}}/self/v1/schemas/api/list/response"
 jsonpath "$.result.resources[5].name" == "Sourcemeta One List API Response"
@@ -585,7 +585,7 @@ jsonpath "$.result.resources[7].uri" == "{{base}}/self/v1/schemas/api/error"
 jsonpath "$.result.resources[7].name" == "Sourcemeta One API Error"
 jsonpath "$.result.resources[7].description" == "The error response format returned by the Sourcemeta One API endpoints"
 jsonpath "$.result.resources[7].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[7].size" == 12491
+jsonpath "$.result.resources[7].size" == 12740
 jsonpath "$.result.resources[7].annotations.priority" == 0
 jsonpath "$.result.resources[8].uri" == "{{base}}/self/v1/schemas/api/list/response"
 jsonpath "$.result.resources[8].name" == "Sourcemeta One List API Response"
@@ -1086,7 +1086,7 @@ jsonpath "$.result.resources[5].uri" == "{{base}}/self/v1/schemas/api/error"
 jsonpath "$.result.resources[5].name" == "Sourcemeta One API Error"
 jsonpath "$.result.resources[5].description" == "The error response format returned by the Sourcemeta One API endpoints"
 jsonpath "$.result.resources[5].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[5].size" == 12491
+jsonpath "$.result.resources[5].size" == 12740
 jsonpath "$.result.resources[5].annotations.priority" == 0
 jsonpath "$.result.resources[6].uri" == "{{base}}/self/v1/schemas/api/list/response"
 jsonpath "$.result.resources[6].name" == "Sourcemeta One List API Response"

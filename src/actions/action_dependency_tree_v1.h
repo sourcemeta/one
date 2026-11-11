@@ -85,6 +85,18 @@ public:
     const auto resolution{this->artifact_resolve_path(
         caller, matches.front(), this->tree_, this->metapack_)};
     if (!resolution.path.has_value()) {
+      // Nothing records what a description depends on yet, so a leaf that is
+      // one is a leaf this surface has no answer for rather than a path with
+      // nothing at it
+      if (this->describes_api(caller, matches.front())) {
+        sourcemeta::one::json_error(
+            request, response, sourcemeta::core::HTTP_STATUS_NOT_IMPLEMENTED,
+            "urn:sourcemeta:one:openapi-description-unsupported",
+            "This operation is not supported on an OpenAPI description yet",
+            this->error_schema_, "*");
+        return;
+      }
+
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
           "urn:sourcemeta:one:not-found", "There is nothing at this URL",
@@ -114,12 +126,15 @@ public:
 
     // A tool call reaches one artifact, so placing the caller here is still
     // once for the request that carried them
-    const auto resolution{
-        this->artifact_resolve_path(caller, arguments.at("schema").to_string(),
-                                    this->tree_, this->metapack_)};
+    const auto &schema_uri{arguments.at("schema").to_string()};
+    const auto resolution{this->artifact_resolve_path(
+        caller, schema_uri, this->tree_, this->metapack_)};
     if (!resolution.path.has_value()) {
-      return sourcemeta::core::mcp_make_tool_error(version, request_id,
-                                                   "Schema not found");
+      return sourcemeta::core::mcp_make_tool_error(
+          version, request_id,
+          this->describes_api(caller, schema_uri)
+              ? "This operation is not supported on an OpenAPI description yet"
+              : "Schema not found");
     }
     auto contents{this->artifact_read_json(resolution.path.value())};
     if (!contents.has_value()) {

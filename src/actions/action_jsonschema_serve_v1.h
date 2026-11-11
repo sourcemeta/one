@@ -68,7 +68,7 @@ public:
     // request is served the same artifact whatever the leaf holds, which is why
     // nothing is read here unless one of those is being asked for
     const auto description{(is_vscode || is_deno || convert) &&
-                           describes_api(self, caller, schema_path)};
+                           self.describes_api(caller, schema_path)};
     if (convert) {
       if (description) {
         sourcemeta::one::json_error(
@@ -96,6 +96,18 @@ public:
         caller, schema_path, sourcemeta::one::RouterAction::Tree::Schemas,
         artifact)};
     if (!resolution.path.has_value()) {
+      // A description is a leaf of the catalog whether or not anything bundles
+      // one yet, so asking for a bundle of one asks for something this version
+      // does not do rather than for something that is not here
+      if (bundle && self.describes_api(caller, schema_path)) {
+        sourcemeta::one::json_error(
+            request, response, sourcemeta::core::HTTP_STATUS_NOT_IMPLEMENTED,
+            "urn:sourcemeta:one:openapi-description-unsupported",
+            "This operation is not supported on an OpenAPI description yet",
+            error_schema, "*");
+        return;
+      }
+
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
           "urn:sourcemeta:one:not-found", "There is nothing at this URL",
@@ -140,21 +152,6 @@ public:
   }
 
 private:
-  // What the leaf at a path holds, for the surfaces that answer one kind of
-  // leaf and not the other. Nothing at the path is no description, which leaves
-  // the ordinary not-found answer to whichever branch goes on to serve
-  static auto
-  describes_api(const sourcemeta::one::RouterAction &self,
-                const sourcemeta::one::Authentication::Caller &caller,
-                const std::string_view schema_path) -> bool {
-    const auto resolution{self.artifact_resolve_path(
-        caller, schema_path, sourcemeta::one::RouterAction::Tree::Schemas,
-        "data")};
-    return resolution.path.has_value() &&
-           self.artifact_kind(resolution.path.value()) ==
-               sourcemeta::one::LeafKind::OpenAPI;
-  }
-
   std::string_view error_schema_;
 };
 

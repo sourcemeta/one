@@ -366,6 +366,13 @@ public:
   [[nodiscard]] auto artifact_kind(const ResolvedArtifact &artifact) const
       -> std::optional<LeafKind>;
 
+  // Whether the leaf a caller reaches at a path describes an API, for the
+  // surfaces that answer one kind of leaf and not the other. Nothing at the
+  // path describes none, which leaves the ordinary not-found answer to
+  // whichever branch goes on to serve
+  [[nodiscard]] auto describes_api(const Authentication::Caller &caller,
+                                   std::string_view input) const -> bool;
+
   auto artifact_serve(const ResolvedArtifact &artifact,
                       const sourcemeta::core::HTTPStatus &status,
                       bool enable_cors, std::string_view mime,

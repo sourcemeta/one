@@ -407,7 +407,12 @@ meta-schema that a schema may declare.
 
     The `bundle` and `as` query parameters are schema concerns and neither
     answers for a description. So are the Visual Studio Code and Deno
-    workarounds below, which a description falls through.
+    workarounds below, which a description falls through. A description is a
+    leaf of the catalog whether or not this version can answer a given question
+    about one, so a question it cannot answer yet is refused with `501 Not
+    Implemented` rather than with `404 Not Found`. Every endpoint under
+    `/self/v1/api/schemas/` answers that way for a description, as does
+    `?bundle` on this one.
 
 !!! success "Enterprise"
 
@@ -529,6 +534,11 @@ property reports none for that schema.
 
     The [configuration file](configuration.md) marks the schema collection as listed but not served.
 
+=== "501"
+
+    The `bundle` query parameter is set on an OpenAPI description. Nothing
+    bundles a description yet.
+
 ### Evaluate
 
 *This endpoint takes a JSON instance as a request body and evaluates it against
@@ -565,6 +575,11 @@ Format](https://json-schema.org/draft/2020-12/json-schema-core#name-output-struc
 === "417"
 
     The `Expect` header carries an expectation other than `100-continue`. See [RFC 9110 §10.1.1](https://datatracker.ietf.org/doc/html/rfc9110#section-10.1.1).
+
+=== "501"
+
+    The `{path}` parameter names an OpenAPI description, which is not a schema
+    to evaluate an instance against.
 
 ### Trace
 
@@ -623,6 +638,11 @@ insight into the validation engine's behavior and logic flow.
 === "417"
 
     The `Expect` header carries an expectation other than `100-continue`. See [RFC 9110 §10.1.1](https://datatracker.ietf.org/doc/html/rfc9110#section-10.1.1).
+
+=== "501"
+
+    The `{path}` parameter names an OpenAPI description, which is not a schema
+    to evaluate an instance against.
 
 ### RDF
 
@@ -709,6 +729,11 @@ contexts are not fetched.
     (the problem details carry the offending annotation facet and instance
     location).
 
+=== "501"
+
+    The `{path}` parameter names an OpenAPI description, which is not a schema
+    to evaluate an instance against.
+
 ### Metadata
 
 *This endpoint retrieves metadata information about the JSON Schema located at
@@ -746,6 +771,11 @@ GET /self/v1/api/schemas/metadata/{path}
 === "404"
 
     The schema does not exist.
+
+=== "501"
+
+    The `{path}` parameter names an OpenAPI description. Nothing records this
+    about a description yet.
 
 ### Search
 
@@ -806,6 +836,11 @@ its own dependencies.
 
     The schema does not exist.
 
+=== "501"
+
+    The `{path}` parameter names an OpenAPI description. Nothing records this
+    about a description yet.
+
 ### Dependents
 
 *This endpoint retrieves all direct and transitive dependents of the JSON
@@ -830,6 +865,11 @@ GET /self/v1/api/schemas/dependents/{path}
 
     The schema does not exist.
 
+=== "501"
+
+    The `{path}` parameter names an OpenAPI description. Nothing records this
+    about a description yet.
+
 ### Health
 
 *This endpoint retrieves the health analysis and score for the JSON Schema located at the specified `{path}` parameter.*
@@ -853,6 +893,11 @@ GET /self/v1/api/schemas/health/{path}
 === "404"
 
     The schema does not exist.
+
+=== "501"
+
+    The `{path}` parameter names an OpenAPI description. Nothing records this
+    about a description yet.
 
 ### Locations
 
@@ -911,6 +956,11 @@ GET /self/v1/api/schemas/locations/{path}
 
     The [configuration file](configuration.md) marks the schema collection as listed but not served.
 
+=== "501"
+
+    The `{path}` parameter names an OpenAPI description. Nothing records this
+    about a description yet.
+
 ### Stats
 
 *This endpoint retrieves keyword statistics, by vocabulary, about every URI
@@ -933,6 +983,11 @@ GET /self/v1/api/schemas/stats/{path}
 === "405"
 
     The [configuration file](configuration.md) marks the schema collection as listed but not served.
+
+=== "501"
+
+    The `{path}` parameter names an OpenAPI description. Nothing records this
+    about a description yet.
 
 ### Positions
 
@@ -969,6 +1024,11 @@ Everything under `/self/v1/api/playground` evaluates a document the caller
 supplies in the request rather than one this instance holds. An [authentication
 policy](configuration.md) naming `/self/v1/api/playground` governs the whole
 namespace, including operations added to it later.
+
+=== "501"
+
+    The `{path}` parameter names an OpenAPI description. Nothing records this
+    about a description yet.
 
 ### Schema Trace
 

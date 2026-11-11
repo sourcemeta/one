@@ -3,6 +3,7 @@
 
 #include <sourcemeta/core/error.h>
 #include <sourcemeta/core/json.h>
+#include <sourcemeta/core/jsonpointer.h>
 
 #include <filesystem> // std::filesystem::path
 #include <utility>    // std::move
@@ -69,17 +70,36 @@ private:
 // describes anything, and nothing bundles one yet
 class ResolverExternalOpenAPIReferenceError : public sourcemeta::core::Error {
 public:
-  ResolverExternalOpenAPIReferenceError(std::filesystem::path path)
+  ResolverExternalOpenAPIReferenceError(
+      std::filesystem::path path, sourcemeta::core::JSON::String reference,
+      sourcemeta::core::Pointer location)
       : sourcemeta::core::Error{"The OpenAPI description references another "
                                 "document, which is not supported yet"},
-        path_{std::move(path)} {}
+        path_{std::move(path)}, reference_{std::move(reference)},
+        location_{std::move(location)} {}
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
     return this->path_;
   }
 
+  // The connection that leaves the document, as the document spells it. Empty
+  // where the description was measured incomplete without one place being
+  // named for it, since nothing is named that the author did not write
+  [[nodiscard]] auto reference() const noexcept
+      -> const sourcemeta::core::JSON::String & {
+    return this->reference_;
+  }
+
+  // Where the member that spells it sits, alongside the reference it locates
+  [[nodiscard]] auto location() const noexcept
+      -> const sourcemeta::core::Pointer & {
+    return this->location_;
+  }
+
 private:
   std::filesystem::path path_;
+  sourcemeta::core::JSON::String reference_;
+  sourcemeta::core::Pointer location_;
 };
 
 // The output directory belongs to the indexer, so a recorded artifact that is

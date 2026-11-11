@@ -199,6 +199,14 @@ auto RouterAction::artifact_kind(const ResolvedArtifact &artifact) const
   return sourcemeta::one::metapack_leaf_kind(parsed->extension);
 }
 
+auto RouterAction::describes_api(const Authentication::Caller &caller,
+                                 const std::string_view input) const -> bool {
+  const auto resolution{
+      this->artifact_resolve_path(caller, input, Tree::Schemas, "data")};
+  return resolution.path.has_value() &&
+         this->artifact_kind(resolution.path.value()) == LeafKind::OpenAPI;
+}
+
 auto RouterAction::artifact_serve(
     const ResolvedArtifact &artifact,
     const sourcemeta::core::HTTPStatus &status, const bool enable_cors,

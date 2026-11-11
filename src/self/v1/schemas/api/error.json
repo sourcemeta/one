@@ -260,6 +260,14 @@
     },
     {
       "const": {
+        "type": "urn:sourcemeta:one:openapi-description-unsupported",
+        "title": "Not Implemented",
+        "status": 501,
+        "detail": "This operation is not supported on an OpenAPI description yet"
+      }
+    },
+    {
+      "const": {
         "type": "urn:sourcemeta:one:auth-missing-policy-match",
         "title": "Internal Server Error",
         "status": 500,

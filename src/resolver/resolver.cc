@@ -692,6 +692,69 @@ auto Resolver::operator()(
   return schema;
 }
 
+// What a description reaches for and does not hold, as the document spells it
+// and where it spells it, with nothing named at all where the frame measures
+// the description incomplete without saying which one place makes it so
+struct OpenAPIDanglingConnection {
+  sourcemeta::core::JSON::String reference;
+  sourcemeta::core::Pointer location;
+};
+
+// The first connection a description makes that leads nowhere it holds, which
+// is what a frame measuring it incomplete comes down to. A frame settles every
+// connection of its own ahead of what the Schema Objects make, and reports
+// each one as landing or not, so this reads them in that same order
+static auto
+first_dangling_connection(const sourcemeta::core::OpenAPIFrame &frame,
+                          const sourcemeta::core::JSON &document)
+    -> OpenAPIDanglingConnection {
+  for (const auto &entry : frame.references()) {
+    if (entry.second.dangling) {
+      return {.reference = entry.second.original,
+              .location = entry.second.origin};
+    }
+  }
+
+  for (const auto &entry : frame.security_references()) {
+    if (entry.second.dangling) {
+      return {.reference = entry.second.original,
+              .location = entry.second.origin};
+    }
+  }
+
+  // A Discriminator Object names a schema by the value of a member rather than
+  // by a field of its own, so what the author wrote is read off the document
+  for (const auto &discriminator : frame.discriminators()) {
+    if (!discriminator.dangling) {
+      continue;
+    }
+
+    const auto &mapping{sourcemeta::core::get(document, discriminator.origin)};
+    return {.reference = mapping.is_string() ? mapping.to_string()
+                                             : discriminator.destination,
+            .location = discriminator.origin};
+  }
+
+  OpenAPIDanglingConnection result;
+  frame.schemas().for_each_unresolved_reference(
+      [&result](const auto &pointer, const auto &reference) -> void {
+        // Naming a dialect this build already comes with asks nothing of
+        // whoever reads the description, so it is the one reference out of a
+        // Schema Object that leaves the description whole
+        if (!result.reference.empty() ||
+            (pointer.back().is_property() &&
+             pointer.back().to_property() == "$schema" &&
+             sourcemeta::core::schema_is_known(reference.destination))) {
+          return;
+        }
+
+        result.reference = sourcemeta::core::JSON::String{reference.original};
+        result.location = sourcemeta::core::to_pointer(pointer);
+      });
+
+  return result;
+}
+
 auto Resolver::openapi(const std::string_view raw_identifier,
                        const Callback &callback) const
     -> std::optional<sourcemeta::core::JSON> {
@@ -770,7 +833,10 @@ auto Resolver::openapi(const std::string_view raw_identifier,
   // one that reaches for another document is refused rather than served with
   // references that lead nowhere
   if (!frame.standalone()) {
-    throw ResolverExternalOpenAPIReferenceError(view->path);
+    auto dangling{first_dangling_connection(frame, document)};
+    throw ResolverExternalOpenAPIReferenceError(view->path,
+                                                std::move(dangling.reference),
+                                                std::move(dangling.location));
   }
 
   /////////////////////////////////////////////////////////////////////////////
