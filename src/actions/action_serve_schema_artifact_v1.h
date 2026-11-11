@@ -81,9 +81,8 @@ public:
     const auto resolution{this->artifact_resolve_path(
         caller, matches.front(), Tree::Schemas, this->artifact_)};
     if (!resolution.path.has_value()) {
-      // No precomputed artifact is written about an OpenAPI description yet,
-      // so a leaf that is one is a leaf this surface has no answer for rather
-      // than a path with nothing at it
+      // A missing precomputed artifact for an OpenAPI description means none
+      // is written about one yet, not that there is nothing here
       if (this->describes_api(caller, matches.front())) {
         sourcemeta::one::json_error(
             request, response, sourcemeta::core::HTTP_STATUS_NOT_IMPLEMENTED,
