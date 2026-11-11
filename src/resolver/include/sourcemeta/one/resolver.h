@@ -113,6 +113,12 @@ private:
                    std::filesystem::file_time_type mtime,
                    const sourcemeta::core::JSON &document) -> Result;
 
+  // Whether some leaf of this catalog answers to the given URI, under either
+  // the identity it came with or the identity this instance serves it as
+  [[nodiscard]] auto
+  holds_identity(const sourcemeta::core::JSON::String &identifier) const
+      -> bool;
+
   Views views_;
   // Resolution is a const operation that runs concurrently with the
   // writers that commit cached materialisation paths, so readers must

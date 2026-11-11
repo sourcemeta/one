@@ -1,0 +1,74 @@
+// A description reaching a document this catalog holds is one built out of
+// several, which is a shape this version refuses rather than a reference that
+// leads nowhere.
+
+WRITE one.json UNTIL EOF
+{
+  "url": "https://sourcemeta.com",
+  "contents": {
+    "example": {
+      "contents": {
+        "schemas": {
+          "baseUri": "https://example.com/",
+          "path": "./schemas",
+          "defaultDialect": "https://json-schema.org/draft/2020-12/schema"
+        }
+      }
+    }
+  }
+}
+EOF
+
+MAKE DIRECTORY schemas
+
+WRITE schemas/shared.json UNTIL EOF
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Shared",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "pathItems": {
+      "Pets": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "Every pet"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+EOF
+
+WRITE schemas/petstore.json UNTIL EOF
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Petstore",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/pets": {
+      "$ref": "https://example.com/shared#/components/pathItems/Pets"
+    }
+  }
+}
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
+
+WRITE expected.txt UNTIL EOF
+2> error: An OpenAPI description spanning more than one document is not supported yet
+2>   at path [CWD]/schemas/petstore.json
+2>   at reference https://example.com/shared#/components/pathItems/Pets
+2>   at location "/paths/~1pets/$ref"
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected.txt

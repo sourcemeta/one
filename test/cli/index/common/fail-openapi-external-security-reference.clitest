@@ -37,7 +37,7 @@ RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING
 DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
 
 WRITE expected.txt UNTIL EOF
-2> error: The OpenAPI description references another document, which is not supported yet
+2> error: Could not resolve a reference in the OpenAPI description
 2>   at path [CWD]/schemas/petstore.json
 2>   at reference https://other.com/auth#/components/securitySchemes/Key
 2>   at location "/security/0/https:~1~1other.com~1auth#~1components~1securitySchemes~1Key"

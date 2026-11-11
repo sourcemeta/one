@@ -405,6 +405,11 @@ meta-schema that a schema may declare.
     fetch of the path followed by a client-side
     [JSON Pointer](https://datatracker.ietf.org/doc/html/rfc6901).
 
+    A description must currently be contained in a single document. One that
+    references another document fails the build, and so does one whose
+    references resolve nowhere. Descriptions spanning several documents are
+    planned.
+
     The `bundle` and `as` query parameters are schema concerns and neither
     answers for a description. So are the Visual Studio Code and Deno
     workarounds below, which a description falls through. A description is a

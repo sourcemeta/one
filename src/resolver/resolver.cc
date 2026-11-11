@@ -694,11 +694,27 @@ auto Resolver::operator()(
 
 // What a description reaches for and does not hold, as the document spells it
 // and where it spells it, with nothing named at all where the frame measures
-// the description incomplete without saying which one place makes it so
+// the description incomplete without saying which one place makes it so. The
+// document is whatever the reference resolves to ahead of its fragment, which
+// is the description's own identity for one that names a position of itself,
+// and nothing at all where the frame reports no document side
 struct OpenAPIDanglingConnection {
   sourcemeta::core::JSON::String reference;
+  sourcemeta::core::JSON::String document;
   sourcemeta::core::Pointer location;
 };
+
+// What a destination names ahead of its fragment, which a frame reports as the
+// two sides of one string
+static auto
+destination_document(const sourcemeta::core::JSON::StringView destination)
+    -> sourcemeta::core::JSON::String {
+  const auto fragment{destination.find('#')};
+  return sourcemeta::core::JSON::String{
+      fragment == sourcemeta::core::JSON::StringView::npos
+          ? destination
+          : destination.substr(0, fragment)};
+}
 
 // The first connection a description makes that leads nowhere it holds, which
 // is what a frame measuring it incomplete comes down to. A frame settles every
@@ -711,6 +727,7 @@ first_dangling_connection(const sourcemeta::core::OpenAPIFrame &frame,
   for (const auto &entry : frame.references()) {
     if (entry.second.dangling) {
       return {.reference = entry.second.original,
+              .document = destination_document(entry.second.destination),
               .location = entry.second.origin};
     }
   }
@@ -718,6 +735,7 @@ first_dangling_connection(const sourcemeta::core::OpenAPIFrame &frame,
   for (const auto &entry : frame.security_references()) {
     if (entry.second.dangling) {
       return {.reference = entry.second.original,
+              .document = destination_document(entry.second.destination),
               .location = entry.second.origin};
     }
   }
@@ -732,6 +750,7 @@ first_dangling_connection(const sourcemeta::core::OpenAPIFrame &frame,
     const auto &mapping{sourcemeta::core::get(document, discriminator.origin)};
     return {.reference = mapping.is_string() ? mapping.to_string()
                                              : discriminator.destination,
+            .document = destination_document(discriminator.destination),
             .location = discriminator.origin};
   }
 
@@ -749,6 +768,7 @@ first_dangling_connection(const sourcemeta::core::OpenAPIFrame &frame,
         }
 
         result.reference = sourcemeta::core::JSON::String{reference.original};
+        result.document = sourcemeta::core::JSON::String{reference.base};
         result.location = sourcemeta::core::to_pointer(pointer);
       });
 
@@ -829,14 +849,28 @@ auto Resolver::openapi(const std::string_view raw_identifier,
       document, sourcemeta::core::schema_walker, subresolver,
       view->original_identifier};
 
-  // Without bundling there is nothing to make a split description whole, so
-  // one that reaches for another document is refused rather than served with
-  // references that lead nowhere
+  // Reaching a document this catalog holds is a description built out of
+  // several, which this version refuses whole rather than serving in part,
+  // since without bundling there is nothing to make one whole. Reaching
+  // anywhere else is a reference that resolves nowhere, which is an error
+  // whatever this version goes on to support
   if (!frame.standalone()) {
     auto dangling{first_dangling_connection(frame, document)};
-    throw ResolverExternalOpenAPIReferenceError(view->path,
-                                                std::move(dangling.reference),
-                                                std::move(dangling.location));
+    // A reference naming a position of the description itself reaches no other
+    // document at all, however the frame spells out where it resolved to
+    const auto destination{normalise_identifier(dangling.document)};
+    const auto elsewhere{!dangling.document.empty() &&
+                         destination != normalise_identifier(frame.base())};
+    if (dangling.reference.empty() ||
+        (elsewhere && this->holds_identity(destination))) {
+      throw ResolverMultiDocumentOpenAPIError(view->path,
+                                              std::move(dangling.reference),
+                                              std::move(dangling.location));
+    }
+
+    throw ResolverUnresolvableOpenAPIReferenceError(
+        view->path, std::move(dangling.reference),
+        std::move(dangling.location));
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -1208,6 +1242,15 @@ auto Resolver::entry(const std::string_view identifier) const -> const Entry & {
   assert(!result->second.original_identifier.empty());
   assert(result->second.collection != nullptr);
   return result->second;
+}
+
+auto Resolver::holds_identity(
+    const sourcemeta::core::JSON::String &identifier) const -> bool {
+  std::shared_lock lock{this->mutex_};
+  return std::ranges::any_of(this->views_, [&identifier](const auto &entry) {
+    return entry.first == identifier ||
+           entry.second.original_identifier == identifier;
+  });
 }
 
 auto Resolver::dialect_of(const std::string_view identifier) const

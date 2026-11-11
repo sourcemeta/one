@@ -277,7 +277,8 @@ TEST(example_openapi_unsupported_version) {
   }
 }
 
-// Without bundling there is nothing to make a split description whole
+// A reference reaching a document nothing holds resolves nowhere, which has
+// nothing to do with what this version supports
 TEST(example_openapi_external_reference) {
   sourcemeta::one::Resolver resolver{shared_configuration().url};
 
@@ -287,9 +288,55 @@ TEST(example_openapi_external_reference) {
     EXPECT_FALSE(resolver.openapi(result.first.get()).has_value());
     FAIL();
   } catch (
-      const sourcemeta::one::ResolverExternalOpenAPIReferenceError &error) {
+      const sourcemeta::one::ResolverUnresolvableOpenAPIReferenceError &error) {
     EXPECT_EQ(error.path(), std::filesystem::path{SCHEMAS_PATH} / "example" /
                                 "openapi-external-reference.json");
+    EXPECT_EQ(error.reference(), "https://other.com/shared#/paths/~1pets");
+    EXPECT_EQ(sourcemeta::core::to_string(error.location()),
+              "/paths/~1pets/$ref");
+  }
+}
+
+// And neither does a reference naming a position of the description itself
+// that the description does not hold
+TEST(example_openapi_internal_dangling_reference) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  const auto result{RESOLVER_IMPORT(
+      resolver, "example", "openapi-internal-dangling-reference.json")};
+  try {
+    EXPECT_FALSE(resolver.openapi(result.first.get()).has_value());
+    FAIL();
+  } catch (
+      const sourcemeta::one::ResolverUnresolvableOpenAPIReferenceError &error) {
+    EXPECT_EQ(error.path(), std::filesystem::path{SCHEMAS_PATH} / "example" /
+                                "openapi-internal-dangling-reference.json");
+    EXPECT_EQ(error.reference(), "#/components/pathItems/Nope");
+    EXPECT_EQ(sourcemeta::core::to_string(error.location()),
+              "/paths/~1pets/$ref");
+  }
+}
+
+// A reference reaching a document this catalog does hold is a description
+// built out of several, which is a shape this version refuses whole rather
+// than a reference that leads nowhere
+TEST(example_openapi_sibling_reference) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  RESOLVER_IMPORT(resolver, "example", "openapi-sibling-target.json");
+  const auto result{
+      RESOLVER_IMPORT(resolver, "example", "openapi-sibling-reference.json")};
+  try {
+    EXPECT_FALSE(resolver.openapi(result.first.get()).has_value());
+    FAIL();
+  } catch (const sourcemeta::one::ResolverMultiDocumentOpenAPIError &error) {
+    EXPECT_EQ(error.path(), std::filesystem::path{SCHEMAS_PATH} / "example" /
+                                "openapi-sibling-reference.json");
+    EXPECT_EQ(error.reference(), "https://example.com/schemas/"
+                                 "openapi-sibling-target#/components/"
+                                 "pathItems/Pets");
+    EXPECT_EQ(sourcemeta::core::to_string(error.location()),
+              "/paths/~1pets/$ref");
   }
 }
 
