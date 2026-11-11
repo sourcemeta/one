@@ -322,10 +322,10 @@ struct GenerateMaterialisedOpenAPI {
                                                sourcemeta::core::schema_walker,
                                                schema_resolver, action.data};
 
-    // The reason a description is worth hosting in a schema registry is the
-    // schemas inside it, so a catalog that refuses an invalid standalone schema
-    // and serves an invalid one inside a description keeps its promise only
-    // half the time
+    // The reason an OpenAPI description is worth hosting in a schema registry
+    // is the schemas inside it, so a catalog that refuses an invalid standalone
+    // schema and serves an invalid one inside such a document keeps its promise
+    // only half the time
     for (const auto &entry : frame.locations()) {
       if (entry.second.type !=
           sourcemeta::core::OpenAPIFrame::ObjectKind::Schema) {

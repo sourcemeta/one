@@ -1,6 +1,6 @@
-// A reference naming a position of the description itself that the
-// description does not hold reaches no other document at all, so nothing
-// about it turns on what this version supports.
+// A reference naming a position of the OpenAPI description itself that the
+// document does not hold reaches no other document at all, so nothing about
+// it turns on what this version supports.
 
 WRITE one.json UNTIL EOF
 {

@@ -161,8 +161,8 @@ TEST(case_insensitive_lookup) {
 }
 
 // The collection declares draft-07 as its default dialect, which has no say
-// over a description, as the dialect of a Schema Object is fixed by the
-// revision with `jsonSchemaDialect` as the only override
+// over an OpenAPI description, as the dialect of a Schema Object is fixed by
+// the revision with `jsonSchemaDialect` as the only override
 TEST(example_openapi_3_1) {
   sourcemeta::one::Resolver resolver{shared_configuration().url};
 
@@ -297,8 +297,8 @@ TEST(example_openapi_external_reference) {
   }
 }
 
-// And neither does a reference naming a position of the description itself
-// that the description does not hold
+// And neither does a reference naming a position of the OpenAPI description
+// itself that the OpenAPI description does not hold
 TEST(example_openapi_internal_dangling_reference) {
   sourcemeta::one::Resolver resolver{shared_configuration().url};
 
@@ -317,9 +317,9 @@ TEST(example_openapi_internal_dangling_reference) {
   }
 }
 
-// A reference reaching a document this catalog does hold is a description
-// built out of several, which is a shape this version refuses whole rather
-// than a reference that leads nowhere
+// A reference reaching a document this catalog does hold is an OpenAPI
+// description built out of several, which is a shape this version refuses whole
+// rather than a reference that leads nowhere
 TEST(example_openapi_sibling_reference) {
   sourcemeta::one::Resolver resolver{shared_configuration().url};
 
@@ -340,9 +340,9 @@ TEST(example_openapi_sibling_reference) {
   }
 }
 
-// A reference a description makes into itself by its own absolute identity
-// would lead nowhere once the identity is the one this instance serves it
-// under, so it is relativised the way a schema reference is
+// A reference an OpenAPI description makes into itself by its own absolute
+// identity would lead nowhere once the identity is the one this instance serves
+// it under, so it is relativised the way a schema reference is
 TEST(example_openapi_absolute_self_reference) {
   sourcemeta::one::Resolver resolver{shared_configuration().url};
 
@@ -388,8 +388,8 @@ TEST(no_base_openapi) {
   })JSON");
 }
 
-// The schema half of the resolver answers for no description, which is what
-// makes a catalog schema referencing into one fail the way a reference to
+// The schema half of the resolver answers for no OpenAPI description, which is
+// what makes a catalog schema referencing into one fail the way a reference to
 // nothing fails
 TEST(example_openapi_is_no_schema) {
   sourcemeta::one::Resolver resolver{shared_configuration().url};

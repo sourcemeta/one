@@ -41,9 +41,9 @@ private:
   std::filesystem::path path_;
 };
 
-// A file declaring an `openapi` member is a description by the only test the
-// specification gives, whichever revision it names, so one naming a revision
-// this build cannot read is a description it cannot serve rather than a schema
+// A file declaring an `openapi` member is an OpenAPI description by the only
+// test the specification gives, whichever revision it names, so one naming a
+// revision this build cannot read is one it cannot serve rather than a schema
 class ResolverUnsupportedOpenAPIVersionError : public sourcemeta::core::Error {
 public:
   ResolverUnsupportedOpenAPIVersionError(std::filesystem::path path,
@@ -66,9 +66,10 @@ private:
   sourcemeta::core::JSON::String version_;
 };
 
-// A description built out of several documents has to be made whole before it
-// describes anything, and nothing bundles one yet. This is a restriction of
-// this version rather than anything wrong with the description, so it says so
+// An OpenAPI description built out of several documents has to be made whole
+// before it describes anything, and nothing bundles one yet. This is a
+// restriction of this version rather than anything wrong with the document, so
+// it says so
 class ResolverMultiDocumentOpenAPIError : public sourcemeta::core::Error {
 public:
   ResolverMultiDocumentOpenAPIError(std::filesystem::path path,
@@ -83,9 +84,10 @@ public:
     return this->path_;
   }
 
-  // The connection that reaches the other document, as the description spells
-  // it. Empty where the description was measured incomplete without one place
-  // being named for it, since nothing is named that the author did not write
+  // The connection that reaches the other document, as the OpenAPI
+  // description spells it. Empty where it was measured incomplete without one
+  // place being named for it, since nothing is named that the author did not
+  // write
   [[nodiscard]] auto reference() const noexcept
       -> const sourcemeta::core::JSON::String & {
     return this->reference_;
@@ -103,7 +105,7 @@ private:
   sourcemeta::core::Pointer location_;
 };
 
-// A reference of a description that reaches neither a position the description
+// A reference of an OpenAPI description that reaches neither a position it
 // holds nor a document this catalog does. Nothing about this one turns on what
 // this version supports, so it reads the way an unresolvable reference of a
 // schema already does
@@ -122,7 +124,7 @@ public:
     return this->path_;
   }
 
-  // The reference that resolves nowhere, as the description spells it
+  // The reference that resolves nowhere, as the OpenAPI description spells it
   [[nodiscard]] auto reference() const noexcept
       -> const sourcemeta::core::JSON::String & {
     return this->reference_;

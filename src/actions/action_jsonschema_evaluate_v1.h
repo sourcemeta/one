@@ -103,8 +103,8 @@ public:
                                                    "Schema not found");
     }
 
-    // A description is a leaf nothing compiles, so what it is answers for the
-    // request ahead of whether a template was written for it
+    // An OpenAPI description is a leaf nothing compiles, so what it is answers
+    // for the request ahead of whether a template was written for it
     if (this->artifact_kind(schema_present.path.value()) ==
         sourcemeta::one::LeafKind::OpenAPI) {
       return sourcemeta::core::mcp_make_tool_error(
@@ -182,8 +182,8 @@ public:
       return;
     }
 
-    // A description is a leaf nothing compiles, so what it is answers for the
-    // request ahead of whether a template was written for it
+    // An OpenAPI description is a leaf nothing compiles, so what it is answers
+    // for the request ahead of whether a template was written for it
     if (self.artifact_kind(schema_present.path.value()) ==
         sourcemeta::one::LeafKind::OpenAPI) {
       sourcemeta::one::json_error(

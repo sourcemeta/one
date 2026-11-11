@@ -88,8 +88,8 @@ make_metapack_schema_extension(const std::string_view dialect)
 }
 
 // The extension area of an artifact holding an OpenAPI description, which is
-// the tag and nothing more, as everything a description records about itself is
-// in the document
+// the tag and nothing more, as everything it records about itself is in the
+// document
 [[nodiscard]] inline auto make_metapack_openapi_extension()
     -> std::vector<std::uint8_t> {
   std::vector<std::uint8_t> result;

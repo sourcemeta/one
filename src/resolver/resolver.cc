@@ -544,9 +544,9 @@ auto Resolver::operator()(
     }
   }
 
-  // This is the schema half of the resolver, so a description is nothing it
-  // answers for. A catalog schema referencing into one therefore fails the way
-  // a reference to nothing fails, naming the file that spelled it
+  // This is the schema half of the resolver, so an OpenAPI description is
+  // nothing it answers for. A catalog schema referencing into one therefore
+  // fails the way a reference to nothing fails, naming the file that spelled it
   if (view != nullptr && view->kind != LeafKind::Schema) {
     return std::nullopt;
   }
@@ -692,11 +692,11 @@ auto Resolver::operator()(
   return schema;
 }
 
-// What a description reaches for and does not hold, as the document spells it
-// and where it spells it, with nothing named at all where the frame measures
-// the description incomplete without saying which one place makes it so. The
+// What an OpenAPI description reaches for and does not hold, as the document
+// spells it and where it spells it, with nothing named at all where the frame
+// measures it incomplete without saying which one place makes it so. The
 // document is whatever the reference resolves to ahead of its fragment, which
-// is the description's own identity for one that names a position of itself,
+// is the document's own identity for one that names a position of itself,
 // and nothing at all where the frame reports no document side
 struct OpenAPIDanglingConnection {
   sourcemeta::core::JSON::String reference;
@@ -716,10 +716,10 @@ destination_document(const sourcemeta::core::JSON::StringView destination)
           : destination.substr(0, fragment)};
 }
 
-// The first connection a description makes that leads nowhere it holds, which
-// is what a frame measuring it incomplete comes down to. A frame settles every
-// connection of its own ahead of what the Schema Objects make, and reports
-// each one as landing or not, so this reads them in that same order
+// The first connection an OpenAPI description makes that leads nowhere it
+// holds, which is what a frame measuring it incomplete comes down to. A frame
+// settles every connection of its own ahead of what the Schema Objects make,
+// and reports each one as landing or not, so this reads them in that same order
 static auto
 first_dangling_connection(const sourcemeta::core::OpenAPIFrame &frame,
                           const sourcemeta::core::JSON &document)
@@ -758,8 +758,8 @@ first_dangling_connection(const sourcemeta::core::OpenAPIFrame &frame,
   frame.schemas().for_each_unresolved_reference(
       [&result](const auto &pointer, const auto &reference) -> void {
         // Naming a dialect this build already comes with asks nothing of
-        // whoever reads the description, so it is the one reference out of a
-        // Schema Object that leaves the description whole
+        // whoever reads the OpenAPI description, so it is the one reference
+        // out of a Schema Object that leaves one whole
         if (!result.reference.empty() ||
             (pointer.back().is_property() &&
              pointer.back().to_property() == "$schema" &&
@@ -831,11 +831,12 @@ auto Resolver::openapi(const std::string_view raw_identifier,
       }};
 
   /////////////////////////////////////////////////////////////////////////////
-  // (3) Declare what the description calls itself, where the revision reserves
-  // a field for it, so that the base every reference below is measured against
-  // is the one the document came with and so that the formatter ranks the field
-  // where the specification puts it. What this instance serves the description
-  // as is written into the same field once the frame has been read
+  // (3) Declare what the OpenAPI description calls itself, where the revision
+  // reserves a field for it, so that the base every reference below is measured
+  // against is the one the document came with and so that the formatter ranks
+  // the field where the specification puts it. What this instance serves the
+  // OpenAPI description as is written into the same field once the frame has
+  // been read
   /////////////////////////////////////////////////////////////////////////////
 
   const auto declares_identity{
@@ -849,15 +850,16 @@ auto Resolver::openapi(const std::string_view raw_identifier,
       document, sourcemeta::core::schema_walker, subresolver,
       view->original_identifier};
 
-  // Reaching a document this catalog holds is a description built out of
-  // several, which this version refuses whole rather than serving in part,
+  // Reaching a document this catalog holds is an OpenAPI description built out
+  // of several, which this version refuses whole rather than serving in part,
   // since without bundling there is nothing to make one whole. Reaching
   // anywhere else is a reference that resolves nowhere, which is an error
   // whatever this version goes on to support
   if (!frame.standalone()) {
     auto dangling{first_dangling_connection(frame, document)};
-    // A reference naming a position of the description itself reaches no other
-    // document at all, however the frame spells out where it resolved to
+    // A reference naming a position of the OpenAPI description itself reaches
+    // no other document at all, however the frame spells out where it resolved
+    // to
     const auto destination{normalise_identifier(dangling.document)};
     const auto elsewhere{!dangling.document.empty() &&
                          destination != normalise_identifier(frame.base())};
@@ -1158,8 +1160,8 @@ auto Resolver::add_openapi(
     const std::filesystem::path &path,
     const std::filesystem::file_time_type mtime,
     const sourcemeta::core::JSON &document) -> Result {
-  // A revision this build cannot read is still a description, so quoting back
-  // what the file named is the only thing to do with it
+  // A revision this build cannot read is still an OpenAPI description, so
+  // quoting back what the file named is the only thing to do with it
   if (!sourcemeta::core::openapi_version(document).has_value()) {
     throw ResolverUnsupportedOpenAPIVersionError(
         path, sourcemeta::core::JSON::String{
@@ -1235,8 +1237,8 @@ auto Resolver::emplace(std::string new_identifier, Entry entry) -> void {
 auto Resolver::entry(const std::string_view identifier) const -> const Entry & {
   const auto result{this->views_.find(std::string{identifier})};
   assert(result != this->views_.cend());
-  // A description whose revision reserves no field to declare a dialect, or
-  // that declares none, carries one nowhere
+  // An OpenAPI description whose revision reserves no field to declare a
+  // dialect, or that declares none, carries one nowhere
   assert(result->second.kind == LeafKind::OpenAPI ||
          !result->second.dialect.empty());
   assert(!result->second.original_identifier.empty());

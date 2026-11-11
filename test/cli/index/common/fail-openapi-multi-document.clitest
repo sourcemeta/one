@@ -1,6 +1,6 @@
-// A description reaching a document this catalog holds is one built out of
-// several, which is a shape this version refuses rather than a reference that
-// leads nowhere.
+// An OpenAPI description reaching a document this catalog holds is one built
+// out of several, which is a shape this version refuses rather than a
+// reference that leads nowhere.
 
 WRITE one.json UNTIL EOF
 {

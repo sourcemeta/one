@@ -393,32 +393,6 @@ meta-schema that a schema may declare.
     `?bundle=0`, and `?bundle=false` all trigger bundling. To disable
     bundling, omit the parameter entirely.
 
-!!! info "OpenAPI descriptions"
-
-    A collection may hold an OpenAPI description beside the schemas it
-    references. This endpoint serves one whole, at its own path, with a
-    `Content-Type` of `application/openapi+json` and no `Link` header, as a
-    description declares the dialect of the schemas it holds within itself. A
-    description is served whole rather than per Schema Object, so a reference
-    into one, such as
-    `http://localhost:8000/example/petstore#/components/schemas/Pet`, is a
-    fetch of the path followed by a client-side
-    [JSON Pointer](https://datatracker.ietf.org/doc/html/rfc6901).
-
-    A description must currently be contained in a single document. One that
-    references another document fails the build, and so does one whose
-    references resolve nowhere. Descriptions spanning several documents are
-    planned.
-
-    The `bundle` and `as` query parameters are schema concerns and neither
-    answers for a description. So are the Visual Studio Code and Deno
-    workarounds below, which a description falls through. A description is a
-    leaf of the catalog whether or not this version can answer a given question
-    about one, so a question it cannot answer yet is refused with `501 Not
-    Implemented` rather than with `404 Not Found`. Every endpoint under
-    `/self/v1/api/schemas/` answers that way for a description, as does
-    `?bundle` on this one.
-
 !!! success "Enterprise"
 
     The `as` query parameter is only available in the
@@ -519,12 +493,7 @@ property reports none for that schema.
 === "400"
 
     The `as` query parameter names a dialect the schema cannot be converted
-    into, is combined with a query parameter other than `bundle`, or is set on
-    an OpenAPI description. Converting a description into a JSON Schema dialect
-    is not a thing it has, as
-    [`as=openapi3.2`](https://spec.openapis.org/oas/v3.2.0.html) already means
-    "this schema, rewritten in the OpenAPI 3.2 Schema Object dialect", which is
-    a different thing from migrating a document to OpenAPI 3.2.
+    into, or is combined with a query parameter other than `bundle`.
 
 === "403"
 
@@ -538,11 +507,6 @@ property reports none for that schema.
 === "405"
 
     The [configuration file](configuration.md) marks the schema collection as listed but not served.
-
-=== "501"
-
-    The `bundle` query parameter is set on an OpenAPI description. Nothing
-    bundles a description yet.
 
 ### Evaluate
 
@@ -580,11 +544,6 @@ Format](https://json-schema.org/draft/2020-12/json-schema-core#name-output-struc
 === "417"
 
     The `Expect` header carries an expectation other than `100-continue`. See [RFC 9110 §10.1.1](https://datatracker.ietf.org/doc/html/rfc9110#section-10.1.1).
-
-=== "501"
-
-    The `{path}` parameter names an OpenAPI description, which is not a schema
-    to evaluate an instance against.
 
 ### Trace
 
@@ -643,11 +602,6 @@ insight into the validation engine's behavior and logic flow.
 === "417"
 
     The `Expect` header carries an expectation other than `100-continue`. See [RFC 9110 §10.1.1](https://datatracker.ietf.org/doc/html/rfc9110#section-10.1.1).
-
-=== "501"
-
-    The `{path}` parameter names an OpenAPI description, which is not a schema
-    to evaluate an instance against.
 
 ### RDF
 
@@ -734,11 +688,6 @@ contexts are not fetched.
     (the problem details carry the offending annotation facet and instance
     location).
 
-=== "501"
-
-    The `{path}` parameter names an OpenAPI description, which is not a schema
-    to evaluate an instance against.
-
 ### Metadata
 
 *This endpoint retrieves metadata information about the JSON Schema located at
@@ -776,11 +725,6 @@ GET /self/v1/api/schemas/metadata/{path}
 === "404"
 
     The schema does not exist.
-
-=== "501"
-
-    The `{path}` parameter names an OpenAPI description. Nothing records this
-    about a description yet.
 
 ### Search
 
@@ -841,11 +785,6 @@ its own dependencies.
 
     The schema does not exist.
 
-=== "501"
-
-    The `{path}` parameter names an OpenAPI description. Nothing records this
-    about a description yet.
-
 ### Dependents
 
 *This endpoint retrieves all direct and transitive dependents of the JSON
@@ -870,11 +809,6 @@ GET /self/v1/api/schemas/dependents/{path}
 
     The schema does not exist.
 
-=== "501"
-
-    The `{path}` parameter names an OpenAPI description. Nothing records this
-    about a description yet.
-
 ### Health
 
 *This endpoint retrieves the health analysis and score for the JSON Schema located at the specified `{path}` parameter.*
@@ -898,11 +832,6 @@ GET /self/v1/api/schemas/health/{path}
 === "404"
 
     The schema does not exist.
-
-=== "501"
-
-    The `{path}` parameter names an OpenAPI description. Nothing records this
-    about a description yet.
 
 ### Locations
 
@@ -961,11 +890,6 @@ GET /self/v1/api/schemas/locations/{path}
 
     The [configuration file](configuration.md) marks the schema collection as listed but not served.
 
-=== "501"
-
-    The `{path}` parameter names an OpenAPI description. Nothing records this
-    about a description yet.
-
 ### Stats
 
 *This endpoint retrieves keyword statistics, by vocabulary, about every URI
@@ -988,11 +912,6 @@ GET /self/v1/api/schemas/stats/{path}
 === "405"
 
     The [configuration file](configuration.md) marks the schema collection as listed but not served.
-
-=== "501"
-
-    The `{path}` parameter names an OpenAPI description. Nothing records this
-    about a description yet.
 
 ### Positions
 
@@ -1022,11 +941,6 @@ schema.
 === "405"
 
     The [configuration file](configuration.md) marks the schema collection as listed but not served.
-
-=== "501"
-
-    The `{path}` parameter names an OpenAPI description. Nothing records this
-    about a description yet.
 
 ## Playground
 

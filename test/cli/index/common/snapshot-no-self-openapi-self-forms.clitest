@@ -1,7 +1,7 @@
-// What a description calls itself decides where the catalog holds it, whether
-// it writes that absolute or relative to where it was read from. A description
-// that leaves the field empty names nothing, so the file it came from decides
-// instead.
+// What an OpenAPI description calls itself decides where the catalog holds
+// it, whether it writes that absolute or relative to where it was read from.
+// One that leaves the field empty names nothing, so the file it came from
+// decides instead.
 
 MAKE DIRECTORY api
 

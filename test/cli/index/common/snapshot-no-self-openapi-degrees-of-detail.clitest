@@ -1,6 +1,6 @@
-// A description holding every kind of connection the shell makes, beside one
-// holding nothing but an empty Paths Object, so that what the catalog writes
-// for a description does not turn on how much the description says.
+// An OpenAPI description holding every kind of connection the shell makes,
+// beside one holding nothing but an empty Paths Object, so that what the
+// catalog writes for one does not turn on how much it says.
 
 MAKE DIRECTORY api
 

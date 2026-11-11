@@ -56,8 +56,8 @@ body startsWith "{\n  \"openapi\": \"3.0.4\",\n  \"info\": {\n"
   }
 }
 
-# A reference a description writes as its own absolute identity would lead
-# nowhere once the identity is the one this instance serves it under
+# A reference an OpenAPI description writes as its own absolute identity
+# would lead nowhere once the identity is the one this instance serves it under
 GET {{base}}/test/schemas/openapi-3-1
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
@@ -145,9 +145,9 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/sche
   }
 }
 
-# A description using the whole of the shell keeps every connection it makes
-# inside itself, and comes back ordered the way the specification lists the
-# fields rather than the way the document wrote them
+# An OpenAPI description using the whole of the shell keeps every connection
+# it makes inside itself, and comes back ordered the way the specification
+# lists the fields rather than the way the document wrote them
 GET {{base}}/test/schemas/openapi-3-2-detailed
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
@@ -373,8 +373,8 @@ header "ETag" exists
 body startsWith "{\n  \"openapi\": \"3.0.4\",\n  \"info\": {\n"
 body == "{{baseline_body}}"
 
-# The editor branch is a workaround for a tool consuming schemas, so a
-# description falls through to what is served at its path
+# The editor branch is a workaround for a tool consuming schemas, so an
+# OpenAPI description falls through to what is served at its path
 GET {{base}}/test/schemas/openapi-3-0
 User-Agent: Visual Studio Code
 HTTP 200
@@ -447,8 +447,8 @@ header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-# Nothing bundles a description yet, and a leaf that is one is still a leaf,
-# so asking for a bundle of it asks for what this version does not do
+# Nothing bundles an OpenAPI description yet, and a leaf that is one is still
+# a leaf, so asking for a bundle of it asks for what this version does not do
 GET {{base}}/test/schemas/openapi-3-0?bundle
 HTTP 501
 Cache-Control: no-store
@@ -482,7 +482,7 @@ header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-# Nothing describes a description for navigation yet
+# Nothing records an OpenAPI description for navigation yet
 GET {{base}}/self/v1/api/schemas/metadata/test/schemas/openapi-3-0
 HTTP 501
 Cache-Control: no-store
@@ -516,7 +516,7 @@ header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-# Nothing records what a description depends on yet
+# Nothing records what an OpenAPI description depends on yet
 GET {{base}}/self/v1/api/schemas/dependencies/test/schemas/openapi-3-0
 HTTP 501
 Cache-Control: no-store
@@ -550,7 +550,7 @@ header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-# Nothing records what depends on a description yet
+# Nothing records what depends on an OpenAPI description yet
 GET {{base}}/self/v1/api/schemas/dependents/test/schemas/openapi-3-0
 HTTP 501
 Cache-Control: no-store
@@ -584,7 +584,7 @@ header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-# Nothing measures the health of a description yet
+# Nothing measures the health of an OpenAPI description yet
 GET {{base}}/self/v1/api/schemas/health/test/schemas/openapi-3-0
 HTTP 501
 Cache-Control: no-store
@@ -618,7 +618,7 @@ header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-# Nothing records the URIs a description answers to yet
+# Nothing records the URIs an OpenAPI description answers to yet
 GET {{base}}/self/v1/api/schemas/locations/test/schemas/openapi-3-0
 HTTP 501
 Cache-Control: no-store
@@ -652,7 +652,7 @@ header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-# Nothing records where the members of a description sit yet
+# Nothing records where the members of an OpenAPI description sit yet
 GET {{base}}/self/v1/api/schemas/positions/test/schemas/openapi-3-0
 HTTP 501
 Cache-Control: no-store
@@ -686,7 +686,7 @@ header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-# Nothing counts what a description is made of yet
+# Nothing counts what an OpenAPI description is made of yet
 GET {{base}}/self/v1/api/schemas/stats/test/schemas/openapi-3-0
 HTTP 501
 Cache-Control: no-store
@@ -720,8 +720,8 @@ header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-# Evaluating an instance against a description asks a document that is no
-# schema to behave like one
+# Evaluating an instance against an OpenAPI description asks a document that
+# is no schema to behave like one
 POST {{base}}/self/v1/api/schemas/evaluate/test/schemas/openapi-3-0
 Content-Type: application/json
 ```
@@ -759,8 +759,8 @@ header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-# Tracing an evaluation against a description asks a document that is no
-# schema to behave like one
+# Tracing an evaluation against an OpenAPI description asks a document that
+# is no schema to behave like one
 POST {{base}}/self/v1/api/schemas/trace/test/schemas/openapi-3-0
 Content-Type: application/json
 ```

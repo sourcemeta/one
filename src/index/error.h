@@ -47,7 +47,7 @@ private:
   std::string stacktrace_;
 };
 
-// Which of the schemas a description holds is at fault, as a description may
+// Which of the schemas an OpenAPI description holds is at fault, as one may
 // hold hundreds and saying only that one of them is invalid is unusable
 class OpenAPISchemaObjectError : public sourcemeta::core::Error {
 public:

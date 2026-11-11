@@ -64,9 +64,9 @@ public:
 
     // The editor and Deno branches are workarounds for tools consuming schemas,
     // and conversion is a JSON Schema dialect conversion, so all three are
-    // about schemas and none of them answers for a description. Every other
-    // request is served the same artifact whatever the leaf holds, which is why
-    // nothing is read here unless one of those is being asked for
+    // about schemas and none of them answers for an OpenAPI description. Every
+    // other request is served the same artifact whatever the leaf holds, which
+    // is why nothing is read here unless one of those is being asked for
     const auto description{(is_vscode || is_deno || convert) &&
                            self.describes_api(caller, schema_path)};
     if (convert) {
@@ -96,9 +96,9 @@ public:
         caller, schema_path, sourcemeta::one::RouterAction::Tree::Schemas,
         artifact)};
     if (!resolution.path.has_value()) {
-      // A description is a leaf of the catalog whether or not anything bundles
-      // one yet, so asking for a bundle of one asks for something this version
-      // does not do rather than for something that is not here
+      // An OpenAPI description is a leaf of the catalog whether or not anything
+      // bundles one yet, so asking for a bundle of one asks for something this
+      // version does not do rather than for something that is not here
       if (bundle && self.describes_api(caller, schema_path)) {
         sourcemeta::one::json_error(
             request, response, sourcemeta::core::HTTP_STATUS_NOT_IMPLEMENTED,
