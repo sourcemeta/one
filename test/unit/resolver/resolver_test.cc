@@ -409,6 +409,65 @@ TEST(example_openapi_reference_spellings) {
   })JSON");
 }
 
+// What follows the hash of a reference is never rewritten, only the document
+// side of it is, so an anchor reaches the schema it named before. An anchor is
+// a spelling only the schemas admit, as a reference of this specification
+// names a position and nothing else
+TEST(example_openapi_anchor_reference) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  RESOLVER_IMPORT(resolver, "example", "openapi-anchor-target.json");
+  RESOLVER_ADD_OPENAPI(resolver, "example", "openapi-anchor-reference.json",
+                       "https://example.com/schemas/openapi-anchor-reference",
+                       "http://localhost:8000/example/openapi-anchor-reference",
+                       R"JSON({
+    "openapi": "3.1.1",
+    "info": {
+      "title": "Anchor reference",
+      "version": "1.0.0"
+    },
+    "paths": {},
+    "components": {
+      "schemas": {
+        "Use": {
+          "$ref": "openapi-anchor-target#Cat"
+        }
+      }
+    }
+  })JSON");
+}
+
+// And a position outside the Components Object is reached the same way, a
+// percent encoded template expression in the pointer included, which comes
+// back exactly as it went in
+TEST(example_openapi_templated_path_reference) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  RESOLVER_IMPORT(resolver, "example", "openapi-templated-target.json");
+  RESOLVER_ADD_OPENAPI(
+      resolver, "example", "openapi-templated-reference.json",
+      "https://example.com/schemas/openapi-templated-reference",
+      "http://localhost:8000/example/openapi-templated-reference",
+      R"JSON({
+    "openapi": "3.1.1",
+    "info": {
+      "title": "Templated reference",
+      "version": "1.0.0"
+    },
+    "paths": {
+      "/dogs": {
+        "get": {
+          "responses": {
+            "404": {
+              "$ref": "openapi-templated-target#/paths/~1pets~1%7Bid%7D/get/responses/404"
+            }
+          }
+        }
+      }
+    }
+  })JSON");
+}
+
 // A dialect an OpenAPI description names relative to itself resolves against
 // the identity of the document that names it, which is the directory it sits
 // in rather than the root of the collection it belongs to
