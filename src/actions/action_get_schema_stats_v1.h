@@ -8,6 +8,7 @@
 
 class ActionGetSchemaStatsV1 : public ActionServeSchemaArtifactV1 {
 public:
+  static constexpr std::string_view TITLE{"Get Schema Stats"};
   static constexpr std::string_view DESCRIPTION{
       "Return per-vocabulary keyword usage statistics for a schema in the "
       "catalog, identifying which JSON Schema keywords the schema relies "

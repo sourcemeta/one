@@ -21,6 +21,7 @@
 
 class ActionPlaygroundSchemaTraceV1 : public sourcemeta::one::RouterAction {
 public:
+  static constexpr std::string_view TITLE{"Playground Trace Schema"};
   static constexpr std::string_view DESCRIPTION{
       "Validate a JSON instance against a schema the caller supplies in the "
       "request rather than one this catalog holds, and return a step-by-step "

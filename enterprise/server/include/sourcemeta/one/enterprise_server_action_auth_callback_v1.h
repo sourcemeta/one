@@ -32,6 +32,7 @@
 
 class ActionAuthCallbackV1 : public sourcemeta::one::RouterAction {
 public:
+  static constexpr std::string_view TITLE{"Login Callback"};
   static constexpr std::string_view DESCRIPTION{
       "Complete an interactive login by exchanging the provider's "
       "authorization code for a session"};

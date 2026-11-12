@@ -8,6 +8,7 @@
 
 class ActionGetSchemaHealthV1 : public ActionServeSchemaArtifactV1 {
 public:
+  static constexpr std::string_view TITLE{"Get Schema Health"};
   static constexpr std::string_view DESCRIPTION{
       "Return the lint health score (0 to 100) and any lint findings "
       "for a schema in the catalog"};

@@ -66,70 +66,76 @@ WRITE expected.txt UNTIL EOF
 2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/catalog-entry.json (#3)
 2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/error.json (#4)
 2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/list/response.json (#5)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/playground/schemas/trace/request.json (#6)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/playground/schemas/trace/response.json (#7)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/dependencies/response.json (#8)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/dependents/response.json (#9)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/request.json (#10)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/response.json (#11)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/health/response.json (#12)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/locations/response.json (#13)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/metadata/response.json (#14)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/output-error.json (#15)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/position.json (#16)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/positions/response.json (#17)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/rdf/request.json (#18)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/rdf/response.json (#19)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/search/response.json (#20)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/stats/response.json (#21)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/request.json (#22)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/response.json (#23)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/error.json (#24)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/initialize/request.json (#25)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/initialize/response.json (#26)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/notifications/cancelled.json (#27)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/notifications/initialized.json (#28)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/ping/request.json (#29)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/ping/response.json (#30)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/prm/response.json (#31)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/request.json (#32)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/request.json (#33)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/response.json (#34)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/resources/read/request.json (#35)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/resources/read/response.json (#36)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/request.json (#37)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/response.json (#38)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#39)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/evaluate-schema/request.json (#40)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/evaluate-schema/response.json (#41)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request.json (#42)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response.json (#43)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-dependents/request.json (#44)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-dependents/response.json (#45)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-health/request.json (#46)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-health/response.json (#47)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-locations/request.json (#48)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-locations/response.json (#49)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-metadata/request.json (#50)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-metadata/response.json (#51)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-positions/request.json (#52)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-positions/response.json (#53)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-stats/request.json (#54)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-stats/response.json (#55)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/instance-to-rdf/request.json (#56)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/instance-to-rdf/response.json (#57)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/list-directory/request.json (#58)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/list-directory/response.json (#59)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/playground-trace-schema/request.json (#60)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/playground-trace-schema/response.json (#61)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/request.json (#62)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/response.json (#63)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/search-schemas/request.json (#64)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/search-schemas/response.json (#65)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request.json (#66)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response.json (#67)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/request.json (#68)
-2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/response.json (#69)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/openapi/dependencies/response.json (#6)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/openapi/dependents/response.json (#7)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/playground/schemas/trace/request.json (#8)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/playground/schemas/trace/response.json (#9)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/dependencies/response.json (#10)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/dependents/response.json (#11)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/request.json (#12)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/evaluate/response.json (#13)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/health/response.json (#14)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/locations/response.json (#15)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/metadata/response.json (#16)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/output-error.json (#17)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/position.json (#18)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/positions/response.json (#19)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/rdf/request.json (#20)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/rdf/response.json (#21)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/search/response.json (#22)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/stats/response.json (#23)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/request.json (#24)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/api/schemas/trace/response.json (#25)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/error.json (#26)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/initialize/request.json (#27)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/initialize/response.json (#28)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/notifications/cancelled.json (#29)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/notifications/initialized.json (#30)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/ping/request.json (#31)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/ping/response.json (#32)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/prm/response.json (#33)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/request.json (#34)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/request.json (#35)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/resources/list/response.json (#36)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/resources/read/request.json (#37)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/resources/read/response.json (#38)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/request.json (#39)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/resources/templates/list/response.json (#40)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/response.json (#41)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/evaluate-schema/request.json (#42)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/evaluate-schema/response.json (#43)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/request.json (#44)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response.json (#45)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-openapi-dependents/request.json (#46)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-openapi-dependents/response.json (#47)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request.json (#48)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response.json (#49)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-dependents/request.json (#50)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-dependents/response.json (#51)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-health/request.json (#52)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-health/response.json (#53)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-locations/request.json (#54)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-locations/response.json (#55)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-metadata/request.json (#56)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-metadata/response.json (#57)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-positions/request.json (#58)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-positions/response.json (#59)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-stats/request.json (#60)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/get-schema-stats/response.json (#61)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/instance-to-rdf/request.json (#62)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/instance-to-rdf/response.json (#63)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/list-directory/request.json (#64)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/list-directory/response.json (#65)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/playground-trace-schema/request.json (#66)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/playground-trace-schema/response.json (#67)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/request.json (#68)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/response.json (#69)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/search-schemas/request.json (#70)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/search-schemas/response.json (#71)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request.json (#72)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/response.json (#73)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/request.json (#74)
+2> Detecting: [PREFIX]/share/sourcemeta/one/self/v1/schemas/mcp/tools/list/response.json (#75)
 2> ( 16%) Producing: explorer/public/%/directory.metapack
 2> ( 33%) Producing: explorer/public/%/directory-html.metapack
 2> ( 50%) Producing: explorer/public/%/search.metapack
@@ -219,6 +225,28 @@ WRITE expected_manifest.txt UNTIL EOF
 ./explorer/public/self/v1/schemas/api/list/response/%/data-html.metapack
 ./explorer/public/self/v1/schemas/api/list/response/%/dependents.metapack
 ./explorer/public/self/v1/schemas/api/list/response/%/metadata.metapack
+./explorer/public/self/v1/schemas/api/openapi
+./explorer/public/self/v1/schemas/api/openapi/%
+./explorer/public/self/v1/schemas/api/openapi/%/directory-html.metapack
+./explorer/public/self/v1/schemas/api/openapi/%/directory.metapack
+./explorer/public/self/v1/schemas/api/openapi/dependencies
+./explorer/public/self/v1/schemas/api/openapi/dependencies/%
+./explorer/public/self/v1/schemas/api/openapi/dependencies/%/directory-html.metapack
+./explorer/public/self/v1/schemas/api/openapi/dependencies/%/directory.metapack
+./explorer/public/self/v1/schemas/api/openapi/dependencies/response
+./explorer/public/self/v1/schemas/api/openapi/dependencies/response/%
+./explorer/public/self/v1/schemas/api/openapi/dependencies/response/%/data-html.metapack
+./explorer/public/self/v1/schemas/api/openapi/dependencies/response/%/dependents.metapack
+./explorer/public/self/v1/schemas/api/openapi/dependencies/response/%/metadata.metapack
+./explorer/public/self/v1/schemas/api/openapi/dependents
+./explorer/public/self/v1/schemas/api/openapi/dependents/%
+./explorer/public/self/v1/schemas/api/openapi/dependents/%/directory-html.metapack
+./explorer/public/self/v1/schemas/api/openapi/dependents/%/directory.metapack
+./explorer/public/self/v1/schemas/api/openapi/dependents/response
+./explorer/public/self/v1/schemas/api/openapi/dependents/response/%
+./explorer/public/self/v1/schemas/api/openapi/dependents/response/%/data-html.metapack
+./explorer/public/self/v1/schemas/api/openapi/dependents/response/%/dependents.metapack
+./explorer/public/self/v1/schemas/api/openapi/dependents/response/%/metadata.metapack
 ./explorer/public/self/v1/schemas/api/playground
 ./explorer/public/self/v1/schemas/api/playground/%
 ./explorer/public/self/v1/schemas/api/playground/%/directory-html.metapack
@@ -511,6 +539,34 @@ WRITE expected_manifest.txt UNTIL EOF
 ./explorer/public/self/v1/schemas/mcp/tools/call/evaluate-schema/response/%/data-html.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/evaluate-schema/response/%/dependents.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/evaluate-schema/response/%/metadata.metapack
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependencies
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/%
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/%/directory-html.metapack
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/%/directory.metapack
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/request
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/request/%
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/request/%/data-html.metapack
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/request/%/dependents.metapack
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/request/%/metadata.metapack
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response/%
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response/%/data-html.metapack
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response/%/dependents.metapack
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response/%/metadata.metapack
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependents
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependents/%
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependents/%/directory-html.metapack
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependents/%/directory.metapack
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependents/request
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependents/request/%
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependents/request/%/data-html.metapack
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependents/request/%/dependents.metapack
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependents/request/%/metadata.metapack
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependents/response
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependents/response/%
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependents/response/%/data-html.metapack
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependents/response/%/dependents.metapack
+./explorer/public/self/v1/schemas/mcp/tools/call/get-openapi-dependents/response/%/metadata.metapack
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-dependencies
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-dependencies/%
 ./explorer/public/self/v1/schemas/mcp/tools/call/get-schema-dependencies/%/directory-html.metapack
@@ -789,6 +845,39 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/api/list/response/%/locations.metapack
 ./schemas/self/v1/schemas/api/list/response/%/positions.metapack
 ./schemas/self/v1/schemas/api/list/response/%/stats.metapack
+./schemas/self/v1/schemas/api/openapi
+./schemas/self/v1/schemas/api/openapi/dependencies
+./schemas/self/v1/schemas/api/openapi/dependencies/response
+./schemas/self/v1/schemas/api/openapi/dependencies/response/%
+./schemas/self/v1/schemas/api/openapi/dependencies/response/%/blaze-exhaustive.metapack
+./schemas/self/v1/schemas/api/openapi/dependencies/response/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/openapi/dependencies/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/api/openapi/dependencies/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/api/openapi/dependencies/response/%/bundle-openapi3.2.metapack
+./schemas/self/v1/schemas/api/openapi/dependencies/response/%/bundle.metapack
+./schemas/self/v1/schemas/api/openapi/dependencies/response/%/data.metapack
+./schemas/self/v1/schemas/api/openapi/dependencies/response/%/dependencies.metapack
+./schemas/self/v1/schemas/api/openapi/dependencies/response/%/editor.metapack
+./schemas/self/v1/schemas/api/openapi/dependencies/response/%/health.metapack
+./schemas/self/v1/schemas/api/openapi/dependencies/response/%/locations.metapack
+./schemas/self/v1/schemas/api/openapi/dependencies/response/%/positions.metapack
+./schemas/self/v1/schemas/api/openapi/dependencies/response/%/stats.metapack
+./schemas/self/v1/schemas/api/openapi/dependents
+./schemas/self/v1/schemas/api/openapi/dependents/response
+./schemas/self/v1/schemas/api/openapi/dependents/response/%
+./schemas/self/v1/schemas/api/openapi/dependents/response/%/blaze-exhaustive.metapack
+./schemas/self/v1/schemas/api/openapi/dependents/response/%/blaze-fast.metapack
+./schemas/self/v1/schemas/api/openapi/dependents/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/api/openapi/dependents/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/api/openapi/dependents/response/%/bundle-openapi3.2.metapack
+./schemas/self/v1/schemas/api/openapi/dependents/response/%/bundle.metapack
+./schemas/self/v1/schemas/api/openapi/dependents/response/%/data.metapack
+./schemas/self/v1/schemas/api/openapi/dependents/response/%/dependencies.metapack
+./schemas/self/v1/schemas/api/openapi/dependents/response/%/editor.metapack
+./schemas/self/v1/schemas/api/openapi/dependents/response/%/health.metapack
+./schemas/self/v1/schemas/api/openapi/dependents/response/%/locations.metapack
+./schemas/self/v1/schemas/api/openapi/dependents/response/%/positions.metapack
+./schemas/self/v1/schemas/api/openapi/dependents/response/%/stats.metapack
 ./schemas/self/v1/schemas/api/playground
 ./schemas/self/v1/schemas/api/playground/schemas
 ./schemas/self/v1/schemas/api/playground/schemas/trace
@@ -1357,6 +1446,68 @@ WRITE expected_manifest.txt UNTIL EOF
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/response/%/locations.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/response/%/positions.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/evaluate-schema/response/%/stats.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/request
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/request/%
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/request/%/blaze-exhaustive.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/request/%/blaze-fast.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/request/%/bundle-openapi3.2.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/request/%/bundle.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/request/%/data.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/request/%/dependencies.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/request/%/editor.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/request/%/health.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/request/%/locations.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/request/%/positions.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/request/%/stats.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response/%
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response/%/blaze-exhaustive.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response/%/blaze-fast.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response/%/bundle-openapi3.2.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response/%/bundle.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response/%/data.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response/%/dependencies.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response/%/editor.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response/%/health.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response/%/locations.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response/%/positions.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response/%/stats.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/request
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/request/%
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/request/%/blaze-exhaustive.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/request/%/blaze-fast.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/request/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/request/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/request/%/bundle-openapi3.2.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/request/%/bundle.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/request/%/data.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/request/%/dependencies.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/request/%/editor.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/request/%/health.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/request/%/locations.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/request/%/positions.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/request/%/stats.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/response
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/response/%
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/response/%/blaze-exhaustive.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/response/%/blaze-fast.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/response/%/bundle-2020-12.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/response/%/bundle-openapi3.1.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/response/%/bundle-openapi3.2.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/response/%/bundle.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/response/%/data.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/response/%/dependencies.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/response/%/editor.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/response/%/health.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/response/%/locations.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/response/%/positions.metapack
+./schemas/self/v1/schemas/mcp/tools/call/get-openapi-dependents/response/%/stats.metapack
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request
 ./schemas/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request/%

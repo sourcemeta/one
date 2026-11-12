@@ -54,7 +54,11 @@ namespace sourcemeta::one {
     "mcp_protected_resource_metadata_v1")                                      \
   X(METRICS_V1, ActionMetricsV1, "metrics_v1")                                 \
   X(PLAYGROUND_SCHEMA_TRACE_V1, ActionPlaygroundSchemaTraceV1,                 \
-    "playground_schema_trace_v1")
+    "playground_schema_trace_v1")                                              \
+  X(GET_OPENAPI_DEPENDENCIES_V1, ActionGetOpenAPIDependenciesV1,               \
+    "get_openapi_dependencies_v1")                                             \
+  X(GET_OPENAPI_DEPENDENTS_V1, ActionGetOpenAPIDependentsV1,                   \
+    "get_openapi_dependents_v1")
 
 #define SOURCEMETA_ONE_DEFINE_ACTION_TYPE(Name, Class, Label)                  \
   ACTION_TYPE_##Name,
@@ -81,6 +85,10 @@ inline constexpr std::array<std::string_view, ACTION_TYPE_COUNT> ACTION_NAMES{
 
 extern const std::array<RouterActionConstructor, ACTION_TYPE_COUNT>
     CONSTRUCTORS;
+
+[[nodiscard]] auto
+action_title(sourcemeta::core::URITemplateRouter::Identifier context) noexcept
+    -> std::string_view;
 
 [[nodiscard]] auto action_description(
     sourcemeta::core::URITemplateRouter::Identifier context) noexcept

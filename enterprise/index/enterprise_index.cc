@@ -7,7 +7,6 @@
 #include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/oauth.h>
-#include <sourcemeta/core/text.h>
 #include <sourcemeta/core/uri.h>
 #include <sourcemeta/core/yaml.h>
 
@@ -142,8 +141,8 @@ auto generate_mcp_tools(const sourcemeta::core::URITemplateRouterView &router,
       output_schema_ref.emplace(std::move(ref));
     }
 
-    std::string title{operation_id};
-    sourcemeta::core::to_title_case(title);
+    const auto title{sourcemeta::one::action_title(context)};
+    assert(!title.empty());
 
     tool_routes.assign(
         std::string{operation_id},

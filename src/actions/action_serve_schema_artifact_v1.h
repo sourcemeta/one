@@ -18,6 +18,7 @@
 
 class ActionServeSchemaArtifactV1 : public sourcemeta::one::RouterAction {
 public:
+  static constexpr std::string_view TITLE{"Serve Schema Artifact"};
   static constexpr std::string_view DESCRIPTION{
       "Look up a precomputed artifact about a specific schema by its "
       "absolute URI"};

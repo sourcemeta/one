@@ -613,6 +613,14 @@ struct GenerateDependents {
       const auto &contents{contents_option.value()};
       assert(contents.is_array());
       for (const auto &entry : contents.as_array()) {
+        // An OpenAPI description may reach a schema of this catalog, and what
+        // this report says of a dependent is what dialect it is written in,
+        // which is a question only a schema answers. So the edges of the other
+        // kind belong to the report that kind keeps rather than to this one
+        if (entry.defines("kind")) {
+          continue;
+        }
+
         direct[entry.at("to").to_string()].emplace(entry.at("from").to_string(),
                                                    entry.at("at").to_string());
       }
@@ -681,9 +689,96 @@ struct GenerateDependents {
       result.push_back(std::move(object));
     }
 
+    const auto extension_bytes{sourcemeta::one::make_metapack_leaf_extension(
+        sourcemeta::one::LeafKind::Schema)};
     sourcemeta::core::metapack_write_json_pretty(
         action.destination, result, "application/json",
-        sourcemeta::core::MetapackEncoding::GZIP, {});
+        sourcemeta::core::MetapackEncoding::GZIP,
+        std::span<const std::uint8_t>{extension_bytes});
+  }
+};
+
+// The reverse of what every leaf of this kind recorded, walked from this one
+// alone. Only an OpenAPI description reaches another, so what the walk keeps is
+// what the OpenAPI edges spell, and each of those carries the kind of Object
+// it reaches for rather than a dialect
+struct GenerateOpenAPIDependents {
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
+                      const sourcemeta::one::BuildDynamicCallback &,
+                      sourcemeta::one::Resolver &,
+                      const sourcemeta::one::Configuration &,
+                      const sourcemeta::core::JSON &) -> void {
+    using DirectMap = std::unordered_map<
+        sourcemeta::core::JSON::String,
+        std::set<std::tuple<sourcemeta::core::JSON::String,
+                            sourcemeta::core::JSON::String,
+                            sourcemeta::core::JSON::String>>>;
+    DirectMap direct;
+    for (const auto &dependency : action.dependencies) {
+      if (dependency.filename() == "authentication.bin") {
+        continue;
+      }
+
+      const auto contents_option{
+          sourcemeta::core::metapack_read_json(dependency)};
+      assert(contents_option.has_value());
+      const auto &contents{contents_option.value()};
+      assert(contents.is_array());
+      for (const auto &entry : contents.as_array()) {
+        // A schema reaching an OpenAPI description is refused, so an edge that
+        // names one is an edge another description spells
+        if (!entry.defines("kind")) {
+          continue;
+        }
+
+        direct[entry.at("to").to_string()].emplace(
+            entry.at("from").to_string(), entry.at("at").to_string(),
+            entry.at("kind").to_string());
+      }
+    }
+
+    std::set<std::tuple<
+        sourcemeta::core::JSON::String, sourcemeta::core::JSON::String,
+        sourcemeta::core::JSON::String, sourcemeta::core::JSON::String>>
+        edges;
+    const sourcemeta::core::JSON::String origin{action.data};
+    std::unordered_set<sourcemeta::core::JSON::StringView> visited;
+    visited.emplace(origin);
+    std::queue<sourcemeta::core::JSON::String> queue;
+    queue.emplace(origin);
+    while (!queue.empty()) {
+      const auto current{std::move(queue.front())};
+      queue.pop();
+      const auto match{direct.find(current)};
+      if (match == direct.cend()) {
+        continue;
+      }
+
+      for (const auto &[dependent, pointer, kind] : match->second) {
+        edges.emplace(dependent, current, pointer, kind);
+        if (visited.emplace(dependent).second) {
+          queue.emplace(dependent);
+        }
+      }
+    }
+
+    auto result{sourcemeta::core::JSON::make_array()};
+    for (const auto &[from, target, pointer, kind] : edges) {
+      auto object{sourcemeta::core::JSON::make_object()};
+      object.assign("from", sourcemeta::core::JSON{from});
+      object.assign("to", sourcemeta::core::JSON{target});
+      object.assign("at", sourcemeta::core::JSON{pointer});
+      object.assign("kind", sourcemeta::core::JSON{kind});
+      result.push_back(std::move(object));
+    }
+
+    const auto extension_bytes{sourcemeta::one::make_metapack_leaf_extension(
+        sourcemeta::one::LeafKind::OpenAPI)};
+    sourcemeta::core::metapack_write_json_pretty(
+        action.destination, result, "application/json",
+        sourcemeta::core::MetapackEncoding::GZIP,
+        std::span<const std::uint8_t>{extension_bytes});
   }
 };
 

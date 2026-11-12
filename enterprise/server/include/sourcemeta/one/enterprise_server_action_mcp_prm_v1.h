@@ -20,6 +20,7 @@
 class ActionMCPProtectedResourceMetadataV1
     : public sourcemeta::one::RouterAction {
 public:
+  static constexpr std::string_view TITLE{"Protected Resource Metadata"};
   static constexpr std::string_view DESCRIPTION{
       "Report where a token for the Model Context Protocol endpoint comes "
       "from"};

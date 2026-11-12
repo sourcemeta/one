@@ -16,6 +16,7 @@ enum : BuildPlan::Action::Type {
   ACTION_POSITIONS,
   ACTION_LOCATIONS,
   ACTION_DEPENDENCIES,
+  ACTION_OPENAPI_DEPENDENCIES,
   ACTION_STATS,
   ACTION_HEALTH,
   ACTION_BUNDLE,
@@ -24,6 +25,7 @@ enum : BuildPlan::Action::Type {
   ACTION_BLAZE_FAST,
   ACTION_SCHEMA_METADATA,
   ACTION_DEPENDENTS,
+  ACTION_OPENAPI_DEPENDENTS,
   ACTION_SEARCH_INDEX,
   ACTION_MCP,
   ACTION_DIRECTORY_LIST,
@@ -60,9 +62,9 @@ enum : BuildPlan::Action::Type {
 enum : BuildPlan::Type { MODE_HEADLESS, MODE_FULL, MODE_EXPERIMENTAL };
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
-inline constexpr std::size_t INDEX_LEAF_RULES{21};
+inline constexpr std::size_t INDEX_LEAF_RULES{23};
 #else
-inline constexpr std::size_t INDEX_LEAF_RULES{14};
+inline constexpr std::size_t INDEX_LEAF_RULES{16};
 #endif
 
 inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
@@ -150,6 +152,24 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
                             .filename = "authentication.bin"}}},
          .dependency_count = 2,
          .kind = LeafKind::Schema},
+
+        {.action = ACTION_OPENAPI_DEPENDENCIES,
+         .base = 0,
+         .filename = "dependencies.metapack",
+         .gate = TargetGate::Always,
+         .dirty = DirtyOverride::Normal,
+         .is_root = false,
+         .combine_only = false,
+         .container_target = false,
+         .tracks_dependencies = true,
+         .dependencies = {{{.source = DependencySource::Base,
+                            .base = 0,
+                            .filename = "data.metapack"},
+                           {.source = DependencySource::GlobalOutput,
+                            .base = 0,
+                            .filename = "authentication.bin"}}},
+         .dependency_count = 2,
+         .kind = LeafKind::OpenAPI},
 
         {.action = ACTION_STATS,
          .base = 0,
@@ -294,6 +314,24 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
                             .filename = "authentication.bin"}}},
          .dependency_count = 2,
          .kind = LeafKind::Schema},
+
+        {.action = ACTION_OPENAPI_DEPENDENTS,
+         .base = 1,
+         .filename = "dependents.metapack",
+         .gate = TargetGate::Always,
+         .dirty = DirtyOverride::ForceOnGraphChange,
+         .is_root = false,
+         .combine_only = true,
+         .container_target = false,
+         .tracks_dependencies = false,
+         .dependencies = {{{.source = DependencySource::Base,
+                            .base = 0,
+                            .filename = "dependencies.metapack"},
+                           {.source = DependencySource::GlobalOutput,
+                            .base = 0,
+                            .filename = "authentication.bin"}}},
+         .dependency_count = 2,
+         .kind = LeafKind::OpenAPI},
 
         {.action = ACTION_WEB_SCHEMA,
          .base = 1,
