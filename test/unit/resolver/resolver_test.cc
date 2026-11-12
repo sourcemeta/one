@@ -409,6 +409,27 @@ TEST(example_openapi_reference_spellings) {
   })JSON");
 }
 
+// A dialect an OpenAPI description names relative to itself resolves against
+// the identity of the document that names it, which is the directory it sits
+// in rather than the root of the collection it belongs to
+TEST(example_openapi_relative_dialect) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  RESOLVER_ADD_OPENAPI(
+      resolver, "example", "nested/openapi-relative-dialect.json",
+      "https://example.com/schemas/nested/openapi-relative-dialect",
+      "http://localhost:8000/example/nested/openapi-relative-dialect",
+      R"JSON({
+    "openapi": "3.1.1",
+    "jsonSchemaDialect": "http://localhost:8000/example/nested/dialect",
+    "info": {
+      "title": "Relative dialect",
+      "version": "1.0.0"
+    },
+    "paths": {}
+  })JSON");
+}
+
 // A Schema Object that declares an identifier of its own is what a reference
 // inside it is measured against, not the OpenAPI description. The served
 // document carries such an identifier exactly as it was written, so one

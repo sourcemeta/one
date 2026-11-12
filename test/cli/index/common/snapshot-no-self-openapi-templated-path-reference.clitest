@@ -1,0 +1,113 @@
+// A reference may name a position outside the Components Object, one under a
+// templated path among them. Only the document side of a reference is ever
+// rewritten, so a percent encoded template expression comes back exactly as it
+// went in.
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "api": {
+      "baseUri": "https://example.com/",
+      "path": "./api",
+      "defaultDialect": "https://json-schema.org/draft/2020-12/schema"
+    }
+  }
+}
+EOF
+
+MAKE DIRECTORY api
+
+WRITE api/shared.json UNTIL EOF
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Shared",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/pets/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "responses": {
+          "404": {
+            "description": "Missing"
+          }
+        }
+      }
+    }
+  }
+}
+EOF
+
+WRITE api/entry.json UNTIL EOF
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Entry",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/dogs": {
+      "get": {
+        "responses": {
+          "404": {
+            "$ref": "shared#/paths/~1pets~1%7Bid%7D/get/responses/404"
+          }
+        }
+      }
+    }
+  }
+}
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 0
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
+
+WRITE expected_output.txt UNTIL EOF
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected_output.txt
+
+TREE output INTO manifest.txt
+DROP LINES MATCHING '^\./schemas/self(/.*)?$' IN manifest.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN manifest.txt
+
+WRITE expected.txt UNTIL EOF
+./authentication.bin
+./configuration.json
+./explorer
+./explorer/public
+./explorer/public/%
+./explorer/public/%/directory.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/api
+./explorer/public/api/%
+./explorer/public/api/%/directory.metapack
+./routes.bin
+./schemas
+./schemas/api
+./schemas/api/entry
+./schemas/api/entry/%
+./schemas/api/entry/%/data.metapack
+./schemas/api/shared
+./schemas/api/shared/%
+./schemas/api/shared/%/data.metapack
+./state.bin
+./version.json
+EOF
+
+COMPARE manifest.txt AGAINST expected.txt

@@ -242,6 +242,7 @@ rebase_reference(const sourcemeta::one::Configuration::Collection &collection,
 static auto
 served_dialect(const sourcemeta::one::Configuration::Collection &collection,
                const std::filesystem::path &location,
+               const sourcemeta::core::JSON::String &identity,
                const std::string_view declared,
                const sourcemeta::core::URI &server) -> std::string {
   std::string raw{declared};
@@ -263,6 +264,14 @@ served_dialect(const sourcemeta::one::Configuration::Collection &collection,
 
   if (sourcemeta::core::schema_is_known(raw)) {
     return raw;
+  }
+
+  // A dialect named relative to the document that names it resolves against
+  // that document's own identity, as every other relative reference it writes
+  // does, rather than against the collection the document sits in
+  sourcemeta::core::URI candidate{raw};
+  if (candidate.is_relative() && !identity.empty()) {
+    raw = candidate.resolve_from(sourcemeta::core::URI{identity}).recompose();
   }
 
   return rebase(collection, normalise_identifier(raw), server, location);
@@ -1281,15 +1290,20 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
     /////////////////////////////////////////////////////////////////////////////
     const auto *declared_dialect{schema.is_object() ? schema.try_at("$schema")
                                                     : nullptr};
-    std::string raw_dialect{declared_dialect != nullptr &&
-                                    declared_dialect->is_string()
-                                ? declared_dialect->to_string()
-                                : default_dialect_str};
+    const auto declares_dialect{declared_dialect != nullptr &&
+                                declared_dialect->is_string()};
+    std::string raw_dialect{declares_dialect ? declared_dialect->to_string()
+                                             : default_dialect_str};
     if (raw_dialect.empty()) {
       throw sourcemeta::core::SchemaUnknownDialectError();
     }
-    auto current_dialect{served_dialect(collection, collection_relative_path,
-                                        raw_dialect, this->server_uri_)};
+    // Only a dialect the schema names itself is measured against the schema.
+    // One the collection names for it is the collection's to resolve, as there
+    // is no one document it was written relative to
+    auto current_dialect{served_dialect(
+        collection, collection_relative_path,
+        declares_dialect ? identifier : sourcemeta::core::JSON::String{},
+        raw_dialect, this->server_uri_)};
     // Otherwise we messed things up
     assert(!current_dialect.ends_with("#.json"));
 
@@ -1373,9 +1387,9 @@ auto Resolver::add_openapi(
   // override. A revision that reserves no such field declares nothing
   const auto *declared_dialect{document.try_at("jsonSchemaDialect")};
   auto dialect{declared_dialect != nullptr && declared_dialect->is_string()
-                   ? served_dialect(collection, collection_relative_path,
-                                    declared_dialect->to_string(),
-                                    this->server_uri_)
+                   ? served_dialect(
+                         collection, collection_relative_path, identity.current,
+                         declared_dialect->to_string(), this->server_uri_)
                    : std::string{}};
 
   std::unique_lock lock{this->mutex_};

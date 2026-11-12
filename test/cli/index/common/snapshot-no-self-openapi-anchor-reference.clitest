@@ -1,0 +1,97 @@
+// A Schema Object reference may name an anchor of a schema another document
+// holds, which is a spelling only the schemas admit. What follows the hash
+// names no position there, and nothing about it is rewritten.
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "api": {
+      "baseUri": "https://example.com/",
+      "path": "./api",
+      "defaultDialect": "https://json-schema.org/draft/2020-12/schema"
+    }
+  }
+}
+EOF
+
+MAKE DIRECTORY api
+
+WRITE api/shared.json UNTIL EOF
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Shared",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "Cat": {
+        "$anchor": "Cat",
+        "type": "object"
+      }
+    }
+  }
+}
+EOF
+
+WRITE api/entry.json UNTIL EOF
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Entry",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "Use": {
+        "$ref": "shared#Cat"
+      }
+    }
+  }
+}
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 0
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
+
+WRITE expected_output.txt UNTIL EOF
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected_output.txt
+
+TREE output INTO manifest.txt
+DROP LINES MATCHING '^\./schemas/self(/.*)?$' IN manifest.txt
+DROP LINES MATCHING '^\./explorer/public/self(/.*)?$' IN manifest.txt
+
+WRITE expected.txt UNTIL EOF
+./authentication.bin
+./configuration.json
+./explorer
+./explorer/public
+./explorer/public/%
+./explorer/public/%/directory.metapack
+./explorer/public/%/login.metapack
+./explorer/public/%/mcp.metapack
+./explorer/public/%/search.metapack
+./explorer/public/api
+./explorer/public/api/%
+./explorer/public/api/%/directory.metapack
+./routes.bin
+./schemas
+./schemas/api
+./schemas/api/entry
+./schemas/api/entry/%
+./schemas/api/entry/%/data.metapack
+./schemas/api/shared
+./schemas/api/shared/%
+./schemas/api/shared/%/data.metapack
+./state.bin
+./version.json
+EOF
+
+COMPARE manifest.txt AGAINST expected.txt
