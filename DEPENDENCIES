@@ -1,7 +1,7 @@
 vendorpull https://github.com/sourcemeta/vendorpull 1dcbac42809cf87cb5b045106b863e17ad84ba02
 uwebsockets https://github.com/uNetworking/uWebSockets v20.81.0
-core https://github.com/sourcemeta/core 9703ef80a7c018958b9b82822972c627d73fe3e4
-blaze https://github.com/sourcemeta/blaze b7d1ff28e86ab611d7b36ba2988bd1cfd3d48d24
+core https://github.com/sourcemeta/core 58654b87dffce00516404e2bcdde24e24583f1f9
+blaze https://github.com/sourcemeta/blaze 0c4dafbc554b2b158d26ab5937975a01b4ccf021
 jsonschema https://github.com/sourcemeta/jsonschema 5dac901ad1c6cf64ee2562e2e4aaf6bf8ba3bbbb
 bootstrap https://github.com/twbs/bootstrap v5.3.3
 bootstrap-icons https://github.com/twbs/icons v1.11.3
