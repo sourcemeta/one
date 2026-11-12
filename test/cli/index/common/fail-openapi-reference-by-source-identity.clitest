@@ -1,0 +1,76 @@
+// A document of another collection is reached by the identity this instance
+// serves it under, not by the one it came with. Naming the latter names
+// something nothing here answers to, however plainly the configuration
+// declares it upstream, and a schema reaching the same way fails the same way.
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "api": {
+      "baseUri": "https://api.example.com/",
+      "path": "./api"
+    },
+    "shared": {
+      "baseUri": "https://shared.example.com/",
+      "path": "./shared"
+    }
+  }
+}
+EOF
+
+MAKE DIRECTORY api
+MAKE DIRECTORY shared
+
+WRITE shared/common.json UNTIL EOF
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Shared",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "pathItems": {
+      "Pets": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "Every pet"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+EOF
+
+WRITE api/petstore.json UNTIL EOF
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Petstore",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/pets": {
+      "$ref": "https://shared.example.com/common#/components/pathItems/Pets"
+    }
+  }
+}
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
+
+WRITE expected.txt UNTIL EOF
+2> error: Could not resolve a reference in the OpenAPI description
+2>   at path [CWD]/api/petstore.json
+2>   at reference https://shared.example.com/common#/components/pathItems/Pets
+2>   at location "/paths/~1pets/$ref"
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected.txt

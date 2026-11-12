@@ -106,18 +106,18 @@ public:
   // Whether any schema in the catalog declares the given URI as its dialect
   [[nodiscard]] auto is_dialect(std::string_view uri) const -> bool;
 
+  // Whether this instance serves a leaf under the given identity, which is the
+  // one spelling a reference has to name to reach it
+  [[nodiscard]] auto
+  serves_identity(const sourcemeta::core::JSON::String &identifier) const
+      -> bool;
+
 private:
   auto add_openapi(const std::filesystem::path &collection_relative_path,
                    const Configuration::Collection &collection,
                    const std::filesystem::path &path,
                    std::filesystem::file_time_type mtime,
                    const sourcemeta::core::JSON &document) -> Result;
-
-  // Whether some leaf of this catalog answers to the given URI, under either
-  // the identity it came with or the identity this instance serves it as
-  [[nodiscard]] auto
-  holds_identity(const sourcemeta::core::JSON::String &identifier) const
-      -> bool;
 
   Views views_;
   // Resolution is a const operation that runs concurrently with the

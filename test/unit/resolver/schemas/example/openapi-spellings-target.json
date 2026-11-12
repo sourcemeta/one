@@ -1,0 +1,54 @@
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "Spellings target",
+    "version": "1.0.0"
+  },
+  "components": {
+    "pathItems": {
+      "Pets": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "Every pet"
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "schema": {
+          "type": "integer"
+        }
+      }
+    },
+    "responses": {
+      "NotFound": {
+        "description": "Missing"
+      }
+    },
+    "headers": {
+      "Limit": {
+        "description": "How many",
+        "schema": {
+          "type": "integer"
+        }
+      }
+    },
+    "securitySchemes": {
+      "Key": {
+        "type": "apiKey",
+        "name": "key",
+        "in": "header"
+      }
+    },
+    "schemas": {
+      "Pet": {
+        "type": "object"
+      }
+    }
+  }
+}

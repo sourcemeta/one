@@ -318,26 +318,265 @@ TEST(example_openapi_internal_dangling_reference) {
 }
 
 // A reference reaching a document this catalog does hold is an OpenAPI
-// description built out of several, which is a shape this version refuses whole
-// rather than a reference that leads nowhere
+// description built out of several, which is served as the documents it is
+// made of, each of them reaching the others under the identity this instance
+// gives them
 TEST(example_openapi_sibling_reference) {
   sourcemeta::one::Resolver resolver{shared_configuration().url};
 
   RESOLVER_IMPORT(resolver, "example", "openapi-sibling-target.json");
-  const auto result{
-      RESOLVER_IMPORT(resolver, "example", "openapi-sibling-reference.json")};
-  try {
-    EXPECT_FALSE(resolver.openapi(result.first.get()).has_value());
-    FAIL();
-  } catch (const sourcemeta::one::ResolverMultiDocumentOpenAPIError &error) {
-    EXPECT_EQ(error.path(), std::filesystem::path{SCHEMAS_PATH} / "example" /
-                                "openapi-sibling-reference.json");
-    EXPECT_EQ(error.reference(), "https://example.com/schemas/"
-                                 "openapi-sibling-target#/components/"
-                                 "pathItems/Pets");
-    EXPECT_EQ(sourcemeta::core::to_string(error.location()),
-              "/paths/~1pets/$ref");
-  }
+  RESOLVER_ADD_OPENAPI(
+      resolver, "example", "openapi-sibling-reference.json",
+      "https://example.com/schemas/openapi-sibling-reference",
+      "http://localhost:8000/example/openapi-sibling-reference",
+      R"JSON({
+    "openapi": "3.1.1",
+    "info": {
+      "title": "Petstore",
+      "version": "1.0.0"
+    },
+    "paths": {
+      "/pets": {
+        "$ref": "openapi-sibling-target#/components/pathItems/Pets"
+      }
+    }
+  })JSON");
+}
+
+// Every spelling a reference may take reaches the same document, and each one
+// is rewritten into what a reader of the served document resolves against the
+// identity it is served under. A reference written against the root of this
+// instance is already in those terms, so it is left exactly as it was
+TEST(example_openapi_reference_spellings) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  RESOLVER_IMPORT(resolver, "example", "openapi-spellings-target.json");
+  RESOLVER_ADD_OPENAPI(
+      resolver, "example", "openapi-reference-spellings.json",
+      "https://example.com/schemas/openapi-reference-spellings",
+      "http://localhost:8000/example/openapi-reference-spellings",
+      R"JSON({
+    "openapi": "3.2.0",
+    "$self": "http://localhost:8000/example/openapi-reference-spellings",
+    "info": {
+      "title": "Spellings",
+      "version": "1.0.0"
+    },
+    "security": [
+      {
+        "openapi-spellings-target#/components/securitySchemes/Key": []
+      }
+    ],
+    "paths": {
+      "/dogs": {
+        "get": {
+          "parameters": [
+            {
+              "$ref": "./openapi-spellings-target#/components/parameters/Page"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Every dog",
+              "headers": {
+                "X-Limit": {
+                  "$ref": "openapi-spellings-target#/components/headers/Limit"
+                }
+              }
+            },
+            "404": {
+              "$ref": "openapi-spellings-target#/components/responses/NotFound"
+            }
+          }
+        }
+      },
+      "/pets": {
+        "$ref": "openapi-spellings-target#/components/pathItems/Pets"
+      }
+    },
+    "components": {
+      "schemas": {
+        "Dog": {
+          "type": "object",
+          "properties": {
+            "pet": {
+              "$ref": "http://localhost:8000/example/openapi-spellings-target#/components/schemas/Pet"
+            }
+          }
+        }
+      }
+    }
+  })JSON");
+}
+
+// What follows the hash of a reference is never rewritten, only the document
+// side of it is, so an anchor reaches the schema it named before. An anchor is
+// a spelling only the schemas admit, as a reference of this specification
+// names a position and nothing else
+TEST(example_openapi_anchor_reference) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  RESOLVER_IMPORT(resolver, "example", "openapi-anchor-target.json");
+  RESOLVER_ADD_OPENAPI(resolver, "example", "openapi-anchor-reference.json",
+                       "https://example.com/schemas/openapi-anchor-reference",
+                       "http://localhost:8000/example/openapi-anchor-reference",
+                       R"JSON({
+    "openapi": "3.1.1",
+    "info": {
+      "title": "Anchor reference",
+      "version": "1.0.0"
+    },
+    "paths": {},
+    "components": {
+      "schemas": {
+        "Use": {
+          "$ref": "openapi-anchor-target#Cat"
+        }
+      }
+    }
+  })JSON");
+}
+
+// And a position outside the Components Object is reached the same way, a
+// percent encoded template expression in the pointer included, which comes
+// back exactly as it went in
+TEST(example_openapi_templated_path_reference) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  RESOLVER_IMPORT(resolver, "example", "openapi-templated-target.json");
+  RESOLVER_ADD_OPENAPI(
+      resolver, "example", "openapi-templated-reference.json",
+      "https://example.com/schemas/openapi-templated-reference",
+      "http://localhost:8000/example/openapi-templated-reference",
+      R"JSON({
+    "openapi": "3.1.1",
+    "info": {
+      "title": "Templated reference",
+      "version": "1.0.0"
+    },
+    "paths": {
+      "/dogs": {
+        "get": {
+          "responses": {
+            "404": {
+              "$ref": "openapi-templated-target#/paths/~1pets~1%7Bid%7D/get/responses/404"
+            }
+          }
+        }
+      }
+    }
+  })JSON");
+}
+
+// A dialect an OpenAPI description names relative to itself resolves against
+// the identity of the document that names it, which is the directory it sits
+// in rather than the root of the collection it belongs to
+TEST(example_openapi_relative_dialect) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  RESOLVER_ADD_OPENAPI(
+      resolver, "example", "nested/openapi-relative-dialect.json",
+      "https://example.com/schemas/nested/openapi-relative-dialect",
+      "http://localhost:8000/example/nested/openapi-relative-dialect",
+      R"JSON({
+    "openapi": "3.1.1",
+    "jsonSchemaDialect": "http://localhost:8000/example/nested/dialect",
+    "info": {
+      "title": "Relative dialect",
+      "version": "1.0.0"
+    },
+    "paths": {}
+  })JSON");
+}
+
+// A Schema Object that declares an identifier of its own is what a reference
+// inside it is measured against, not the OpenAPI description. The served
+// document carries such an identifier exactly as it was written, so one
+// written relative to the document carries along with it and everything under
+// it is rebased against it rather than against the document
+TEST(example_openapi_nested_identifier) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  RESOLVER_IMPORT(resolver, "example", "nested/openapi-nested-target.json");
+  RESOLVER_ADD_OPENAPI(
+      resolver, "example", "openapi-nested-identifier.json",
+      "https://example.com/schemas/openapi-nested-identifier",
+      "http://localhost:8000/example/openapi-nested-identifier",
+      R"JSON({
+    "openapi": "3.1.1",
+    "info": {
+      "title": "Nested identifier",
+      "version": "1.0.0"
+    },
+    "paths": {},
+    "components": {
+      "schemas": {
+        "Pet": {
+          "$id": "nested/pet",
+          "oneOf": [
+            {
+              "$ref": "openapi-nested-target"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "kind",
+            "mapping": {
+              "target": "openapi-nested-target"
+            }
+          }
+        }
+      }
+    }
+  })JSON");
+}
+
+// A Discriminator Object mapping names a schema either by the name of a
+// component or by a URI reference, and only the second is in terms of an
+// identity. A name is resolved from the entry document wherever the
+// Discriminator Object sits, so serving the document elsewhere does not move
+// what a name reaches
+TEST(example_openapi_discriminator_mapping) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  RESOLVER_IMPORT(resolver, "example", "openapi-spellings-target.json");
+  RESOLVER_ADD_OPENAPI(
+      resolver, "example", "openapi-discriminator-mapping.json",
+      "https://example.com/schemas/openapi-discriminator-mapping",
+      "http://localhost:8000/example/openapi-discriminator-mapping",
+      R"JSON({
+    "openapi": "3.2.0",
+    "$self": "http://localhost:8000/example/openapi-discriminator-mapping",
+    "info": {
+      "title": "Discriminator",
+      "version": "1.0.0"
+    },
+    "paths": {},
+    "components": {
+      "schemas": {
+        "Cat": {
+          "type": "object"
+        },
+        "Pet": {
+          "oneOf": [
+            {
+              "$ref": "openapi-spellings-target#/components/schemas/Pet"
+            },
+            {
+              "$ref": "#/components/schemas/Cat"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "kind",
+            "mapping": {
+              "shared": "openapi-spellings-target#/components/schemas/Pet",
+              "named": "Cat",
+              "fragment": "#/components/schemas/Cat"
+            }
+          }
+        }
+      }
+    }
+  })JSON");
 }
 
 // A reference an OpenAPI description makes into itself by its own absolute
@@ -399,13 +638,19 @@ TEST(example_openapi_is_no_schema) {
   EXPECT_FALSE(resolver(result.first.get()).has_value());
 }
 
-// And the OpenAPI half answers for no schema
-TEST(example_schema_is_no_openapi) {
+// The OpenAPI half answers for a schema too, which is what a Schema Object of
+// an OpenAPI description reaching one of this catalog needs of it
+TEST(example_openapi_answers_for_a_schema) {
   sourcemeta::one::Resolver resolver{shared_configuration().url};
 
   const auto result{
       RESOLVER_IMPORT(resolver, "example", "2020-12-with-id.json")};
-  EXPECT_FALSE(resolver.openapi(result.first.get()).has_value());
+  const auto schema{resolver.openapi(result.first.get())};
+  EXPECT_TRUE(schema.has_value());
+  EXPECT_EQ(schema.value(), sourcemeta::core::parse_json(R"JSON({
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "http://localhost:8000/example/2020-12-with-id"
+  })JSON"));
 }
 
 // An `openapi` member of any other type declares no revision, so the file goes

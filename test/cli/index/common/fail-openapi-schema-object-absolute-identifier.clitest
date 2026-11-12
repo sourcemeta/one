@@ -1,0 +1,63 @@
+// Nothing rewrites the identifier a Schema Object declares, so the served
+// document carries it exactly as it was written. One written absolute goes on
+// naming a document this instance does not serve, which leaves every
+// reference measured against it reaching nothing.
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "api": {
+      "baseUri": "https://example.com/",
+      "path": "./api",
+      "defaultDialect": "https://json-schema.org/draft/2020-12/schema"
+    }
+  }
+}
+EOF
+
+MAKE DIRECTORY api
+
+WRITE api/tag.json UNTIL EOF
+{
+  "type": "string"
+}
+EOF
+
+WRITE api/entry.json UNTIL EOF
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Entry",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "Model": {
+        "$id": "https://example.com/schemas/model",
+        "type": "object",
+        "properties": {
+          "tag": {
+            "$ref": "tag"
+          }
+        }
+      }
+    }
+  }
+}
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
+
+WRITE expected.txt UNTIL EOF
+2> error: Could not resolve a reference in the OpenAPI description
+2>   at path [CWD]/api/entry.json
+2>   at reference tag
+2>   at location "/components/schemas/Model/properties/tag/$ref"
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected.txt

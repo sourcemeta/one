@@ -242,6 +242,7 @@ rebase_reference(const sourcemeta::one::Configuration::Collection &collection,
 static auto
 served_dialect(const sourcemeta::one::Configuration::Collection &collection,
                const std::filesystem::path &location,
+               const sourcemeta::core::JSON::String &identity,
                const std::string_view declared,
                const sourcemeta::core::URI &server) -> std::string {
   std::string raw{declared};
@@ -263,6 +264,14 @@ served_dialect(const sourcemeta::one::Configuration::Collection &collection,
 
   if (sourcemeta::core::schema_is_known(raw)) {
     return raw;
+  }
+
+  // A dialect named relative to the document that names it resolves against
+  // that document's own identity, as every other relative reference it writes
+  // does, rather than against the collection the document sits in
+  sourcemeta::core::URI candidate{raw};
+  if (candidate.is_relative() && !identity.empty()) {
+    raw = candidate.resolve_from(sourcemeta::core::URI{identity}).recompose();
   }
 
   return rebase(collection, normalise_identifier(raw), server, location);
@@ -695,17 +704,17 @@ auto Resolver::operator()(
 // What an OpenAPI description reaches for and does not hold, as the document
 // spells it and where it spells it, with nothing named at all where the frame
 // measures it incomplete without saying which one place makes it so. The
-// document is whatever the reference resolves to ahead of its fragment, which
-// is the document's own identity for one that names a position of itself,
-// and nothing at all where the frame reports no document side
+// document is where the reference lands once the document is served, ahead of
+// any fragment, which is the served identity itself for one that names a
+// position of the document it already sits in
 struct OpenAPIDanglingConnection {
   sourcemeta::core::JSON::String reference;
   sourcemeta::core::JSON::String document;
   sourcemeta::core::Pointer location;
 };
 
-// What a destination names ahead of its fragment, which a frame reports as the
-// two sides of one string
+// What a destination names ahead of its fragment, which a reference carries as
+// the two sides of one string
 static auto
 destination_document(const sourcemeta::core::JSON::StringView destination)
     -> sourcemeta::core::JSON::String {
@@ -716,28 +725,169 @@ destination_document(const sourcemeta::core::JSON::StringView destination)
           : destination.substr(0, fragment)};
 }
 
-// The first connection an OpenAPI description makes that leads nowhere it
-// holds, which is what a frame measuring it incomplete comes down to. A frame
-// settles every connection of its own ahead of what the Schema Objects make,
-// and reports each one as landing or not, so this reads them in that same order
-static auto
-first_dangling_connection(const sourcemeta::core::OpenAPIFrame &frame,
-                          const sourcemeta::core::JSON &document)
-    -> OpenAPIDanglingConnection {
-  for (const auto &entry : frame.references()) {
-    if (entry.second.dangling) {
-      return {.reference = entry.second.original,
-              .document = destination_document(entry.second.destination),
-              .location = entry.second.origin};
+// What the references of one OpenAPI description are measured against, which
+// is the collection that spells them, the identity the document came with and
+// the identity this instance serves it as
+struct OpenAPIReferenceBase {
+  const sourcemeta::one::Configuration::Collection &collection;
+  const sourcemeta::core::URI &original;
+  const sourcemeta::core::URI &served;
+};
+
+// What this instance serves the base in force somewhere in an OpenAPI
+// description as. A position inside a Schema Object that declares an
+// identifier of its own is measured against that identifier rather than
+// against the document, and nothing rewrites such an identifier, so the served
+// document carries it exactly as it was written.
+//
+// Which means only an identifier written relative to the document lands
+// anywhere this instance serves, as that is the one the served identity of the
+// document carries along with it. One written absolute goes on naming whatever
+// it already named, and so does one nested below another, which this does not
+// follow. Nothing at all for those, so that a reference measured against one
+// reaches nothing rather than appearing to reach what it never would
+static auto served_scope(const OpenAPIReferenceBase &identity,
+                         const sourcemeta::core::JSON &document,
+                         const sourcemeta::core::SchemaFrame &schemas,
+                         const sourcemeta::core::JSON::String &scope)
+    -> std::optional<sourcemeta::core::URI> {
+  if (scope.empty() ||
+      normalise_identifier(scope) ==
+          normalise_identifier(identity.original.recompose())) {
+    return identity.served;
+  }
+
+  const auto resource{schemas.traverse(scope)};
+  if (!resource.has_value()) {
+    return std::nullopt;
+  }
+
+  const auto &holder{
+      sourcemeta::core::get(document, resource.value().get().pointer)};
+  const auto *declared{holder.is_object() ? holder.try_at("$id") : nullptr};
+  if (declared == nullptr || !declared->is_string()) {
+    return std::nullopt;
+  }
+
+  // The identifier has to be one the document's own identity settles, or what
+  // it resolves against is another identifier this does not follow
+  sourcemeta::core::URI written{declared->to_string()};
+  if (!written.is_relative()) {
+    return std::nullopt;
+  }
+
+  written.resolve_from(identity.original);
+  if (normalise_identifier(written.recompose()) !=
+      normalise_identifier(scope)) {
+    return std::nullopt;
+  }
+
+  sourcemeta::core::URI result{declared->to_string()};
+  result.resolve_from(identity.served);
+  return result;
+}
+
+// Where a reference of an OpenAPI description lands once the document is
+// served, which is the reference as the rewrite will write it resolved against
+// what this instance serves its own base as. The base in force is the
+// document itself for every connection the shell makes and the enclosing
+// Schema Object for one the schemas make, which is the base the rewrite
+// settles each of them against too.
+//
+// This reads what the author wrote rather than what the frame resolved,
+// because a frame measures a reference against the identity the document came
+// with. One written against the root of this instance therefore resolves, in
+// the frame, to a place that never meant anything, while the rewrite leaves it
+// alone and a reader of the served document lands where the author meant
+static auto reference_lands_at(const OpenAPIReferenceBase &identity,
+                               const sourcemeta::core::URI &server,
+                               const sourcemeta::core::JSON &document,
+                               const sourcemeta::core::SchemaFrame &schemas,
+                               const sourcemeta::core::JSON::String &scope,
+                               const sourcemeta::core::JSON::String &reference)
+    -> sourcemeta::core::JSON::String {
+  const sourcemeta::core::URI base{scope.empty() ? identity.original.recompose()
+                                                 : scope};
+  const auto rewritten{
+      rebase_reference(identity.collection, base, reference, server)};
+  sourcemeta::core::URI target{rewritten.value_or(reference)};
+  if (target.is_relative()) {
+    const auto served{served_scope(identity, document, schemas, scope)};
+    if (!served.has_value()) {
+      return {};
     }
+
+    target.resolve_from(served.value());
+  }
+
+  return destination_document(target.recompose());
+}
+
+// Whether a connection of an OpenAPI description reaches another document that
+// this instance serves, which is what lets one built out of several be served
+// as the documents it is made of. A connection landing back on the document
+// that spells it reaches no other document at all, so one of those is never
+// reaching anything
+static auto reaches_served_document(const sourcemeta::one::Resolver &resolver,
+                                    const sourcemeta::core::URI &served,
+                                    const OpenAPIDanglingConnection &connection)
+    -> bool {
+  return !connection.document.empty() &&
+         normalise_identifier(connection.document) !=
+             normalise_identifier(served.recompose()) &&
+         resolver.serves_identity(connection.document);
+}
+
+// The first connection an OpenAPI description makes that reaches no document
+// this catalog holds, which is the one thing that stops one built out of
+// several from being served. Nothing at all where every connection of it
+// reaches a document the catalog holds, and a connection naming nothing where
+// the frame measures the description incomplete without saying which place
+// makes it so. A frame settles every connection of its own ahead of what the
+// Schema Objects make, and reports each one as landing or not, so this reads
+// them in that same order
+static auto
+first_unreached_connection(const sourcemeta::one::Resolver &resolver,
+                           const OpenAPIReferenceBase &identity,
+                           const sourcemeta::core::URI &server,
+                           const sourcemeta::core::OpenAPIFrame &frame,
+                           const sourcemeta::core::JSON &document)
+    -> std::optional<OpenAPIDanglingConnection> {
+  auto held{false};
+  for (const auto &entry : frame.references()) {
+    if (!entry.second.dangling) {
+      continue;
+    }
+
+    const OpenAPIDanglingConnection connection{
+        .reference = entry.second.original,
+        .document =
+            reference_lands_at(identity, server, document, frame.schemas(), {},
+                               entry.second.original),
+        .location = entry.second.origin};
+    if (!reaches_served_document(resolver, identity.served, connection)) {
+      return connection;
+    }
+
+    held = true;
   }
 
   for (const auto &entry : frame.security_references()) {
-    if (entry.second.dangling) {
-      return {.reference = entry.second.original,
-              .document = destination_document(entry.second.destination),
-              .location = entry.second.origin};
+    if (!entry.second.dangling) {
+      continue;
     }
+
+    const OpenAPIDanglingConnection connection{
+        .reference = entry.second.original,
+        .document =
+            reference_lands_at(identity, server, document, frame.schemas(), {},
+                               entry.second.original),
+        .location = entry.second.origin};
+    if (!reaches_served_document(resolver, identity.served, connection)) {
+      return connection;
+    }
+
+    held = true;
   }
 
   // A Discriminator Object names a schema by the value of a member rather than
@@ -748,31 +898,69 @@ first_dangling_connection(const sourcemeta::core::OpenAPIFrame &frame,
     }
 
     const auto &mapping{sourcemeta::core::get(document, discriminator.origin)};
-    return {.reference = mapping.is_string() ? mapping.to_string()
-                                             : discriminator.destination,
-            .document = destination_document(discriminator.destination),
-            .location = discriminator.origin};
+    const sourcemeta::core::JSON::String written{
+        mapping.is_string() ? mapping.to_string() : discriminator.destination};
+    // A mapping that names a component by its name is no URI reference, and
+    // what it stands for is settled from the entry document wherever it sits,
+    // so one that lands nowhere names a component this OpenAPI description
+    // does not hold rather than a document this instance does not serve
+    const OpenAPIDanglingConnection connection{
+        .reference = written,
+        .document = discriminator.by_name
+                        ? sourcemeta::core::JSON::String{}
+                        : reference_lands_at(identity, server, document,
+                                             frame.schemas(),
+                                             discriminator.scope, written),
+        .location = discriminator.origin};
+    if (!reaches_served_document(resolver, identity.served, connection)) {
+      return connection;
+    }
+
+    held = true;
   }
 
-  OpenAPIDanglingConnection result;
+  std::optional<OpenAPIDanglingConnection> result;
   frame.schemas().for_each_unresolved_reference(
-      [&result](const auto &pointer, const auto &reference) -> void {
+      [&resolver, &identity, &server, &document, &frame, &result,
+       &held](const auto &pointer, const auto &reference) -> void {
         // Naming a dialect this build already comes with asks nothing of
         // whoever reads the OpenAPI description, so it is the one reference
         // out of a Schema Object that leaves one whole
-        if (!result.reference.empty() ||
+        if (result.has_value() ||
             (pointer.back().is_property() &&
              pointer.back().to_property() == "$schema" &&
              sourcemeta::core::schema_is_known(reference.destination))) {
           return;
         }
 
-        result.reference = sourcemeta::core::JSON::String{reference.original};
-        result.document = sourcemeta::core::JSON::String{reference.base};
-        result.location = sourcemeta::core::to_pointer(pointer);
+        const sourcemeta::core::JSON::String written{reference.original};
+        const auto holder{frame.schemas().traverse(pointer.initial())};
+        const OpenAPIDanglingConnection connection{
+            .reference = written,
+            .document = reference_lands_at(
+                identity, server, document, frame.schemas(),
+                holder.has_value()
+                    ? sourcemeta::core::JSON::String{holder.value().get().base}
+                    : sourcemeta::core::JSON::String{},
+                written),
+            .location = sourcemeta::core::to_pointer(pointer)};
+        if (!reaches_served_document(resolver, identity.served, connection)) {
+          result = connection;
+          return;
+        }
+
+        held = true;
       });
 
-  return result;
+  if (result.has_value()) {
+    return result;
+  }
+
+  // A frame reporting an incomplete OpenAPI description that this walk finds
+  // every connection of is a frame reading something this walk cannot see, so
+  // the refusal stands and names nothing
+  return held ? std::nullopt
+              : std::optional<OpenAPIDanglingConnection>{std::in_place};
 }
 
 auto Resolver::openapi(const std::string_view raw_identifier,
@@ -795,8 +983,11 @@ auto Resolver::openapi(const std::string_view raw_identifier,
     cached_path = result->second.cache_path;
   }
 
+  // A Schema Object of an OpenAPI description may reach a schema of this
+  // catalog, and what comes back then is a schema rather than a description,
+  // which is the one case where the two halves of the resolver meet
   if (view->kind != LeafKind::OpenAPI) {
-    return std::nullopt;
+    return this->operator()(identifier, callback);
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -850,37 +1041,29 @@ auto Resolver::openapi(const std::string_view raw_identifier,
       document, sourcemeta::core::schema_walker, subresolver,
       view->original_identifier};
 
-  // Reaching a document this catalog holds is an OpenAPI description built out
-  // of several, which this version refuses whole rather than serving in part,
-  // since without bundling there is nothing to make one whole. Reaching
-  // anywhere else is a reference that resolves nowhere, which is an error
-  // whatever this version goes on to support
-  if (!frame.standalone()) {
-    auto dangling{first_dangling_connection(frame, document)};
-    // A reference naming a position of the OpenAPI description itself reaches
-    // no other document at all, however the frame spells out where it resolved
-    // to
-    const auto destination{normalise_identifier(dangling.document)};
-    const auto elsewhere{!dangling.document.empty() &&
-                         destination != normalise_identifier(frame.base())};
-    if (dangling.reference.empty() ||
-        (elsewhere && this->holds_identity(destination))) {
-      throw ResolverMultiDocumentOpenAPIError(view->path,
-                                              std::move(dangling.reference),
-                                              std::move(dangling.location));
-    }
+  const sourcemeta::core::URI base{view->original_identifier};
+  const sourcemeta::core::URI served{*new_identifier};
+  const auto &collection{*view->collection};
+  const OpenAPIReferenceBase identity{
+      .collection = collection, .original = base, .served = served};
 
-    throw ResolverUnresolvableOpenAPIReferenceError(
-        view->path, std::move(dangling.reference),
-        std::move(dangling.location));
+  // An OpenAPI description may be built out of several documents, so reaching
+  // beyond this one is only an error where what it reaches is not something
+  // this instance serves. A reference naming a position of the OpenAPI
+  // description itself reaches the document it already sits in
+  if (!frame.standalone()) {
+    auto unreached{first_unreached_connection(
+        *this, identity, this->server_uri_, frame, document)};
+    if (unreached.has_value()) {
+      throw ResolverUnresolvableOpenAPIReferenceError(
+          view->path, std::move(unreached->reference),
+          std::move(unreached->location));
+    }
   }
 
   /////////////////////////////////////////////////////////////////////////////
   // (4) Normalise every reference to match the new identifier
   /////////////////////////////////////////////////////////////////////////////
-
-  const sourcemeta::core::URI base{view->original_identifier};
-  const auto &collection{*view->collection};
 
   // A Security Requirement Object names a scheme by the key of a member rather
   // than by its value, so this is the one rewrite that moves a member
@@ -908,6 +1091,29 @@ auto Resolver::openapi(const std::string_view raw_identifier,
           sourcemeta::core::JSON{rewritten.value()};
     }
   });
+
+  // A Discriminator Object names a schema by the value of a member rather than
+  // by a field of its own, and names it either by the name of a component or
+  // by a URI reference. A name is resolved from the entry document wherever
+  // the Discriminator Object sits, so what this instance serves the document
+  // as does not reach one
+  for (const auto &discriminator : frame.discriminators()) {
+    if (discriminator.by_name) {
+      continue;
+    }
+
+    // A mapping is resolved against the schema that holds it rather than
+    // against the document, so one inside a Schema Object declaring an
+    // identifier of its own is rebased against that identifier, exactly as
+    // the reference beside it is
+    auto &mapping{sourcemeta::core::get(document, discriminator.origin)};
+    const sourcemeta::core::URI scope{discriminator.scope};
+    const auto rewritten{rebase_reference(
+        collection, scope, mapping.to_string(), this->server_uri_)};
+    if (rewritten.has_value()) {
+      mapping = sourcemeta::core::JSON{rewritten.value()};
+    }
+  }
 
   const auto ref_hash{document.as_object().hash("$ref")};
   const auto dynamic_ref_hash{document.as_object().hash("$dynamicRef")};
@@ -1084,15 +1290,20 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
     /////////////////////////////////////////////////////////////////////////////
     const auto *declared_dialect{schema.is_object() ? schema.try_at("$schema")
                                                     : nullptr};
-    std::string raw_dialect{declared_dialect != nullptr &&
-                                    declared_dialect->is_string()
-                                ? declared_dialect->to_string()
-                                : default_dialect_str};
+    const auto declares_dialect{declared_dialect != nullptr &&
+                                declared_dialect->is_string()};
+    std::string raw_dialect{declares_dialect ? declared_dialect->to_string()
+                                             : default_dialect_str};
     if (raw_dialect.empty()) {
       throw sourcemeta::core::SchemaUnknownDialectError();
     }
-    auto current_dialect{served_dialect(collection, collection_relative_path,
-                                        raw_dialect, this->server_uri_)};
+    // Only a dialect the schema names itself is measured against the schema.
+    // One the collection names for it is the collection's to resolve, as there
+    // is no one document it was written relative to
+    auto current_dialect{served_dialect(
+        collection, collection_relative_path,
+        declares_dialect ? identifier : sourcemeta::core::JSON::String{},
+        raw_dialect, this->server_uri_)};
     // Otherwise we messed things up
     assert(!current_dialect.ends_with("#.json"));
 
@@ -1176,9 +1387,9 @@ auto Resolver::add_openapi(
   // override. A revision that reserves no such field declares nothing
   const auto *declared_dialect{document.try_at("jsonSchemaDialect")};
   auto dialect{declared_dialect != nullptr && declared_dialect->is_string()
-                   ? served_dialect(collection, collection_relative_path,
-                                    declared_dialect->to_string(),
-                                    this->server_uri_)
+                   ? served_dialect(
+                         collection, collection_relative_path, identity.current,
+                         declared_dialect->to_string(), this->server_uri_)
                    : std::string{}};
 
   std::unique_lock lock{this->mutex_};
@@ -1246,13 +1457,10 @@ auto Resolver::entry(const std::string_view identifier) const -> const Entry & {
   return result->second;
 }
 
-auto Resolver::holds_identity(
+auto Resolver::serves_identity(
     const sourcemeta::core::JSON::String &identifier) const -> bool {
   std::shared_lock lock{this->mutex_};
-  return std::ranges::any_of(this->views_, [&identifier](const auto &entry) {
-    return entry.first == identifier ||
-           entry.second.original_identifier == identifier;
-  });
+  return this->views_.contains(normalise_identifier(identifier));
 }
 
 auto Resolver::dialect_of(const std::string_view identifier) const

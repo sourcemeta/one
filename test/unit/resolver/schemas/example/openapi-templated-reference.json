@@ -1,0 +1,18 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Templated reference",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/dogs": {
+      "get": {
+        "responses": {
+          "404": {
+            "$ref": "https://example.com/schemas/openapi-templated-target#/paths/~1pets~1%7Bid%7D/get/responses/404"
+          }
+        }
+      }
+    }
+  }
+}

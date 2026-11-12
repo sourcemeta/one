@@ -1,0 +1,45 @@
+// A reference has to be a URI reference before anything can be asked about
+// where it leads.
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "api": {
+      "baseUri": "https://example.com/",
+      "path": "./api"
+    }
+  }
+}
+EOF
+
+MAKE DIRECTORY api
+
+WRITE api/entry.json UNTIL EOF
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Entry",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/pets": {
+      "$ref": "http://[not-a-uri"
+    }
+  }
+}
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
+
+WRITE expected.txt UNTIL EOF
+2> error: The Path Item Object reference must be a URI reference
+2>   at path [CWD]/api/entry.json
+2>   at location "/paths/~1pets/$ref"
+2>   at base https://example.com/entry
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected.txt

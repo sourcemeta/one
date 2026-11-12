@@ -1,0 +1,87 @@
+// Every document of an OpenAPI description is a leaf of this catalog, served
+// at a URL of its own and read on its own, so one that leans on what the
+// document referencing it declares is one nothing here can serve whole. The
+// specification resolves this by the name of an operation from the entry document, and a
+// catalog of documents has no entry document to resolve it from.
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "api": {
+      "baseUri": "https://example.com/",
+      "path": "./api",
+      "defaultDialect": "https://json-schema.org/draft/2020-12/schema"
+    }
+  }
+}
+EOF
+
+MAKE DIRECTORY api
+
+WRITE api/shared.json UNTIL EOF
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "Shared",
+    "version": "1.0.0"
+  },
+  "components": {
+    "pathItems": {
+      "Pets": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "Every pet",
+              "links": {
+                "owners": {
+                  "operationId": "listOwners"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+EOF
+
+WRITE api/entry.json UNTIL EOF
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "Entry",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/pets": {
+      "$ref": "shared#/components/pathItems/Pets"
+    },
+    "/owners": {
+      "get": {
+        "operationId": "listOwners",
+        "responses": {
+          "200": {
+            "description": "Every owner"
+          }
+        }
+      }
+    }
+  }
+}
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
+
+WRITE expected.txt UNTIL EOF
+2> error: The Link Object operation identifier must name an operation the OpenAPI Description declares
+2>   at path [CWD]/api/shared.json
+2>   at location "/components/pathItems/Pets/get/responses/200/links/owners/operationId"
+2>   at base https://example.com/shared
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected.txt

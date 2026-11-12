@@ -1,0 +1,16 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Anchor target",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "Cat": {
+        "$anchor": "Cat",
+        "type": "object"
+      }
+    }
+  }
+}
