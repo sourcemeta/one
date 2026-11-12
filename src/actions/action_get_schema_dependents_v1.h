@@ -21,8 +21,12 @@ public:
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
       sourcemeta::one::Router &dispatcher)
-      : ActionDependencyTreeV1{base,         router,         identifier,
-                               "dependents", Tree::Explorer, dispatcher} {}
+      : ActionDependencyTreeV1{
+            base,           router,
+            identifier,     "dependents",
+            Tree::Explorer, sourcemeta::one::LeafKind::Schema,
+            "schema",       "Schema not found",
+            dispatcher} {}
 };
 
 #endif

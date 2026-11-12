@@ -274,16 +274,19 @@ jsonpath "$.result.resources[21].size" == 200
 jsonpath "$.result.resources[21].annotations.priority" == 0.5
 jsonpath "$.result.resources[22].uri" == "{{base}}/test/description-only/03"
 jsonpath "$.result.resources[22].name" == "/test/description-only/03"
+jsonpath "$.result.resources[22].description" == "A schema with only a description (03)"
 jsonpath "$.result.resources[22].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[22].size" == 200
 jsonpath "$.result.resources[22].annotations.priority" == 0.5
 jsonpath "$.result.resources[23].uri" == "{{base}}/test/description-only/04"
 jsonpath "$.result.resources[23].name" == "/test/description-only/04"
+jsonpath "$.result.resources[23].description" == "A schema with only a description (04)"
 jsonpath "$.result.resources[23].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[23].size" == 200
 jsonpath "$.result.resources[23].annotations.priority" == 0.5
 jsonpath "$.result.resources[24].uri" == "{{base}}/test/description-only/05"
 jsonpath "$.result.resources[24].name" == "/test/description-only/05"
+jsonpath "$.result.resources[24].description" == "A schema with only a description (05)"
 jsonpath "$.result.resources[24].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[24].size" == 200
 jsonpath "$.result.resources[24].annotations.priority" == 0.5
@@ -508,7 +511,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 5
-jsonpath "$.result.tools" count == 13
+jsonpath "$.result.tools" count == 15
 jsonpath "$.result.tools[0].name" == "list_directory"
 jsonpath "$.result.tools[0].description" == "List the contents of a directory in the catalog"
 jsonpath "$.result.tools[0].inputSchema.type" == "object"
@@ -639,6 +642,26 @@ jsonpath "$.result.tools[12].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[12].annotations.destructiveHint" == false
 jsonpath "$.result.tools[12].annotations.idempotentHint" == true
 jsonpath "$.result.tools[12].annotations.openWorldHint" == false
+jsonpath "$.result.tools[13].name" == "get_openapi_dependencies"
+jsonpath "$.result.tools[13].description" == "List the documents this OpenAPI description directly or transitively reaches, the outgoing edges of the dependency graph"
+jsonpath "$.result.tools[13].inputSchema.type" == "object"
+jsonpath "$.result.tools[13].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/request"
+jsonpath "$.result.tools[13].inputSchema['$comment']" == "The full input schema for this tool is published at the `$ref` URL above. A client that does not resolve it can call `resources/read` on that URL to fetch it, since this server is a JSON Schema registry and every `$ref` URL is itself reachable as an MCP resource"
+jsonpath "$.result.tools[13].annotations.title" == "Get Openapi Dependencies"
+jsonpath "$.result.tools[13].annotations.readOnlyHint" == true
+jsonpath "$.result.tools[13].annotations.destructiveHint" == false
+jsonpath "$.result.tools[13].annotations.idempotentHint" == true
+jsonpath "$.result.tools[13].annotations.openWorldHint" == false
+jsonpath "$.result.tools[14].name" == "get_openapi_dependents"
+jsonpath "$.result.tools[14].description" == "List the OpenAPI descriptions that directly or transitively reference this one, the incoming edges of the dependency graph"
+jsonpath "$.result.tools[14].inputSchema.type" == "object"
+jsonpath "$.result.tools[14].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-openapi-dependents/request"
+jsonpath "$.result.tools[14].inputSchema['$comment']" == "The full input schema for this tool is published at the `$ref` URL above. A client that does not resolve it can call `resources/read` on that URL to fetch it, since this server is a JSON Schema registry and every `$ref` URL is itself reachable as an MCP resource"
+jsonpath "$.result.tools[14].annotations.title" == "Get Openapi Dependents"
+jsonpath "$.result.tools[14].annotations.readOnlyHint" == true
+jsonpath "$.result.tools[14].annotations.destructiveHint" == false
+jsonpath "$.result.tools[14].annotations.idempotentHint" == true
+jsonpath "$.result.tools[14].annotations.openWorldHint" == false
 # Added in 2025-06-18 ("outputSchema" on Tool)
 # https://modelcontextprotocol.io/specification/2025-06-18/changelog
 jsonpath "$..outputSchema" not exists
@@ -781,7 +804,7 @@ jsonpath "$..mimeType" not exists
 variable "text" jsonpath "$.path" == "/"
 variable "text" jsonpath "$.url" == "{{base}}"
 variable "text" jsonpath "$.breadcrumb" count == 0
-variable "text" jsonpath "$.schemas" == 152
+variable "text" jsonpath "$.schemas" == 158
 variable "text" jsonpath "$.entries" count == 5
 variable "text" jsonpath "$.private" == false
 variable "text" jsonpath "$.entries[0].name" == "no-blaze"
@@ -803,8 +826,8 @@ variable "text" jsonpath "$.entries[2].private" == false
 variable "text" jsonpath "$.entries[2].title" == "Self"
 variable "text" jsonpath "$.entries[2].description" == "The schemas that define the current version of this instance"
 variable "text" jsonpath "$.entries[2].type" == "directory"
-variable "text" jsonpath "$.entries[2].health" == 99
-variable "text" jsonpath "$.entries[2].schemas" == 68
+variable "text" jsonpath "$.entries[2].health" == 100
+variable "text" jsonpath "$.entries[2].schemas" == 74
 variable "text" jsonpath "$.entries[2].path" == "/self/"
 variable "text" jsonpath "$.entries[3].name" == "test"
 variable "text" jsonpath "$.entries[3].private" == false

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One OpenAPI Dependents RPC Input",
+  "description": "Get all direct and indirect dependents of an OpenAPI description in the catalog",
+  "examples": [
+    {
+      "openapi": "https://example.com/api/petstore"
+    }
+  ],
+  "type": "object",
+  "required": [ "openapi" ],
+  "properties": {
+    "openapi": {
+      "description": "Absolute URI of an OpenAPI description in this catalog",
+      "x-format-assertion": true,
+      "type": "string",
+      "pattern": "^[^#?]*$",
+      "format": "uri"
+    }
+  },
+  "additionalProperties": false
+}

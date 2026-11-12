@@ -983,11 +983,14 @@ auto Resolver::openapi(const std::string_view raw_identifier,
     cached_path = result->second.cache_path;
   }
 
-  // A Schema Object of an OpenAPI description may reach a schema of this
-  // catalog, and what comes back then is a schema rather than a description,
-  // which is the one case where the two halves of the resolver meet
+  // The two halves stay apart even where a Schema Object of an OpenAPI
+  // description reaches a schema of this catalog, because what a reference
+  // expects to find is fixed by where it sits and analysis asks the half that
+  // matches. Answering for a schema here would hand a schema to a reference
+  // that spelled out a document of this specification, which then reads as a
+  // description missing its version rather than as what it is
   if (view->kind != LeafKind::OpenAPI) {
-    return this->operator()(identifier, callback);
+    return std::nullopt;
   }
 
   /////////////////////////////////////////////////////////////////////////////

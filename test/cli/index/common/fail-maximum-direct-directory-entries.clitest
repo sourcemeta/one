@@ -45,7 +45,7 @@ DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([
 WRITE expected.txt UNTIL EOF
 2> error: Too many entries in a single directory
 2>   at path [CWD]/output/schemas/self/v1/schemas/mcp/tools/call
-2>   with count 15
+2>   with count 17
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt
@@ -100,7 +100,7 @@ WRITE schemas/b/three.json UNTIL EOF
 }
 EOF
 
-RUN --skip-banner one.json output --maximum-direct-directory-entries 15 STDIN /dev/null IN . INTO log_3.txt EXPECTING 0
+RUN --skip-banner one.json output --maximum-direct-directory-entries 17 STDIN /dev/null IN . INTO log_3.txt EXPECTING 0
 DROP LINES MATCHING '^[12]> \([ 0-9]+%\) ' IN log_3.txt
 DROP LINES CONTAINING $ONE_PREFIX IN log_3.txt
 REPLACE MATCHING ' \(#[0-9]+\)' WITH '' IN log_3.txt

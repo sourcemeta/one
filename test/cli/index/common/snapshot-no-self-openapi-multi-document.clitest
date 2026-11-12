@@ -90,6 +90,12 @@ WRITE expected_tree.txt UNTIL EOF
 ./explorer/public/example/schemas
 ./explorer/public/example/schemas/%
 ./explorer/public/example/schemas/%/directory.metapack
+./explorer/public/example/schemas/petstore
+./explorer/public/example/schemas/petstore/%
+./explorer/public/example/schemas/petstore/%/dependents.metapack
+./explorer/public/example/schemas/shared
+./explorer/public/example/schemas/shared/%
+./explorer/public/example/schemas/shared/%/dependents.metapack
 ./routes.bin
 ./schemas
 ./schemas/example
@@ -97,9 +103,11 @@ WRITE expected_tree.txt UNTIL EOF
 ./schemas/example/schemas/petstore
 ./schemas/example/schemas/petstore/%
 ./schemas/example/schemas/petstore/%/data.metapack
+./schemas/example/schemas/petstore/%/dependencies.metapack
 ./schemas/example/schemas/shared
 ./schemas/example/schemas/shared/%
 ./schemas/example/schemas/shared/%/data.metapack
+./schemas/example/schemas/shared/%/dependencies.metapack
 ./state.bin
 ./version.json
 EOF

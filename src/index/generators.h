@@ -60,6 +60,37 @@ static auto format_schema(sourcemeta::core::JSON &schema,
   sourcemeta::core::schema_format(schema, frame);
 }
 
+// A reference may not reach what a stricter policy holds back, whatever kind of
+// leaf spells it, so both kinds are swept the same way off the edges they
+// recorded. A URI outside this instance belongs to no policy, so there is
+// nothing to compare it against
+static auto
+reject_cross_policy_edges(const sourcemeta::core::JSON &edges,
+                          const std::filesystem::path &authentication_path,
+                          const sourcemeta::one::Configuration &configuration)
+    -> void {
+  if (edges.empty()) {
+    return;
+  }
+
+  const sourcemeta::one::Authentication::Table authentication{
+      authentication_path};
+  for (const auto &edge : edges.as_array()) {
+    const auto &referrer_uri{edge.at("from").to_string()};
+    const auto &referent_uri{edge.at("to").to_string()};
+    const auto referrer{sourcemeta::one::Authentication::Path::parse(
+        referrer_uri, configuration.url)};
+    const auto referent{sourcemeta::one::Authentication::Path::parse(
+        referent_uri, configuration.url)};
+    if (referrer.has_value() && referent.has_value() &&
+        !authentication.reference_permitted(referrer.value(),
+                                            referent.value())) {
+      throw CrossPolicyReferenceError(configuration.path, referrer_uri,
+                                      referent_uri);
+    }
+  }
+}
+
 // The name a location kind answers to outside this program, which is a name
 // this project promises rather than one it happens to use
 static auto
@@ -354,8 +385,8 @@ struct GenerateMaterialisedOpenAPI {
       }
     }
 
-    const auto extension_bytes{
-        sourcemeta::one::make_metapack_openapi_extension()};
+    const auto extension_bytes{sourcemeta::one::make_metapack_leaf_extension(
+        sourcemeta::one::LeafKind::OpenAPI)};
     sourcemeta::core::metapack_write_json_pretty(
         action.destination, document.value(), "application/openapi+json",
         sourcemeta::core::MetapackEncoding::GZIP,
@@ -582,28 +613,14 @@ struct GenerateDependencies {
     // Otherwise we are returning non-sense
     assert(result.unique());
 
-    if (!result.empty()) {
-      const sourcemeta::one::Authentication::Table authentication{
-          action.dependencies.at(1)};
-      for (const auto &edge : result.as_array()) {
-        const auto &referrer_uri{edge.at("from").to_string()};
-        const auto &referent_uri{edge.at("to").to_string()};
-        const auto referrer{sourcemeta::one::Authentication::Path::parse(
-            referrer_uri, configuration.url)};
-        const auto referent{sourcemeta::one::Authentication::Path::parse(
-            referent_uri, configuration.url)};
-        if (referrer.has_value() && referent.has_value() &&
-            !authentication.reference_permitted(referrer.value(),
-                                                referent.value())) {
-          throw CrossPolicyReferenceError(configuration.path, referrer_uri,
-                                          referent_uri);
-        }
-      }
-    }
+    reject_cross_policy_edges(result, action.dependencies.at(1), configuration);
 
+    const auto extension_bytes{sourcemeta::one::make_metapack_leaf_extension(
+        sourcemeta::one::LeafKind::Schema)};
     sourcemeta::core::metapack_write_json_pretty(
         action.destination, result, "application/json",
-        sourcemeta::core::MetapackEncoding::GZIP, {});
+        sourcemeta::core::MetapackEncoding::GZIP,
+        std::span<const std::uint8_t>{extension_bytes});
   }
 
 private:
@@ -614,6 +631,59 @@ private:
     }
 
     return sourcemeta::core::JSON{uri};
+  }
+};
+
+struct GenerateOpenAPIDependencies {
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
+                      const sourcemeta::one::BuildDynamicCallback &callback,
+                      sourcemeta::one::Resolver &resolver,
+                      const sourcemeta::one::Configuration &configuration,
+                      const sourcemeta::core::JSON &) -> void {
+    const auto contents_option{
+        sourcemeta::core::metapack_read_json(action.dependencies.front())};
+    assert(contents_option.has_value());
+    const auto &contents{contents_option.value()};
+    const sourcemeta::core::SchemaResolver schema_resolver{
+        [&callback, &resolver](
+            const auto identifier) -> std::optional<sourcemeta::core::JSON> {
+          return resolver(identifier, callback);
+        }};
+    auto result{sourcemeta::core::JSON::make_array()};
+    sourcemeta::core::openapi_dependencies(
+        contents, sourcemeta::core::schema_walker, schema_resolver,
+        [&callback, &resolver](const auto identifier) {
+          return resolver.openapi(identifier, callback);
+        },
+        [&result](const sourcemeta::core::OpenAPIDependency &dependency) {
+          auto trace{sourcemeta::core::JSON::make_object()};
+          trace.assign("from", sourcemeta::core::JSON{dependency.origin});
+          trace.assign("to", sourcemeta::core::JSON{dependency.destination});
+          trace.assign("at", sourcemeta::core::JSON{sourcemeta::core::to_string(
+                                 dependency.pointer)});
+          // TODO: Hold the far end to this, so that it names the kind of
+          // Object that is there rather than the kind the position spelling
+          // the reference reaches for. Analysis reports what each reference
+          // expects and hands over the document it reached, but it reads no
+          // further than the document
+          trace.assign("kind", sourcemeta::core::JSON{
+                                   sourcemeta::core::openapi_kind_name(
+                                       dependency.expected)});
+          result.push_back(std::move(trace));
+        },
+        {.default_base = action.data});
+    // Otherwise we are returning non-sense
+    assert(result.unique());
+
+    reject_cross_policy_edges(result, action.dependencies.at(1), configuration);
+
+    const auto extension_bytes{sourcemeta::one::make_metapack_leaf_extension(
+        sourcemeta::one::LeafKind::OpenAPI)};
+    sourcemeta::core::metapack_write_json_pretty(
+        action.destination, result, "application/json",
+        sourcemeta::core::MetapackEncoding::GZIP,
+        std::span<const std::uint8_t>{extension_bytes});
   }
 };
 
@@ -947,6 +1017,10 @@ struct GenerateURITemplateRoutes {
         "/self/v1/schemas/api/schemas/dependencies/response"};
     constexpr std::string_view DEPENDENTS_SCHEMA{
         "/self/v1/schemas/api/schemas/dependents/response"};
+    constexpr std::string_view OPENAPI_DEPENDENCIES_SCHEMA{
+        "/self/v1/schemas/api/openapi/dependencies/response"};
+    constexpr std::string_view OPENAPI_DEPENDENTS_SCHEMA{
+        "/self/v1/schemas/api/openapi/dependents/response"};
     constexpr std::string_view HEALTH_SCHEMA{
         "/self/v1/schemas/api/schemas/health/response"};
     constexpr std::string_view LOCATIONS_SCHEMA{
@@ -989,6 +1063,14 @@ struct GenerateURITemplateRoutes {
         "/self/v1/schemas/mcp/tools/call/get-schema-dependents/request"};
     constexpr std::string_view GET_SCHEMA_DEPENDENTS_RESPONSE_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/get-schema-dependents/response"};
+    constexpr std::string_view GET_OPENAPI_DEPENDENCIES_REQUEST_SCHEMA{
+        "/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/request"};
+    constexpr std::string_view GET_OPENAPI_DEPENDENCIES_RESPONSE_SCHEMA{
+        "/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response"};
+    constexpr std::string_view GET_OPENAPI_DEPENDENTS_REQUEST_SCHEMA{
+        "/self/v1/schemas/mcp/tools/call/get-openapi-dependents/request"};
+    constexpr std::string_view GET_OPENAPI_DEPENDENTS_RESPONSE_SCHEMA{
+        "/self/v1/schemas/mcp/tools/call/get-openapi-dependents/response"};
     constexpr std::string_view GET_SCHEMA_HEALTH_REQUEST_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/get-schema-health/request"};
     constexpr std::string_view GET_SCHEMA_HEALTH_RESPONSE_SCHEMA{
@@ -1223,6 +1305,33 @@ struct GenerateURITemplateRoutes {
       router.add(sourcemeta::one::ENDPOINT_SCHEMA_SEARCH, "search_schemas",
                  next_id++, sourcemeta::one::ACTION_TYPE_SCHEMA_SEARCH_V1,
                  search_arguments);
+
+      const auto openapi_dependencies_arguments{
+          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+              {{"responseSchema",
+                std::string_view{OPENAPI_DEPENDENCIES_SCHEMA}},
+               {"mcpRequestSchema",
+                std::string_view{GET_OPENAPI_DEPENDENCIES_REQUEST_SCHEMA}},
+               {"mcpResponseSchema",
+                std::string_view{GET_OPENAPI_DEPENDENCIES_RESPONSE_SCHEMA}},
+               {"errorSchema", std::string_view{ERROR_SCHEMA}}})};
+      router.add(sourcemeta::one::ENDPOINT_OPENAPI_DEPENDENCIES,
+                 "get_openapi_dependencies", next_id++,
+                 sourcemeta::one::ACTION_TYPE_GET_OPENAPI_DEPENDENCIES_V1,
+                 openapi_dependencies_arguments);
+
+      const auto openapi_dependents_arguments{
+          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+              {{"responseSchema", std::string_view{OPENAPI_DEPENDENTS_SCHEMA}},
+               {"mcpRequestSchema",
+                std::string_view{GET_OPENAPI_DEPENDENTS_REQUEST_SCHEMA}},
+               {"mcpResponseSchema",
+                std::string_view{GET_OPENAPI_DEPENDENTS_RESPONSE_SCHEMA}},
+               {"errorSchema", std::string_view{ERROR_SCHEMA}}})};
+      router.add(sourcemeta::one::ENDPOINT_OPENAPI_DEPENDENTS,
+                 "get_openapi_dependents", next_id++,
+                 sourcemeta::one::ACTION_TYPE_GET_OPENAPI_DEPENDENTS_V1,
+                 openapi_dependents_arguments);
 
       const auto health_check_arguments{
           std::to_array<sourcemeta::core::URITemplateRouter::Argument>(

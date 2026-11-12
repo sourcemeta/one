@@ -14,15 +14,15 @@
       "Dog": {
         "type": "object",
         "properties": {
-          "pet": {
-            "$ref": "https://example.com/schemas/openapi-split-shared#/components/schemas/Pet"
+          "name": {
+            "$ref": "https://example.com/schemas/string"
           }
         }
       },
       "Any": {
         "oneOf": [
           {
-            "$ref": "https://example.com/schemas/openapi-split-shared#/components/schemas/Pet"
+            "$ref": "https://example.com/schemas/string"
           },
           {
             "$ref": "#/components/schemas/Dog"
@@ -31,7 +31,7 @@
         "discriminator": {
           "propertyName": "kind",
           "mapping": {
-            "pet": "https://example.com/schemas/openapi-split-shared#/components/schemas/Pet",
+            "name": "https://example.com/schemas/string",
             "dog": "Dog"
           }
         }

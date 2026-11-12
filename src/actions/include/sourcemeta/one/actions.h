@@ -39,6 +39,10 @@ namespace sourcemeta::one {
     "get_schema_dependencies_v1")                                              \
   X(GET_SCHEMA_DEPENDENTS_V1, ActionGetSchemaDependentsV1,                     \
     "get_schema_dependents_v1")                                                \
+  X(GET_OPENAPI_DEPENDENCIES_V1, ActionGetOpenAPIDependenciesV1,               \
+    "get_openapi_dependencies_v1")                                             \
+  X(GET_OPENAPI_DEPENDENTS_V1, ActionGetOpenAPIDependentsV1,                   \
+    "get_openapi_dependents_v1")                                               \
   X(JSONSCHEMA_EVALUATE_V1, ActionJSONSchemaEvaluateV1,                        \
     "jsonschema_evaluate_v1")                                                  \
   X(JSONSCHEMA_RDF_V1, ActionJSONSchemaRDFV1, "jsonschema_rdf_v1")             \

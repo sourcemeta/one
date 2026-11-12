@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One OpenAPI Dependencies API Response",
+  "description": "The response format for the OpenAPI description dependencies API endpoint",
+  "examples": [
+    [
+      {
+        "from": "https://example.com/api/petstore",
+        "to": "https://example.com/api/shared",
+        "at": "/paths/~1pets/$ref",
+        "kind": "path-item"
+      }
+    ]
+  ],
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [ "from", "to", "at", "kind" ],
+    "properties": {
+      "at": {
+        "x-format-assertion": true,
+        "type": "string",
+        "format": "json-pointer"
+      },
+      "from": {
+        "x-format-assertion": true,
+        "type": "string",
+        "format": "uri"
+      },
+      "kind": {
+        "enum": [
+          "openapi",
+          "path-item",
+          "parameter",
+          "request-body",
+          "response",
+          "example",
+          "header",
+          "link",
+          "callback",
+          "security-scheme",
+          "media-type",
+          "operation",
+          "schema"
+        ]
+      },
+      "to": {
+        "x-format-assertion": true,
+        "type": "string",
+        "format": "uri"
+      }
+    },
+    "additionalProperties": false
+  }
+}

@@ -84,18 +84,11 @@ public:
     const sourcemeta::one::RequestCookies cookies{request};
     const auto resolution{this->artifact_resolve_path(
         caller, matches.front(), this->tree_, this->metapack_)};
-    if (!resolution.path.has_value()) {
-      // A missing artifact for an OpenAPI description means nothing records
-      // its connections yet, not that there is nothing here
-      if (this->describes_api(caller, matches.front())) {
-        sourcemeta::one::json_error(
-            request, response, sourcemeta::core::HTTP_STATUS_NOT_IMPLEMENTED,
-            "urn:sourcemeta:one:openapi-description-unsupported",
-            "This operation is not supported on an OpenAPI description yet",
-            this->error_schema_, "*");
-        return;
-      }
-
+    // Both kinds of leaf record their connections under one name, and what
+    // each kind records differs enough to have a surface of its own, so an
+    // artifact of the other kind is one this surface holds nothing at
+    if (!resolution.path.has_value() ||
+        this->artifact_kind(resolution.path.value()) != this->kind_) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
           "urn:sourcemeta:one:not-found", "There is nothing at this URL",
@@ -125,20 +118,18 @@ public:
 
     // A tool call reaches one artifact, so placing the caller here is still
     // once for the request that carried them
-    const auto &schema_uri{arguments.at("schema").to_string()};
+    const auto &leaf_uri{arguments.at(this->argument_).to_string()};
     const auto resolution{this->artifact_resolve_path(
-        caller, schema_uri, this->tree_, this->metapack_)};
-    if (!resolution.path.has_value()) {
-      return sourcemeta::core::mcp_make_tool_error(
-          version, request_id,
-          this->describes_api(caller, schema_uri)
-              ? "This operation is not supported on an OpenAPI description yet"
-              : "Schema not found");
+        caller, leaf_uri, this->tree_, this->metapack_)};
+    if (!resolution.path.has_value() ||
+        this->artifact_kind(resolution.path.value()) != this->kind_) {
+      return sourcemeta::core::mcp_make_tool_error(version, request_id,
+                                                   this->missing_);
     }
     auto contents{this->artifact_read_json(resolution.path.value())};
     if (!contents.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(version, request_id,
-                                                   "Schema not found");
+                                                   this->missing_);
     }
 
     auto envelope{sourcemeta::core::JSON::make_object()};
@@ -176,10 +167,14 @@ protected:
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
       const std::string_view metapack, const Tree tree,
-      sourcemeta::one::Router &dispatcher)
+      const sourcemeta::one::LeafKind kind, const std::string_view argument,
+      const std::string_view missing, sourcemeta::one::Router &dispatcher)
       : sourcemeta::one::RouterAction{base, router.base_url(), dispatcher} {
     this->metapack_ = metapack;
     this->tree_ = tree;
+    this->kind_ = kind;
+    this->argument_ = argument;
+    this->missing_ = missing;
     router.arguments(
         identifier, [this](const auto &key, const auto &value) -> void {
           if (key == "responseSchema") {
@@ -199,6 +194,9 @@ private:
   // A caller that never names a direction resolves nothing, which the tree it
   // resolves against must not decide
   Tree tree_{Tree::Schemas};
+  sourcemeta::one::LeafKind kind_{sourcemeta::one::LeafKind::Schema};
+  std::string_view argument_{"schema"};
+  std::string_view missing_{"Schema not found"};
   std::string_view response_schema_;
   std::string_view rpc_request_schema_;
   std::string_view rpc_response_schema_;
