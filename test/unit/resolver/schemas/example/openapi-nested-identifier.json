@@ -1,0 +1,26 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Nested identifier",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "Pet": {
+        "$id": "nested/pet",
+        "oneOf": [
+          {
+            "$ref": "https://example.com/schemas/nested/openapi-nested-target"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "target": "https://example.com/schemas/nested/openapi-nested-target"
+          }
+        }
+      }
+    }
+  }
+}

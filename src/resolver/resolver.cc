@@ -725,9 +725,65 @@ struct OpenAPIReferenceBase {
   const sourcemeta::core::URI &served;
 };
 
+// What this instance serves the base in force somewhere in an OpenAPI
+// description as. A position inside a Schema Object that declares an
+// identifier of its own is measured against that identifier rather than
+// against the document, and nothing rewrites such an identifier, so the served
+// document carries it exactly as it was written.
+//
+// Which means only an identifier written relative to the document lands
+// anywhere this instance serves, as that is the one the served identity of the
+// document carries along with it. One written absolute goes on naming whatever
+// it already named, and so does one nested below another, which this does not
+// follow. Nothing at all for those, so that a reference measured against one
+// reaches nothing rather than appearing to reach what it never would
+static auto served_scope(const OpenAPIReferenceBase &identity,
+                         const sourcemeta::core::JSON &document,
+                         const sourcemeta::core::SchemaFrame &schemas,
+                         const sourcemeta::core::JSON::String &scope)
+    -> std::optional<sourcemeta::core::URI> {
+  if (scope.empty() ||
+      normalise_identifier(scope) ==
+          normalise_identifier(identity.original.recompose())) {
+    return identity.served;
+  }
+
+  const auto resource{schemas.traverse(scope)};
+  if (!resource.has_value()) {
+    return std::nullopt;
+  }
+
+  const auto &holder{
+      sourcemeta::core::get(document, resource.value().get().pointer)};
+  const auto *declared{holder.is_object() ? holder.try_at("$id") : nullptr};
+  if (declared == nullptr || !declared->is_string()) {
+    return std::nullopt;
+  }
+
+  // The identifier has to be one the document's own identity settles, or what
+  // it resolves against is another identifier this does not follow
+  sourcemeta::core::URI written{declared->to_string()};
+  if (!written.is_relative()) {
+    return std::nullopt;
+  }
+
+  written.resolve_from(identity.original);
+  if (normalise_identifier(written.recompose()) !=
+      normalise_identifier(scope)) {
+    return std::nullopt;
+  }
+
+  sourcemeta::core::URI result{declared->to_string()};
+  result.resolve_from(identity.served);
+  return result;
+}
+
 // Where a reference of an OpenAPI description lands once the document is
 // served, which is the reference as the rewrite will write it resolved against
-// the identity this instance serves the document under.
+// what this instance serves its own base as. The base in force is the
+// document itself for every connection the shell makes and the enclosing
+// Schema Object for one the schemas make, which is the base the rewrite
+// settles each of them against too.
 //
 // This reads what the author wrote rather than what the frame resolved,
 // because a frame measures a reference against the identity the document came
@@ -736,13 +792,23 @@ struct OpenAPIReferenceBase {
 // alone and a reader of the served document lands where the author meant
 static auto reference_lands_at(const OpenAPIReferenceBase &identity,
                                const sourcemeta::core::URI &server,
+                               const sourcemeta::core::JSON &document,
+                               const sourcemeta::core::SchemaFrame &schemas,
+                               const sourcemeta::core::JSON::String &scope,
                                const sourcemeta::core::JSON::String &reference)
     -> sourcemeta::core::JSON::String {
-  const auto rewritten{rebase_reference(identity.collection, identity.original,
-                                        reference, server)};
+  const sourcemeta::core::URI base{scope.empty() ? identity.original.recompose()
+                                                 : scope};
+  const auto rewritten{
+      rebase_reference(identity.collection, base, reference, server)};
   sourcemeta::core::URI target{rewritten.value_or(reference)};
   if (target.is_relative()) {
-    target.resolve_from(identity.served);
+    const auto served{served_scope(identity, document, schemas, scope)};
+    if (!served.has_value()) {
+      return {};
+    }
+
+    target.resolve_from(served.value());
   }
 
   return destination_document(target.recompose());
@@ -786,7 +852,9 @@ first_unreached_connection(const sourcemeta::one::Resolver &resolver,
 
     const OpenAPIDanglingConnection connection{
         .reference = entry.second.original,
-        .document = reference_lands_at(identity, server, entry.second.original),
+        .document =
+            reference_lands_at(identity, server, document, frame.schemas(), {},
+                               entry.second.original),
         .location = entry.second.origin};
     if (!reaches_served_document(resolver, identity.served, connection)) {
       return connection;
@@ -802,7 +870,9 @@ first_unreached_connection(const sourcemeta::one::Resolver &resolver,
 
     const OpenAPIDanglingConnection connection{
         .reference = entry.second.original,
-        .document = reference_lands_at(identity, server, entry.second.original),
+        .document =
+            reference_lands_at(identity, server, document, frame.schemas(), {},
+                               entry.second.original),
         .location = entry.second.origin};
     if (!reaches_served_document(resolver, identity.served, connection)) {
       return connection;
@@ -821,9 +891,17 @@ first_unreached_connection(const sourcemeta::one::Resolver &resolver,
     const auto &mapping{sourcemeta::core::get(document, discriminator.origin)};
     const sourcemeta::core::JSON::String written{
         mapping.is_string() ? mapping.to_string() : discriminator.destination};
+    // A mapping that names a component by its name is no URI reference, and
+    // what it stands for is settled from the entry document wherever it sits,
+    // so one that lands nowhere names a component this OpenAPI description
+    // does not hold rather than a document this instance does not serve
     const OpenAPIDanglingConnection connection{
         .reference = written,
-        .document = reference_lands_at(identity, server, written),
+        .document = discriminator.by_name
+                        ? sourcemeta::core::JSON::String{}
+                        : reference_lands_at(identity, server, document,
+                                             frame.schemas(),
+                                             discriminator.scope, written),
         .location = discriminator.origin};
     if (!reaches_served_document(resolver, identity.served, connection)) {
       return connection;
@@ -834,7 +912,7 @@ first_unreached_connection(const sourcemeta::one::Resolver &resolver,
 
   std::optional<OpenAPIDanglingConnection> result;
   frame.schemas().for_each_unresolved_reference(
-      [&resolver, &identity, &server, &result,
+      [&resolver, &identity, &server, &document, &frame, &result,
        &held](const auto &pointer, const auto &reference) -> void {
         // Naming a dialect this build already comes with asks nothing of
         // whoever reads the OpenAPI description, so it is the one reference
@@ -847,9 +925,15 @@ first_unreached_connection(const sourcemeta::one::Resolver &resolver,
         }
 
         const sourcemeta::core::JSON::String written{reference.original};
+        const auto holder{frame.schemas().traverse(pointer.initial())};
         const OpenAPIDanglingConnection connection{
             .reference = written,
-            .document = reference_lands_at(identity, server, written),
+            .document = reference_lands_at(
+                identity, server, document, frame.schemas(),
+                holder.has_value()
+                    ? sourcemeta::core::JSON::String{holder.value().get().base}
+                    : sourcemeta::core::JSON::String{},
+                written),
             .location = sourcemeta::core::to_pointer(pointer)};
         if (!reaches_served_document(resolver, identity.served, connection)) {
           result = connection;
@@ -1009,9 +1093,14 @@ auto Resolver::openapi(const std::string_view raw_identifier,
       continue;
     }
 
+    // A mapping is resolved against the schema that holds it rather than
+    // against the document, so one inside a Schema Object declaring an
+    // identifier of its own is rebased against that identifier, exactly as
+    // the reference beside it is
     auto &mapping{sourcemeta::core::get(document, discriminator.origin)};
-    const auto rewritten{rebase_reference(collection, base, mapping.to_string(),
-                                          this->server_uri_)};
+    const sourcemeta::core::URI scope{discriminator.scope};
+    const auto rewritten{rebase_reference(
+        collection, scope, mapping.to_string(), this->server_uri_)};
     if (rewritten.has_value()) {
       mapping = sourcemeta::core::JSON{rewritten.value()};
     }

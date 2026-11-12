@@ -409,6 +409,47 @@ TEST(example_openapi_reference_spellings) {
   })JSON");
 }
 
+// A Schema Object that declares an identifier of its own is what a reference
+// inside it is measured against, not the OpenAPI description. The served
+// document carries such an identifier exactly as it was written, so one
+// written relative to the document carries along with it and everything under
+// it is rebased against it rather than against the document
+TEST(example_openapi_nested_identifier) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  RESOLVER_IMPORT(resolver, "example", "nested/openapi-nested-target.json");
+  RESOLVER_ADD_OPENAPI(
+      resolver, "example", "openapi-nested-identifier.json",
+      "https://example.com/schemas/openapi-nested-identifier",
+      "http://localhost:8000/example/openapi-nested-identifier",
+      R"JSON({
+    "openapi": "3.1.1",
+    "info": {
+      "title": "Nested identifier",
+      "version": "1.0.0"
+    },
+    "paths": {},
+    "components": {
+      "schemas": {
+        "Pet": {
+          "$id": "nested/pet",
+          "oneOf": [
+            {
+              "$ref": "openapi-nested-target"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "kind",
+            "mapping": {
+              "target": "openapi-nested-target"
+            }
+          }
+        }
+      }
+    }
+  })JSON");
+}
+
 // A Discriminator Object mapping names a schema either by the name of a
 // component or by a URI reference, and only the second is in terms of an
 // identity. A name is resolved from the entry document wherever the
