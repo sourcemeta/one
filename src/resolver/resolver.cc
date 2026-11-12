@@ -999,6 +999,24 @@ auto Resolver::openapi(const std::string_view raw_identifier,
     }
   });
 
+  // A Discriminator Object names a schema by the value of a member rather than
+  // by a field of its own, and names it either by the name of a component or
+  // by a URI reference. A name is resolved from the entry document wherever
+  // the Discriminator Object sits, so what this instance serves the document
+  // as does not reach one
+  for (const auto &discriminator : frame.discriminators()) {
+    if (discriminator.by_name) {
+      continue;
+    }
+
+    auto &mapping{sourcemeta::core::get(document, discriminator.origin)};
+    const auto rewritten{rebase_reference(collection, base, mapping.to_string(),
+                                          this->server_uri_)};
+    if (rewritten.has_value()) {
+      mapping = sourcemeta::core::JSON{rewritten.value()};
+    }
+  }
+
   const auto ref_hash{document.as_object().hash("$ref")};
   const auto dynamic_ref_hash{document.as_object().hash("$dynamicRef")};
   frame.schemas().for_each_subschema(

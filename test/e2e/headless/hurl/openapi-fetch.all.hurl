@@ -357,7 +357,9 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/sche
 
 # An OpenAPI description built out of several documents is served as the
 # documents it is made of, each of them reaching the others under the identity
-# this instance gives them rather than the one they came with
+# this instance gives them rather than the one they came with. A Discriminator
+# Object mapping naming a schema by URI is one of those, while one naming a
+# component by name is left as it was written
 GET {{base}}/test/schemas/openapi-split-entry
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
@@ -387,6 +389,23 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"http://localhost:8
   },
   "components": {
     "schemas": {
+      "Any": {
+        "oneOf": [
+          {
+            "$ref": "openapi-split-shared#/components/schemas/Pet"
+          },
+          {
+            "$ref": "#/components/schemas/Dog"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "pet": "openapi-split-shared#/components/schemas/Pet",
+            "dog": "Dog"
+          }
+        }
+      },
       "Dog": {
         "type": "object",
         "properties": {

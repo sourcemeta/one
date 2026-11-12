@@ -409,6 +409,55 @@ TEST(example_openapi_reference_spellings) {
   })JSON");
 }
 
+// A Discriminator Object mapping names a schema either by the name of a
+// component or by a URI reference, and only the second is in terms of an
+// identity. A name is resolved from the entry document wherever the
+// Discriminator Object sits, so serving the document elsewhere does not move
+// what a name reaches
+TEST(example_openapi_discriminator_mapping) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  RESOLVER_IMPORT(resolver, "example", "openapi-spellings-target.json");
+  RESOLVER_ADD_OPENAPI(
+      resolver, "example", "openapi-discriminator-mapping.json",
+      "https://example.com/schemas/openapi-discriminator-mapping",
+      "http://localhost:8000/example/openapi-discriminator-mapping",
+      R"JSON({
+    "openapi": "3.2.0",
+    "$self": "http://localhost:8000/example/openapi-discriminator-mapping",
+    "info": {
+      "title": "Discriminator",
+      "version": "1.0.0"
+    },
+    "paths": {},
+    "components": {
+      "schemas": {
+        "Cat": {
+          "type": "object"
+        },
+        "Pet": {
+          "oneOf": [
+            {
+              "$ref": "openapi-spellings-target#/components/schemas/Pet"
+            },
+            {
+              "$ref": "#/components/schemas/Cat"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "kind",
+            "mapping": {
+              "shared": "openapi-spellings-target#/components/schemas/Pet",
+              "named": "Cat",
+              "fragment": "#/components/schemas/Cat"
+            }
+          }
+        }
+      }
+    }
+  })JSON");
+}
+
 // A reference an OpenAPI description makes into itself by its own absolute
 // identity would lead nowhere once the identity is the one this instance serves
 // it under, so it is relativised the way a schema reference is

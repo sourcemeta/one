@@ -1,0 +1,33 @@
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "Discriminator",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "Cat": {
+        "type": "object"
+      },
+      "Pet": {
+        "oneOf": [
+          {
+            "$ref": "https://example.com/schemas/openapi-spellings-target#/components/schemas/Pet"
+          },
+          {
+            "$ref": "#/components/schemas/Cat"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "shared": "https://example.com/schemas/openapi-spellings-target#/components/schemas/Pet",
+            "named": "Cat",
+            "fragment": "#/components/schemas/Cat"
+          }
+        }
+      }
+    }
+  }
+}

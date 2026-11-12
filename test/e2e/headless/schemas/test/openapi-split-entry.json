@@ -18,6 +18,23 @@
             "$ref": "https://example.com/schemas/openapi-split-shared#/components/schemas/Pet"
           }
         }
+      },
+      "Any": {
+        "oneOf": [
+          {
+            "$ref": "https://example.com/schemas/openapi-split-shared#/components/schemas/Pet"
+          },
+          {
+            "$ref": "#/components/schemas/Dog"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "pet": "https://example.com/schemas/openapi-split-shared#/components/schemas/Pet",
+            "dog": "Dog"
+          }
+        }
       }
     }
   }
