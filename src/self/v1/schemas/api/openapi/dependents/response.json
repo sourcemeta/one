@@ -29,7 +29,6 @@
       },
       "kind": {
         "enum": [
-          "openapi",
           "path-item",
           "parameter",
           "request-body",
