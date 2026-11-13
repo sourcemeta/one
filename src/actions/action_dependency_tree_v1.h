@@ -84,9 +84,9 @@ public:
     const sourcemeta::one::RequestCookies cookies{request};
     const auto resolution{this->artifact_resolve_path(
         caller, matches.front(), this->tree_, this->metapack_)};
-    // Both kinds of leaf record their connections under one name, and what
-    // each kind records differs enough to have a surface of its own, so an
-    // artifact of the other kind is one this surface holds nothing at
+    // Both kinds of leaf record their connections under one filename, and what
+    // each kind records differs enough to have a surface of its own. This
+    // surface therefore holds nothing for an artifact of the other kind
     if (!resolution.path.has_value() ||
         this->artifact_kind(resolution.path.value()) != this->kind_) {
       sourcemeta::one::json_error(

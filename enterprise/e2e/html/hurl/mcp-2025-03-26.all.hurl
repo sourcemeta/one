@@ -681,6 +681,8 @@ jsonpath "$.result.tools[9].title" not exists
 jsonpath "$.result.tools[10].title" not exists
 jsonpath "$.result.tools[11].title" not exists
 jsonpath "$.result.tools[12].title" not exists
+jsonpath "$.result.tools[13].title" not exists
+jsonpath "$.result.tools[14].title" not exists
 # Added in 2025-11-25 (SEP-973)
 # https://github.com/modelcontextprotocol/modelcontextprotocol/issues/973
 jsonpath "$..icons" not exists

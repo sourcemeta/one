@@ -29,6 +29,20 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 50
 jsonpath "$.result.tools" count == 15
 jsonpath "$.result.tools[0].name" == "list_directory"
+jsonpath "$.result.tools[1].name" == "get_schema_dependencies"
+jsonpath "$.result.tools[2].name" == "get_schema_dependents"
+jsonpath "$.result.tools[3].name" == "get_schema_health"
+jsonpath "$.result.tools[4].name" == "get_schema_locations"
+jsonpath "$.result.tools[5].name" == "get_schema_positions"
+jsonpath "$.result.tools[6].name" == "get_schema_stats"
+jsonpath "$.result.tools[7].name" == "get_schema_metadata"
+jsonpath "$.result.tools[8].name" == "evaluate_schema"
+jsonpath "$.result.tools[9].name" == "instance_to_rdf"
+jsonpath "$.result.tools[10].name" == "trace_schema_evaluation"
+jsonpath "$.result.tools[11].name" == "playground_trace_schema"
+jsonpath "$.result.tools[12].name" == "search_schemas"
+jsonpath "$.result.tools[13].name" == "get_openapi_dependencies"
+jsonpath "$.result.tools[14].name" == "get_openapi_dependents"
 # The display title is sent both on the tool and under its annotations, since
 # the revisions differ on where a client reads it from
 jsonpath "$.result.tools[0].title" == "List Directory"
@@ -199,6 +213,32 @@ jsonpath "$.result.tools[12].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[12].annotations.destructiveHint" == false
 jsonpath "$.result.tools[12].annotations.idempotentHint" == true
 jsonpath "$.result.tools[12].annotations.openWorldHint" == false
+jsonpath "$.result.tools[13].name" == "get_openapi_dependencies"
+jsonpath "$.result.tools[13].title" == "Get Openapi Dependencies"
+jsonpath "$.result.tools[13].description" == "List the documents this OpenAPI description directly or transitively reaches, the outgoing edges of the dependency graph"
+jsonpath "$.result.tools[13].inputSchema.type" == "object"
+jsonpath "$.result.tools[13].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/request"
+jsonpath "$.result.tools[13].inputSchema['$comment']" == "The full input schema for this tool is published at the `$ref` URL above. A client that does not resolve it can call `resources/read` on that URL to fetch it, since this server is a JSON Schema registry and every `$ref` URL is itself reachable as an MCP resource"
+jsonpath "$.result.tools[13].outputSchema.type" == "object"
+jsonpath "$.result.tools[13].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response"
+jsonpath "$.result.tools[13].annotations.title" == "Get Openapi Dependencies"
+jsonpath "$.result.tools[13].annotations.readOnlyHint" == true
+jsonpath "$.result.tools[13].annotations.destructiveHint" == false
+jsonpath "$.result.tools[13].annotations.idempotentHint" == true
+jsonpath "$.result.tools[13].annotations.openWorldHint" == false
+jsonpath "$.result.tools[14].name" == "get_openapi_dependents"
+jsonpath "$.result.tools[14].title" == "Get Openapi Dependents"
+jsonpath "$.result.tools[14].description" == "List the OpenAPI descriptions that directly or transitively reference this one, the incoming edges of the dependency graph"
+jsonpath "$.result.tools[14].inputSchema.type" == "object"
+jsonpath "$.result.tools[14].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-openapi-dependents/request"
+jsonpath "$.result.tools[14].inputSchema['$comment']" == "The full input schema for this tool is published at the `$ref` URL above. A client that does not resolve it can call `resources/read` on that URL to fetch it, since this server is a JSON Schema registry and every `$ref` URL is itself reachable as an MCP resource"
+jsonpath "$.result.tools[14].outputSchema.type" == "object"
+jsonpath "$.result.tools[14].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-openapi-dependents/response"
+jsonpath "$.result.tools[14].annotations.title" == "Get Openapi Dependents"
+jsonpath "$.result.tools[14].annotations.readOnlyHint" == true
+jsonpath "$.result.tools[14].annotations.destructiveHint" == false
+jsonpath "$.result.tools[14].annotations.idempotentHint" == true
+jsonpath "$.result.tools[14].annotations.openWorldHint" == false
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
