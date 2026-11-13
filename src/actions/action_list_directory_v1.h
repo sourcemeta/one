@@ -21,6 +21,7 @@
 
 class ActionListDirectoryV1 : public sourcemeta::one::RouterAction {
 public:
+  static constexpr std::string_view TITLE{"List Directory"};
   static constexpr std::string_view DESCRIPTION{
       "List the contents of a directory in the catalog"};
   static constexpr bool READ_ONLY{true};

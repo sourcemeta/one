@@ -20,6 +20,7 @@
 
 class ActionJSONSchemaEvaluateV1 : public sourcemeta::one::RouterAction {
 public:
+  static constexpr std::string_view TITLE{"Evaluate Schema"};
   static constexpr std::string_view DESCRIPTION{
       "Validate a JSON instance against a schema and return whether it "
       "is valid plus any errors"};

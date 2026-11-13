@@ -36,6 +36,7 @@ public:
 
 class ActionJSONSchemaTraceV1 : public sourcemeta::one::RouterAction {
 public:
+  static constexpr std::string_view TITLE{"Trace Schema Evaluation"};
   static constexpr std::string_view DESCRIPTION{
       "Validate a JSON instance against a schema and return a step-by-step "
       "trace of the evaluation. The trace can be substantial, so prefer "

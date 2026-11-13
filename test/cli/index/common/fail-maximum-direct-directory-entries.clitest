@@ -45,7 +45,7 @@ DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([
 WRITE expected.txt UNTIL EOF
 2> error: Too many entries in a single directory
 2>   at path [CWD]/output/schemas/self/v1/schemas/mcp/tools/call
-2>   with count 15
+2>   with count 17
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt
@@ -70,10 +70,10 @@ COMPARE log_2.txt AGAINST expected_log_2.txt
 
 // It should succeed when total schemas exceed the limit but are spread
 // across a directory hierarchy where no single directory has more than the limit.
-// The limit must be at least 15 since self/v1's mcp/tools/call directory has 15
-// entries (13 per-tool subdirectories plus the generic request and response
+// The limit must be at least 17 since self/v1's mcp/tools/call directory has 17
+// entries (15 per-tool subdirectories plus the generic request and response
 // schemas), and a directory is refused for exceeding the limit rather than for
-// meeting it, so 15 sits exactly on the boundary that is allowed
+// meeting it, so 17 sits exactly on the boundary that is allowed
 REMOVE output
 REMOVE schemas
 MAKE DIRECTORY schemas/a
@@ -100,7 +100,7 @@ WRITE schemas/b/three.json UNTIL EOF
 }
 EOF
 
-RUN --skip-banner one.json output --maximum-direct-directory-entries 15 STDIN /dev/null IN . INTO log_3.txt EXPECTING 0
+RUN --skip-banner one.json output --maximum-direct-directory-entries 17 STDIN /dev/null IN . INTO log_3.txt EXPECTING 0
 DROP LINES MATCHING '^[12]> \([ 0-9]+%\) ' IN log_3.txt
 DROP LINES CONTAINING $ONE_PREFIX IN log_3.txt
 REPLACE MATCHING ' \(#[0-9]+\)' WITH '' IN log_3.txt

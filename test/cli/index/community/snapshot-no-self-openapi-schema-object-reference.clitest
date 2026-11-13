@@ -72,6 +72,9 @@ WRITE expected.txt UNTIL EOF
 ./explorer/public/example
 ./explorer/public/example/%
 ./explorer/public/example/%/directory.metapack
+./explorer/public/example/petstore
+./explorer/public/example/petstore/%
+./explorer/public/example/petstore/%/dependents.metapack
 ./explorer/public/example/tag
 ./explorer/public/example/tag/%
 ./explorer/public/example/tag/%/dependents.metapack
@@ -82,6 +85,7 @@ WRITE expected.txt UNTIL EOF
 ./schemas/example/petstore
 ./schemas/example/petstore/%
 ./schemas/example/petstore/%/data.metapack
+./schemas/example/petstore/%/dependencies.metapack
 ./schemas/example/tag
 ./schemas/example/tag/%
 ./schemas/example/tag/%/blaze-exhaustive.metapack

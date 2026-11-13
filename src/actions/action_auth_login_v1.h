@@ -22,6 +22,7 @@
 
 class ActionAuthLoginV1 : public sourcemeta::one::RouterAction {
 public:
+  static constexpr std::string_view TITLE{"Log In"};
   static constexpr std::string_view DESCRIPTION{
       "Start an interactive login by redirecting the browser to the identity "
       "provider"};

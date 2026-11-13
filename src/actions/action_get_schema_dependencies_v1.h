@@ -8,6 +8,7 @@
 
 class ActionGetSchemaDependenciesV1 : public ActionDependencyTreeV1 {
 public:
+  static constexpr std::string_view TITLE{"Get Schema Dependencies"};
   static constexpr std::string_view DESCRIPTION{
       "List the schemas this schema directly or transitively references, "
       "the outgoing edges of the dependency graph"};
@@ -21,8 +22,11 @@ public:
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
       sourcemeta::one::Router &dispatcher)
-      : ActionDependencyTreeV1{base,           router,        identifier,
-                               "dependencies", Tree::Schemas, dispatcher} {}
+      : ActionDependencyTreeV1{base,          router,
+                               identifier,    "dependencies",
+                               Tree::Schemas, sourcemeta::one::LeafKind::Schema,
+                               "schema",      "Schema not found",
+                               dispatcher} {}
 };
 
 #endif

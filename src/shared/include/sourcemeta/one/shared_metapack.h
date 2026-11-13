@@ -87,14 +87,14 @@ make_metapack_schema_extension(const std::string_view dialect)
   return result;
 }
 
-// The extension area of an artifact holding an OpenAPI description, which is
-// the tag and nothing more, as everything it records about itself is in the
-// document
-[[nodiscard]] inline auto make_metapack_openapi_extension()
+// The extension area of an artifact that records the kind of leaf it belongs
+// to and nothing else. Both kinds of leaf write some artifacts under one
+// filename, and this tag is what tells those apart
+[[nodiscard]] inline auto make_metapack_leaf_extension(const LeafKind kind)
     -> std::vector<std::uint8_t> {
   std::vector<std::uint8_t> result;
   result.resize(sizeof(MetapackLeafExtension));
-  const MetapackLeafExtension layout{.kind = LeafKind::OpenAPI};
+  const MetapackLeafExtension layout{.kind = kind};
   std::memcpy(result.data(), &layout, sizeof(layout));
   return result;
 }
