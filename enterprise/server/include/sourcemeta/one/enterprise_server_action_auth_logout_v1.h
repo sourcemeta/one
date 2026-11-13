@@ -23,6 +23,7 @@
 
 class ActionAuthLogoutV1 : public sourcemeta::one::RouterAction {
 public:
+  static constexpr std::string_view TITLE{"Log Out"};
   static constexpr std::string_view DESCRIPTION{
       "Clear the browser sessions established through interactive login"};
   static constexpr bool READ_ONLY{false};

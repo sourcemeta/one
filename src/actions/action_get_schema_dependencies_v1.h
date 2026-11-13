@@ -8,6 +8,7 @@
 
 class ActionGetSchemaDependenciesV1 : public ActionDependencyTreeV1 {
 public:
+  static constexpr std::string_view TITLE{"Get Schema Dependencies"};
   static constexpr std::string_view DESCRIPTION{
       "List the schemas this schema directly or transitively references, "
       "the outgoing edges of the dependency graph"};

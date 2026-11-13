@@ -346,7 +346,7 @@ jsonpath "$.result.tools[9].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mc
 jsonpath "$.result.tools[9].inputSchema['$comment']" == "The full input schema for this tool is published at the `$ref` URL above. A client that does not resolve it can call `resources/read` on that URL to fetch it, since this server is a JSON Schema registry and every `$ref` URL is itself reachable as an MCP resource"
 jsonpath "$.result.tools[9].outputSchema.type" == "object"
 jsonpath "$.result.tools[9].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/instance-to-rdf/response"
-jsonpath "$.result.tools[9].annotations.title" == "Instance To Rdf"
+jsonpath "$.result.tools[9].annotations.title" == "Instance to RDF"
 jsonpath "$.result.tools[9].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[9].annotations.destructiveHint" == false
 jsonpath "$.result.tools[9].annotations.idempotentHint" == true
@@ -394,7 +394,7 @@ jsonpath "$.result.tools[13].inputSchema['$ref']" == "{{base}}/self/v1/schemas/m
 jsonpath "$.result.tools[13].inputSchema['$comment']" == "The full input schema for this tool is published at the `$ref` URL above. A client that does not resolve it can call `resources/read` on that URL to fetch it, since this server is a JSON Schema registry and every `$ref` URL is itself reachable as an MCP resource"
 jsonpath "$.result.tools[13].outputSchema.type" == "object"
 jsonpath "$.result.tools[13].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response"
-jsonpath "$.result.tools[13].annotations.title" == "Get Openapi Dependencies"
+jsonpath "$.result.tools[13].annotations.title" == "Get OpenAPI Dependencies"
 jsonpath "$.result.tools[13].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[13].annotations.destructiveHint" == false
 jsonpath "$.result.tools[13].annotations.idempotentHint" == true
@@ -406,7 +406,7 @@ jsonpath "$.result.tools[14].inputSchema['$ref']" == "{{base}}/self/v1/schemas/m
 jsonpath "$.result.tools[14].inputSchema['$comment']" == "The full input schema for this tool is published at the `$ref` URL above. A client that does not resolve it can call `resources/read` on that URL to fetch it, since this server is a JSON Schema registry and every `$ref` URL is itself reachable as an MCP resource"
 jsonpath "$.result.tools[14].outputSchema.type" == "object"
 jsonpath "$.result.tools[14].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-openapi-dependents/response"
-jsonpath "$.result.tools[14].annotations.title" == "Get Openapi Dependents"
+jsonpath "$.result.tools[14].annotations.title" == "Get OpenAPI Dependents"
 jsonpath "$.result.tools[14].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[14].annotations.destructiveHint" == false
 jsonpath "$.result.tools[14].annotations.idempotentHint" == true
@@ -569,7 +569,7 @@ jsonpath "$.result.tools[9].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mc
 jsonpath "$.result.tools[9].inputSchema['$comment']" == "The full input schema for this tool is published at the `$ref` URL above. A client that does not resolve it can call `resources/read` on that URL to fetch it, since this server is a JSON Schema registry and every `$ref` URL is itself reachable as an MCP resource"
 jsonpath "$.result.tools[9].outputSchema.type" == "object"
 jsonpath "$.result.tools[9].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/instance-to-rdf/response"
-jsonpath "$.result.tools[9].annotations.title" == "Instance To Rdf"
+jsonpath "$.result.tools[9].annotations.title" == "Instance to RDF"
 jsonpath "$.result.tools[9].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[9].annotations.destructiveHint" == false
 jsonpath "$.result.tools[9].annotations.idempotentHint" == true
@@ -617,7 +617,7 @@ jsonpath "$.result.tools[13].inputSchema['$ref']" == "{{base}}/self/v1/schemas/m
 jsonpath "$.result.tools[13].inputSchema['$comment']" == "The full input schema for this tool is published at the `$ref` URL above. A client that does not resolve it can call `resources/read` on that URL to fetch it, since this server is a JSON Schema registry and every `$ref` URL is itself reachable as an MCP resource"
 jsonpath "$.result.tools[13].outputSchema.type" == "object"
 jsonpath "$.result.tools[13].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response"
-jsonpath "$.result.tools[13].annotations.title" == "Get Openapi Dependencies"
+jsonpath "$.result.tools[13].annotations.title" == "Get OpenAPI Dependencies"
 jsonpath "$.result.tools[13].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[13].annotations.destructiveHint" == false
 jsonpath "$.result.tools[13].annotations.idempotentHint" == true
@@ -629,7 +629,7 @@ jsonpath "$.result.tools[14].inputSchema['$ref']" == "{{base}}/self/v1/schemas/m
 jsonpath "$.result.tools[14].inputSchema['$comment']" == "The full input schema for this tool is published at the `$ref` URL above. A client that does not resolve it can call `resources/read` on that URL to fetch it, since this server is a JSON Schema registry and every `$ref` URL is itself reachable as an MCP resource"
 jsonpath "$.result.tools[14].outputSchema.type" == "object"
 jsonpath "$.result.tools[14].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-openapi-dependents/response"
-jsonpath "$.result.tools[14].annotations.title" == "Get Openapi Dependents"
+jsonpath "$.result.tools[14].annotations.title" == "Get OpenAPI Dependents"
 jsonpath "$.result.tools[14].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[14].annotations.destructiveHint" == false
 jsonpath "$.result.tools[14].annotations.idempotentHint" == true

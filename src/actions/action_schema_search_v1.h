@@ -27,6 +27,7 @@
 
 class ActionSchemaSearchV1 : public sourcemeta::one::RouterAction {
 public:
+  static constexpr std::string_view TITLE{"Search Schemas"};
   static constexpr std::string_view DESCRIPTION{
       "Search for schemas by query term"};
   static constexpr bool READ_ONLY{true};

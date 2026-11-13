@@ -20,6 +20,7 @@
 
 class ActionDependencyTreeV1 : public sourcemeta::one::RouterAction {
 public:
+  static constexpr std::string_view TITLE{"Get Dependency Tree"};
   static constexpr std::string_view DESCRIPTION{
       "Look up the dependency graph of a specific schema (incoming or "
       "outgoing)"};

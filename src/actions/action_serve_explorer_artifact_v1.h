@@ -18,6 +18,7 @@
 
 class ActionServeExplorerArtifactV1 : public sourcemeta::one::RouterAction {
 public:
+  static constexpr std::string_view TITLE{"Serve Explorer Artifact"};
   static constexpr std::string_view DESCRIPTION{
       "Read a navigation artifact for browsing schemas"};
   static constexpr bool READ_ONLY{true};

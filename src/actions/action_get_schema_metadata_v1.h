@@ -8,6 +8,7 @@
 
 class ActionGetSchemaMetadataV1 : public ActionServeExplorerArtifactV1 {
 public:
+  static constexpr std::string_view TITLE{"Get Schema Metadata"};
   static constexpr std::string_view DESCRIPTION{
       "Return navigation metadata for a schema in the catalog, including "
       "title, description, dialect, byte size, dependency count, and "

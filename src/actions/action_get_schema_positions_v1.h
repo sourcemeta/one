@@ -8,6 +8,7 @@
 
 class ActionGetSchemaPositionsV1 : public ActionServeSchemaArtifactV1 {
 public:
+  static constexpr std::string_view TITLE{"Get Schema Positions"};
   static constexpr std::string_view DESCRIPTION{
       "Return the source line and column position of every JSON Pointer "
       "inside a schema"};

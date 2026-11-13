@@ -86,6 +86,10 @@ inline constexpr std::array<std::string_view, ACTION_TYPE_COUNT> ACTION_NAMES{
 extern const std::array<RouterActionConstructor, ACTION_TYPE_COUNT>
     CONSTRUCTORS;
 
+[[nodiscard]] auto
+action_title(sourcemeta::core::URITemplateRouter::Identifier context) noexcept
+    -> std::string_view;
+
 [[nodiscard]] auto action_description(
     sourcemeta::core::URITemplateRouter::Identifier context) noexcept
     -> std::string_view;

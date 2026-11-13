@@ -8,6 +8,7 @@
 
 class ActionGetOpenAPIDependenciesV1 : public ActionDependencyTreeV1 {
 public:
+  static constexpr std::string_view TITLE{"Get OpenAPI Dependencies"};
   static constexpr std::string_view DESCRIPTION{
       "List the documents this OpenAPI description directly or transitively "
       "reaches, the outgoing edges of the dependency graph"};

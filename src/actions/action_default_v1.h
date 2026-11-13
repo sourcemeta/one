@@ -21,6 +21,7 @@
 
 class ActionDefaultV1 : public sourcemeta::one::RouterAction {
 public:
+  static constexpr std::string_view TITLE{"Default Fallback"};
   static constexpr std::string_view DESCRIPTION{
       "Default fallback action for unmatched URIs"};
   static constexpr bool READ_ONLY{true};

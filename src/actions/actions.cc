@@ -36,6 +36,7 @@
 namespace {
 
 struct ActionMetadata {
+  std::string_view title;
   std::string_view description;
   bool read_only;
   bool destructive;
@@ -44,8 +45,8 @@ struct ActionMetadata {
 };
 
 #define SOURCEMETA_ONE_DEFINE_METADATA(Name, Class, Label)                     \
-  ActionMetadata{Class::DESCRIPTION, Class::READ_ONLY, Class::DESTRUCTIVE,     \
-                 Class::IDEMPOTENT, Class::OPEN_WORLD},
+  ActionMetadata{Class::TITLE,       Class::DESCRIPTION, Class::READ_ONLY,     \
+                 Class::DESTRUCTIVE, Class::IDEMPOTENT,  Class::OPEN_WORLD},
 
 const std::array<ActionMetadata, sourcemeta::one::ACTION_TYPE_COUNT> METADATA{
     {SOURCEMETA_ONE_FOR_EACH_ACTION(SOURCEMETA_ONE_DEFINE_METADATA)}};
@@ -67,6 +68,15 @@ const std::array<RouterActionConstructor, ACTION_TYPE_COUNT> CONSTRUCTORS{
     }()};
 
 #undef SOURCEMETA_ONE_MAKE_CONSTRUCTOR_ENTRY
+
+auto action_title(
+    const sourcemeta::core::URITemplateRouter::Identifier context) noexcept
+    -> std::string_view {
+  if (context >= METADATA.size()) {
+    return {};
+  }
+  return METADATA[context].title;
+}
 
 auto action_description(
     const sourcemeta::core::URITemplateRouter::Identifier context) noexcept

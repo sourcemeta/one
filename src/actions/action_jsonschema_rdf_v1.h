@@ -23,6 +23,7 @@
 
 class ActionJSONSchemaRDFV1 : public sourcemeta::one::RouterAction {
 public:
+  static constexpr std::string_view TITLE{"Instance to RDF"};
   static constexpr std::string_view DESCRIPTION{
       "Validate a JSON instance against a schema in the catalog and "
       "promote it to JSON-LD using the x-jsonld-* annotations of the "
