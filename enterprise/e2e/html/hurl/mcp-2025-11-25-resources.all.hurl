@@ -549,13 +549,13 @@ jsonpath "$.result.resources[37].description" == "The response format for the di
 jsonpath "$.result.resources[38].uri" == "{{base}}/self/v1/schemas/api/openapi/dependencies/response"
 jsonpath "$.result.resources[38].name" == "Sourcemeta One OpenAPI Dependencies API Response"
 jsonpath "$.result.resources[38].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[38].size" == 1366
+jsonpath "$.result.resources[38].size" == 1345
 jsonpath "$.result.resources[38].annotations.priority" == 0.0
 jsonpath "$.result.resources[38].description" == "The response format for the OpenAPI description dependencies API endpoint"
 jsonpath "$.result.resources[39].uri" == "{{base}}/self/v1/schemas/api/openapi/dependents/response"
 jsonpath "$.result.resources[39].name" == "Sourcemeta One OpenAPI Dependents API Response"
 jsonpath "$.result.resources[39].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[39].size" == 1360
+jsonpath "$.result.resources[39].size" == 1339
 jsonpath "$.result.resources[39].annotations.priority" == 0.0
 jsonpath "$.result.resources[39].description" == "The response format for the OpenAPI description dependents API endpoint"
 jsonpath "$.result.resources[40].uri" == "{{base}}/self/v1/schemas/api/playground/schemas/trace/response"
@@ -1466,13 +1466,13 @@ jsonpath "$.result.resources[37].description" == "The response format for the di
 jsonpath "$.result.resources[38].uri" == "{{base}}/self/v1/schemas/api/openapi/dependencies/response"
 jsonpath "$.result.resources[38].name" == "Sourcemeta One OpenAPI Dependencies API Response"
 jsonpath "$.result.resources[38].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[38].size" == 1366
+jsonpath "$.result.resources[38].size" == 1345
 jsonpath "$.result.resources[38].annotations.priority" == 0.0
 jsonpath "$.result.resources[38].description" == "The response format for the OpenAPI description dependencies API endpoint"
 jsonpath "$.result.resources[39].uri" == "{{base}}/self/v1/schemas/api/openapi/dependents/response"
 jsonpath "$.result.resources[39].name" == "Sourcemeta One OpenAPI Dependents API Response"
 jsonpath "$.result.resources[39].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[39].size" == 1360
+jsonpath "$.result.resources[39].size" == 1339
 jsonpath "$.result.resources[39].annotations.priority" == 0.0
 jsonpath "$.result.resources[39].description" == "The response format for the OpenAPI description dependents API endpoint"
 jsonpath "$.result.resources[40].uri" == "{{base}}/self/v1/schemas/api/playground/schemas/trace/response"
