@@ -638,19 +638,14 @@ TEST(example_openapi_is_no_schema) {
   EXPECT_FALSE(resolver(result.first.get()).has_value());
 }
 
-// The OpenAPI half answers for a schema too, which is what a Schema Object of
-// an OpenAPI description reaching one of this catalog needs of it
-TEST(example_openapi_answers_for_a_schema) {
+// And the OpenAPI half answers for no schema, which is what keeps a reference
+// that spelled out a document of this specification from being handed one
+TEST(example_schema_is_no_openapi) {
   sourcemeta::one::Resolver resolver{shared_configuration().url};
 
   const auto result{
       RESOLVER_IMPORT(resolver, "example", "2020-12-with-id.json")};
-  const auto schema{resolver.openapi(result.first.get())};
-  EXPECT_TRUE(schema.has_value());
-  EXPECT_EQ(schema.value(), sourcemeta::core::parse_json(R"JSON({
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "http://localhost:8000/example/2020-12-with-id"
-  })JSON"));
+  EXPECT_FALSE(resolver.openapi(result.first.get()).has_value());
 }
 
 // An `openapi` member of any other type declares no revision, so the file goes

@@ -8,6 +8,7 @@
 
 class ActionGetSchemaLocationsV1 : public ActionServeSchemaArtifactV1 {
 public:
+  static constexpr std::string_view TITLE{"Get Schema Locations"};
   static constexpr std::string_view DESCRIPTION{
       "Return every URI exposed by a schema, including subschemas and "
       "anchors, with their parent and base URI relationships. The response "

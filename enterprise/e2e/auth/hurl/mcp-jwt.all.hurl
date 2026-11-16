@@ -56,7 +56,7 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 jsonpath "$.valid" == true
 
 # The catalog a token sees is the anonymous one plus exactly what its policy
-# gates. The instance holds 63 resources reachable without a credential, and
+# gates. The instance holds 76 resources reachable without a credential, and
 # this token adds one, so the count is the whole assertion: anything else
 # admitted or withheld moves it
 POST {{base}}/self/v1/mcp
@@ -119,7 +119,7 @@ Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 page_two_body: body
 [Asserts]
-jsonpath "$.result.resources" count == 21
+jsonpath "$.result.resources" count == 27
 jsonpath "$.result.nextCursor" not exists
 jsonpath "$.result.resources[*].uri" not includes "{{base}}/strict/rule"
 jsonpath "$.result.resources[*].uri" not includes "{{base}}/typed/thing"

@@ -16,6 +16,7 @@
 
 class ActionServeStaticV1 : public sourcemeta::one::RouterAction {
 public:
+  static constexpr std::string_view TITLE{"Serve Static Asset"};
   static constexpr std::string_view DESCRIPTION{
       "Serve a static asset bundled with the server"};
   static constexpr bool READ_ONLY{true};

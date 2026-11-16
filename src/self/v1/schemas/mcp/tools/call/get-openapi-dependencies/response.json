@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One OpenAPI Dependencies RPC Output",
+  "description": "Get all direct and indirect dependencies of an OpenAPI description in the catalog",
+  "examples": [
+    {
+      "results": [
+        {
+          "from": "https://example.com/api/petstore",
+          "to": "https://example.com/api/shared",
+          "at": "/paths/~1pets/$ref",
+          "kind": "path-item"
+        }
+      ]
+    }
+  ],
+  "type": "object",
+  "required": [ "results" ],
+  "properties": {
+    "results": {
+      "$ref": "../../../../api/openapi/dependencies/response.json"
+    }
+  },
+  "additionalProperties": false
+}

@@ -21,6 +21,7 @@
 
 class ActionMetricsV1 : public sourcemeta::one::RouterAction {
 public:
+  static constexpr std::string_view TITLE{"Metrics"};
   static constexpr std::string_view DESCRIPTION{
       "Report instance telemetry in the Prometheus exposition format"};
   static constexpr bool READ_ONLY{true};

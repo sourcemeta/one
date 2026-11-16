@@ -22,6 +22,7 @@
 
 class ActionAuthLoginPageV1 : public sourcemeta::one::RouterAction {
 public:
+  static constexpr std::string_view TITLE{"Login Page"};
   static constexpr std::string_view DESCRIPTION{
       "Show the ways of signing in to this instance"};
   static constexpr bool READ_ONLY{true};

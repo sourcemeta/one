@@ -38,7 +38,7 @@ anonymous_tools: body
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1
-jsonpath "$.result.tools" count == 11
+jsonpath "$.result.tools" count == 13
 jsonpath "$.result.tools[*].name" not contains "trace_schema_evaluation"
 jsonpath "$.result.tools[*].name" not contains "playground_trace_schema"
 jsonpath "$.result.tools[*].name" contains "search_schemas"
@@ -90,7 +90,7 @@ admitted_tools: body
 [Asserts]
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 2
-jsonpath "$.result.tools" count == 13
+jsonpath "$.result.tools" count == 15
 jsonpath "$.result.tools[*].name" contains "trace_schema_evaluation"
 jsonpath "$.result.tools[*].name" contains "playground_trace_schema"
 jsonpath "$.result.resultType" == "complete"
@@ -342,7 +342,7 @@ HTTP 200
 Cache-Control: no-store
 Content-Type: application/json
 [Asserts]
-jsonpath "$.result.tools" count == 11
+jsonpath "$.result.tools" count == 13
 jsonpath "$.result.tools[*].name" not contains "trace_schema_evaluation"
 jsonpath "$.result.tools[*].name" not contains "playground_trace_schema"
 jsonpath "$.result.resultType" == "complete"

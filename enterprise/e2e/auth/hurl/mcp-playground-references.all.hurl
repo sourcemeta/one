@@ -20,7 +20,7 @@ HTTP 200
 Cache-Control: no-store
 [Asserts]
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.result.tools" count == 13
+jsonpath "$.result.tools" count == 15
 jsonpath "$.result.tools[*].name" contains "playground_trace_schema"
 
 # An anonymous caller reaches the compiler and traces a schema of their own

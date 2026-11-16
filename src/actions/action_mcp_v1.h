@@ -118,6 +118,7 @@ mcp_transport_error(const sourcemeta::core::MCPProtocolVersion version,
 
 class ActionMCPV1 : public sourcemeta::one::RouterAction {
 public:
+  static constexpr std::string_view TITLE{"Model Context Protocol Endpoint"};
   static constexpr std::string_view DESCRIPTION{
       "Handle Model Context Protocol JSON-RPC requests"};
   static constexpr bool READ_ONLY{true};
