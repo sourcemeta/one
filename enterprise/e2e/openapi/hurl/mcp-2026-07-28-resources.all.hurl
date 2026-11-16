@@ -110,7 +110,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 40
 jsonpath "$.result.contents" count == 1
 jsonpath "$.result.contents[0].uri" == "{{base}}/api/split-entry"
-jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
+jsonpath "$.result.contents[0].mimeType" == "application/openapi+json"
 jsonpath "$.result.contents[0].text" == "{{entry_document}}"
 jsonpath "$.result.resultType" == "complete"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
@@ -273,7 +273,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 41
 jsonpath "$.result.contents" count == 1
 jsonpath "$.result.contents[0].uri" == "{{base}}/api/split-entry?bundle"
-jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
+jsonpath "$.result.contents[0].mimeType" == "application/openapi+json"
 jsonpath "$.result.contents[0].text" == "{{entry_bundle}}"
 jsonpath "$.result.resultType" == "complete"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
@@ -384,7 +384,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 42
 jsonpath "$.result.contents" count == 1
 jsonpath "$.result.contents[0].uri" == "{{base}}/api/petstore?bundle"
-jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
+jsonpath "$.result.contents[0].mimeType" == "application/openapi+json"
 jsonpath "$.result.contents[0].text" == "{{petstore_bundle}}"
 jsonpath "$.result.resultType" == "complete"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"

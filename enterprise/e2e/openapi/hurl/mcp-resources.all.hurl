@@ -101,7 +101,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 50
 jsonpath "$.result.contents" count == 1
 jsonpath "$.result.contents[0].uri" == "{{base}}/api/split-entry"
-jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
+jsonpath "$.result.contents[0].mimeType" == "application/openapi+json"
 jsonpath "$.result.contents[0].text" == "{{entry_document}}"
 jsonpath "$.result.resultType" not exists
 jsonpath "$.result._meta" not exists
@@ -253,7 +253,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 51
 jsonpath "$.result.contents" count == 1
 jsonpath "$.result.contents[0].uri" == "{{base}}/api/split-entry?bundle"
-jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
+jsonpath "$.result.contents[0].mimeType" == "application/openapi+json"
 jsonpath "$.result.contents[0].text" == "{{entry_bundle}}"
 jsonpath "$.result.resultType" not exists
 jsonpath "$.result._meta" not exists
@@ -353,7 +353,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 52
 jsonpath "$.result.contents" count == 1
 jsonpath "$.result.contents[0].uri" == "{{base}}/api/petstore?bundle"
-jsonpath "$.result.contents[0].mimeType" == "application/schema+json"
+jsonpath "$.result.contents[0].mimeType" == "application/openapi+json"
 jsonpath "$.result.contents[0].text" == "{{petstore_bundle}}"
 jsonpath "$.result.resultType" not exists
 jsonpath "$.result._meta" not exists

@@ -628,6 +628,48 @@ TEST(example_openapi_discriminator_mapping_single_segment) {
   })JSON");
 }
 
+// A mapping that comes out of the rebase as a fragment alone names a place of
+// the document that spells it, which is no name a component goes by either, so
+// it is left as it is rather than turned into a reference to the collection
+// that holds the document
+TEST(example_openapi_discriminator_mapping_self_anchor) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  RESOLVER_ADD_OPENAPI(
+      resolver, "example", "openapi-discriminator-self-anchor.json",
+      "https://example.com/schemas/openapi-discriminator-self-anchor",
+      "http://localhost:8000/example/openapi-discriminator-self-anchor",
+      R"JSON({
+    "openapi": "3.1.1",
+    "info": {
+      "title": "Self anchor",
+      "version": "1.0.0"
+    },
+    "paths": {},
+    "components": {
+      "schemas": {
+        "Dog": {
+          "$anchor": "Dog",
+          "type": "object"
+        },
+        "Pet": {
+          "oneOf": [
+            {
+              "$ref": "#Dog"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "kind",
+            "mapping": {
+              "dog": "#Dog"
+            }
+          }
+        }
+      }
+    }
+  })JSON");
+}
+
 // A mapping that relativises to more than one segment says which of the two
 // readings it takes on its own, as no name a component goes by is spelled that
 // way, so nothing is added to it

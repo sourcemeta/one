@@ -391,6 +391,30 @@
       "minItems": 1,
       "items": {
         "type": "object",
+        "oneOf": [
+          {
+            "properties": {
+              "mimeType": {
+                "const": "application/schema+json"
+              },
+              "text": {
+                "contentEncoding": "identity",
+                "contentMediaType": "application/schema+json"
+              }
+            }
+          },
+          {
+            "properties": {
+              "mimeType": {
+                "const": "application/openapi+json"
+              },
+              "text": {
+                "contentEncoding": "identity",
+                "contentMediaType": "application/openapi+json"
+              }
+            }
+          }
+        ],
         "required": [ "uri", "mimeType", "text" ],
         "properties": {
           "uri": {
@@ -399,12 +423,10 @@
             "format": "uri"
           },
           "mimeType": {
-            "const": "application/schema+json"
+            "enum": [ "application/schema+json", "application/openapi+json" ]
           },
           "text": {
-            "type": "string",
-            "contentEncoding": "identity",
-            "contentMediaType": "application/schema+json"
+            "type": "string"
           }
         },
         "additionalProperties": false

@@ -239,16 +239,18 @@ rebase_reference(const sourcemeta::one::Configuration::Collection &collection,
 // spelled once it has been rebased. OpenAPI Specification 3.1.1, Section
 // 4.8.25 reads a value that holds up as the name of a component as such a
 // name, and tells an author who means a URI reference instead to "prefix it
-// with the `.` path segment". The name a component goes by admits no slash, so
-// a value carrying one says which of the two it is already, and one that does
-// not is spelled with that segment. Resolving a reference drops the segment
-// again, so what it names is whatever it named before
-[[maybe_unused]] static auto
-mapping_by_uri(const sourcemeta::core::JSON::String &reference)
+// with the `.` path segment". Section 4.8.7 spells such a name as one path
+// segment and nothing else, so a reference carrying anything beyond that says
+// which of the two it is already, and one that does not is spelled with that
+// segment. Resolving a reference drops the segment again, so what it names is
+// whatever it named before
+static auto mapping_by_uri(const sourcemeta::core::JSON::String &reference)
     -> sourcemeta::core::JSON::String {
-  if (reference.empty() ||
-      reference.find('/') != sourcemeta::core::JSON::String::npos ||
-      sourcemeta::core::URI{reference}.scheme().has_value()) {
+  const sourcemeta::core::URI uri{reference};
+  const auto path{uri.path()};
+  if (uri.scheme().has_value() || uri.host().has_value() ||
+      uri.query().has_value() || uri.fragment().has_value() ||
+      !path.has_value() || path.value().empty() || path.value().contains('/')) {
     return reference;
   }
 

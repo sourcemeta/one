@@ -473,7 +473,8 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"http://localhost:8
 # path segment that says so, as the specification reads a value that holds up
 # as the name of a component as such a name and this document holds a component
 # of exactly that name. A mapping that does name a component is left as it was
-# written
+# written, and so is one that comes out of this naming a place of the document
+# that spells it
 GET {{base}}/test/schemas/openapi-discriminator
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
@@ -512,11 +513,13 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/sche
           "propertyName": "kind",
           "mapping": {
             "text": "./string",
-            "dog": "Dog"
+            "dog": "Dog",
+            "anchored": "#Dog"
           }
         }
       },
       "Dog": {
+        "$anchor": "Dog",
         "type": "object",
         "properties": {
           "bark": {
@@ -573,11 +576,13 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/sche
           "propertyName": "kind",
           "mapping": {
             "text": "./string",
-            "dog": "Dog"
+            "dog": "Dog",
+            "anchored": "#Dog"
           }
         }
       },
       "Dog": {
+        "$anchor": "Dog",
         "type": "object",
         "properties": {
           "bark": {

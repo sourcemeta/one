@@ -831,7 +831,7 @@ jsonpath "$.result.resources[18].uri" == "{{base}}/self/v1/schemas/mcp/resources
 jsonpath "$.result.resources[18].name" == "Sourcemeta One MCP Resources Read Response"
 jsonpath "$.result.resources[18].description" == "Sourcemeta One's response containing an MCP resource"
 jsonpath "$.result.resources[18].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[18].size" == 1754
+jsonpath "$.result.resources[18].size" == 2478
 jsonpath "$.result.resources[18].annotations.priority" == 0.0
 jsonpath "$.result.resources[19].uri" == "{{base}}/self/v1/schemas/mcp/resources/templates/list/request"
 jsonpath "$.result.resources[19].name" == "Sourcemeta One MCP Resources Templates List Request"
@@ -1122,7 +1122,7 @@ jsonpath "$.result.resources[5].uri" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.resources[5].name" == "Sourcemeta One MCP Response"
 jsonpath "$.result.resources[5].description" == "Any outgoing MCP response the server returns"
 jsonpath "$.result.resources[5].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[5].size" == 23274
+jsonpath "$.result.resources[5].size" == 23858
 jsonpath "$.result.resources[5].annotations.priority" == 0.0
 jsonpath "$.result.resources[6].uri" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
 jsonpath "$.result.resources[6].name" == "Sourcemeta One MCP Tools List Response"

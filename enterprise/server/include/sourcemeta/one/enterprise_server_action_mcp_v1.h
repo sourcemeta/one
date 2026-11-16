@@ -428,6 +428,8 @@ public:
 private:
   static constexpr std::string_view MCP_TEMPLATE_MIME_TYPE{
       "application/schema+json"};
+  static constexpr std::string_view MCP_OPENAPI_MIME_TYPE{
+      "application/openapi+json"};
 
   auto
   write_envelope(sourcemeta::one::HTTPRequest &request,
@@ -746,9 +748,15 @@ private:
     std::ostringstream payload;
     sourcemeta::core::prettify(schema.value(), payload);
 
+    // What a leaf holds is what its media type names, as an OpenAPI
+    // description is no JSON Schema however a caller came to reach it
+    const auto kind{this->artifact_kind(resolution.path.value())};
     auto contents{sourcemeta::core::JSON::make_array()};
     contents.push_back(sourcemeta::core::mcp_make_resource_text_content(
-        uri, MCP_TEMPLATE_MIME_TYPE, payload.str()));
+        uri,
+        kind == sourcemeta::one::LeafKind::OpenAPI ? MCP_OPENAPI_MIME_TYPE
+                                                   : MCP_TEMPLATE_MIME_TYPE,
+        payload.str()));
     // Whether this schema is one anybody reaches, which is what decides who
     // may keep a copy of it. A listing is settled by the view it was built
     // for, whereas a single schema is settled by itself
