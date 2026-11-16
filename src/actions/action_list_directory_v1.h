@@ -58,6 +58,11 @@ public:
                                       "If-Modified-Since");
       return;
     }
+
+    if (sourcemeta::one::reject_unknown_query(request, response, {},
+                                              this->error_schema_, "*")) {
+      return;
+    }
     const std::string_view path_match{matches.empty() ? std::string_view{}
                                                       : matches.front()};
     const sourcemeta::one::RequestCookies cookies{request};

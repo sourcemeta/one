@@ -62,6 +62,11 @@ public:
                                       "If-Modified-Since");
       return;
     }
+
+    if (sourcemeta::one::reject_unknown_query(request, response, {},
+                                              this->error_schema_, "*")) {
+      return;
+    }
     if (matches.empty()) {
       sourcemeta::one::json_error(
           request, response,

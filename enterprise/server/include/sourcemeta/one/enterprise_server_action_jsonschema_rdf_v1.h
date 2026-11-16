@@ -102,6 +102,11 @@ public:
       return;
     }
 
+    if (sourcemeta::one::reject_unknown_query(request, response, {},
+                                              this->error_schema_, "*")) {
+      return;
+    }
+
     std::string schema_uri{this->server_uri()};
     schema_uri.push_back('/');
     schema_uri.append(path);

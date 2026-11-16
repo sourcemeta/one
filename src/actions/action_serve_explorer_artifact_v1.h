@@ -57,6 +57,11 @@ public:
                                       "If-Modified-Since");
       return;
     }
+
+    if (sourcemeta::one::reject_unknown_query(request, response, {},
+                                              this->error_schema_, "*")) {
+      return;
+    }
     if (!matches.empty() &&
         (matches.front().find('#') != std::string_view::npos ||
          matches.front().find("%23") != std::string_view::npos)) {

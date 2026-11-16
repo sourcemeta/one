@@ -82,6 +82,30 @@
       }
     },
     {
+      "type": "object",
+      "required": [ "type", "title", "status", "detail", "parameter" ],
+      "properties": {
+        "type": {
+          "const": "urn:sourcemeta:one:unknown-query-parameter"
+        },
+        "title": {
+          "const": "Bad Request"
+        },
+        "status": {
+          "const": 400
+        },
+        "detail": {
+          "const": "This endpoint does not read one of the given query parameters"
+        },
+        "parameter": {
+          "description": "The query parameter that this endpoint does not read, as the caller wrote it, truncated to the length this bounds since a caller chooses the name",
+          "type": "string",
+          "maxLength": 64
+        }
+      },
+      "additionalProperties": false
+    },
+    {
       "const": {
         "type": "urn:sourcemeta:one:custom-dialect-conversion",
         "title": "Bad Request",

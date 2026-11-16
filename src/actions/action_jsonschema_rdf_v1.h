@@ -79,6 +79,11 @@ public:
       return;
     }
 
+    if (sourcemeta::one::reject_unknown_query(request, response, {},
+                                              this->error_schema_, "*")) {
+      return;
+    }
+
     sourcemeta::one::json_error(
         request, response, sourcemeta::core::HTTP_STATUS_FORBIDDEN,
         "urn:sourcemeta:one:enterprise-required",

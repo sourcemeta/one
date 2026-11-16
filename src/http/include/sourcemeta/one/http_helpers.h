@@ -299,7 +299,9 @@ json_error(const HTTPRequest &request, HTTPResponse &response,
            const std::string_view schema, const std::string_view origin,
            const std::string_view allow = {},
            const std::span<const std::pair<std::string_view, std::string_view>>
-               challenge = {}) -> void {
+               challenge = {},
+           const std::span<const std::pair<std::string_view, std::string_view>>
+               extensions = {}) -> void {
   // Header values are written to the wire verbatim. CR/LF would split
   // headers, enabling response header injection or CORS widening. Today's
   // callers pass string literals, but the asserts catch future untrusted
@@ -307,8 +309,16 @@ json_error(const HTTPRequest &request, HTTPResponse &response,
   // a header cannot carry, so it needs no guard of its own
   assert(origin.find_first_of("\r\n") == std::string_view::npos);
   assert(allow.find_first_of("\r\n") == std::string_view::npos);
-  const auto body{sourcemeta::core::http_make_problem_details(
+  auto body{sourcemeta::core::http_make_problem_details(
       {.status = status, .type = type, .detail = detail})};
+  // RFC 9457 Section 3.2 lets a problem type carry members of its own, which
+  // Section 3.1.4 prefers over a consumer reading the detail string, since
+  // what a caller has to act on should not have to be parsed back out of
+  // prose written for a person
+  // https://datatracker.ietf.org/doc/html/rfc9457#section-3.2
+  for (const auto &extension : extensions) {
+    body.assign(extension.first, sourcemeta::core::JSON{extension.second});
+  }
 
   response.write_status(status);
   response.write_header("Content-Type", "application/problem+json");
@@ -355,6 +365,32 @@ json_error(const HTTPRequest &request, HTTPResponse &response,
   std::ostringstream output;
   sourcemeta::core::prettify(body, output);
   send_response(status, request, response, output.str(), Encoding::Identity);
+}
+
+// A surface that declares which query parameters it reads answers a name it
+// does not know rather than ignoring it, so a caller that mistypes one is
+// told rather than handed the answer to a different question. Reports whether
+// the request was refused, so that whoever asked stops when it was
+[[nodiscard]] inline auto
+reject_unknown_query(const HTTPRequest &request, HTTPResponse &response,
+                     const std::span<const std::string_view> known,
+                     const std::string_view schema,
+                     const std::string_view origin) -> bool {
+  const auto unknown{request.unknown_query(known)};
+  if (!unknown.has_value()) {
+    return false;
+  }
+
+  // The name is what the caller wrote rather than anything this chose, so
+  // what travels back is bounded to what the error schema admits
+  constexpr std::size_t MAXIMUM_REPORTED_NAME{64};
+  const std::array<std::pair<std::string_view, std::string_view>, 1> extensions{
+      {{"parameter", unknown.value().substr(0, MAXIMUM_REPORTED_NAME)}}};
+  json_error(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+             "urn:sourcemeta:one:unknown-query-parameter",
+             "This endpoint does not read one of the given query parameters",
+             schema, origin, {}, {}, extensions);
+  return true;
 }
 
 // Whether the caller prefers an HTML representation over JSON. The Accept
