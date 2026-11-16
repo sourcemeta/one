@@ -785,11 +785,11 @@ Schema located at the specified `{path}` parameter.*
 GET /self/v1/api/schemas/dependencies/{path}
 ```
 
-Where a reference sits is part of what this report is for, so a schema that
-several positions name is reported once for each of them, including the
-reference that closes a cycle back onto the schema this report is of. A
-reference that a schema makes to itself is that schema's own business and is
-reported nowhere.
+Where a reference sits is part of what this report is for, so a schema is
+reported once for each position that names it. A cycle that leads back to the
+schema this report is of ends in such a position, so that schema is listed
+among its own dependencies. A reference whose destination is the document
+spelling it is left out, as it reaches nothing beyond that document.
 
 === "200"
 
