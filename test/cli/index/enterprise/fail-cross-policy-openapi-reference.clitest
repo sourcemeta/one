@@ -1,0 +1,80 @@
+// What bundling embeds into an OpenAPI description is whatever the
+// description reaches, so a reference that crosses into a stricter policy
+// would hand a bundle of the public document to a caller the private one is
+// kept from. The connections of a description are held to the same rule the
+// connections of a schema are.
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "authentication": [
+    {
+      "type": "apiKey",
+      "algorithm": "identity",
+      "name": "private",
+      "paths": [ "/private" ],
+      "keys": [ { "environmentVariable": "ONE_TEST_CROSS_POLICY_KEY" } ]
+    }
+  ],
+  "contents": {
+    "public": { "path": "./public" },
+    "private": { "path": "./private" }
+  }
+}
+EOF
+
+MAKE DIRECTORY public
+MAKE DIRECTORY private
+
+WRITE private/secret.json UNTIL EOF
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Secret",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "pathItems": {
+      "Pets": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "Every pet"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+EOF
+
+WRITE public/leak.json UNTIL EOF
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Leak",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/pets": {
+      "$ref": "/private/secret#/components/pathItems/Pets"
+    }
+  }
+}
+EOF
+
+RUN --skip-banner --concurrency 1 one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
+
+WRITE expected.txt UNTIL EOF
+2> error: A schema cannot reference a schema behind a stricter authentication policy
+2>   at schema http://localhost:8000/public/leak
+2>   with reference http://localhost:8000/private/secret
+2>   at path [CWD]/one.json
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected.txt

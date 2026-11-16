@@ -131,6 +131,12 @@ jobs:
           path: enterprise/e2e/html
           edition: ${{ matrix.edition.name }}
         if: matrix.edition.name == 'enterprise'
+      - name: E2E (enterprise/openapi)
+        uses: ./.github/actions/e2e
+        with:
+          path: enterprise/e2e/openapi
+          edition: ${{ matrix.edition.name }}
+        if: matrix.edition.name == 'enterprise'
       - name: E2E (enterprise/auth-keys)
         uses: ./.github/actions/e2e
         with:

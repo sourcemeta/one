@@ -1,0 +1,32 @@
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "Collision",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "openapi-discriminator-target": {
+        "type": "object"
+      },
+      "Pet": {
+        "oneOf": [
+          {
+            "$ref": "https://example.com/schemas/openapi-discriminator-target"
+          },
+          {
+            "$ref": "#/components/schemas/openapi-discriminator-target"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "spelled": "https://example.com/schemas/openapi-discriminator-target",
+            "named": "openapi-discriminator-target"
+          }
+        }
+      }
+    }
+  }
+}

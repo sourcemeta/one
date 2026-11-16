@@ -137,14 +137,17 @@ WRITE expected.txt UNTIL EOF
 ./schemas/api/meta/%/stats.metapack
 ./schemas/api/petstore-3-0
 ./schemas/api/petstore-3-0/%
+./schemas/api/petstore-3-0/%/bundle.metapack
 ./schemas/api/petstore-3-0/%/data.metapack
 ./schemas/api/petstore-3-0/%/dependencies.metapack
 ./schemas/api/petstore-3-1
 ./schemas/api/petstore-3-1/%
+./schemas/api/petstore-3-1/%/bundle.metapack
 ./schemas/api/petstore-3-1/%/data.metapack
 ./schemas/api/petstore-3-1/%/dependencies.metapack
 ./schemas/api/petstore-3-2
 ./schemas/api/petstore-3-2/%
+./schemas/api/petstore-3-2/%/bundle.metapack
 ./schemas/api/petstore-3-2/%/data.metapack
 ./schemas/api/petstore-3-2/%/dependencies.metapack
 ./state.bin

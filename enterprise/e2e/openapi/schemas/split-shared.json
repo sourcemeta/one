@@ -1,0 +1,21 @@
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "Shared",
+    "version": "1.0.0"
+  },
+  "components": {
+    "pathItems": {
+      "Pets": {
+        "get": {
+          "operationId": "listSharedPets",
+          "responses": {
+            "200": {
+              "description": "Every pet"
+            }
+          }
+        }
+      }
+    }
+  }
+}

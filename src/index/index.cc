@@ -80,6 +80,7 @@ static constexpr std::array<BuildHandlerFunction, sourcemeta::one::ACTION_COUNT>
         &sourcemeta::one::GenerateStats::handler,
         &sourcemeta::one::GenerateHealth::handler,
         &sourcemeta::one::GenerateBundle::handler,
+        &sourcemeta::one::GenerateOpenAPIBundle::handler,
         &sourcemeta::one::GenerateEditor::handler,
         &sourcemeta::one::GenerateBlazeTemplateExhaustive::handler,
         &sourcemeta::one::GenerateBlazeTemplateFast::handler,

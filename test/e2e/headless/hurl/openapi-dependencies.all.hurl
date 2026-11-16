@@ -6,7 +6,8 @@
 # document of it, and a schema of this catalog besides, so one report carries
 # both kinds of edge and says which kind each one reaches for. A document that
 # several positions name is an edge for each of them, as where a reference
-# sits is part of what this report is for
+# sits is part of what this report is for. A Discriminator Object mapping that
+# names a schema by URI is one of those positions
 GET {{base}}/self/v1/api/openapi/dependencies/test/schemas/openapi-split-entry
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
@@ -25,7 +26,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" exists
 header "Last-Modified" exists
-jsonpath "$" count == 3
+jsonpath "$" count == 4
 jsonpath "$[0].from" == "{{base}}/test/schemas/openapi-split-entry"
 jsonpath "$[0].to" == "{{base}}/test/schemas/openapi-split-shared"
 jsonpath "$[0].at" == "/paths/~1pets/$ref"
@@ -33,14 +34,19 @@ jsonpath "$[0].kind" == "path-item"
 jsonpath "$[0].baseDialect" not exists
 jsonpath "$[1].from" == "{{base}}/test/schemas/openapi-split-entry"
 jsonpath "$[1].to" == "{{base}}/test/schemas/string"
-jsonpath "$[1].at" == "/components/schemas/Any/oneOf/0/$ref"
+jsonpath "$[1].at" == "/components/schemas/Any/discriminator/mapping/name"
 jsonpath "$[1].kind" == "schema"
 jsonpath "$[1].baseDialect" not exists
 jsonpath "$[2].from" == "{{base}}/test/schemas/openapi-split-entry"
 jsonpath "$[2].to" == "{{base}}/test/schemas/string"
-jsonpath "$[2].at" == "/components/schemas/Dog/properties/name/$ref"
+jsonpath "$[2].at" == "/components/schemas/Any/oneOf/0/$ref"
 jsonpath "$[2].kind" == "schema"
 jsonpath "$[2].baseDialect" not exists
+jsonpath "$[3].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[3].to" == "{{base}}/test/schemas/string"
+jsonpath "$[3].at" == "/components/schemas/Dog/properties/name/$ref"
+jsonpath "$[3].kind" == "schema"
+jsonpath "$[3].baseDialect" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -76,7 +82,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" exists
 header "Last-Modified" exists
-jsonpath "$" count == 3
+jsonpath "$" count == 4
 jsonpath "$[0].from" == "{{base}}/test/schemas/openapi-split-entry"
 jsonpath "$[0].to" == "{{base}}/test/schemas/openapi-split-shared"
 jsonpath "$[0].at" == "/paths/~1pets/$ref"
@@ -84,14 +90,19 @@ jsonpath "$[0].kind" == "path-item"
 jsonpath "$[0].baseDialect" not exists
 jsonpath "$[1].from" == "{{base}}/test/schemas/openapi-split-entry"
 jsonpath "$[1].to" == "{{base}}/test/schemas/string"
-jsonpath "$[1].at" == "/components/schemas/Any/oneOf/0/$ref"
+jsonpath "$[1].at" == "/components/schemas/Any/discriminator/mapping/name"
 jsonpath "$[1].kind" == "schema"
 jsonpath "$[1].baseDialect" not exists
 jsonpath "$[2].from" == "{{base}}/test/schemas/openapi-split-entry"
 jsonpath "$[2].to" == "{{base}}/test/schemas/string"
-jsonpath "$[2].at" == "/components/schemas/Dog/properties/name/$ref"
+jsonpath "$[2].at" == "/components/schemas/Any/oneOf/0/$ref"
 jsonpath "$[2].kind" == "schema"
 jsonpath "$[2].baseDialect" not exists
+jsonpath "$[3].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[3].to" == "{{base}}/test/schemas/string"
+jsonpath "$[3].at" == "/components/schemas/Dog/properties/name/$ref"
+jsonpath "$[3].kind" == "schema"
+jsonpath "$[3].baseDialect" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -99,6 +110,58 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+header "Vary" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.valid" == true
+
+# A Discriminator Object mapping that names a schema by URI reaches it, so the
+# position of the mapping is an edge of its own beside the reference that names
+# the same schema. A mapping that names a component reaches nothing beyond the
+# document spelling it, so it is no edge at all
+GET {{base}}/self/v1/api/openapi/dependencies/test/schemas/openapi-discriminator
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/api/openapi/dependencies/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "Vary" == "Accept-Encoding"
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
+header "Last-Modified" exists
+jsonpath "$" count == 2
+jsonpath "$[0].from" == "{{base}}/test/schemas/openapi-discriminator"
+jsonpath "$[0].to" == "{{base}}/test/schemas/string"
+jsonpath "$[0].at" == "/components/schemas/Any/discriminator/mapping/text"
+jsonpath "$[0].kind" == "schema"
+jsonpath "$[0].baseDialect" not exists
+jsonpath "$[1].from" == "{{base}}/test/schemas/openapi-discriminator"
+jsonpath "$[1].to" == "{{base}}/test/schemas/string"
+jsonpath "$[1].at" == "/components/schemas/Any/oneOf/0/$ref"
+jsonpath "$[1].kind" == "schema"
+jsonpath "$[1].baseDialect" not exists
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Cache-Control: no-store
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists

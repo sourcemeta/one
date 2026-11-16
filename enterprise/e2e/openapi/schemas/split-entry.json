@@ -1,0 +1,42 @@
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "Split",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/pets": {
+      "$ref": "https://example.com/api/split-shared#/components/pathItems/Pets"
+    }
+  },
+  "components": {
+    "schemas": {
+      "Dog": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "$ref": "https://example.com/api/name"
+          }
+        }
+      },
+      "Any": {
+        "oneOf": [
+          {
+            "$ref": "https://example.com/api/name"
+          },
+          {
+            "$ref": "#/components/schemas/Dog"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "sibling": "https://example.com/api/name",
+            "nested": "https://example.com/api/nested/name",
+            "dog": "Dog"
+          }
+        }
+      }
+    }
+  }
+}

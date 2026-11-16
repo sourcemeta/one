@@ -401,7 +401,7 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"http://localhost:8
         "discriminator": {
           "propertyName": "kind",
           "mapping": {
-            "name": "string",
+            "name": "./string",
             "dog": "Dog"
           }
         }
@@ -464,6 +464,149 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"http://localhost:8
             "type": "string"
           }
         }
+      }
+    }
+  }
+}
+
+# A Discriminator Object mapping that names a schema by URI is served with the
+# path segment that says so, as the specification reads a value that holds up
+# as the name of a component as such a name and this document holds a component
+# of exactly that name. A mapping that does name a component is left as it was
+# written
+GET {{base}}/test/schemas/openapi-discriminator
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/openapi+json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
+header "Link" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
+body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/schemas/openapi-discriminator\",\n"
+{
+  "openapi": "3.2.0",
+  "$self": "{{base}}/test/schemas/openapi-discriminator",
+  "info": {
+    "title": "Discriminator",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "Any": {
+        "oneOf": [
+          {
+            "$ref": "string"
+          },
+          {
+            "$ref": "#/components/schemas/Dog"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "text": "./string",
+            "dog": "Dog"
+          }
+        }
+      },
+      "Dog": {
+        "type": "object",
+        "properties": {
+          "bark": {
+            "type": "boolean"
+          }
+        }
+      },
+      "string": {
+        "title": "A component going by the name that the schema reached by URI is spelled with",
+        "type": "object"
+      }
+    }
+  }
+}
+
+# Bundling the same description embeds the schema it reaches under a name of
+# its own, since the one it would take is taken, and the mapping goes on
+# naming it by the URI it answers to rather than by either component name
+GET {{base}}/test/schemas/openapi-discriminator?bundle
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/openapi+json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
+header "Link" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
+body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/schemas/openapi-discriminator\",\n"
+{
+  "openapi": "3.2.0",
+  "$self": "{{base}}/test/schemas/openapi-discriminator",
+  "info": {
+    "title": "Discriminator",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "Any": {
+        "oneOf": [
+          {
+            "$ref": "{{base}}/test/schemas/string"
+          },
+          {
+            "$ref": "#/components/schemas/Dog"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "text": "./string",
+            "dog": "Dog"
+          }
+        }
+      },
+      "Dog": {
+        "type": "object",
+        "properties": {
+          "bark": {
+            "type": "boolean"
+          }
+        }
+      },
+      "string": {
+        "title": "A component going by the name that the schema reached by URI is spelled with",
+        "type": "object"
+      },
+      "string_": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "{{base}}/test/schemas/string",
+        "examples": [
+          "example_01",
+          "example_02",
+          "example_03",
+          "example_04",
+          5,
+          "example_06",
+          "example_07",
+          "example_08",
+          "example_09",
+          "example_10",
+          "example_11",
+          "example_12"
+        ],
+        "type": "string"
       }
     }
   }
@@ -561,40 +704,168 @@ header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-# Nothing bundles an OpenAPI description yet, and a leaf that is one is still
-# a leaf, so asking for a bundle of it asks for what this version does not do
+# A description that reaches nothing beyond itself bundles to what it already
+# holds
 GET {{base}}/test/schemas/openapi-3-0?bundle
-HTTP 501
-Cache-Control: no-store
-Content-Type: application/problem+json
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/openapi+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/error>; rel="describedby"
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
-header "Vary" not exists
+header "Vary" == "User-Agent, Accept-Encoding"
+header "Link" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.status" == 501
-jsonpath "$.type" == "urn:sourcemeta:one:openapi-description-unsupported"
-jsonpath "$.title" == "Not Implemented"
-jsonpath "$.detail" == "This operation is not supported on an OpenAPI description yet"
+header "ETag" exists
+body == "{{baseline_body}}"
 
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
+# A description built out of several documents bundles into one, with what it
+# reached landing in its own Components Object and every reference naming it
+# there. A Discriminator Object mapping that named a schema by URI names the
+# component it became, and one that named a component by name is left as it
+# was written
+GET {{base}}/test/schemas/openapi-split-entry?bundle
 HTTP 200
-Cache-Control: no-store
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/openapi+json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 [Asserts]
-header "Vary" not exists
+header "Vary" == "User-Agent, Accept-Encoding"
+header "Link" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.valid" == true
+header "ETag" exists
+body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/schemas/openapi-split-entry\",\n"
+{
+  "openapi": "3.2.0",
+  "$self": "{{base}}/test/schemas/openapi-split-entry",
+  "info": {
+    "title": "Split",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/pets": {
+      "$ref": "#/components/pathItems/Pets"
+    }
+  },
+  "components": {
+    "schemas": {
+      "Any": {
+        "oneOf": [
+          {
+            "$ref": "{{base}}/test/schemas/string"
+          },
+          {
+            "$ref": "#/components/schemas/Dog"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "name": "./string",
+            "dog": "Dog"
+          }
+        }
+      },
+      "Dog": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "$ref": "{{base}}/test/schemas/string"
+          }
+        }
+      },
+      "string": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "{{base}}/test/schemas/string",
+        "examples": [
+          "example_01",
+          "example_02",
+          "example_03",
+          "example_04",
+          5,
+          "example_06",
+          "example_07",
+          "example_08",
+          "example_09",
+          "example_10",
+          "example_11",
+          "example_12"
+        ],
+        "type": "string"
+      }
+    },
+    "pathItems": {
+      "Pets": {
+        "get": {
+          "operationId": "listSharedPets",
+          "responses": {
+            "200": {
+              "description": "Every pet"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+# And the document it reached bundles to what it already holds, as it reaches
+# nothing of its own
+GET {{base}}/test/schemas/openapi-split-shared?bundle
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/openapi+json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
+header "Link" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
+body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/schemas/openapi-split-shared\",\n"
+{
+  "openapi": "3.2.0",
+  "$self": "{{base}}/test/schemas/openapi-split-shared",
+  "info": {
+    "title": "Shared",
+    "version": "1.0.0"
+  },
+  "components": {
+    "pathItems": {
+      "Pets": {
+        "get": {
+          "operationId": "listSharedPets",
+          "responses": {
+            "200": {
+              "description": "Every pet"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Pet": {
+        "type": "object",
+        "required": [ "name" ],
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
 
 # Nothing records an OpenAPI description for navigation yet
 GET {{base}}/self/v1/api/schemas/metadata/test/schemas/openapi-3-0

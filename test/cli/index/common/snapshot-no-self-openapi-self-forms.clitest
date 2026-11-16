@@ -105,14 +105,17 @@ WRITE expected.txt UNTIL EOF
 ./schemas/api/api
 ./schemas/api/api/absolute
 ./schemas/api/api/absolute/%
+./schemas/api/api/absolute/%/bundle.metapack
 ./schemas/api/api/absolute/%/data.metapack
 ./schemas/api/api/absolute/%/dependencies.metapack
 ./schemas/api/elsewhere
 ./schemas/api/elsewhere/%
+./schemas/api/elsewhere/%/bundle.metapack
 ./schemas/api/elsewhere/%/data.metapack
 ./schemas/api/elsewhere/%/dependencies.metapack
 ./schemas/api/fragment
 ./schemas/api/fragment/%
+./schemas/api/fragment/%/bundle.metapack
 ./schemas/api/fragment/%/data.metapack
 ./schemas/api/fragment/%/dependencies.metapack
 ./state.bin
