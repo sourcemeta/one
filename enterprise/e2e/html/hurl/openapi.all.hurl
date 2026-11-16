@@ -44,7 +44,7 @@ header "Last-Modified" exists
     }
   ],
   "health": 100,
-  "dependencies": 4,
+  "dependencies": 5,
   "alert": null,
   "priority": 50,
   "breadcrumb": [
@@ -117,7 +117,7 @@ header "Last-Modified" exists
     }
   ],
   "health": 100,
-  "dependencies": 7,
+  "dependencies": 9,
   "alert": null,
   "priority": 50,
   "breadcrumb": [
@@ -275,7 +275,7 @@ header "Last-Modified" exists
     }
   ],
   "health": 100,
-  "dependencies": 3,
+  "dependencies": 4,
   "alert": null,
   "priority": 50,
   "breadcrumb": [

@@ -128,7 +128,7 @@ navigation and discovery purposes.
     | `/entries/*/email` | String | No | For `directory` entries, the e-mail address associated with the entry |
     | `/entries/*/github` | String | No | For `directory` entries, the GitHub organisation or repository associated with the entry |
     | `/entries/*/website` | String | No | For `directory` entries, the website URL associated with the entry |
-    | `/entries/*/dependencies` | Integer | Yes | For `schema` entries, the number of direct and indirect dependencies of the schema |
+    | `/entries/*/dependencies` | Integer | Yes | For `schema` entries, the number of references the schema makes to other schemas, directly and indirectly |
     | `/entries/*/bytes` | Integer | No | For `schema` entries, the bytes that the entry occupies |
     | `/entries/*/bytesBundled` | Integer | No | For `schema` entries, the bytes that the entry occupies when bundled |
     | `/entries/*/baseDialect` | String | No | For `schema` entries, the base dialect URI of the entry |
@@ -721,7 +721,7 @@ GET /self/v1/api/schemas/metadata/{path}
     | `/health` | Integer | Yes | The health score of the schema |
     | `/priority` | Integer | Yes | An importance hint from `0` (least important) to `100` (most important), inherited from the schema collection's [`x-sourcemeta-one:priority`](configuration.md) configuration value |
     | `/private` | Boolean | Yes | Whether an authentication policy governs this schema |
-    | `/dependencies` | Integer | Yes | The number of direct and indirect dependencies of the schema |
+    | `/dependencies` | Integer | Yes | The number of references the schema makes to other schemas, directly and indirectly |
     | `/bytes` | Integer | Yes | The bytes that the schema occupies |
     | `/bytesBundled` | Integer | Yes | The bytes that the schema occupies when bundled |
     | `/alert` | String / Null | No | The human readable alert message for the schema collection, if any. The web explorer renders this as Markdown |
@@ -785,9 +785,11 @@ Schema located at the specified `{path}` parameter.*
 GET /self/v1/api/schemas/dependencies/{path}
 ```
 
-Every other schema that this one reaches is reported once, so a chain of
-references that leads back to the schema itself does not list the schema among
-its own dependencies.
+Where a reference sits is part of what this report is for, so a schema that
+several positions name is reported once for each of them, including the
+reference that closes a cycle back onto the schema this report is of. A
+reference that a schema makes to itself is that schema's own business and is
+reported nowhere.
 
 === "200"
 
