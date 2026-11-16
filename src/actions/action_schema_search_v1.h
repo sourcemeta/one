@@ -344,7 +344,7 @@ private:
   // of these is refused rather than ignored, so a caller that mistypes one is
   // told rather than quietly answered as though they had not asked
   static constexpr std::array<std::string_view, 3> QUERY_PARAMETERS{
-      "q", "limit", "scope"};
+      {"q", "limit", "scope"}};
 
   // A caller is answered out of the index their view holds, so what a search
   // can name is what the caller could have reached by looking

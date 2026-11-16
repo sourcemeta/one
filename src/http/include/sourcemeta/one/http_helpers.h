@@ -299,7 +299,9 @@ json_error(const HTTPRequest &request, HTTPResponse &response,
            const std::string_view schema, const std::string_view origin,
            const std::string_view allow = {},
            const std::span<const std::pair<std::string_view, std::string_view>>
-               challenge = {}) -> void {
+               challenge = {},
+           const std::span<const std::pair<std::string_view, std::string_view>>
+               extensions = {}) -> void {
   // Header values are written to the wire verbatim. CR/LF would split
   // headers, enabling response header injection or CORS widening. Today's
   // callers pass string literals, but the asserts catch future untrusted
@@ -307,8 +309,16 @@ json_error(const HTTPRequest &request, HTTPResponse &response,
   // a header cannot carry, so it needs no guard of its own
   assert(origin.find_first_of("\r\n") == std::string_view::npos);
   assert(allow.find_first_of("\r\n") == std::string_view::npos);
-  const auto body{sourcemeta::core::http_make_problem_details(
+  auto body{sourcemeta::core::http_make_problem_details(
       {.status = status, .type = type, .detail = detail})};
+  // RFC 9457 Section 3.2 lets a problem type carry members of its own, which
+  // Section 3.1.4 prefers over a consumer reading the detail string, since
+  // what a caller has to act on should not have to be parsed back out of
+  // prose written for a person
+  // https://datatracker.ietf.org/doc/html/rfc9457#section-3.2
+  for (const auto &extension : extensions) {
+    body.assign(extension.first, sourcemeta::core::JSON{extension.second});
+  }
 
   response.write_status(status);
   response.write_header("Content-Type", "application/problem+json");
@@ -371,17 +381,15 @@ reject_unknown_query(const HTTPRequest &request, HTTPResponse &response,
     return false;
   }
 
-  // The name travels back so that whoever sent it can tell which of their
-  // parameters went unread, bounded because the only limit on what a caller
-  // may put in a query string is what the request line carries
+  // The name is what the caller wrote rather than anything this chose, so
+  // what travels back is bounded to what the error schema admits
   constexpr std::size_t MAXIMUM_REPORTED_NAME{64};
-  std::ostringstream detail;
-  detail << "This endpoint does not recognise the "
-         << unknown.value().substr(0, MAXIMUM_REPORTED_NAME)
-         << " query parameter";
+  const std::array<std::pair<std::string_view, std::string_view>, 1> extensions{
+      {{"parameter", unknown.value().substr(0, MAXIMUM_REPORTED_NAME)}}};
   json_error(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
-             "urn:sourcemeta:one:unknown-query-parameter", detail.str(), schema,
-             origin);
+             "urn:sourcemeta:one:unknown-query-parameter",
+             "This endpoint does not read one of the given query parameters",
+             schema, origin, {}, {}, extensions);
   return true;
 }
 
