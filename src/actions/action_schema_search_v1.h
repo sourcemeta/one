@@ -12,6 +12,7 @@
 #include <sourcemeta/one/router.h>
 #include <sourcemeta/one/search.h>
 
+#include <array>         // std::array
 #include <charconv>      // std::from_chars
 #include <cstddef>       // std::size_t
 #include <cstdint>       // std::uint8_t
@@ -99,6 +100,12 @@ public:
           "urn:sourcemeta:one:method-not-allowed",
           "This HTTP method is invalid for this URL", this->error_schema_, "*",
           "GET, HEAD, OPTIONS");
+      return;
+    }
+
+    if (sourcemeta::one::reject_unknown_query(
+            request, response, ActionSchemaSearchV1::QUERY_PARAMETERS,
+            this->error_schema_, "*")) {
       return;
     }
 
@@ -333,6 +340,12 @@ public:
   }
 
 private:
+  // What this endpoint reads out of the query string. A name that is not one
+  // of these is refused rather than ignored, so a caller that mistypes one is
+  // told rather than quietly answered as though they had not asked
+  static constexpr std::array<std::string_view, 3> QUERY_PARAMETERS{
+      "q", "limit", "scope"};
+
   // A caller is answered out of the index their view holds, so what a search
   // can name is what the caller could have reached by looking
   [[nodiscard]] auto search_view_for(const std::string_view view)

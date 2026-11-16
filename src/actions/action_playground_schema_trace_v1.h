@@ -64,6 +64,10 @@ public:
       return;
     }
 
+    if (sourcemeta::one::reject_unknown_query(request, response, {},
+                                              this->error_schema_, "*")) {
+      return;
+    }
     this->schema_post_body(
         request, response, this->response_schema_, this->error_schema_,
         sourcemeta::one::MAX_PLAYGROUND_REQUEST_BODY_BYTES,

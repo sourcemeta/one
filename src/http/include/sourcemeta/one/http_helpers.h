@@ -357,6 +357,34 @@ json_error(const HTTPRequest &request, HTTPResponse &response,
   send_response(status, request, response, output.str(), Encoding::Identity);
 }
 
+// A surface that declares which query parameters it reads answers a name it
+// does not know rather than ignoring it, so a caller that mistypes one is
+// told rather than handed the answer to a different question. Reports whether
+// the request was refused, so that whoever asked stops when it was
+[[nodiscard]] inline auto
+reject_unknown_query(const HTTPRequest &request, HTTPResponse &response,
+                     const std::span<const std::string_view> known,
+                     const std::string_view schema,
+                     const std::string_view origin) -> bool {
+  const auto unknown{request.unknown_query(known)};
+  if (!unknown.has_value()) {
+    return false;
+  }
+
+  // The name travels back so that whoever sent it can tell which of their
+  // parameters went unread, bounded because the only limit on what a caller
+  // may put in a query string is what the request line carries
+  constexpr std::size_t MAXIMUM_REPORTED_NAME{64};
+  std::ostringstream detail;
+  detail << "This endpoint does not recognise the "
+         << unknown.value().substr(0, MAXIMUM_REPORTED_NAME)
+         << " query parameter";
+  json_error(request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+             "urn:sourcemeta:one:unknown-query-parameter", detail.str(), schema,
+             origin);
+  return true;
+}
+
 // Whether the caller prefers an HTML representation over JSON. The Accept
 // header is negotiated with quality values rather than matched literally, so a
 // browser presenting its full Accept list is recognised, while a client that

@@ -8,7 +8,7 @@
 #include <sourcemeta/one/http_response.h>
 #include <sourcemeta/one/http_uwebsockets.h>
 
-#include <algorithm>   // std::ranges::count_if
+#include <algorithm>   // std::ranges::count_if, std::ranges::find
 #include <chrono>      // std::chrono::system_clock, std::chrono::steady_clock
 #include <concepts>    // std::invocable
 #include <cstddef>     // std::size_t
@@ -17,6 +17,7 @@
 #include <limits>      // std::numeric_limits
 #include <memory>      // std::shared_ptr, std::make_shared
 #include <optional>    // std::optional
+#include <span>        // std::span
 #include <string>      // std::string
 #include <string_view> // std::string_view
 #include <utility>     // std::move
@@ -178,6 +179,28 @@ public:
     const sourcemeta::core::URI::Query query{this->request_->getQuery()};
     return static_cast<std::size_t>(std::ranges::count_if(
         query, [](const auto &parameter) { return !parameter.first.empty(); }));
+  }
+
+  // The first query parameter the caller sent that is not among the ones a
+  // surface declares it reads, if any. The name borrows the request's own
+  // query string, so it lasts as long as the request does
+  [[nodiscard]] auto
+  unknown_query(const std::span<const std::string_view> known) const
+      -> std::optional<std::string_view> {
+    const sourcemeta::core::URI::Query query{this->request_->getQuery()};
+    for (const auto &parameter : query) {
+      // A query string of `?&&` parses into pairs that name nothing, and a
+      // name nobody wrote is not one a surface can be asked about
+      if (parameter.first.empty()) {
+        continue;
+      }
+
+      if (std::ranges::find(known, parameter.first) == known.end()) {
+        return parameter.first;
+      }
+    }
+
+    return std::nullopt;
   }
 
   [[nodiscard]] auto header_gmt(const std::string_view name) const noexcept

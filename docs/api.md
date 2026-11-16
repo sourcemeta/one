@@ -107,20 +107,21 @@ navigation and discovery purposes.
     | `/path` | String | Yes | The relative URL of the directory |
     | `/breadcrumb` | Array | Yes | The breadcrumb of the directory entry |
     | `/breadcrumb/*/name` | String | Yes | The breadcrumb entry URL path segment |
-    | `/breadcrumb/*/url` | String | Yes | The relative URL of the breadcrumb location |
+    | `/breadcrumb/*/path` | String | Yes | The relative URL of the breadcrumb location |
     | `/title` | String | No | The title associated with the directory |
     | `/description` | String | No | The description associated with the directory. The web explorer renders this as Markdown |
     | `/email` | String | No | The e-mail address associated with the directory |
     | `/github` | String | No | The GitHub organisation or repository associated with the directory |
     | `/website` | String | No | The external URL associated with the directory  |
     | `/schemas` | Integer | Yes | The recursive count of schemas in this directory |
+    | `/health` | Integer | Yes | The aggregated health of the directory |
     | `/private` | Boolean | Yes | Whether an authentication policy governs this directory |
     | `/entries` | Array | Yes | The entries inside the directory |
     | `/entries/*/type` | String | Yes | The type of the entry (`schema` or `directory`) |
     | `/entries/*/name` | String | Yes | The last URL path segment of the entry |
     | `/entries/*/path` | String | Yes | The relative URL of the entry |
     | `/entries/*/private` | Boolean | Yes | Whether an authentication policy governs the entry |
-    | `/entries/*/health` | Integer | No | The aggregated health of the entry |
+    | `/entries/*/health` | Integer | Yes | The aggregated health of the entry |
     | `/entries/*/schemas` | Integer | No | For `directory` entries, the recursive count of schemas in the directory |
     | `/entries/*/title` | String | No | The title associated with the entry |
     | `/entries/*/description` | String | No | The description associated with the entry. The web explorer renders this as Markdown |
@@ -135,6 +136,11 @@ navigation and discovery purposes.
     | `/entries/*/identifier` | String | No | For `schema` entries, the absolute URI of the entry |
     | `/entries/*/alert` | String / Null | No | For `schema` entries, the human readable alert message for the schema collection. The web explorer renders this as Markdown |
     | `/entries/*/priority` | Integer | No | For `schema` entries, an importance hint from `0` (least important) to `100` (most important), inherited from the schema collection's [`x-sourcemeta-one:priority`](configuration.md) configuration value |
+
+=== "400"
+
+    The query carries a parameter this endpoint does not read. It declares
+    none, so any name at all is refused rather than ignored.
 
 === "404"
 
@@ -527,7 +533,8 @@ Format](https://json-schema.org/draft/2020-12/json-schema-core#name-output-struc
 
 === "400"
 
-    You must pass an instance to validate against.
+    You must pass an instance to validate against, or the query carries a
+    parameter this endpoint does not read, as it declares none.
 
 === "404"
 
@@ -585,7 +592,8 @@ insight into the validation engine's behavior and logic flow.
 
 === "400"
 
-    You must pass an instance to validate against.
+    You must pass an instance to validate against, or the query carries a
+    parameter this endpoint does not read, as it declares none.
 
 === "404"
 
@@ -657,9 +665,11 @@ contexts are not fetched.
 
 === "400"
 
-    You must pass a request body that matches the request schema, or the
-    provided `context` cannot be processed (for example because it references
-    a remote context).
+    You must pass a request body that matches the request schema, the provided
+    `context` cannot be processed (for example because it references a remote
+    context), or the query carries a parameter this endpoint does not read, as
+    it declares none. `flatten` and `context` are read out of the request
+    body rather than the query string.
 
 === "404"
 
@@ -722,6 +732,11 @@ GET /self/v1/api/schemas/metadata/{path}
     | `/breadcrumb/*/name` | String | Yes | The breadcrumb entry URL path |
     | `/breadcrumb/*/path` | String | Yes | The relative URL of the breadcrumb location |
 
+=== "400"
+
+    The query carries a parameter this endpoint does not read. It declares
+    none, so any name at all is refused rather than ignored.
+
 === "404"
 
     The schema does not exist.
@@ -749,15 +764,17 @@ be combined in any order (i.e. `scope=title,description`).
     |----------|------|----------|-------------|
     | `/*/path` | String | Yes | The relative URL of the schema |
     | `/*/identifier` | String | Yes | The absolute URL of the schema |
-    | `/*/title` | String | No | The title of the schema (may be an empty string) |
-    | `/*/description` | String | No | The description of the schema (may be an empty string). The web explorer renders this as Markdown |
+    | `/*/title` | String | Yes | The title of the schema |
+    | `/*/description` | String | Yes | The description of the schema. The web explorer renders this as Markdown |
     | `/*/priority` | Integer | Yes | An importance hint from `0` (least important) to `100` (most important), inherited from the schema collection's [`x-sourcemeta-one:priority`](configuration.md) configuration value |
     | `/*/health` | Integer | Yes | The health score of the schema (0 to 100) |
 
 === "400"
 
     Returned when `q` is missing or empty, when `q` or `limit` do not match
-    their corresponding ranges, or any query parameter has an invalid type.
+    their corresponding ranges, when `scope` names anything other than the
+    three fields above, or when the query carries a name other than `q`,
+    `limit` and `scope`.
 
 ### Dependencies
 
@@ -780,6 +797,11 @@ its own dependencies.
     | `/*/to` | String | Yes | The absolute URL of the schema being referenced |
     | `/*/at` | String | Yes | The JSON Pointer to the schema location where the dependency originates |
     | `/*/baseDialect` | String | Yes | The absolute URI of the base dialect of the schema being referenced |
+
+=== "400"
+
+    The query carries a parameter this endpoint does not read. It declares
+    none, so any name at all is refused rather than ignored.
 
 === "404"
 
@@ -805,6 +827,11 @@ GET /self/v1/api/schemas/dependents/{path}
     | `/*/at` | String | Yes | The JSON Pointer to the schema location where the dependency originates |
     | `/*/baseDialect` | String | Yes | The absolute URI of the base dialect of the schema that originates the dependency |
 
+=== "400"
+
+    The query carries a parameter this endpoint does not read. It declares
+    none, so any name at all is refused rather than ignored.
+
 === "404"
 
     The schema does not exist.
@@ -826,8 +853,14 @@ GET /self/v1/api/schemas/health/{path}
     | `/errors/*/pointers` | Array | Yes | The paths where the issue occurs |
     | `/errors/*/pointers/*` | String | Yes | A JSON Pointer path of where the issue occurs |
     | `/errors/*/name` | String | Yes | The identifier name of the health issue |
+    | `/errors/*/custom` | Boolean | Yes | Whether the issue comes from a custom lint rule rather than a built-in one |
     | `/errors/*/message` | String | Yes | Human-readable description of the issue. The web explorer renders this as Markdown |
-    | `/errors/*/description` | String / Null | No | Additional description (may be null). The web explorer renders this as Markdown |
+    | `/errors/*/description` | String / Null | Yes | Additional description. The web explorer renders this as Markdown |
+
+=== "400"
+
+    The query carries a parameter this endpoint does not read. It declares
+    none, so any name at all is refused rather than ignored.
 
 === "404"
 
@@ -852,7 +885,7 @@ GET /self/v1/api/schemas/locations/{path}
     | `/static/*/base` | String | Yes | The base URI of the location |
     | `/static/*/baseDialect` | String | Yes | The base dialect of the schema |
     | `/static/*/dialect` | String | Yes | The JSON Schema dialect URI |
-    | `/static/*/parent` | String / Null | No | The parent JSON Pointer (if any) |
+    | `/static/*/parent` | String / Null | Yes | The parent JSON Pointer (if any) |
     | `/static/*/pointer` | String | Yes | The JSON Pointer to this location from the root of the schema |
     | `/static/*/relativePointer` | String | Yes | The relative JSON Pointer from its nearest base URI |
     | `/static/*/root` | String | Yes | The root URI of the schema |
@@ -869,7 +902,7 @@ GET /self/v1/api/schemas/locations/{path}
     | `/dynamic/*/base` | String | Yes | The base URI of the location |
     | `/dynamic/*/baseDialect` | String | Yes | The base dialect of the schema |
     | `/dynamic/*/dialect` | String | Yes | The JSON Schema dialect URI |
-    | `/dynamic/*/parent` | String / Null | No | The parent URI (if any) |
+    | `/dynamic/*/parent` | String / Null | Yes | The parent JSON Pointer (if any) |
     | `/dynamic/*/pointer` | String | Yes | The JSON Pointer to this location from the root of the schema |
     | `/dynamic/*/relativePointer` | String | Yes | The relative JSON Pointer from its nearest base URI |
     | `/dynamic/*/root` | String | Yes | The root URI of the schema |
@@ -881,6 +914,11 @@ GET /self/v1/api/schemas/locations/{path}
     | `/dynamic/*/position/3` | Integer | Yes | Ending column number |
     | `/dynamic/*/propertyName` | Boolean | Yes | Whether the location applies to a property name |
     | `/dynamic/*/orphan` | Boolean | Yes | Whether the location is inside a definitions container |
+
+=== "400"
+
+    The query carries a parameter this endpoint does not read. It declares
+    none, so any name at all is refused rather than ignored.
 
 === "404"
 
@@ -904,6 +942,11 @@ GET /self/v1/api/schemas/stats/{path}
     | Property | Type | Required | Description |
     |----------|------|----------|-------------|
     | `/<vocabulary>/<keyword>` | Integer | Yes | The number of occurrences keywords of a specific keyword name from a specific vocabulary (or `unknown` otherwise) |
+
+=== "400"
+
+    The query carries a parameter this endpoint does not read. It declares
+    none, so any name at all is refused rather than ignored.
 
 === "404"
 
@@ -933,6 +976,11 @@ schema.
     | `/*/1` | Integer | Yes | Starting column number |
     | `/*/2` | Integer | Yes | Ending line number |
     | `/*/3` | Integer | Yes | Ending column number |
+
+=== "400"
+
+    The query carries a parameter this endpoint does not read. It declares
+    none, so any name at all is refused rather than ignored.
 
 === "404"
 
@@ -981,7 +1029,7 @@ ingested into the catalog the normal way.
 
 === "400"
 
-    The body is not the expected object, or the schema cannot be compiled, which includes a [`$ref`](https://www.learnjsonschema.com/2020-12/core/ref/) in it not resolving.
+    The body is not the expected object, the schema cannot be compiled, which includes a [`$ref`](https://www.learnjsonschema.com/2020-12/core/ref/) in it not resolving, or the query carries a parameter this endpoint does not read, as it declares none.
 
 === "413"
 

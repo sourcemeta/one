@@ -82,6 +82,26 @@
       }
     },
     {
+      "type": "object",
+      "required": [ "type", "title", "status", "detail" ],
+      "properties": {
+        "type": {
+          "const": "urn:sourcemeta:one:unknown-query-parameter"
+        },
+        "title": {
+          "const": "Bad Request"
+        },
+        "status": {
+          "const": 400
+        },
+        "detail": {
+          "description": "The message naming the query parameter that this endpoint does not read, which is bounded in length since a caller chooses the name",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    {
       "const": {
         "type": "urn:sourcemeta:one:custom-dialect-conversion",
         "title": "Bad Request",
