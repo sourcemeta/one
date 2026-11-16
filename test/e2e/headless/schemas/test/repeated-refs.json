@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/repeated-refs.json",
+  "properties": {
+    "one": { "$ref": "https://example.com/schemas/string.json" },
+    "two": { "$ref": "https://example.com/schemas/string.json" },
+    "three": { "$ref": "https://example.com/schemas/absolute-refs.json" }
+  }
+}

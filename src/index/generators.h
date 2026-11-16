@@ -37,7 +37,7 @@
 #include <limits>       // std::numeric_limits
 #include <memory>       // std::unique_ptr, std::make_unique
 #include <mutex>        // std::once_flag, std::call_once
-#include <optional>     // std::optional
+#include <optional>     // std::nullopt, std::optional
 #include <ostream>      // std::ostream
 #include <shared_mutex> // std::shared_mutex, std::shared_lock, std::unique_lock
 #include <sstream>      // std::ostringstream
@@ -549,7 +549,6 @@ struct GenerateDependencies {
           const auto &origin{dependency.origin};
           const auto &pointer{dependency.pointer};
           const auto &target{dependency.destination};
-          const auto &schema{dependency.document};
           auto trace{sourcemeta::core::JSON::make_object()};
           trace.assign("from", without_json_extension(origin));
           trace.assign("to", without_json_extension(target));
@@ -558,6 +557,15 @@ struct GenerateDependencies {
           sourcemeta::core::JSON::String target_uri{target};
           const auto match{base_dialects.find(target_uri)};
           if (match == base_dialects.cend()) {
+            // Only the reference that had analysis resolve a document carries
+            // it, so what another reference brought in is read here
+            const auto fetched{dependency.document == nullptr
+                                   ? resolver(target, callback)
+                                   : std::nullopt};
+            assert(dependency.document != nullptr || fetched.has_value());
+            const auto &schema{dependency.document == nullptr
+                                   ? fetched.value()
+                                   : *dependency.document};
             const sourcemeta::core::SchemaFrame frame{
                 sourcemeta::core::SchemaFrame::Mode::Root,
                 schema,
