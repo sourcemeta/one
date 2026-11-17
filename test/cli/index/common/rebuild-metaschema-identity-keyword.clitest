@@ -1,0 +1,73 @@
+// Which keyword introduces an identifier is what a schema's dialect says, so
+// an answer settled against a dialect that has since changed is no answer at
+// all, however untouched the file that gave it. A dialect this catalog holds
+// is one of its own files, so a cached answer only stands while the answer for
+// the file serving its dialect stands too
+
+WRITE one.json UNTIL EOF
+{
+  "url": "https://sourcemeta.com",
+  "html": false,
+  "contents": {
+    "example": {
+      "baseUri": "https://example.com/",
+      "path": "./schemas"
+    }
+  }
+}
+EOF
+
+MAKE DIRECTORY schemas
+
+WRITE schemas/mm-leaf.json UNTIL EOF
+{
+  "$schema": "https://example.com/custom-dialect",
+  "$id": "https://example.com/renamed"
+}
+EOF
+
+// Built on 2020-12, where `$id` is what introduces an identifier
+WRITE schemas/aa-dialect.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/custom-dialect",
+  "$vocabulary": {
+    "https://json-schema.org/draft/2020-12/vocab/core": true,
+    "https://json-schema.org/draft/2020-12/vocab/validation": true
+  }
+}
+EOF
+
+RUN --skip-banner --deterministic --concurrency 1 --verbose one.json output STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN log_1.txt
+DROP LINES MATCHING ' => https://sourcemeta\.com/self/' IN log_1.txt
+SORT log_1.txt
+
+WRITE expected_log_1.txt UNTIL EOF
+2> https://example.com/custom-dialect => https://sourcemeta.com/example/custom-dialect
+2> https://example.com/renamed => https://sourcemeta.com/example/renamed
+EOF
+
+COMPARE log_1.txt AGAINST expected_log_1.txt
+
+// The same dialect URI, now built on Draft 4, where `id` introduces an
+// identifier and `$id` carries nothing. The leaf is untouched, so only
+// reconsidering what its dialect says can get it right
+WRITE schemas/aa-dialect.json UNTIL EOF
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "https://example.com/custom-dialect"
+}
+EOF
+
+RUN --skip-banner --deterministic --concurrency 1 --verbose one.json output STDIN /dev/null IN . INTO log_2.txt EXPECTING 0
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN log_2.txt
+DROP LINES MATCHING ' => https://sourcemeta\.com/self/' IN log_2.txt
+SORT log_2.txt
+
+WRITE expected_log_2.txt UNTIL EOF
+2> https://example.com/custom-dialect => https://sourcemeta.com/example/custom-dialect
+2> https://example.com/mm-leaf => https://sourcemeta.com/example/mm-leaf
+EOF
+
+COMPARE log_2.txt AGAINST expected_log_2.txt

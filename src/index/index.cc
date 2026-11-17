@@ -35,10 +35,12 @@
 #include <filesystem>    // std::filesystem
 #include <functional>    // std::reference_wrapper, std::cref
 #include <mutex>         // std::mutex, std::scoped_lock
+#include <optional>      // std::optional
 #include <print>         // std::print, std::println
 #include <sstream>       // std::ostringstream
 #include <string>        // std::string
 #include <string_view>   // std::string_view
+#include <unordered_map> // std::unordered_map
 #include <unordered_set> // std::unordered_set
 #include <vector>        // std::vector
 
@@ -450,7 +452,8 @@ static auto index_main(const std::string_view &program,
 
   // Resolving a single URI reads the collection a schema lives in, and never
   // the mappings, so this stays out of the way of that lookup
-  sourcemeta::one::rebase_resolve_targets(configuration);
+  const auto resolve_targets{
+      sourcemeta::one::rebase_resolve_targets(configuration)};
 
   /////////////////////////////////////////////////////////////////////////////
   // (4) Prepare the output directory and load previous state
@@ -635,11 +638,68 @@ static auto index_main(const std::string_view &program,
   // identifiers and paths may no longer be valid
   const auto incremental{raw_configuration == current_configuration &&
                          current_version == this_version};
-  std::vector<std::reference_wrapper<const DetectedSchema>> uncached_schemas;
+  // What the cache has to say about each detected schema, before deciding
+  // which of those answers still stand
+  std::vector<const sourcemeta::one::BuildState::ResolverEntry *>
+      cached_entries;
+  cached_entries.reserve(detected_schemas.size());
   for (const auto &detected : detected_schemas) {
-    const auto *cached{
+    cached_entries.push_back(
         incremental ? entries.resolve(detected.path.native(), detected.mtime)
-                    : nullptr};
+                    : nullptr);
+  }
+
+  // Which keyword introduces an identifier is what a schema's dialect says, so
+  // an answer settled against a dialect that has since changed is no answer at
+  // all, however untouched the file that gave it. A dialect this catalog holds
+  // is one of these very files, so a cached answer stands only while the
+  // answer for the file serving its dialect stands too, and a chain of
+  // dialects settles by letting each one that falls take its dependants with
+  // it. An official dialect, and a leaf that carries none, rest on nothing
+  // here
+  std::unordered_map<std::string_view, std::size_t> providers;
+  std::unordered_map<std::string_view, std::vector<std::size_t>> dependants;
+  for (std::size_t index = 0; index < cached_entries.size(); ++index) {
+    const auto *cached{cached_entries[index]};
+    if (cached == nullptr) {
+      continue;
+    }
+
+    providers.emplace(cached->new_identifier, index);
+    if (!cached->dialect.empty() &&
+        !sourcemeta::core::schema_is_known(cached->dialect)) {
+      dependants[cached->dialect].push_back(index);
+    }
+  }
+
+  std::vector<std::size_t> falling;
+  for (const auto &dialect : dependants) {
+    if (!providers.contains(dialect.first)) {
+      falling.insert(falling.cend(), dialect.second.cbegin(),
+                     dialect.second.cend());
+    }
+  }
+
+  while (!falling.empty()) {
+    const auto index{falling.back()};
+    falling.pop_back();
+    if (cached_entries[index] == nullptr) {
+      continue;
+    }
+
+    const std::string_view identity{cached_entries[index]->new_identifier};
+    cached_entries[index] = nullptr;
+    const auto match{dependants.find(identity)};
+    if (match != dependants.cend()) {
+      falling.insert(falling.cend(), match->second.cbegin(),
+                     match->second.cend());
+    }
+  }
+
+  std::vector<std::reference_wrapper<const DetectedSchema>> uncached_schemas;
+  for (std::size_t index = 0; index < detected_schemas.size(); ++index) {
+    const auto &detected{detected_schemas[index]};
+    const auto *cached{cached_entries[index]};
     if (cached != nullptr) {
       const auto &collection{detected.collection.get()};
       resolver.emplace(
@@ -662,45 +722,112 @@ static auto index_main(const std::string_view &program,
     }
   }
 
-  // Phase 2: resolve uncached schemas and commit to cache
-  sourcemeta::core::parallel_for_each(
-      uncached_schemas.begin(), uncached_schemas.end(),
-      [&resolver, &mutex, &entries, &uncached_schemas,
-       &app](const auto &detected_ref, const auto threads, const auto cursor) {
-        const auto &detected{detected_ref.get()};
-        print_progress(threads, "Resolving",
-                       (detected.collection_relative_path /
-                        detected.path.lexically_relative(
-                            detected.collection.get().absolute_path))
-                           .string(),
-                       cursor, uncached_schemas.size());
-        const auto result{resolver.add(detected.collection_relative_path,
-                                       detected.collection.get(), detected.path,
-                                       detected.mtime)};
+  // Phase 2: resolve uncached schemas and commit to cache.
+  //
+  // What a schema declares as its identifier is introduced by a keyword that
+  // only its dialect names, so a schema naming a dialect this catalog itself
+  // holds cannot settle its identity until that dialect is registered. A pass
+  // that cannot settle one therefore registers nothing for it and leaves it
+  // for the next pass, rather than taking the identifier its path implies and
+  // making what the registry serves depend on the order files arrived in.
+  //
+  // Every pass registers at least one more schema or none at all, so a chain
+  // of dialects settles in as many passes as it is deep, and a pass that
+  // settles nothing is the end of it: whatever is left names a dialect this
+  // catalog does not hold, and takes the identifier its path implies on a
+  // final pass. The dialect that could not be resolved is reported further
+  // along, where it is the reference to it that fails rather than the identity
+  std::vector<std::reference_wrapper<const DetectedSchema>> deferred_schemas;
+  auto unresolved_dialect{sourcemeta::one::UnresolvedDialect::Withhold};
+  while (!uncached_schemas.empty()) {
+    deferred_schemas.clear();
+    sourcemeta::core::parallel_for_each(
+        uncached_schemas.begin(), uncached_schemas.end(),
+        [&resolver, &mutex, &entries, &uncached_schemas, &deferred_schemas,
+         unresolved_dialect, &app](const auto &detected_ref, const auto threads,
+                                   const auto cursor) {
+          const auto &detected{detected_ref.get()};
+          print_progress(threads, "Resolving",
+                         (detected.collection_relative_path /
+                          detected.path.lexically_relative(
+                              detected.collection.get().absolute_path))
+                             .string(),
+                         cursor, uncached_schemas.size());
 
-        {
-          const auto &resolved{result.second.get()};
-          const std::scoped_lock lock{mutex};
-          entries.commit(detected.path.native(),
-                         sourcemeta::one::BuildState::ResolverEntry{
-                             .file_mark = detected.mtime,
-                             .new_identifier = std::string{result.first.get()},
-                             .original_identifier =
-                                 std::string{resolved.original_identifier},
-                             .dialect = std::string{resolved.dialect},
-                             .relative_path = resolved.relative_path.string(),
-                             .vocabularies = resolved.vocabularies,
-                             .kind = resolved.kind});
-        }
+          std::optional<sourcemeta::one::Resolver::Result> result;
+          try {
+            result.emplace(resolver.add(
+                detected.collection_relative_path, detected.collection.get(),
+                detected.path, detected.mtime, unresolved_dialect));
+          } catch (const sourcemeta::core::SchemaResolutionError &) {
+            // A pass that already had the fallback to give has no later pass
+            // to hand this to, so what it still could not resolve is reported
+            // rather than held back for a pass that would never come
+            if (unresolved_dialect !=
+                sourcemeta::one::UnresolvedDialect::Withhold) {
+              throw;
+            }
 
-        if (app.contains("verbose")) {
-          const std::scoped_lock lock{mutex};
-          std::println(stderr, "{} => {}",
-                       result.second.get().original_identifier,
-                       result.first.get());
-        }
-      },
-      concurrency);
+            const std::scoped_lock lock{mutex};
+            deferred_schemas.emplace_back(detected);
+            return;
+          }
+
+          {
+            const auto &resolved{result.value().second.get()};
+            const std::scoped_lock lock{mutex};
+            entries.commit(
+                detected.path.native(),
+                sourcemeta::one::BuildState::ResolverEntry{
+                    .file_mark = detected.mtime,
+                    .new_identifier = std::string{result.value().first.get()},
+                    .original_identifier =
+                        std::string{resolved.original_identifier},
+                    .dialect = std::string{resolved.dialect},
+                    .relative_path = resolved.relative_path.string(),
+                    .vocabularies = resolved.vocabularies,
+                    .kind = resolved.kind});
+          }
+
+          if (app.contains("verbose")) {
+            const std::scoped_lock lock{mutex};
+            std::println(stderr, "{} => {}",
+                         result.value().second.get().original_identifier,
+                         result.value().first.get());
+          }
+        },
+        concurrency);
+
+    const auto registered{deferred_schemas.size() != uncached_schemas.size()};
+    uncached_schemas = std::move(deferred_schemas);
+
+    // A routed target that settled in this pass is only reachable by what it
+    // is served as once routing says so, and a schema naming a dialect its
+    // collection routes by file has to reach it to settle an identity of its
+    // own. Correcting routing between passes is what lets the pass after this
+    // one resolve that dialect, the same way registering a dialect lets the
+    // pass after it resolve one named directly. Every worker has joined by
+    // here, so nothing is reading these mappings
+    const auto rerouted{!uncached_schemas.empty() &&
+                        sourcemeta::one::settle_resolve_targets(
+                            configuration, resolver, resolve_targets)};
+
+    // A pass that registered nothing and corrected no routing has nothing
+    // left to tell the next one, so what remains names a dialect this catalog
+    // does not hold and settles for what its path implies. Routing corrects
+    // each target at most once, so this is reached either way
+    if (!registered && !rerouted) {
+      unresolved_dialect = sourcemeta::one::UnresolvedDialect::Fallback;
+    }
+  }
+
+  // Routing was settled before anything was registered, so what the catalog
+  // serves each routed file as is only known now. Every reference naming a
+  // routed target is rewritten against those mappings further along. A build
+  // that resolved nothing at all, because the cache answered for everything,
+  // reaches this without a single pass having run
+  sourcemeta::one::settle_resolve_targets(configuration, resolver,
+                                          resolve_targets);
 
   PROFILE_END(profiling, "Resolve");
 

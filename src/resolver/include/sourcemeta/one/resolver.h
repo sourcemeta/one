@@ -9,6 +9,7 @@
 
 #include <sourcemeta/one/resolver_error.h>
 
+#include <cstdint>    // std::uint8_t
 #include <filesystem> // std::filesystem::path, std::filesystem::file_time_type
 #include <functional> // std::function, std::reference_wrapper
 #include <optional>   // std::optional
@@ -20,10 +21,33 @@
 
 namespace sourcemeta::one {
 
+// A target a collection names by file, and the file it names. What the registry
+// serves that file as depends on the dialect it is written against, which
+// nothing can resolve before the catalog is indexed, so routing settles on the
+// identifier the file's path implies and is corrected once the catalog can
+// answer
+struct ResolveTarget {
+  std::filesystem::path location;
+  sourcemeta::core::JSON::String key;
+  std::filesystem::path path;
+};
+
+using ResolveTargets = std::vector<ResolveTarget>;
+
 // A collection names the schemas it routes references to by file, the way the
 // manifest format does everywhere else. Every such target is replaced here with
 // the URI the registry serves that file under, before the catalog is indexed
-auto rebase_resolve_targets(Configuration &configuration) -> void;
+auto rebase_resolve_targets(Configuration &configuration) -> ResolveTargets;
+
+// What settling an identity does when the dialect a schema names is nothing
+// this catalog can resolve yet. Registering a dialect is what makes it
+// resolvable, so a schema naming one this catalog holds answers the question
+// differently once that dialect is in, and taking the identifier its path
+// implies before then is what makes the answer depend on the order files
+// happened to arrive in. A caller that can register more schemas and ask again
+// withholds that fallback, and allows it on a pass where nothing is left to
+// register and the path is the only answer there is
+enum class UnresolvedDialect : std::uint8_t { Withhold, Fallback };
 
 class Resolver {
 public:
@@ -79,10 +103,18 @@ public:
       std::pair<std::reference_wrapper<const sourcemeta::core::JSON::String>,
                 std::reference_wrapper<const Entry>>;
 
+  // Throws sourcemeta::core::SchemaResolutionError without registering
+  // anything when the schema names a dialect this catalog cannot resolve yet
+  // and the caller withheld the fallback, so that the caller may register the
+  // rest of the catalog and ask again. A caller with nothing left to register
+  // has no second answer to wait for, which is why the fallback is what asking
+  // once gets
   auto add(const std::filesystem::path &collection_relative_path,
            const Configuration::Collection &collection,
            const std::filesystem::path &path,
-           const std::filesystem::file_time_type mtime) -> Result;
+           const std::filesystem::file_time_type mtime,
+           UnresolvedDialect unresolved_dialect = UnresolvedDialect::Fallback)
+      -> Result;
 
   auto emplace(std::string new_identifier, Entry entry) -> void;
 
@@ -147,6 +179,16 @@ private:
                                 std::optional<sourcemeta::core::JSON>>>
       dialects_;
 };
+
+// Correct what routing was settled on, now that the catalog knows what it
+// serves each routed file as, reporting whether that changed any mapping.
+// Every reference naming a routed target is rewritten against these mappings,
+// so this has to run once everything is registered and before anything is
+// written out. Running it earlier, between the passes that register the
+// catalog, is what lets a pass resolve a dialect its collection routes by file
+auto settle_resolve_targets(Configuration &configuration,
+                            const Resolver &resolver,
+                            const ResolveTargets &targets) -> bool;
 
 } // namespace sourcemeta::one
 

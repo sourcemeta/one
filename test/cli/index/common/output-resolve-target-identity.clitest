@@ -1,0 +1,67 @@
+// A collection that routes a reference by file is settled on a URI before
+// anything is indexed, so a target written against a dialect of the catalog
+// itself has only the identifier its path implies to go on at that point.
+// Routing is corrected once the catalog knows what it serves that file as,
+// which is what every reference naming the target is rewritten against, so
+// reaching the target must not depend on the target keeping that first answer
+
+MAKE DIRECTORY schemas
+
+WRITE one.json UNTIL EOF
+{
+  "url": "https://sourcemeta.com",
+  "html": false,
+  "contents": {
+    "example": {
+      "baseUri": "https://example.com/",
+      "path": "./schemas",
+      "resolve": { "urn:example:target": "./schemas/thetarget.json" }
+    }
+  }
+}
+EOF
+
+// The routed target renames itself, and names a dialect this catalog holds
+// rather than an official one
+WRITE schemas/thetarget.json UNTIL EOF
+{
+  "$schema": "https://example.com/custom-dialect",
+  "$id": "https://example.com/renamed-target",
+  "type": "string"
+}
+EOF
+
+WRITE schemas/aa-dialect.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/custom-dialect",
+  "$vocabulary": {
+    "https://json-schema.org/draft/2020-12/vocab/core": true,
+    "https://json-schema.org/draft/2020-12/vocab/applicator": true,
+    "https://json-schema.org/draft/2020-12/vocab/validation": true
+  }
+}
+EOF
+
+// Reaching the target through the routed URI is what fails when routing keeps
+// the identifier the target's path implied
+WRITE schemas/consumer.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/consumer",
+  "$ref": "urn:example:target"
+}
+EOF
+
+RUN --deterministic --concurrency 1 --verbose --skip-banner one.json output STDIN /dev/null IN . INTO log.txt EXPECTING 0
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN log.txt
+DROP LINES MATCHING ' => https://sourcemeta\.com/self/' IN log.txt
+SORT log.txt
+
+WRITE expected.txt UNTIL EOF
+2> https://example.com/consumer => https://sourcemeta.com/example/consumer
+2> https://example.com/custom-dialect => https://sourcemeta.com/example/custom-dialect
+2> https://example.com/renamed-target => https://sourcemeta.com/example/renamed-target
+EOF
+
+COMPARE log.txt AGAINST expected.txt

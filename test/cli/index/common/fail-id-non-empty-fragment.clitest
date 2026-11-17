@@ -1,0 +1,60 @@
+// An identifier carrying a non-empty fragment is invalid, and which of the two
+// ways it is invalid depends on the dialect. Framing is what judges that, and
+// it judges the identifier without knowing which file carried it, so the file
+// has to be named here or whoever has to go and fix one is not told where
+
+WRITE one.json UNTIL EOF
+{
+  "url": "https://sourcemeta.com",
+  "html": false,
+  "contents": {
+    "example": {
+      "baseUri": "https://example.com/",
+      "path": "./schemas"
+    }
+  }
+}
+EOF
+
+MAKE DIRECTORY schemas
+
+// From 2019-09 onwards a fragment is never allowed in an identifier
+WRITE schemas/leaf.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/renamed#frag"
+}
+EOF
+
+RUN --skip-banner --deterministic --concurrency 1 one.json output_1 STDIN /dev/null IN . INTO log_1.txt EXPECTING 1
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN log_1.txt
+
+WRITE expected_1.txt UNTIL EOF
+2> error: Identifiers must not contain non-empty fragments
+2>   at path [CWD]/schemas/leaf.json
+2>   at identifier https://example.com/renamed#frag
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN log_1.txt
+COMPARE log_1.txt AGAINST expected_1.txt
+
+// Before 2019-09 a fragment stands only where it is the whole identifier, as
+// it names an anchor rather than a resource of its own
+WRITE schemas/leaf.json UNTIL EOF
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/renamed#frag"
+}
+EOF
+
+RUN --skip-banner --deterministic --concurrency 1 one.json output_2 STDIN /dev/null IN . INTO log_2.txt EXPECTING 1
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN log_2.txt
+
+WRITE expected_2.txt UNTIL EOF
+2> error: Identifiers may only carry a fragment when they consist of nothing else
+2>   at path [CWD]/schemas/leaf.json
+2>   at identifier https://example.com/renamed#frag
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN log_2.txt
+COMPARE log_2.txt AGAINST expected_2.txt

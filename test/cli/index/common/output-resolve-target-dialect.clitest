@@ -1,0 +1,83 @@
+// A schema may name a dialect its collection routes by file, and what the
+// registry serves that dialect as is not known until the catalog is indexed.
+// Correcting routing only once everything is registered would be too late for
+// the schemas that have to resolve that dialect to settle an identity, so
+// routing is corrected between the passes that register the catalog. A chain
+// of routed dialects therefore settles a level per pass, however deep it runs
+// and whatever each level calls itself
+
+MAKE DIRECTORY schemas
+
+WRITE one.json UNTIL EOF
+{
+  "url": "https://sourcemeta.com",
+  "html": false,
+  "contents": {
+    "example": {
+      "baseUri": "https://example.com/",
+      "path": "./schemas",
+      "resolve": {
+        "urn:example:b": "./schemas/b.json",
+        "urn:example:c": "./schemas/c.json"
+      }
+    }
+  }
+}
+EOF
+
+WRITE schemas/aa-a.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/dialect-a",
+  "$vocabulary": {
+    "https://json-schema.org/draft/2020-12/vocab/core": true,
+    "https://json-schema.org/draft/2020-12/vocab/validation": true
+  }
+}
+EOF
+
+// Routed, renames itself, and written against a dialect of the catalog
+WRITE schemas/b.json UNTIL EOF
+{
+  "$schema": "https://example.com/dialect-a",
+  "$id": "https://example.com/renamed-b",
+  "$vocabulary": {
+    "https://json-schema.org/draft/2020-12/vocab/core": true,
+    "https://json-schema.org/draft/2020-12/vocab/validation": true
+  }
+}
+EOF
+
+// The same again, one level further out, written against the routed dialect
+WRITE schemas/c.json UNTIL EOF
+{
+  "$schema": "urn:example:b",
+  "$id": "https://example.com/renamed-c",
+  "$vocabulary": {
+    "https://json-schema.org/draft/2020-12/vocab/core": true,
+    "https://json-schema.org/draft/2020-12/vocab/validation": true
+  }
+}
+EOF
+
+WRITE schemas/mm-leaf.json UNTIL EOF
+{
+  "$schema": "urn:example:c",
+  "$id": "https://example.com/renamed-leaf",
+  "type": "string"
+}
+EOF
+
+RUN --deterministic --concurrency 1 --verbose --skip-banner one.json output STDIN /dev/null IN . INTO log.txt EXPECTING 0
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN log.txt
+DROP LINES MATCHING ' => https://sourcemeta\.com/self/' IN log.txt
+SORT log.txt
+
+WRITE expected.txt UNTIL EOF
+2> https://example.com/dialect-a => https://sourcemeta.com/example/dialect-a
+2> https://example.com/renamed-b => https://sourcemeta.com/example/renamed-b
+2> https://example.com/renamed-c => https://sourcemeta.com/example/renamed-c
+2> https://example.com/renamed-leaf => https://sourcemeta.com/example/renamed-leaf
+EOF
+
+COMPARE log.txt AGAINST expected.txt
