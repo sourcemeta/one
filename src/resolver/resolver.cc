@@ -533,9 +533,9 @@ auto rebase_resolve_targets(Configuration &configuration) -> ResolveTargets {
 
 auto settle_resolve_targets(Configuration &configuration,
                             const Resolver &resolver,
-                            const ResolveTargets &targets) -> void {
+                            const ResolveTargets &targets) -> bool {
   if (targets.empty()) {
-    return;
+    return false;
   }
 
   // What the catalog came to serve each file as, which is the question routing
@@ -547,6 +547,7 @@ auto settle_resolve_targets(Configuration &configuration,
     served.emplace(view.second.path, view.first);
   }
 
+  bool changed{false};
   for (const auto &target : targets) {
     const auto match{served.find(target.path)};
     // A target the catalog never registered is one whose collection does not
@@ -558,8 +559,17 @@ auto settle_resolve_targets(Configuration &configuration,
     auto *collection{std::get_if<Configuration::Collection>(
         &configuration.entries.at(target.location))};
     assert(collection != nullptr);
+    const auto current{collection->resolve.find(target.key)};
+    if (current != collection->resolve.cend() &&
+        current->second == match->second) {
+      continue;
+    }
+
     collection->resolve.insert_or_assign(target.key, match->second);
+    changed = true;
   }
+
+  return changed;
 }
 
 Resolver::Resolver(const std::string_view url)

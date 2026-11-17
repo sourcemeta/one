@@ -740,16 +740,34 @@ static auto index_main(const std::string_view &program,
         },
         concurrency);
 
-    if (deferred_schemas.size() == uncached_schemas.size()) {
+    const auto registered{deferred_schemas.size() != uncached_schemas.size()};
+    uncached_schemas = std::move(deferred_schemas);
+
+    // A routed target that settled in this pass is only reachable by what it
+    // is served as once routing says so, and a schema naming a dialect its
+    // collection routes by file has to reach it to settle an identity of its
+    // own. Correcting routing between passes is what lets the pass after this
+    // one resolve that dialect, the same way registering a dialect lets the
+    // pass after it resolve one named directly. Every worker has joined by
+    // here, so nothing is reading these mappings
+    const auto rerouted{!uncached_schemas.empty() &&
+                        sourcemeta::one::settle_resolve_targets(
+                            configuration, resolver, resolve_targets)};
+
+    // A pass that registered nothing and corrected no routing has nothing
+    // left to tell the next one, so what remains names a dialect this catalog
+    // does not hold and settles for what its path implies. Routing corrects
+    // each target at most once, so this is reached either way
+    if (!registered && !rerouted) {
       unresolved_dialect = sourcemeta::one::UnresolvedDialect::Fallback;
     }
-
-    uncached_schemas = std::move(deferred_schemas);
   }
 
   // Routing was settled before anything was registered, so what the catalog
   // serves each routed file as is only known now. Every reference naming a
-  // routed target is rewritten against those mappings further along
+  // routed target is rewritten against those mappings further along. A build
+  // that resolved nothing at all, because the cache answered for everything,
+  // reaches this without a single pass having run
   sourcemeta::one::settle_resolve_targets(configuration, resolver,
                                           resolve_targets);
 

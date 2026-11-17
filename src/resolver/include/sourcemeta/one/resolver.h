@@ -181,12 +181,14 @@ private:
 };
 
 // Correct what routing was settled on, now that the catalog knows what it
-// serves each routed file as. Every reference naming a routed target is
-// rewritten against these mappings, so this has to run once everything is
-// registered and before anything is written out
+// serves each routed file as, reporting whether that changed any mapping.
+// Every reference naming a routed target is rewritten against these mappings,
+// so this has to run once everything is registered and before anything is
+// written out. Running it earlier, between the passes that register the
+// catalog, is what lets a pass resolve a dialect its collection routes by file
 auto settle_resolve_targets(Configuration &configuration,
                             const Resolver &resolver,
-                            const ResolveTargets &targets) -> void;
+                            const ResolveTargets &targets) -> bool;
 
 } // namespace sourcemeta::one
 
