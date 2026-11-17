@@ -451,7 +451,7 @@ static auto index_main(const std::string_view &program,
 
   // Resolving a single URI reads the collection a schema lives in, and never
   // the mappings, so this stays out of the way of that lookup
-  auto resolve_targets{sourcemeta::one::rebase_resolve_targets(configuration)};
+  sourcemeta::one::rebase_resolve_targets(configuration);
 
   /////////////////////////////////////////////////////////////////////////////
   // (4) Prepare the output directory and load previous state
@@ -628,7 +628,6 @@ static auto index_main(const std::string_view &program,
   /////////////////////////////////////////////////////////////////////////////
 
   sourcemeta::one::Resolver resolver{configuration.url};
-  resolver.track_resolve_targets(std::move(resolve_targets));
   resolver.reserve(detected_schemas.size());
 
   // Phase 1: populate resolver from cache for unchanged source files.

@@ -437,8 +437,7 @@ static auto serves(const sourcemeta::one::Configuration::Collection &collection,
 
 namespace sourcemeta::one {
 
-auto rebase_resolve_targets(Configuration &configuration) -> ResolveTargets {
-  ResolveTargets targets;
+auto rebase_resolve_targets(Configuration &configuration) -> void {
   const sourcemeta::core::URI server{configuration.url};
   for (auto &entry : configuration.entries) {
     auto *collection{std::get_if<Configuration::Collection>(&entry.second)};
@@ -506,58 +505,28 @@ auto rebase_resolve_targets(Configuration &configuration) -> ResolveTargets {
         throw ResolverTargetNotASchemaError(declared_path, pair.first, target);
       }
 
-      // Nothing is indexed yet at this point, so the only dialects there are
-      // to resolve are the official ones. A target written against a dialect
-      // of the catalog itself therefore settles on the identifier its path
-      // implies, which is not what the registry serves it as if it turns out
-      // to declare something else. Which file each routed URI was settled on
-      // is reported back so that the registry can answer to it either way
-      auto served{sourcemeta::core::openapi_is_document(contents)
-                      ? openapi_identity(*owner, *owner_location, target,
-                                         contents, server)
-                            .served
-                      : schema_identity(*owner, *owner_location, target,
-                                        contents,
-                                        sourcemeta::core::schema_resolver,
-                                        server, UnresolvedDialect::Fallback)
-                            .served};
-      targets.insert_or_assign(target, served);
-      result.emplace(pair.first, std::move(served));
+      result.emplace(pair.first,
+                     sourcemeta::core::openapi_is_document(contents)
+                         ? openapi_identity(*owner, *owner_location, target,
+                                            contents, server)
+                               .served
+                         // Nothing is indexed yet at this point, so the only
+                         // dialects there are to resolve are the official ones,
+                         // and a target written against a dialect of the
+                         // catalog itself has no later pass to wait for
+                         : schema_identity(*owner, *owner_location, target,
+                                           contents,
+                                           sourcemeta::core::schema_resolver,
+                                           server, UnresolvedDialect::Fallback)
+                               .served);
     }
 
     collection->resolve = std::move(result);
   }
-
-  return targets;
 }
 
 Resolver::Resolver(const std::string_view url)
     : server_url_{url}, server_uri_{std::string{url}} {}
-
-auto Resolver::track_resolve_targets(ResolveTargets targets) -> void {
-  assert(this->views_.empty());
-  this->resolve_targets_ = std::move(targets);
-}
-
-auto Resolver::alias_resolve_target(
-    const std::filesystem::path &path,
-    const sourcemeta::core::JSON::String &served) -> void {
-  const auto target{this->resolve_targets_.find(path)};
-  if (target == this->resolve_targets_.cend()) {
-    return;
-  }
-
-  // Routing that was settled on what this leaf came to be served as needs
-  // nothing further, which is every target whose dialect was resolvable
-  // before the catalog was indexed
-  const auto routed{normalise_identifier(target->second)};
-  if (routed == served) {
-    return;
-  }
-
-  const std::unique_lock lock{this->mutex_};
-  this->resolve_aliases_.insert_or_assign(routed, served);
-}
 
 auto Resolver::operator()(const Configuration::Collection &collection,
                           const std::string_view identifier,
@@ -611,7 +580,6 @@ auto Resolver::operator()(
   const Entry *view{nullptr};
   const sourcemeta::core::JSON::String *new_identifier{nullptr};
   std::optional<std::filesystem::path> cached_path;
-  std::optional<sourcemeta::core::JSON::String> routed;
   {
     std::shared_lock lock{this->mutex_};
     const auto result{this->views_.find(identifier)};
@@ -619,20 +587,7 @@ auto Resolver::operator()(
       view = &result->second;
       new_identifier = &result->first;
       cached_path = result->second.cache_path;
-    } else {
-      const auto alias{this->resolve_aliases_.find(identifier)};
-      if (alias != this->resolve_aliases_.cend()) {
-        routed = alias->second;
-      }
     }
-  }
-
-  // A collection that routes a reference by file was settled on a URI before
-  // the file it names had been read, so a target that turned out to declare
-  // something else answers to what routing names as well as to what it is
-  // served as
-  if (routed.has_value()) {
-    return this->operator()(routed.value(), callback);
   }
 
   // This is the schema half of the resolver, so an OpenAPI description is
@@ -1438,7 +1393,6 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
           result.first->first);
     }
     this->track_dialect(result.first->second.dialect);
-    this->alias_resolve_target(path, result.first->first);
     return {result.first->first, result.first->second};
   } catch (const sourcemeta::core::SchemaKeywordError &error) {
     throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
@@ -1514,7 +1468,6 @@ auto Resolver::add_openapi(
   }
 
   this->track_dialect(result.first->second.dialect);
-  this->alias_resolve_target(path, result.first->first);
   return {result.first->first, result.first->second};
 }
 
@@ -1541,7 +1494,6 @@ auto Resolver::emplace(std::string new_identifier, Entry entry) -> void {
         "Cannot register the same identifier twice", result.first->first);
   }
   this->track_dialect(result.first->second.dialect);
-  this->alias_resolve_target(path, result.first->first);
 }
 
 auto Resolver::entry(const std::string_view identifier) const -> const Entry & {
