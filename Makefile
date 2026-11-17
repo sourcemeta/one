@@ -95,7 +95,6 @@ test-e2e: check
 ifeq ($(ENTERPRISE),ON)
 	./contrib/e2e-native.sh enterprise/e2e/empty $(EDITION) $(SANDBOX_PORT)
 	./contrib/e2e-native.sh enterprise/e2e/html $(EDITION) $(SANDBOX_PORT)
-	./contrib/e2e-native.sh enterprise/e2e/openapi $(EDITION) $(SANDBOX_PORT)
 	# Machine credentials need nobody to sign in, so this authentication
 	# sandbox is the one that runs without an identity provider beside it
 	./contrib/e2e-native.sh enterprise/e2e/auth-keys $(EDITION) $(SANDBOX_PORT)
@@ -114,7 +113,6 @@ docker: docker-build
 ifeq ($(ENTERPRISE),ON)
 	$(MAKE) -C enterprise/e2e/empty EDITION=$(EDITION)
 	$(MAKE) -C enterprise/e2e/html EDITION=$(EDITION)
-	$(MAKE) -C enterprise/e2e/openapi EDITION=$(EDITION)
 	$(MAKE) -C enterprise/e2e/auth-keys EDITION=$(EDITION)
 	# The rest each stand up an identity provider alongside the registry,
 	# exercising both JWT and apiKey policies

@@ -6,7 +6,7 @@
   },
   "paths": {
     "/pets": {
-      "$ref": "https://example.com/api/split-shared#/components/pathItems/Pets"
+      "$ref": "openapi-split-shared#/components/pathItems/Pets"
     }
   },
   "components": {
@@ -15,14 +15,14 @@
         "type": "object",
         "properties": {
           "name": {
-            "$ref": "https://example.com/api/name"
+            "$ref": "object"
           }
         }
       },
       "Any": {
         "oneOf": [
           {
-            "$ref": "https://example.com/api/name"
+            "$ref": "object"
           },
           {
             "$ref": "#/components/schemas/Dog"
@@ -31,8 +31,8 @@
         "discriminator": {
           "propertyName": "kind",
           "mapping": {
-            "sibling": "https://example.com/api/name",
-            "nested": "https://example.com/api/nested/name",
+            "sibling": "./object",
+            "nested": "bare/01",
             "dog": "Dog"
           }
         }
