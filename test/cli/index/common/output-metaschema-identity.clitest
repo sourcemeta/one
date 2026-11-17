@@ -1,0 +1,73 @@
+// What a schema is served as must not depend on whether the dialect it names
+// was indexed before or after it. Settling an identity needs the dialect
+// resolved, and a dialect this catalog holds only becomes resolvable once it
+// is registered, so a schema that named one indexed after it used to fall back
+// to the identifier its path implies and be served under the wrong URI
+
+MAKE DIRECTORY schemas
+
+WRITE one.json UNTIL EOF
+{
+  "url": "https://sourcemeta.com",
+  "html": false,
+  "contents": {
+    "example": {
+      "baseUri": "https://example.com/",
+      "path": "./schemas"
+    }
+  }
+}
+EOF
+
+// The dialect named the way the collection writes it, which is what the file
+// that declares it calls itself
+WRITE schemas/mm-leaf.json UNTIL EOF
+{
+  "$schema": "https://example.com/custom-dialect",
+  "$id": "https://example.com/renamed",
+  "type": "string"
+}
+EOF
+
+WRITE expected.txt UNTIL EOF
+2> https://example.com/custom-dialect => https://sourcemeta.com/example/custom-dialect
+2> https://example.com/renamed => https://sourcemeta.com/example/renamed
+EOF
+
+// (1) The dialect sorts before the schema that names it
+WRITE schemas/aa-dialect.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/custom-dialect",
+  "$vocabulary": {
+    "https://json-schema.org/draft/2020-12/vocab/core": true,
+    "https://json-schema.org/draft/2020-12/vocab/validation": true
+  }
+}
+EOF
+
+RUN --deterministic --concurrency 1 --verbose --skip-banner one.json output_1 STDIN /dev/null IN . INTO log_1.txt EXPECTING 0
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN log_1.txt
+DROP LINES MATCHING ' => https://sourcemeta\.com/self/' IN log_1.txt
+SORT log_1.txt
+COMPARE log_1.txt AGAINST expected.txt
+
+REMOVE schemas/aa-dialect.json
+
+// (2) The very same dialect, named so that it sorts after the schema
+WRITE schemas/zz-dialect.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/custom-dialect",
+  "$vocabulary": {
+    "https://json-schema.org/draft/2020-12/vocab/core": true,
+    "https://json-schema.org/draft/2020-12/vocab/validation": true
+  }
+}
+EOF
+
+RUN --deterministic --concurrency 1 --verbose --skip-banner one.json output_2 STDIN /dev/null IN . INTO log_2.txt EXPECTING 0
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN log_2.txt
+DROP LINES MATCHING ' => https://sourcemeta\.com/self/' IN log_2.txt
+SORT log_2.txt
+COMPARE log_2.txt AGAINST expected.txt

@@ -119,14 +119,16 @@ static auto rebase(const sourcemeta::one::Configuration::Collection &collection,
 }
 
 // The identifier a schema declares, or the given default when it declares
-// none. A schema whose dialect cannot be determined or resolved also takes the
-// default, as what such a schema is worth is settled further along, where the
-// file it came from is still at hand
+// none. Which keyword introduces that identifier is what the dialect in force
+// says, so framing has to resolve the dialect before it can read the
+// identifier at all, and only framing is left to decide that, as every rule
+// that bears on it belongs to the specifications rather than to this registry
 static auto
 declared_identifier(const sourcemeta::core::JSON &schema,
                     const sourcemeta::core::SchemaResolver &resolver,
                     const std::string_view default_dialect,
-                    const std::string_view default_identifier)
+                    const std::string_view default_identifier,
+                    const sourcemeta::one::UnresolvedDialect unresolved_dialect)
     -> sourcemeta::core::JSON::String {
   try {
     const sourcemeta::core::SchemaFrame frame{
@@ -139,8 +141,27 @@ declared_identifier(const sourcemeta::core::JSON &schema,
         sourcemeta::core::SchemaFrame::IdentifierMode::Fallback};
     return frame.root();
   } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &) {
+    // The dialect answered, and what it answered names no base dialect this
+    // build knows. Registering more schemas cannot change that, so there is
+    // nothing to wait for
+    return sourcemeta::core::JSON::String{default_identifier};
+  } catch (const sourcemeta::core::SchemaVocabularyError &) {
+    // The dialect answered, and what it answered declares its vocabularies in
+    // a way the specifications do not allow, leaving nothing to say which
+    // keyword introduces an identifier. Measuring a schema against its
+    // metaschema is what reports that, and it says where in the metaschema the
+    // fault is rather than only that there is one
+    return sourcemeta::core::JSON::String{default_identifier};
+  } catch (const sourcemeta::core::SchemaRelativeMetaschemaResolutionError &) {
+    // A dialect named by a relative URI is invalid however much of this
+    // catalog is registered, so no later pass answers this one either. Caught
+    // ahead of the resolution failure it derives from for that reason
     return sourcemeta::core::JSON::String{default_identifier};
   } catch (const sourcemeta::core::SchemaResolutionError &) {
+    if (unresolved_dialect == sourcemeta::one::UnresolvedDialect::Withhold) {
+      throw;
+    }
+
     return sourcemeta::core::JSON::String{default_identifier};
   }
 }
@@ -354,14 +375,25 @@ schema_identity(const sourcemeta::one::Configuration::Collection &collection,
                 const std::filesystem::path &path,
                 const sourcemeta::core::JSON &schema,
                 const sourcemeta::core::SchemaResolver &resolver,
-                const sourcemeta::core::URI &server) -> SchemaIdentity {
+                const sourcemeta::core::URI &server,
+                const sourcemeta::one::UnresolvedDialect unresolved_dialect)
+    -> SchemaIdentity {
   const auto default_identifier{default_identifier_of(collection, path)};
-  return settle_identity(
-      collection, location, path,
-      declared_identifier(schema, resolver,
-                          collection.default_dialect.value_or(""),
-                          default_identifier),
-      default_identifier, server);
+  // Framing judges an identifier without knowing which file carried it, and
+  // whoever has to go and fix one has to be told that much. The failure to
+  // register an identifier twice is raised further along for the same reason,
+  // and stays out of here, as the file it has to name is the second of two
+  try {
+    return settle_identity(
+        collection, location, path,
+        declared_identifier(schema, resolver,
+                            collection.default_dialect.value_or(""),
+                            default_identifier, unresolved_dialect),
+        default_identifier, server);
+  } catch (const sourcemeta::core::SchemaFrameError &error) {
+    throw sourcemeta::core::FileError<sourcemeta::core::SchemaFrameError>(
+        path, error);
+  }
 }
 
 // The same, for an OpenAPI description. The identity keyword a revision
@@ -405,7 +437,8 @@ static auto serves(const sourcemeta::one::Configuration::Collection &collection,
 
 namespace sourcemeta::one {
 
-auto rebase_resolve_targets(Configuration &configuration) -> void {
+auto rebase_resolve_targets(Configuration &configuration) -> ResolveTargets {
+  ResolveTargets targets;
   const sourcemeta::core::URI server{configuration.url};
   for (auto &entry : configuration.entries) {
     auto *collection{std::get_if<Configuration::Collection>(&entry.second)};
@@ -473,23 +506,58 @@ auto rebase_resolve_targets(Configuration &configuration) -> void {
         throw ResolverTargetNotASchemaError(declared_path, pair.first, target);
       }
 
-      result.emplace(
-          pair.first,
-          sourcemeta::core::openapi_is_document(contents)
-              ? openapi_identity(*owner, *owner_location, target, contents,
-                                 server)
-                    .served
-              : schema_identity(*owner, *owner_location, target, contents,
-                                sourcemeta::core::schema_resolver, server)
-                    .served);
+      // Nothing is indexed yet at this point, so the only dialects there are
+      // to resolve are the official ones. A target written against a dialect
+      // of the catalog itself therefore settles on the identifier its path
+      // implies, which is not what the registry serves it as if it turns out
+      // to declare something else. Which file each routed URI was settled on
+      // is reported back so that the registry can answer to it either way
+      auto served{sourcemeta::core::openapi_is_document(contents)
+                      ? openapi_identity(*owner, *owner_location, target,
+                                         contents, server)
+                            .served
+                      : schema_identity(*owner, *owner_location, target,
+                                        contents,
+                                        sourcemeta::core::schema_resolver,
+                                        server, UnresolvedDialect::Fallback)
+                            .served};
+      targets.insert_or_assign(target, served);
+      result.emplace(pair.first, std::move(served));
     }
 
     collection->resolve = std::move(result);
   }
+
+  return targets;
 }
 
 Resolver::Resolver(const std::string_view url)
     : server_url_{url}, server_uri_{std::string{url}} {}
+
+auto Resolver::track_resolve_targets(ResolveTargets targets) -> void {
+  assert(this->views_.empty());
+  this->resolve_targets_ = std::move(targets);
+}
+
+auto Resolver::alias_resolve_target(
+    const std::filesystem::path &path,
+    const sourcemeta::core::JSON::String &served) -> void {
+  const auto target{this->resolve_targets_.find(path)};
+  if (target == this->resolve_targets_.cend()) {
+    return;
+  }
+
+  // Routing that was settled on what this leaf came to be served as needs
+  // nothing further, which is every target whose dialect was resolvable
+  // before the catalog was indexed
+  const auto routed{normalise_identifier(target->second)};
+  if (routed == served) {
+    return;
+  }
+
+  const std::unique_lock lock{this->mutex_};
+  this->resolve_aliases_.insert_or_assign(routed, served);
+}
 
 auto Resolver::operator()(const Configuration::Collection &collection,
                           const std::string_view identifier,
@@ -543,6 +611,7 @@ auto Resolver::operator()(
   const Entry *view{nullptr};
   const sourcemeta::core::JSON::String *new_identifier{nullptr};
   std::optional<std::filesystem::path> cached_path;
+  std::optional<sourcemeta::core::JSON::String> routed;
   {
     std::shared_lock lock{this->mutex_};
     const auto result{this->views_.find(identifier)};
@@ -550,7 +619,20 @@ auto Resolver::operator()(
       view = &result->second;
       new_identifier = &result->first;
       cached_path = result->second.cache_path;
+    } else {
+      const auto alias{this->resolve_aliases_.find(identifier)};
+      if (alias != this->resolve_aliases_.cend()) {
+        routed = alias->second;
+      }
     }
+  }
+
+  // A collection that routes a reference by file was settled on a URI before
+  // the file it names had been read, so a target that turned out to declare
+  // something else answers to what routing names as well as to what it is
+  // served as
+  if (routed.has_value()) {
+    return this->operator()(routed.value(), callback);
   }
 
   // This is the schema half of the resolver, so an OpenAPI description is
@@ -1250,7 +1332,8 @@ auto Resolver::cached_dialect(const sourcemeta::core::JSON::String &uri) const
 auto Resolver::add(const std::filesystem::path &collection_relative_path,
                    const Configuration::Collection &collection,
                    const std::filesystem::path &path,
-                   const std::filesystem::file_time_type mtime) -> Result {
+                   const std::filesystem::file_time_type mtime,
+                   const UnresolvedDialect unresolved_dialect) -> Result {
   /////////////////////////////////////////////////////////////////////////////
   // (1) Read the schema file
   /////////////////////////////////////////////////////////////////////////////
@@ -1279,11 +1362,21 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
     /////////////////////////////////////////////////////////////////////////////
     const auto identity{schema_identity(
         collection, collection_relative_path, path, schema,
-        [this, &collection](
+        [this, &collection, &collection_relative_path](
             const auto subidentifier) -> std::optional<sourcemeta::core::JSON> {
-          return this->operator()(collection, subidentifier);
+          // What framing asks for here is the dialect, and this catalog files
+          // a dialect it holds under the URI it serves it as rather than under
+          // the one the file that declares it calls itself. Putting the
+          // question the way the catalog answers it is what lets a schema name
+          // a dialect of its own collection the way the collection writes it.
+          // An official dialect, and one no collection lends a URI to, come
+          // back from here untouched
+          return this->operator()(
+              served_dialect(collection, collection_relative_path,
+                             sourcemeta::core::JSON::String{}, subidentifier,
+                             this->server_uri_));
         },
-        this->server_uri_)};
+        this->server_uri_, unresolved_dialect)};
     const auto &identifier{identity.current};
     const auto &new_identifier{identity.served};
 
@@ -1345,6 +1438,7 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
           result.first->first);
     }
     this->track_dialect(result.first->second.dialect);
+    this->alias_resolve_target(path, result.first->first);
     return {result.first->first, result.first->second};
   } catch (const sourcemeta::core::SchemaKeywordError &error) {
     throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
@@ -1420,6 +1514,7 @@ auto Resolver::add_openapi(
   }
 
   this->track_dialect(result.first->second.dialect);
+  this->alias_resolve_target(path, result.first->first);
   return {result.first->first, result.first->second};
 }
 
@@ -1446,6 +1541,7 @@ auto Resolver::emplace(std::string new_identifier, Entry entry) -> void {
         "Cannot register the same identifier twice", result.first->first);
   }
   this->track_dialect(result.first->second.dialect);
+  this->alias_resolve_target(path, result.first->first);
 }
 
 auto Resolver::entry(const std::string_view identifier) const -> const Entry & {

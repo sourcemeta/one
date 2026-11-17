@@ -35,6 +35,7 @@
 #include <filesystem>    // std::filesystem
 #include <functional>    // std::reference_wrapper, std::cref
 #include <mutex>         // std::mutex, std::scoped_lock
+#include <optional>      // std::optional
 #include <print>         // std::print, std::println
 #include <sstream>       // std::ostringstream
 #include <string>        // std::string
@@ -450,7 +451,7 @@ static auto index_main(const std::string_view &program,
 
   // Resolving a single URI reads the collection a schema lives in, and never
   // the mappings, so this stays out of the way of that lookup
-  sourcemeta::one::rebase_resolve_targets(configuration);
+  auto resolve_targets{sourcemeta::one::rebase_resolve_targets(configuration)};
 
   /////////////////////////////////////////////////////////////////////////////
   // (4) Prepare the output directory and load previous state
@@ -627,6 +628,7 @@ static auto index_main(const std::string_view &program,
   /////////////////////////////////////////////////////////////////////////////
 
   sourcemeta::one::Resolver resolver{configuration.url};
+  resolver.track_resolve_targets(std::move(resolve_targets));
   resolver.reserve(detected_schemas.size());
 
   // Phase 1: populate resolver from cache for unchanged source files.
@@ -662,45 +664,88 @@ static auto index_main(const std::string_view &program,
     }
   }
 
-  // Phase 2: resolve uncached schemas and commit to cache
-  sourcemeta::core::parallel_for_each(
-      uncached_schemas.begin(), uncached_schemas.end(),
-      [&resolver, &mutex, &entries, &uncached_schemas,
-       &app](const auto &detected_ref, const auto threads, const auto cursor) {
-        const auto &detected{detected_ref.get()};
-        print_progress(threads, "Resolving",
-                       (detected.collection_relative_path /
-                        detected.path.lexically_relative(
-                            detected.collection.get().absolute_path))
-                           .string(),
-                       cursor, uncached_schemas.size());
-        const auto result{resolver.add(detected.collection_relative_path,
-                                       detected.collection.get(), detected.path,
-                                       detected.mtime)};
+  // Phase 2: resolve uncached schemas and commit to cache.
+  //
+  // What a schema declares as its identifier is introduced by a keyword that
+  // only its dialect names, so a schema naming a dialect this catalog itself
+  // holds cannot settle its identity until that dialect is registered. A pass
+  // that cannot settle one therefore registers nothing for it and leaves it
+  // for the next pass, rather than taking the identifier its path implies and
+  // making what the registry serves depend on the order files arrived in.
+  //
+  // Every pass registers at least one more schema or none at all, so a chain
+  // of dialects settles in as many passes as it is deep, and a pass that
+  // settles nothing is the end of it: whatever is left names a dialect this
+  // catalog does not hold, and takes the identifier its path implies on a
+  // final pass. The dialect that could not be resolved is reported further
+  // along, where it is the reference to it that fails rather than the identity
+  std::vector<std::reference_wrapper<const DetectedSchema>> deferred_schemas;
+  auto unresolved_dialect{sourcemeta::one::UnresolvedDialect::Withhold};
+  while (!uncached_schemas.empty()) {
+    deferred_schemas.clear();
+    sourcemeta::core::parallel_for_each(
+        uncached_schemas.begin(), uncached_schemas.end(),
+        [&resolver, &mutex, &entries, &uncached_schemas, &deferred_schemas,
+         unresolved_dialect, &app](const auto &detected_ref, const auto threads,
+                                   const auto cursor) {
+          const auto &detected{detected_ref.get()};
+          print_progress(threads, "Resolving",
+                         (detected.collection_relative_path /
+                          detected.path.lexically_relative(
+                              detected.collection.get().absolute_path))
+                             .string(),
+                         cursor, uncached_schemas.size());
 
-        {
-          const auto &resolved{result.second.get()};
-          const std::scoped_lock lock{mutex};
-          entries.commit(detected.path.native(),
-                         sourcemeta::one::BuildState::ResolverEntry{
-                             .file_mark = detected.mtime,
-                             .new_identifier = std::string{result.first.get()},
-                             .original_identifier =
-                                 std::string{resolved.original_identifier},
-                             .dialect = std::string{resolved.dialect},
-                             .relative_path = resolved.relative_path.string(),
-                             .vocabularies = resolved.vocabularies,
-                             .kind = resolved.kind});
-        }
+          std::optional<sourcemeta::one::Resolver::Result> result;
+          try {
+            result.emplace(resolver.add(
+                detected.collection_relative_path, detected.collection.get(),
+                detected.path, detected.mtime, unresolved_dialect));
+          } catch (const sourcemeta::core::SchemaResolutionError &) {
+            // A pass that already had the fallback to give has no later pass
+            // to hand this to, so what it still could not resolve is reported
+            // rather than held back for a pass that would never come
+            if (unresolved_dialect !=
+                sourcemeta::one::UnresolvedDialect::Withhold) {
+              throw;
+            }
 
-        if (app.contains("verbose")) {
-          const std::scoped_lock lock{mutex};
-          std::println(stderr, "{} => {}",
-                       result.second.get().original_identifier,
-                       result.first.get());
-        }
-      },
-      concurrency);
+            const std::scoped_lock lock{mutex};
+            deferred_schemas.emplace_back(detected);
+            return;
+          }
+
+          {
+            const auto &resolved{result.value().second.get()};
+            const std::scoped_lock lock{mutex};
+            entries.commit(
+                detected.path.native(),
+                sourcemeta::one::BuildState::ResolverEntry{
+                    .file_mark = detected.mtime,
+                    .new_identifier = std::string{result.value().first.get()},
+                    .original_identifier =
+                        std::string{resolved.original_identifier},
+                    .dialect = std::string{resolved.dialect},
+                    .relative_path = resolved.relative_path.string(),
+                    .vocabularies = resolved.vocabularies,
+                    .kind = resolved.kind});
+          }
+
+          if (app.contains("verbose")) {
+            const std::scoped_lock lock{mutex};
+            std::println(stderr, "{} => {}",
+                         result.value().second.get().original_identifier,
+                         result.value().first.get());
+          }
+        },
+        concurrency);
+
+    if (deferred_schemas.size() == uncached_schemas.size()) {
+      unresolved_dialect = sourcemeta::one::UnresolvedDialect::Fallback;
+    }
+
+    uncached_schemas = std::move(deferred_schemas);
+  }
 
   PROFILE_END(profiling, "Resolve");
 

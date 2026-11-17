@@ -9,6 +9,7 @@
 
 #include <sourcemeta/one/resolver_error.h>
 
+#include <cstdint>    // std::uint8_t
 #include <filesystem> // std::filesystem::path, std::filesystem::file_time_type
 #include <functional> // std::function, std::reference_wrapper
 #include <optional>   // std::optional
@@ -20,10 +21,27 @@
 
 namespace sourcemeta::one {
 
+// Which file each routed URI was settled on, for the targets a collection
+// names by file. Settling happens before anything is indexed, so the dialect a
+// target is written against is resolvable only if it is an official one, and
+// what the registry ends up serving that target as is not yet known
+using ResolveTargets =
+    std::unordered_map<std::filesystem::path, sourcemeta::core::JSON::String>;
+
 // A collection names the schemas it routes references to by file, the way the
 // manifest format does everywhere else. Every such target is replaced here with
 // the URI the registry serves that file under, before the catalog is indexed
-auto rebase_resolve_targets(Configuration &configuration) -> void;
+auto rebase_resolve_targets(Configuration &configuration) -> ResolveTargets;
+
+// What settling an identity does when the dialect a schema names is nothing
+// this catalog can resolve yet. Registering a dialect is what makes it
+// resolvable, so a schema naming one this catalog holds answers the question
+// differently once that dialect is in, and taking the identifier its path
+// implies before then is what makes the answer depend on the order files
+// happened to arrive in. A caller that can register more schemas and ask again
+// withholds that fallback, and allows it on a pass where nothing is left to
+// register and the path is the only answer there is
+enum class UnresolvedDialect : std::uint8_t { Withhold, Fallback };
 
 class Resolver {
 public:
@@ -79,12 +97,28 @@ public:
       std::pair<std::reference_wrapper<const sourcemeta::core::JSON::String>,
                 std::reference_wrapper<const Entry>>;
 
+  // Throws sourcemeta::core::SchemaResolutionError without registering
+  // anything when the schema names a dialect this catalog cannot resolve yet
+  // and the caller withheld the fallback, so that the caller may register the
+  // rest of the catalog and ask again. A caller with nothing left to register
+  // has no second answer to wait for, which is why the fallback is what asking
+  // once gets
   auto add(const std::filesystem::path &collection_relative_path,
            const Configuration::Collection &collection,
            const std::filesystem::path &path,
-           const std::filesystem::file_time_type mtime) -> Result;
+           const std::filesystem::file_time_type mtime,
+           UnresolvedDialect unresolved_dialect = UnresolvedDialect::Fallback)
+      -> Result;
 
   auto emplace(std::string new_identifier, Entry entry) -> void;
+
+  // What the collections route by file, so that a target the registry ends up
+  // serving under something other than the URI routing was settled on is
+  // still reachable by that URI. Settled before anything is indexed, which is
+  // why routing cannot be held to what a target turns out to declare, and why
+  // this has to be told rather than worked out. Call before registering
+  // anything, as nothing reads it under a lock
+  auto track_resolve_targets(ResolveTargets targets) -> void;
 
   using Views = std::unordered_map<sourcemeta::core::JSON::String, Entry>;
 
@@ -119,6 +153,12 @@ private:
                    std::filesystem::file_time_type mtime,
                    const sourcemeta::core::JSON &document) -> Result;
 
+  // Note the URI a collection routes to this file, where it is not already
+  // the one the file came to be served under
+  auto alias_resolve_target(const std::filesystem::path &path,
+                            const sourcemeta::core::JSON::String &served)
+      -> void;
+
   Views views_;
   // Resolution is a const operation that runs concurrently with the
   // writers that commit cached materialisation paths, so readers must
@@ -126,6 +166,16 @@ private:
   mutable std::shared_mutex mutex_;
   std::string_view server_url_;
   sourcemeta::core::URI server_uri_;
+
+  // Settled before anything is registered and never written again, so
+  // resolution reads it without taking the lock that guards the views
+  ResolveTargets resolve_targets_;
+  // What routing was settled on, for the targets that came to be served
+  // under something else. Guarded alongside the views, as registering a
+  // leaf is what fills it
+  std::unordered_map<sourcemeta::core::JSON::String,
+                     sourcemeta::core::JSON::String>
+      resolve_aliases_;
 
   // Schemas that act as meta-schemas of other schemas get resolved over
   // and over again during indexing (i.e. for every schema that uses them),
