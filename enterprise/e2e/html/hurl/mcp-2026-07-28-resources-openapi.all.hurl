@@ -187,8 +187,8 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/open
         "discriminator": {
           "propertyName": "kind",
           "mapping": {
-            "sibling": "./object",
-            "nested": "bare/01",
+            "sibling": "{{base}}/test/object",
+            "nested": "{{base}}/test/bare/01",
             "dog": "Dog"
           }
         }

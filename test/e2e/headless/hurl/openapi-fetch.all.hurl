@@ -575,7 +575,7 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/sche
         "discriminator": {
           "propertyName": "kind",
           "mapping": {
-            "text": "./string",
+            "text": "{{base}}/test/schemas/string",
             "dog": "Dog",
             "anchored": "#Dog"
           }
@@ -773,7 +773,7 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/sche
         "discriminator": {
           "propertyName": "kind",
           "mapping": {
-            "name": "./string",
+            "name": "{{base}}/test/schemas/string",
             "dog": "Dog"
           }
         }
