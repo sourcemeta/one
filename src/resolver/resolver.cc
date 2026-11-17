@@ -437,7 +437,8 @@ static auto serves(const sourcemeta::one::Configuration::Collection &collection,
 
 namespace sourcemeta::one {
 
-auto rebase_resolve_targets(Configuration &configuration) -> void {
+auto rebase_resolve_targets(Configuration &configuration) -> ResolveTargets {
+  ResolveTargets targets;
   const sourcemeta::core::URI server{configuration.url};
   for (auto &entry : configuration.entries) {
     auto *collection{std::get_if<Configuration::Collection>(&entry.second)};
@@ -505,23 +506,59 @@ auto rebase_resolve_targets(Configuration &configuration) -> void {
         throw ResolverTargetNotASchemaError(declared_path, pair.first, target);
       }
 
+      // Nothing is indexed yet at this point, so the only dialects there are
+      // to resolve are the official ones. A target written against a dialect
+      // of the catalog itself therefore settles on the identifier its path
+      // implies, and which file it named is recorded so that routing can be
+      // corrected once the catalog knows what it serves that file as
       result.emplace(pair.first,
                      sourcemeta::core::openapi_is_document(contents)
                          ? openapi_identity(*owner, *owner_location, target,
                                             contents, server)
                                .served
-                         // Nothing is indexed yet at this point, so the only
-                         // dialects there are to resolve are the official ones,
-                         // and a target written against a dialect of the
-                         // catalog itself has no later pass to wait for
                          : schema_identity(*owner, *owner_location, target,
                                            contents,
                                            sourcemeta::core::schema_resolver,
                                            server, UnresolvedDialect::Fallback)
                                .served);
+      targets.push_back(
+          {.location = entry.first, .key = pair.first, .path = target});
     }
 
     collection->resolve = std::move(result);
+  }
+
+  return targets;
+}
+
+auto settle_resolve_targets(Configuration &configuration,
+                            const Resolver &resolver,
+                            const ResolveTargets &targets) -> void {
+  if (targets.empty()) {
+    return;
+  }
+
+  // What the catalog came to serve each file as, which is the question routing
+  // had no way to ask before anything was registered
+  std::unordered_map<std::filesystem::path, sourcemeta::core::JSON::String>
+      served;
+  served.reserve(resolver.size());
+  for (const auto &view : resolver) {
+    served.emplace(view.second.path, view.first);
+  }
+
+  for (const auto &target : targets) {
+    const auto match{served.find(target.path)};
+    // A target the catalog never registered is one whose collection does not
+    // index it, which is refused where routing was settled rather than here
+    if (match == served.cend()) {
+      continue;
+    }
+
+    auto *collection{std::get_if<Configuration::Collection>(
+        &configuration.entries.at(target.location))};
+    assert(collection != nullptr);
+    collection->resolve.insert_or_assign(target.key, match->second);
   }
 }
 

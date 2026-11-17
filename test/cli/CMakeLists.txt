@@ -156,6 +156,7 @@ if(ONE_INDEX)
   sourcemeta_one_test_cli(common index output-help-skip-banner)
   sourcemeta_one_test_cli(common index output-metaschema-identity)
   sourcemeta_one_test_cli(common index output-resolve-schema)
+  sourcemeta_one_test_cli(common index output-resolve-target-identity)
   sourcemeta_one_test_cli(common index output-resolve-schema-traversal)
 
   sourcemeta_one_test_cli_shell(common index rebuild-corrupt-state)

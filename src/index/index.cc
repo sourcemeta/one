@@ -451,7 +451,8 @@ static auto index_main(const std::string_view &program,
 
   // Resolving a single URI reads the collection a schema lives in, and never
   // the mappings, so this stays out of the way of that lookup
-  sourcemeta::one::rebase_resolve_targets(configuration);
+  const auto resolve_targets{
+      sourcemeta::one::rebase_resolve_targets(configuration)};
 
   /////////////////////////////////////////////////////////////////////////////
   // (4) Prepare the output directory and load previous state
@@ -745,6 +746,12 @@ static auto index_main(const std::string_view &program,
 
     uncached_schemas = std::move(deferred_schemas);
   }
+
+  // Routing was settled before anything was registered, so what the catalog
+  // serves each routed file as is only known now. Every reference naming a
+  // routed target is rewritten against those mappings further along
+  sourcemeta::one::settle_resolve_targets(configuration, resolver,
+                                          resolve_targets);
 
   PROFILE_END(profiling, "Resolve");
 

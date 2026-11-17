@@ -21,10 +21,23 @@
 
 namespace sourcemeta::one {
 
+// A target a collection names by file, and the file it names. What the registry
+// serves that file as depends on the dialect it is written against, which
+// nothing can resolve before the catalog is indexed, so routing settles on the
+// identifier the file's path implies and is corrected once the catalog can
+// answer
+struct ResolveTarget {
+  std::filesystem::path location;
+  sourcemeta::core::JSON::String key;
+  std::filesystem::path path;
+};
+
+using ResolveTargets = std::vector<ResolveTarget>;
+
 // A collection names the schemas it routes references to by file, the way the
 // manifest format does everywhere else. Every such target is replaced here with
 // the URI the registry serves that file under, before the catalog is indexed
-auto rebase_resolve_targets(Configuration &configuration) -> void;
+auto rebase_resolve_targets(Configuration &configuration) -> ResolveTargets;
 
 // What settling an identity does when the dialect a schema names is nothing
 // this catalog can resolve yet. Registering a dialect is what makes it
@@ -166,6 +179,14 @@ private:
                                 std::optional<sourcemeta::core::JSON>>>
       dialects_;
 };
+
+// Correct what routing was settled on, now that the catalog knows what it
+// serves each routed file as. Every reference naming a routed target is
+// rewritten against these mappings, so this has to run once everything is
+// registered and before anything is written out
+auto settle_resolve_targets(Configuration &configuration,
+                            const Resolver &resolver,
+                            const ResolveTargets &targets) -> void;
 
 } // namespace sourcemeta::one
 
