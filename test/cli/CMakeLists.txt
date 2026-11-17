@@ -163,6 +163,7 @@ if(ONE_INDEX)
   sourcemeta_one_test_cli_shell(common index rebuild-corrupt-state)
   sourcemeta_one_test_cli_shell(common index rebuild-dependents-many)
   sourcemeta_one_test_cli(common index rebuild-fail-dependents-remove-referenced-schema)
+  sourcemeta_one_test_cli(common index rebuild-metaschema-identity-keyword)
   sourcemeta_one_test_cli(common index rebuild-modify-cache)
   sourcemeta_one_test_cli_shell(common index rebuild-search-index-nested)
 

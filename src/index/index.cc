@@ -40,6 +40,7 @@
 #include <sstream>       // std::ostringstream
 #include <string>        // std::string
 #include <string_view>   // std::string_view
+#include <unordered_map> // std::unordered_map
 #include <unordered_set> // std::unordered_set
 #include <vector>        // std::vector
 
@@ -637,11 +638,68 @@ static auto index_main(const std::string_view &program,
   // identifiers and paths may no longer be valid
   const auto incremental{raw_configuration == current_configuration &&
                          current_version == this_version};
-  std::vector<std::reference_wrapper<const DetectedSchema>> uncached_schemas;
+  // What the cache has to say about each detected schema, before deciding
+  // which of those answers still stand
+  std::vector<const sourcemeta::one::BuildState::ResolverEntry *>
+      cached_entries;
+  cached_entries.reserve(detected_schemas.size());
   for (const auto &detected : detected_schemas) {
-    const auto *cached{
+    cached_entries.push_back(
         incremental ? entries.resolve(detected.path.native(), detected.mtime)
-                    : nullptr};
+                    : nullptr);
+  }
+
+  // Which keyword introduces an identifier is what a schema's dialect says, so
+  // an answer settled against a dialect that has since changed is no answer at
+  // all, however untouched the file that gave it. A dialect this catalog holds
+  // is one of these very files, so a cached answer stands only while the
+  // answer for the file serving its dialect stands too, and a chain of
+  // dialects settles by letting each one that falls take its dependants with
+  // it. An official dialect, and a leaf that carries none, rest on nothing
+  // here
+  std::unordered_map<std::string_view, std::size_t> providers;
+  std::unordered_map<std::string_view, std::vector<std::size_t>> dependants;
+  for (std::size_t index = 0; index < cached_entries.size(); ++index) {
+    const auto *cached{cached_entries[index]};
+    if (cached == nullptr) {
+      continue;
+    }
+
+    providers.emplace(cached->new_identifier, index);
+    if (!cached->dialect.empty() &&
+        !sourcemeta::core::schema_is_known(cached->dialect)) {
+      dependants[cached->dialect].push_back(index);
+    }
+  }
+
+  std::vector<std::size_t> falling;
+  for (const auto &dialect : dependants) {
+    if (!providers.contains(dialect.first)) {
+      falling.insert(falling.cend(), dialect.second.cbegin(),
+                     dialect.second.cend());
+    }
+  }
+
+  while (!falling.empty()) {
+    const auto index{falling.back()};
+    falling.pop_back();
+    if (cached_entries[index] == nullptr) {
+      continue;
+    }
+
+    const std::string_view identity{cached_entries[index]->new_identifier};
+    cached_entries[index] = nullptr;
+    const auto match{dependants.find(identity)};
+    if (match != dependants.cend()) {
+      falling.insert(falling.cend(), match->second.cbegin(),
+                     match->second.cend());
+    }
+  }
+
+  std::vector<std::reference_wrapper<const DetectedSchema>> uncached_schemas;
+  for (std::size_t index = 0; index < detected_schemas.size(); ++index) {
+    const auto &detected{detected_schemas[index]};
+    const auto *cached{cached_entries[index]};
     if (cached != nullptr) {
       const auto &collection{detected.collection.get()};
       resolver.emplace(
