@@ -4,9 +4,54 @@
     "title": "Split",
     "version": "1.0.0"
   },
+  "security": [
+    {
+      "https://example.com/schemas/openapi-split-shared#/components/securitySchemes/Key": []
+    }
+  ],
   "paths": {
     "/pets": {
       "$ref": "https://example.com/schemas/openapi-split-shared#/components/pathItems/Pets"
+    },
+    "/dogs": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "https://example.com/schemas/openapi-split-shared#/components/parameters/Page"
+          }
+        ],
+        "requestBody": {
+          "$ref": "https://example.com/schemas/openapi-split-shared#/components/requestBodies/NewPet"
+        },
+        "responses": {
+          "404": {
+            "$ref": "https://example.com/schemas/openapi-split-shared#/components/responses/NotFound"
+          },
+          "200": {
+            "description": "Every dog",
+            "headers": {
+              "X-Limit": {
+                "$ref": "https://example.com/schemas/openapi-split-shared#/components/headers/Limit"
+              }
+            },
+            "content": {
+              "application/json": {
+                "$ref": "https://example.com/schemas/openapi-split-shared#/components/mediaTypes/Json"
+              }
+            },
+            "links": {
+              "self": {
+                "$ref": "https://example.com/schemas/openapi-split-shared#/components/links/Self"
+              }
+            }
+          }
+        },
+        "callbacks": {
+          "onData": {
+            "$ref": "https://example.com/schemas/openapi-split-shared#/components/callbacks/OnData"
+          }
+        }
+      }
     }
   },
   "components": {

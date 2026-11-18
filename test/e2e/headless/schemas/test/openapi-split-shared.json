@@ -17,6 +17,71 @@
         }
       }
     },
+    "parameters": {
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "schema": {
+          "type": "integer"
+        }
+      }
+    },
+    "requestBodies": {
+      "NewPet": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "NotFound": {
+        "description": "Missing"
+      }
+    },
+    "headers": {
+      "Limit": {
+        "description": "How many",
+        "schema": {
+          "type": "integer"
+        }
+      }
+    },
+    "mediaTypes": {
+      "Json": {
+        "schema": {
+          "type": "object"
+        }
+      }
+    },
+    "links": {
+      "Self": {
+        "operationId": "listSharedPets"
+      }
+    },
+    "callbacks": {
+      "OnData": {
+        "{$request.query.url}": {
+          "post": {
+            "responses": {
+              "200": {
+                "description": "Taken"
+              }
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "Key": {
+        "type": "apiKey",
+        "name": "key",
+        "in": "header"
+      }
+    },
     "schemas": {
       "Pet": {
         "type": "object",

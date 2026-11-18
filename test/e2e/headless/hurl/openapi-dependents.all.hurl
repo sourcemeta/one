@@ -21,12 +21,52 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" exists
 header "Last-Modified" exists
-jsonpath "$" count == 1
+jsonpath "$" count == 9
 jsonpath "$[0].from" == "{{base}}/test/schemas/openapi-split-entry"
 jsonpath "$[0].to" == "{{base}}/test/schemas/openapi-split-shared"
-jsonpath "$[0].at" == "/paths/~1pets/$ref"
-jsonpath "$[0].kind" == "path-item"
+jsonpath "$[0].at" == "/paths/~1dogs/get/callbacks/onData/$ref"
+jsonpath "$[0].kind" == "callback"
 jsonpath "$[0].baseDialect" not exists
+jsonpath "$[1].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[1].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[1].at" == "/paths/~1dogs/get/parameters/0/$ref"
+jsonpath "$[1].kind" == "parameter"
+jsonpath "$[1].baseDialect" not exists
+jsonpath "$[2].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[2].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[2].at" == "/paths/~1dogs/get/requestBody/$ref"
+jsonpath "$[2].kind" == "request-body"
+jsonpath "$[2].baseDialect" not exists
+jsonpath "$[3].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[3].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[3].at" == "/paths/~1dogs/get/responses/200/content/application~1json/$ref"
+jsonpath "$[3].kind" == "media-type"
+jsonpath "$[3].baseDialect" not exists
+jsonpath "$[4].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[4].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[4].at" == "/paths/~1dogs/get/responses/200/headers/X-Limit/$ref"
+jsonpath "$[4].kind" == "header"
+jsonpath "$[4].baseDialect" not exists
+jsonpath "$[5].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[5].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[5].at" == "/paths/~1dogs/get/responses/200/links/self/$ref"
+jsonpath "$[5].kind" == "link"
+jsonpath "$[5].baseDialect" not exists
+jsonpath "$[6].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[6].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[6].at" == "/paths/~1dogs/get/responses/404/$ref"
+jsonpath "$[6].kind" == "response"
+jsonpath "$[6].baseDialect" not exists
+jsonpath "$[7].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[7].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[7].at" == "/paths/~1pets/$ref"
+jsonpath "$[7].kind" == "path-item"
+jsonpath "$[7].baseDialect" not exists
+jsonpath "$[8].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[8].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[8].at" == "/security/0/openapi-split-shared#~1components~1securitySchemes~1Key"
+jsonpath "$[8].kind" == "security-scheme"
+jsonpath "$[8].baseDialect" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -62,12 +102,52 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" exists
 header "Last-Modified" exists
-jsonpath "$" count == 1
+jsonpath "$" count == 9
 jsonpath "$[0].from" == "{{base}}/test/schemas/openapi-split-entry"
 jsonpath "$[0].to" == "{{base}}/test/schemas/openapi-split-shared"
-jsonpath "$[0].at" == "/paths/~1pets/$ref"
-jsonpath "$[0].kind" == "path-item"
+jsonpath "$[0].at" == "/paths/~1dogs/get/callbacks/onData/$ref"
+jsonpath "$[0].kind" == "callback"
 jsonpath "$[0].baseDialect" not exists
+jsonpath "$[1].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[1].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[1].at" == "/paths/~1dogs/get/parameters/0/$ref"
+jsonpath "$[1].kind" == "parameter"
+jsonpath "$[1].baseDialect" not exists
+jsonpath "$[2].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[2].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[2].at" == "/paths/~1dogs/get/requestBody/$ref"
+jsonpath "$[2].kind" == "request-body"
+jsonpath "$[2].baseDialect" not exists
+jsonpath "$[3].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[3].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[3].at" == "/paths/~1dogs/get/responses/200/content/application~1json/$ref"
+jsonpath "$[3].kind" == "media-type"
+jsonpath "$[3].baseDialect" not exists
+jsonpath "$[4].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[4].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[4].at" == "/paths/~1dogs/get/responses/200/headers/X-Limit/$ref"
+jsonpath "$[4].kind" == "header"
+jsonpath "$[4].baseDialect" not exists
+jsonpath "$[5].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[5].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[5].at" == "/paths/~1dogs/get/responses/200/links/self/$ref"
+jsonpath "$[5].kind" == "link"
+jsonpath "$[5].baseDialect" not exists
+jsonpath "$[6].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[6].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[6].at" == "/paths/~1dogs/get/responses/404/$ref"
+jsonpath "$[6].kind" == "response"
+jsonpath "$[6].baseDialect" not exists
+jsonpath "$[7].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[7].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[7].at" == "/paths/~1pets/$ref"
+jsonpath "$[7].kind" == "path-item"
+jsonpath "$[7].baseDialect" not exists
+jsonpath "$[8].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[8].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[8].at" == "/security/0/openapi-split-shared#~1components~1securitySchemes~1Key"
+jsonpath "$[8].kind" == "security-scheme"
+jsonpath "$[8].baseDialect" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

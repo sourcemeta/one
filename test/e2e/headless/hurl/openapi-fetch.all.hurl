@@ -357,9 +357,11 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/sche
 
 # An OpenAPI description built out of several documents is served as the
 # documents it is made of, each of them reaching the others under the identity
-# this instance gives them rather than the one they came with. A Discriminator
-# Object mapping naming a schema by URI is one of those, while one naming a
-# component by name is left as it was written
+# this instance gives them rather than the one they came with. Every position
+# the specification lets a reference sit in is one of those, the key of a
+# Security Requirement Object included, and so is a Discriminator Object
+# mapping naming a schema by URI, while one naming a component by name is left
+# as it was written
 GET {{base}}/test/schemas/openapi-split-entry
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
@@ -374,15 +376,60 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" exists
-body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"http://localhost:8000/test/schemas/openapi-split-entry\",\n"
+body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/schemas/openapi-split-entry\",\n"
 {
   "openapi": "3.2.0",
-  "$self": "http://localhost:8000/test/schemas/openapi-split-entry",
+  "$self": "{{base}}/test/schemas/openapi-split-entry",
   "info": {
     "title": "Split",
     "version": "1.0.0"
   },
+  "security": [
+    {
+      "openapi-split-shared#/components/securitySchemes/Key": []
+    }
+  ],
   "paths": {
+    "/dogs": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "openapi-split-shared#/components/parameters/Page"
+          }
+        ],
+        "requestBody": {
+          "$ref": "openapi-split-shared#/components/requestBodies/NewPet"
+        },
+        "responses": {
+          "200": {
+            "description": "Every dog",
+            "headers": {
+              "X-Limit": {
+                "$ref": "openapi-split-shared#/components/headers/Limit"
+              }
+            },
+            "links": {
+              "self": {
+                "$ref": "openapi-split-shared#/components/links/Self"
+              }
+            },
+            "content": {
+              "application/json": {
+                "$ref": "openapi-split-shared#/components/mediaTypes/Json"
+              }
+            }
+          },
+          "404": {
+            "$ref": "openapi-split-shared#/components/responses/NotFound"
+          }
+        },
+        "callbacks": {
+          "onData": {
+            "$ref": "openapi-split-shared#/components/callbacks/OnData"
+          }
+        }
+      }
+    },
     "/pets": {
       "$ref": "openapi-split-shared#/components/pathItems/Pets"
     }
@@ -434,15 +481,80 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" exists
-body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"http://localhost:8000/test/schemas/openapi-split-shared\",\n"
+body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/schemas/openapi-split-shared\",\n"
 {
   "openapi": "3.2.0",
-  "$self": "http://localhost:8000/test/schemas/openapi-split-shared",
+  "$self": "{{base}}/test/schemas/openapi-split-shared",
   "info": {
     "title": "Shared",
     "version": "1.0.0"
   },
   "components": {
+    "responses": {
+      "NotFound": {
+        "description": "Missing"
+      }
+    },
+    "parameters": {
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "schema": {
+          "type": "integer"
+        }
+      }
+    },
+    "requestBodies": {
+      "NewPet": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "mediaTypes": {
+      "Json": {
+        "schema": {
+          "type": "object"
+        }
+      }
+    },
+    "headers": {
+      "Limit": {
+        "description": "How many",
+        "schema": {
+          "type": "integer"
+        }
+      }
+    },
+    "securitySchemes": {
+      "Key": {
+        "type": "apiKey",
+        "name": "key",
+        "in": "header"
+      }
+    },
+    "links": {
+      "Self": {
+        "operationId": "listSharedPets"
+      }
+    },
+    "callbacks": {
+      "OnData": {
+        "{$request.query.url}": {
+          "post": {
+            "responses": {
+              "200": {
+                "description": "Taken"
+              }
+            }
+          }
+        }
+      }
+    },
     "pathItems": {
       "Pets": {
         "get": {
@@ -813,9 +925,11 @@ body == "{{baseline_body}}"
 
 # A description built out of several documents bundles into one, with what it
 # reached landing in its own Components Object and every reference naming it
-# there. A Discriminator Object mapping that named a schema by URI names the
-# component it became, and one that named a component by name is left as it
-# was written
+# there, whichever position the reference sat in. The key of a Security
+# Requirement Object becomes the name of the scheme it brought in, as that key
+# is the member the scopes sit under rather than a value of its own. A
+# Discriminator Object mapping that named a schema by URI names the component
+# it became, and one that named a component by name is left as it was written
 GET {{base}}/test/schemas/openapi-split-entry?bundle
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
@@ -838,12 +952,122 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/sche
     "title": "Split",
     "version": "1.0.0"
   },
+  "security": [
+    {
+      "Key": []
+    }
+  ],
   "paths": {
+    "/dogs": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          }
+        ],
+        "requestBody": {
+          "$ref": "#/components/requestBodies/NewPet"
+        },
+        "responses": {
+          "200": {
+            "description": "Every dog",
+            "headers": {
+              "X-Limit": {
+                "$ref": "#/components/headers/Limit"
+              }
+            },
+            "links": {
+              "self": {
+                "$ref": "#/components/links/Self"
+              }
+            },
+            "content": {
+              "application/json": {
+                "$ref": "#/components/mediaTypes/Json"
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        },
+        "callbacks": {
+          "onData": {
+            "$ref": "#/components/callbacks/OnData"
+          }
+        }
+      }
+    },
     "/pets": {
       "$ref": "#/components/pathItems/Pets"
     }
   },
   "components": {
+    "responses": {
+      "NotFound": {
+        "description": "Missing"
+      }
+    },
+    "parameters": {
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "schema": {
+          "type": "integer"
+        }
+      }
+    },
+    "requestBodies": {
+      "NewPet": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "mediaTypes": {
+      "Json": {
+        "schema": {
+          "type": "object"
+        }
+      }
+    },
+    "headers": {
+      "Limit": {
+        "description": "How many",
+        "schema": {
+          "type": "integer"
+        }
+      }
+    },
+    "securitySchemes": {
+      "Key": {
+        "type": "apiKey",
+        "name": "key",
+        "in": "header"
+      }
+    },
+    "links": {
+      "Self": {
+        "operationId": "listSharedPets"
+      }
+    },
+    "callbacks": {
+      "OnData": {
+        "{$request.query.url}": {
+          "post": {
+            "responses": {
+              "200": {
+                "description": "Taken"
+              }
+            }
+          }
+        }
+      }
+    },
     "pathItems": {
       "Pets": {
         "get": {
@@ -930,6 +1154,71 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/sche
     "version": "1.0.0"
   },
   "components": {
+    "responses": {
+      "NotFound": {
+        "description": "Missing"
+      }
+    },
+    "parameters": {
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "schema": {
+          "type": "integer"
+        }
+      }
+    },
+    "requestBodies": {
+      "NewPet": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "mediaTypes": {
+      "Json": {
+        "schema": {
+          "type": "object"
+        }
+      }
+    },
+    "headers": {
+      "Limit": {
+        "description": "How many",
+        "schema": {
+          "type": "integer"
+        }
+      }
+    },
+    "securitySchemes": {
+      "Key": {
+        "type": "apiKey",
+        "name": "key",
+        "in": "header"
+      }
+    },
+    "links": {
+      "Self": {
+        "operationId": "listSharedPets"
+      }
+    },
+    "callbacks": {
+      "OnData": {
+        "{$request.query.url}": {
+          "post": {
+            "responses": {
+              "200": {
+                "description": "Taken"
+              }
+            }
+          }
+        }
+      }
+    },
     "pathItems": {
       "Pets": {
         "get": {
