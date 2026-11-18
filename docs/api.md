@@ -811,12 +811,8 @@ spelling it is left out, as it reaches nothing beyond that document.
 
 ### Dependents
 
-*This endpoint retrieves all direct and transitive dependents of the JSON
-Schema located at the specified `{path}` parameter. A dependent is a schema or
-an OpenAPI description that references this schema, either directly or
-indirectly through a chain of references. An OpenAPI description that
-references a schema embeds it when bundled, so a change to the schema changes
-what that description serves.*
+*This endpoint retrieves all direct and transitive dependents of the resource
+located at the specified `{path}` parameter.*
 
 ```
 GET /self/v1/api/schemas/dependents/{path}
