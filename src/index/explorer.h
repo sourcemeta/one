@@ -14,6 +14,7 @@
 #include <sourcemeta/core/jsonschema.h>
 #include <sourcemeta/core/mcp.h>
 #include <sourcemeta/core/metapack.h>
+#include <sourcemeta/core/openapi.h>
 #include <sourcemeta/core/semver.h>
 #include <sourcemeta/core/text.h>
 
@@ -159,6 +160,30 @@ struct MetapackExplorerSchemaExtension {
   std::uint16_t alert_length;
 };
 
+// What an OpenAPI description's metadata packs, which is the schema layout's
+// numbers and strings plus the three an OpenAPI description answers for and a
+// schema does not. It is a layout of its own rather than a widening of the
+// schema one, so what a schema packs does not grow by what it would never fill
+struct MetapackExplorerOpenAPIExtension {
+  MetapackLeafExtension leaf;
+  std::int64_t health;
+  std::int64_t bytes;
+  std::int64_t bytes_bundled;
+  std::int64_t dependencies;
+  std::int64_t operations;
+  MetapackVersionInfo version;
+  std::uint8_t priority;
+  std::uint8_t revision;
+  std::uint16_t path_length;
+  std::uint16_t identifier_length;
+  std::uint16_t base_dialect_length;
+  std::uint16_t dialect_length;
+  std::uint16_t title_length;
+  std::uint16_t description_length;
+  std::uint16_t alert_length;
+  std::uint16_t api_version_length;
+};
+
 struct MetapackDirectoryExtension {
   MetapackVersionInfo version;
   std::int64_t health;
@@ -245,33 +270,37 @@ static auto make_directory_extension(
   return result;
 }
 
-inline auto explorer_extension_string(const MetapackExplorerSchemaExtension *,
-                                      const std::uint8_t *base,
+// Every leaf layout lays its strings out after the struct and names their
+// lengths alike, so one reader serves each of them
+template <typename T>
+inline auto explorer_extension_string(const T *, const std::uint8_t *base,
                                       const std::size_t field_offset,
                                       const std::size_t field_length)
     -> std::string_view {
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-  return {reinterpret_cast<const char *>(
-              base + sizeof(MetapackExplorerSchemaExtension) + field_offset),
+  return {reinterpret_cast<const char *>(base + sizeof(T) + field_offset),
           field_length};
 }
 
-inline auto
-explorer_extension_path(const MetapackExplorerSchemaExtension *extension,
-                        const std::uint8_t *base) -> std::string_view {
+template <typename T>
+inline auto explorer_extension_path(const T *extension,
+                                    const std::uint8_t *base)
+    -> std::string_view {
   return explorer_extension_string(extension, base, 0, extension->path_length);
 }
 
-inline auto
-explorer_extension_identifier(const MetapackExplorerSchemaExtension *extension,
-                              const std::uint8_t *base) -> std::string_view {
+template <typename T>
+inline auto explorer_extension_identifier(const T *extension,
+                                          const std::uint8_t *base)
+    -> std::string_view {
   const std::size_t offset{extension->path_length};
   return explorer_extension_string(extension, base, offset,
                                    extension->identifier_length);
 }
 
-inline auto explorer_extension_base_dialect(
-    const MetapackExplorerSchemaExtension *extension, const std::uint8_t *base)
+template <typename T>
+inline auto explorer_extension_base_dialect(const T *extension,
+                                            const std::uint8_t *base)
     -> std::string_view {
   const std::size_t offset{static_cast<std::size_t>(extension->path_length) +
                            extension->identifier_length};
@@ -279,9 +308,10 @@ inline auto explorer_extension_base_dialect(
                                    extension->base_dialect_length);
 }
 
-inline auto
-explorer_extension_dialect(const MetapackExplorerSchemaExtension *extension,
-                           const std::uint8_t *base) -> std::string_view {
+template <typename T>
+inline auto explorer_extension_dialect(const T *extension,
+                                       const std::uint8_t *base)
+    -> std::string_view {
   const std::size_t offset{static_cast<std::size_t>(extension->path_length) +
                            extension->identifier_length +
                            extension->base_dialect_length};
@@ -289,9 +319,10 @@ explorer_extension_dialect(const MetapackExplorerSchemaExtension *extension,
                                    extension->dialect_length);
 }
 
-inline auto
-explorer_extension_title(const MetapackExplorerSchemaExtension *extension,
-                         const std::uint8_t *base) -> std::string_view {
+template <typename T>
+inline auto explorer_extension_title(const T *extension,
+                                     const std::uint8_t *base)
+    -> std::string_view {
   const std::size_t offset{static_cast<std::size_t>(extension->path_length) +
                            extension->identifier_length +
                            extension->base_dialect_length +
@@ -300,9 +331,10 @@ explorer_extension_title(const MetapackExplorerSchemaExtension *extension,
                                    extension->title_length);
 }
 
-inline auto
-explorer_extension_description(const MetapackExplorerSchemaExtension *extension,
-                               const std::uint8_t *base) -> std::string_view {
+template <typename T>
+inline auto explorer_extension_description(const T *extension,
+                                           const std::uint8_t *base)
+    -> std::string_view {
   const std::size_t offset{static_cast<std::size_t>(extension->path_length) +
                            extension->identifier_length +
                            extension->base_dialect_length +
@@ -311,9 +343,10 @@ explorer_extension_description(const MetapackExplorerSchemaExtension *extension,
                                    extension->description_length);
 }
 
-inline auto
-explorer_extension_alert(const MetapackExplorerSchemaExtension *extension,
-                         const std::uint8_t *base) -> std::string_view {
+template <typename T>
+inline auto explorer_extension_alert(const T *extension,
+                                     const std::uint8_t *base)
+    -> std::string_view {
   const std::size_t offset{static_cast<std::size_t>(extension->path_length) +
                            extension->identifier_length +
                            extension->base_dialect_length +
@@ -321,6 +354,108 @@ explorer_extension_alert(const MetapackExplorerSchemaExtension *extension,
                            extension->description_length};
   return explorer_extension_string(extension, base, offset,
                                    extension->alert_length);
+}
+
+// What a dialect rests on, which is what the document declaring that dialect
+// says of itself. An OpenAPI description declares no dialect of its own, so
+// the dialect its Schema Objects default to is the only way to its base
+static auto
+base_dialect_of(const sourcemeta::core::JSON::String &dialect,
+                sourcemeta::one::Resolver &resolver,
+                const sourcemeta::one::BuildDynamicCallback &callback)
+    -> std::string {
+  const auto document{resolver(dialect, callback)};
+  assert(document.has_value());
+  const sourcemeta::core::SchemaFrame frame{
+      sourcemeta::core::SchemaFrame::Mode::Root,
+      document.value(),
+      sourcemeta::core::schema_walker,
+      [&callback, &resolver](const auto identifier) {
+        return resolver(identifier, callback);
+      },
+      "",
+      dialect};
+  return std::format("{}", frame.root_location().value().get().base_dialect);
+}
+
+// The version the described API gives itself, which is the one string an
+// OpenAPI description packs that a schema has no field for
+inline auto explorer_extension_api_version(
+    const MetapackExplorerOpenAPIExtension *extension, const std::uint8_t *base)
+    -> std::string_view {
+  const std::size_t offset{
+      static_cast<std::size_t>(extension->path_length) +
+      extension->identifier_length + extension->base_dialect_length +
+      extension->dialect_length + extension->title_length +
+      extension->description_length + extension->alert_length};
+  return explorer_extension_string(extension, base, offset,
+                                   extension->api_version_length);
+}
+
+static auto make_explorer_openapi_extension(
+    const std::int64_t health, const std::int64_t bytes,
+    const std::int64_t bytes_bundled, const std::int64_t dependencies,
+    const std::int64_t operations, const MetapackVersionInfo &version,
+    const std::uint8_t priority,
+    const sourcemeta::core::OpenAPIVersion revision,
+    const std::string_view path, const std::string_view identifier,
+    const std::string_view base_dialect, const std::string_view dialect,
+    const std::string_view title, const std::string_view description,
+    const std::string_view alert, const std::string_view api_version)
+    -> std::vector<std::uint8_t> {
+  assert(path.size() <= std::numeric_limits<std::uint16_t>::max());
+  assert(identifier.size() <= std::numeric_limits<std::uint16_t>::max());
+  assert(base_dialect.size() <= std::numeric_limits<std::uint16_t>::max());
+  assert(dialect.size() <= std::numeric_limits<std::uint16_t>::max());
+  assert(title.size() <= std::numeric_limits<std::uint16_t>::max());
+  assert(description.size() <= std::numeric_limits<std::uint16_t>::max());
+  assert(alert.size() <= std::numeric_limits<std::uint16_t>::max());
+  assert(api_version.size() <= std::numeric_limits<std::uint16_t>::max());
+
+  const auto strings_size{
+      path.size() + identifier.size() + base_dialect.size() + dialect.size() +
+      title.size() + description.size() + alert.size() + api_version.size()};
+  std::vector<std::uint8_t> result;
+  result.resize(sizeof(MetapackExplorerOpenAPIExtension) + strings_size);
+
+  MetapackExplorerOpenAPIExtension header{};
+  header.leaf.kind = sourcemeta::one::LeafKind::OpenAPI;
+  header.health = health;
+  header.bytes = bytes;
+  header.bytes_bundled = bytes_bundled;
+  header.dependencies = dependencies;
+  header.operations = operations;
+  header.version = version;
+  header.priority = priority;
+  header.revision = static_cast<std::uint8_t>(revision);
+  header.path_length = static_cast<std::uint16_t>(path.size());
+  header.identifier_length = static_cast<std::uint16_t>(identifier.size());
+  header.base_dialect_length = static_cast<std::uint16_t>(base_dialect.size());
+  header.dialect_length = static_cast<std::uint16_t>(dialect.size());
+  header.title_length = static_cast<std::uint16_t>(title.size());
+  header.description_length = static_cast<std::uint16_t>(description.size());
+  header.alert_length = static_cast<std::uint16_t>(alert.size());
+  header.api_version_length = static_cast<std::uint16_t>(api_version.size());
+
+  auto *cursor{result.data()};
+  std::memcpy(cursor, &header, sizeof(header));
+  cursor += sizeof(header);
+
+  const auto append = [&cursor](const std::string_view string) {
+    std::memcpy(cursor, string.data(), string.size());
+    cursor += string.size();
+  };
+
+  append(path);
+  append(identifier);
+  append(base_dialect);
+  append(dialect);
+  append(title);
+  append(description);
+  append(alert);
+  append(api_version);
+
+  return result;
 }
 
 static auto make_explorer_schema_extension(
@@ -577,6 +712,157 @@ struct GenerateExplorerSchemaMetadata {
         result.at("baseDialect").to_string(), result.at("dialect").to_string(),
         extension_title, extension_description,
         result.at("alert").is_string() ? result.at("alert").to_string() : "")};
+
+    sourcemeta::core::metapack_write_json_pretty(
+        action.destination, result, "application/json",
+        sourcemeta::core::MetapackEncoding::GZIP,
+        std::span<const std::uint8_t>{extension_bytes});
+  }
+};
+
+// What an OpenAPI description answers about itself, which both the listings
+// and the metadata endpoint read
+struct GenerateOpenAPIMetadata {
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
+                      const sourcemeta::one::BuildDynamicCallback &callback,
+                      sourcemeta::one::Resolver &resolver,
+                      const sourcemeta::one::Configuration &,
+                      const sourcemeta::core::JSON &) -> void {
+    const auto &resolver_entry{resolver.entry(action.data)};
+    assert(action.dependencies.size() == 4);
+    sourcemeta::core::FileView data_view{action.dependencies.front()};
+    const auto data_parsed{sourcemeta::core::metapack_parse(data_view)};
+    assert(data_parsed.has_value());
+    const auto data_bytes{data_parsed->header->content_bytes};
+    sourcemeta::core::FileView bundle_view{action.dependencies.at(2)};
+    const auto bundle_parsed{sourcemeta::core::metapack_parse(bundle_view)};
+    assert(bundle_parsed.has_value());
+    const auto bundle_bytes{bundle_parsed->header->content_bytes};
+    const auto document_option{
+        sourcemeta::core::metapack_read_json(data_parsed.value())};
+    assert(document_option.has_value());
+    const auto &document{document_option.value()};
+
+    const sourcemeta::core::OpenAPIFrame frame{
+        document, sourcemeta::core::schema_walker,
+        [&callback, &resolver](const auto identifier) {
+          return resolver(identifier, callback);
+        },
+        action.data};
+    const auto *const root{frame.traverse(frame.base())};
+    assert(root != nullptr);
+
+    auto result{sourcemeta::core::JSON::make_object()};
+    result.assign("bytes",
+                  sourcemeta::core::JSON{static_cast<std::size_t>(data_bytes)});
+    result.assign("bytesBundled", sourcemeta::core::JSON{
+                                      static_cast<std::size_t>(bundle_bytes)});
+    result.assign("identifier",
+                  sourcemeta::core::JSON{std::string{frame.base()}});
+    result.assign("path", sourcemeta::core::JSON{
+                              "/" + resolver_entry.relative_path.string()});
+    result.assign(
+        "openapi",
+        sourcemeta::core::JSON{std::string{
+            sourcemeta::core::openapi_version_name(frame.version())}});
+
+    // The dialect a Schema Object of this description is read under unless it
+    // declares its own, which is the revision's own wherever the field a later
+    // revision reserves to override it says nothing
+    const auto &dialect{root->default_dialect};
+    result.assign("dialect", sourcemeta::core::JSON{dialect});
+    result.assign("baseDialect", sourcemeta::core::JSON{base_dialect_of(
+                                     dialect, resolver, callback)});
+
+    const auto *const info{document.try_at("info")};
+    assert(info != nullptr && info->is_object());
+    result.assign("version", info->at("version"));
+    const auto *const title{info->try_at("title")};
+    if (title != nullptr && title->is_string()) {
+      result.assign("title", sourcemeta::core::JSON{title->trim()});
+    }
+
+    // Section 4.1.1 calls the summary "a short summary of the API", which is
+    // the role a listing and the search index give this field, while the
+    // description beside it is CommonMark and conventionally long. The
+    // earliest revision reserves no summary and falls back to it
+    const auto *const summary{info->try_at("summary")};
+    const auto *const description{summary != nullptr && summary->is_string()
+                                      ? summary
+                                      : info->try_at("description")};
+    if (description != nullptr && description->is_string()) {
+      result.assign("description", sourcemeta::core::JSON{description->trim()});
+    }
+
+    // Framing, Schema Object validation against the dialect and bundling all
+    // hold before any of this is written, so there is no check left to lower
+    // this until linting arrives
+    result.assign("health", sourcemeta::core::JSON{100});
+    result.assign("operations",
+                  sourcemeta::core::to_json(frame.operations().size()));
+
+    const auto dependencies_option{
+        sourcemeta::core::metapack_read_json(action.dependencies.at(1))};
+    assert(dependencies_option.has_value());
+    result.assign("dependencies", sourcemeta::core::to_json(
+                                      dependencies_option.value().size()));
+
+    const auto &collection{*resolver_entry.collection};
+    if (collection.extra.defines("x-sourcemeta-one:alert")) {
+      assert(collection.extra.at("x-sourcemeta-one:alert").is_string());
+      result.assign("alert", collection.extra.at("x-sourcemeta-one:alert"));
+    } else {
+      result.assign("alert", sourcemeta::core::JSON{nullptr});
+    }
+
+    result.assign(
+        "priority",
+        sourcemeta::core::JSON{static_cast<sourcemeta::core::JSON::Integer>(
+            sourcemeta::one::Configuration::priority(collection))});
+    result.assign("breadcrumb",
+                  make_breadcrumb(resolver_entry.relative_path, false));
+
+    const sourcemeta::one::Authentication::Table authentication{
+        action.dependencies.at(3)};
+    result.assign("private",
+                  make_private(authentication, result.at("path").to_string()));
+
+    const auto description_name{
+        action.destination.parent_path().parent_path().filename().string()};
+    // The binary extension format stores per-field lengths as `uint16_t`, so
+    // what overflows that cap is truncated before it is packed. The full
+    // strings remain in the JSON above
+    constexpr auto MAX_EXTENSION_FIELD_LENGTH{
+        static_cast<std::size_t>(std::numeric_limits<std::uint16_t>::max())};
+    constexpr std::string_view EXTENSION_TRUNCATION_MARKER{"..."};
+    std::string extension_title{result.defines("title")
+                                    ? result.at("title").to_string()
+                                    : std::string{}};
+    sourcemeta::core::truncate(extension_title,
+                               MAX_EXTENSION_FIELD_LENGTH -
+                                   EXTENSION_TRUNCATION_MARKER.size(),
+                               EXTENSION_TRUNCATION_MARKER);
+    std::string extension_description{result.defines("description")
+                                          ? result.at("description").to_string()
+                                          : std::string{}};
+    sourcemeta::core::truncate(extension_description,
+                               MAX_EXTENSION_FIELD_LENGTH -
+                                   EXTENSION_TRUNCATION_MARKER.size(),
+                               EXTENSION_TRUNCATION_MARKER);
+    const auto extension_bytes{make_explorer_openapi_extension(
+        result.at("health").to_integer(), static_cast<std::int64_t>(data_bytes),
+        static_cast<std::int64_t>(bundle_bytes),
+        result.at("dependencies").to_integer(),
+        result.at("operations").to_integer(),
+        parse_version_info(description_name),
+        static_cast<std::uint8_t>(result.at("priority").to_integer()),
+        frame.version(), result.at("path").to_string(),
+        result.at("identifier").to_string(),
+        result.at("baseDialect").to_string(), result.at("dialect").to_string(),
+        extension_title, extension_description,
+        result.at("alert").is_string() ? result.at("alert").to_string() : "",
+        result.at("version").to_string())};
 
     sourcemeta::core::metapack_write_json_pretty(
         action.destination, result, "application/json",

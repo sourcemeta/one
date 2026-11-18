@@ -27,7 +27,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 50
-jsonpath "$.result.tools" count == 15
+jsonpath "$.result.tools" count == 16
 jsonpath "$.result.tools[0].name" == "list_directory"
 jsonpath "$.result.tools[1].name" == "get_schema_dependencies"
 jsonpath "$.result.tools[2].name" == "get_schema_dependents"
@@ -43,6 +43,7 @@ jsonpath "$.result.tools[11].name" == "playground_trace_schema"
 jsonpath "$.result.tools[12].name" == "search_schemas"
 jsonpath "$.result.tools[13].name" == "get_openapi_dependencies"
 jsonpath "$.result.tools[14].name" == "get_openapi_dependents"
+jsonpath "$.result.tools[15].name" == "get_openapi_metadata"
 # The display title is sent both on the tool and under its annotations, since
 # the revisions differ on where a client reads it from
 jsonpath "$.result.tools[0].title" == "List Directory"
@@ -239,6 +240,19 @@ jsonpath "$.result.tools[14].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[14].annotations.destructiveHint" == false
 jsonpath "$.result.tools[14].annotations.idempotentHint" == true
 jsonpath "$.result.tools[14].annotations.openWorldHint" == false
+jsonpath "$.result.tools[15].name" == "get_openapi_metadata"
+jsonpath "$.result.tools[15].title" == "Get OpenAPI Metadata"
+jsonpath "$.result.tools[15].description" == "Return navigation metadata for an OpenAPI description in the catalog, including title, description, revision, API version, byte size, operation count, dependency count, and breadcrumb path"
+jsonpath "$.result.tools[15].inputSchema.type" == "object"
+jsonpath "$.result.tools[15].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-openapi-metadata/request"
+jsonpath "$.result.tools[15].inputSchema['$comment']" == "The full input schema for this tool is published at the `$ref` URL above. A client that does not resolve it can call `resources/read` on that URL to fetch it, since this server is a JSON Schema registry and every `$ref` URL is itself reachable as an MCP resource"
+jsonpath "$.result.tools[15].outputSchema.type" == "object"
+jsonpath "$.result.tools[15].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-openapi-metadata/response"
+jsonpath "$.result.tools[15].annotations.title" == "Get OpenAPI Metadata"
+jsonpath "$.result.tools[15].annotations.readOnlyHint" == true
+jsonpath "$.result.tools[15].annotations.destructiveHint" == false
+jsonpath "$.result.tools[15].annotations.idempotentHint" == true
+jsonpath "$.result.tools[15].annotations.openWorldHint" == false
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

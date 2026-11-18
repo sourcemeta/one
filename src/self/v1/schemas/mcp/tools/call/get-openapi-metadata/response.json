@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One OpenAPI Metadata RPC Output",
+  "description": "Get metadata information about an OpenAPI description in the catalog",
+  "examples": [
+    {
+      "bytes": 2048,
+      "bytesBundled": 4096,
+      "identifier": "https://example.com/api/petstore",
+      "path": "/api/petstore",
+      "openapi": "3.1",
+      "version": "1.0.0",
+      "dialect": "https://spec.openapis.org/oas/3.1/dialect/base",
+      "baseDialect": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Petstore",
+      "description": "A sample API for managing pets",
+      "health": 100,
+      "dependencies": 3,
+      "operations": 12,
+      "priority": 50,
+      "private": false,
+      "breadcrumb": [
+        {
+          "name": "Home",
+          "path": "/"
+        }
+      ]
+    }
+  ],
+  "$ref": "../../../../api/openapi/metadata/response.json"
+}

@@ -91,12 +91,14 @@ WRITE expected.txt UNTIL EOF
 ./explorer/public/api/petstore
 ./explorer/public/api/petstore/%
 ./explorer/public/api/petstore/%/dependents.metapack
+./explorer/public/api/petstore/%/metadata.metapack
 ./explorer/public/shared
 ./explorer/public/shared/%
 ./explorer/public/shared/%/directory.metapack
 ./explorer/public/shared/common
 ./explorer/public/shared/common/%
 ./explorer/public/shared/common/%/dependents.metapack
+./explorer/public/shared/common/%/metadata.metapack
 ./routes.bin
 ./schemas
 ./schemas/api
