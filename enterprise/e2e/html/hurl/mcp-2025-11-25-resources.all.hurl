@@ -1784,7 +1784,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 40
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid resource schema URI"
+jsonpath "$.error.message" == "Invalid resource URI"
 jsonpath "$.error.data" == "URIs accepted by resources/read must not contain a fragment and may only carry optional `bundle` or `as` query parameters"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -1834,7 +1834,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 41
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid resource schema URI"
+jsonpath "$.error.message" == "Invalid resource URI"
 jsonpath "$.error.data" == "URIs accepted by resources/read must not contain a fragment and may only carry optional `bundle` or `as` query parameters"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}

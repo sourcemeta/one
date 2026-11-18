@@ -647,7 +647,7 @@ private:
       sourcemeta::core::URI request{uri};
       if (request.fragment().has_value()) {
         return sourcemeta::core::jsonrpc_make_error(
-            &request_id, -32602, "Invalid resource schema URI",
+            &request_id, -32602, "Invalid resource URI",
             sourcemeta::core::JSON{
                 "URIs accepted by resources/read must not contain a fragment "
                 "and may only carry optional `bundle` or `as` query "
@@ -665,7 +665,7 @@ private:
             static_cast<std::ptrdiff_t>(conversion_value.has_value())};
         if (std::ranges::distance(*query_view) != expected_size) {
           return sourcemeta::core::jsonrpc_make_error(
-              &request_id, -32602, "Invalid resource schema URI",
+              &request_id, -32602, "Invalid resource URI",
               sourcemeta::core::JSON{
                   "URIs accepted by resources/read must not contain a "
                   "fragment and may only carry optional `bundle` or `as` "
@@ -704,7 +704,7 @@ private:
       if (this->artifact_kind(resolution.path.value()) ==
           sourcemeta::one::LeafKind::OpenAPI) {
         return sourcemeta::core::jsonrpc_make_error(
-            &request_id, -32602, "Invalid resource schema URI",
+            &request_id, -32602, "Invalid resource URI",
             sourcemeta::core::JSON{"An OpenAPI description cannot be converted "
                                    "into a JSON Schema dialect"});
       }
@@ -719,7 +719,7 @@ private:
               *this, resolution.path.value())};
           if (served.custom) {
             return sourcemeta::core::jsonrpc_make_error(
-                &request_id, -32602, "Invalid resource schema URI",
+                &request_id, -32602, "Invalid resource URI",
                 sourcemeta::core::JSON{
                     "Schemas with custom dialects cannot be converted, as "
                     "their meta-schemas would need to be converted too"});
@@ -731,7 +731,7 @@ private:
               sourcemeta::one::conversion_applies(served.ladder.value(),
                                                   target.value())) {
             return sourcemeta::core::jsonrpc_make_error(
-                &request_id, -32602, "Invalid resource schema URI",
+                &request_id, -32602, "Invalid resource URI",
                 sourcemeta::core::JSON{
                     "Meta-schemas are not converted, as restating the dialect "
                     "that a meta-schema describes is not always safe"});
@@ -743,7 +743,7 @@ private:
 
       if (!target.has_value() || !resolution.path.has_value()) {
         return sourcemeta::core::jsonrpc_make_error(
-            &request_id, -32602, "Invalid resource schema URI",
+            &request_id, -32602, "Invalid resource URI",
             sourcemeta::core::JSON{
                 "The schema cannot be converted into this dialect"});
       }

@@ -16,7 +16,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.type" == "urn:sourcemeta:one:invalid-schema-uri"
 jsonpath "$.title" == "Bad Request"
 jsonpath "$.status" == 400
-jsonpath "$.detail" == "The schema URI must not contain a fragment"
+jsonpath "$.detail" == "The URI must not contain a fragment"
 
 GET {{base}}/self/v1/api/schemas/locations/test/object%23meta
 HTTP 400
@@ -34,7 +34,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.type" == "urn:sourcemeta:one:invalid-schema-uri"
 jsonpath "$.title" == "Bad Request"
 jsonpath "$.status" == 400
-jsonpath "$.detail" == "The schema URI must not contain a fragment"
+jsonpath "$.detail" == "The URI must not contain a fragment"
 
 GET {{base}}/self/v1/api/schemas/positions/test/object%23meta
 HTTP 400
@@ -52,7 +52,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.type" == "urn:sourcemeta:one:invalid-schema-uri"
 jsonpath "$.title" == "Bad Request"
 jsonpath "$.status" == 400
-jsonpath "$.detail" == "The schema URI must not contain a fragment"
+jsonpath "$.detail" == "The URI must not contain a fragment"
 
 GET {{base}}/self/v1/api/schemas/stats/test/object%23meta
 HTTP 400
@@ -70,7 +70,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.type" == "urn:sourcemeta:one:invalid-schema-uri"
 jsonpath "$.title" == "Bad Request"
 jsonpath "$.status" == 400
-jsonpath "$.detail" == "The schema URI must not contain a fragment"
+jsonpath "$.detail" == "The URI must not contain a fragment"
 
 GET {{base}}/self/v1/api/schemas/health/test/object%23meta
 HTTP 400
@@ -88,7 +88,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.type" == "urn:sourcemeta:one:invalid-schema-uri"
 jsonpath "$.title" == "Bad Request"
 jsonpath "$.status" == 400
-jsonpath "$.detail" == "The schema URI must not contain a fragment"
+jsonpath "$.detail" == "The URI must not contain a fragment"
 
 GET {{base}}/self/v1/api/schemas/dependencies/test/object%23meta
 HTTP 400
@@ -106,7 +106,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.type" == "urn:sourcemeta:one:invalid-schema-uri"
 jsonpath "$.title" == "Bad Request"
 jsonpath "$.status" == 400
-jsonpath "$.detail" == "The schema URI must not contain a fragment"
+jsonpath "$.detail" == "The URI must not contain a fragment"
 
 GET {{base}}/self/v1/api/schemas/dependents/test/object%23meta
 HTTP 400
@@ -124,7 +124,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.type" == "urn:sourcemeta:one:invalid-schema-uri"
 jsonpath "$.title" == "Bad Request"
 jsonpath "$.status" == 400
-jsonpath "$.detail" == "The schema URI must not contain a fragment"
+jsonpath "$.detail" == "The URI must not contain a fragment"
 
 POST {{base}}/self/v1/api/schemas/evaluate/test/object%23meta
 Content-Type: application/json
@@ -146,7 +146,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.type" == "urn:sourcemeta:one:invalid-schema-uri"
 jsonpath "$.title" == "Bad Request"
 jsonpath "$.status" == 400
-jsonpath "$.detail" == "The schema URI must not contain a fragment"
+jsonpath "$.detail" == "The URI must not contain a fragment"
 
 POST {{base}}/self/v1/api/schemas/trace/test/object%23meta
 Content-Type: application/json
@@ -168,7 +168,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.type" == "urn:sourcemeta:one:invalid-schema-uri"
 jsonpath "$.title" == "Bad Request"
 jsonpath "$.status" == 400
-jsonpath "$.detail" == "The schema URI must not contain a fragment"
+jsonpath "$.detail" == "The URI must not contain a fragment"
 
 GET {{base}}/test/object%23meta
 HTTP 400
@@ -186,7 +186,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.type" == "urn:sourcemeta:one:invalid-schema-uri"
 jsonpath "$.title" == "Bad Request"
 jsonpath "$.status" == 400
-jsonpath "$.detail" == "The schema URI must not contain a fragment"
+jsonpath "$.detail" == "The URI must not contain a fragment"
 
 # A CORS preflight to a fragment-bearing path still returns the full set of
 # preflight headers, so the browser does not see this as a CORS failure.

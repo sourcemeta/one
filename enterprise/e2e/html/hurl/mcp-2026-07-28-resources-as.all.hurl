@@ -190,7 +190,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 902
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid resource schema URI"
+jsonpath "$.error.message" == "Invalid resource URI"
 jsonpath "$.error.data" == "The schema cannot be converted into this dialect"
 jsonpath "$.result" not exists
 
@@ -257,7 +257,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 903
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid resource schema URI"
+jsonpath "$.error.message" == "Invalid resource URI"
 jsonpath "$.error.data" == "The schema cannot be converted into this dialect"
 jsonpath "$.result" not exists
 
@@ -324,7 +324,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 904
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid resource schema URI"
+jsonpath "$.error.message" == "Invalid resource URI"
 jsonpath "$.error.data" == "The schema cannot be converted into this dialect"
 jsonpath "$.result" not exists
 
@@ -531,7 +531,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 907
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid resource schema URI"
+jsonpath "$.error.message" == "Invalid resource URI"
 jsonpath "$.error.data" == "URIs accepted by resources/read must not contain a fragment and may only carry optional `bundle` or `as` query parameters"
 jsonpath "$.result" not exists
 
@@ -662,7 +662,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 909
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid resource schema URI"
+jsonpath "$.error.message" == "Invalid resource URI"
 jsonpath "$.error.data" == "An OpenAPI description cannot be converted into a JSON Schema dialect"
 jsonpath "$.result" not exists
 

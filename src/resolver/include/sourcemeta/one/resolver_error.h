@@ -10,11 +10,13 @@
 
 namespace sourcemeta::one {
 
-class ResolverNotASchemaError : public sourcemeta::core::Error {
+// What a collection serves is read as whichever kind of resource it turns out
+// to be, and nothing of any kind can be made of a file that holds no object,
+// so this says what no resource may be rather than naming the kinds
+class ResolverNotAResourceError : public sourcemeta::core::Error {
 public:
-  ResolverNotASchemaError(std::filesystem::path path)
-      : sourcemeta::core::
-            Error{"The file does not contain a valid JSON Schema"},
+  ResolverNotAResourceError(std::filesystem::path path)
+      : sourcemeta::core::Error{"The file does not contain a valid resource"},
         path_{std::move(path)} {}
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
@@ -128,7 +130,7 @@ public:
   ResolverOutsideBaseError(std::filesystem::path path,
                            sourcemeta::core::JSON::String uri,
                            sourcemeta::core::JSON::String base)
-      : sourcemeta::core::Error{"The schema identifier is not relative to the "
+      : sourcemeta::core::Error{"The identifier is not relative to the "
                                 "corresponding base"},
         path_{std::move(path)}, uri_{std::move(uri)}, base_{std::move(base)} {}
 
@@ -208,13 +210,12 @@ private:
   std::filesystem::path target_;
 };
 
-class ResolverTargetNotASchemaError : public sourcemeta::core::Error {
+class ResolverTargetNotAResourceError : public sourcemeta::core::Error {
 public:
-  ResolverTargetNotASchemaError(std::filesystem::path path,
-                                sourcemeta::core::JSON::String uri,
-                                std::filesystem::path target)
-      : sourcemeta::core::Error{"The resolve target is not a schema this "
-                                "registry can serve"},
+  ResolverTargetNotAResourceError(std::filesystem::path path,
+                                  sourcemeta::core::JSON::String uri,
+                                  std::filesystem::path target)
+      : sourcemeta::core::Error{"The resolve target is not a valid resource"},
         path_{std::move(path)}, uri_{std::move(uri)},
         target_{std::move(target)} {}
 

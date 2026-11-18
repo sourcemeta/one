@@ -492,7 +492,8 @@ auto rebase_resolve_targets(Configuration &configuration) -> void {
       // neither of these can be routed to
       auto contents{sourcemeta::core::read_yaml_or_json(target)};
       if (!contents.is_object()) {
-        throw ResolverTargetNotASchemaError(declared_path, pair.first, target);
+        throw ResolverTargetNotAResourceError(declared_path, pair.first,
+                                              target);
       }
 
       result.emplace(
@@ -1284,7 +1285,7 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
     }
 
     if (!schema.is_object()) {
-      throw ResolverNotASchemaError(path);
+      throw ResolverNotAResourceError(path);
     }
 
     if (sourcemeta::core::openapi_is_document(schema)) {

@@ -1266,7 +1266,7 @@ TEST(non_schema_file) {
   try {
     RESOLVER_IMPORT(resolver, "example", "non-schema-array.json");
     FAIL();
-  } catch (const sourcemeta::one::ResolverNotASchemaError &error) {
+  } catch (const sourcemeta::one::ResolverNotAResourceError &error) {
     EXPECT_EQ(error.path().filename(), "non-schema-array.json");
   }
 }
