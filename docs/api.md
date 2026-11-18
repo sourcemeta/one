@@ -829,7 +829,7 @@ GET /self/v1/api/schemas/dependents/{path}
     | `/*/from` | String | Yes | The absolute URL of the schema or OpenAPI description that originates the dependency |
     | `/*/to` | String | Yes | The absolute URL of the resource being referenced |
     | `/*/at` | String | Yes | The JSON Pointer to the location where the dependency originates |
-    | `/*/kind` | String | Yes | What the resource that originates the dependency is, either `schema` or `openapi` |
+    | `/*/kind` | `schema` / `openapi` | Yes | What the resource that originates the dependency is |
     | `/*/baseDialect` | String | Only for `schema` | The absolute URI of the base dialect of the schema that originates the dependency, which an OpenAPI description does not declare |
 
 === "400"
