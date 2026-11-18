@@ -12,6 +12,7 @@
 #include <sourcemeta/one/router.h>
 
 #include <filesystem>  // std::filesystem
+#include <map>         // std::map
 #include <set>         // std::set
 #include <span>        // std::span
 #include <sstream>     // std::ostringstream
@@ -140,7 +141,15 @@ public:
     auto envelope{sourcemeta::core::JSON::make_object()};
     envelope.assign_assume_new("results", std::move(contents.value()));
 
+    // What the dependents of a schema report of every edge is which kind of
+    // resource reached it, so this reads the kinds it already carries. The
+    // reports of a description say which kind of Object each reference reaches
+    // instead, which is no claim about the resource that spelled it
+    const auto reports_resource_kind{this->metapack_ == "dependents" &&
+                                     this->kind_ ==
+                                         sourcemeta::one::LeafKind::Schema};
     std::set<std::string_view> unique_uris;
+    std::map<std::string_view, std::string_view> kinds;
     for (const auto &entry : envelope.at("results").as_array()) {
       for (const auto *const field : {"from", "to"}) {
         if (!entry.defines(field)) {
@@ -151,6 +160,11 @@ public:
           unique_uris.emplace(uri);
         }
       }
+
+      if (reports_resource_kind && entry.defines("kind")) {
+        kinds.emplace(entry.at("from").to_string(),
+                      entry.at("kind").to_string());
+      }
     }
 
     auto content{sourcemeta::core::JSON::make_array()};
@@ -159,11 +173,15 @@ public:
     content.push_back(sourcemeta::core::mcp_make_text_block(payload.str()));
     for (const auto uri : unique_uris) {
       // An edge of this report may name an OpenAPI description, which is no
-      // JSON Schema however a caller came to reach it
-      content.push_back(sourcemeta::one::mcp_schema_block(
+      // JSON Schema however a caller came to reach it. What the report does
+      // not say of a resource is asked of what this instance serves there
+      const auto known{kinds.find(uri)};
+      const auto describes_api{known == kinds.cend()
+                                   ? this->describes_api(caller, uri)
+                                   : known->second == OPENAPI_RESOURCE_KIND};
+      content.push_back(sourcemeta::one::mcp_resource_block(
           version, uri, uri.substr(this->server_uri().size()), {},
-          this->describes_api(caller, uri) ? OPENAPI_MIME_TYPE
-                                           : SCHEMA_MIME_TYPE));
+          describes_api ? OPENAPI_MIME_TYPE : SCHEMA_MIME_TYPE));
     }
 
     return sourcemeta::core::mcp_make_tool_success(
@@ -200,6 +218,7 @@ protected:
 
 private:
   static constexpr std::string_view SCHEMA_MIME_TYPE{"application/schema+json"};
+  static constexpr std::string_view OPENAPI_RESOURCE_KIND{"openapi"};
   static constexpr std::string_view OPENAPI_MIME_TYPE{
       "application/openapi+json"};
 

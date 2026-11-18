@@ -1584,6 +1584,14 @@ auto Resolver::serves_identity(
   return this->views_.contains(normalise_identifier(identifier));
 }
 
+auto Resolver::kind_of(const std::string_view identifier) const
+    -> std::optional<LeafKind> {
+  const auto result{this->views_.find(std::string{identifier})};
+  return result == this->views_.cend()
+             ? std::nullopt
+             : std::optional<LeafKind>{result->second.kind};
+}
+
 auto Resolver::dialect_of(const std::string_view identifier) const
     -> std::string_view {
   const auto result{this->views_.find(std::string{identifier})};

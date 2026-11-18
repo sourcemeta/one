@@ -664,8 +664,9 @@ struct GenerateDependents {
       object.assign("at", sourcemeta::core::JSON{pointer});
       // Which kind of resource a dependent is is what this instance serves it
       // as, rather than anything the edge that reached it looks like
-      const auto describes_api{resolver.entry(from).kind ==
-                               sourcemeta::one::LeafKind::OpenAPI};
+      const auto served{resolver.kind_of(from)};
+      assert(served.has_value());
+      const auto describes_api{served == sourcemeta::one::LeafKind::OpenAPI};
       object.assign(
           "kind", sourcemeta::core::JSON{describes_api ? "openapi" : "schema"});
       // A dialect is what a schema is written against, and a description

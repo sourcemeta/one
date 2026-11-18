@@ -129,6 +129,11 @@ public:
 
   [[nodiscard]] auto entry(std::string_view identifier) const -> const Entry &;
 
+  // Which kind of resource this instance serves the given identity as, or
+  // nothing at all for an identity it does not serve
+  [[nodiscard]] auto kind_of(std::string_view identifier) const
+      -> std::optional<LeafKind>;
+
   // The dialect this instance serves the given schema as, or nothing at all
   // for a schema it does not serve. A schema whose dialect reserves no keyword
   // to declare one carries it nowhere else

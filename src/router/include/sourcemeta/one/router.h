@@ -160,7 +160,7 @@ private:
 // A resource named as a content block. A revision that has no block type for
 // naming a resource is given the same three fields as lines instead, since
 // what reads tool output is a language model rather than a display surface
-[[nodiscard]] inline auto mcp_schema_block(
+[[nodiscard]] inline auto mcp_resource_block(
     const sourcemeta::core::MCPProtocolVersion version,
     const sourcemeta::core::JSON::StringView uri,
     const sourcemeta::core::JSON::StringView name,
