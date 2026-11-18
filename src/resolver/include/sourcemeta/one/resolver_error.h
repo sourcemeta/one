@@ -10,9 +10,8 @@
 
 namespace sourcemeta::one {
 
-// What a collection serves is read as whichever kind of resource it turns out
-// to be, and nothing of any kind can be made of a file that holds no object,
-// so this says what no resource may be rather than naming the kinds
+// A collection may serve a resource of any kind, so this message names none,
+// and a file that holds no object cannot be any of them
 class ResolverNotAResourceError : public sourcemeta::core::Error {
 public:
   ResolverNotAResourceError(std::filesystem::path path)
