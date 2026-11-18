@@ -284,6 +284,15 @@ static auto execute_plan(sourcemeta::one::BuildState &entries,
             }
 
             throw;
+          } catch (const sourcemeta::core::OpenAPIReferenceError &error) {
+            const auto *entry{
+                action.data.empty() ? nullptr : &resolver.entry(action.data)};
+            if (entry) {
+              throw sourcemeta::core::FileError<
+                  sourcemeta::core::OpenAPIReferenceError>(entry->path, error);
+            }
+
+            throw;
           } catch (const sourcemeta::core::SchemaVocabularyError &error) {
             const auto *entry{
                 action.data.empty() ? nullptr : &resolver.entry(action.data)};
@@ -1111,6 +1120,22 @@ auto main(int argc, char *argv[]) noexcept -> int {
                error.base());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::OpenAPIResolutionError &error) {
+    std::print(stderr,
+               "error: {}\n  at identifier {}\n  at location \"{}\"\n"
+               "  at base {}\n",
+               error.what(), error.identifier(),
+               sourcemeta::core::to_string(error.location()), error.base());
+    return EXIT_FAILURE;
+  } catch (
+      const sourcemeta::core::FileError<sourcemeta::core::OpenAPIReferenceError>
+          &error) {
+    std::print(stderr,
+               "error: {}\n  at path {}\n  at identifier {}\n"
+               "  at location \"{}\"\n  at base {}\n",
+               error.what(), error.path().string(), error.identifier(),
+               sourcemeta::core::to_string(error.location()), error.base());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::core::OpenAPIReferenceError &error) {
     std::print(stderr,
                "error: {}\n  at identifier {}\n  at location \"{}\"\n"
                "  at base {}\n",

@@ -699,6 +699,16 @@ private:
     }
 
     if (conversion.has_value()) {
+      // A conversion names a JSON Schema dialect, which an OpenAPI description
+      // is no candidate for however a caller came to reach it
+      if (this->artifact_kind(resolution.path.value()) ==
+          sourcemeta::one::LeafKind::OpenAPI) {
+        return sourcemeta::core::jsonrpc_make_error(
+            &request_id, -32602, "Invalid resource schema URI",
+            sourcemeta::core::JSON{"An OpenAPI description cannot be converted "
+                                   "into a JSON Schema dialect"});
+      }
+
       const auto target{sourcemeta::one::conversion_target(conversion.value())};
       if (target.has_value()) {
         auto converted{this->artifact_resolve_path(

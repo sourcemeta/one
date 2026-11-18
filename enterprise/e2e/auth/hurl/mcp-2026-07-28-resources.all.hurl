@@ -192,7 +192,7 @@ jsonpath "$.result.resources[24].description" == "The response format for the sc
 jsonpath "$.result.resources[25].uri" == "{{base}}/self/v1/schemas/mcp/error"
 jsonpath "$.result.resources[25].name" == "Sourcemeta One MCP Error Response"
 jsonpath "$.result.resources[25].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[25].size" == 11642
+jsonpath "$.result.resources[25].size" == 11870
 jsonpath "$.result.resources[25].annotations.priority" == 0.0
 jsonpath "$.result.resources[25].description" == "The error response Sourcemeta One returns when an MCP request fails. An `id` is echoed whenever the request carried a readable one, and is absent when the request was refused before one could be read"
 jsonpath "$.result.resources[26].uri" == "{{base}}/self/v1/schemas/mcp/initialize/request"
@@ -746,7 +746,7 @@ jsonpath "$.result.resources[27].description" == "The response format for the sc
 jsonpath "$.result.resources[28].uri" == "{{base}}/self/v1/schemas/mcp/error"
 jsonpath "$.result.resources[28].name" == "Sourcemeta One MCP Error Response"
 jsonpath "$.result.resources[28].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[28].size" == 11642
+jsonpath "$.result.resources[28].size" == 11870
 jsonpath "$.result.resources[28].annotations.priority" == 0.0
 jsonpath "$.result.resources[28].description" == "The error response Sourcemeta One returns when an MCP request fails. An `id` is echoed whenever the request carried a readable one, and is absent when the request was refused before one could be read"
 jsonpath "$.result.resources[29].uri" == "{{base}}/self/v1/schemas/mcp/initialize/request"
@@ -1283,7 +1283,7 @@ jsonpath "$.result.resources[25].description" == "The response format for the sc
 jsonpath "$.result.resources[26].uri" == "{{base}}/self/v1/schemas/mcp/error"
 jsonpath "$.result.resources[26].name" == "Sourcemeta One MCP Error Response"
 jsonpath "$.result.resources[26].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[26].size" == 11642
+jsonpath "$.result.resources[26].size" == 11870
 jsonpath "$.result.resources[26].annotations.priority" == 0.0
 jsonpath "$.result.resources[26].description" == "The error response Sourcemeta One returns when an MCP request fails. An `id` is echoed whenever the request carried a readable one, and is absent when the request was refused before one could be read"
 jsonpath "$.result.resources[27].uri" == "{{base}}/self/v1/schemas/mcp/initialize/request"

@@ -617,6 +617,90 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/sche
   }
 }
 
+# A description may name more than one place of a single schema it reaches,
+# and each reference is served pointing at the place it named
+GET {{base}}/test/schemas/openapi-two-positions
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/openapi+json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
+header "Link" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
+body startsWith "{\n  \"openapi\": \"3.1.1\",\n  \"info\": {\n"
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Two positions",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "Age": {
+        "$ref": "named-places#/$defs/age"
+      },
+      "Name": {
+        "$ref": "named-places#/$defs/name"
+      }
+    }
+  }
+}
+
+# Bundling that description brings the schema in once, under the identity it
+# answers to, and both references go on naming the places they named before
+GET {{base}}/test/schemas/openapi-two-positions?bundle
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/openapi+json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
+header "Link" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
+body startsWith "{\n  \"openapi\": \"3.1.1\",\n  \"info\": {\n"
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Two positions",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "Age": {
+        "$ref": "{{base}}/test/schemas/named-places#/$defs/age"
+      },
+      "Name": {
+        "$ref": "{{base}}/test/schemas/named-places#/$defs/name"
+      },
+      "named-places": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "{{base}}/test/schemas/named-places",
+        "$defs": {
+          "name": {
+            "type": "string"
+          },
+          "age": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  }
+}
+
 # The `.json` suffix names the same leaf, as it does for a schema
 GET {{base}}/test/schemas/openapi-3-0.json
 HTTP 200
@@ -760,6 +844,18 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/sche
     }
   },
   "components": {
+    "pathItems": {
+      "Pets": {
+        "get": {
+          "operationId": "listSharedPets",
+          "responses": {
+            "200": {
+              "description": "Every pet"
+            }
+          }
+        }
+      }
+    },
     "schemas": {
       "Any": {
         "oneOf": [
@@ -804,18 +900,6 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/sche
           "example_12"
         ],
         "type": "string"
-      }
-    },
-    "pathItems": {
-      "Pets": {
-        "get": {
-          "operationId": "listSharedPets",
-          "responses": {
-            "200": {
-              "description": "Every pet"
-            }
-          }
-        }
       }
     }
   }

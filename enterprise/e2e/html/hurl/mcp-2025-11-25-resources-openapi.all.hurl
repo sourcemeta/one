@@ -163,7 +163,24 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/open
     }
   },
   "components": {
+    "pathItems": {
+      "Pets": {
+        "get": {
+          "operationId": "listSharedPets",
+          "responses": {
+            "200": {
+              "description": "Every pet"
+            }
+          }
+        }
+      }
+    },
     "schemas": {
+      "01": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "{{base}}/test/bare/01",
+        "type": "string"
+      },
       "Any": {
         "oneOf": [
           {
@@ -190,11 +207,6 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/open
           }
         }
       },
-      "01": {
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "$id": "{{base}}/test/bare/01",
-        "type": "string"
-      },
       "object": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "$id": "{{base}}/test/object",
@@ -209,18 +221,6 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/open
           },
           "foo": {
             "type": "string"
-          }
-        }
-      }
-    },
-    "pathItems": {
-      "Pets": {
-        "get": {
-          "operationId": "listSharedPets",
-          "responses": {
-            "200": {
-              "description": "Every pet"
-            }
           }
         }
       }

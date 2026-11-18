@@ -113,6 +113,13 @@
           "const": {
             "code": -32602,
             "message": "Invalid resource schema URI",
+            "data": "An OpenAPI description cannot be converted into a JSON Schema dialect"
+          }
+        },
+        {
+          "const": {
+            "code": -32602,
+            "message": "Invalid resource schema URI",
             "data": "The schema cannot be converted into this dialect"
           }
         },

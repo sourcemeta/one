@@ -872,6 +872,11 @@ struct GenerateOpenAPIBundle {
         },
         {.default_base = action.data});
 
+    const sourcemeta::core::OpenAPIFrame frame{document,
+                                               sourcemeta::core::schema_walker,
+                                               schema_resolver, action.data};
+    sourcemeta::core::openapi_format(document, frame);
+
     const auto extension_bytes{sourcemeta::one::make_metapack_leaf_extension(
         sourcemeta::one::LeafKind::OpenAPI)};
     sourcemeta::core::metapack_write_json_pretty(
