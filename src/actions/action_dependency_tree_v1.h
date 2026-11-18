@@ -158,8 +158,12 @@ public:
     sourcemeta::core::prettify(envelope, payload);
     content.push_back(sourcemeta::core::mcp_make_text_block(payload.str()));
     for (const auto uri : unique_uris) {
+      // An edge of this report may name an OpenAPI description, which is no
+      // JSON Schema however a caller came to reach it
       content.push_back(sourcemeta::one::mcp_schema_block(
-          version, uri, uri.substr(this->server_uri().size())));
+          version, uri, uri.substr(this->server_uri().size()), {},
+          this->describes_api(caller, uri) ? OPENAPI_MIME_TYPE
+                                           : SCHEMA_MIME_TYPE));
     }
 
     return sourcemeta::core::mcp_make_tool_success(
@@ -195,6 +199,10 @@ protected:
   }
 
 private:
+  static constexpr std::string_view SCHEMA_MIME_TYPE{"application/schema+json"};
+  static constexpr std::string_view OPENAPI_MIME_TYPE{
+      "application/openapi+json"};
+
   std::string_view metapack_;
   // A caller that never names a direction resolves nothing, which the tree it
   // resolves against must not decide

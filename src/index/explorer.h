@@ -613,14 +613,11 @@ struct GenerateDependents {
       const auto &contents{contents_option.value()};
       assert(contents.is_array());
       for (const auto &entry : contents.as_array()) {
-        // An OpenAPI description may reach a schema of this catalog, and what
-        // this report says of a dependent is what dialect it is written in,
-        // which is a question only a schema answers. So the edges of the other
-        // kind belong to the report that kind keeps rather than to this one
-        if (entry.defines("kind")) {
-          continue;
-        }
-
+        // An OpenAPI description reaches a schema of this catalog by embedding
+        // it, so a change to the schema changes what that description serves,
+        // which is what makes it a dependent. What a description reports
+        // covers the schemas its schemas reach as well, so one edge arrives
+        // here from more than one report and is counted once
         direct[entry.at("to").to_string()].emplace(entry.at("from").to_string(),
                                                    entry.at("at").to_string());
       }
@@ -665,6 +662,20 @@ struct GenerateDependents {
       object.assign("from", sourcemeta::core::JSON{from});
       object.assign("to", sourcemeta::core::JSON{target});
       object.assign("at", sourcemeta::core::JSON{pointer});
+      // Which kind of resource a dependent is is what this instance serves it
+      // as, rather than anything the edge that reached it looks like
+      const auto describes_api{resolver.entry(from).kind ==
+                               sourcemeta::one::LeafKind::OpenAPI};
+      object.assign(
+          "kind", sourcemeta::core::JSON{describes_api ? "openapi" : "schema"});
+      // A dialect is what a schema is written against, and a description
+      // declares none of its own, so this says it of the dependents that have
+      // one and leaves the field out of the others
+      if (describes_api) {
+        result.push_back(std::move(object));
+        continue;
+      }
+
       const auto match{base_dialects.find(from)};
       if (match == base_dialects.cend()) {
         const auto schema{resolver(from, callback)};

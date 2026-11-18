@@ -157,18 +157,19 @@ private:
   return result;
 }
 
-// A schema named as a content block. A revision that has no block type for
+// A resource named as a content block. A revision that has no block type for
 // naming a resource is given the same three fields as lines instead, since
 // what reads tool output is a language model rather than a display surface
-[[nodiscard]] inline auto
-mcp_schema_block(const sourcemeta::core::MCPProtocolVersion version,
-                 const sourcemeta::core::JSON::StringView uri,
-                 const sourcemeta::core::JSON::StringView name,
-                 const sourcemeta::core::JSON::StringView description = {})
+[[nodiscard]] inline auto mcp_schema_block(
+    const sourcemeta::core::MCPProtocolVersion version,
+    const sourcemeta::core::JSON::StringView uri,
+    const sourcemeta::core::JSON::StringView name,
+    const sourcemeta::core::JSON::StringView description = {},
+    const sourcemeta::core::JSON::StringView mime = "application/schema+json")
     -> sourcemeta::core::JSON {
   if (sourcemeta::core::mcp_supports_resource_link_content(version)) {
-    return sourcemeta::core::mcp_make_resource_link(
-        version, uri, name, "application/schema+json", description);
+    return sourcemeta::core::mcp_make_resource_link(version, uri, name, mime,
+                                                    description);
   }
 
   std::string text;

@@ -33,6 +33,7 @@ header "ETag" matches /^"[0-9a-f]{64}"$/
     "from": "{{base}}/orphan/lonely",
     "to": "{{base}}/public/string",
     "at": "/properties/label/$ref",
+    "kind": "schema",
     "baseDialect": "https://json-schema.org/draft/2020-12/schema"
   }
 ]
@@ -81,12 +82,14 @@ header "ETag" != {{anonymous_etag}}
     "from": "{{base}}/orphan/lonely",
     "to": "{{base}}/public/string",
     "at": "/properties/label/$ref",
+    "kind": "schema",
     "baseDialect": "https://json-schema.org/draft/2020-12/schema"
   },
   {
     "from": "{{base}}/reports/quarterly",
     "to": "{{base}}/public/string",
     "at": "/items/$ref",
+    "kind": "schema",
     "baseDialect": "https://json-schema.org/draft/2020-12/schema"
   }
 ]
@@ -121,12 +124,14 @@ header "ETag" == {{reports_etag}}
     "from": "{{base}}/orphan/lonely",
     "to": "{{base}}/public/string",
     "at": "/properties/label/$ref",
+    "kind": "schema",
     "baseDialect": "https://json-schema.org/draft/2020-12/schema"
   },
   {
     "from": "{{base}}/reports/quarterly",
     "to": "{{base}}/public/string",
     "at": "/items/$ref",
+    "kind": "schema",
     "baseDialect": "https://json-schema.org/draft/2020-12/schema"
   }
 ]
@@ -156,6 +161,7 @@ header "ETag" == {{anonymous_etag}}
     "from": "{{base}}/orphan/lonely",
     "to": "{{base}}/public/string",
     "at": "/properties/label/$ref",
+    "kind": "schema",
     "baseDialect": "https://json-schema.org/draft/2020-12/schema"
   }
 ]

@@ -9,7 +9,14 @@
           "from": "https://example.com/schemas/user.json",
           "to": "https://example.com/schemas/address.json",
           "at": "/properties/address/$ref",
+          "kind": "schema",
           "baseDialect": "https://json-schema.org/draft/2020-12/schema"
+        },
+        {
+          "from": "https://example.com/api/petstore",
+          "to": "https://example.com/schemas/address.json",
+          "at": "/components/schemas/Address/$ref",
+          "kind": "openapi"
         }
       ]
     }

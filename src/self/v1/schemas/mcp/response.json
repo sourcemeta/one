@@ -486,7 +486,10 @@
                 "type": "string"
               },
               "mimeType": {
-                "const": "application/schema+json"
+                "enum": [
+                  "application/schema+json",
+                  "application/openapi+json"
+                ]
               }
             },
             "additionalProperties": false
