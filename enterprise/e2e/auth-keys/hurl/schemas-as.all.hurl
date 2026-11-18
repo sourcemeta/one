@@ -473,7 +473,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 30
 jsonpath "$.error.code" == -32602
-jsonpath "$.error.message" == "Invalid resource schema URI"
+jsonpath "$.error.message" == "Invalid resource URI"
 jsonpath "$.error.data" == "Schemas with custom dialects cannot be converted, as their meta-schemas would need to be converted too"
 jsonpath "$.result" not exists
 

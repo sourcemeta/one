@@ -158,7 +158,7 @@ public:
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
           "urn:sourcemeta:one:invalid-schema-uri",
-          "The schema URI must not contain a fragment", error_schema, "*");
+          "The URI must not contain a fragment", error_schema, "*");
       return;
     }
 

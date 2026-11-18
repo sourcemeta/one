@@ -37,10 +37,6 @@
     context.evaluator->instance_location.push_back(                            \
         instruction.relative_instance_location);                               \
   }                                                                            \
-  if constexpr (Dynamic) {                                                     \
-    context.evaluator->resources.push_back(                                    \
-        context.schema->extra[instruction.extra_index].schema_resource);       \
-  }                                                                            \
   if constexpr (HasCallback) {                                                 \
     (*context.callback)(EvaluationType::Pre, true, instruction,                \
                         context.schema->extra[instruction.extra_index],        \
@@ -65,9 +61,6 @@
   if constexpr (HasCallback) {                                                 \
     context.evaluator->instance_location.pop_back(                             \
         instruction.relative_instance_location.size());                        \
-  }                                                                            \
-  if constexpr (Dynamic) {                                                     \
-    context.evaluator->resources.pop_back();                                   \
   }
 
 #define EVALUATE_BEGIN(instruction_type, precondition)                         \
@@ -415,7 +408,7 @@ inline auto assume_value_copy(const Value &variant) noexcept -> T {
   return *pointer;
 }
 
-template <bool Frames, bool Dynamic, bool HasCallback> struct DispatchContext {
+template <bool HasCallback> struct DispatchContext {
   const sourcemeta::blaze::Template *schema;
   const sourcemeta::blaze::Callback *callback;
   sourcemeta::blaze::Evaluator *evaluator;
@@ -425,29 +418,27 @@ template <bool Frames, bool Dynamic, bool HasCallback> struct DispatchContext {
   std::size_t frame;
 };
 
-template <bool Frames, bool Dynamic, bool HasCallback>
+template <bool HasCallback>
 inline auto
 evaluate_instruction(const sourcemeta::blaze::Instruction &instruction,
                      const sourcemeta::core::JSON &instance,
                      const std::uint64_t depth,
-                     DispatchContext<Frames, Dynamic, HasCallback> &context)
-    -> bool;
+                     DispatchContext<HasCallback> &context) -> bool;
 
-template <bool Frames, bool Dynamic, bool HasCallback>
+template <bool HasCallback>
 inline auto evaluate_instruction_with_property(
     const sourcemeta::blaze::Instruction &instruction,
     const sourcemeta::core::JSON &instance, const std::uint64_t depth,
-    DispatchContext<Frames, Dynamic, HasCallback> &context,
+    DispatchContext<HasCallback> &context,
     const sourcemeta::core::JSON::String &name) -> bool;
 
 #define INSTRUCTION_HANDLER(name)                                              \
-  template <bool Frames, bool Dynamic, bool HasCallback>                       \
+  template <bool HasCallback>                                                  \
   static inline auto name(                                                     \
       [[maybe_unused]] const sourcemeta::blaze::Instruction &instruction,      \
       [[maybe_unused]] const sourcemeta::core::JSON &instance,                 \
       [[maybe_unused]] const std::uint64_t depth,                              \
-      [[maybe_unused]] DispatchContext<Frames, Dynamic, HasCallback> &context) \
-      -> bool
+      [[maybe_unused]] DispatchContext<HasCallback> &context) -> bool
 
 #define INSTRUCTION_DIRECT(name, value_type)                                   \
   SOURCEMETA_FORCEINLINE inline auto DIRECT_##name(                            \
@@ -1397,12 +1388,11 @@ INSTRUCTION_HANDLER(AssertionArrayPrefixEvaluate) {
 // nothing of its own, so running it here is indistinguishable from dispatching
 // it, yet the tag does report, which is why it only steps aside when there is
 // no callback to report to
-template <bool Frames, bool Dynamic, bool HasCallback>
+template <bool HasCallback>
 SOURCEMETA_FORCEINLINE inline auto
 evaluate_branch(const sourcemeta::blaze::Instruction &branch,
                 const sourcemeta::core::JSON &target, const std::uint64_t depth,
-                DispatchContext<Frames, Dynamic, HasCallback> &context)
-    -> bool {
+                DispatchContext<HasCallback> &context) -> bool {
   if (branch.type != InstructionIndex::ControlGroup) [[unlikely]] {
     return evaluate_instruction(branch, target, depth, context);
   }
@@ -1458,41 +1448,54 @@ INSTRUCTION_HANDLER(LogicalOr) {
   // This boolean value controls whether we should be exhaustive
   if (value) {
     for (const auto &child : instruction.children) {
-      // A branch that does not hold contributes nothing, including any
-      // evaluation it marked before failing. Only a schema that tracks
-      // evaluation can ever observe those marks
-      [[maybe_unused]] std::size_t checkpoint{0};
-      if constexpr (Frames) {
-        checkpoint = context.evaluator->checkpoint();
-      }
-
       if (evaluate_branch(child, target, depth + 1, context)) {
         result = true;
-      } else {
-        if constexpr (Frames) {
-          context.evaluator->rewind(checkpoint);
-        }
       }
     }
   } else {
     for (const auto &child : instruction.children) {
-      [[maybe_unused]] std::size_t checkpoint{0};
-      if constexpr (Frames) {
-        checkpoint = context.evaluator->checkpoint();
-      }
-
       if (evaluate_branch(child, target, depth + 1, context)) {
         result = true;
         break;
-      }
-
-      if constexpr (Frames) {
-        context.evaluator->rewind(checkpoint);
       }
     }
   }
 
   EVALUATE_END(LogicalOr);
+}
+
+INSTRUCTION_HANDLER(LogicalOrEvaluate) {
+  EVALUATE_BEGIN_NO_PRECONDITION(LogicalOrEvaluate);
+  result = instruction.children.empty();
+  const auto &target{
+      resolve_instance(instance, instruction.relative_instance_location)};
+  const auto value{assume_value_copy<ValueBoolean>(instruction.value)};
+
+  // This boolean value controls whether we should be exhaustive
+  if (value) {
+    for (const auto &child : instruction.children) {
+      // A branch that does not hold contributes nothing, including any
+      // evaluation it marked before failing
+      const auto checkpoint{context.evaluator->checkpoint()};
+      if (evaluate_branch(child, target, depth + 1, context)) {
+        result = true;
+      } else {
+        context.evaluator->rewind(checkpoint);
+      }
+    }
+  } else {
+    for (const auto &child : instruction.children) {
+      const auto checkpoint{context.evaluator->checkpoint()};
+      if (evaluate_branch(child, target, depth + 1, context)) {
+        result = true;
+        break;
+      }
+
+      context.evaluator->rewind(checkpoint);
+    }
+  }
+
+  EVALUATE_END(LogicalOrEvaluate);
 }
 
 INSTRUCTION_HANDLER(LogicalAnd) {
@@ -1573,13 +1576,34 @@ INSTRUCTION_HANDLER(LogicalXor) {
       resolve_instance(instance, instruction.relative_instance_location)};
   const auto value{assume_value_copy<ValueBoolean>(instruction.value)};
   for (const auto &child : instruction.children) {
+    if (evaluate_branch(child, target, depth + 1, context)) {
+      if (has_matched) [[unlikely]] {
+        result = false;
+        // This boolean value controls whether we should be exhaustive
+        if (!value) {
+          break;
+        }
+      } else {
+        has_matched = true;
+      }
+    }
+  }
+
+  result = result && has_matched;
+  EVALUATE_END(LogicalXor);
+}
+
+INSTRUCTION_HANDLER(LogicalXorEvaluate) {
+  EVALUATE_BEGIN_NO_PRECONDITION(LogicalXorEvaluate);
+  result = true;
+  bool has_matched{false};
+  const auto &target{
+      resolve_instance(instance, instruction.relative_instance_location)};
+  const auto value{assume_value_copy<ValueBoolean>(instruction.value)};
+  for (const auto &child : instruction.children) {
     // A branch that does not hold contributes nothing, including any
     // evaluation it marked before failing
-    [[maybe_unused]] std::size_t checkpoint{0};
-    if constexpr (Frames) {
-      checkpoint = context.evaluator->checkpoint();
-    }
-
+    const auto checkpoint{context.evaluator->checkpoint()};
     if (evaluate_branch(child, target, depth + 1, context)) {
       if (has_matched) [[unlikely]] {
         result = false;
@@ -1591,14 +1615,12 @@ INSTRUCTION_HANDLER(LogicalXor) {
         has_matched = true;
       }
     } else {
-      if constexpr (Frames) {
-        context.evaluator->rewind(checkpoint);
-      }
+      context.evaluator->rewind(checkpoint);
     }
   }
 
   result = result && has_matched;
-  EVALUATE_END(LogicalXor);
+  EVALUATE_END(LogicalXorEvaluate);
 }
 
 INSTRUCTION_HANDLER(LogicalCondition) {
@@ -1617,23 +1639,10 @@ INSTRUCTION_HANDLER(LogicalCondition) {
   const auto &target{
       resolve_instance(instance, instruction.relative_instance_location)};
 
-  // A condition that holds does contribute the evaluation it marked, but one
-  // that does not hold contributes nothing at all
-  [[maybe_unused]] std::size_t checkpoint{0};
-  if constexpr (Frames) {
-    checkpoint = context.evaluator->checkpoint();
-  }
-
   for (std::size_t cursor = 0; cursor < value.first; cursor++) {
     if (!EVALUATE_RECURSE(instruction.children[cursor], target)) {
       result = false;
       break;
-    }
-  }
-
-  if (!result) {
-    if constexpr (Frames) {
-      context.evaluator->rewind(checkpoint);
     }
   }
 
@@ -1672,6 +1681,74 @@ INSTRUCTION_HANDLER(LogicalCondition) {
   }
 
   EVALUATE_END(LogicalCondition);
+}
+
+INSTRUCTION_HANDLER(LogicalConditionEvaluate) {
+  EVALUATE_BEGIN_NO_PRECONDITION(LogicalConditionEvaluate);
+  result = true;
+  const auto value{assume_value_copy<ValueIndexPair>(instruction.value)};
+  const auto children_size{instruction.children.size()};
+  assert(children_size >= value.first);
+  SOURCEMETA_ASSUME(children_size >= value.first);
+  assert(children_size >= value.second);
+  SOURCEMETA_ASSUME(children_size >= value.second);
+
+  // The condition is the leading segment [0, then start). It may be empty,
+  // for example when a `$ref` condition inlines and its jump is dropped, in
+  // which case it trivially passes and the then branch applies
+  const auto &target{
+      resolve_instance(instance, instruction.relative_instance_location)};
+
+  // A condition that holds does contribute the evaluation it marked, but one
+  // that does not hold contributes nothing at all
+  const auto checkpoint{context.evaluator->checkpoint()};
+
+  for (std::size_t cursor = 0; cursor < value.first; cursor++) {
+    if (!EVALUATE_RECURSE(instruction.children[cursor], target)) {
+      result = false;
+      break;
+    }
+  }
+
+  if (!result) {
+    context.evaluator->rewind(checkpoint);
+  }
+
+  // On a passing condition the then branch runs, otherwise the else branch,
+  // which is absent when it starts at zero
+  std::size_t consequence_start;
+  std::size_t consequence_end;
+  if (result) {
+    consequence_start = value.first;
+    consequence_end = value.second > 0 ? value.second : children_size;
+  } else {
+    consequence_start = value.second;
+    consequence_end = value.second > 0 ? children_size : value.second;
+  }
+
+  result = true;
+  if (consequence_start < consequence_end) {
+    if constexpr (HasCallback) {
+      context.evaluator->evaluate_path.pop_back(
+          context.schema->extra[instruction.extra_index]
+              .relative_schema_location.size());
+    }
+
+    for (auto cursor = consequence_start; cursor < consequence_end; cursor++) {
+      if (!EVALUATE_RECURSE(instruction.children[cursor], target)) {
+        result = false;
+        break;
+      }
+    }
+
+    if constexpr (HasCallback) {
+      context.evaluator->evaluate_path.push_back(
+          context.schema->extra[instruction.extra_index]
+              .relative_schema_location);
+    }
+  }
+
+  EVALUATE_END(LogicalConditionEvaluate);
 }
 
 INSTRUCTION_HANDLER(ControlGroup) {
@@ -1763,10 +1840,8 @@ INSTRUCTION_HANDLER(ControlEvaluate) {
 INSTRUCTION_HANDLER(ControlFrame) {
   EVALUATE_BEGIN_PASS_THROUGH(ControlFrame);
   assert(!instruction.children.empty());
-  [[maybe_unused]] const auto parent_frame{context.frame};
-  if constexpr (Frames) {
-    context.frame = context.evaluator->checkpoint();
-  }
+  const auto parent_frame{context.frame};
+  context.frame = context.evaluator->checkpoint();
 
   for (const auto &child : instruction.children) {
     if (!EVALUATE_RECURSE(child, instance)) [[unlikely]] {
@@ -1775,38 +1850,52 @@ INSTRUCTION_HANDLER(ControlFrame) {
     }
   }
 
-  if constexpr (Frames) {
-    context.frame = parent_frame;
-  }
+  context.frame = parent_frame;
 
   EVALUATE_END_PASS_THROUGH(ControlFrame);
 }
 
-INSTRUCTION_HANDLER(ControlDynamicAnchorJump) {
-  EVALUATE_BEGIN_NO_PRECONDITION(ControlDynamicAnchorJump);
-  result = false;
-  const auto &target{
-      resolve_instance(instance, instruction.relative_instance_location)};
-  const auto &value{assume_value<ValueString>(instruction.value)};
-  for (const auto &resource : context.evaluator->resources) {
-    const auto label{Evaluator::hash(resource, value)};
-    const auto match{std::ranges::find_if(
-        context.schema->labels,
-        [&label](const auto &entry) -> bool { return entry.first == label; })};
-    if (match != context.schema->labels.cend()) [[likely]] {
-      result = true;
-      assert(match->second < context.schema->targets.size());
-      for (const auto &child : context.schema->targets[match->second]) {
-        if (!EVALUATE_RECURSE(child, target)) [[unlikely]] {
-          result = false;
-          EVALUATE_END(ControlDynamicAnchorJump);
-        }
-      }
-
+INSTRUCTION_HANDLER(ControlResource) {
+  EVALUATE_BEGIN_PASS_THROUGH(ControlResource);
+  assert(!instruction.children.empty());
+  const auto index{assume_value_copy<ValueUnsignedInteger>(instruction.value)};
+  assert(index != 0);
+  assert(index < context.schema->bindings.size());
+  const auto &bindings{context.schema->bindings[index]};
+  context.evaluator->enter_resource(bindings);
+  for (const auto &child : instruction.children) {
+    if (!EVALUATE_RECURSE(child, instance)) [[unlikely]] {
+      result = false;
       break;
     }
   }
 
+  context.evaluator->leave_resource(bindings);
+  EVALUATE_END_PASS_THROUGH(ControlResource);
+}
+
+INSTRUCTION_HANDLER(ControlDynamicAnchorJump) {
+  EVALUATE_BEGIN_NO_PRECONDITION(ControlDynamicAnchorJump);
+  result = true;
+  const auto &target{
+      resolve_instance(instance, instruction.relative_instance_location)};
+  const auto &value{assume_value<ValueIndexPair>(instruction.value)};
+  const auto destination{
+      context.evaluator->dynamic_target(value.first, value.second)};
+  assert(destination != 0);
+  assert(destination - 1 < context.schema->targets.size());
+  const auto &bindings{
+      context.schema
+          ->bindings[context.schema->target_bindings[destination - 1]]};
+  context.evaluator->enter_resource(bindings);
+  for (const auto &child : context.schema->targets[destination - 1]) {
+    if (!EVALUATE_RECURSE(child, target)) [[unlikely]] {
+      result = false;
+      break;
+    }
+  }
+
+  context.evaluator->leave_resource(bindings);
   EVALUATE_END(ControlDynamicAnchorJump);
 }
 
@@ -1826,6 +1915,29 @@ INSTRUCTION_HANDLER(ControlJump) {
   }
 
   EVALUATE_END(ControlJump);
+}
+
+INSTRUCTION_HANDLER(ControlResourceJump) {
+  EVALUATE_BEGIN_NO_PRECONDITION(ControlResourceJump);
+  result = true;
+  const auto &value{assume_value<ValueIndexPair>(instruction.value)};
+  assert(context.schema->targets.size() > value.first);
+  assert(value.second != 0);
+  assert(value.second < context.schema->bindings.size());
+  const auto &target{resolve_target(
+      context.property_target,
+      resolve_instance(instance, instruction.relative_instance_location))};
+  const auto &bindings{context.schema->bindings[value.second]};
+  context.evaluator->enter_resource(bindings);
+  for (const auto &child : context.schema->targets[value.first]) {
+    if (!EVALUATE_RECURSE(child, target)) [[unlikely]] {
+      result = false;
+      break;
+    }
+  }
+
+  context.evaluator->leave_resource(bindings);
+  EVALUATE_END(ControlResourceJump);
 }
 
 INSTRUCTION_HANDLER(AnnotationEmit) {
@@ -1883,10 +1995,7 @@ INSTRUCTION_HANDLER(LogicalNot) {
 INSTRUCTION_HANDLER(LogicalNotEvaluate) {
   EVALUATE_BEGIN_NO_PRECONDITION(LogicalNotEvaluate);
 
-  [[maybe_unused]] std::size_t checkpoint{0};
-  if constexpr (Frames) {
-    checkpoint = context.evaluator->checkpoint();
-  }
+  const auto checkpoint{context.evaluator->checkpoint()};
 
   const auto &target{
       resolve_instance(instance, instruction.relative_instance_location)};
@@ -1897,9 +2006,7 @@ INSTRUCTION_HANDLER(LogicalNotEvaluate) {
     }
   }
 
-  if constexpr (Frames) {
-    context.evaluator->rewind(checkpoint);
-  }
+  context.evaluator->rewind(checkpoint);
 
   EVALUATE_END(LogicalNotEvaluate);
 }
@@ -2007,12 +2114,10 @@ INSTRUCTION_HANDLER(LoopPropertiesMatch) {
   // that value is decided here, rather than dispatched to and left to find the
   // property in the object a second time. The evaluation-marking variants of
   // those assertions are deliberately absent, as skipping them would skip the
-  // marker. Dynamic pushes and pops a resource per instruction that the direct
-  // path would skip, and children are evaluated at `depth + 1`, which the
-  // direct path does not route through the depth check. Every condition holds
-  // for every child, so decide once rather than per property
-  const auto direct_children{!Frames && !HasCallback && !Dynamic &&
-                             depth < DEPTH_LIMIT};
+  // marker. Children are evaluated at `depth + 1`, which the direct path does
+  // not route through the depth check. Every condition holds for every child,
+  // so decide once rather than per property
+  const auto direct_children{!HasCallback && depth < DEPTH_LIMIT};
   for (const auto &entry : target.as_object()) {
     const auto *index{named_index(value, entry.first, entry.hash)};
     if (!index) {
@@ -2069,12 +2174,10 @@ INSTRUCTION_HANDLER(LoopPropertiesMatchClosed) {
   // that value is decided here, rather than dispatched to and left to find the
   // property in the object a second time. The evaluation-marking variants of
   // those assertions are deliberately absent, as skipping them would skip the
-  // marker. Dynamic pushes and pops a resource per instruction that the direct
-  // path would skip, and children are evaluated at `depth + 1`, which the
-  // direct path does not route through the depth check. Every condition holds
-  // for every child, so decide once rather than per property
-  const auto direct_children{!Frames && !HasCallback && !Dynamic &&
-                             depth < DEPTH_LIMIT};
+  // marker. Children are evaluated at `depth + 1`, which the direct path does
+  // not route through the depth check. Every condition holds for every child,
+  // so decide once rather than per property
+  const auto direct_children{!HasCallback && depth < DEPTH_LIMIT};
   for (const auto &entry : target.as_object()) {
     const auto *index{named_index(value, entry.first, entry.hash)};
     if (!index) [[unlikely]] {
@@ -2568,12 +2671,11 @@ INSTRUCTION_HANDLER(LoopItems) {
   result = true;
 
   // To avoid index lookups and unnecessary conditionals
-  if constexpr (!Frames && !HasCallback) {
-    // Dynamic pushes and pops a resource per instruction that the direct path
-    // would skip, and children are evaluated at `depth + 1`, which the direct
-    // path does not route through the depth check. Both conditions hold for
-    // every child, so decide once rather than per element
-    const auto direct_children{!Dynamic && depth < DEPTH_LIMIT};
+  if constexpr (!HasCallback) {
+    // Children are evaluated at `depth + 1`, which the direct path does not
+    // route through the depth check, and that holds for every child, so decide
+    // once rather than per element
+    const auto direct_children{depth < DEPTH_LIMIT};
     for (const auto &new_instance : target.as_array()) {
       for (const auto &child : instruction.children) {
         bool child_ok;
@@ -3070,15 +3172,15 @@ INSTRUCTION_HANDLER(LoopContains) {
 
 #undef INSTRUCTION_HANDLER
 
-template <bool Frames, bool Dynamic, bool HasCallback>
-using DispatchHandler = bool (*)(
-    const sourcemeta::blaze::Instruction &, const sourcemeta::core::JSON &,
-    std::uint64_t, DispatchContext<Frames, Dynamic, HasCallback> &);
+template <bool HasCallback>
+using DispatchHandler = bool (*)(const sourcemeta::blaze::Instruction &,
+                                 const sourcemeta::core::JSON &, std::uint64_t,
+                                 DispatchContext<HasCallback> &);
 
-template <bool Frames, bool Dynamic, bool HasCallback>
+template <bool HasCallback>
 // Must have same order as InstructionIndex
 // NOLINTNEXTLINE(modernize-avoid-c-arrays)
-static constexpr DispatchHandler<Frames, Dynamic, HasCallback> HANDLERS[107] = {
+static constexpr DispatchHandler<HasCallback> HANDLERS[112] = {
     AssertionFail,
     AssertionDefines,
     AssertionDefinesStrict,
@@ -3141,9 +3243,12 @@ static constexpr DispatchHandler<Frames, Dynamic, HasCallback> HANDLERS[107] = {
     LogicalNot,
     LogicalNotEvaluate,
     LogicalOr,
+    LogicalOrEvaluate,
     LogicalAnd,
     LogicalXor,
+    LogicalXorEvaluate,
     LogicalCondition,
+    LogicalConditionEvaluate,
     LogicalWhenType,
     LogicalWhenDefines,
     LogicalWhenArraySizeGreater,
@@ -3184,47 +3289,48 @@ static constexpr DispatchHandler<Frames, Dynamic, HasCallback> HANDLERS[107] = {
     ControlGroupWhenType,
     ControlEvaluate,
     ControlFrame,
+    ControlResource,
     ControlDynamicAnchorJump,
-    ControlJump};
+    ControlJump,
+    ControlResourceJump};
 
-template <bool Frames, bool Dynamic, bool HasCallback>
+template <bool HasCallback>
 inline auto
 evaluate_instruction(const sourcemeta::blaze::Instruction &instruction,
                      const sourcemeta::core::JSON &instance,
                      const std::uint64_t depth,
-                     DispatchContext<Frames, Dynamic, HasCallback> &context)
-    -> bool {
+                     DispatchContext<HasCallback> &context) -> bool {
   if (depth > DEPTH_LIMIT) [[unlikely]] {
     throw EvaluationError("The evaluation path depth limit was reached "
                           "likely due to infinite recursion");
   }
 
-  return HANDLERS<Frames, Dynamic, HasCallback>[std::to_underlying(
-      instruction.type)](instruction, instance, depth, context);
+  return HANDLERS<HasCallback>[std::to_underlying(instruction.type)](
+      instruction, instance, depth, context);
 }
 
-template <bool Frames, bool Dynamic, bool HasCallback>
+template <bool HasCallback>
 inline auto evaluate_instruction_without_callback(
     const sourcemeta::blaze::Instruction &instruction,
     const sourcemeta::core::JSON &instance, const std::uint64_t depth,
-    DispatchContext<Frames, Dynamic, HasCallback> &context) -> bool {
+    DispatchContext<HasCallback> &context) -> bool {
   if (depth > DEPTH_LIMIT) [[unlikely]] {
     throw EvaluationError("The evaluation path depth limit was reached "
                           "likely due to infinite recursion");
   }
 
-  DispatchContext<false, Dynamic, false> plain_context{
-      context.schema, context.callback, context.evaluator,
-      context.property_target, context.frame};
-  return HANDLERS<false, Dynamic, false>[std::to_underlying(instruction.type)](
+  DispatchContext<false> plain_context{context.schema, context.callback,
+                                       context.evaluator,
+                                       context.property_target, context.frame};
+  return HANDLERS<false>[std::to_underlying(instruction.type)](
       instruction, instance, depth, plain_context);
 }
 
-template <bool Frames, bool Dynamic, bool HasCallback>
+template <bool HasCallback>
 inline auto evaluate_instruction_with_property(
     const sourcemeta::blaze::Instruction &instruction,
     const sourcemeta::core::JSON &instance, const std::uint64_t depth,
-    DispatchContext<Frames, Dynamic, HasCallback> &context,
+    DispatchContext<HasCallback> &context,
     const sourcemeta::core::JSON::String &name) -> bool {
   const auto *previous = context.property_target;
   context.property_target = &name;

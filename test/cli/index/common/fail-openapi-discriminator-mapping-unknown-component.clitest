@@ -1,0 +1,62 @@
+// OpenAPI Specification 3.1.1, Section 4.8.25 reads a Discriminator Object
+// mapping that holds up as the name of a component as such a name, resolved
+// from the Components Object of the entry document, so one that no component
+// answers to reaches nothing at all rather than a document of its own.
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "api": {
+      "baseUri": "https://example.com/api",
+      "path": "./api"
+    }
+  }
+}
+EOF
+
+MAKE DIRECTORY api
+
+WRITE api/name.json UNTIL EOF
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string"
+}
+EOF
+
+WRITE api/petstore.json UNTIL EOF
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "Petstore",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "Any": {
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "text": "name"
+          }
+        }
+      }
+    }
+  }
+}
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
+
+WRITE expected.txt UNTIL EOF
+2> error: Could not resolve a reference in the OpenAPI description
+2>   at path [CWD]/api/petstore.json
+2>   at reference name
+2>   at location "/components/schemas/Any/discriminator/mapping/text"
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected.txt

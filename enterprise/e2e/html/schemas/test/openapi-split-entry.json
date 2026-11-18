@@ -1,0 +1,42 @@
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "Split",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/pets": {
+      "$ref": "openapi-split-shared#/components/pathItems/Pets"
+    }
+  },
+  "components": {
+    "schemas": {
+      "Dog": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "$ref": "object"
+          }
+        }
+      },
+      "Any": {
+        "oneOf": [
+          {
+            "$ref": "object"
+          },
+          {
+            "$ref": "#/components/schemas/Dog"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "sibling": "./object",
+            "nested": "bare/01",
+            "dog": "Dog"
+          }
+        }
+      }
+    }
+  }
+}

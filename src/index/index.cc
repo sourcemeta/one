@@ -82,6 +82,7 @@ static constexpr std::array<BuildHandlerFunction, sourcemeta::one::ACTION_COUNT>
         &sourcemeta::one::GenerateStats::handler,
         &sourcemeta::one::GenerateHealth::handler,
         &sourcemeta::one::GenerateBundle::handler,
+        &sourcemeta::one::GenerateOpenAPIBundle::handler,
         &sourcemeta::one::GenerateEditor::handler,
         &sourcemeta::one::GenerateBlazeTemplateExhaustive::handler,
         &sourcemeta::one::GenerateBlazeTemplateFast::handler,
@@ -282,6 +283,15 @@ static auto execute_plan(sourcemeta::one::BuildState &entries,
             if (entry) {
               throw sourcemeta::core::FileError<sourcemeta::core::OpenAPIError>(
                   entry->path, error);
+            }
+
+            throw;
+          } catch (const sourcemeta::core::OpenAPIReferenceError &error) {
+            const auto *entry{
+                action.data.empty() ? nullptr : &resolver.entry(action.data)};
+            if (entry) {
+              throw sourcemeta::core::FileError<
+                  sourcemeta::core::OpenAPIReferenceError>(entry->path, error);
             }
 
             throw;
@@ -1033,7 +1043,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
                error.what(), error.uri(), error.target().string(),
                error.path().string());
     return EXIT_FAILURE;
-  } catch (const sourcemeta::one::ResolverTargetNotASchemaError &error) {
+  } catch (const sourcemeta::one::ResolverTargetNotAResourceError &error) {
     std::print(stderr, "error: {}\n  at uri {}\n  to path {}\n  at path {}\n",
                error.what(), error.uri(), error.target().string(),
                error.path().string());
@@ -1103,10 +1113,11 @@ auto main(int argc, char *argv[]) noexcept -> int {
     return EXIT_FAILURE;
 #endif
   } catch (const sourcemeta::one::CrossPolicyReferenceError &error) {
-    std::print(stderr,
-               "error: {}\n  at schema {}\n  with reference {}\n  at path {}\n",
-               error.what(), error.referrer(), error.referent(),
-               error.path().string());
+    std::print(
+        stderr,
+        "error: {}\n  at resource {}\n  with reference {}\n  at path {}\n",
+        error.what(), error.referrer(), error.referent(),
+        error.path().string());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::AuthenticationUnknownPathError &error) {
     std::print(stderr, "error: {}\n  at scope {}\n  at path {}\n", error.what(),
@@ -1191,7 +1202,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
                "directory, so delete it and index again from scratch\n",
                error.what(), error.path().string());
     return EXIT_FAILURE;
-  } catch (const sourcemeta::one::ResolverNotASchemaError &error) {
+  } catch (const sourcemeta::one::ResolverNotAResourceError &error) {
     std::print(stderr, "error: {}\n  at path {}\n", error.what(),
                error.path().string());
     return EXIT_FAILURE;
@@ -1237,6 +1248,22 @@ auto main(int argc, char *argv[]) noexcept -> int {
                error.base());
     return EXIT_FAILURE;
   } catch (const sourcemeta::core::OpenAPIResolutionError &error) {
+    std::print(stderr,
+               "error: {}\n  at identifier {}\n  at location \"{}\"\n"
+               "  at base {}\n",
+               error.what(), error.identifier(),
+               sourcemeta::core::to_string(error.location()), error.base());
+    return EXIT_FAILURE;
+  } catch (
+      const sourcemeta::core::FileError<sourcemeta::core::OpenAPIReferenceError>
+          &error) {
+    std::print(stderr,
+               "error: {}\n  at path {}\n  at identifier {}\n"
+               "  at location \"{}\"\n  at base {}\n",
+               error.what(), error.path().string(), error.identifier(),
+               sourcemeta::core::to_string(error.location()), error.base());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::core::OpenAPIReferenceError &error) {
     std::print(stderr,
                "error: {}\n  at identifier {}\n  at location \"{}\"\n"
                "  at base {}\n",

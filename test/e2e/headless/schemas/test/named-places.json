@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/named-places.json",
+  "$defs": {
+    "name": {
+      "type": "string"
+    },
+    "age": {
+      "type": "integer"
+    }
+  }
+}

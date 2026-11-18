@@ -105,28 +105,35 @@
         {
           "const": {
             "code": -32602,
-            "message": "Invalid resource schema URI",
+            "message": "Invalid resource URI",
             "data": "URIs accepted by resources/read must not contain a fragment and may only carry optional `bundle` or `as` query parameters"
           }
         },
         {
           "const": {
             "code": -32602,
-            "message": "Invalid resource schema URI",
+            "message": "Invalid resource URI",
+            "data": "An OpenAPI description cannot be converted into a JSON Schema dialect"
+          }
+        },
+        {
+          "const": {
+            "code": -32602,
+            "message": "Invalid resource URI",
             "data": "The schema cannot be converted into this dialect"
           }
         },
         {
           "const": {
             "code": -32602,
-            "message": "Invalid resource schema URI",
+            "message": "Invalid resource URI",
             "data": "Schemas with custom dialects cannot be converted, as their meta-schemas would need to be converted too"
           }
         },
         {
           "const": {
             "code": -32602,
-            "message": "Invalid resource schema URI",
+            "message": "Invalid resource URI",
             "data": "Meta-schemas are not converted, as restating the dialect that a meta-schema describes is not always safe"
           }
         },

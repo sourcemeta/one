@@ -639,7 +639,8 @@ auto describe(const Template &schema_template, const bool valid,
                           {type_name(target.type())});
   }
 
-  if (step.type == sourcemeta::blaze::InstructionIndex::LogicalOr) {
+  if (step.type == sourcemeta::blaze::InstructionIndex::LogicalOr ||
+      step.type == sourcemeta::blaze::InstructionIndex::LogicalOrEvaluate) {
     assert(!step.children.empty());
     return render_message(message_format(schema_template, step),
                           {type_name(target.type())});
@@ -654,7 +655,8 @@ auto describe(const Template &schema_template, const bool valid,
     return render_message(format, {type_name(target.type())});
   }
 
-  if (step.type == sourcemeta::blaze::InstructionIndex::LogicalXor) {
+  if (step.type == sourcemeta::blaze::InstructionIndex::LogicalXor ||
+      step.type == sourcemeta::blaze::InstructionIndex::LogicalXorEvaluate) {
     assert(!step.children.empty());
     return render_message(message_format(schema_template, step),
                           {describe_subject(evaluate_path, instance_location,
@@ -662,13 +664,16 @@ auto describe(const Template &schema_template, const bool valid,
   }
 
   if (step.type == sourcemeta::blaze::InstructionIndex::LogicalCondition ||
+      step.type ==
+          sourcemeta::blaze::InstructionIndex::LogicalConditionEvaluate ||
       step.type == sourcemeta::blaze::InstructionIndex::LogicalNot ||
       step.type == sourcemeta::blaze::InstructionIndex::LogicalNotEvaluate) {
     return render_message(message_format(schema_template, step),
                           {type_name(target.type())});
   }
 
-  if (step.type == sourcemeta::blaze::InstructionIndex::ControlJump) {
+  if (step.type == sourcemeta::blaze::InstructionIndex::ControlJump ||
+      step.type == sourcemeta::blaze::InstructionIndex::ControlResourceJump) {
     // Inside `propertyNames` the subject is the property name, which is a
     // string rather than the instance the location points at
     return render_message(message_format(schema_template, step),
@@ -680,10 +685,11 @@ auto describe(const Template &schema_template, const bool valid,
   if (step.type ==
       sourcemeta::blaze::InstructionIndex::ControlDynamicAnchorJump) {
     if (keyword == "$dynamicRef") {
-      return render_message(
-          message_format(schema_template, step),
-          {type_name(target.type()),
-           escape_string(instruction_value<ValueString>(step))});
+      const auto anchor{instruction_value<ValueIndexPair>(step).first};
+      assert(anchor < schema_template.anchors.size());
+      return render_message(message_format(schema_template, step),
+                            {type_name(target.type()),
+                             escape_string(schema_template.anchors[anchor])});
     }
 
     assert(keyword == "$recursiveRef");

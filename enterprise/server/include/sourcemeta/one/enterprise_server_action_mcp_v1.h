@@ -428,6 +428,8 @@ public:
 private:
   static constexpr std::string_view MCP_TEMPLATE_MIME_TYPE{
       "application/schema+json"};
+  static constexpr std::string_view MCP_OPENAPI_MIME_TYPE{
+      "application/openapi+json"};
 
   auto
   write_envelope(sourcemeta::one::HTTPRequest &request,
@@ -645,7 +647,7 @@ private:
       sourcemeta::core::URI request{uri};
       if (request.fragment().has_value()) {
         return sourcemeta::core::jsonrpc_make_error(
-            &request_id, -32602, "Invalid resource schema URI",
+            &request_id, -32602, "Invalid resource URI",
             sourcemeta::core::JSON{
                 "URIs accepted by resources/read must not contain a fragment "
                 "and may only carry optional `bundle` or `as` query "
@@ -663,7 +665,7 @@ private:
             static_cast<std::ptrdiff_t>(conversion_value.has_value())};
         if (std::ranges::distance(*query_view) != expected_size) {
           return sourcemeta::core::jsonrpc_make_error(
-              &request_id, -32602, "Invalid resource schema URI",
+              &request_id, -32602, "Invalid resource URI",
               sourcemeta::core::JSON{
                   "URIs accepted by resources/read must not contain a "
                   "fragment and may only carry optional `bundle` or `as` "
@@ -697,6 +699,16 @@ private:
     }
 
     if (conversion.has_value()) {
+      // A conversion names a JSON Schema dialect, which an OpenAPI description
+      // is no candidate for however a caller came to reach it
+      if (this->artifact_kind(resolution.path.value()) ==
+          sourcemeta::one::LeafKind::OpenAPI) {
+        return sourcemeta::core::jsonrpc_make_error(
+            &request_id, -32602, "Invalid resource URI",
+            sourcemeta::core::JSON{"An OpenAPI description cannot be converted "
+                                   "into a JSON Schema dialect"});
+      }
+
       const auto target{sourcemeta::one::conversion_target(conversion.value())};
       if (target.has_value()) {
         auto converted{this->artifact_resolve_path(
@@ -707,7 +719,7 @@ private:
               *this, resolution.path.value())};
           if (served.custom) {
             return sourcemeta::core::jsonrpc_make_error(
-                &request_id, -32602, "Invalid resource schema URI",
+                &request_id, -32602, "Invalid resource URI",
                 sourcemeta::core::JSON{
                     "Schemas with custom dialects cannot be converted, as "
                     "their meta-schemas would need to be converted too"});
@@ -719,7 +731,7 @@ private:
               sourcemeta::one::conversion_applies(served.ladder.value(),
                                                   target.value())) {
             return sourcemeta::core::jsonrpc_make_error(
-                &request_id, -32602, "Invalid resource schema URI",
+                &request_id, -32602, "Invalid resource URI",
                 sourcemeta::core::JSON{
                     "Meta-schemas are not converted, as restating the dialect "
                     "that a meta-schema describes is not always safe"});
@@ -731,7 +743,7 @@ private:
 
       if (!target.has_value() || !resolution.path.has_value()) {
         return sourcemeta::core::jsonrpc_make_error(
-            &request_id, -32602, "Invalid resource schema URI",
+            &request_id, -32602, "Invalid resource URI",
             sourcemeta::core::JSON{
                 "The schema cannot be converted into this dialect"});
       }
@@ -746,9 +758,15 @@ private:
     std::ostringstream payload;
     sourcemeta::core::prettify(schema.value(), payload);
 
+    // What a leaf holds is what its media type names, as an OpenAPI
+    // description is no JSON Schema however a caller came to reach it
+    const auto kind{this->artifact_kind(resolution.path.value())};
     auto contents{sourcemeta::core::JSON::make_array()};
     contents.push_back(sourcemeta::core::mcp_make_resource_text_content(
-        uri, MCP_TEMPLATE_MIME_TYPE, payload.str()));
+        uri,
+        kind == sourcemeta::one::LeafKind::OpenAPI ? MCP_OPENAPI_MIME_TYPE
+                                                   : MCP_TEMPLATE_MIME_TYPE,
+        payload.str()));
     // Whether this schema is one anybody reaches, which is what decides who
     // may keep a copy of it. A listing is settled by the view it was built
     // for, whereas a single schema is settled by itself

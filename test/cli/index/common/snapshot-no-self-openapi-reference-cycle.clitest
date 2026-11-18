@@ -110,10 +110,12 @@ WRITE expected.txt UNTIL EOF
 ./schemas/api
 ./schemas/api/entry
 ./schemas/api/entry/%
+./schemas/api/entry/%/bundle.metapack
 ./schemas/api/entry/%/data.metapack
 ./schemas/api/entry/%/dependencies.metapack
 ./schemas/api/shared
 ./schemas/api/shared/%
+./schemas/api/shared/%/bundle.metapack
 ./schemas/api/shared/%/data.metapack
 ./schemas/api/shared/%/dependencies.metapack
 ./state.bin

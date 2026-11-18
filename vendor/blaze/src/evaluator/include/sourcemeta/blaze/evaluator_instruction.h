@@ -82,9 +82,12 @@ enum class InstructionIndex : std::uint8_t {
   LogicalNot,
   LogicalNotEvaluate,
   LogicalOr,
+  LogicalOrEvaluate,
   LogicalAnd,
   LogicalXor,
+  LogicalXorEvaluate,
   LogicalCondition,
+  LogicalConditionEvaluate,
   LogicalWhenType,
   LogicalWhenDefines,
   LogicalWhenArraySizeGreater,
@@ -125,8 +128,10 @@ enum class InstructionIndex : std::uint8_t {
   ControlGroupWhenType,
   ControlEvaluate,
   ControlFrame,
+  ControlResource,
   ControlDynamicAnchorJump,
-  ControlJump
+  ControlJump,
+  ControlResourceJump
 };
 
 /// @ingroup evaluator
@@ -194,9 +199,12 @@ constexpr std::string_view INSTRUCTION_NAMES[] = {
     "LogicalNot",
     "LogicalNotEvaluate",
     "LogicalOr",
+    "LogicalOrEvaluate",
     "LogicalAnd",
     "LogicalXor",
+    "LogicalXorEvaluate",
     "LogicalCondition",
+    "LogicalConditionEvaluate",
     "LogicalWhenType",
     "LogicalWhenDefines",
     "LogicalWhenArraySizeGreater",
@@ -237,8 +245,10 @@ constexpr std::string_view INSTRUCTION_NAMES[] = {
     "ControlGroupWhenType",
     "ControlEvaluate",
     "ControlFrame",
+    "ControlResource",
     "ControlDynamicAnchorJump",
-    "ControlJump"};
+    "ControlJump",
+    "ControlResourceJump"};
 
 /// @ingroup evaluator
 /// Check if a given instruction type corresponds to an annotation
@@ -252,6 +262,55 @@ inline auto is_annotation(const InstructionIndex type) noexcept -> bool {
     case InstructionIndex::AnnotationEmit:
       return true;
     case InstructionIndex::AnnotationEmitWrapped:
+      return true;
+    default:
+      return false;
+  }
+}
+
+/// @ingroup evaluator
+/// Check if a given instruction type holds alternative branches, where a
+/// branch that does not hold contributes nothing to the overall result
+inline auto is_disjunction(const InstructionIndex type) noexcept -> bool {
+  switch (type) {
+    case InstructionIndex::LogicalOr:
+    case InstructionIndex::LogicalOrEvaluate:
+    case InstructionIndex::LogicalXor:
+    case InstructionIndex::LogicalXorEvaluate:
+      return true;
+    default:
+      return false;
+  }
+}
+
+/// @ingroup evaluator
+/// Check if a given instruction type holds a condition followed by its
+/// mutually exclusive consequence and alternative
+inline auto is_conditional(const InstructionIndex type) noexcept -> bool {
+  switch (type) {
+    case InstructionIndex::LogicalCondition:
+    case InstructionIndex::LogicalConditionEvaluate:
+      return true;
+    default:
+      return false;
+  }
+}
+
+/// @ingroup evaluator
+/// Check if a given instruction type steers evaluation rather than asserting
+/// on the instance, which every one of them does from a location of its own
+inline auto is_control(const InstructionIndex type) noexcept -> bool {
+  switch (type) {
+    case InstructionIndex::ControlGroup:
+    case InstructionIndex::ControlGroupWhenDefines:
+    case InstructionIndex::ControlGroupWhenDefinesDirect:
+    case InstructionIndex::ControlGroupWhenType:
+    case InstructionIndex::ControlEvaluate:
+    case InstructionIndex::ControlFrame:
+    case InstructionIndex::ControlResource:
+    case InstructionIndex::ControlDynamicAnchorJump:
+    case InstructionIndex::ControlJump:
+    case InstructionIndex::ControlResourceJump:
       return true;
     default:
       return false;

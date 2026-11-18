@@ -1200,7 +1200,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 jsonpath "$.steps" count == 67
 jsonpath "$.steps[0].type" == "push"
-jsonpath "$.steps[0].name" == "ControlJump"
+jsonpath "$.steps[0].name" == "ControlResourceJump"
 jsonpath "$.steps[0].evaluatePath" == "/$ref"
 jsonpath "$.steps[0].instanceLocation" == ""
 jsonpath "$.steps[0].instancePositions" count == 4
@@ -1226,7 +1226,7 @@ jsonpath "$.steps[1].annotation" == null
 jsonpath "$.steps[1].message" == null
 jsonpath "$.steps[1].vocabulary" == "https://json-schema.org/draft/2020-12/vocab/applicator"
 jsonpath "$.steps[2].type" == "push"
-jsonpath "$.steps[2].name" == "ControlJump"
+jsonpath "$.steps[2].name" == "ControlResourceJump"
 jsonpath "$.steps[2].evaluatePath" == "/$ref/allOf/0/$ref"
 jsonpath "$.steps[2].instanceLocation" == ""
 jsonpath "$.steps[2].instancePositions" count == 4
@@ -1304,7 +1304,7 @@ jsonpath "$.steps[7].annotation" == null
 jsonpath "$.steps[7].message" == "The value was expected to be of type boolean, or object and it was of type object"
 jsonpath "$.steps[7].vocabulary" == "https://json-schema.org/draft/2020-12/vocab/validation"
 jsonpath "$.steps[8].type" == "pass"
-jsonpath "$.steps[8].name" == "ControlJump"
+jsonpath "$.steps[8].name" == "ControlResourceJump"
 jsonpath "$.steps[8].evaluatePath" == "/$ref/allOf/0/$ref"
 jsonpath "$.steps[8].instanceLocation" == ""
 jsonpath "$.steps[8].instancePositions" count == 4
@@ -1317,7 +1317,7 @@ jsonpath "$.steps[8].annotation" == null
 jsonpath "$.steps[8].message" == "The object value was expected to validate against the referenced schema"
 jsonpath "$.steps[8].vocabulary" == "https://json-schema.org/draft/2020-12/vocab/core"
 jsonpath "$.steps[9].type" == "push"
-jsonpath "$.steps[9].name" == "ControlJump"
+jsonpath "$.steps[9].name" == "ControlResourceJump"
 jsonpath "$.steps[9].evaluatePath" == "/$ref/allOf/1/$ref"
 jsonpath "$.steps[9].instanceLocation" == ""
 jsonpath "$.steps[9].instancePositions" count == 4
@@ -1395,7 +1395,7 @@ jsonpath "$.steps[14].annotation" == null
 jsonpath "$.steps[14].message" == "The value was expected to be of type boolean, or object and it was of type object"
 jsonpath "$.steps[14].vocabulary" == "https://json-schema.org/draft/2020-12/vocab/validation"
 jsonpath "$.steps[15].type" == "pass"
-jsonpath "$.steps[15].name" == "ControlJump"
+jsonpath "$.steps[15].name" == "ControlResourceJump"
 jsonpath "$.steps[15].evaluatePath" == "/$ref/allOf/1/$ref"
 jsonpath "$.steps[15].instanceLocation" == ""
 jsonpath "$.steps[15].instancePositions" count == 4
@@ -1408,7 +1408,7 @@ jsonpath "$.steps[15].annotation" == null
 jsonpath "$.steps[15].message" == "The object value was expected to validate against the referenced schema"
 jsonpath "$.steps[15].vocabulary" == "https://json-schema.org/draft/2020-12/vocab/core"
 jsonpath "$.steps[16].type" == "push"
-jsonpath "$.steps[16].name" == "ControlJump"
+jsonpath "$.steps[16].name" == "ControlResourceJump"
 jsonpath "$.steps[16].evaluatePath" == "/$ref/allOf/2/$ref"
 jsonpath "$.steps[16].instanceLocation" == ""
 jsonpath "$.steps[16].instancePositions" count == 4
@@ -1486,7 +1486,7 @@ jsonpath "$.steps[21].annotation" == null
 jsonpath "$.steps[21].message" == "The value was expected to be of type boolean, or object and it was of type object"
 jsonpath "$.steps[21].vocabulary" == "https://json-schema.org/draft/2020-12/vocab/validation"
 jsonpath "$.steps[22].type" == "pass"
-jsonpath "$.steps[22].name" == "ControlJump"
+jsonpath "$.steps[22].name" == "ControlResourceJump"
 jsonpath "$.steps[22].evaluatePath" == "/$ref/allOf/2/$ref"
 jsonpath "$.steps[22].instanceLocation" == ""
 jsonpath "$.steps[22].instancePositions" count == 4
@@ -1499,7 +1499,7 @@ jsonpath "$.steps[22].annotation" == null
 jsonpath "$.steps[22].message" == "The object value was expected to validate against the referenced schema"
 jsonpath "$.steps[22].vocabulary" == "https://json-schema.org/draft/2020-12/vocab/core"
 jsonpath "$.steps[23].type" == "push"
-jsonpath "$.steps[23].name" == "ControlJump"
+jsonpath "$.steps[23].name" == "ControlResourceJump"
 jsonpath "$.steps[23].evaluatePath" == "/$ref/allOf/3/$ref"
 jsonpath "$.steps[23].instanceLocation" == ""
 jsonpath "$.steps[23].instancePositions" count == 4
@@ -1694,7 +1694,7 @@ jsonpath "$.steps[37].annotation" == null
 jsonpath "$.steps[37].message" == "The value was expected to be of type boolean, or object and it was of type object"
 jsonpath "$.steps[37].vocabulary" == "https://json-schema.org/draft/2020-12/vocab/validation"
 jsonpath "$.steps[38].type" == "pass"
-jsonpath "$.steps[38].name" == "ControlJump"
+jsonpath "$.steps[38].name" == "ControlResourceJump"
 jsonpath "$.steps[38].evaluatePath" == "/$ref/allOf/3/$ref"
 jsonpath "$.steps[38].instanceLocation" == ""
 jsonpath "$.steps[38].instancePositions" count == 4
@@ -1707,7 +1707,7 @@ jsonpath "$.steps[38].annotation" == null
 jsonpath "$.steps[38].message" == "The object value was expected to validate against the referenced schema"
 jsonpath "$.steps[38].vocabulary" == "https://json-schema.org/draft/2020-12/vocab/core"
 jsonpath "$.steps[39].type" == "push"
-jsonpath "$.steps[39].name" == "ControlJump"
+jsonpath "$.steps[39].name" == "ControlResourceJump"
 jsonpath "$.steps[39].evaluatePath" == "/$ref/allOf/4/$ref"
 jsonpath "$.steps[39].instanceLocation" == ""
 jsonpath "$.steps[39].instancePositions" count == 4
@@ -1785,7 +1785,7 @@ jsonpath "$.steps[44].annotation" == null
 jsonpath "$.steps[44].message" == "The value was expected to be of type boolean, or object and it was of type object"
 jsonpath "$.steps[44].vocabulary" == "https://json-schema.org/draft/2020-12/vocab/validation"
 jsonpath "$.steps[45].type" == "pass"
-jsonpath "$.steps[45].name" == "ControlJump"
+jsonpath "$.steps[45].name" == "ControlResourceJump"
 jsonpath "$.steps[45].evaluatePath" == "/$ref/allOf/4/$ref"
 jsonpath "$.steps[45].instanceLocation" == ""
 jsonpath "$.steps[45].instancePositions" count == 4
@@ -1798,7 +1798,7 @@ jsonpath "$.steps[45].annotation" == null
 jsonpath "$.steps[45].message" == "The object value was expected to validate against the referenced schema"
 jsonpath "$.steps[45].vocabulary" == "https://json-schema.org/draft/2020-12/vocab/core"
 jsonpath "$.steps[46].type" == "push"
-jsonpath "$.steps[46].name" == "ControlJump"
+jsonpath "$.steps[46].name" == "ControlResourceJump"
 jsonpath "$.steps[46].evaluatePath" == "/$ref/allOf/5/$ref"
 jsonpath "$.steps[46].instanceLocation" == ""
 jsonpath "$.steps[46].instancePositions" count == 4
@@ -1876,7 +1876,7 @@ jsonpath "$.steps[51].annotation" == null
 jsonpath "$.steps[51].message" == "The value was expected to be of type boolean, or object and it was of type object"
 jsonpath "$.steps[51].vocabulary" == "https://json-schema.org/draft/2020-12/vocab/validation"
 jsonpath "$.steps[52].type" == "pass"
-jsonpath "$.steps[52].name" == "ControlJump"
+jsonpath "$.steps[52].name" == "ControlResourceJump"
 jsonpath "$.steps[52].evaluatePath" == "/$ref/allOf/5/$ref"
 jsonpath "$.steps[52].instanceLocation" == ""
 jsonpath "$.steps[52].instancePositions" count == 4
@@ -1889,7 +1889,7 @@ jsonpath "$.steps[52].annotation" == null
 jsonpath "$.steps[52].message" == "The object value was expected to validate against the referenced schema"
 jsonpath "$.steps[52].vocabulary" == "https://json-schema.org/draft/2020-12/vocab/core"
 jsonpath "$.steps[53].type" == "push"
-jsonpath "$.steps[53].name" == "ControlJump"
+jsonpath "$.steps[53].name" == "ControlResourceJump"
 jsonpath "$.steps[53].evaluatePath" == "/$ref/allOf/6/$ref"
 jsonpath "$.steps[53].instanceLocation" == ""
 jsonpath "$.steps[53].instancePositions" count == 4
@@ -1967,7 +1967,7 @@ jsonpath "$.steps[58].annotation" == null
 jsonpath "$.steps[58].message" == "The value was expected to be of type boolean, or object and it was of type object"
 jsonpath "$.steps[58].vocabulary" == "https://json-schema.org/draft/2020-12/vocab/validation"
 jsonpath "$.steps[59].type" == "pass"
-jsonpath "$.steps[59].name" == "ControlJump"
+jsonpath "$.steps[59].name" == "ControlResourceJump"
 jsonpath "$.steps[59].evaluatePath" == "/$ref/allOf/6/$ref"
 jsonpath "$.steps[59].instanceLocation" == ""
 jsonpath "$.steps[59].instancePositions" count == 4
@@ -2058,7 +2058,7 @@ jsonpath "$.steps[65].annotation" == null
 jsonpath "$.steps[65].message" == "The value was expected to be of type boolean, or object and it was of type object"
 jsonpath "$.steps[65].vocabulary" == "https://json-schema.org/draft/2020-12/vocab/validation"
 jsonpath "$.steps[66].type" == "pass"
-jsonpath "$.steps[66].name" == "ControlJump"
+jsonpath "$.steps[66].name" == "ControlResourceJump"
 jsonpath "$.steps[66].evaluatePath" == "/$ref"
 jsonpath "$.steps[66].instanceLocation" == ""
 jsonpath "$.steps[66].instancePositions" count == 4

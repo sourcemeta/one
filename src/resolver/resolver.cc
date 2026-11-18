@@ -256,6 +256,28 @@ rebase_reference(const sourcemeta::one::Configuration::Collection &collection,
   return value.recompose();
 }
 
+// How a Discriminator Object mapping that names a schema by URI must be
+// spelled once it has been rebased. OpenAPI Specification 3.1.1, Section
+// 4.8.25 reads a value that holds up as the name of a component as such a
+// name, and tells an author who means a URI reference instead to "prefix it
+// with the `.` path segment". Section 4.8.7 spells such a name as one path
+// segment and nothing else, so a reference carrying anything beyond that says
+// which of the two it is already, and one that does not is spelled with that
+// segment. Resolving a reference drops the segment again, so what it names is
+// whatever it named before
+static auto mapping_by_uri(const sourcemeta::core::JSON::String &reference)
+    -> sourcemeta::core::JSON::String {
+  const sourcemeta::core::URI uri{reference};
+  const auto path{uri.path()};
+  if (uri.scheme().has_value() || uri.host().has_value() ||
+      uri.query().has_value() || uri.fragment().has_value() ||
+      !path.has_value() || path.value().empty() || path.value().contains('/')) {
+    return reference;
+  }
+
+  return "./" + reference;
+}
+
 // What this instance serves a declared dialect as, which is what a document is
 // analysed against rather than whatever it happened to name. Both kinds of leaf
 // settle it this way, as a document that names a dialect this catalog holds
@@ -503,7 +525,8 @@ auto rebase_resolve_targets(Configuration &configuration) -> ResolveTargets {
       // neither of these can be routed to
       auto contents{sourcemeta::core::read_yaml_or_json(target)};
       if (!contents.is_object()) {
-        throw ResolverTargetNotASchemaError(declared_path, pair.first, target);
+        throw ResolverTargetNotAResourceError(declared_path, pair.first,
+                                              target);
       }
 
       // Nothing is indexed yet at this point, so the only dialects there are
@@ -1198,7 +1221,7 @@ auto Resolver::openapi(const std::string_view raw_identifier,
     const auto rewritten{rebase_reference(
         collection, scope, mapping.to_string(), this->server_uri_)};
     if (rewritten.has_value()) {
-      mapping = sourcemeta::core::JSON{rewritten.value()};
+      mapping = sourcemeta::core::JSON{mapping_by_uri(rewritten.value())};
     }
   }
 
@@ -1347,7 +1370,7 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
     }
 
     if (!schema.is_object()) {
-      throw ResolverNotASchemaError(path);
+      throw ResolverNotAResourceError(path);
     }
 
     if (sourcemeta::core::openapi_is_document(schema)) {

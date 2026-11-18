@@ -152,14 +152,7 @@ auto Configuration::from_json(const sourcemeta::core::JSON &value,
                            "The values in the resolve object must be strings",
                            sourcemeta::core::Pointer({"resolve", pair.first}));
 
-      try {
-        result.resolve.emplace(pair.first, sourcemeta::core::URI::canonicalize(
-                                               pair.second.to_string()));
-      } catch (const sourcemeta::core::URIParseError &) {
-        CONFIGURATION_ENSURE(
-            false, "The values in the resolve object must represent valid URIs",
-            sourcemeta::core::Pointer({"resolve", pair.first}));
-      }
+      result.add_resolve(pair.first, pair.second.to_string());
     }
   }
 

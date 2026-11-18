@@ -204,10 +204,21 @@ struct SOURCEMETA_BLAZE_CONFIGURATION_EXPORT Configuration {
   auto add_dependency(const sourcemeta::core::URI &uri,
                       const std::filesystem::path &path) -> void;
 
+  /// Add a resolve mapping to the configuration
+  auto add_resolve(const sourcemeta::core::JSON::String &identifier,
+                   const sourcemeta::core::JSON::String &target) -> void;
+
   /// Check if the given path represents a schema described by this
   /// configuration
   [[nodiscard]]
   auto applies_to(const std::filesystem::path &path) const -> bool;
+
+  /// What the `resolve` object maps the given schema identifier to, or nothing
+  /// if the identifier is not mapped. The identifier matches however it is
+  /// spelled, and with or without a `.json` extension
+  [[nodiscard]]
+  auto find_resolve(const sourcemeta::core::JSON::String &identifier) const
+      -> const sourcemeta::core::JSON::String *;
 
   /// Parse a configuration file from its contents
   [[nodiscard]]

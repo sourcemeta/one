@@ -228,12 +228,7 @@ auto compiler_2019_09_applicator_additionalproperties(
 
 auto compiler_2019_09_applicator_items(const KeywordContext &context,
                                        const Instructions &) -> Instructions {
-  // TODO: Be smarter about how we treat `unevaluatedItems` like how we do for
-  // `unevaluatedProperties`
-  const bool track{std::ranges::any_of(
-      context.global.unevaluated, [](const auto &dependency) -> auto {
-        return dependency.first.ends_with("unevaluatedItems");
-      })};
+  const auto track{context.global.defines_unevaluated_items};
 
   if (context.value().is_array()) {
     return compiler_draft3_applicator_items_with_options(
@@ -248,12 +243,7 @@ auto compiler_2019_09_applicator_items(const KeywordContext &context,
 auto compiler_2019_09_applicator_additionalitems(const KeywordContext &context,
                                                  const Instructions &)
     -> Instructions {
-  // TODO: Be smarter about how we treat `unevaluatedItems` like how we do for
-  // `unevaluatedProperties`
-  const bool track{std::ranges::any_of(
-      context.global.unevaluated, [](const auto &dependency) -> auto {
-        return dependency.first.ends_with("unevaluatedItems");
-      })};
+  const auto track{context.global.defines_unevaluated_items};
 
   return compiler_draft3_applicator_additionalitems_with_options(
       context, context.global.collects_annotations,
@@ -430,7 +420,14 @@ auto compiler_2019_09_core_recursiveref(const KeywordContext &context,
     return compiler_draft3_core_ref(context, current);
   }
 
-  return {make(InstructionIndex::ControlDynamicAnchorJump, context, "")};
+  // A recursive anchor carries no name of its own, so it is kept under an
+  // empty one, and the resource the reference sits in is where it lands when
+  // no enclosing resource declares one
+  return {
+      make(InstructionIndex::ControlDynamicAnchorJump, context,
+           dynamic_anchor_value(
+               context,
+               context.base().recompose_without_fragment().value_or(""), ""))};
 }
 
 auto compiler_2019_09_applicator_properties(const KeywordContext &context,

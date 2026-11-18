@@ -26,7 +26,7 @@ RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING
 DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
 
 WRITE expected.txt UNTIL EOF
-2> error: The file does not contain a valid JSON Schema
+2> error: The file does not contain a valid resource
 2>   at path [CWD]/schemas/test.yaml
 EOF
 

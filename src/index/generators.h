@@ -670,11 +670,6 @@ struct GenerateOpenAPIDependencies {
           trace.assign("to", sourcemeta::core::JSON{dependency.destination});
           trace.assign("at", sourcemeta::core::JSON{sourcemeta::core::to_string(
                                  dependency.pointer)});
-          // TODO: Hold the far end to this, so that it names the kind of
-          // Object that is there rather than the kind the position spelling
-          // the reference reaches for. Analysis reports what each reference
-          // expects and hands over the document it reached, but it reads no
-          // further than the document
           trace.assign("kind", sourcemeta::core::JSON{
                                    sourcemeta::core::openapi_kind_name(
                                        dependency.expected)});
@@ -849,6 +844,43 @@ struct GenerateBundle {
         sourcemeta::one::make_metapack_schema_extension(dialect_identifier)};
     sourcemeta::core::metapack_write_json_pretty(
         action.destination, schema, "application/schema+json",
+        sourcemeta::core::MetapackEncoding::GZIP,
+        std::span<const std::uint8_t>{extension_bytes});
+  }
+};
+
+struct GenerateOpenAPIBundle {
+  static auto handler(const sourcemeta::one::BuildState &,
+                      const sourcemeta::one::BuildPlan::Action &action,
+                      const sourcemeta::one::BuildDynamicCallback &callback,
+                      sourcemeta::one::Resolver &resolver,
+                      const sourcemeta::one::Configuration &,
+                      const sourcemeta::core::JSON &) -> void {
+    auto contents_option{
+        sourcemeta::core::metapack_read_json(action.dependencies.front())};
+    assert(contents_option.has_value());
+    auto document{std::move(contents_option.value())};
+    const sourcemeta::core::SchemaResolver schema_resolver{
+        [&callback, &resolver](
+            const auto identifier) -> std::optional<sourcemeta::core::JSON> {
+          return resolver(identifier, callback);
+        }};
+    sourcemeta::core::openapi_bundle(
+        document, sourcemeta::core::schema_walker, schema_resolver,
+        [&callback, &resolver](const auto identifier) {
+          return resolver.openapi(identifier, callback);
+        },
+        {.default_base = action.data});
+
+    const sourcemeta::core::OpenAPIFrame frame{document,
+                                               sourcemeta::core::schema_walker,
+                                               schema_resolver, action.data};
+    sourcemeta::core::openapi_format(document, frame);
+
+    const auto extension_bytes{sourcemeta::one::make_metapack_leaf_extension(
+        sourcemeta::one::LeafKind::OpenAPI)};
+    sourcemeta::core::metapack_write_json_pretty(
+        action.destination, document, "application/openapi+json",
         sourcemeta::core::MetapackEncoding::GZIP,
         std::span<const std::uint8_t>{extension_bytes});
   }

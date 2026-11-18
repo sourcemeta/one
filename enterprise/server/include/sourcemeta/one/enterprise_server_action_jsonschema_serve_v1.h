@@ -45,7 +45,7 @@ public:
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
           "urn:sourcemeta:one:invalid-schema-uri",
-          "The schema URI must not contain a fragment", error_schema, "*");
+          "The URI must not contain a fragment", error_schema, "*");
       return;
     }
 
@@ -90,18 +90,6 @@ public:
         caller, schema_path, sourcemeta::one::RouterAction::Tree::Schemas,
         artifact)};
     if (!resolution.path.has_value()) {
-      // An OpenAPI description is a leaf of the catalog whether or not anything
-      // bundles one yet, so asking for a bundle of one asks for something this
-      // version does not do rather than for something that is not here
-      if (bundle && self.describes_api(caller, schema_path)) {
-        sourcemeta::one::json_error(
-            request, response, sourcemeta::core::HTTP_STATUS_NOT_IMPLEMENTED,
-            "urn:sourcemeta:one:openapi-description-unsupported",
-            "This operation is not supported on an OpenAPI description yet",
-            error_schema, "*");
-        return;
-      }
-
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
           "urn:sourcemeta:one:not-found", "There is nothing at this URL",

@@ -30,7 +30,8 @@ import {
   ANNOTATION_EMIT, ANNOTATION_EMIT_WRAPPED, ANNOTATION_TO_PARENT, ANNOTATION_BASENAME_TO_PARENT,
   EVALUATE,
   LOGICAL_NOT, LOGICAL_NOT_EVALUATE,
-  LOGICAL_OR, LOGICAL_AND, LOGICAL_XOR, LOGICAL_CONDITION,
+  LOGICAL_OR, LOGICAL_OR_EVALUATE, LOGICAL_AND, LOGICAL_XOR,
+  LOGICAL_XOR_EVALUATE, LOGICAL_CONDITION, LOGICAL_CONDITION_EVALUATE,
   LOGICAL_WHEN_TYPE, LOGICAL_WHEN_DEFINES, LOGICAL_WHEN_ARRAY_SIZE_GREATER,
   LOOP_PROPERTIES_UNEVALUATED, LOOP_PROPERTIES_UNEVALUATED_EXCEPT,
   LOOP_PROPERTIES_MATCH, LOOP_PROPERTIES_MATCH_CLOSED,
@@ -48,7 +49,7 @@ import {
   LOOP_ITEMS_INTEGER_BOUNDED, LOOP_ITEMS_INTEGER_BOUNDED_SIZED,
   LOOP_ITEMS_ARRAY_BOUNDED_TYPE_STRICT_ANY,
   LOOP_CONTAINS,
-  CONTROL_DYNAMIC_ANCHOR_JUMP, CONTROL_JUMP
+  CONTROL_DYNAMIC_ANCHOR_JUMP, CONTROL_JUMP, CONTROL_RESOURCE_JUMP
 } from './opcodes.mjs';
 
 const TYPE_INTEGER = 2;
@@ -529,19 +530,20 @@ export function describe(valid, instruction, evaluatePath,
     return renderMessage(instruction.message, [ typeName(targetType) ]);
   }
 
-  if (opcode === LOGICAL_OR || opcode === LOGICAL_AND ||
-      opcode === LOGICAL_CONDITION || opcode === LOGICAL_NOT ||
+  if (opcode === LOGICAL_OR || opcode === LOGICAL_OR_EVALUATE ||
+      opcode === LOGICAL_AND || opcode === LOGICAL_CONDITION ||
+      opcode === LOGICAL_CONDITION_EVALUATE || opcode === LOGICAL_NOT ||
       opcode === LOGICAL_NOT_EVALUATE) {
     return renderMessage(instruction.message, [ typeName(targetType) ]);
   }
 
-  if (opcode === LOGICAL_XOR) {
+  if (opcode === LOGICAL_XOR || opcode === LOGICAL_XOR_EVALUATE) {
     return renderMessage(instruction.message,
                          [ describeSubject(property, instanceLocation,
                                            target, false) ]);
   }
 
-  if (opcode === CONTROL_JUMP) {
+  if (opcode === CONTROL_JUMP || opcode === CONTROL_RESOURCE_JUMP) {
     // Inside `propertyNames` the subject is the property name, which is a
     // string rather than the instance the location points at
     return renderMessage(instruction.message,
@@ -550,7 +552,8 @@ export function describe(valid, instruction, evaluatePath,
 
   if (opcode === CONTROL_DYNAMIC_ANCHOR_JUMP) {
     return renderMessage(instruction.message,
-                         [ typeName(targetType), escapeString(value) ]);
+                         [ typeName(targetType),
+                           escapeString(instruction.anchor) ]);
   }
 
   if (opcode === ANNOTATION_EMIT || opcode === ANNOTATION_EMIT_WRAPPED ||

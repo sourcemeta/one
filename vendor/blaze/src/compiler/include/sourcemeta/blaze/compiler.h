@@ -216,10 +216,23 @@ struct Context {
   const Mode mode;
   /// Whether the schema makes use of dynamic scoping
   const bool uses_dynamic_scopes;
+  /// The dynamic anchor names the schema declares, without duplicates, whose
+  /// positions are what instructions refer to
+  const std::vector<std::string> anchors;
+  /// What each schema resource binds on entry, as an index into
+  /// Template::bindings where zero means the resource binds nothing. Indexed
+  /// by the identifiers that Context::resources assigns
+  const std::vector<std::size_t> resource_bindings;
   /// Whether evaluating the schema may collect at least one annotation
   const bool collects_annotations;
   /// The list of unevaluated entries and their dependencies
   const SchemaUnevaluatedEntries unevaluated;
+  /// Whether the schema declares `unevaluatedItems` anywhere at all
+  // TODO: This should go away if we start properly compiling
+  // `unevaluatedItems` like we compile `unevaluatedProperties`, as the
+  // dependencies of the former are not traced, so any occurrence of it
+  // anywhere forces every enclosing instruction to keep track of evaluation
+  const bool defines_unevaluated_items;
   /// The set of tweaks for the compiler
   const Tweaks tweaks;
   /// All possible reference targets (key includes is_property_name context)

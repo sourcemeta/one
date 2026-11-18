@@ -1,0 +1,29 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Self anchor",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "Dog": {
+        "$anchor": "Dog",
+        "type": "object"
+      },
+      "Pet": {
+        "oneOf": [
+          {
+            "$ref": "https://example.com/schemas/openapi-discriminator-self-anchor#Dog"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "dog": "https://example.com/schemas/openapi-discriminator-self-anchor#Dog"
+          }
+        }
+      }
+    }
+  }
+}

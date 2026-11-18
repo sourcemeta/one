@@ -33,7 +33,7 @@ RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING
 DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
 
 WRITE expected.txt UNTIL EOF
-2> error: The schema identifier is not relative to the corresponding base
+2> error: The identifier is not relative to the corresponding base
 2>   at path [CWD]/schemas/petstore.json
 2>   at identifier https://other.com/petstore
 2>   with base https://example.com/

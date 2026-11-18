@@ -521,7 +521,7 @@ TEST(example_openapi_nested_identifier) {
           "discriminator": {
             "propertyName": "kind",
             "mapping": {
-              "target": "openapi-nested-target"
+              "target": "./openapi-nested-target"
             }
           }
         }
@@ -571,6 +571,136 @@ TEST(example_openapi_discriminator_mapping) {
               "shared": "openapi-spellings-target#/components/schemas/Pet",
               "named": "Cat",
               "fragment": "#/components/schemas/Cat"
+            }
+          }
+        }
+      }
+    }
+  })JSON");
+}
+
+// The name a component goes by admits no slash, so a Discriminator Object
+// mapping relativised down to a single segment is a value that this
+// specification reads as such a name, which is a schema of the entry document
+// rather than the one the author named. The segment that says otherwise is
+// written alongside it, and a mapping that does name a component is left as it
+// was written even where the two spellings coincide
+TEST(example_openapi_discriminator_mapping_single_segment) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  RESOLVER_IMPORT(resolver, "example", "openapi-discriminator-target.json");
+  RESOLVER_ADD_OPENAPI(
+      resolver, "example", "openapi-discriminator-collision.json",
+      "https://example.com/schemas/openapi-discriminator-collision",
+      "http://localhost:8000/example/openapi-discriminator-collision",
+      R"JSON({
+    "openapi": "3.2.0",
+    "$self": "http://localhost:8000/example/openapi-discriminator-collision",
+    "info": {
+      "title": "Collision",
+      "version": "1.0.0"
+    },
+    "paths": {},
+    "components": {
+      "schemas": {
+        "openapi-discriminator-target": {
+          "type": "object"
+        },
+        "Pet": {
+          "oneOf": [
+            {
+              "$ref": "openapi-discriminator-target"
+            },
+            {
+              "$ref": "#/components/schemas/openapi-discriminator-target"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "kind",
+            "mapping": {
+              "spelled": "./openapi-discriminator-target",
+              "named": "openapi-discriminator-target"
+            }
+          }
+        }
+      }
+    }
+  })JSON");
+}
+
+// A mapping that comes out of the rebase as a fragment alone names a place of
+// the document that spells it, which is no name a component goes by either, so
+// it is left as it is rather than turned into a reference to the collection
+// that holds the document
+TEST(example_openapi_discriminator_mapping_self_anchor) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  RESOLVER_ADD_OPENAPI(
+      resolver, "example", "openapi-discriminator-self-anchor.json",
+      "https://example.com/schemas/openapi-discriminator-self-anchor",
+      "http://localhost:8000/example/openapi-discriminator-self-anchor",
+      R"JSON({
+    "openapi": "3.1.1",
+    "info": {
+      "title": "Self anchor",
+      "version": "1.0.0"
+    },
+    "paths": {},
+    "components": {
+      "schemas": {
+        "Dog": {
+          "$anchor": "Dog",
+          "type": "object"
+        },
+        "Pet": {
+          "oneOf": [
+            {
+              "$ref": "#Dog"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "kind",
+            "mapping": {
+              "dog": "#Dog"
+            }
+          }
+        }
+      }
+    }
+  })JSON");
+}
+
+// A mapping that relativises to more than one segment says which of the two
+// readings it takes on its own, as no name a component goes by is spelled that
+// way, so nothing is added to it
+TEST(example_openapi_discriminator_mapping_nested_path) {
+  sourcemeta::one::Resolver resolver{shared_configuration().url};
+
+  RESOLVER_IMPORT(resolver, "example", "nested/openapi-nested-target.json");
+  RESOLVER_ADD_OPENAPI(
+      resolver, "example", "openapi-discriminator-nested.json",
+      "https://example.com/schemas/openapi-discriminator-nested",
+      "http://localhost:8000/example/openapi-discriminator-nested",
+      R"JSON({
+    "openapi": "3.2.0",
+    "$self": "http://localhost:8000/example/openapi-discriminator-nested",
+    "info": {
+      "title": "Nested",
+      "version": "1.0.0"
+    },
+    "paths": {},
+    "components": {
+      "schemas": {
+        "Pet": {
+          "oneOf": [
+            {
+              "$ref": "nested/openapi-nested-target"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "kind",
+            "mapping": {
+              "spelled": "nested/openapi-nested-target"
             }
           }
         }
@@ -1136,7 +1266,7 @@ TEST(non_schema_file) {
   try {
     RESOLVER_IMPORT(resolver, "example", "non-schema-array.json");
     FAIL();
-  } catch (const sourcemeta::one::ResolverNotASchemaError &error) {
+  } catch (const sourcemeta::one::ResolverNotAResourceError &error) {
     EXPECT_EQ(error.path().filename(), "non-schema-array.json");
   }
 }

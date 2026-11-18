@@ -126,8 +126,8 @@ class CrossPolicyReferenceError : public sourcemeta::core::Error {
 public:
   CrossPolicyReferenceError(std::filesystem::path path, std::string referrer,
                             std::string referent)
-      : sourcemeta::core::Error{"A schema cannot reference a schema behind a "
-                                "stricter authentication policy"},
+      : sourcemeta::core::Error{"A resource cannot reference one behind "
+                                "a stricter authentication policy"},
         path_{std::move(path)}, referrer_{std::move(referrer)},
         referent_{std::move(referent)} {}
 

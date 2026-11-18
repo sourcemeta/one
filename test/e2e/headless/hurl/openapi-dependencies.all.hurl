@@ -6,7 +6,8 @@
 # document of it, and a schema of this catalog besides, so one report carries
 # both kinds of edge and says which kind each one reaches for. A document that
 # several positions name is an edge for each of them, as where a reference
-# sits is part of what this report is for
+# sits is part of what this report is for. A Discriminator Object mapping that
+# names a schema by URI is one of those positions
 GET {{base}}/self/v1/api/openapi/dependencies/test/schemas/openapi-split-entry
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
@@ -25,22 +26,67 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" exists
 header "Last-Modified" exists
-jsonpath "$" count == 3
+jsonpath "$" count == 12
 jsonpath "$[0].from" == "{{base}}/test/schemas/openapi-split-entry"
 jsonpath "$[0].to" == "{{base}}/test/schemas/openapi-split-shared"
-jsonpath "$[0].at" == "/paths/~1pets/$ref"
-jsonpath "$[0].kind" == "path-item"
+jsonpath "$[0].at" == "/paths/~1dogs/get/callbacks/onData/$ref"
+jsonpath "$[0].kind" == "callback"
 jsonpath "$[0].baseDialect" not exists
 jsonpath "$[1].from" == "{{base}}/test/schemas/openapi-split-entry"
-jsonpath "$[1].to" == "{{base}}/test/schemas/string"
-jsonpath "$[1].at" == "/components/schemas/Any/oneOf/0/$ref"
-jsonpath "$[1].kind" == "schema"
+jsonpath "$[1].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[1].at" == "/paths/~1dogs/get/parameters/0/$ref"
+jsonpath "$[1].kind" == "parameter"
 jsonpath "$[1].baseDialect" not exists
 jsonpath "$[2].from" == "{{base}}/test/schemas/openapi-split-entry"
-jsonpath "$[2].to" == "{{base}}/test/schemas/string"
-jsonpath "$[2].at" == "/components/schemas/Dog/properties/name/$ref"
-jsonpath "$[2].kind" == "schema"
+jsonpath "$[2].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[2].at" == "/paths/~1dogs/get/requestBody/$ref"
+jsonpath "$[2].kind" == "request-body"
 jsonpath "$[2].baseDialect" not exists
+jsonpath "$[3].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[3].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[3].at" == "/paths/~1dogs/get/responses/200/content/application~1json/$ref"
+jsonpath "$[3].kind" == "media-type"
+jsonpath "$[3].baseDialect" not exists
+jsonpath "$[4].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[4].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[4].at" == "/paths/~1dogs/get/responses/200/headers/X-Limit/$ref"
+jsonpath "$[4].kind" == "header"
+jsonpath "$[4].baseDialect" not exists
+jsonpath "$[5].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[5].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[5].at" == "/paths/~1dogs/get/responses/200/links/self/$ref"
+jsonpath "$[5].kind" == "link"
+jsonpath "$[5].baseDialect" not exists
+jsonpath "$[6].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[6].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[6].at" == "/paths/~1dogs/get/responses/404/$ref"
+jsonpath "$[6].kind" == "response"
+jsonpath "$[6].baseDialect" not exists
+jsonpath "$[7].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[7].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[7].at" == "/paths/~1pets/$ref"
+jsonpath "$[7].kind" == "path-item"
+jsonpath "$[7].baseDialect" not exists
+jsonpath "$[8].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[8].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[8].at" == "/security/0/openapi-split-shared#~1components~1securitySchemes~1Key"
+jsonpath "$[8].kind" == "security-scheme"
+jsonpath "$[8].baseDialect" not exists
+jsonpath "$[9].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[9].to" == "{{base}}/test/schemas/string"
+jsonpath "$[9].at" == "/components/schemas/Any/discriminator/mapping/name"
+jsonpath "$[9].kind" == "schema"
+jsonpath "$[9].baseDialect" not exists
+jsonpath "$[10].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[10].to" == "{{base}}/test/schemas/string"
+jsonpath "$[10].at" == "/components/schemas/Any/oneOf/0/$ref"
+jsonpath "$[10].kind" == "schema"
+jsonpath "$[10].baseDialect" not exists
+jsonpath "$[11].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[11].to" == "{{base}}/test/schemas/string"
+jsonpath "$[11].at" == "/components/schemas/Dog/properties/name/$ref"
+jsonpath "$[11].kind" == "schema"
+jsonpath "$[11].baseDialect" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -76,22 +122,68 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 header "ETag" exists
 header "Last-Modified" exists
-jsonpath "$" count == 3
+jsonpath "$" count == 12
 jsonpath "$[0].from" == "{{base}}/test/schemas/openapi-split-entry"
 jsonpath "$[0].to" == "{{base}}/test/schemas/openapi-split-shared"
-jsonpath "$[0].at" == "/paths/~1pets/$ref"
-jsonpath "$[0].kind" == "path-item"
+jsonpath "$[0].at" == "/paths/~1dogs/get/callbacks/onData/$ref"
+jsonpath "$[0].kind" == "callback"
 jsonpath "$[0].baseDialect" not exists
 jsonpath "$[1].from" == "{{base}}/test/schemas/openapi-split-entry"
-jsonpath "$[1].to" == "{{base}}/test/schemas/string"
-jsonpath "$[1].at" == "/components/schemas/Any/oneOf/0/$ref"
-jsonpath "$[1].kind" == "schema"
+jsonpath "$[1].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[1].at" == "/paths/~1dogs/get/parameters/0/$ref"
+jsonpath "$[1].kind" == "parameter"
 jsonpath "$[1].baseDialect" not exists
 jsonpath "$[2].from" == "{{base}}/test/schemas/openapi-split-entry"
-jsonpath "$[2].to" == "{{base}}/test/schemas/string"
-jsonpath "$[2].at" == "/components/schemas/Dog/properties/name/$ref"
-jsonpath "$[2].kind" == "schema"
+jsonpath "$[2].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[2].at" == "/paths/~1dogs/get/requestBody/$ref"
+jsonpath "$[2].kind" == "request-body"
 jsonpath "$[2].baseDialect" not exists
+jsonpath "$[3].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[3].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[3].at" == "/paths/~1dogs/get/responses/200/content/application~1json/$ref"
+jsonpath "$[3].kind" == "media-type"
+jsonpath "$[3].baseDialect" not exists
+jsonpath "$[4].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[4].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[4].at" == "/paths/~1dogs/get/responses/200/headers/X-Limit/$ref"
+jsonpath "$[4].kind" == "header"
+jsonpath "$[4].baseDialect" not exists
+jsonpath "$[5].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[5].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[5].at" == "/paths/~1dogs/get/responses/200/links/self/$ref"
+jsonpath "$[5].kind" == "link"
+jsonpath "$[5].baseDialect" not exists
+jsonpath "$[6].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[6].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[6].at" == "/paths/~1dogs/get/responses/404/$ref"
+jsonpath "$[6].kind" == "response"
+jsonpath "$[6].baseDialect" not exists
+jsonpath "$[7].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[7].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[7].at" == "/paths/~1pets/$ref"
+jsonpath "$[7].kind" == "path-item"
+jsonpath "$[7].baseDialect" not exists
+jsonpath "$[8].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[8].to" == "{{base}}/test/schemas/openapi-split-shared"
+jsonpath "$[8].at" == "/security/0/openapi-split-shared#~1components~1securitySchemes~1Key"
+jsonpath "$[8].kind" == "security-scheme"
+jsonpath "$[8].baseDialect" not exists
+jsonpath "$[9].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[9].to" == "{{base}}/test/schemas/string"
+jsonpath "$[9].at" == "/components/schemas/Any/discriminator/mapping/name"
+jsonpath "$[9].kind" == "schema"
+jsonpath "$[9].baseDialect" not exists
+jsonpath "$[10].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[10].to" == "{{base}}/test/schemas/string"
+jsonpath "$[10].at" == "/components/schemas/Any/oneOf/0/$ref"
+jsonpath "$[10].kind" == "schema"
+jsonpath "$[10].baseDialect" not exists
+jsonpath "$[11].from" == "{{base}}/test/schemas/openapi-split-entry"
+jsonpath "$[11].to" == "{{base}}/test/schemas/string"
+jsonpath "$[11].at" == "/components/schemas/Dog/properties/name/$ref"
+jsonpath "$[11].kind" == "schema"
+jsonpath "$[11].baseDialect" not exists
+
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -99,6 +191,58 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+header "Vary" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.valid" == true
+
+# A Discriminator Object mapping that names a schema by URI reaches it, so the
+# position of the mapping is an edge of its own beside the reference that names
+# the same schema. A mapping that names a component reaches nothing beyond the
+# document spelling it, so it is no edge at all
+GET {{base}}/self/v1/api/openapi/dependencies/test/schemas/openapi-discriminator
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/api/openapi/dependencies/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "Vary" == "Accept-Encoding"
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
+header "Last-Modified" exists
+jsonpath "$" count == 2
+jsonpath "$[0].from" == "{{base}}/test/schemas/openapi-discriminator"
+jsonpath "$[0].to" == "{{base}}/test/schemas/string"
+jsonpath "$[0].at" == "/components/schemas/Any/discriminator/mapping/text"
+jsonpath "$[0].kind" == "schema"
+jsonpath "$[0].baseDialect" not exists
+jsonpath "$[1].from" == "{{base}}/test/schemas/openapi-discriminator"
+jsonpath "$[1].to" == "{{base}}/test/schemas/string"
+jsonpath "$[1].at" == "/components/schemas/Any/oneOf/0/$ref"
+jsonpath "$[1].kind" == "schema"
+jsonpath "$[1].baseDialect" not exists
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Cache-Control: no-store
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
@@ -335,7 +479,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.type" == "urn:sourcemeta:one:invalid-schema-uri"
 jsonpath "$.title" == "Bad Request"
 jsonpath "$.status" == 400
-jsonpath "$.detail" == "The schema URI must not contain a fragment"
+jsonpath "$.detail" == "The URI must not contain a fragment"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
