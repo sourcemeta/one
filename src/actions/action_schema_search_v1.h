@@ -330,7 +330,7 @@ public:
 
     for (const auto &entry : envelope.at("results").as_array()) {
       const auto &title{entry.at("title").to_string()};
-      content.push_back(sourcemeta::one::mcp_schema_block(
+      content.push_back(sourcemeta::one::mcp_resource_block(
           version, entry.at("identifier").to_string(),
           title.empty() ? entry.at("path").to_string() : title,
           entry.at("description").to_string()));

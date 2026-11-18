@@ -811,10 +811,8 @@ spelling it is left out, as it reaches nothing beyond that document.
 
 ### Dependents
 
-*This endpoint retrieves all direct and transitive dependents of the JSON
-Schema located at the specified `{path}` parameter. A dependent is a schema
-that references this schema, either directly or indirectly through a chain of
-references.*
+*This endpoint retrieves all direct and transitive dependents of the resource
+located at the specified `{path}` parameter.*
 
 ```
 GET /self/v1/api/schemas/dependents/{path}
@@ -824,10 +822,11 @@ GET /self/v1/api/schemas/dependents/{path}
 
     | Property | Type | Required | Description |
     |----------|------|----------|-------------|
-    | `/*/from` | String | Yes | The absolute URL of the schema that originates the dependency |
-    | `/*/to` | String | Yes | The absolute URL of the schema being referenced |
-    | `/*/at` | String | Yes | The JSON Pointer to the schema location where the dependency originates |
-    | `/*/baseDialect` | String | Yes | The absolute URI of the base dialect of the schema that originates the dependency |
+    | `/*/from` | String | Yes | The absolute URL of the schema or OpenAPI description that originates the dependency |
+    | `/*/to` | String | Yes | The absolute URL of the resource being referenced |
+    | `/*/at` | String | Yes | The JSON Pointer to the location where the dependency originates |
+    | `/*/kind` | `schema` / `openapi` | Yes | What the resource that originates the dependency is |
+    | `/*/baseDialect` | String | Only for `schema` | The absolute URI of the base dialect of the schema that originates the dependency, which an OpenAPI description does not declare |
 
 === "400"
 

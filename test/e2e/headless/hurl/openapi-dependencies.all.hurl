@@ -549,3 +549,81 @@ header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+
+# What a description reaches carries on through the schemas it reaches, so a
+# description that names a Schema Object of another description and a schema of
+# this catalog reports the edges of both of those as well as its own
+GET {{base}}/self/v1/api/openapi/dependencies/test/schemas/openapi-chain
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/api/openapi/dependencies/response>; rel="describedby"
+[Captures]
+last_response: body
+schema_path: header "Link" regex "<([^>]+)>"
+[Asserts]
+header "Vary" == "Accept-Encoding"
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
+header "Last-Modified" exists
+jsonpath "$" count == 8
+jsonpath "$[0].from" == "{{base}}/test/schemas/openapi-chain"
+jsonpath "$[0].to" == "{{base}}/test/schemas/repeated-refs"
+jsonpath "$[0].at" == "/components/schemas/Deep/$ref"
+jsonpath "$[0].kind" == "schema"
+jsonpath "$[0].baseDialect" not exists
+jsonpath "$[1].from" == "{{base}}/test/schemas/openapi-chain"
+jsonpath "$[1].to" == "{{base}}/test/schemas/openapi-two-positions"
+jsonpath "$[1].at" == "/components/schemas/Name/$ref"
+jsonpath "$[1].kind" == "schema"
+jsonpath "$[1].baseDialect" not exists
+jsonpath "$[2].from" == "{{base}}/test/schemas/openapi-two-positions"
+jsonpath "$[2].to" == "{{base}}/test/schemas/named-places"
+jsonpath "$[2].at" == "/components/schemas/Age/$ref"
+jsonpath "$[2].kind" == "schema"
+jsonpath "$[2].baseDialect" not exists
+jsonpath "$[3].from" == "{{base}}/test/schemas/openapi-two-positions"
+jsonpath "$[3].to" == "{{base}}/test/schemas/named-places"
+jsonpath "$[3].at" == "/components/schemas/Name/$ref"
+jsonpath "$[3].kind" == "schema"
+jsonpath "$[3].baseDialect" not exists
+jsonpath "$[4].from" == "{{base}}/test/schemas/repeated-refs"
+jsonpath "$[4].to" == "{{base}}/test/schemas/string"
+jsonpath "$[4].at" == "/properties/one/$ref"
+jsonpath "$[4].kind" == "schema"
+jsonpath "$[4].baseDialect" not exists
+jsonpath "$[5].from" == "{{base}}/test/schemas/repeated-refs"
+jsonpath "$[5].to" == "{{base}}/test/schemas/absolute-refs"
+jsonpath "$[5].at" == "/properties/three/$ref"
+jsonpath "$[5].kind" == "schema"
+jsonpath "$[5].baseDialect" not exists
+jsonpath "$[6].from" == "{{base}}/test/schemas/repeated-refs"
+jsonpath "$[6].to" == "{{base}}/test/schemas/string"
+jsonpath "$[6].at" == "/properties/two/$ref"
+jsonpath "$[6].kind" == "schema"
+jsonpath "$[6].baseDialect" not exists
+jsonpath "$[7].from" == "{{base}}/test/schemas/absolute-refs"
+jsonpath "$[7].to" == "{{base}}/test/schemas/string"
+jsonpath "$[7].at" == "/$ref"
+jsonpath "$[7].kind" == "schema"
+jsonpath "$[7].baseDialect" not exists
+
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{last_response}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+header "Vary" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.valid" == true

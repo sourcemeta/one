@@ -65,12 +65,28 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 300
 jsonpath "$.result.isError" == false
-jsonpath "$.result.content" count == 1
+jsonpath "$.result.content" count == 3
 jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[1].type" == "resource_link"
+jsonpath "$.result.content[1].uri" == "{{base}}/test/bare/01"
+jsonpath "$.result.content[1].mimeType" == "application/schema+json"
+jsonpath "$.result.content[2].type" == "resource_link"
+jsonpath "$.result.content[2].uri" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.content[2].mimeType" == "application/openapi+json"
 jsonpath "$.result.structuredContent.results" exists
-jsonpath "$.result.structuredContent.results" count == 0
+jsonpath "$.result.structuredContent.results" count == 1
+jsonpath "$.result.structuredContent.results[0].from" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.results[0].to" == "{{base}}/test/bare/01"
+jsonpath "$.result.structuredContent.results[0].at" == "/components/schemas/Any/discriminator/mapping/nested"
+jsonpath "$.result.structuredContent.results[0].kind" == "openapi"
+jsonpath "$.result.structuredContent.results[0].baseDialect" not exists
 variable "text" jsonpath "$.results" exists
-variable "text" jsonpath "$.results" count == 0
+variable "text" jsonpath "$.results" count == 1
+variable "text" jsonpath "$.results[0].from" == "{{base}}/test/openapi-split-entry"
+variable "text" jsonpath "$.results[0].to" == "{{base}}/test/bare/01"
+variable "text" jsonpath "$.results[0].at" == "/components/schemas/Any/discriminator/mapping/nested"
+variable "text" jsonpath "$.results[0].kind" == "openapi"
+variable "text" jsonpath "$.results[0].baseDialect" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -136,12 +152,48 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 301
 jsonpath "$.result.isError" == false
-jsonpath "$.result.content" count == 1
+jsonpath "$.result.content" count == 3
 jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[1].type" == "resource_link"
+jsonpath "$.result.content[1].uri" == "{{base}}/test/object"
+jsonpath "$.result.content[1].mimeType" == "application/schema+json"
+jsonpath "$.result.content[2].type" == "resource_link"
+jsonpath "$.result.content[2].uri" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.content[2].mimeType" == "application/openapi+json"
 jsonpath "$.result.structuredContent.results" exists
-jsonpath "$.result.structuredContent.results" count == 0
+jsonpath "$.result.structuredContent.results" count == 3
+jsonpath "$.result.structuredContent.results[0].from" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.results[0].to" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.results[0].at" == "/components/schemas/Any/discriminator/mapping/sibling"
+jsonpath "$.result.structuredContent.results[0].kind" == "openapi"
+jsonpath "$.result.structuredContent.results[0].baseDialect" not exists
+jsonpath "$.result.structuredContent.results[1].from" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.results[1].to" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.results[1].at" == "/components/schemas/Any/oneOf/0/$ref"
+jsonpath "$.result.structuredContent.results[1].kind" == "openapi"
+jsonpath "$.result.structuredContent.results[1].baseDialect" not exists
+jsonpath "$.result.structuredContent.results[2].from" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.results[2].to" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.results[2].at" == "/components/schemas/Dog/properties/name/$ref"
+jsonpath "$.result.structuredContent.results[2].kind" == "openapi"
+jsonpath "$.result.structuredContent.results[2].baseDialect" not exists
 variable "text" jsonpath "$.results" exists
-variable "text" jsonpath "$.results" count == 0
+variable "text" jsonpath "$.results" count == 3
+variable "text" jsonpath "$.results[0].from" == "{{base}}/test/openapi-split-entry"
+variable "text" jsonpath "$.results[0].to" == "{{base}}/test/object"
+variable "text" jsonpath "$.results[0].at" == "/components/schemas/Any/discriminator/mapping/sibling"
+variable "text" jsonpath "$.results[0].kind" == "openapi"
+variable "text" jsonpath "$.results[0].baseDialect" not exists
+variable "text" jsonpath "$.results[1].from" == "{{base}}/test/openapi-split-entry"
+variable "text" jsonpath "$.results[1].to" == "{{base}}/test/object"
+variable "text" jsonpath "$.results[1].at" == "/components/schemas/Any/oneOf/0/$ref"
+variable "text" jsonpath "$.results[1].kind" == "openapi"
+variable "text" jsonpath "$.results[1].baseDialect" not exists
+variable "text" jsonpath "$.results[2].from" == "{{base}}/test/openapi-split-entry"
+variable "text" jsonpath "$.results[2].to" == "{{base}}/test/object"
+variable "text" jsonpath "$.results[2].at" == "/components/schemas/Dog/properties/name/$ref"
+variable "text" jsonpath "$.results[2].kind" == "openapi"
+variable "text" jsonpath "$.results[2].baseDialect" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -650,12 +702,48 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 313
 jsonpath "$.result.isError" == false
-jsonpath "$.result.content" count == 1
+jsonpath "$.result.content" count == 3
 jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[1].type" == "resource_link"
+jsonpath "$.result.content[1].uri" == "{{base}}/test/object"
+jsonpath "$.result.content[1].mimeType" == "application/schema+json"
+jsonpath "$.result.content[2].type" == "resource_link"
+jsonpath "$.result.content[2].uri" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.content[2].mimeType" == "application/openapi+json"
 jsonpath "$.result.structuredContent.results" exists
-jsonpath "$.result.structuredContent.results" count == 0
+jsonpath "$.result.structuredContent.results" count == 3
+jsonpath "$.result.structuredContent.results[0].from" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.results[0].to" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.results[0].at" == "/components/schemas/Any/discriminator/mapping/sibling"
+jsonpath "$.result.structuredContent.results[0].kind" == "openapi"
+jsonpath "$.result.structuredContent.results[0].baseDialect" not exists
+jsonpath "$.result.structuredContent.results[1].from" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.results[1].to" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.results[1].at" == "/components/schemas/Any/oneOf/0/$ref"
+jsonpath "$.result.structuredContent.results[1].kind" == "openapi"
+jsonpath "$.result.structuredContent.results[1].baseDialect" not exists
+jsonpath "$.result.structuredContent.results[2].from" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.results[2].to" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.results[2].at" == "/components/schemas/Dog/properties/name/$ref"
+jsonpath "$.result.structuredContent.results[2].kind" == "openapi"
+jsonpath "$.result.structuredContent.results[2].baseDialect" not exists
 variable "text" jsonpath "$.results" exists
-variable "text" jsonpath "$.results" count == 0
+variable "text" jsonpath "$.results" count == 3
+variable "text" jsonpath "$.results[0].from" == "{{base}}/test/openapi-split-entry"
+variable "text" jsonpath "$.results[0].to" == "{{base}}/test/object"
+variable "text" jsonpath "$.results[0].at" == "/components/schemas/Any/discriminator/mapping/sibling"
+variable "text" jsonpath "$.results[0].kind" == "openapi"
+variable "text" jsonpath "$.results[0].baseDialect" not exists
+variable "text" jsonpath "$.results[1].from" == "{{base}}/test/openapi-split-entry"
+variable "text" jsonpath "$.results[1].to" == "{{base}}/test/object"
+variable "text" jsonpath "$.results[1].at" == "/components/schemas/Any/oneOf/0/$ref"
+variable "text" jsonpath "$.results[1].kind" == "openapi"
+variable "text" jsonpath "$.results[1].baseDialect" not exists
+variable "text" jsonpath "$.results[2].from" == "{{base}}/test/openapi-split-entry"
+variable "text" jsonpath "$.results[2].to" == "{{base}}/test/object"
+variable "text" jsonpath "$.results[2].at" == "/components/schemas/Dog/properties/name/$ref"
+variable "text" jsonpath "$.results[2].kind" == "openapi"
+variable "text" jsonpath "$.results[2].baseDialect" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1175,12 +1263,48 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == "dependents-call-string-id"
 jsonpath "$.result.isError" == false
-jsonpath "$.result.content" count == 1
+jsonpath "$.result.content" count == 3
 jsonpath "$.result.content[0].type" == "text"
+jsonpath "$.result.content[1].type" == "resource_link"
+jsonpath "$.result.content[1].uri" == "{{base}}/test/object"
+jsonpath "$.result.content[1].mimeType" == "application/schema+json"
+jsonpath "$.result.content[2].type" == "resource_link"
+jsonpath "$.result.content[2].uri" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.content[2].mimeType" == "application/openapi+json"
 jsonpath "$.result.structuredContent.results" exists
-jsonpath "$.result.structuredContent.results" count == 0
+jsonpath "$.result.structuredContent.results" count == 3
+jsonpath "$.result.structuredContent.results[0].from" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.results[0].to" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.results[0].at" == "/components/schemas/Any/discriminator/mapping/sibling"
+jsonpath "$.result.structuredContent.results[0].kind" == "openapi"
+jsonpath "$.result.structuredContent.results[0].baseDialect" not exists
+jsonpath "$.result.structuredContent.results[1].from" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.results[1].to" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.results[1].at" == "/components/schemas/Any/oneOf/0/$ref"
+jsonpath "$.result.structuredContent.results[1].kind" == "openapi"
+jsonpath "$.result.structuredContent.results[1].baseDialect" not exists
+jsonpath "$.result.structuredContent.results[2].from" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.results[2].to" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.results[2].at" == "/components/schemas/Dog/properties/name/$ref"
+jsonpath "$.result.structuredContent.results[2].kind" == "openapi"
+jsonpath "$.result.structuredContent.results[2].baseDialect" not exists
 variable "text" jsonpath "$.results" exists
-variable "text" jsonpath "$.results" count == 0
+variable "text" jsonpath "$.results" count == 3
+variable "text" jsonpath "$.results[0].from" == "{{base}}/test/openapi-split-entry"
+variable "text" jsonpath "$.results[0].to" == "{{base}}/test/object"
+variable "text" jsonpath "$.results[0].at" == "/components/schemas/Any/discriminator/mapping/sibling"
+variable "text" jsonpath "$.results[0].kind" == "openapi"
+variable "text" jsonpath "$.results[0].baseDialect" not exists
+variable "text" jsonpath "$.results[1].from" == "{{base}}/test/openapi-split-entry"
+variable "text" jsonpath "$.results[1].to" == "{{base}}/test/object"
+variable "text" jsonpath "$.results[1].at" == "/components/schemas/Any/oneOf/0/$ref"
+variable "text" jsonpath "$.results[1].kind" == "openapi"
+variable "text" jsonpath "$.results[1].baseDialect" not exists
+variable "text" jsonpath "$.results[2].from" == "{{base}}/test/openapi-split-entry"
+variable "text" jsonpath "$.results[2].to" == "{{base}}/test/object"
+variable "text" jsonpath "$.results[2].at" == "/components/schemas/Dog/properties/name/$ref"
+variable "text" jsonpath "$.results[2].kind" == "openapi"
+variable "text" jsonpath "$.results[2].baseDialect" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

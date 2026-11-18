@@ -130,7 +130,7 @@ public:
           continue;
         }
         const auto &title{entry.at_or("title", EMPTY_STRING).to_string()};
-        content.push_back(sourcemeta::one::mcp_schema_block(
+        content.push_back(sourcemeta::one::mcp_resource_block(
             version, entry.at("identifier").to_string(),
             title.empty() ? entry.at("path").to_string() : title,
             entry.at_or("description", EMPTY_STRING).to_string()));
