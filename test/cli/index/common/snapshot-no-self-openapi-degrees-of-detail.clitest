@@ -258,9 +258,11 @@ WRITE expected.txt UNTIL EOF
 ./explorer/public/api/minimal
 ./explorer/public/api/minimal/%
 ./explorer/public/api/minimal/%/dependents.metapack
+./explorer/public/api/minimal/%/metadata.metapack
 ./explorer/public/api/petstore
 ./explorer/public/api/petstore/%
 ./explorer/public/api/petstore/%/dependents.metapack
+./explorer/public/api/petstore/%/metadata.metapack
 ./routes.bin
 ./schemas
 ./schemas/api

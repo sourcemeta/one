@@ -58,7 +58,9 @@ namespace sourcemeta::one {
   X(GET_OPENAPI_DEPENDENCIES_V1, ActionGetOpenAPIDependenciesV1,               \
     "get_openapi_dependencies_v1")                                             \
   X(GET_OPENAPI_DEPENDENTS_V1, ActionGetOpenAPIDependentsV1,                   \
-    "get_openapi_dependents_v1")
+    "get_openapi_dependents_v1")                                               \
+  X(GET_OPENAPI_METADATA_V1, ActionGetOpenAPIMetadataV1,                       \
+    "get_openapi_metadata_v1")
 
 #define SOURCEMETA_ONE_DEFINE_ACTION_TYPE(Name, Class, Label)                  \
   ACTION_TYPE_##Name,

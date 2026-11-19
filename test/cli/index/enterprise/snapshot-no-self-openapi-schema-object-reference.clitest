@@ -75,6 +75,7 @@ WRITE expected.txt UNTIL EOF
 ./explorer/public/example/petstore
 ./explorer/public/example/petstore/%
 ./explorer/public/example/petstore/%/dependents.metapack
+./explorer/public/example/petstore/%/metadata.metapack
 ./explorer/public/example/tag
 ./explorer/public/example/tag/%
 ./explorer/public/example/tag/%/dependents.metapack

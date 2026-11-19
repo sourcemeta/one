@@ -1059,6 +1059,8 @@ struct GenerateURITemplateRoutes {
         "/self/v1/schemas/api/schemas/dependents/response"};
     constexpr std::string_view OPENAPI_DEPENDENCIES_SCHEMA{
         "/self/v1/schemas/api/openapi/dependencies/response"};
+    constexpr std::string_view OPENAPI_METADATA_SCHEMA{
+        "/self/v1/schemas/api/openapi/metadata/response"};
     constexpr std::string_view OPENAPI_DEPENDENTS_SCHEMA{
         "/self/v1/schemas/api/openapi/dependents/response"};
     constexpr std::string_view HEALTH_SCHEMA{
@@ -1107,6 +1109,10 @@ struct GenerateURITemplateRoutes {
         "/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/request"};
     constexpr std::string_view GET_OPENAPI_DEPENDENCIES_RESPONSE_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response"};
+    constexpr std::string_view GET_OPENAPI_METADATA_REQUEST_SCHEMA{
+        "/self/v1/schemas/mcp/tools/call/get-openapi-metadata/request"};
+    constexpr std::string_view GET_OPENAPI_METADATA_RESPONSE_SCHEMA{
+        "/self/v1/schemas/mcp/tools/call/get-openapi-metadata/response"};
     constexpr std::string_view GET_OPENAPI_DEPENDENTS_REQUEST_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/get-openapi-dependents/request"};
     constexpr std::string_view GET_OPENAPI_DEPENDENTS_RESPONSE_SCHEMA{
@@ -1372,6 +1378,19 @@ struct GenerateURITemplateRoutes {
                  "get_openapi_dependents", next_id++,
                  sourcemeta::one::ACTION_TYPE_GET_OPENAPI_DEPENDENTS_V1,
                  openapi_dependents_arguments);
+
+      const auto openapi_metadata_arguments{
+          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
+              {{"responseSchema", std::string_view{OPENAPI_METADATA_SCHEMA}},
+               {"mcpRequestSchema",
+                std::string_view{GET_OPENAPI_METADATA_REQUEST_SCHEMA}},
+               {"mcpResponseSchema",
+                std::string_view{GET_OPENAPI_METADATA_RESPONSE_SCHEMA}},
+               {"errorSchema", std::string_view{ERROR_SCHEMA}}})};
+      router.add(sourcemeta::one::ENDPOINT_OPENAPI_METADATA,
+                 "get_openapi_metadata", next_id++,
+                 sourcemeta::one::ACTION_TYPE_GET_OPENAPI_METADATA_V1,
+                 openapi_metadata_arguments);
 
       const auto health_check_arguments{
           std::to_array<sourcemeta::core::URITemplateRouter::Argument>(

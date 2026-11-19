@@ -213,9 +213,11 @@ WRITE expected.txt UNTIL EOF
 ./explorer/public/api/entry
 ./explorer/public/api/entry/%
 ./explorer/public/api/entry/%/dependents.metapack
+./explorer/public/api/entry/%/metadata.metapack
 ./explorer/public/api/shared
 ./explorer/public/api/shared/%
 ./explorer/public/api/shared/%/dependents.metapack
+./explorer/public/api/shared/%/metadata.metapack
 ./routes.bin
 ./schemas
 ./schemas/api

@@ -11,6 +11,7 @@
 #include "action_dependency_tree_v1.h"
 #include "action_get_openapi_dependencies_v1.h"
 #include "action_get_openapi_dependents_v1.h"
+#include "action_get_openapi_metadata_v1.h"
 #include "action_get_schema_dependencies_v1.h"
 #include "action_get_schema_dependents_v1.h"
 #include "action_get_schema_health_v1.h"

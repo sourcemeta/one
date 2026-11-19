@@ -25,6 +25,7 @@ enum : BuildPlan::Action::Type {
   ACTION_BLAZE_EXHAUSTIVE,
   ACTION_BLAZE_FAST,
   ACTION_SCHEMA_METADATA,
+  ACTION_OPENAPI_METADATA,
   ACTION_DEPENDENTS,
   ACTION_OPENAPI_DEPENDENTS,
   ACTION_SEARCH_INDEX,
@@ -63,9 +64,9 @@ enum : BuildPlan::Action::Type {
 enum : BuildPlan::Type { MODE_HEADLESS, MODE_FULL, MODE_EXPERIMENTAL };
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
-inline constexpr std::size_t INDEX_LEAF_RULES{24};
+inline constexpr std::size_t INDEX_LEAF_RULES{25};
 #else
-inline constexpr std::size_t INDEX_LEAF_RULES{17};
+inline constexpr std::size_t INDEX_LEAF_RULES{18};
 #endif
 
 inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
@@ -315,6 +316,30 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
                             .filename = "data.metapack"}}},
          .dependency_count = 6,
          .kind = LeafKind::Schema},
+
+        {.action = ACTION_OPENAPI_METADATA,
+         .base = 1,
+         .filename = "metadata.metapack",
+         .gate = TargetGate::Always,
+         .dirty = DirtyOverride::Normal,
+         .is_root = false,
+         .combine_only = false,
+         .container_target = true,
+         .tracks_dependencies = false,
+         .dependencies = {{{.source = DependencySource::Base,
+                            .base = 0,
+                            .filename = "data.metapack"},
+                           {.source = DependencySource::Base,
+                            .base = 0,
+                            .filename = "dependencies.metapack"},
+                           {.source = DependencySource::Base,
+                            .base = 0,
+                            .filename = "bundle.metapack"},
+                           {.source = DependencySource::GlobalOutput,
+                            .base = 0,
+                            .filename = "authentication.bin"}}},
+         .dependency_count = 4,
+         .kind = LeafKind::OpenAPI},
 
         {.action = ACTION_DEPENDENTS,
          .base = 1,

@@ -1245,9 +1245,11 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/sche
   }
 }
 
-# Nothing records an OpenAPI description for navigation yet
+# An OpenAPI description keeps its own navigation metadata, which the schema
+# surface holds nothing of, as the two kinds record it under one filename and
+# what each records differs enough to have a surface of its own
 GET {{base}}/self/v1/api/schemas/metadata/test/schemas/openapi-3-0
-HTTP 501
+HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
 Access-Control-Allow-Origin: *
@@ -1262,10 +1264,10 @@ header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.status" == 501
-jsonpath "$.type" == "urn:sourcemeta:one:openapi-description-unsupported"
-jsonpath "$.title" == "Not Implemented"
-jsonpath "$.detail" == "This operation is not supported on an OpenAPI description yet"
+jsonpath "$.status" == 404
+jsonpath "$.type" == "urn:sourcemeta:one:not-found"
+jsonpath "$.title" == "Not Found"
+jsonpath "$.detail" == "There is nothing at this URL"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
