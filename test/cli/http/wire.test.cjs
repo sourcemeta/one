@@ -79,15 +79,25 @@ async function main() {
   const lines = createInterface({ input: child.stdout });
   const ready = once(lines, "line").then(([line]) => Number(line));
   const closed = once(child, "close");
-  const timeout = setTimeout(() => child.kill("SIGKILL"), DEADLINE);
+  let timeout;
+  let failed = false;
+  const readinessDeadline = new Promise((_, reject) => {
+    timeout = setTimeout(() => reject(new Error(
+      "Echo server did not announce readiness before the deadline"
+    )), DEADLINE);
+  });
   try {
     const port = await Promise.race([
       ready,
+      readinessDeadline,
       closed.then(([code, signal]) => { throw new Error("Echo server exited before readiness: " + (signal || code)); }),
     ]);
     clearTimeout(timeout);
     assert.ok(Number.isInteger(port) && port > 0 && port <= 65535, "expected an ephemeral port");
     await run(port);
+  } catch (error) {
+    failed = true;
+    throw error;
   } finally {
     clearTimeout(timeout);
     lines.close();
@@ -97,6 +107,9 @@ async function main() {
       const [code, signal] = await closed;
       assert.equal(signal, null, "echo server terminated by " + signal);
       assert.equal(code, 0, "expected a graceful server exit");
+    } catch (shutdownError) {
+      if (!failed) throw shutdownError;
+      console.error("Echo server cleanup also failed:", shutdownError.message);
     } finally {
       clearTimeout(kill);
     }

@@ -7,7 +7,8 @@ for the announcement, bounds socket and process operations, and shuts down
 the child on success and failure. The existing Docker CTest run picks up
 this test when ONE_TESTS and ONE_SERVER are enabled.
 
-Run from an existing One build with Node available:
+Run from a One build configured with `ONE_TESTS=ON` and `ONE_SERVER=ON`,
+with Node available:
 
 ```sh
 cmake --build build --target sourcemeta_one_http_wire_echo
@@ -26,7 +27,7 @@ The test takes no runtime dependency on h1spec or Deno.
 | Missing Host | 400 | RFC 9112 section 3.2 |
 | Bodies of 64 and 65 bytes | Exact echo at the cap and 413 above it | One HTTPRequest::body fixture policy |
 
-The remaining external cases are outside this initial subset. In particular,
+The remaining h1spec cases are outside this initial subset. In particular,
 this gate excludes timeout-only cases, special method or interim-response
 handling, and cases whose broad status ranges need separate RFC review.
 The split-write checks complete the requests and verify the response.

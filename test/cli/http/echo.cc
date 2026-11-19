@@ -35,6 +35,9 @@ auto main() -> int {
         }
       },
       [](const std::uint16_t port) { std::cout << port << std::endl; },
-      [](const std::uint16_t) {}, "127.0.0.1"};
+      [](const std::uint16_t port) {
+        std::cerr << "Failed to listen on 127.0.0.1:" << port << '\n';
+      },
+      "127.0.0.1"};
   return server.stopped_gracefully() ? 0 : 1;
 }
