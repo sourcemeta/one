@@ -6,6 +6,7 @@
     {
       "health": 100,
       "schemas": 42,
+      "openapi": 3,
       "entries": [],
       "path": "/schemas",
       "url": "https://example.com/schemas",

@@ -543,7 +543,7 @@ jsonpath "$.result.resources[36].description" == "The error response format retu
 jsonpath "$.result.resources[37].uri" == "{{base}}/self/v1/schemas/api/list/response"
 jsonpath "$.result.resources[37].name" == "Sourcemeta One List API Response"
 jsonpath "$.result.resources[37].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[37].size" == 3861
+jsonpath "$.result.resources[37].size" == 4757
 jsonpath "$.result.resources[37].annotations.priority" == 0.0
 jsonpath "$.result.resources[37].description" == "The response format for the directory listing API endpoint"
 jsonpath "$.result.resources[38].uri" == "{{base}}/self/v1/schemas/api/openapi/dependencies/response"
@@ -953,7 +953,7 @@ jsonpath "$.result.resources[47].uri" == "{{base}}/self/v1/schemas/mcp/tools/cal
 jsonpath "$.result.resources[47].name" == "Sourcemeta One Directory Listing RPC Output"
 jsonpath "$.result.resources[47].description" == "List the contents of a directory in the catalog"
 jsonpath "$.result.resources[47].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[47].size" == 609
+jsonpath "$.result.resources[47].size" == 629
 jsonpath "$.result.resources[47].annotations.priority" == 0.0
 jsonpath "$.result.resources[48].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/playground-trace-schema/request"
 jsonpath "$.result.resources[48].name" == "Sourcemeta One Playground Schema Trace RPC Input"
@@ -1478,7 +1478,7 @@ jsonpath "$.result.resources[36].description" == "The error response format retu
 jsonpath "$.result.resources[37].uri" == "{{base}}/self/v1/schemas/api/list/response"
 jsonpath "$.result.resources[37].name" == "Sourcemeta One List API Response"
 jsonpath "$.result.resources[37].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[37].size" == 3861
+jsonpath "$.result.resources[37].size" == 4757
 jsonpath "$.result.resources[37].annotations.priority" == 0.0
 jsonpath "$.result.resources[37].description" == "The response format for the directory listing API endpoint"
 jsonpath "$.result.resources[38].uri" == "{{base}}/self/v1/schemas/api/openapi/dependencies/response"

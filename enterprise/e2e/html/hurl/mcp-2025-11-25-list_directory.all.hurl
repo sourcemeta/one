@@ -123,7 +123,9 @@ variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
 jsonpath "$.result.structuredContent.schemas" == 161
+jsonpath "$.result.structuredContent.openapi" == 3
 variable "text" jsonpath "$.schemas" == 161
+variable "text" jsonpath "$.openapi" == 3
 jsonpath "$.result.structuredContent.entries" count == 5
 jsonpath "$.result.structuredContent.private" == false
 variable "text" jsonpath "$.entries" count == 5
@@ -137,7 +139,9 @@ variable "text" jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.result.structuredContent.entries[0].health" == 0
 variable "text" jsonpath "$.entries[0].health" == 0
 jsonpath "$.result.structuredContent.entries[0].schemas" == 2
+jsonpath "$.result.structuredContent.entries[0].openapi" == 0
 variable "text" jsonpath "$.entries[0].schemas" == 2
+variable "text" jsonpath "$.entries[0].openapi" == 0
 jsonpath "$.result.structuredContent.entries[0].path" == "/no-blaze/"
 variable "text" jsonpath "$.entries[0].path" == "/no-blaze/"
 jsonpath "$.result.structuredContent.entries[1].name" == "openapi3.0"
@@ -153,7 +157,9 @@ variable "text" jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.result.structuredContent.entries[1].health" == 67
 variable "text" jsonpath "$.entries[1].health" == 67
 jsonpath "$.result.structuredContent.entries[1].schemas" == 3
+jsonpath "$.result.structuredContent.entries[1].openapi" == 0
 variable "text" jsonpath "$.entries[1].schemas" == 3
+variable "text" jsonpath "$.entries[1].openapi" == 0
 jsonpath "$.result.structuredContent.entries[1].path" == "/openapi3.0/"
 variable "text" jsonpath "$.entries[1].path" == "/openapi3.0/"
 jsonpath "$.result.structuredContent.entries[2].name" == "self"
@@ -169,7 +175,9 @@ variable "text" jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.result.structuredContent.entries[2].health" == 100
 variable "text" jsonpath "$.entries[2].health" == 100
 jsonpath "$.result.structuredContent.entries[2].schemas" == 77
+jsonpath "$.result.structuredContent.entries[2].openapi" == 0
 variable "text" jsonpath "$.entries[2].schemas" == 77
+variable "text" jsonpath "$.entries[2].openapi" == 0
 jsonpath "$.result.structuredContent.entries[2].path" == "/self/"
 variable "text" jsonpath "$.entries[2].path" == "/self/"
 jsonpath "$.result.structuredContent.entries[3].name" == "test"
@@ -181,7 +189,9 @@ variable "text" jsonpath "$.entries[3].type" == "directory"
 jsonpath "$.result.structuredContent.entries[3].health" == 31
 variable "text" jsonpath "$.entries[3].health" == 31
 jsonpath "$.result.structuredContent.entries[3].schemas" == 77
+jsonpath "$.result.structuredContent.entries[3].openapi" == 3
 variable "text" jsonpath "$.entries[3].schemas" == 77
+variable "text" jsonpath "$.entries[3].openapi" == 3
 jsonpath "$.result.structuredContent.entries[3].path" == "/test/"
 variable "text" jsonpath "$.entries[3].path" == "/test/"
 jsonpath "$.result.structuredContent.entries[4].name" == "twins"
@@ -197,7 +207,9 @@ variable "text" jsonpath "$.entries[4].type" == "directory"
 jsonpath "$.result.structuredContent.entries[4].health" == 100
 variable "text" jsonpath "$.entries[4].health" == 100
 jsonpath "$.result.structuredContent.entries[4].schemas" == 2
+jsonpath "$.result.structuredContent.entries[4].openapi" == 0
 variable "text" jsonpath "$.entries[4].schemas" == 2
+variable "text" jsonpath "$.entries[4].openapi" == 0
 jsonpath "$.result.structuredContent.entries[4].path" == "/twins/"
 variable "text" jsonpath "$.entries[4].path" == "/twins/"
 
@@ -274,7 +286,9 @@ variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
 jsonpath "$.result.structuredContent.schemas" == 161
+jsonpath "$.result.structuredContent.openapi" == 3
 variable "text" jsonpath "$.schemas" == 161
+variable "text" jsonpath "$.openapi" == 3
 jsonpath "$.result.structuredContent.entries" count == 5
 jsonpath "$.result.structuredContent.private" == false
 variable "text" jsonpath "$.entries" count == 5
@@ -288,7 +302,9 @@ variable "text" jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.result.structuredContent.entries[0].health" == 0
 variable "text" jsonpath "$.entries[0].health" == 0
 jsonpath "$.result.structuredContent.entries[0].schemas" == 2
+jsonpath "$.result.structuredContent.entries[0].openapi" == 0
 variable "text" jsonpath "$.entries[0].schemas" == 2
+variable "text" jsonpath "$.entries[0].openapi" == 0
 jsonpath "$.result.structuredContent.entries[0].path" == "/no-blaze/"
 variable "text" jsonpath "$.entries[0].path" == "/no-blaze/"
 jsonpath "$.result.structuredContent.entries[1].name" == "openapi3.0"
@@ -304,7 +320,9 @@ variable "text" jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.result.structuredContent.entries[1].health" == 67
 variable "text" jsonpath "$.entries[1].health" == 67
 jsonpath "$.result.structuredContent.entries[1].schemas" == 3
+jsonpath "$.result.structuredContent.entries[1].openapi" == 0
 variable "text" jsonpath "$.entries[1].schemas" == 3
+variable "text" jsonpath "$.entries[1].openapi" == 0
 jsonpath "$.result.structuredContent.entries[1].path" == "/openapi3.0/"
 variable "text" jsonpath "$.entries[1].path" == "/openapi3.0/"
 jsonpath "$.result.structuredContent.entries[2].name" == "self"
@@ -320,7 +338,9 @@ variable "text" jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.result.structuredContent.entries[2].health" == 100
 variable "text" jsonpath "$.entries[2].health" == 100
 jsonpath "$.result.structuredContent.entries[2].schemas" == 77
+jsonpath "$.result.structuredContent.entries[2].openapi" == 0
 variable "text" jsonpath "$.entries[2].schemas" == 77
+variable "text" jsonpath "$.entries[2].openapi" == 0
 jsonpath "$.result.structuredContent.entries[2].path" == "/self/"
 variable "text" jsonpath "$.entries[2].path" == "/self/"
 jsonpath "$.result.structuredContent.entries[3].name" == "test"
@@ -332,7 +352,9 @@ variable "text" jsonpath "$.entries[3].type" == "directory"
 jsonpath "$.result.structuredContent.entries[3].health" == 31
 variable "text" jsonpath "$.entries[3].health" == 31
 jsonpath "$.result.structuredContent.entries[3].schemas" == 77
+jsonpath "$.result.structuredContent.entries[3].openapi" == 3
 variable "text" jsonpath "$.entries[3].schemas" == 77
+variable "text" jsonpath "$.entries[3].openapi" == 3
 jsonpath "$.result.structuredContent.entries[3].path" == "/test/"
 variable "text" jsonpath "$.entries[3].path" == "/test/"
 jsonpath "$.result.structuredContent.entries[4].name" == "twins"
@@ -348,7 +370,9 @@ variable "text" jsonpath "$.entries[4].type" == "directory"
 jsonpath "$.result.structuredContent.entries[4].health" == 100
 variable "text" jsonpath "$.entries[4].health" == 100
 jsonpath "$.result.structuredContent.entries[4].schemas" == 2
+jsonpath "$.result.structuredContent.entries[4].openapi" == 0
 variable "text" jsonpath "$.entries[4].schemas" == 2
+variable "text" jsonpath "$.entries[4].openapi" == 0
 jsonpath "$.result.structuredContent.entries[4].path" == "/twins/"
 variable "text" jsonpath "$.entries[4].path" == "/twins/"
 
@@ -425,7 +449,9 @@ variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
 jsonpath "$.result.structuredContent.schemas" == 161
+jsonpath "$.result.structuredContent.openapi" == 3
 variable "text" jsonpath "$.schemas" == 161
+variable "text" jsonpath "$.openapi" == 3
 jsonpath "$.result.structuredContent.entries" count == 5
 jsonpath "$.result.structuredContent.private" == false
 variable "text" jsonpath "$.entries" count == 5
@@ -439,7 +465,9 @@ variable "text" jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.result.structuredContent.entries[0].health" == 0
 variable "text" jsonpath "$.entries[0].health" == 0
 jsonpath "$.result.structuredContent.entries[0].schemas" == 2
+jsonpath "$.result.structuredContent.entries[0].openapi" == 0
 variable "text" jsonpath "$.entries[0].schemas" == 2
+variable "text" jsonpath "$.entries[0].openapi" == 0
 jsonpath "$.result.structuredContent.entries[0].path" == "/no-blaze/"
 variable "text" jsonpath "$.entries[0].path" == "/no-blaze/"
 jsonpath "$.result.structuredContent.entries[1].name" == "openapi3.0"
@@ -451,7 +479,9 @@ variable "text" jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.result.structuredContent.entries[1].health" == 67
 variable "text" jsonpath "$.entries[1].health" == 67
 jsonpath "$.result.structuredContent.entries[1].schemas" == 3
+jsonpath "$.result.structuredContent.entries[1].openapi" == 0
 variable "text" jsonpath "$.entries[1].schemas" == 3
+variable "text" jsonpath "$.entries[1].openapi" == 0
 jsonpath "$.result.structuredContent.entries[1].path" == "/openapi3.0/"
 variable "text" jsonpath "$.entries[1].path" == "/openapi3.0/"
 jsonpath "$.result.structuredContent.entries[1].title" == "OpenAPI 3.0"
@@ -467,7 +497,9 @@ variable "text" jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.result.structuredContent.entries[2].health" == 100
 variable "text" jsonpath "$.entries[2].health" == 100
 jsonpath "$.result.structuredContent.entries[2].schemas" == 77
+jsonpath "$.result.structuredContent.entries[2].openapi" == 0
 variable "text" jsonpath "$.entries[2].schemas" == 77
+variable "text" jsonpath "$.entries[2].openapi" == 0
 jsonpath "$.result.structuredContent.entries[2].path" == "/self/"
 variable "text" jsonpath "$.entries[2].path" == "/self/"
 jsonpath "$.result.structuredContent.entries[2].title" == "Self"
@@ -483,7 +515,9 @@ variable "text" jsonpath "$.entries[3].type" == "directory"
 jsonpath "$.result.structuredContent.entries[3].health" == 31
 variable "text" jsonpath "$.entries[3].health" == 31
 jsonpath "$.result.structuredContent.entries[3].schemas" == 77
+jsonpath "$.result.structuredContent.entries[3].openapi" == 3
 variable "text" jsonpath "$.entries[3].schemas" == 77
+variable "text" jsonpath "$.entries[3].openapi" == 3
 jsonpath "$.result.structuredContent.entries[3].path" == "/test/"
 variable "text" jsonpath "$.entries[3].path" == "/test/"
 jsonpath "$.result.structuredContent.entries[4].name" == "twins"
@@ -495,7 +529,9 @@ variable "text" jsonpath "$.entries[4].type" == "directory"
 jsonpath "$.result.structuredContent.entries[4].health" == 100
 variable "text" jsonpath "$.entries[4].health" == 100
 jsonpath "$.result.structuredContent.entries[4].schemas" == 2
+jsonpath "$.result.structuredContent.entries[4].openapi" == 0
 variable "text" jsonpath "$.entries[4].schemas" == 2
+variable "text" jsonpath "$.entries[4].openapi" == 0
 jsonpath "$.result.structuredContent.entries[4].path" == "/twins/"
 variable "text" jsonpath "$.entries[4].path" == "/twins/"
 jsonpath "$.result.structuredContent.entries[4].title" == "Twins"
@@ -585,12 +621,14 @@ variable "text" jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.result.structuredContent.breadcrumb[0].path" == "/test/"
 variable "text" jsonpath "$.breadcrumb[0].path" == "/test/"
 jsonpath "$.result.structuredContent.schemas" == 77
+jsonpath "$.result.structuredContent.openapi" == 3
 variable "text" jsonpath "$.schemas" == 77
+variable "text" jsonpath "$.openapi" == 3
 jsonpath "$.result.structuredContent.health" == 31
 variable "text" jsonpath "$.health" == 31
-jsonpath "$.result.structuredContent.entries" count == 8
+jsonpath "$.result.structuredContent.entries" count == 11
 jsonpath "$.result.structuredContent.private" == false
-variable "text" jsonpath "$.entries" count == 8
+variable "text" jsonpath "$.entries" count == 11
 variable "text" jsonpath "$.private" == false
 jsonpath "$.result.structuredContent.entries[0].name" == "bare"
 jsonpath "$.result.structuredContent.entries[0].private" == false
@@ -601,7 +639,9 @@ variable "text" jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.result.structuredContent.entries[0].health" == 0
 variable "text" jsonpath "$.entries[0].health" == 0
 jsonpath "$.result.structuredContent.entries[0].schemas" == 50
+jsonpath "$.result.structuredContent.entries[0].openapi" == 0
 variable "text" jsonpath "$.entries[0].schemas" == 50
+variable "text" jsonpath "$.entries[0].openapi" == 0
 jsonpath "$.result.structuredContent.entries[0].path" == "/test/bare/"
 variable "text" jsonpath "$.entries[0].path" == "/test/bare/"
 jsonpath "$.result.structuredContent.entries[1].name" == "description-only"
@@ -613,7 +653,9 @@ variable "text" jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.result.structuredContent.entries[1].health" == 0
 variable "text" jsonpath "$.entries[1].health" == 0
 jsonpath "$.result.structuredContent.entries[1].schemas" == 5
+jsonpath "$.result.structuredContent.entries[1].openapi" == 0
 variable "text" jsonpath "$.entries[1].schemas" == 5
+variable "text" jsonpath "$.entries[1].openapi" == 0
 jsonpath "$.result.structuredContent.entries[1].path" == "/test/description-only/"
 variable "text" jsonpath "$.entries[1].path" == "/test/description-only/"
 jsonpath "$.result.structuredContent.entries[2].name" == "draft3"
@@ -625,7 +667,9 @@ variable "text" jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.result.structuredContent.entries[2].health" == 38
 variable "text" jsonpath "$.entries[2].health" == 38
 jsonpath "$.result.structuredContent.entries[2].schemas" == 2
+jsonpath "$.result.structuredContent.entries[2].openapi" == 0
 variable "text" jsonpath "$.entries[2].schemas" == 2
+variable "text" jsonpath "$.entries[2].openapi" == 0
 jsonpath "$.result.structuredContent.entries[2].path" == "/test/draft3/"
 variable "text" jsonpath "$.entries[2].path" == "/test/draft3/"
 jsonpath "$.result.structuredContent.entries[3].name" == "full"
@@ -637,7 +681,9 @@ variable "text" jsonpath "$.entries[3].type" == "directory"
 jsonpath "$.result.structuredContent.entries[3].health" == 0
 variable "text" jsonpath "$.entries[3].health" == 0
 jsonpath "$.result.structuredContent.entries[3].schemas" == 5
+jsonpath "$.result.structuredContent.entries[3].openapi" == 0
 variable "text" jsonpath "$.entries[3].schemas" == 5
+variable "text" jsonpath "$.entries[3].openapi" == 0
 jsonpath "$.result.structuredContent.entries[3].path" == "/test/full/"
 variable "text" jsonpath "$.entries[3].path" == "/test/full/"
 jsonpath "$.result.structuredContent.entries[4].name" == "jsonld"
@@ -649,7 +695,9 @@ variable "text" jsonpath "$.entries[4].type" == "directory"
 jsonpath "$.result.structuredContent.entries[4].health" == 43
 variable "text" jsonpath "$.entries[4].health" == 43
 jsonpath "$.result.structuredContent.entries[4].schemas" == 5
+jsonpath "$.result.structuredContent.entries[4].openapi" == 0
 variable "text" jsonpath "$.entries[4].schemas" == 5
+variable "text" jsonpath "$.entries[4].openapi" == 0
 jsonpath "$.result.structuredContent.entries[4].path" == "/test/jsonld/"
 variable "text" jsonpath "$.entries[4].path" == "/test/jsonld/"
 jsonpath "$.result.structuredContent.entries[5].name" == "openapi"
@@ -661,7 +709,9 @@ variable "text" jsonpath "$.entries[5].type" == "directory"
 jsonpath "$.result.structuredContent.entries[5].health" == 100
 variable "text" jsonpath "$.entries[5].health" == 100
 jsonpath "$.result.structuredContent.entries[5].schemas" == 4
+jsonpath "$.result.structuredContent.entries[5].openapi" == 0
 variable "text" jsonpath "$.entries[5].schemas" == 4
+variable "text" jsonpath "$.entries[5].openapi" == 0
 jsonpath "$.result.structuredContent.entries[5].path" == "/test/openapi/"
 variable "text" jsonpath "$.entries[5].path" == "/test/openapi/"
 jsonpath "$.result.structuredContent.entries[6].name" == "title-only"
@@ -673,7 +723,9 @@ variable "text" jsonpath "$.entries[6].type" == "directory"
 jsonpath "$.result.structuredContent.entries[6].health" == 0
 variable "text" jsonpath "$.entries[6].health" == 0
 jsonpath "$.result.structuredContent.entries[6].schemas" == 5
+jsonpath "$.result.structuredContent.entries[6].openapi" == 0
 variable "text" jsonpath "$.entries[6].schemas" == 5
+variable "text" jsonpath "$.entries[6].openapi" == 0
 jsonpath "$.result.structuredContent.entries[6].path" == "/test/title-only/"
 variable "text" jsonpath "$.entries[6].path" == "/test/title-only/"
 jsonpath "$.result.structuredContent.entries[7].name" == "object"
@@ -694,6 +746,54 @@ jsonpath "$.result.structuredContent.entries[7].description" == "An Object Examp
 jsonpath "$.result.structuredContent.entries[7].priority" == 50
 variable "text" jsonpath "$.entries[7].priority" == 50
 variable "text" jsonpath "$.entries[7].description" == "An Object Example"
+jsonpath "$.result.structuredContent.entries[8].name" == "openapi-petstore"
+variable "text" jsonpath "$.entries[8].name" == "openapi-petstore"
+jsonpath "$.result.structuredContent.entries[8].private" == false
+variable "text" jsonpath "$.entries[8].private" == false
+jsonpath "$.result.structuredContent.entries[8].type" == "openapi"
+variable "text" jsonpath "$.entries[8].type" == "openapi"
+jsonpath "$.result.structuredContent.entries[8].health" == 100
+variable "text" jsonpath "$.entries[8].health" == 100
+jsonpath "$.result.structuredContent.entries[8].openapi" == "3.0"
+variable "text" jsonpath "$.entries[8].openapi" == "3.0"
+jsonpath "$.result.structuredContent.entries[8].version" == "1.0.0"
+variable "text" jsonpath "$.entries[8].version" == "1.0.0"
+jsonpath "$.result.structuredContent.entries[8].operations" == 1
+variable "text" jsonpath "$.entries[8].operations" == 1
+jsonpath "$.result.structuredContent.entries[8].path" == "/test/openapi-petstore"
+variable "text" jsonpath "$.entries[8].path" == "/test/openapi-petstore"
+jsonpath "$.result.structuredContent.entries[9].name" == "openapi-split-entry"
+variable "text" jsonpath "$.entries[9].name" == "openapi-split-entry"
+jsonpath "$.result.structuredContent.entries[9].private" == false
+variable "text" jsonpath "$.entries[9].private" == false
+jsonpath "$.result.structuredContent.entries[9].type" == "openapi"
+variable "text" jsonpath "$.entries[9].type" == "openapi"
+jsonpath "$.result.structuredContent.entries[9].health" == 100
+variable "text" jsonpath "$.entries[9].health" == 100
+jsonpath "$.result.structuredContent.entries[9].openapi" == "3.2"
+variable "text" jsonpath "$.entries[9].openapi" == "3.2"
+jsonpath "$.result.structuredContent.entries[9].version" == "1.0.0"
+variable "text" jsonpath "$.entries[9].version" == "1.0.0"
+jsonpath "$.result.structuredContent.entries[9].operations" == 0
+variable "text" jsonpath "$.entries[9].operations" == 0
+jsonpath "$.result.structuredContent.entries[9].path" == "/test/openapi-split-entry"
+variable "text" jsonpath "$.entries[9].path" == "/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.entries[10].name" == "openapi-split-shared"
+variable "text" jsonpath "$.entries[10].name" == "openapi-split-shared"
+jsonpath "$.result.structuredContent.entries[10].private" == false
+variable "text" jsonpath "$.entries[10].private" == false
+jsonpath "$.result.structuredContent.entries[10].type" == "openapi"
+variable "text" jsonpath "$.entries[10].type" == "openapi"
+jsonpath "$.result.structuredContent.entries[10].health" == 100
+variable "text" jsonpath "$.entries[10].health" == 100
+jsonpath "$.result.structuredContent.entries[10].openapi" == "3.2"
+variable "text" jsonpath "$.entries[10].openapi" == "3.2"
+jsonpath "$.result.structuredContent.entries[10].version" == "1.0.0"
+variable "text" jsonpath "$.entries[10].version" == "1.0.0"
+jsonpath "$.result.structuredContent.entries[10].operations" == 0
+variable "text" jsonpath "$.entries[10].operations" == 0
+jsonpath "$.result.structuredContent.entries[10].path" == "/test/openapi-split-shared"
+variable "text" jsonpath "$.entries[10].path" == "/test/openapi-split-shared"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -925,7 +1025,9 @@ variable "text" jsonpath "$.breadcrumb[1].name" == "bare"
 jsonpath "$.result.structuredContent.breadcrumb[1].path" == "/test/bare/"
 variable "text" jsonpath "$.breadcrumb[1].path" == "/test/bare/"
 jsonpath "$.result.structuredContent.schemas" == 50
+jsonpath "$.result.structuredContent.openapi" == 0
 variable "text" jsonpath "$.schemas" == 50
+variable "text" jsonpath "$.openapi" == 0
 jsonpath "$.result.structuredContent.health" == 0
 variable "text" jsonpath "$.health" == 0
 jsonpath "$.result.structuredContent.entries" count == 50
@@ -2196,12 +2298,14 @@ variable "text" jsonpath "$.path" == "/test"
 jsonpath "$.result.structuredContent.url" == "{{base}}/test"
 variable "text" jsonpath "$.url" == "{{base}}/test"
 jsonpath "$.result.structuredContent.schemas" == 77
+jsonpath "$.result.structuredContent.openapi" == 3
 variable "text" jsonpath "$.schemas" == 77
+variable "text" jsonpath "$.openapi" == 3
 jsonpath "$.result.structuredContent.health" == 31
 variable "text" jsonpath "$.health" == 31
-jsonpath "$.result.structuredContent.entries" count == 8
+jsonpath "$.result.structuredContent.entries" count == 11
 jsonpath "$.result.structuredContent.private" == false
-variable "text" jsonpath "$.entries" count == 8
+variable "text" jsonpath "$.entries" count == 11
 variable "text" jsonpath "$.private" == false
 jsonpath "$.result.structuredContent.entries[7].name" == "object"
 jsonpath "$.result.structuredContent.entries[7].private" == false
@@ -2217,6 +2321,54 @@ jsonpath "$.result.structuredContent.entries[7].description" == "An Object Examp
 jsonpath "$.result.structuredContent.entries[7].priority" == 50
 variable "text" jsonpath "$.entries[7].priority" == 50
 variable "text" jsonpath "$.entries[7].description" == "An Object Example"
+jsonpath "$.result.structuredContent.entries[8].name" == "openapi-petstore"
+variable "text" jsonpath "$.entries[8].name" == "openapi-petstore"
+jsonpath "$.result.structuredContent.entries[8].private" == false
+variable "text" jsonpath "$.entries[8].private" == false
+jsonpath "$.result.structuredContent.entries[8].type" == "openapi"
+variable "text" jsonpath "$.entries[8].type" == "openapi"
+jsonpath "$.result.structuredContent.entries[8].health" == 100
+variable "text" jsonpath "$.entries[8].health" == 100
+jsonpath "$.result.structuredContent.entries[8].openapi" == "3.0"
+variable "text" jsonpath "$.entries[8].openapi" == "3.0"
+jsonpath "$.result.structuredContent.entries[8].version" == "1.0.0"
+variable "text" jsonpath "$.entries[8].version" == "1.0.0"
+jsonpath "$.result.structuredContent.entries[8].operations" == 1
+variable "text" jsonpath "$.entries[8].operations" == 1
+jsonpath "$.result.structuredContent.entries[8].path" == "/test/openapi-petstore"
+variable "text" jsonpath "$.entries[8].path" == "/test/openapi-petstore"
+jsonpath "$.result.structuredContent.entries[9].name" == "openapi-split-entry"
+variable "text" jsonpath "$.entries[9].name" == "openapi-split-entry"
+jsonpath "$.result.structuredContent.entries[9].private" == false
+variable "text" jsonpath "$.entries[9].private" == false
+jsonpath "$.result.structuredContent.entries[9].type" == "openapi"
+variable "text" jsonpath "$.entries[9].type" == "openapi"
+jsonpath "$.result.structuredContent.entries[9].health" == 100
+variable "text" jsonpath "$.entries[9].health" == 100
+jsonpath "$.result.structuredContent.entries[9].openapi" == "3.2"
+variable "text" jsonpath "$.entries[9].openapi" == "3.2"
+jsonpath "$.result.structuredContent.entries[9].version" == "1.0.0"
+variable "text" jsonpath "$.entries[9].version" == "1.0.0"
+jsonpath "$.result.structuredContent.entries[9].operations" == 0
+variable "text" jsonpath "$.entries[9].operations" == 0
+jsonpath "$.result.structuredContent.entries[9].path" == "/test/openapi-split-entry"
+variable "text" jsonpath "$.entries[9].path" == "/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.entries[10].name" == "openapi-split-shared"
+variable "text" jsonpath "$.entries[10].name" == "openapi-split-shared"
+jsonpath "$.result.structuredContent.entries[10].private" == false
+variable "text" jsonpath "$.entries[10].private" == false
+jsonpath "$.result.structuredContent.entries[10].type" == "openapi"
+variable "text" jsonpath "$.entries[10].type" == "openapi"
+jsonpath "$.result.structuredContent.entries[10].health" == 100
+variable "text" jsonpath "$.entries[10].health" == 100
+jsonpath "$.result.structuredContent.entries[10].openapi" == "3.2"
+variable "text" jsonpath "$.entries[10].openapi" == "3.2"
+jsonpath "$.result.structuredContent.entries[10].version" == "1.0.0"
+variable "text" jsonpath "$.entries[10].version" == "1.0.0"
+jsonpath "$.result.structuredContent.entries[10].operations" == 0
+variable "text" jsonpath "$.entries[10].operations" == 0
+jsonpath "$.result.structuredContent.entries[10].path" == "/test/openapi-split-shared"
+variable "text" jsonpath "$.entries[10].path" == "/test/openapi-split-shared"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -2362,7 +2514,9 @@ variable "text" jsonpath "$.breadcrumb[0].name" == "self"
 jsonpath "$.result.structuredContent.breadcrumb[0].path" == "/self/"
 variable "text" jsonpath "$.breadcrumb[0].path" == "/self/"
 jsonpath "$.result.structuredContent.schemas" == 77
+jsonpath "$.result.structuredContent.openapi" == 0
 variable "text" jsonpath "$.schemas" == 77
+variable "text" jsonpath "$.openapi" == 0
 jsonpath "$.result.structuredContent.health" == 100
 variable "text" jsonpath "$.health" == 100
 jsonpath "$.result.structuredContent.entries" count == 1
@@ -2378,7 +2532,9 @@ variable "text" jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.result.structuredContent.entries[0].health" == 100
 variable "text" jsonpath "$.entries[0].health" == 100
 jsonpath "$.result.structuredContent.entries[0].schemas" == 77
+jsonpath "$.result.structuredContent.entries[0].openapi" == 0
 variable "text" jsonpath "$.entries[0].schemas" == 77
+variable "text" jsonpath "$.entries[0].openapi" == 0
 jsonpath "$.result.structuredContent.entries[0].path" == "/self/v1/"
 variable "text" jsonpath "$.entries[0].path" == "/self/v1/"
 
@@ -2567,12 +2723,14 @@ variable "text" jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.result.structuredContent.breadcrumb[0].path" == "/test/"
 variable "text" jsonpath "$.breadcrumb[0].path" == "/test/"
 jsonpath "$.result.structuredContent.schemas" == 77
+jsonpath "$.result.structuredContent.openapi" == 3
 variable "text" jsonpath "$.schemas" == 77
+variable "text" jsonpath "$.openapi" == 3
 jsonpath "$.result.structuredContent.health" == 31
 variable "text" jsonpath "$.health" == 31
-jsonpath "$.result.structuredContent.entries" count == 8
+jsonpath "$.result.structuredContent.entries" count == 11
 jsonpath "$.result.structuredContent.private" == false
-variable "text" jsonpath "$.entries" count == 8
+variable "text" jsonpath "$.entries" count == 11
 variable "text" jsonpath "$.private" == false
 jsonpath "$.result.structuredContent.entries[0].name" == "bare"
 jsonpath "$.result.structuredContent.entries[0].private" == false
@@ -2583,7 +2741,9 @@ variable "text" jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.result.structuredContent.entries[0].health" == 0
 variable "text" jsonpath "$.entries[0].health" == 0
 jsonpath "$.result.structuredContent.entries[0].schemas" == 50
+jsonpath "$.result.structuredContent.entries[0].openapi" == 0
 variable "text" jsonpath "$.entries[0].schemas" == 50
+variable "text" jsonpath "$.entries[0].openapi" == 0
 jsonpath "$.result.structuredContent.entries[0].path" == "/test/bare/"
 variable "text" jsonpath "$.entries[0].path" == "/test/bare/"
 jsonpath "$.result.structuredContent.entries[1].name" == "description-only"
@@ -2595,7 +2755,9 @@ variable "text" jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.result.structuredContent.entries[1].health" == 0
 variable "text" jsonpath "$.entries[1].health" == 0
 jsonpath "$.result.structuredContent.entries[1].schemas" == 5
+jsonpath "$.result.structuredContent.entries[1].openapi" == 0
 variable "text" jsonpath "$.entries[1].schemas" == 5
+variable "text" jsonpath "$.entries[1].openapi" == 0
 jsonpath "$.result.structuredContent.entries[1].path" == "/test/description-only/"
 variable "text" jsonpath "$.entries[1].path" == "/test/description-only/"
 jsonpath "$.result.structuredContent.entries[2].name" == "draft3"
@@ -2607,7 +2769,9 @@ variable "text" jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.result.structuredContent.entries[2].health" == 38
 variable "text" jsonpath "$.entries[2].health" == 38
 jsonpath "$.result.structuredContent.entries[2].schemas" == 2
+jsonpath "$.result.structuredContent.entries[2].openapi" == 0
 variable "text" jsonpath "$.entries[2].schemas" == 2
+variable "text" jsonpath "$.entries[2].openapi" == 0
 jsonpath "$.result.structuredContent.entries[2].path" == "/test/draft3/"
 variable "text" jsonpath "$.entries[2].path" == "/test/draft3/"
 jsonpath "$.result.structuredContent.entries[3].name" == "full"
@@ -2619,7 +2783,9 @@ variable "text" jsonpath "$.entries[3].type" == "directory"
 jsonpath "$.result.structuredContent.entries[3].health" == 0
 variable "text" jsonpath "$.entries[3].health" == 0
 jsonpath "$.result.structuredContent.entries[3].schemas" == 5
+jsonpath "$.result.structuredContent.entries[3].openapi" == 0
 variable "text" jsonpath "$.entries[3].schemas" == 5
+variable "text" jsonpath "$.entries[3].openapi" == 0
 jsonpath "$.result.structuredContent.entries[3].path" == "/test/full/"
 variable "text" jsonpath "$.entries[3].path" == "/test/full/"
 jsonpath "$.result.structuredContent.entries[4].name" == "jsonld"
@@ -2631,7 +2797,9 @@ variable "text" jsonpath "$.entries[4].type" == "directory"
 jsonpath "$.result.structuredContent.entries[4].health" == 43
 variable "text" jsonpath "$.entries[4].health" == 43
 jsonpath "$.result.structuredContent.entries[4].schemas" == 5
+jsonpath "$.result.structuredContent.entries[4].openapi" == 0
 variable "text" jsonpath "$.entries[4].schemas" == 5
+variable "text" jsonpath "$.entries[4].openapi" == 0
 jsonpath "$.result.structuredContent.entries[4].path" == "/test/jsonld/"
 variable "text" jsonpath "$.entries[4].path" == "/test/jsonld/"
 jsonpath "$.result.structuredContent.entries[5].name" == "openapi"
@@ -2643,7 +2811,9 @@ variable "text" jsonpath "$.entries[5].type" == "directory"
 jsonpath "$.result.structuredContent.entries[5].health" == 100
 variable "text" jsonpath "$.entries[5].health" == 100
 jsonpath "$.result.structuredContent.entries[5].schemas" == 4
+jsonpath "$.result.structuredContent.entries[5].openapi" == 0
 variable "text" jsonpath "$.entries[5].schemas" == 4
+variable "text" jsonpath "$.entries[5].openapi" == 0
 jsonpath "$.result.structuredContent.entries[5].path" == "/test/openapi/"
 variable "text" jsonpath "$.entries[5].path" == "/test/openapi/"
 jsonpath "$.result.structuredContent.entries[6].name" == "title-only"
@@ -2655,7 +2825,9 @@ variable "text" jsonpath "$.entries[6].type" == "directory"
 jsonpath "$.result.structuredContent.entries[6].health" == 0
 variable "text" jsonpath "$.entries[6].health" == 0
 jsonpath "$.result.structuredContent.entries[6].schemas" == 5
+jsonpath "$.result.structuredContent.entries[6].openapi" == 0
 variable "text" jsonpath "$.entries[6].schemas" == 5
+variable "text" jsonpath "$.entries[6].openapi" == 0
 jsonpath "$.result.structuredContent.entries[6].path" == "/test/title-only/"
 variable "text" jsonpath "$.entries[6].path" == "/test/title-only/"
 jsonpath "$.result.structuredContent.entries[7].name" == "object"
@@ -2676,6 +2848,54 @@ jsonpath "$.result.structuredContent.entries[7].description" == "An Object Examp
 jsonpath "$.result.structuredContent.entries[7].priority" == 50
 variable "text" jsonpath "$.entries[7].priority" == 50
 variable "text" jsonpath "$.entries[7].description" == "An Object Example"
+jsonpath "$.result.structuredContent.entries[8].name" == "openapi-petstore"
+variable "text" jsonpath "$.entries[8].name" == "openapi-petstore"
+jsonpath "$.result.structuredContent.entries[8].private" == false
+variable "text" jsonpath "$.entries[8].private" == false
+jsonpath "$.result.structuredContent.entries[8].type" == "openapi"
+variable "text" jsonpath "$.entries[8].type" == "openapi"
+jsonpath "$.result.structuredContent.entries[8].health" == 100
+variable "text" jsonpath "$.entries[8].health" == 100
+jsonpath "$.result.structuredContent.entries[8].openapi" == "3.0"
+variable "text" jsonpath "$.entries[8].openapi" == "3.0"
+jsonpath "$.result.structuredContent.entries[8].version" == "1.0.0"
+variable "text" jsonpath "$.entries[8].version" == "1.0.0"
+jsonpath "$.result.structuredContent.entries[8].operations" == 1
+variable "text" jsonpath "$.entries[8].operations" == 1
+jsonpath "$.result.structuredContent.entries[8].path" == "/test/openapi-petstore"
+variable "text" jsonpath "$.entries[8].path" == "/test/openapi-petstore"
+jsonpath "$.result.structuredContent.entries[9].name" == "openapi-split-entry"
+variable "text" jsonpath "$.entries[9].name" == "openapi-split-entry"
+jsonpath "$.result.structuredContent.entries[9].private" == false
+variable "text" jsonpath "$.entries[9].private" == false
+jsonpath "$.result.structuredContent.entries[9].type" == "openapi"
+variable "text" jsonpath "$.entries[9].type" == "openapi"
+jsonpath "$.result.structuredContent.entries[9].health" == 100
+variable "text" jsonpath "$.entries[9].health" == 100
+jsonpath "$.result.structuredContent.entries[9].openapi" == "3.2"
+variable "text" jsonpath "$.entries[9].openapi" == "3.2"
+jsonpath "$.result.structuredContent.entries[9].version" == "1.0.0"
+variable "text" jsonpath "$.entries[9].version" == "1.0.0"
+jsonpath "$.result.structuredContent.entries[9].operations" == 0
+variable "text" jsonpath "$.entries[9].operations" == 0
+jsonpath "$.result.structuredContent.entries[9].path" == "/test/openapi-split-entry"
+variable "text" jsonpath "$.entries[9].path" == "/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.entries[10].name" == "openapi-split-shared"
+variable "text" jsonpath "$.entries[10].name" == "openapi-split-shared"
+jsonpath "$.result.structuredContent.entries[10].private" == false
+variable "text" jsonpath "$.entries[10].private" == false
+jsonpath "$.result.structuredContent.entries[10].type" == "openapi"
+variable "text" jsonpath "$.entries[10].type" == "openapi"
+jsonpath "$.result.structuredContent.entries[10].health" == 100
+variable "text" jsonpath "$.entries[10].health" == 100
+jsonpath "$.result.structuredContent.entries[10].openapi" == "3.2"
+variable "text" jsonpath "$.entries[10].openapi" == "3.2"
+jsonpath "$.result.structuredContent.entries[10].version" == "1.0.0"
+variable "text" jsonpath "$.entries[10].version" == "1.0.0"
+jsonpath "$.result.structuredContent.entries[10].operations" == 0
+variable "text" jsonpath "$.entries[10].operations" == 0
+jsonpath "$.result.structuredContent.entries[10].path" == "/test/openapi-split-shared"
+variable "text" jsonpath "$.entries[10].path" == "/test/openapi-split-shared"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -2759,12 +2979,14 @@ variable "text" jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.result.structuredContent.breadcrumb[0].path" == "/test/"
 variable "text" jsonpath "$.breadcrumb[0].path" == "/test/"
 jsonpath "$.result.structuredContent.schemas" == 77
+jsonpath "$.result.structuredContent.openapi" == 3
 variable "text" jsonpath "$.schemas" == 77
+variable "text" jsonpath "$.openapi" == 3
 jsonpath "$.result.structuredContent.health" == 31
 variable "text" jsonpath "$.health" == 31
-jsonpath "$.result.structuredContent.entries" count == 8
+jsonpath "$.result.structuredContent.entries" count == 11
 jsonpath "$.result.structuredContent.private" == false
-variable "text" jsonpath "$.entries" count == 8
+variable "text" jsonpath "$.entries" count == 11
 variable "text" jsonpath "$.private" == false
 jsonpath "$.result.structuredContent.entries[0].name" == "bare"
 jsonpath "$.result.structuredContent.entries[0].private" == false
@@ -2775,7 +2997,9 @@ variable "text" jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.result.structuredContent.entries[0].health" == 0
 variable "text" jsonpath "$.entries[0].health" == 0
 jsonpath "$.result.structuredContent.entries[0].schemas" == 50
+jsonpath "$.result.structuredContent.entries[0].openapi" == 0
 variable "text" jsonpath "$.entries[0].schemas" == 50
+variable "text" jsonpath "$.entries[0].openapi" == 0
 jsonpath "$.result.structuredContent.entries[0].path" == "/test/bare/"
 variable "text" jsonpath "$.entries[0].path" == "/test/bare/"
 jsonpath "$.result.structuredContent.entries[1].name" == "description-only"
@@ -2787,7 +3011,9 @@ variable "text" jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.result.structuredContent.entries[1].health" == 0
 variable "text" jsonpath "$.entries[1].health" == 0
 jsonpath "$.result.structuredContent.entries[1].schemas" == 5
+jsonpath "$.result.structuredContent.entries[1].openapi" == 0
 variable "text" jsonpath "$.entries[1].schemas" == 5
+variable "text" jsonpath "$.entries[1].openapi" == 0
 jsonpath "$.result.structuredContent.entries[1].path" == "/test/description-only/"
 variable "text" jsonpath "$.entries[1].path" == "/test/description-only/"
 jsonpath "$.result.structuredContent.entries[2].name" == "draft3"
@@ -2799,7 +3025,9 @@ variable "text" jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.result.structuredContent.entries[2].health" == 38
 variable "text" jsonpath "$.entries[2].health" == 38
 jsonpath "$.result.structuredContent.entries[2].schemas" == 2
+jsonpath "$.result.structuredContent.entries[2].openapi" == 0
 variable "text" jsonpath "$.entries[2].schemas" == 2
+variable "text" jsonpath "$.entries[2].openapi" == 0
 jsonpath "$.result.structuredContent.entries[2].path" == "/test/draft3/"
 variable "text" jsonpath "$.entries[2].path" == "/test/draft3/"
 jsonpath "$.result.structuredContent.entries[3].name" == "full"
@@ -2811,7 +3039,9 @@ variable "text" jsonpath "$.entries[3].type" == "directory"
 jsonpath "$.result.structuredContent.entries[3].health" == 0
 variable "text" jsonpath "$.entries[3].health" == 0
 jsonpath "$.result.structuredContent.entries[3].schemas" == 5
+jsonpath "$.result.structuredContent.entries[3].openapi" == 0
 variable "text" jsonpath "$.entries[3].schemas" == 5
+variable "text" jsonpath "$.entries[3].openapi" == 0
 jsonpath "$.result.structuredContent.entries[3].path" == "/test/full/"
 variable "text" jsonpath "$.entries[3].path" == "/test/full/"
 jsonpath "$.result.structuredContent.entries[4].name" == "jsonld"
@@ -2823,7 +3053,9 @@ variable "text" jsonpath "$.entries[4].type" == "directory"
 jsonpath "$.result.structuredContent.entries[4].health" == 43
 variable "text" jsonpath "$.entries[4].health" == 43
 jsonpath "$.result.structuredContent.entries[4].schemas" == 5
+jsonpath "$.result.structuredContent.entries[4].openapi" == 0
 variable "text" jsonpath "$.entries[4].schemas" == 5
+variable "text" jsonpath "$.entries[4].openapi" == 0
 jsonpath "$.result.structuredContent.entries[4].path" == "/test/jsonld/"
 variable "text" jsonpath "$.entries[4].path" == "/test/jsonld/"
 jsonpath "$.result.structuredContent.entries[5].name" == "openapi"
@@ -2835,7 +3067,9 @@ variable "text" jsonpath "$.entries[5].type" == "directory"
 jsonpath "$.result.structuredContent.entries[5].health" == 100
 variable "text" jsonpath "$.entries[5].health" == 100
 jsonpath "$.result.structuredContent.entries[5].schemas" == 4
+jsonpath "$.result.structuredContent.entries[5].openapi" == 0
 variable "text" jsonpath "$.entries[5].schemas" == 4
+variable "text" jsonpath "$.entries[5].openapi" == 0
 jsonpath "$.result.structuredContent.entries[5].path" == "/test/openapi/"
 variable "text" jsonpath "$.entries[5].path" == "/test/openapi/"
 jsonpath "$.result.structuredContent.entries[6].name" == "title-only"
@@ -2847,7 +3081,9 @@ variable "text" jsonpath "$.entries[6].type" == "directory"
 jsonpath "$.result.structuredContent.entries[6].health" == 0
 variable "text" jsonpath "$.entries[6].health" == 0
 jsonpath "$.result.structuredContent.entries[6].schemas" == 5
+jsonpath "$.result.structuredContent.entries[6].openapi" == 0
 variable "text" jsonpath "$.entries[6].schemas" == 5
+variable "text" jsonpath "$.entries[6].openapi" == 0
 jsonpath "$.result.structuredContent.entries[6].path" == "/test/title-only/"
 variable "text" jsonpath "$.entries[6].path" == "/test/title-only/"
 jsonpath "$.result.structuredContent.entries[7].name" == "object"
@@ -2868,6 +3104,54 @@ jsonpath "$.result.structuredContent.entries[7].description" == "An Object Examp
 jsonpath "$.result.structuredContent.entries[7].priority" == 50
 variable "text" jsonpath "$.entries[7].priority" == 50
 variable "text" jsonpath "$.entries[7].description" == "An Object Example"
+jsonpath "$.result.structuredContent.entries[8].name" == "openapi-petstore"
+variable "text" jsonpath "$.entries[8].name" == "openapi-petstore"
+jsonpath "$.result.structuredContent.entries[8].private" == false
+variable "text" jsonpath "$.entries[8].private" == false
+jsonpath "$.result.structuredContent.entries[8].type" == "openapi"
+variable "text" jsonpath "$.entries[8].type" == "openapi"
+jsonpath "$.result.structuredContent.entries[8].health" == 100
+variable "text" jsonpath "$.entries[8].health" == 100
+jsonpath "$.result.structuredContent.entries[8].openapi" == "3.0"
+variable "text" jsonpath "$.entries[8].openapi" == "3.0"
+jsonpath "$.result.structuredContent.entries[8].version" == "1.0.0"
+variable "text" jsonpath "$.entries[8].version" == "1.0.0"
+jsonpath "$.result.structuredContent.entries[8].operations" == 1
+variable "text" jsonpath "$.entries[8].operations" == 1
+jsonpath "$.result.structuredContent.entries[8].path" == "/test/openapi-petstore"
+variable "text" jsonpath "$.entries[8].path" == "/test/openapi-petstore"
+jsonpath "$.result.structuredContent.entries[9].name" == "openapi-split-entry"
+variable "text" jsonpath "$.entries[9].name" == "openapi-split-entry"
+jsonpath "$.result.structuredContent.entries[9].private" == false
+variable "text" jsonpath "$.entries[9].private" == false
+jsonpath "$.result.structuredContent.entries[9].type" == "openapi"
+variable "text" jsonpath "$.entries[9].type" == "openapi"
+jsonpath "$.result.structuredContent.entries[9].health" == 100
+variable "text" jsonpath "$.entries[9].health" == 100
+jsonpath "$.result.structuredContent.entries[9].openapi" == "3.2"
+variable "text" jsonpath "$.entries[9].openapi" == "3.2"
+jsonpath "$.result.structuredContent.entries[9].version" == "1.0.0"
+variable "text" jsonpath "$.entries[9].version" == "1.0.0"
+jsonpath "$.result.structuredContent.entries[9].operations" == 0
+variable "text" jsonpath "$.entries[9].operations" == 0
+jsonpath "$.result.structuredContent.entries[9].path" == "/test/openapi-split-entry"
+variable "text" jsonpath "$.entries[9].path" == "/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.entries[10].name" == "openapi-split-shared"
+variable "text" jsonpath "$.entries[10].name" == "openapi-split-shared"
+jsonpath "$.result.structuredContent.entries[10].private" == false
+variable "text" jsonpath "$.entries[10].private" == false
+jsonpath "$.result.structuredContent.entries[10].type" == "openapi"
+variable "text" jsonpath "$.entries[10].type" == "openapi"
+jsonpath "$.result.structuredContent.entries[10].health" == 100
+variable "text" jsonpath "$.entries[10].health" == 100
+jsonpath "$.result.structuredContent.entries[10].openapi" == "3.2"
+variable "text" jsonpath "$.entries[10].openapi" == "3.2"
+jsonpath "$.result.structuredContent.entries[10].version" == "1.0.0"
+variable "text" jsonpath "$.entries[10].version" == "1.0.0"
+jsonpath "$.result.structuredContent.entries[10].operations" == 0
+variable "text" jsonpath "$.entries[10].operations" == 0
+jsonpath "$.result.structuredContent.entries[10].path" == "/test/openapi-split-shared"
+variable "text" jsonpath "$.entries[10].path" == "/test/openapi-split-shared"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -2951,12 +3235,14 @@ variable "text" jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.result.structuredContent.breadcrumb[0].path" == "/test/"
 variable "text" jsonpath "$.breadcrumb[0].path" == "/test/"
 jsonpath "$.result.structuredContent.schemas" == 77
+jsonpath "$.result.structuredContent.openapi" == 3
 variable "text" jsonpath "$.schemas" == 77
+variable "text" jsonpath "$.openapi" == 3
 jsonpath "$.result.structuredContent.health" == 31
 variable "text" jsonpath "$.health" == 31
-jsonpath "$.result.structuredContent.entries" count == 8
+jsonpath "$.result.structuredContent.entries" count == 11
 jsonpath "$.result.structuredContent.private" == false
-variable "text" jsonpath "$.entries" count == 8
+variable "text" jsonpath "$.entries" count == 11
 variable "text" jsonpath "$.private" == false
 jsonpath "$.result.structuredContent.entries[0].name" == "bare"
 jsonpath "$.result.structuredContent.entries[0].private" == false
@@ -2967,7 +3253,9 @@ variable "text" jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.result.structuredContent.entries[0].health" == 0
 variable "text" jsonpath "$.entries[0].health" == 0
 jsonpath "$.result.structuredContent.entries[0].schemas" == 50
+jsonpath "$.result.structuredContent.entries[0].openapi" == 0
 variable "text" jsonpath "$.entries[0].schemas" == 50
+variable "text" jsonpath "$.entries[0].openapi" == 0
 jsonpath "$.result.structuredContent.entries[0].path" == "/test/bare/"
 variable "text" jsonpath "$.entries[0].path" == "/test/bare/"
 jsonpath "$.result.structuredContent.entries[1].name" == "description-only"
@@ -2979,7 +3267,9 @@ variable "text" jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.result.structuredContent.entries[1].health" == 0
 variable "text" jsonpath "$.entries[1].health" == 0
 jsonpath "$.result.structuredContent.entries[1].schemas" == 5
+jsonpath "$.result.structuredContent.entries[1].openapi" == 0
 variable "text" jsonpath "$.entries[1].schemas" == 5
+variable "text" jsonpath "$.entries[1].openapi" == 0
 jsonpath "$.result.structuredContent.entries[1].path" == "/test/description-only/"
 variable "text" jsonpath "$.entries[1].path" == "/test/description-only/"
 jsonpath "$.result.structuredContent.entries[2].name" == "draft3"
@@ -2991,7 +3281,9 @@ variable "text" jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.result.structuredContent.entries[2].health" == 38
 variable "text" jsonpath "$.entries[2].health" == 38
 jsonpath "$.result.structuredContent.entries[2].schemas" == 2
+jsonpath "$.result.structuredContent.entries[2].openapi" == 0
 variable "text" jsonpath "$.entries[2].schemas" == 2
+variable "text" jsonpath "$.entries[2].openapi" == 0
 jsonpath "$.result.structuredContent.entries[2].path" == "/test/draft3/"
 variable "text" jsonpath "$.entries[2].path" == "/test/draft3/"
 jsonpath "$.result.structuredContent.entries[3].name" == "full"
@@ -3003,7 +3295,9 @@ variable "text" jsonpath "$.entries[3].type" == "directory"
 jsonpath "$.result.structuredContent.entries[3].health" == 0
 variable "text" jsonpath "$.entries[3].health" == 0
 jsonpath "$.result.structuredContent.entries[3].schemas" == 5
+jsonpath "$.result.structuredContent.entries[3].openapi" == 0
 variable "text" jsonpath "$.entries[3].schemas" == 5
+variable "text" jsonpath "$.entries[3].openapi" == 0
 jsonpath "$.result.structuredContent.entries[3].path" == "/test/full/"
 variable "text" jsonpath "$.entries[3].path" == "/test/full/"
 jsonpath "$.result.structuredContent.entries[4].name" == "jsonld"
@@ -3015,7 +3309,9 @@ variable "text" jsonpath "$.entries[4].type" == "directory"
 jsonpath "$.result.structuredContent.entries[4].health" == 43
 variable "text" jsonpath "$.entries[4].health" == 43
 jsonpath "$.result.structuredContent.entries[4].schemas" == 5
+jsonpath "$.result.structuredContent.entries[4].openapi" == 0
 variable "text" jsonpath "$.entries[4].schemas" == 5
+variable "text" jsonpath "$.entries[4].openapi" == 0
 jsonpath "$.result.structuredContent.entries[4].path" == "/test/jsonld/"
 variable "text" jsonpath "$.entries[4].path" == "/test/jsonld/"
 jsonpath "$.result.structuredContent.entries[5].name" == "openapi"
@@ -3027,7 +3323,9 @@ variable "text" jsonpath "$.entries[5].type" == "directory"
 jsonpath "$.result.structuredContent.entries[5].health" == 100
 variable "text" jsonpath "$.entries[5].health" == 100
 jsonpath "$.result.structuredContent.entries[5].schemas" == 4
+jsonpath "$.result.structuredContent.entries[5].openapi" == 0
 variable "text" jsonpath "$.entries[5].schemas" == 4
+variable "text" jsonpath "$.entries[5].openapi" == 0
 jsonpath "$.result.structuredContent.entries[5].path" == "/test/openapi/"
 variable "text" jsonpath "$.entries[5].path" == "/test/openapi/"
 jsonpath "$.result.structuredContent.entries[6].name" == "title-only"
@@ -3039,7 +3337,9 @@ variable "text" jsonpath "$.entries[6].type" == "directory"
 jsonpath "$.result.structuredContent.entries[6].health" == 0
 variable "text" jsonpath "$.entries[6].health" == 0
 jsonpath "$.result.structuredContent.entries[6].schemas" == 5
+jsonpath "$.result.structuredContent.entries[6].openapi" == 0
 variable "text" jsonpath "$.entries[6].schemas" == 5
+variable "text" jsonpath "$.entries[6].openapi" == 0
 jsonpath "$.result.structuredContent.entries[6].path" == "/test/title-only/"
 variable "text" jsonpath "$.entries[6].path" == "/test/title-only/"
 jsonpath "$.result.structuredContent.entries[7].name" == "object"
@@ -3060,6 +3360,54 @@ jsonpath "$.result.structuredContent.entries[7].description" == "An Object Examp
 jsonpath "$.result.structuredContent.entries[7].priority" == 50
 variable "text" jsonpath "$.entries[7].priority" == 50
 variable "text" jsonpath "$.entries[7].description" == "An Object Example"
+jsonpath "$.result.structuredContent.entries[8].name" == "openapi-petstore"
+variable "text" jsonpath "$.entries[8].name" == "openapi-petstore"
+jsonpath "$.result.structuredContent.entries[8].private" == false
+variable "text" jsonpath "$.entries[8].private" == false
+jsonpath "$.result.structuredContent.entries[8].type" == "openapi"
+variable "text" jsonpath "$.entries[8].type" == "openapi"
+jsonpath "$.result.structuredContent.entries[8].health" == 100
+variable "text" jsonpath "$.entries[8].health" == 100
+jsonpath "$.result.structuredContent.entries[8].openapi" == "3.0"
+variable "text" jsonpath "$.entries[8].openapi" == "3.0"
+jsonpath "$.result.structuredContent.entries[8].version" == "1.0.0"
+variable "text" jsonpath "$.entries[8].version" == "1.0.0"
+jsonpath "$.result.structuredContent.entries[8].operations" == 1
+variable "text" jsonpath "$.entries[8].operations" == 1
+jsonpath "$.result.structuredContent.entries[8].path" == "/test/openapi-petstore"
+variable "text" jsonpath "$.entries[8].path" == "/test/openapi-petstore"
+jsonpath "$.result.structuredContent.entries[9].name" == "openapi-split-entry"
+variable "text" jsonpath "$.entries[9].name" == "openapi-split-entry"
+jsonpath "$.result.structuredContent.entries[9].private" == false
+variable "text" jsonpath "$.entries[9].private" == false
+jsonpath "$.result.structuredContent.entries[9].type" == "openapi"
+variable "text" jsonpath "$.entries[9].type" == "openapi"
+jsonpath "$.result.structuredContent.entries[9].health" == 100
+variable "text" jsonpath "$.entries[9].health" == 100
+jsonpath "$.result.structuredContent.entries[9].openapi" == "3.2"
+variable "text" jsonpath "$.entries[9].openapi" == "3.2"
+jsonpath "$.result.structuredContent.entries[9].version" == "1.0.0"
+variable "text" jsonpath "$.entries[9].version" == "1.0.0"
+jsonpath "$.result.structuredContent.entries[9].operations" == 0
+variable "text" jsonpath "$.entries[9].operations" == 0
+jsonpath "$.result.structuredContent.entries[9].path" == "/test/openapi-split-entry"
+variable "text" jsonpath "$.entries[9].path" == "/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.entries[10].name" == "openapi-split-shared"
+variable "text" jsonpath "$.entries[10].name" == "openapi-split-shared"
+jsonpath "$.result.structuredContent.entries[10].private" == false
+variable "text" jsonpath "$.entries[10].private" == false
+jsonpath "$.result.structuredContent.entries[10].type" == "openapi"
+variable "text" jsonpath "$.entries[10].type" == "openapi"
+jsonpath "$.result.structuredContent.entries[10].health" == 100
+variable "text" jsonpath "$.entries[10].health" == 100
+jsonpath "$.result.structuredContent.entries[10].openapi" == "3.2"
+variable "text" jsonpath "$.entries[10].openapi" == "3.2"
+jsonpath "$.result.structuredContent.entries[10].version" == "1.0.0"
+variable "text" jsonpath "$.entries[10].version" == "1.0.0"
+jsonpath "$.result.structuredContent.entries[10].operations" == 0
+variable "text" jsonpath "$.entries[10].operations" == 0
+jsonpath "$.result.structuredContent.entries[10].path" == "/test/openapi-split-shared"
+variable "text" jsonpath "$.entries[10].path" == "/test/openapi-split-shared"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -3134,7 +3482,9 @@ variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
 jsonpath "$.result.structuredContent.schemas" == 161
+jsonpath "$.result.structuredContent.openapi" == 3
 variable "text" jsonpath "$.schemas" == 161
+variable "text" jsonpath "$.openapi" == 3
 jsonpath "$.result.structuredContent.entries" count == 5
 jsonpath "$.result.structuredContent.private" == false
 variable "text" jsonpath "$.entries" count == 5
@@ -3148,7 +3498,9 @@ variable "text" jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.result.structuredContent.entries[0].health" == 0
 variable "text" jsonpath "$.entries[0].health" == 0
 jsonpath "$.result.structuredContent.entries[0].schemas" == 2
+jsonpath "$.result.structuredContent.entries[0].openapi" == 0
 variable "text" jsonpath "$.entries[0].schemas" == 2
+variable "text" jsonpath "$.entries[0].openapi" == 0
 jsonpath "$.result.structuredContent.entries[0].path" == "/no-blaze/"
 variable "text" jsonpath "$.entries[0].path" == "/no-blaze/"
 jsonpath "$.result.structuredContent.entries[1].name" == "openapi3.0"
@@ -3164,7 +3516,9 @@ variable "text" jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.result.structuredContent.entries[1].health" == 67
 variable "text" jsonpath "$.entries[1].health" == 67
 jsonpath "$.result.structuredContent.entries[1].schemas" == 3
+jsonpath "$.result.structuredContent.entries[1].openapi" == 0
 variable "text" jsonpath "$.entries[1].schemas" == 3
+variable "text" jsonpath "$.entries[1].openapi" == 0
 jsonpath "$.result.structuredContent.entries[1].path" == "/openapi3.0/"
 variable "text" jsonpath "$.entries[1].path" == "/openapi3.0/"
 jsonpath "$.result.structuredContent.entries[2].name" == "self"
@@ -3180,7 +3534,9 @@ variable "text" jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.result.structuredContent.entries[2].health" == 100
 variable "text" jsonpath "$.entries[2].health" == 100
 jsonpath "$.result.structuredContent.entries[2].schemas" == 77
+jsonpath "$.result.structuredContent.entries[2].openapi" == 0
 variable "text" jsonpath "$.entries[2].schemas" == 77
+variable "text" jsonpath "$.entries[2].openapi" == 0
 jsonpath "$.result.structuredContent.entries[2].path" == "/self/"
 variable "text" jsonpath "$.entries[2].path" == "/self/"
 jsonpath "$.result.structuredContent.entries[3].name" == "test"
@@ -3192,7 +3548,9 @@ variable "text" jsonpath "$.entries[3].type" == "directory"
 jsonpath "$.result.structuredContent.entries[3].health" == 31
 variable "text" jsonpath "$.entries[3].health" == 31
 jsonpath "$.result.structuredContent.entries[3].schemas" == 77
+jsonpath "$.result.structuredContent.entries[3].openapi" == 3
 variable "text" jsonpath "$.entries[3].schemas" == 77
+variable "text" jsonpath "$.entries[3].openapi" == 3
 jsonpath "$.result.structuredContent.entries[3].path" == "/test/"
 variable "text" jsonpath "$.entries[3].path" == "/test/"
 jsonpath "$.result.structuredContent.entries[4].name" == "twins"
@@ -3208,7 +3566,9 @@ variable "text" jsonpath "$.entries[4].type" == "directory"
 jsonpath "$.result.structuredContent.entries[4].health" == 100
 variable "text" jsonpath "$.entries[4].health" == 100
 jsonpath "$.result.structuredContent.entries[4].schemas" == 2
+jsonpath "$.result.structuredContent.entries[4].openapi" == 0
 variable "text" jsonpath "$.entries[4].schemas" == 2
+variable "text" jsonpath "$.entries[4].openapi" == 0
 jsonpath "$.result.structuredContent.entries[4].path" == "/twins/"
 variable "text" jsonpath "$.entries[4].path" == "/twins/"
 
@@ -3285,7 +3645,9 @@ variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
 jsonpath "$.result.structuredContent.schemas" == 161
+jsonpath "$.result.structuredContent.openapi" == 3
 variable "text" jsonpath "$.schemas" == 161
+variable "text" jsonpath "$.openapi" == 3
 jsonpath "$.result.structuredContent.entries" count == 5
 jsonpath "$.result.structuredContent.private" == false
 variable "text" jsonpath "$.entries" count == 5
@@ -3299,7 +3661,9 @@ variable "text" jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.result.structuredContent.entries[0].health" == 0
 variable "text" jsonpath "$.entries[0].health" == 0
 jsonpath "$.result.structuredContent.entries[0].schemas" == 2
+jsonpath "$.result.structuredContent.entries[0].openapi" == 0
 variable "text" jsonpath "$.entries[0].schemas" == 2
+variable "text" jsonpath "$.entries[0].openapi" == 0
 jsonpath "$.result.structuredContent.entries[0].path" == "/no-blaze/"
 variable "text" jsonpath "$.entries[0].path" == "/no-blaze/"
 jsonpath "$.result.structuredContent.entries[1].name" == "openapi3.0"
@@ -3315,7 +3679,9 @@ variable "text" jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.result.structuredContent.entries[1].health" == 67
 variable "text" jsonpath "$.entries[1].health" == 67
 jsonpath "$.result.structuredContent.entries[1].schemas" == 3
+jsonpath "$.result.structuredContent.entries[1].openapi" == 0
 variable "text" jsonpath "$.entries[1].schemas" == 3
+variable "text" jsonpath "$.entries[1].openapi" == 0
 jsonpath "$.result.structuredContent.entries[1].path" == "/openapi3.0/"
 variable "text" jsonpath "$.entries[1].path" == "/openapi3.0/"
 jsonpath "$.result.structuredContent.entries[2].name" == "self"
@@ -3331,7 +3697,9 @@ variable "text" jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.result.structuredContent.entries[2].health" == 100
 variable "text" jsonpath "$.entries[2].health" == 100
 jsonpath "$.result.structuredContent.entries[2].schemas" == 77
+jsonpath "$.result.structuredContent.entries[2].openapi" == 0
 variable "text" jsonpath "$.entries[2].schemas" == 77
+variable "text" jsonpath "$.entries[2].openapi" == 0
 jsonpath "$.result.structuredContent.entries[2].path" == "/self/"
 variable "text" jsonpath "$.entries[2].path" == "/self/"
 jsonpath "$.result.structuredContent.entries[3].name" == "test"
@@ -3343,7 +3711,9 @@ variable "text" jsonpath "$.entries[3].type" == "directory"
 jsonpath "$.result.structuredContent.entries[3].health" == 31
 variable "text" jsonpath "$.entries[3].health" == 31
 jsonpath "$.result.structuredContent.entries[3].schemas" == 77
+jsonpath "$.result.structuredContent.entries[3].openapi" == 3
 variable "text" jsonpath "$.entries[3].schemas" == 77
+variable "text" jsonpath "$.entries[3].openapi" == 3
 jsonpath "$.result.structuredContent.entries[3].path" == "/test/"
 variable "text" jsonpath "$.entries[3].path" == "/test/"
 jsonpath "$.result.structuredContent.entries[4].name" == "twins"
@@ -3359,7 +3729,9 @@ variable "text" jsonpath "$.entries[4].type" == "directory"
 jsonpath "$.result.structuredContent.entries[4].health" == 100
 variable "text" jsonpath "$.entries[4].health" == 100
 jsonpath "$.result.structuredContent.entries[4].schemas" == 2
+jsonpath "$.result.structuredContent.entries[4].openapi" == 0
 variable "text" jsonpath "$.entries[4].schemas" == 2
+variable "text" jsonpath "$.entries[4].openapi" == 0
 jsonpath "$.result.structuredContent.entries[4].path" == "/twins/"
 variable "text" jsonpath "$.entries[4].path" == "/twins/"
 
@@ -3436,7 +3808,9 @@ variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
 jsonpath "$.result.structuredContent.schemas" == 161
+jsonpath "$.result.structuredContent.openapi" == 3
 variable "text" jsonpath "$.schemas" == 161
+variable "text" jsonpath "$.openapi" == 3
 jsonpath "$.result.structuredContent.entries" count == 5
 jsonpath "$.result.structuredContent.private" == false
 variable "text" jsonpath "$.entries" count == 5
@@ -3450,7 +3824,9 @@ variable "text" jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.result.structuredContent.entries[0].health" == 0
 variable "text" jsonpath "$.entries[0].health" == 0
 jsonpath "$.result.structuredContent.entries[0].schemas" == 2
+jsonpath "$.result.structuredContent.entries[0].openapi" == 0
 variable "text" jsonpath "$.entries[0].schemas" == 2
+variable "text" jsonpath "$.entries[0].openapi" == 0
 jsonpath "$.result.structuredContent.entries[0].path" == "/no-blaze/"
 variable "text" jsonpath "$.entries[0].path" == "/no-blaze/"
 jsonpath "$.result.structuredContent.entries[1].name" == "openapi3.0"
@@ -3466,7 +3842,9 @@ variable "text" jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.result.structuredContent.entries[1].health" == 67
 variable "text" jsonpath "$.entries[1].health" == 67
 jsonpath "$.result.structuredContent.entries[1].schemas" == 3
+jsonpath "$.result.structuredContent.entries[1].openapi" == 0
 variable "text" jsonpath "$.entries[1].schemas" == 3
+variable "text" jsonpath "$.entries[1].openapi" == 0
 jsonpath "$.result.structuredContent.entries[1].path" == "/openapi3.0/"
 variable "text" jsonpath "$.entries[1].path" == "/openapi3.0/"
 jsonpath "$.result.structuredContent.entries[2].name" == "self"
@@ -3482,7 +3860,9 @@ variable "text" jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.result.structuredContent.entries[2].health" == 100
 variable "text" jsonpath "$.entries[2].health" == 100
 jsonpath "$.result.structuredContent.entries[2].schemas" == 77
+jsonpath "$.result.structuredContent.entries[2].openapi" == 0
 variable "text" jsonpath "$.entries[2].schemas" == 77
+variable "text" jsonpath "$.entries[2].openapi" == 0
 jsonpath "$.result.structuredContent.entries[2].path" == "/self/"
 variable "text" jsonpath "$.entries[2].path" == "/self/"
 jsonpath "$.result.structuredContent.entries[3].name" == "test"
@@ -3494,7 +3874,9 @@ variable "text" jsonpath "$.entries[3].type" == "directory"
 jsonpath "$.result.structuredContent.entries[3].health" == 31
 variable "text" jsonpath "$.entries[3].health" == 31
 jsonpath "$.result.structuredContent.entries[3].schemas" == 77
+jsonpath "$.result.structuredContent.entries[3].openapi" == 3
 variable "text" jsonpath "$.entries[3].schemas" == 77
+variable "text" jsonpath "$.entries[3].openapi" == 3
 jsonpath "$.result.structuredContent.entries[3].path" == "/test/"
 variable "text" jsonpath "$.entries[3].path" == "/test/"
 jsonpath "$.result.structuredContent.entries[4].name" == "twins"
@@ -3510,7 +3892,9 @@ variable "text" jsonpath "$.entries[4].type" == "directory"
 jsonpath "$.result.structuredContent.entries[4].health" == 100
 variable "text" jsonpath "$.entries[4].health" == 100
 jsonpath "$.result.structuredContent.entries[4].schemas" == 2
+jsonpath "$.result.structuredContent.entries[4].openapi" == 0
 variable "text" jsonpath "$.entries[4].schemas" == 2
+variable "text" jsonpath "$.entries[4].openapi" == 0
 jsonpath "$.result.structuredContent.entries[4].path" == "/twins/"
 variable "text" jsonpath "$.entries[4].path" == "/twins/"
 
@@ -3587,7 +3971,9 @@ variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
 jsonpath "$.result.structuredContent.schemas" == 161
+jsonpath "$.result.structuredContent.openapi" == 3
 variable "text" jsonpath "$.schemas" == 161
+variable "text" jsonpath "$.openapi" == 3
 jsonpath "$.result.structuredContent.entries" count == 5
 jsonpath "$.result.structuredContent.private" == false
 variable "text" jsonpath "$.entries" count == 5
@@ -3601,7 +3987,9 @@ variable "text" jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.result.structuredContent.entries[0].health" == 0
 variable "text" jsonpath "$.entries[0].health" == 0
 jsonpath "$.result.structuredContent.entries[0].schemas" == 2
+jsonpath "$.result.structuredContent.entries[0].openapi" == 0
 variable "text" jsonpath "$.entries[0].schemas" == 2
+variable "text" jsonpath "$.entries[0].openapi" == 0
 jsonpath "$.result.structuredContent.entries[0].path" == "/no-blaze/"
 variable "text" jsonpath "$.entries[0].path" == "/no-blaze/"
 jsonpath "$.result.structuredContent.entries[1].name" == "openapi3.0"
@@ -3613,7 +4001,9 @@ variable "text" jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.result.structuredContent.entries[1].health" == 67
 variable "text" jsonpath "$.entries[1].health" == 67
 jsonpath "$.result.structuredContent.entries[1].schemas" == 3
+jsonpath "$.result.structuredContent.entries[1].openapi" == 0
 variable "text" jsonpath "$.entries[1].schemas" == 3
+variable "text" jsonpath "$.entries[1].openapi" == 0
 jsonpath "$.result.structuredContent.entries[1].path" == "/openapi3.0/"
 variable "text" jsonpath "$.entries[1].path" == "/openapi3.0/"
 jsonpath "$.result.structuredContent.entries[1].title" == "OpenAPI 3.0"
@@ -3629,7 +4019,9 @@ variable "text" jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.result.structuredContent.entries[2].health" == 100
 variable "text" jsonpath "$.entries[2].health" == 100
 jsonpath "$.result.structuredContent.entries[2].schemas" == 77
+jsonpath "$.result.structuredContent.entries[2].openapi" == 0
 variable "text" jsonpath "$.entries[2].schemas" == 77
+variable "text" jsonpath "$.entries[2].openapi" == 0
 jsonpath "$.result.structuredContent.entries[2].path" == "/self/"
 variable "text" jsonpath "$.entries[2].path" == "/self/"
 jsonpath "$.result.structuredContent.entries[2].title" == "Self"
@@ -3645,7 +4037,9 @@ variable "text" jsonpath "$.entries[3].type" == "directory"
 jsonpath "$.result.structuredContent.entries[3].health" == 31
 variable "text" jsonpath "$.entries[3].health" == 31
 jsonpath "$.result.structuredContent.entries[3].schemas" == 77
+jsonpath "$.result.structuredContent.entries[3].openapi" == 3
 variable "text" jsonpath "$.entries[3].schemas" == 77
+variable "text" jsonpath "$.entries[3].openapi" == 3
 jsonpath "$.result.structuredContent.entries[3].path" == "/test/"
 variable "text" jsonpath "$.entries[3].path" == "/test/"
 jsonpath "$.result.structuredContent.entries[4].name" == "twins"
@@ -3657,7 +4051,9 @@ variable "text" jsonpath "$.entries[4].type" == "directory"
 jsonpath "$.result.structuredContent.entries[4].health" == 100
 variable "text" jsonpath "$.entries[4].health" == 100
 jsonpath "$.result.structuredContent.entries[4].schemas" == 2
+jsonpath "$.result.structuredContent.entries[4].openapi" == 0
 variable "text" jsonpath "$.entries[4].schemas" == 2
+variable "text" jsonpath "$.entries[4].openapi" == 0
 jsonpath "$.result.structuredContent.entries[4].path" == "/twins/"
 variable "text" jsonpath "$.entries[4].path" == "/twins/"
 jsonpath "$.result.structuredContent.entries[4].title" == "Twins"
@@ -3738,7 +4134,9 @@ variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
 jsonpath "$.result.structuredContent.schemas" == 161
+jsonpath "$.result.structuredContent.openapi" == 3
 variable "text" jsonpath "$.schemas" == 161
+variable "text" jsonpath "$.openapi" == 3
 jsonpath "$.result.structuredContent.entries" count == 5
 jsonpath "$.result.structuredContent.private" == false
 variable "text" jsonpath "$.entries" count == 5
@@ -3752,7 +4150,9 @@ variable "text" jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.result.structuredContent.entries[0].health" == 0
 variable "text" jsonpath "$.entries[0].health" == 0
 jsonpath "$.result.structuredContent.entries[0].schemas" == 2
+jsonpath "$.result.structuredContent.entries[0].openapi" == 0
 variable "text" jsonpath "$.entries[0].schemas" == 2
+variable "text" jsonpath "$.entries[0].openapi" == 0
 jsonpath "$.result.structuredContent.entries[0].path" == "/no-blaze/"
 variable "text" jsonpath "$.entries[0].path" == "/no-blaze/"
 jsonpath "$.result.structuredContent.entries[1].name" == "openapi3.0"
@@ -3764,7 +4164,9 @@ variable "text" jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.result.structuredContent.entries[1].health" == 67
 variable "text" jsonpath "$.entries[1].health" == 67
 jsonpath "$.result.structuredContent.entries[1].schemas" == 3
+jsonpath "$.result.structuredContent.entries[1].openapi" == 0
 variable "text" jsonpath "$.entries[1].schemas" == 3
+variable "text" jsonpath "$.entries[1].openapi" == 0
 jsonpath "$.result.structuredContent.entries[1].path" == "/openapi3.0/"
 variable "text" jsonpath "$.entries[1].path" == "/openapi3.0/"
 jsonpath "$.result.structuredContent.entries[1].title" == "OpenAPI 3.0"
@@ -3780,7 +4182,9 @@ variable "text" jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.result.structuredContent.entries[2].health" == 100
 variable "text" jsonpath "$.entries[2].health" == 100
 jsonpath "$.result.structuredContent.entries[2].schemas" == 77
+jsonpath "$.result.structuredContent.entries[2].openapi" == 0
 variable "text" jsonpath "$.entries[2].schemas" == 77
+variable "text" jsonpath "$.entries[2].openapi" == 0
 jsonpath "$.result.structuredContent.entries[2].path" == "/self/"
 variable "text" jsonpath "$.entries[2].path" == "/self/"
 jsonpath "$.result.structuredContent.entries[2].title" == "Self"
@@ -3796,7 +4200,9 @@ variable "text" jsonpath "$.entries[3].type" == "directory"
 jsonpath "$.result.structuredContent.entries[3].health" == 31
 variable "text" jsonpath "$.entries[3].health" == 31
 jsonpath "$.result.structuredContent.entries[3].schemas" == 77
+jsonpath "$.result.structuredContent.entries[3].openapi" == 3
 variable "text" jsonpath "$.entries[3].schemas" == 77
+variable "text" jsonpath "$.entries[3].openapi" == 3
 jsonpath "$.result.structuredContent.entries[3].path" == "/test/"
 variable "text" jsonpath "$.entries[3].path" == "/test/"
 jsonpath "$.result.structuredContent.entries[4].name" == "twins"
@@ -3808,7 +4214,9 @@ variable "text" jsonpath "$.entries[4].type" == "directory"
 jsonpath "$.result.structuredContent.entries[4].health" == 100
 variable "text" jsonpath "$.entries[4].health" == 100
 jsonpath "$.result.structuredContent.entries[4].schemas" == 2
+jsonpath "$.result.structuredContent.entries[4].openapi" == 0
 variable "text" jsonpath "$.entries[4].schemas" == 2
+variable "text" jsonpath "$.entries[4].openapi" == 0
 jsonpath "$.result.structuredContent.entries[4].path" == "/twins/"
 variable "text" jsonpath "$.entries[4].path" == "/twins/"
 jsonpath "$.result.structuredContent.entries[4].title" == "Twins"
@@ -3898,12 +4306,14 @@ variable "text" jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.result.structuredContent.breadcrumb[0].path" == "/test/"
 variable "text" jsonpath "$.breadcrumb[0].path" == "/test/"
 jsonpath "$.result.structuredContent.schemas" == 77
+jsonpath "$.result.structuredContent.openapi" == 3
 variable "text" jsonpath "$.schemas" == 77
+variable "text" jsonpath "$.openapi" == 3
 jsonpath "$.result.structuredContent.health" == 31
 variable "text" jsonpath "$.health" == 31
-jsonpath "$.result.structuredContent.entries" count == 8
+jsonpath "$.result.structuredContent.entries" count == 11
 jsonpath "$.result.structuredContent.private" == false
-variable "text" jsonpath "$.entries" count == 8
+variable "text" jsonpath "$.entries" count == 11
 variable "text" jsonpath "$.private" == false
 jsonpath "$.result.structuredContent.entries[0].name" == "bare"
 jsonpath "$.result.structuredContent.entries[0].private" == false
@@ -3914,7 +4324,9 @@ variable "text" jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.result.structuredContent.entries[0].health" == 0
 variable "text" jsonpath "$.entries[0].health" == 0
 jsonpath "$.result.structuredContent.entries[0].schemas" == 50
+jsonpath "$.result.structuredContent.entries[0].openapi" == 0
 variable "text" jsonpath "$.entries[0].schemas" == 50
+variable "text" jsonpath "$.entries[0].openapi" == 0
 jsonpath "$.result.structuredContent.entries[0].path" == "/test/bare/"
 variable "text" jsonpath "$.entries[0].path" == "/test/bare/"
 jsonpath "$.result.structuredContent.entries[1].name" == "description-only"
@@ -3926,7 +4338,9 @@ variable "text" jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.result.structuredContent.entries[1].health" == 0
 variable "text" jsonpath "$.entries[1].health" == 0
 jsonpath "$.result.structuredContent.entries[1].schemas" == 5
+jsonpath "$.result.structuredContent.entries[1].openapi" == 0
 variable "text" jsonpath "$.entries[1].schemas" == 5
+variable "text" jsonpath "$.entries[1].openapi" == 0
 jsonpath "$.result.structuredContent.entries[1].path" == "/test/description-only/"
 variable "text" jsonpath "$.entries[1].path" == "/test/description-only/"
 jsonpath "$.result.structuredContent.entries[2].name" == "draft3"
@@ -3938,7 +4352,9 @@ variable "text" jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.result.structuredContent.entries[2].health" == 38
 variable "text" jsonpath "$.entries[2].health" == 38
 jsonpath "$.result.structuredContent.entries[2].schemas" == 2
+jsonpath "$.result.structuredContent.entries[2].openapi" == 0
 variable "text" jsonpath "$.entries[2].schemas" == 2
+variable "text" jsonpath "$.entries[2].openapi" == 0
 jsonpath "$.result.structuredContent.entries[2].path" == "/test/draft3/"
 variable "text" jsonpath "$.entries[2].path" == "/test/draft3/"
 jsonpath "$.result.structuredContent.entries[3].name" == "full"
@@ -3950,7 +4366,9 @@ variable "text" jsonpath "$.entries[3].type" == "directory"
 jsonpath "$.result.structuredContent.entries[3].health" == 0
 variable "text" jsonpath "$.entries[3].health" == 0
 jsonpath "$.result.structuredContent.entries[3].schemas" == 5
+jsonpath "$.result.structuredContent.entries[3].openapi" == 0
 variable "text" jsonpath "$.entries[3].schemas" == 5
+variable "text" jsonpath "$.entries[3].openapi" == 0
 jsonpath "$.result.structuredContent.entries[3].path" == "/test/full/"
 variable "text" jsonpath "$.entries[3].path" == "/test/full/"
 jsonpath "$.result.structuredContent.entries[4].name" == "jsonld"
@@ -3962,7 +4380,9 @@ variable "text" jsonpath "$.entries[4].type" == "directory"
 jsonpath "$.result.structuredContent.entries[4].health" == 43
 variable "text" jsonpath "$.entries[4].health" == 43
 jsonpath "$.result.structuredContent.entries[4].schemas" == 5
+jsonpath "$.result.structuredContent.entries[4].openapi" == 0
 variable "text" jsonpath "$.entries[4].schemas" == 5
+variable "text" jsonpath "$.entries[4].openapi" == 0
 jsonpath "$.result.structuredContent.entries[4].path" == "/test/jsonld/"
 variable "text" jsonpath "$.entries[4].path" == "/test/jsonld/"
 jsonpath "$.result.structuredContent.entries[5].name" == "openapi"
@@ -3974,7 +4394,9 @@ variable "text" jsonpath "$.entries[5].type" == "directory"
 jsonpath "$.result.structuredContent.entries[5].health" == 100
 variable "text" jsonpath "$.entries[5].health" == 100
 jsonpath "$.result.structuredContent.entries[5].schemas" == 4
+jsonpath "$.result.structuredContent.entries[5].openapi" == 0
 variable "text" jsonpath "$.entries[5].schemas" == 4
+variable "text" jsonpath "$.entries[5].openapi" == 0
 jsonpath "$.result.structuredContent.entries[5].path" == "/test/openapi/"
 variable "text" jsonpath "$.entries[5].path" == "/test/openapi/"
 jsonpath "$.result.structuredContent.entries[6].name" == "title-only"
@@ -3986,7 +4408,9 @@ variable "text" jsonpath "$.entries[6].type" == "directory"
 jsonpath "$.result.structuredContent.entries[6].health" == 0
 variable "text" jsonpath "$.entries[6].health" == 0
 jsonpath "$.result.structuredContent.entries[6].schemas" == 5
+jsonpath "$.result.structuredContent.entries[6].openapi" == 0
 variable "text" jsonpath "$.entries[6].schemas" == 5
+variable "text" jsonpath "$.entries[6].openapi" == 0
 jsonpath "$.result.structuredContent.entries[6].path" == "/test/title-only/"
 variable "text" jsonpath "$.entries[6].path" == "/test/title-only/"
 jsonpath "$.result.structuredContent.entries[7].name" == "object"
@@ -4007,6 +4431,54 @@ jsonpath "$.result.structuredContent.entries[7].description" == "An Object Examp
 jsonpath "$.result.structuredContent.entries[7].priority" == 50
 variable "text" jsonpath "$.entries[7].priority" == 50
 variable "text" jsonpath "$.entries[7].description" == "An Object Example"
+jsonpath "$.result.structuredContent.entries[8].name" == "openapi-petstore"
+variable "text" jsonpath "$.entries[8].name" == "openapi-petstore"
+jsonpath "$.result.structuredContent.entries[8].private" == false
+variable "text" jsonpath "$.entries[8].private" == false
+jsonpath "$.result.structuredContent.entries[8].type" == "openapi"
+variable "text" jsonpath "$.entries[8].type" == "openapi"
+jsonpath "$.result.structuredContent.entries[8].health" == 100
+variable "text" jsonpath "$.entries[8].health" == 100
+jsonpath "$.result.structuredContent.entries[8].openapi" == "3.0"
+variable "text" jsonpath "$.entries[8].openapi" == "3.0"
+jsonpath "$.result.structuredContent.entries[8].version" == "1.0.0"
+variable "text" jsonpath "$.entries[8].version" == "1.0.0"
+jsonpath "$.result.structuredContent.entries[8].operations" == 1
+variable "text" jsonpath "$.entries[8].operations" == 1
+jsonpath "$.result.structuredContent.entries[8].path" == "/test/openapi-petstore"
+variable "text" jsonpath "$.entries[8].path" == "/test/openapi-petstore"
+jsonpath "$.result.structuredContent.entries[9].name" == "openapi-split-entry"
+variable "text" jsonpath "$.entries[9].name" == "openapi-split-entry"
+jsonpath "$.result.structuredContent.entries[9].private" == false
+variable "text" jsonpath "$.entries[9].private" == false
+jsonpath "$.result.structuredContent.entries[9].type" == "openapi"
+variable "text" jsonpath "$.entries[9].type" == "openapi"
+jsonpath "$.result.structuredContent.entries[9].health" == 100
+variable "text" jsonpath "$.entries[9].health" == 100
+jsonpath "$.result.structuredContent.entries[9].openapi" == "3.2"
+variable "text" jsonpath "$.entries[9].openapi" == "3.2"
+jsonpath "$.result.structuredContent.entries[9].version" == "1.0.0"
+variable "text" jsonpath "$.entries[9].version" == "1.0.0"
+jsonpath "$.result.structuredContent.entries[9].operations" == 0
+variable "text" jsonpath "$.entries[9].operations" == 0
+jsonpath "$.result.structuredContent.entries[9].path" == "/test/openapi-split-entry"
+variable "text" jsonpath "$.entries[9].path" == "/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.entries[10].name" == "openapi-split-shared"
+variable "text" jsonpath "$.entries[10].name" == "openapi-split-shared"
+jsonpath "$.result.structuredContent.entries[10].private" == false
+variable "text" jsonpath "$.entries[10].private" == false
+jsonpath "$.result.structuredContent.entries[10].type" == "openapi"
+variable "text" jsonpath "$.entries[10].type" == "openapi"
+jsonpath "$.result.structuredContent.entries[10].health" == 100
+variable "text" jsonpath "$.entries[10].health" == 100
+jsonpath "$.result.structuredContent.entries[10].openapi" == "3.2"
+variable "text" jsonpath "$.entries[10].openapi" == "3.2"
+jsonpath "$.result.structuredContent.entries[10].version" == "1.0.0"
+variable "text" jsonpath "$.entries[10].version" == "1.0.0"
+jsonpath "$.result.structuredContent.entries[10].operations" == 0
+variable "text" jsonpath "$.entries[10].operations" == 0
+jsonpath "$.result.structuredContent.entries[10].path" == "/test/openapi-split-shared"
+variable "text" jsonpath "$.entries[10].path" == "/test/openapi-split-shared"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -4547,7 +5019,9 @@ variable "text" jsonpath "$.breadcrumb[0].name" == "twins"
 jsonpath "$.result.structuredContent.breadcrumb[0].path" == "/twins/"
 variable "text" jsonpath "$.breadcrumb[0].path" == "/twins/"
 jsonpath "$.result.structuredContent.schemas" == 2
+jsonpath "$.result.structuredContent.openapi" == 0
 variable "text" jsonpath "$.schemas" == 2
+variable "text" jsonpath "$.openapi" == 0
 jsonpath "$.result.structuredContent.health" == 100
 variable "text" jsonpath "$.health" == 100
 jsonpath "$.result.structuredContent.entries" count == 2
@@ -4563,7 +5037,9 @@ variable "text" jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.result.structuredContent.entries[0].health" == 100
 variable "text" jsonpath "$.entries[0].health" == 100
 jsonpath "$.result.structuredContent.entries[0].schemas" == 1
+jsonpath "$.result.structuredContent.entries[0].openapi" == 0
 variable "text" jsonpath "$.entries[0].schemas" == 1
+variable "text" jsonpath "$.entries[0].openapi" == 0
 jsonpath "$.result.structuredContent.entries[0].path" == "/twins/foo/"
 variable "text" jsonpath "$.entries[0].path" == "/twins/foo/"
 jsonpath "$.result.structuredContent.entries[1].name" == "foo"

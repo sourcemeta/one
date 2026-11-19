@@ -818,6 +818,7 @@ variable "text" jsonpath "$.path" == "/"
 variable "text" jsonpath "$.url" == "{{base}}"
 variable "text" jsonpath "$.breadcrumb" count == 0
 variable "text" jsonpath "$.schemas" == 161
+variable "text" jsonpath "$.openapi" == 3
 variable "text" jsonpath "$.entries" count == 5
 variable "text" jsonpath "$.private" == false
 variable "text" jsonpath "$.entries[0].name" == "no-blaze"
@@ -825,6 +826,7 @@ variable "text" jsonpath "$.entries[0].private" == false
 variable "text" jsonpath "$.entries[0].type" == "directory"
 variable "text" jsonpath "$.entries[0].health" == 0
 variable "text" jsonpath "$.entries[0].schemas" == 2
+variable "text" jsonpath "$.entries[0].openapi" == 0
 variable "text" jsonpath "$.entries[0].path" == "/no-blaze/"
 variable "text" jsonpath "$.entries[1].name" == "openapi3.0"
 variable "text" jsonpath "$.entries[1].private" == false
@@ -833,6 +835,7 @@ variable "text" jsonpath "$.entries[1].description" == "Schemas that take their 
 variable "text" jsonpath "$.entries[1].type" == "directory"
 variable "text" jsonpath "$.entries[1].health" == 67
 variable "text" jsonpath "$.entries[1].schemas" == 3
+variable "text" jsonpath "$.entries[1].openapi" == 0
 variable "text" jsonpath "$.entries[1].path" == "/openapi3.0/"
 variable "text" jsonpath "$.entries[2].name" == "self"
 variable "text" jsonpath "$.entries[2].private" == false
@@ -841,12 +844,14 @@ variable "text" jsonpath "$.entries[2].description" == "The schemas that define 
 variable "text" jsonpath "$.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].health" == 100
 variable "text" jsonpath "$.entries[2].schemas" == 77
+variable "text" jsonpath "$.entries[2].openapi" == 0
 variable "text" jsonpath "$.entries[2].path" == "/self/"
 variable "text" jsonpath "$.entries[3].name" == "test"
 variable "text" jsonpath "$.entries[3].private" == false
 variable "text" jsonpath "$.entries[3].type" == "directory"
 variable "text" jsonpath "$.entries[3].health" == 31
 variable "text" jsonpath "$.entries[3].schemas" == 77
+variable "text" jsonpath "$.entries[3].openapi" == 3
 variable "text" jsonpath "$.entries[3].path" == "/test/"
 variable "text" jsonpath "$.entries[4].name" == "twins"
 variable "text" jsonpath "$.entries[4].private" == false
@@ -855,6 +860,7 @@ variable "text" jsonpath "$.entries[4].description" == "Schemas whose base name 
 variable "text" jsonpath "$.entries[4].type" == "directory"
 variable "text" jsonpath "$.entries[4].health" == 100
 variable "text" jsonpath "$.entries[4].schemas" == 2
+variable "text" jsonpath "$.entries[4].openapi" == 0
 variable "text" jsonpath "$.entries[4].path" == "/twins/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
