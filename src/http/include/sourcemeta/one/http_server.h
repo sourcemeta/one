@@ -14,6 +14,7 @@
 #include <latch>       // std::latch
 #include <memory>      // std::unique_ptr, std::make_unique
 #include <mutex>       // std::mutex, std::scoped_lock
+#include <string>      // std::string
 #include <string_view> // std::string_view
 #include <thread>      // std::thread, std::thread::hardware_concurrency
 #include <unistd.h>    // write, STDERR_FILENO
@@ -36,8 +37,11 @@ public:
   template <typename RequestHandler, typename ListenCallback,
             typename ErrorCallback>
   HTTPServer(const std::uint16_t port, RequestHandler on_request,
-             ListenCallback on_listen, ErrorCallback on_error) {
-    HTTPServer::concurrency = std::max(1u, std::thread::hardware_concurrency());
+             ListenCallback on_listen, ErrorCallback on_error,
+             const std::string &host = {}) {
+    // An ephemeral listener has one bound port to report.
+    HTTPServer::concurrency =
+        port == 0 ? 1u : std::max(1u, std::thread::hardware_concurrency());
     HTTPServer::round_robin.store(0, std::memory_order_relaxed);
     HTTPServer::should_stop.store(false, std::memory_order_relaxed);
     HTTPServer::workers_alive.store(HTTPServer::concurrency,
@@ -89,8 +93,8 @@ public:
     threads.reserve(HTTPServer::concurrency);
     for (unsigned int index{0}; index < HTTPServer::concurrency; ++index) {
       threads.emplace_back(std::make_unique<std::thread>(
-          [index, port, &on_request, &on_listen, &on_error, &setup_barrier,
-           &setup_mutex]() -> void {
+          [index, port, &host, &on_request, &on_listen, &on_error,
+           &setup_barrier, &setup_mutex]() -> void {
             // uWS provides slow-loris protection out of the box, so
             // we don't have to configure any of it ourselves.
             uWS::SocketContextOptions options{};
@@ -118,7 +122,7 @@ public:
             {
               std::scoped_lock guard{setup_mutex};
               app->listen(
-                  static_cast<int>(port),
+                  host, static_cast<int>(port),
                   [port, &on_listen,
                    &on_error](us_listen_socket_t *const socket) -> void {
                     if (socket) {
@@ -127,7 +131,7 @@ public:
                               true,
                               reinterpret_cast<struct us_socket_t *>(socket)))};
                       assert(bound_port > 0);
-                      assert(port == bound_port);
+                      assert(port == 0 || port == bound_port);
                       on_listen(bound_port);
                     } else {
                       on_error(port);
