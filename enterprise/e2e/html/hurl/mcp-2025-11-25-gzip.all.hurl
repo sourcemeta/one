@@ -1216,6 +1216,24 @@ jsonpath "$.result.resources[7].description" == "Any incoming MCP request the se
 jsonpath "$.result.resources[7].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[7].size" == 8772
 jsonpath "$.result.resources[7].annotations.priority" == 0.0
+jsonpath "$.result.resources[8].uri" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.resources[8].name" == "Sourcemeta One MCP Response"
+jsonpath "$.result.resources[8].description" == "Any outgoing MCP response the server returns"
+jsonpath "$.result.resources[8].mimeType" == "application/schema+json"
+jsonpath "$.result.resources[8].size" == 23941
+jsonpath "$.result.resources[8].annotations.priority" == 0.0
+jsonpath "$.result.resources[9].uri" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
+jsonpath "$.result.resources[9].name" == "Sourcemeta One MCP Tools List Response"
+jsonpath "$.result.resources[9].description" == "Sourcemeta One's list of MCP tools"
+jsonpath "$.result.resources[9].mimeType" == "application/schema+json"
+jsonpath "$.result.resources[9].size" == 4809
+jsonpath "$.result.resources[9].annotations.priority" == 0.0
+jsonpath "$.result.resources[10].uri" == "{{base}}/self/v1/schemas/api/playground/schemas/trace/request"
+jsonpath "$.result.resources[10].name" == "Sourcemeta One Playground Schema Trace API Request"
+jsonpath "$.result.resources[10].description" == "A JSON instance and the schema to trace its evaluation against"
+jsonpath "$.result.resources[10].mimeType" == "application/schema+json"
+jsonpath "$.result.resources[10].size" == 1124
+jsonpath "$.result.resources[10].annotations.priority" == 0.0
 jsonpath "$.result.nextCursor" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -1662,6 +1680,24 @@ jsonpath "$.result.resources[7].description" == "Any incoming MCP request the se
 jsonpath "$.result.resources[7].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[7].size" == 8772
 jsonpath "$.result.resources[7].annotations.priority" == 0.0
+jsonpath "$.result.resources[8].uri" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.resources[8].name" == "Sourcemeta One MCP Response"
+jsonpath "$.result.resources[8].description" == "Any outgoing MCP response the server returns"
+jsonpath "$.result.resources[8].mimeType" == "application/schema+json"
+jsonpath "$.result.resources[8].size" == 23941
+jsonpath "$.result.resources[8].annotations.priority" == 0.0
+jsonpath "$.result.resources[9].uri" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
+jsonpath "$.result.resources[9].name" == "Sourcemeta One MCP Tools List Response"
+jsonpath "$.result.resources[9].description" == "Sourcemeta One's list of MCP tools"
+jsonpath "$.result.resources[9].mimeType" == "application/schema+json"
+jsonpath "$.result.resources[9].size" == 4809
+jsonpath "$.result.resources[9].annotations.priority" == 0.0
+jsonpath "$.result.resources[10].uri" == "{{base}}/self/v1/schemas/api/playground/schemas/trace/request"
+jsonpath "$.result.resources[10].name" == "Sourcemeta One Playground Schema Trace API Request"
+jsonpath "$.result.resources[10].description" == "A JSON instance and the schema to trace its evaluation against"
+jsonpath "$.result.resources[10].mimeType" == "application/schema+json"
+jsonpath "$.result.resources[10].size" == 1124
+jsonpath "$.result.resources[10].annotations.priority" == 0.0
 jsonpath "$.result.nextCursor" not exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}

@@ -80,10 +80,10 @@ public:
         caller, path_match, Tree::Explorer, this->artifact_)};
     // Both kinds of leaf record their navigation under one filename, and what
     // each kind records differs enough to have a surface of its own. This
-    // surface therefore holds nothing for an artifact of the other kind
+    // surface therefore holds nothing for an artifact of the other kind, nor
+    // for one that says nothing of the kind it belongs to
     if (resolution.path.has_value()) {
-      const auto kind{this->artifact_kind(resolution.path.value())};
-      if (kind.has_value() && kind.value() != this->kind_) {
+      if (this->artifact_kind(resolution.path.value()) != this->kind_) {
         sourcemeta::one::json_error(
             request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
             "urn:sourcemeta:one:not-found", "There is nothing at this URL",
@@ -94,8 +94,11 @@ public:
 
     if (!resolution.path.has_value()) {
       // A missing navigation artifact for an OpenAPI description means none
-      // is written for one yet, not that there is nothing here
-      if (this->describes_api(caller, path_match)) {
+      // is written for one yet, not that there is nothing here. The surface
+      // that answers for a description says so itself rather than pointing at
+      // a feature it is
+      if (this->kind_ == sourcemeta::one::LeafKind::Schema &&
+          this->describes_api(caller, path_match)) {
         sourcemeta::one::json_error(
             request, response, sourcemeta::core::HTTP_STATUS_NOT_IMPLEMENTED,
             "urn:sourcemeta:one:openapi-description-unsupported",
@@ -136,12 +139,10 @@ public:
     const auto &schema_uri{arguments.at(this->argument_).to_string()};
     const auto resolution{this->artifact_resolve_path(
         caller, schema_uri, Tree::Explorer, this->artifact_)};
-    if (resolution.path.has_value()) {
-      const auto kind{this->artifact_kind(resolution.path.value())};
-      if (kind.has_value() && kind.value() != this->kind_) {
-        return sourcemeta::core::mcp_make_tool_error(version, request_id,
-                                                     this->missing_);
-      }
+    if (resolution.path.has_value() &&
+        this->artifact_kind(resolution.path.value()) != this->kind_) {
+      return sourcemeta::core::mcp_make_tool_error(version, request_id,
+                                                   this->missing_);
     }
 
     if (!resolution.path.has_value()) {

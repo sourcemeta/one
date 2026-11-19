@@ -850,6 +850,11 @@ struct GenerateOpenAPIMetadata {
                                MAX_EXTENSION_FIELD_LENGTH -
                                    EXTENSION_TRUNCATION_MARKER.size(),
                                EXTENSION_TRUNCATION_MARKER);
+    std::string extension_api_version{result.at("version").to_string()};
+    sourcemeta::core::truncate(extension_api_version,
+                               MAX_EXTENSION_FIELD_LENGTH -
+                                   EXTENSION_TRUNCATION_MARKER.size(),
+                               EXTENSION_TRUNCATION_MARKER);
     const auto extension_bytes{make_explorer_openapi_extension(
         result.at("health").to_integer(), static_cast<std::int64_t>(data_bytes),
         static_cast<std::int64_t>(bundle_bytes),
@@ -862,7 +867,7 @@ struct GenerateOpenAPIMetadata {
         result.at("baseDialect").to_string(), result.at("dialect").to_string(),
         extension_title, extension_description,
         result.at("alert").is_string() ? result.at("alert").to_string() : "",
-        result.at("version").to_string())};
+        extension_api_version)};
 
     sourcemeta::core::metapack_write_json_pretty(
         action.destination, result, "application/json",

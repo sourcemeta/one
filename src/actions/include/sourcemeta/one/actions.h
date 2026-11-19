@@ -55,12 +55,12 @@ namespace sourcemeta::one {
   X(METRICS_V1, ActionMetricsV1, "metrics_v1")                                 \
   X(PLAYGROUND_SCHEMA_TRACE_V1, ActionPlaygroundSchemaTraceV1,                 \
     "playground_schema_trace_v1")                                              \
-  X(GET_OPENAPI_METADATA_V1, ActionGetOpenAPIMetadataV1,                       \
-    "get_openapi_metadata_v1")                                                 \
   X(GET_OPENAPI_DEPENDENCIES_V1, ActionGetOpenAPIDependenciesV1,               \
     "get_openapi_dependencies_v1")                                             \
   X(GET_OPENAPI_DEPENDENTS_V1, ActionGetOpenAPIDependentsV1,                   \
-    "get_openapi_dependents_v1")
+    "get_openapi_dependents_v1")                                               \
+  X(GET_OPENAPI_METADATA_V1, ActionGetOpenAPIMetadataV1,                       \
+    "get_openapi_metadata_v1")
 
 #define SOURCEMETA_ONE_DEFINE_ACTION_TYPE(Name, Class, Label)                  \
   ACTION_TYPE_##Name,
