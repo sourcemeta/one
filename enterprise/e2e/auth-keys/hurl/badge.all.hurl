@@ -200,12 +200,26 @@ Content-Type: application/json
 Link: </self/v1/schemas/api/list/response>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+[Captures]
+vault_list: body
+vault_list_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.private" == true
 jsonpath "$.entries[?(@.name == 'secret')].private" == true
 jsonpath "$.entries[?(@.name == 'inner')].private" == true
 
+POST {{base}}/self/v1/api/schemas/evaluate{{vault_list_schema}}
+```
+{{vault_list}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
+
 # The same answer reaches an agent, through the tool rather than the endpoint
+
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 Content-Type: application/json

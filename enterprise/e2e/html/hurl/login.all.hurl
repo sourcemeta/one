@@ -60,6 +60,19 @@ HTTP 405
 Cache-Control: no-store
 Content-Type: application/problem+json
 Link: </self/v1/schemas/api/error>; rel="describedby"
+[Captures]
+method_body: body
+method_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Allow" == "GET, HEAD, OPTIONS"
 jsonpath "$.status" == 405
+
+POST {{base}}/self/v1/api/schemas/evaluate{{method_schema}}
+```
+{{method_body}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+jsonpath "$.valid" == true
