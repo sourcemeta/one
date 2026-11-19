@@ -93,10 +93,11 @@ public:
     }
 
     if (!resolution.path.has_value()) {
-      // A missing navigation artifact for an OpenAPI description means none
-      // is written for one yet, not that there is nothing here. The surface
-      // that answers for a description says so itself rather than pointing at
-      // a feature it is
+      // A path that names an OpenAPI description is a place that exists
+      // without navigation written for it yet, so this surface refuses instead
+      // of claiming there is nothing here. Only the surface that answers for
+      // schemas refuses this way, as an artifact absent from the surface that
+      // answers for a description means there is no such description
       if (this->kind_ == sourcemeta::one::LeafKind::Schema &&
           this->describes_api(caller, path_match)) {
         sourcemeta::one::json_error(
