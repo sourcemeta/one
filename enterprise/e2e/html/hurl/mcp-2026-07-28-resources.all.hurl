@@ -825,7 +825,7 @@ jsonpath "$.result.resources[17].uri" == "{{base}}/self/v1/schemas/mcp/resources
 jsonpath "$.result.resources[17].name" == "Sourcemeta One MCP Resources List Response"
 jsonpath "$.result.resources[17].description" == "Sourcemeta One's list of MCP resources"
 jsonpath "$.result.resources[17].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[17].size" == 3062
+jsonpath "$.result.resources[17].size" == 3145
 jsonpath "$.result.resources[17].annotations.priority" == 0.0
 jsonpath "$.result.resources[18].uri" == "{{base}}/self/v1/schemas/mcp/resources/read/request"
 jsonpath "$.result.resources[18].name" == "Sourcemeta One MCP Resources Read Request"
@@ -849,7 +849,7 @@ jsonpath "$.result.resources[21].uri" == "{{base}}/self/v1/schemas/mcp/resources
 jsonpath "$.result.resources[21].name" == "Sourcemeta One MCP Resources Templates List Response"
 jsonpath "$.result.resources[21].description" == "Sourcemeta One's list of MCP resource templates"
 jsonpath "$.result.resources[21].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[21].size" == 3242
+jsonpath "$.result.resources[21].size" == 5460
 jsonpath "$.result.resources[21].annotations.priority" == 0.0
 jsonpath "$.result.resources[22].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/evaluate-schema/request"
 jsonpath "$.result.resources[22].name" == "Sourcemeta One Schema Evaluate RPC Input"
@@ -1087,7 +1087,7 @@ header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 512
-jsonpath "$.result.resources" count == 11
+jsonpath "$.result.resources" count == 14
 jsonpath "$.result.resources[0].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/request"
 jsonpath "$.result.resources[0].name" == "Sourcemeta One MCP Tools Call Request"
 jsonpath "$.result.resources[0].description" == "Request from a client to invoke an MCP tool by name"
@@ -1140,7 +1140,7 @@ jsonpath "$.result.resources[8].uri" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.resources[8].name" == "Sourcemeta One MCP Response"
 jsonpath "$.result.resources[8].description" == "Any outgoing MCP response the server returns"
 jsonpath "$.result.resources[8].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[8].size" == 23941
+jsonpath "$.result.resources[8].size" == 26026
 jsonpath "$.result.resources[8].annotations.priority" == 0.0
 jsonpath "$.result.resources[9].uri" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
 jsonpath "$.result.resources[9].name" == "Sourcemeta One MCP Tools List Response"
@@ -1154,6 +1154,24 @@ jsonpath "$.result.resources[10].description" == "A JSON instance and the schema
 jsonpath "$.result.resources[10].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[10].size" == 1124
 jsonpath "$.result.resources[10].annotations.priority" == 0.0
+jsonpath "$.result.resources[11].uri" == "{{base}}/test/openapi-petstore"
+jsonpath "$.result.resources[11].name" == "Petstore"
+jsonpath "$.result.resources[11].description" == "Everything about the pets this shop keeps"
+jsonpath "$.result.resources[11].mimeType" == "application/openapi+json"
+jsonpath "$.result.resources[11].size" == 318
+jsonpath "$.result.resources[11].annotations.priority" == 0.5
+jsonpath "$.result.resources[12].uri" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.resources[12].name" == "Split"
+jsonpath "$.result.resources[12].description" == "What a listing says of this API"
+jsonpath "$.result.resources[12].mimeType" == "application/openapi+json"
+jsonpath "$.result.resources[12].size" == 945
+jsonpath "$.result.resources[12].annotations.priority" == 0.5
+jsonpath "$.result.resources[13].uri" == "{{base}}/test/openapi-split-shared"
+jsonpath "$.result.resources[13].name" == "Shared"
+jsonpath "$.result.resources[13].description" not exists
+jsonpath "$.result.resources[13].mimeType" == "application/openapi+json"
+jsonpath "$.result.resources[13].size" == 404
+jsonpath "$.result.resources[13].annotations.priority" == 0.5
 jsonpath "$.result.nextCursor" not exists
 jsonpath "$.result.resultType" == "complete"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
@@ -1821,11 +1839,15 @@ header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 12
-jsonpath "$.result.resourceTemplates" count == 1
+jsonpath "$.result.resourceTemplates" count == 2
 jsonpath "$.result.resourceTemplates[0].uriTemplate" == "{{base}}/{+path}{?bundle,as}"
 jsonpath "$.result.resourceTemplates[0].name" == "JSON Schema"
 jsonpath "$.result.resourceTemplates[0].description" == "A JSON Schema in this catalog, addressable by its canonical absolute URI under this server's origin. This instance is sovereign over its own URL namespace. Schemas whose URIs lie outside this namespace will not be served here. Substitute `{+path}` with the schema's catalog path. Include `{?bundle}` (its presence alone triggers bundling, any value is ignored) to receive the schema with every external `$ref` inlined into a single self-contained document. Alternatively, include `{?as}` with one of the keys of the `conversions` property of the schema metadata to receive the schema converted into that dialect. The URI must not contain a fragment. Use `resources/list` to discover the available schemas rather than guessing paths"
 jsonpath "$.result.resourceTemplates[0].mimeType" == "application/schema+json"
+jsonpath "$.result.resourceTemplates[1].uriTemplate" == "{{base}}/{+path}{?bundle}"
+jsonpath "$.result.resourceTemplates[1].name" == "OpenAPI Description"
+jsonpath "$.result.resourceTemplates[1].description" == "An OpenAPI description in this catalog, addressable by its absolute URI under this server's origin. Substitute `{+path}` with the description's catalog path. Include `{?bundle}` (its presence alone triggers bundling, any value is ignored) to receive the description with every external reference inlined into a single self-contained document. A description cannot be converted into a JSON Schema dialect, so it takes no `as`. The URI must not contain a fragment. Use `resources/list` to discover the available descriptions rather than guessing paths"
+jsonpath "$.result.resourceTemplates[1].mimeType" == "application/openapi+json"
 jsonpath "$.result.resultType" == "complete"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"

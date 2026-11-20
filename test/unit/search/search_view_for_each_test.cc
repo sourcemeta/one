@@ -18,6 +18,7 @@ struct VisitedEntry {
   std::string description;
   std::uint64_t bytes_raw;
   std::uint64_t bytes_bundled;
+  sourcemeta::one::LeafKind kind;
   auto operator==(const VisitedEntry &) const -> bool = default;
 };
 
@@ -65,7 +66,8 @@ static auto collect(sourcemeta::one::SearchView &view, std::size_t offset,
                        .title = std::string{entry.title},
                        .description = std::string{entry.description},
                        .bytes_raw = entry.bytes_raw,
-                       .bytes_bundled = entry.bytes_bundled});
+                       .bytes_bundled = entry.bytes_bundled,
+                       .kind = entry.kind});
                 });
   return visited;
 }
@@ -79,7 +81,8 @@ TEST(visits_full_range) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 11,
-                            .bytes_bundled = 22},
+                            .bytes_bundled = 22,
+                            .kind = sourcemeta::one::LeafKind::Schema},
                            {.path = "/apple",
                             .identifier = "http://example.com/apple",
                             .title = "Apple Title",
@@ -87,7 +90,8 @@ TEST(visits_full_range) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 33,
-                            .bytes_bundled = 44},
+                            .bytes_bundled = 44,
+                            .kind = sourcemeta::one::LeafKind::Schema},
                            {.path = "/mango",
                             .identifier = "http://example.com/mango",
                             .title = "Mango Title",
@@ -95,27 +99,32 @@ TEST(visits_full_range) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 55,
-                            .bytes_bundled = 66}});
+                            .bytes_bundled = 66,
+                            .kind = sourcemeta::one::LeafKind::Schema}});
   sourcemeta::one::SearchView view{path};
-  EXPECT_EQ(collect(view, 0, 3), (std::vector<VisitedEntry>{
-                                     {.path = "/apple",
-                                      .identifier = "http://example.com/apple",
-                                      .title = "Apple Title",
-                                      .description = "Apple Desc",
-                                      .bytes_raw = 33,
-                                      .bytes_bundled = 44},
-                                     {.path = "/mango",
-                                      .identifier = "http://example.com/mango",
-                                      .title = "Mango Title",
-                                      .description = "Mango Desc",
-                                      .bytes_raw = 55,
-                                      .bytes_bundled = 66},
-                                     {.path = "/zebra",
-                                      .identifier = "http://example.com/zebra",
-                                      .title = "Zebra Title",
-                                      .description = "Zebra Desc",
-                                      .bytes_raw = 11,
-                                      .bytes_bundled = 22}}));
+  EXPECT_EQ(
+      collect(view, 0, 3),
+      (std::vector<VisitedEntry>{{.path = "/apple",
+                                  .identifier = "http://example.com/apple",
+                                  .title = "Apple Title",
+                                  .description = "Apple Desc",
+                                  .bytes_raw = 33,
+                                  .bytes_bundled = 44,
+                                  .kind = sourcemeta::one::LeafKind::Schema},
+                                 {.path = "/mango",
+                                  .identifier = "http://example.com/mango",
+                                  .title = "Mango Title",
+                                  .description = "Mango Desc",
+                                  .bytes_raw = 55,
+                                  .bytes_bundled = 66,
+                                  .kind = sourcemeta::one::LeafKind::Schema},
+                                 {.path = "/zebra",
+                                  .identifier = "http://example.com/zebra",
+                                  .title = "Zebra Title",
+                                  .description = "Zebra Desc",
+                                  .bytes_raw = 11,
+                                  .bytes_bundled = 22,
+                                  .kind = sourcemeta::one::LeafKind::Schema}}));
 }
 
 TEST(visits_subset_with_offset) {
@@ -127,7 +136,8 @@ TEST(visits_subset_with_offset) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 1,
-                            .bytes_bundled = 2},
+                            .bytes_bundled = 2,
+                            .kind = sourcemeta::one::LeafKind::Schema},
                            {.path = "/b",
                             .identifier = "http://example.com/b",
                             .title = "B Title",
@@ -135,7 +145,8 @@ TEST(visits_subset_with_offset) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 3,
-                            .bytes_bundled = 4},
+                            .bytes_bundled = 4,
+                            .kind = sourcemeta::one::LeafKind::Schema},
                            {.path = "/c",
                             .identifier = "http://example.com/c",
                             .title = "C Title",
@@ -143,7 +154,8 @@ TEST(visits_subset_with_offset) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 5,
-                            .bytes_bundled = 6},
+                            .bytes_bundled = 6,
+                            .kind = sourcemeta::one::LeafKind::Schema},
                            {.path = "/d",
                             .identifier = "http://example.com/d",
                             .title = "D Title",
@@ -151,21 +163,25 @@ TEST(visits_subset_with_offset) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 7,
-                            .bytes_bundled = 8}});
+                            .bytes_bundled = 8,
+                            .kind = sourcemeta::one::LeafKind::Schema}});
   sourcemeta::one::SearchView view{path};
-  EXPECT_EQ(collect(view, 1, 2),
-            (std::vector<VisitedEntry>{{.path = "/b",
-                                        .identifier = "http://example.com/b",
-                                        .title = "B Title",
-                                        .description = "B Desc",
-                                        .bytes_raw = 3,
-                                        .bytes_bundled = 4},
-                                       {.path = "/c",
-                                        .identifier = "http://example.com/c",
-                                        .title = "C Title",
-                                        .description = "C Desc",
-                                        .bytes_raw = 5,
-                                        .bytes_bundled = 6}}));
+  EXPECT_EQ(
+      collect(view, 1, 2),
+      (std::vector<VisitedEntry>{{.path = "/b",
+                                  .identifier = "http://example.com/b",
+                                  .title = "B Title",
+                                  .description = "B Desc",
+                                  .bytes_raw = 3,
+                                  .bytes_bundled = 4,
+                                  .kind = sourcemeta::one::LeafKind::Schema},
+                                 {.path = "/c",
+                                  .identifier = "http://example.com/c",
+                                  .title = "C Title",
+                                  .description = "C Desc",
+                                  .bytes_raw = 5,
+                                  .bytes_bundled = 6,
+                                  .kind = sourcemeta::one::LeafKind::Schema}}));
 }
 
 TEST(clamps_count_to_total) {
@@ -177,7 +193,8 @@ TEST(clamps_count_to_total) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 1,
-                            .bytes_bundled = 2},
+                            .bytes_bundled = 2,
+                            .kind = sourcemeta::one::LeafKind::Schema},
                            {.path = "/b",
                             .identifier = "http://example.com/b",
                             .title = "B Title",
@@ -185,15 +202,18 @@ TEST(clamps_count_to_total) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 3,
-                            .bytes_bundled = 4}});
+                            .bytes_bundled = 4,
+                            .kind = sourcemeta::one::LeafKind::Schema}});
   sourcemeta::one::SearchView view{path};
-  EXPECT_EQ(collect(view, 1, 100),
-            (std::vector<VisitedEntry>{{.path = "/b",
-                                        .identifier = "http://example.com/b",
-                                        .title = "B Title",
-                                        .description = "B Desc",
-                                        .bytes_raw = 3,
-                                        .bytes_bundled = 4}}));
+  EXPECT_EQ(
+      collect(view, 1, 100),
+      (std::vector<VisitedEntry>{{.path = "/b",
+                                  .identifier = "http://example.com/b",
+                                  .title = "B Title",
+                                  .description = "B Desc",
+                                  .bytes_raw = 3,
+                                  .bytes_bundled = 4,
+                                  .kind = sourcemeta::one::LeafKind::Schema}}));
 }
 
 TEST(skips_when_offset_at_end) {
@@ -205,7 +225,8 @@ TEST(skips_when_offset_at_end) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 1,
-                            .bytes_bundled = 2},
+                            .bytes_bundled = 2,
+                            .kind = sourcemeta::one::LeafKind::Schema},
                            {.path = "/b",
                             .identifier = "http://example.com/b",
                             .title = "B Title",
@@ -213,7 +234,8 @@ TEST(skips_when_offset_at_end) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 3,
-                            .bytes_bundled = 4}});
+                            .bytes_bundled = 4,
+                            .kind = sourcemeta::one::LeafKind::Schema}});
   sourcemeta::one::SearchView view{path};
   EXPECT_EQ(collect(view, 2, 10), std::vector<VisitedEntry>{});
 }
@@ -227,7 +249,8 @@ TEST(skips_when_offset_past_end) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 1,
-                            .bytes_bundled = 2}});
+                            .bytes_bundled = 2,
+                            .kind = sourcemeta::one::LeafKind::Schema}});
   sourcemeta::one::SearchView view{path};
   EXPECT_EQ(collect(view, 99, 10), std::vector<VisitedEntry>{});
 }
@@ -241,7 +264,8 @@ TEST(skips_when_count_zero) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 1,
-                            .bytes_bundled = 2},
+                            .bytes_bundled = 2,
+                            .kind = sourcemeta::one::LeafKind::Schema},
                            {.path = "/b",
                             .identifier = "http://example.com/b",
                             .title = "B Title",
@@ -249,7 +273,8 @@ TEST(skips_when_count_zero) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 3,
-                            .bytes_bundled = 4}});
+                            .bytes_bundled = 4,
+                            .kind = sourcemeta::one::LeafKind::Schema}});
   sourcemeta::one::SearchView view{path};
   EXPECT_EQ(collect(view, 0, 0), std::vector<VisitedEntry>{});
 }
@@ -263,7 +288,8 @@ TEST(visit_order_matches_at) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 11,
-                            .bytes_bundled = 22},
+                            .bytes_bundled = 22,
+                            .kind = sourcemeta::one::LeafKind::Schema},
                            {.path = "/apple",
                             .identifier = "http://example.com/apple",
                             .title = "",
@@ -271,7 +297,8 @@ TEST(visit_order_matches_at) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 33,
-                            .bytes_bundled = 44},
+                            .bytes_bundled = 44,
+                            .kind = sourcemeta::one::LeafKind::Schema},
                            {.path = "/mango",
                             .identifier = "http://example.com/mango",
                             .title = "",
@@ -279,7 +306,8 @@ TEST(visit_order_matches_at) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 55,
-                            .bytes_bundled = 66}});
+                            .bytes_bundled = 66,
+                            .kind = sourcemeta::one::LeafKind::Schema}});
   sourcemeta::one::SearchView view{path};
   const auto from_for_each{collect(view, 0, view.count())};
   std::vector<VisitedEntry> from_at;
@@ -290,7 +318,8 @@ TEST(visit_order_matches_at) {
                        .title = std::string{entry.title},
                        .description = std::string{entry.description},
                        .bytes_raw = entry.bytes_raw,
-                       .bytes_bundled = entry.bytes_bundled});
+                       .bytes_bundled = entry.bytes_bundled,
+                       .kind = entry.kind});
   }
   EXPECT_EQ(from_for_each, from_at);
 }
@@ -304,7 +333,8 @@ TEST(empty_strings_for_empty_metadata) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 7,
-                            .bytes_bundled = 8}});
+                            .bytes_bundled = 8,
+                            .kind = sourcemeta::one::LeafKind::Schema}});
   sourcemeta::one::SearchView view{path};
   EXPECT_EQ(
       collect(view, 0, 1),
@@ -313,7 +343,8 @@ TEST(empty_strings_for_empty_metadata) {
                                   .title = "",
                                   .description = "",
                                   .bytes_raw = 7,
-                                  .bytes_bundled = 8}}));
+                                  .bytes_bundled = 8,
+                                  .kind = sourcemeta::one::LeafKind::Schema}}));
 }
 
 TEST(count_size_max_does_not_overflow) {
@@ -325,7 +356,8 @@ TEST(count_size_max_does_not_overflow) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 1,
-                            .bytes_bundled = 2},
+                            .bytes_bundled = 2,
+                            .kind = sourcemeta::one::LeafKind::Schema},
                            {.path = "/b",
                             .identifier = "http://example.com/b",
                             .title = "B Title",
@@ -333,21 +365,25 @@ TEST(count_size_max_does_not_overflow) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 3,
-                            .bytes_bundled = 4}});
+                            .bytes_bundled = 4,
+                            .kind = sourcemeta::one::LeafKind::Schema}});
   sourcemeta::one::SearchView view{path};
-  EXPECT_EQ(collect(view, 0, std::numeric_limits<std::size_t>::max()),
-            (std::vector<VisitedEntry>{{.path = "/a",
-                                        .identifier = "http://example.com/a",
-                                        .title = "A Title",
-                                        .description = "A Desc",
-                                        .bytes_raw = 1,
-                                        .bytes_bundled = 2},
-                                       {.path = "/b",
-                                        .identifier = "http://example.com/b",
-                                        .title = "B Title",
-                                        .description = "B Desc",
-                                        .bytes_raw = 3,
-                                        .bytes_bundled = 4}}));
+  EXPECT_EQ(
+      collect(view, 0, std::numeric_limits<std::size_t>::max()),
+      (std::vector<VisitedEntry>{{.path = "/a",
+                                  .identifier = "http://example.com/a",
+                                  .title = "A Title",
+                                  .description = "A Desc",
+                                  .bytes_raw = 1,
+                                  .bytes_bundled = 2,
+                                  .kind = sourcemeta::one::LeafKind::Schema},
+                                 {.path = "/b",
+                                  .identifier = "http://example.com/b",
+                                  .title = "B Title",
+                                  .description = "B Desc",
+                                  .bytes_raw = 3,
+                                  .bytes_bundled = 4,
+                                  .kind = sourcemeta::one::LeafKind::Schema}}));
 }
 
 TEST(count_size_max_with_offset_does_not_overflow) {
@@ -359,7 +395,8 @@ TEST(count_size_max_with_offset_does_not_overflow) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 1,
-                            .bytes_bundled = 2},
+                            .bytes_bundled = 2,
+                            .kind = sourcemeta::one::LeafKind::Schema},
                            {.path = "/b",
                             .identifier = "http://example.com/b",
                             .title = "B Title",
@@ -367,15 +404,18 @@ TEST(count_size_max_with_offset_does_not_overflow) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 3,
-                            .bytes_bundled = 4}});
+                            .bytes_bundled = 4,
+                            .kind = sourcemeta::one::LeafKind::Schema}});
   sourcemeta::one::SearchView view{path};
-  EXPECT_EQ(collect(view, 1, std::numeric_limits<std::size_t>::max()),
-            (std::vector<VisitedEntry>{{.path = "/b",
-                                        .identifier = "http://example.com/b",
-                                        .title = "B Title",
-                                        .description = "B Desc",
-                                        .bytes_raw = 3,
-                                        .bytes_bundled = 4}}));
+  EXPECT_EQ(
+      collect(view, 1, std::numeric_limits<std::size_t>::max()),
+      (std::vector<VisitedEntry>{{.path = "/b",
+                                  .identifier = "http://example.com/b",
+                                  .title = "B Title",
+                                  .description = "B Desc",
+                                  .bytes_raw = 3,
+                                  .bytes_bundled = 4,
+                                  .kind = sourcemeta::one::LeafKind::Schema}}));
 }
 
 TEST(malformed_offset_table_too_large_returns_nothing) {
@@ -415,15 +455,16 @@ TEST(malformed_record_offset_out_of_bounds_stops) {
 
 TEST(malformed_record_field_lengths_stops) {
   const auto path{test_path("for_each_malformed_record_field.metapack")};
-  auto payload{
-      sourcemeta::one::make_search({{.path = "/foo",
-                                     .identifier = "http://example.com/foo",
-                                     .title = "Title",
-                                     .description = "Desc",
-                                     .health = 80,
-                                     .priority = 100,
-                                     .bytes_raw = 1,
-                                     .bytes_bundled = 2}})};
+  auto payload{sourcemeta::one::make_search(
+      {{.path = "/foo",
+        .identifier = "http://example.com/foo",
+        .title = "Title",
+        .description = "Desc",
+        .health = 80,
+        .priority = 100,
+        .bytes_raw = 1,
+        .bytes_bundled = 2,
+        .kind = sourcemeta::one::LeafKind::Schema}})};
   sourcemeta::one::SearchIndexHeader header{};
   std::memcpy(&header, payload.data(),
               sizeof(sourcemeta::one::SearchIndexHeader));

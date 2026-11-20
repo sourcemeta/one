@@ -36,7 +36,8 @@ TEST(count_single_entry) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 100,
-                            .bytes_bundled = 200}});
+                            .bytes_bundled = 200,
+                            .kind = sourcemeta::one::LeafKind::Schema}});
   sourcemeta::one::SearchView view{path};
   EXPECT_EQ(view.count(), 1);
 }
@@ -50,7 +51,8 @@ TEST(count_multiple_entries) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 1,
-                            .bytes_bundled = 2},
+                            .bytes_bundled = 2,
+                            .kind = sourcemeta::one::LeafKind::Schema},
                            {.path = "/b",
                             .identifier = "http://example.com/b",
                             .title = "B",
@@ -58,7 +60,8 @@ TEST(count_multiple_entries) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 3,
-                            .bytes_bundled = 4},
+                            .bytes_bundled = 4,
+                            .kind = sourcemeta::one::LeafKind::Schema},
                            {.path = "/c",
                             .identifier = "http://example.com/c",
                             .title = "C",
@@ -66,7 +69,8 @@ TEST(count_multiple_entries) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 5,
-                            .bytes_bundled = 6}});
+                            .bytes_bundled = 6,
+                            .kind = sourcemeta::one::LeafKind::Schema}});
   sourcemeta::one::SearchView view{path};
   EXPECT_EQ(view.count(), 3);
 }
@@ -80,7 +84,8 @@ TEST(at_returns_field_data) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 100,
-                            .bytes_bundled = 200}});
+                            .bytes_bundled = 200,
+                            .kind = sourcemeta::one::LeafKind::Schema}});
   sourcemeta::one::SearchView view{path};
   const auto entry{view.at(0)};
   EXPECT_EQ(entry.path, "/foo/bar");
@@ -100,7 +105,8 @@ TEST(at_walks_in_sorted_order) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 11,
-                            .bytes_bundled = 22},
+                            .bytes_bundled = 22,
+                            .kind = sourcemeta::one::LeafKind::Schema},
                            {.path = "/apple",
                             .identifier = "http://example.com/apple",
                             .title = "Title",
@@ -108,7 +114,8 @@ TEST(at_walks_in_sorted_order) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 33,
-                            .bytes_bundled = 44},
+                            .bytes_bundled = 44,
+                            .kind = sourcemeta::one::LeafKind::Schema},
                            {.path = "/mango",
                             .identifier = "http://example.com/mango",
                             .title = "Title",
@@ -116,7 +123,8 @@ TEST(at_walks_in_sorted_order) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 55,
-                            .bytes_bundled = 66}});
+                            .bytes_bundled = 66,
+                            .kind = sourcemeta::one::LeafKind::Schema}});
   sourcemeta::one::SearchView view{path};
   EXPECT_EQ(view.count(), 3);
   EXPECT_EQ(view.at(0).path, "/apple");
@@ -142,7 +150,8 @@ TEST(at_returns_empty_strings_for_empty_metadata) {
                             .health = 80,
                             .priority = 100,
                             .bytes_raw = 7,
-                            .bytes_bundled = 8}});
+                            .bytes_bundled = 8,
+                            .kind = sourcemeta::one::LeafKind::Schema}});
   sourcemeta::one::SearchView view{path};
   const auto entry{view.at(0)};
   EXPECT_EQ(entry.path, "/only/path");
@@ -151,4 +160,32 @@ TEST(at_returns_empty_strings_for_empty_metadata) {
   EXPECT_EQ(entry.description, "");
   EXPECT_EQ(entry.bytes_raw, 7);
   EXPECT_EQ(entry.bytes_bundled, 8);
+}
+
+TEST(one_kind_follows_the_other_whatever_each_ranks) {
+  const auto path{test_path("kind_order.metapack")};
+  write_search_file(path, {{.path = "/api/rich",
+                            .identifier = "http://example.com/api/rich",
+                            .title = "Title",
+                            .description = "Desc",
+                            .health = 100,
+                            .priority = 100,
+                            .bytes_raw = 0,
+                            .bytes_bundled = 0,
+                            .kind = sourcemeta::one::LeafKind::OpenAPI},
+                           {.path = "/schema/bare",
+                            .identifier = "http://example.com/schema/bare",
+                            .title = "",
+                            .description = "",
+                            .health = 0,
+                            .priority = 0,
+                            .bytes_raw = 0,
+                            .bytes_bundled = 0,
+                            .kind = sourcemeta::one::LeafKind::Schema}});
+  sourcemeta::one::SearchView view{path};
+  EXPECT_EQ(view.count(), 2);
+  EXPECT_EQ(view.at(0).path, "/schema/bare");
+  EXPECT_EQ(view.at(0).kind, sourcemeta::one::LeafKind::Schema);
+  EXPECT_EQ(view.at(1).path, "/api/rich");
+  EXPECT_EQ(view.at(1).kind, sourcemeta::one::LeafKind::OpenAPI);
 }

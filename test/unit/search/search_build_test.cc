@@ -26,7 +26,8 @@ TEST(single_entry) {
        .health = 80,
        .priority = 100,
        .bytes_raw = 0,
-       .bytes_bundled = 0}};
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   EXPECT_FALSE(payload.empty());
   EXPECT_GE(payload.size(), sizeof(sourcemeta::one::SearchIndexHeader));
@@ -41,7 +42,8 @@ TEST(header_single_entry) {
        .health = 80,
        .priority = 100,
        .bytes_raw = 0,
-       .bytes_bundled = 0}};
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   sourcemeta::one::SearchIndexHeader header{};
@@ -61,7 +63,8 @@ TEST(header_multiple_entries) {
        .health = 80,
        .priority = 100,
        .bytes_raw = 0,
-       .bytes_bundled = 0},
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema},
       {.path = "/b",
        .identifier = "http://example.com/b",
        .title = "B",
@@ -69,7 +72,8 @@ TEST(header_multiple_entries) {
        .health = 80,
        .priority = 100,
        .bytes_raw = 0,
-       .bytes_bundled = 0},
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema},
       {.path = "/c",
        .identifier = "http://example.com/c",
        .title = "C",
@@ -77,7 +81,8 @@ TEST(header_multiple_entries) {
        .health = 80,
        .priority = 100,
        .bytes_raw = 0,
-       .bytes_bundled = 0}};
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   sourcemeta::one::SearchIndexHeader header{};
@@ -97,7 +102,8 @@ TEST(offset_table) {
        .health = 80,
        .priority = 100,
        .bytes_raw = 0,
-       .bytes_bundled = 0},
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema},
       {.path = "/b",
        .identifier = "http://example.com/b",
        .title = "BB",
@@ -105,7 +111,8 @@ TEST(offset_table) {
        .health = 80,
        .priority = 100,
        .bytes_raw = 0,
-       .bytes_bundled = 0}};
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   sourcemeta::one::SearchIndexHeader header{};
@@ -139,7 +146,8 @@ TEST(record_fields) {
        .health = 80,
        .priority = 100,
        .bytes_raw = 4096,
-       .bytes_bundled = 8192}};
+       .bytes_bundled = 8192,
+       .kind = sourcemeta::one::LeafKind::Schema}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   sourcemeta::one::SearchIndexHeader header{};
@@ -191,7 +199,8 @@ TEST(total_size) {
        .health = 80,
        .priority = 100,
        .bytes_raw = 0,
-       .bytes_bundled = 0},
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema},
       {.path = "/bb",
        .identifier = "http://example.com/bb",
        .title = "TT",
@@ -199,7 +208,8 @@ TEST(total_size) {
        .health = 80,
        .priority = 100,
        .bytes_raw = 0,
-       .bytes_bundled = 0}};
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   const auto first_fields{std::string{"/a"}.size() +
@@ -225,7 +235,8 @@ TEST(skips_entry_with_oversized_path) {
        .health = 80,
        .priority = 100,
        .bytes_raw = 0,
-       .bytes_bundled = 0},
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema},
       {.path = "/normal",
        .identifier = "http://example.com/normal",
        .title = "Normal",
@@ -233,7 +244,8 @@ TEST(skips_entry_with_oversized_path) {
        .health = 80,
        .priority = 100,
        .bytes_raw = 0,
-       .bytes_bundled = 0}};
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   sourcemeta::one::SearchIndexHeader header{};
@@ -252,7 +264,8 @@ TEST(skips_entry_with_oversized_identifier) {
        .health = 80,
        .priority = 100,
        .bytes_raw = 0,
-       .bytes_bundled = 0},
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema},
       {.path = "/normal",
        .identifier = "http://example.com/normal",
        .title = "Normal",
@@ -260,7 +273,8 @@ TEST(skips_entry_with_oversized_identifier) {
        .health = 80,
        .priority = 100,
        .bytes_raw = 0,
-       .bytes_bundled = 0}};
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   sourcemeta::one::SearchIndexHeader header{};
@@ -279,7 +293,8 @@ TEST(truncates_oversized_title_with_ellipsis) {
        .health = 80,
        .priority = 100,
        .bytes_raw = 0,
-       .bytes_bundled = 0}};
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   sourcemeta::one::SearchIndexHeader header{};
@@ -307,7 +322,8 @@ TEST(truncates_oversized_description_with_ellipsis) {
        .health = 80,
        .priority = 100,
        .bytes_raw = 0,
-       .bytes_bundled = 0}};
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
 
   sourcemeta::one::SearchIndexHeader header{};
@@ -335,7 +351,8 @@ TEST(all_entries_oversized_returns_empty) {
        .health = 80,
        .priority = 100,
        .bytes_raw = 0,
-       .bytes_bundled = 0}};
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   EXPECT_TRUE(payload.empty());
 }
@@ -350,7 +367,8 @@ TEST(entry_at_exact_uint16_max_is_kept) {
        .health = 80,
        .priority = 100,
        .bytes_raw = 0,
-       .bytes_bundled = 0}};
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   EXPECT_FALSE(payload.empty());
 
@@ -370,7 +388,8 @@ TEST(entry_at_uint16_max_plus_one_is_skipped) {
        .health = 80,
        .priority = 100,
        .bytes_raw = 0,
-       .bytes_bundled = 0}};
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   EXPECT_TRUE(payload.empty());
 }
@@ -384,7 +403,8 @@ TEST(priority_is_primary_sort_key) {
        .health = 100,
        .priority = 0,
        .bytes_raw = 0,
-       .bytes_bundled = 0},
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema},
       {.path = "/high/bare",
        .identifier = "http://example.com/high/bare",
        .title = "",
@@ -392,7 +412,8 @@ TEST(priority_is_primary_sort_key) {
        .health = 0,
        .priority = 100,
        .bytes_raw = 0,
-       .bytes_bundled = 0},
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema},
       {.path = "/mid/rich",
        .identifier = "http://example.com/mid/rich",
        .title = "Mid Title",
@@ -400,7 +421,8 @@ TEST(priority_is_primary_sort_key) {
        .health = 90,
        .priority = 50,
        .bytes_raw = 0,
-       .bytes_bundled = 0}};
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{
       sourcemeta::one::search(payload.data(), payload.size(), "/", 10,
@@ -420,7 +442,8 @@ TEST(priority_and_health_surface_in_search_output) {
        .health = 80,
        .priority = 50,
        .bytes_raw = 0,
-       .bytes_bundled = 0}};
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{
       sourcemeta::one::search(payload.data(), payload.size(), "foo", 10,
@@ -430,4 +453,32 @@ TEST(priority_and_health_surface_in_search_output) {
   EXPECT_EQ(result.at(0).at("priority").to_integer(), 50);
   EXPECT_TRUE(result.at(0).defines("health"));
   EXPECT_EQ(result.at(0).at("health").to_integer(), 80);
+}
+
+TEST(a_search_passes_over_what_is_no_schema) {
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {.path = "/pets/api",
+       .identifier = "http://example.com/pets/api",
+       .title = "Pets",
+       .description = "Desc",
+       .health = 100,
+       .priority = 50,
+       .bytes_raw = 0,
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::OpenAPI},
+      {.path = "/pets/schema",
+       .identifier = "http://example.com/pets/schema",
+       .title = "Pets",
+       .description = "Desc",
+       .health = 100,
+       .priority = 50,
+       .bytes_raw = 0,
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema}};
+  const auto payload{sourcemeta::one::make_search(std::move(entries))};
+  const auto result{
+      sourcemeta::one::search(payload.data(), payload.size(), "pets", 10,
+                              sourcemeta::one::SEARCH_SCOPE_PATH)};
+  EXPECT_EQ(result.size(), 1);
+  EXPECT_EQ(result.at(0).at("path").to_string(), "/pets/schema");
 }
