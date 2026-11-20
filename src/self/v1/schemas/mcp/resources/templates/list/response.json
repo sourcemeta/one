@@ -39,60 +39,9 @@
       "properties": {
         "resourceTemplates": {
           "type": "array",
-          "allOf": [
-            {
-              "contains": {
-                "required": [ "name" ],
-                "properties": {
-                  "name": {
-                    "const": "JSON Schema"
-                  }
-                }
-              }
-            },
-            {
-              "contains": {
-                "required": [ "name" ],
-                "properties": {
-                  "name": {
-                    "const": "OpenAPI Description"
-                  }
-                }
-              }
-            }
-          ],
-          "maxItems": 2,
-          "minItems": 2,
+          "minItems": 1,
           "items": {
             "type": "object",
-            "anyOf": [
-              {
-                "properties": {
-                  "name": {
-                    "const": "JSON Schema"
-                  },
-                  "description": {
-                    "const": "A JSON Schema in this catalog, addressable by its canonical absolute URI under this server's origin. This instance is sovereign over its own URL namespace. Schemas whose URIs lie outside this namespace will not be served here. Substitute `{+path}` with the schema's catalog path. Include `{?bundle}` (its presence alone triggers bundling, any value is ignored) to receive the schema with every external `$ref` inlined into a single self-contained document. Alternatively, include `{?as}` with one of the keys of the `conversions` property of the schema metadata to receive the schema converted into that dialect. The URI must not contain a fragment. Use `resources/list` to discover the available schemas rather than guessing paths"
-                  },
-                  "mimeType": {
-                    "const": "application/schema+json"
-                  }
-                }
-              },
-              {
-                "properties": {
-                  "name": {
-                    "const": "OpenAPI Description"
-                  },
-                  "description": {
-                    "const": "An OpenAPI description in this catalog, addressable by its absolute URI under this server's origin. Substitute `{+path}` with the description's catalog path. Include `{?bundle}` (its presence alone triggers bundling, any value is ignored) to receive the description with every external reference inlined into a single self-contained document. A description cannot be converted into a JSON Schema dialect, so it takes no `as`. The URI must not contain a fragment. Use `resources/list` to discover the available descriptions rather than guessing paths"
-                  },
-                  "mimeType": {
-                    "const": "application/openapi+json"
-                  }
-                }
-              }
-            ],
             "required": [ "uriTemplate", "name", "description", "mimeType" ],
             "properties": {
               "uriTemplate": {
@@ -101,7 +50,7 @@
                 "format": "uri-template"
               },
               "name": {
-                "enum": [ "JSON Schema", "OpenAPI Description" ]
+                "type": "string"
               },
               "description": {
                 "type": "string"
