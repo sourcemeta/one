@@ -1106,8 +1106,13 @@ struct GenerateExplorerSearchIndex {
       assert(directory.defines("entries"));
 
       for (const auto &directory_entry : directory.at("entries").as_array()) {
-        if (!directory_entry.defines("type") ||
-            directory_entry.at("type").to_string() != "schema") {
+        const auto *type{directory_entry.try_at("type")};
+        if (type == nullptr) {
+          continue;
+        }
+
+        const std::string_view kind{type->to_string()};
+        if (kind != "schema" && kind != "openapi") {
           continue;
         }
 
@@ -1136,7 +1141,9 @@ struct GenerateExplorerSearchIndex {
                  directory_entry.defines("bytesBundled")
                      ? static_cast<std::uint64_t>(
                            directory_entry.at("bytesBundled").to_integer())
-                     : static_cast<std::uint64_t>(0)});
+                     : static_cast<std::uint64_t>(0),
+             .kind = kind == "openapi" ? sourcemeta::one::LeafKind::OpenAPI
+                                       : sourcemeta::one::LeafKind::Schema});
       }
     }
 
@@ -1194,11 +1201,13 @@ struct GenerateLogin {
   }
 };
 
-// What a listing calls a schema, and how many it names before it hands out a
-// cursor. Both are settled here, since the pages are written rather than
-// assembled
+// What a listing calls each kind it names, and how many it names before it
+// hands out a cursor. All of it is settled here, since the pages are written
+// rather than assembled
 inline constexpr std::string_view MCP_RESOURCE_MIME_TYPE{
     "application/schema+json"};
+inline constexpr std::string_view MCP_OPENAPI_RESOURCE_MIME_TYPE{
+    "application/openapi+json"};
 inline constexpr std::size_t MCP_RESOURCES_PAGE_SIZE{50};
 // The descriptors are written once and answered to every caller whatever
 // revision they settle on, so they are built at the oldest one this instance
@@ -1227,7 +1236,9 @@ struct GenerateMCP {
         "JSON Schemas organized as a tree of directories. Every schema is "
         "exposed as an MCP resource via the `JSON Schema` resource template "
         "(see `resources/templates/list`) and is addressable by its "
-        "canonical absolute URI. This instance is sovereign over its own "
+        "canonical absolute URI. A catalog may also hold OpenAPI "
+        "descriptions, exposed the same way via the `OpenAPI Description` "
+        "resource template. This instance is sovereign over its own "
         "URL namespace. Schemas whose URIs lie outside this namespace will "
         "not be served here. Use `tools/list` to discover the operations "
         "this catalog exposes. Because this server is a JSON Schema "
@@ -1246,11 +1257,12 @@ struct GenerateMCP {
     }
     instructions << INSTRUCTIONS_BODY;
 
-    std::string template_uri{configuration.url};
-    if (!template_uri.empty() && template_uri.back() == '/') {
-      template_uri.pop_back();
+    std::string template_base{configuration.url};
+    if (!template_base.empty() && template_base.back() == '/') {
+      template_base.pop_back();
     }
-    template_uri.append("/{+path}{?bundle,as}");
+    const auto template_uri{template_base + "/{+path}{?bundle,as}"};
+    const auto openapi_template_uri{template_base + "/{+path}{?bundle}"};
 
     auto resource_templates{sourcemeta::core::JSON::make_array()};
     resource_templates.push_back(sourcemeta::core::mcp_make_resource_template(
@@ -1269,6 +1281,18 @@ struct GenerateMCP {
         "`resources/list` to discover the available schemas rather than "
         "guessing paths",
         "application/schema+json"));
+    resource_templates.push_back(sourcemeta::core::mcp_make_resource_template(
+        MCP_DESCRIPTOR_VERSION, openapi_template_uri, "OpenAPI Description",
+        "An OpenAPI description in this catalog, addressable by its "
+        "absolute URI under this server's origin. Substitute `{+path}` "
+        "with the description's catalog path. Include `{?bundle}` (its "
+        "presence alone triggers bundling, any value is ignored) to "
+        "receive the description with every external reference inlined "
+        "into a single self-contained document. A description cannot be "
+        "converted into a JSON Schema dialect, so it takes no `as`. The "
+        "URI must not contain a fragment. Use `resources/list` to "
+        "discover the available descriptions rather than guessing paths",
+        "application/openapi+json"));
 
     auto tools{sourcemeta::core::JSON::make_array()};
     auto tool_routes{sourcemeta::core::JSON::make_object()};
@@ -1357,8 +1381,10 @@ struct GenerateMCP {
               resources.push_back(sourcemeta::core::mcp_make_resource(
                   MCP_DESCRIPTOR_VERSION, uri,
                   entry.title.empty() ? entry.path : entry.title,
-                  MCP_RESOURCE_MIME_TYPE, entry.description,
-                  static_cast<std::size_t>(entry.bytes_raw),
+                  entry.kind == sourcemeta::one::LeafKind::OpenAPI
+                      ? MCP_OPENAPI_RESOURCE_MIME_TYPE
+                      : MCP_RESOURCE_MIME_TYPE,
+                  entry.description, static_cast<std::size_t>(entry.bytes_raw),
                   static_cast<double>(entry.priority) / 100.0));
             });
 

@@ -7,6 +7,7 @@
 
 #include <sourcemeta/core/io.h>
 #include <sourcemeta/core/json.h>
+#include <sourcemeta/one/shared.h>
 
 #include <cstddef>     // std::size_t
 #include <cstdint>     // std::uint8_t
@@ -28,6 +29,7 @@ struct SearchEntry {
   std::uint8_t priority;
   std::uint64_t bytes_raw;
   std::uint64_t bytes_bundled;
+  LeafKind kind;
 };
 
 struct SearchListEntry {
@@ -39,6 +41,7 @@ struct SearchListEntry {
   std::uint64_t bytes_bundled;
   std::uint8_t priority;
   std::uint8_t health;
+  LeafKind kind;
 };
 
 #pragma pack(push, 1)
@@ -56,12 +59,16 @@ struct SearchRecordHeader {
   std::uint64_t bytes_bundled;
   std::uint8_t priority;
   std::uint8_t health;
+  std::uint8_t kind;
 };
 #pragma pack(pop)
 
-// Result ranking is fixed and intentionally not configurable: higher-priority
-// schemas always come first, then entries with richer metadata, then
-// healthier schemas. The scope only narrows which fields are searched
+// The catalog holds one kind after the other, the way a directory lists what
+// it holds, and ranks within a kind. Ranking is fixed and intentionally not
+// configurable: higher-priority entries come first, then entries with richer
+// metadata, then healthier ones. The scope only narrows which fields are
+// searched, and a search answers for the schemas of the catalog alone however
+// wide a scope it is given
 inline constexpr std::uint8_t SEARCH_SCOPE_PATH{0b001};
 inline constexpr std::uint8_t SEARCH_SCOPE_TITLE{0b010};
 inline constexpr std::uint8_t SEARCH_SCOPE_DESCRIPTION{0b100};

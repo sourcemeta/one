@@ -17,6 +17,10 @@ auto make_search(std::vector<SearchEntry> &&entries)
     -> std::vector<std::uint8_t> {
   std::ranges::sort(
       entries, [](const SearchEntry &left, const SearchEntry &right) -> bool {
+        if (left.kind != right.kind) {
+          return left.kind < right.kind;
+        }
+
         if (left.priority != right.priority) {
           return left.priority > right.priority;
         }
@@ -98,7 +102,8 @@ auto make_search(std::vector<SearchEntry> &&entries)
         .bytes_raw = entry.bytes_raw,
         .bytes_bundled = entry.bytes_bundled,
         .priority = entry.priority,
-        .health = entry.health};
+        .health = entry.health,
+        .kind = static_cast<std::uint8_t>(entry.kind)};
     std::memcpy(payload.data() + record_position, &record_header,
                 sizeof(SearchRecordHeader));
     record_position += sizeof(SearchRecordHeader);
@@ -216,6 +221,12 @@ auto search(const std::uint8_t *payload, const std::size_t payload_size,
                                        record_header->identifier_length +
                                        record_header->title_length),
         record_header->description_length};
+
+    // What a search answers for is the schemas of the catalog, while the
+    // catalog itself holds every kind
+    if (static_cast<LeafKind>(record_header->kind) != LeafKind::Schema) {
+      continue;
+    }
 
     bool matched{false};
 
@@ -366,7 +377,8 @@ auto SearchView::at(const std::size_t index) -> SearchListEntry {
           .bytes_raw = record_header->bytes_raw,
           .bytes_bundled = record_header->bytes_bundled,
           .priority = record_header->priority,
-          .health = record_header->health};
+          .health = record_header->health,
+          .kind = static_cast<LeafKind>(record_header->kind)};
 }
 
 auto SearchView::for_each(
@@ -439,7 +451,8 @@ auto SearchView::for_each(
               .bytes_raw = record_header->bytes_raw,
               .bytes_bundled = record_header->bytes_bundled,
               .priority = record_header->priority,
-              .health = record_header->health});
+              .health = record_header->health,
+              .kind = static_cast<LeafKind>(record_header->kind)});
   }
 }
 
