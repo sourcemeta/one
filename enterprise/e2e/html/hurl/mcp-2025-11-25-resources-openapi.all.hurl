@@ -28,7 +28,9 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/open
   "$self": "{{base}}/test/openapi-split-entry",
   "info": {
     "title": "Split",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "summary": "What a listing says of this API",
+    "description": "The long form, which a summary beside it stands in for"
   },
   "paths": {
     "/pets": {
@@ -155,7 +157,9 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/open
   "$self": "{{base}}/test/openapi-split-entry",
   "info": {
     "title": "Split",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "summary": "What a listing says of this API",
+    "description": "The long form, which a summary beside it stands in for"
   },
   "paths": {
     "/pets": {
@@ -313,7 +317,8 @@ body startsWith "{\n  \"openapi\": \"3.0.4\",\n  \"info\": {\n"
   "openapi": "3.0.4",
   "info": {
     "title": "Petstore",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "description": "Everything about the pets this shop keeps"
   },
   "paths": {
     "/pets": {

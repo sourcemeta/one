@@ -103,10 +103,10 @@ jsonpath "$.id" == 800
 jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 1
 jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.structuredContent.bytes" == 818
-variable "text" jsonpath "$.bytes" == 818
-jsonpath "$.result.structuredContent.bytesBundled" == 1741
-variable "text" jsonpath "$.bytesBundled" == 1741
+jsonpath "$.result.structuredContent.bytes" == 945
+variable "text" jsonpath "$.bytes" == 945
+jsonpath "$.result.structuredContent.bytesBundled" == 1868
+variable "text" jsonpath "$.bytesBundled" == 1868
 jsonpath "$.result.structuredContent.identifier" == "{{base}}/test/openapi-split-entry"
 variable "text" jsonpath "$.identifier" == "{{base}}/test/openapi-split-entry"
 jsonpath "$.result.structuredContent.path" == "/test/openapi-split-entry"
@@ -121,6 +121,8 @@ jsonpath "$.result.structuredContent.baseDialect" == "https://json-schema.org/dr
 variable "text" jsonpath "$.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 jsonpath "$.result.structuredContent.title" == "Split"
 variable "text" jsonpath "$.title" == "Split"
+jsonpath "$.result.structuredContent.description" == "What a listing says of this API"
+variable "text" jsonpath "$.description" == "What a listing says of this API"
 jsonpath "$.result.structuredContent.health" == 100
 variable "text" jsonpath "$.health" == 100
 jsonpath "$.result.structuredContent.operations" == 0

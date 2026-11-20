@@ -2,6 +2,7 @@
   "openapi": "3.0.4",
   "info": {
     "title": "Petstore",
+    "description": "Everything about the pets this shop keeps",
     "version": "1.0.0"
   },
   "paths": {

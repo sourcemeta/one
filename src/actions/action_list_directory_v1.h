@@ -122,8 +122,12 @@ public:
 
     if (const auto *entries{result.try_at("entries")};
         entries != nullptr && entries->is_array()) {
+      // Either kind is a resource a caller can read, addressed the same way
+      // and differing only in the media type the link announces
       for (const auto &entry : entries->as_array()) {
-        if (entry.at_or("type", EMPTY_STRING).to_string() != "schema") {
+        const auto &kind{entry.at_or("type", EMPTY_STRING).to_string()};
+        const auto describes_api{kind == OPENAPI_RESOURCE_KIND};
+        if (kind != SCHEMA_RESOURCE_KIND && !describes_api) {
           continue;
         }
         if (!entry.defines("identifier")) {
@@ -133,7 +137,8 @@ public:
         content.push_back(sourcemeta::one::mcp_resource_block(
             version, entry.at("identifier").to_string(),
             title.empty() ? entry.at("path").to_string() : title,
-            entry.at_or("description", EMPTY_STRING).to_string()));
+            entry.at_or("description", EMPTY_STRING).to_string(),
+            describes_api ? OPENAPI_MIME_TYPE : SCHEMA_MIME_TYPE));
       }
     }
 
@@ -142,6 +147,12 @@ public:
   }
 
 private:
+  static constexpr std::string_view SCHEMA_RESOURCE_KIND{"schema"};
+  static constexpr std::string_view OPENAPI_RESOURCE_KIND{"openapi"};
+  static constexpr std::string_view SCHEMA_MIME_TYPE{"application/schema+json"};
+  static constexpr std::string_view OPENAPI_MIME_TYPE{
+      "application/openapi+json"};
+
   std::string_view response_schema_;
   std::string_view rpc_request_schema_;
   std::string_view rpc_response_schema_;
