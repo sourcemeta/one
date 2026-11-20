@@ -2,6 +2,8 @@
   "openapi": "3.2.0",
   "info": {
     "title": "Split",
+    "summary": "What a listing says of this API",
+    "description": "The long form, which a summary beside it stands in for",
     "version": "1.0.0"
   },
   "paths": {

@@ -609,13 +609,28 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 103
 jsonpath "$.result.isError" == false
-jsonpath "$.result.content" count == 2
+jsonpath "$.result.content" count == 5
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
 jsonpath "$.result.content[1].uri" == "{{base}}/test/object"
 jsonpath "$.result.content[1].name" == "My Object"
 jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
+jsonpath "$.result.content[2].type" == "resource_link"
+jsonpath "$.result.content[2].uri" == "{{base}}/test/openapi-petstore"
+jsonpath "$.result.content[2].name" == "Petstore"
+jsonpath "$.result.content[2].description" == "Everything about the pets this shop keeps"
+jsonpath "$.result.content[2].mimeType" == "application/openapi+json"
+jsonpath "$.result.content[3].type" == "resource_link"
+jsonpath "$.result.content[3].uri" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.content[3].name" == "Split"
+jsonpath "$.result.content[3].description" == "What a listing says of this API"
+jsonpath "$.result.content[3].mimeType" == "application/openapi+json"
+jsonpath "$.result.content[4].type" == "resource_link"
+jsonpath "$.result.content[4].uri" == "{{base}}/test/openapi-split-shared"
+jsonpath "$.result.content[4].name" == "Shared"
+jsonpath "$.result.content[4].description" not exists
+jsonpath "$.result.content[4].mimeType" == "application/openapi+json"
 jsonpath "$.result.structuredContent.path" == "/test"
 variable "text" jsonpath "$.path" == "/test"
 jsonpath "$.result.structuredContent.url" == "{{base}}/test"
@@ -768,6 +783,14 @@ jsonpath "$.result.structuredContent.entries[8].operations" == 1
 variable "text" jsonpath "$.entries[8].operations" == 1
 jsonpath "$.result.structuredContent.entries[8].path" == "/test/openapi-petstore"
 variable "text" jsonpath "$.entries[8].path" == "/test/openapi-petstore"
+jsonpath "$.result.structuredContent.entries[8].identifier" == "{{base}}/test/openapi-petstore"
+variable "text" jsonpath "$.entries[8].identifier" == "{{base}}/test/openapi-petstore"
+jsonpath "$.result.structuredContent.entries[8].title" == "Petstore"
+variable "text" jsonpath "$.entries[8].title" == "Petstore"
+jsonpath "$.result.structuredContent.entries[8].description" == "Everything about the pets this shop keeps"
+variable "text" jsonpath "$.entries[8].description" == "Everything about the pets this shop keeps"
+jsonpath "$.result.structuredContent.entries[8].priority" == 50
+variable "text" jsonpath "$.entries[8].priority" == 50
 jsonpath "$.result.structuredContent.entries[9].name" == "openapi-split-entry"
 variable "text" jsonpath "$.entries[9].name" == "openapi-split-entry"
 jsonpath "$.result.structuredContent.entries[9].private" == false
@@ -784,6 +807,14 @@ jsonpath "$.result.structuredContent.entries[9].operations" == 0
 variable "text" jsonpath "$.entries[9].operations" == 0
 jsonpath "$.result.structuredContent.entries[9].path" == "/test/openapi-split-entry"
 variable "text" jsonpath "$.entries[9].path" == "/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.entries[9].identifier" == "{{base}}/test/openapi-split-entry"
+variable "text" jsonpath "$.entries[9].identifier" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.entries[9].title" == "Split"
+variable "text" jsonpath "$.entries[9].title" == "Split"
+jsonpath "$.result.structuredContent.entries[9].description" == "What a listing says of this API"
+variable "text" jsonpath "$.entries[9].description" == "What a listing says of this API"
+jsonpath "$.result.structuredContent.entries[9].priority" == 50
+variable "text" jsonpath "$.entries[9].priority" == 50
 jsonpath "$.result.structuredContent.entries[10].name" == "openapi-split-shared"
 variable "text" jsonpath "$.entries[10].name" == "openapi-split-shared"
 jsonpath "$.result.structuredContent.entries[10].private" == false
@@ -800,6 +831,14 @@ jsonpath "$.result.structuredContent.entries[10].operations" == 0
 variable "text" jsonpath "$.entries[10].operations" == 0
 jsonpath "$.result.structuredContent.entries[10].path" == "/test/openapi-split-shared"
 variable "text" jsonpath "$.entries[10].path" == "/test/openapi-split-shared"
+jsonpath "$.result.structuredContent.entries[10].identifier" == "{{base}}/test/openapi-split-shared"
+variable "text" jsonpath "$.entries[10].identifier" == "{{base}}/test/openapi-split-shared"
+jsonpath "$.result.structuredContent.entries[10].title" == "Shared"
+variable "text" jsonpath "$.entries[10].title" == "Shared"
+jsonpath "$.result.structuredContent.entries[10].description" not exists
+variable "text" jsonpath "$.entries[10].description" not exists
+jsonpath "$.result.structuredContent.entries[10].priority" == 50
+variable "text" jsonpath "$.entries[10].priority" == 50
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -2292,13 +2331,28 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 106
 jsonpath "$.result.isError" == false
-jsonpath "$.result.content" count == 2
+jsonpath "$.result.content" count == 5
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
 jsonpath "$.result.content[1].uri" == "{{base}}/test/object"
 jsonpath "$.result.content[1].name" == "My Object"
 jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
+jsonpath "$.result.content[2].type" == "resource_link"
+jsonpath "$.result.content[2].uri" == "{{base}}/test/openapi-petstore"
+jsonpath "$.result.content[2].name" == "Petstore"
+jsonpath "$.result.content[2].description" == "Everything about the pets this shop keeps"
+jsonpath "$.result.content[2].mimeType" == "application/openapi+json"
+jsonpath "$.result.content[3].type" == "resource_link"
+jsonpath "$.result.content[3].uri" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.content[3].name" == "Split"
+jsonpath "$.result.content[3].description" == "What a listing says of this API"
+jsonpath "$.result.content[3].mimeType" == "application/openapi+json"
+jsonpath "$.result.content[4].type" == "resource_link"
+jsonpath "$.result.content[4].uri" == "{{base}}/test/openapi-split-shared"
+jsonpath "$.result.content[4].name" == "Shared"
+jsonpath "$.result.content[4].description" not exists
+jsonpath "$.result.content[4].mimeType" == "application/openapi+json"
 jsonpath "$.result.structuredContent.path" == "/test"
 variable "text" jsonpath "$.path" == "/test"
 jsonpath "$.result.structuredContent.url" == "{{base}}/test"
@@ -2343,6 +2397,14 @@ jsonpath "$.result.structuredContent.entries[8].operations" == 1
 variable "text" jsonpath "$.entries[8].operations" == 1
 jsonpath "$.result.structuredContent.entries[8].path" == "/test/openapi-petstore"
 variable "text" jsonpath "$.entries[8].path" == "/test/openapi-petstore"
+jsonpath "$.result.structuredContent.entries[8].identifier" == "{{base}}/test/openapi-petstore"
+variable "text" jsonpath "$.entries[8].identifier" == "{{base}}/test/openapi-petstore"
+jsonpath "$.result.structuredContent.entries[8].title" == "Petstore"
+variable "text" jsonpath "$.entries[8].title" == "Petstore"
+jsonpath "$.result.structuredContent.entries[8].description" == "Everything about the pets this shop keeps"
+variable "text" jsonpath "$.entries[8].description" == "Everything about the pets this shop keeps"
+jsonpath "$.result.structuredContent.entries[8].priority" == 50
+variable "text" jsonpath "$.entries[8].priority" == 50
 jsonpath "$.result.structuredContent.entries[9].name" == "openapi-split-entry"
 variable "text" jsonpath "$.entries[9].name" == "openapi-split-entry"
 jsonpath "$.result.structuredContent.entries[9].private" == false
@@ -2359,6 +2421,14 @@ jsonpath "$.result.structuredContent.entries[9].operations" == 0
 variable "text" jsonpath "$.entries[9].operations" == 0
 jsonpath "$.result.structuredContent.entries[9].path" == "/test/openapi-split-entry"
 variable "text" jsonpath "$.entries[9].path" == "/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.entries[9].identifier" == "{{base}}/test/openapi-split-entry"
+variable "text" jsonpath "$.entries[9].identifier" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.entries[9].title" == "Split"
+variable "text" jsonpath "$.entries[9].title" == "Split"
+jsonpath "$.result.structuredContent.entries[9].description" == "What a listing says of this API"
+variable "text" jsonpath "$.entries[9].description" == "What a listing says of this API"
+jsonpath "$.result.structuredContent.entries[9].priority" == 50
+variable "text" jsonpath "$.entries[9].priority" == 50
 jsonpath "$.result.structuredContent.entries[10].name" == "openapi-split-shared"
 variable "text" jsonpath "$.entries[10].name" == "openapi-split-shared"
 jsonpath "$.result.structuredContent.entries[10].private" == false
@@ -2375,6 +2445,14 @@ jsonpath "$.result.structuredContent.entries[10].operations" == 0
 variable "text" jsonpath "$.entries[10].operations" == 0
 jsonpath "$.result.structuredContent.entries[10].path" == "/test/openapi-split-shared"
 variable "text" jsonpath "$.entries[10].path" == "/test/openapi-split-shared"
+jsonpath "$.result.structuredContent.entries[10].identifier" == "{{base}}/test/openapi-split-shared"
+variable "text" jsonpath "$.entries[10].identifier" == "{{base}}/test/openapi-split-shared"
+jsonpath "$.result.structuredContent.entries[10].title" == "Shared"
+variable "text" jsonpath "$.entries[10].title" == "Shared"
+jsonpath "$.result.structuredContent.entries[10].description" not exists
+variable "text" jsonpath "$.entries[10].description" not exists
+jsonpath "$.result.structuredContent.entries[10].priority" == 50
+variable "text" jsonpath "$.entries[10].priority" == 50
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -2711,13 +2789,28 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 112
 jsonpath "$.result.isError" == false
-jsonpath "$.result.content" count == 2
+jsonpath "$.result.content" count == 5
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
 jsonpath "$.result.content[1].uri" == "{{base}}/test/object"
 jsonpath "$.result.content[1].name" == "My Object"
 jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
+jsonpath "$.result.content[2].type" == "resource_link"
+jsonpath "$.result.content[2].uri" == "{{base}}/test/openapi-petstore"
+jsonpath "$.result.content[2].name" == "Petstore"
+jsonpath "$.result.content[2].description" == "Everything about the pets this shop keeps"
+jsonpath "$.result.content[2].mimeType" == "application/openapi+json"
+jsonpath "$.result.content[3].type" == "resource_link"
+jsonpath "$.result.content[3].uri" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.content[3].name" == "Split"
+jsonpath "$.result.content[3].description" == "What a listing says of this API"
+jsonpath "$.result.content[3].mimeType" == "application/openapi+json"
+jsonpath "$.result.content[4].type" == "resource_link"
+jsonpath "$.result.content[4].uri" == "{{base}}/test/openapi-split-shared"
+jsonpath "$.result.content[4].name" == "Shared"
+jsonpath "$.result.content[4].description" not exists
+jsonpath "$.result.content[4].mimeType" == "application/openapi+json"
 jsonpath "$.result.structuredContent.path" == "/test"
 variable "text" jsonpath "$.path" == "/test"
 jsonpath "$.result.structuredContent.url" == "{{base}}/test"
@@ -2870,6 +2963,14 @@ jsonpath "$.result.structuredContent.entries[8].operations" == 1
 variable "text" jsonpath "$.entries[8].operations" == 1
 jsonpath "$.result.structuredContent.entries[8].path" == "/test/openapi-petstore"
 variable "text" jsonpath "$.entries[8].path" == "/test/openapi-petstore"
+jsonpath "$.result.structuredContent.entries[8].identifier" == "{{base}}/test/openapi-petstore"
+variable "text" jsonpath "$.entries[8].identifier" == "{{base}}/test/openapi-petstore"
+jsonpath "$.result.structuredContent.entries[8].title" == "Petstore"
+variable "text" jsonpath "$.entries[8].title" == "Petstore"
+jsonpath "$.result.structuredContent.entries[8].description" == "Everything about the pets this shop keeps"
+variable "text" jsonpath "$.entries[8].description" == "Everything about the pets this shop keeps"
+jsonpath "$.result.structuredContent.entries[8].priority" == 50
+variable "text" jsonpath "$.entries[8].priority" == 50
 jsonpath "$.result.structuredContent.entries[9].name" == "openapi-split-entry"
 variable "text" jsonpath "$.entries[9].name" == "openapi-split-entry"
 jsonpath "$.result.structuredContent.entries[9].private" == false
@@ -2886,6 +2987,14 @@ jsonpath "$.result.structuredContent.entries[9].operations" == 0
 variable "text" jsonpath "$.entries[9].operations" == 0
 jsonpath "$.result.structuredContent.entries[9].path" == "/test/openapi-split-entry"
 variable "text" jsonpath "$.entries[9].path" == "/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.entries[9].identifier" == "{{base}}/test/openapi-split-entry"
+variable "text" jsonpath "$.entries[9].identifier" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.entries[9].title" == "Split"
+variable "text" jsonpath "$.entries[9].title" == "Split"
+jsonpath "$.result.structuredContent.entries[9].description" == "What a listing says of this API"
+variable "text" jsonpath "$.entries[9].description" == "What a listing says of this API"
+jsonpath "$.result.structuredContent.entries[9].priority" == 50
+variable "text" jsonpath "$.entries[9].priority" == 50
 jsonpath "$.result.structuredContent.entries[10].name" == "openapi-split-shared"
 variable "text" jsonpath "$.entries[10].name" == "openapi-split-shared"
 jsonpath "$.result.structuredContent.entries[10].private" == false
@@ -2902,6 +3011,14 @@ jsonpath "$.result.structuredContent.entries[10].operations" == 0
 variable "text" jsonpath "$.entries[10].operations" == 0
 jsonpath "$.result.structuredContent.entries[10].path" == "/test/openapi-split-shared"
 variable "text" jsonpath "$.entries[10].path" == "/test/openapi-split-shared"
+jsonpath "$.result.structuredContent.entries[10].identifier" == "{{base}}/test/openapi-split-shared"
+variable "text" jsonpath "$.entries[10].identifier" == "{{base}}/test/openapi-split-shared"
+jsonpath "$.result.structuredContent.entries[10].title" == "Shared"
+variable "text" jsonpath "$.entries[10].title" == "Shared"
+jsonpath "$.result.structuredContent.entries[10].description" not exists
+variable "text" jsonpath "$.entries[10].description" not exists
+jsonpath "$.result.structuredContent.entries[10].priority" == 50
+variable "text" jsonpath "$.entries[10].priority" == 50
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -2967,13 +3084,28 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1121
 jsonpath "$.result.isError" == false
-jsonpath "$.result.content" count == 2
+jsonpath "$.result.content" count == 5
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
 jsonpath "$.result.content[1].uri" == "{{base}}/test/object"
 jsonpath "$.result.content[1].name" == "My Object"
 jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
+jsonpath "$.result.content[2].type" == "resource_link"
+jsonpath "$.result.content[2].uri" == "{{base}}/test/openapi-petstore"
+jsonpath "$.result.content[2].name" == "Petstore"
+jsonpath "$.result.content[2].description" == "Everything about the pets this shop keeps"
+jsonpath "$.result.content[2].mimeType" == "application/openapi+json"
+jsonpath "$.result.content[3].type" == "resource_link"
+jsonpath "$.result.content[3].uri" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.content[3].name" == "Split"
+jsonpath "$.result.content[3].description" == "What a listing says of this API"
+jsonpath "$.result.content[3].mimeType" == "application/openapi+json"
+jsonpath "$.result.content[4].type" == "resource_link"
+jsonpath "$.result.content[4].uri" == "{{base}}/test/openapi-split-shared"
+jsonpath "$.result.content[4].name" == "Shared"
+jsonpath "$.result.content[4].description" not exists
+jsonpath "$.result.content[4].mimeType" == "application/openapi+json"
 jsonpath "$.result.structuredContent.path" == "/test"
 variable "text" jsonpath "$.path" == "/test"
 jsonpath "$.result.structuredContent.url" == "{{base}}/test"
@@ -3126,6 +3258,14 @@ jsonpath "$.result.structuredContent.entries[8].operations" == 1
 variable "text" jsonpath "$.entries[8].operations" == 1
 jsonpath "$.result.structuredContent.entries[8].path" == "/test/openapi-petstore"
 variable "text" jsonpath "$.entries[8].path" == "/test/openapi-petstore"
+jsonpath "$.result.structuredContent.entries[8].identifier" == "{{base}}/test/openapi-petstore"
+variable "text" jsonpath "$.entries[8].identifier" == "{{base}}/test/openapi-petstore"
+jsonpath "$.result.structuredContent.entries[8].title" == "Petstore"
+variable "text" jsonpath "$.entries[8].title" == "Petstore"
+jsonpath "$.result.structuredContent.entries[8].description" == "Everything about the pets this shop keeps"
+variable "text" jsonpath "$.entries[8].description" == "Everything about the pets this shop keeps"
+jsonpath "$.result.structuredContent.entries[8].priority" == 50
+variable "text" jsonpath "$.entries[8].priority" == 50
 jsonpath "$.result.structuredContent.entries[9].name" == "openapi-split-entry"
 variable "text" jsonpath "$.entries[9].name" == "openapi-split-entry"
 jsonpath "$.result.structuredContent.entries[9].private" == false
@@ -3142,6 +3282,14 @@ jsonpath "$.result.structuredContent.entries[9].operations" == 0
 variable "text" jsonpath "$.entries[9].operations" == 0
 jsonpath "$.result.structuredContent.entries[9].path" == "/test/openapi-split-entry"
 variable "text" jsonpath "$.entries[9].path" == "/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.entries[9].identifier" == "{{base}}/test/openapi-split-entry"
+variable "text" jsonpath "$.entries[9].identifier" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.entries[9].title" == "Split"
+variable "text" jsonpath "$.entries[9].title" == "Split"
+jsonpath "$.result.structuredContent.entries[9].description" == "What a listing says of this API"
+variable "text" jsonpath "$.entries[9].description" == "What a listing says of this API"
+jsonpath "$.result.structuredContent.entries[9].priority" == 50
+variable "text" jsonpath "$.entries[9].priority" == 50
 jsonpath "$.result.structuredContent.entries[10].name" == "openapi-split-shared"
 variable "text" jsonpath "$.entries[10].name" == "openapi-split-shared"
 jsonpath "$.result.structuredContent.entries[10].private" == false
@@ -3158,6 +3306,14 @@ jsonpath "$.result.structuredContent.entries[10].operations" == 0
 variable "text" jsonpath "$.entries[10].operations" == 0
 jsonpath "$.result.structuredContent.entries[10].path" == "/test/openapi-split-shared"
 variable "text" jsonpath "$.entries[10].path" == "/test/openapi-split-shared"
+jsonpath "$.result.structuredContent.entries[10].identifier" == "{{base}}/test/openapi-split-shared"
+variable "text" jsonpath "$.entries[10].identifier" == "{{base}}/test/openapi-split-shared"
+jsonpath "$.result.structuredContent.entries[10].title" == "Shared"
+variable "text" jsonpath "$.entries[10].title" == "Shared"
+jsonpath "$.result.structuredContent.entries[10].description" not exists
+variable "text" jsonpath "$.entries[10].description" not exists
+jsonpath "$.result.structuredContent.entries[10].priority" == 50
+variable "text" jsonpath "$.entries[10].priority" == 50
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -3223,13 +3379,28 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1122
 jsonpath "$.result.isError" == false
-jsonpath "$.result.content" count == 2
+jsonpath "$.result.content" count == 5
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
 jsonpath "$.result.content[1].uri" == "{{base}}/test/object"
 jsonpath "$.result.content[1].name" == "My Object"
 jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
+jsonpath "$.result.content[2].type" == "resource_link"
+jsonpath "$.result.content[2].uri" == "{{base}}/test/openapi-petstore"
+jsonpath "$.result.content[2].name" == "Petstore"
+jsonpath "$.result.content[2].description" == "Everything about the pets this shop keeps"
+jsonpath "$.result.content[2].mimeType" == "application/openapi+json"
+jsonpath "$.result.content[3].type" == "resource_link"
+jsonpath "$.result.content[3].uri" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.content[3].name" == "Split"
+jsonpath "$.result.content[3].description" == "What a listing says of this API"
+jsonpath "$.result.content[3].mimeType" == "application/openapi+json"
+jsonpath "$.result.content[4].type" == "resource_link"
+jsonpath "$.result.content[4].uri" == "{{base}}/test/openapi-split-shared"
+jsonpath "$.result.content[4].name" == "Shared"
+jsonpath "$.result.content[4].description" not exists
+jsonpath "$.result.content[4].mimeType" == "application/openapi+json"
 jsonpath "$.result.structuredContent.path" == "/test"
 variable "text" jsonpath "$.path" == "/test"
 jsonpath "$.result.structuredContent.url" == "{{base}}/test"
@@ -3382,6 +3553,14 @@ jsonpath "$.result.structuredContent.entries[8].operations" == 1
 variable "text" jsonpath "$.entries[8].operations" == 1
 jsonpath "$.result.structuredContent.entries[8].path" == "/test/openapi-petstore"
 variable "text" jsonpath "$.entries[8].path" == "/test/openapi-petstore"
+jsonpath "$.result.structuredContent.entries[8].identifier" == "{{base}}/test/openapi-petstore"
+variable "text" jsonpath "$.entries[8].identifier" == "{{base}}/test/openapi-petstore"
+jsonpath "$.result.structuredContent.entries[8].title" == "Petstore"
+variable "text" jsonpath "$.entries[8].title" == "Petstore"
+jsonpath "$.result.structuredContent.entries[8].description" == "Everything about the pets this shop keeps"
+variable "text" jsonpath "$.entries[8].description" == "Everything about the pets this shop keeps"
+jsonpath "$.result.structuredContent.entries[8].priority" == 50
+variable "text" jsonpath "$.entries[8].priority" == 50
 jsonpath "$.result.structuredContent.entries[9].name" == "openapi-split-entry"
 variable "text" jsonpath "$.entries[9].name" == "openapi-split-entry"
 jsonpath "$.result.structuredContent.entries[9].private" == false
@@ -3398,6 +3577,14 @@ jsonpath "$.result.structuredContent.entries[9].operations" == 0
 variable "text" jsonpath "$.entries[9].operations" == 0
 jsonpath "$.result.structuredContent.entries[9].path" == "/test/openapi-split-entry"
 variable "text" jsonpath "$.entries[9].path" == "/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.entries[9].identifier" == "{{base}}/test/openapi-split-entry"
+variable "text" jsonpath "$.entries[9].identifier" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.entries[9].title" == "Split"
+variable "text" jsonpath "$.entries[9].title" == "Split"
+jsonpath "$.result.structuredContent.entries[9].description" == "What a listing says of this API"
+variable "text" jsonpath "$.entries[9].description" == "What a listing says of this API"
+jsonpath "$.result.structuredContent.entries[9].priority" == 50
+variable "text" jsonpath "$.entries[9].priority" == 50
 jsonpath "$.result.structuredContent.entries[10].name" == "openapi-split-shared"
 variable "text" jsonpath "$.entries[10].name" == "openapi-split-shared"
 jsonpath "$.result.structuredContent.entries[10].private" == false
@@ -3414,6 +3601,14 @@ jsonpath "$.result.structuredContent.entries[10].operations" == 0
 variable "text" jsonpath "$.entries[10].operations" == 0
 jsonpath "$.result.structuredContent.entries[10].path" == "/test/openapi-split-shared"
 variable "text" jsonpath "$.entries[10].path" == "/test/openapi-split-shared"
+jsonpath "$.result.structuredContent.entries[10].identifier" == "{{base}}/test/openapi-split-shared"
+variable "text" jsonpath "$.entries[10].identifier" == "{{base}}/test/openapi-split-shared"
+jsonpath "$.result.structuredContent.entries[10].title" == "Shared"
+variable "text" jsonpath "$.entries[10].title" == "Shared"
+jsonpath "$.result.structuredContent.entries[10].description" not exists
+variable "text" jsonpath "$.entries[10].description" not exists
+jsonpath "$.result.structuredContent.entries[10].priority" == 50
+variable "text" jsonpath "$.entries[10].priority" == 50
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -4304,13 +4499,28 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 116
 jsonpath "$.result.isError" == false
-jsonpath "$.result.content" count == 2
+jsonpath "$.result.content" count == 5
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
 jsonpath "$.result.content[1].uri" == "{{base}}/test/object"
 jsonpath "$.result.content[1].name" == "My Object"
 jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
+jsonpath "$.result.content[2].type" == "resource_link"
+jsonpath "$.result.content[2].uri" == "{{base}}/test/openapi-petstore"
+jsonpath "$.result.content[2].name" == "Petstore"
+jsonpath "$.result.content[2].description" == "Everything about the pets this shop keeps"
+jsonpath "$.result.content[2].mimeType" == "application/openapi+json"
+jsonpath "$.result.content[3].type" == "resource_link"
+jsonpath "$.result.content[3].uri" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.content[3].name" == "Split"
+jsonpath "$.result.content[3].description" == "What a listing says of this API"
+jsonpath "$.result.content[3].mimeType" == "application/openapi+json"
+jsonpath "$.result.content[4].type" == "resource_link"
+jsonpath "$.result.content[4].uri" == "{{base}}/test/openapi-split-shared"
+jsonpath "$.result.content[4].name" == "Shared"
+jsonpath "$.result.content[4].description" not exists
+jsonpath "$.result.content[4].mimeType" == "application/openapi+json"
 jsonpath "$.result.structuredContent.path" == "/test"
 variable "text" jsonpath "$.path" == "/test"
 jsonpath "$.result.structuredContent.url" == "{{base}}/test"
@@ -4463,6 +4673,14 @@ jsonpath "$.result.structuredContent.entries[8].operations" == 1
 variable "text" jsonpath "$.entries[8].operations" == 1
 jsonpath "$.result.structuredContent.entries[8].path" == "/test/openapi-petstore"
 variable "text" jsonpath "$.entries[8].path" == "/test/openapi-petstore"
+jsonpath "$.result.structuredContent.entries[8].identifier" == "{{base}}/test/openapi-petstore"
+variable "text" jsonpath "$.entries[8].identifier" == "{{base}}/test/openapi-petstore"
+jsonpath "$.result.structuredContent.entries[8].title" == "Petstore"
+variable "text" jsonpath "$.entries[8].title" == "Petstore"
+jsonpath "$.result.structuredContent.entries[8].description" == "Everything about the pets this shop keeps"
+variable "text" jsonpath "$.entries[8].description" == "Everything about the pets this shop keeps"
+jsonpath "$.result.structuredContent.entries[8].priority" == 50
+variable "text" jsonpath "$.entries[8].priority" == 50
 jsonpath "$.result.structuredContent.entries[9].name" == "openapi-split-entry"
 variable "text" jsonpath "$.entries[9].name" == "openapi-split-entry"
 jsonpath "$.result.structuredContent.entries[9].private" == false
@@ -4479,6 +4697,14 @@ jsonpath "$.result.structuredContent.entries[9].operations" == 0
 variable "text" jsonpath "$.entries[9].operations" == 0
 jsonpath "$.result.structuredContent.entries[9].path" == "/test/openapi-split-entry"
 variable "text" jsonpath "$.entries[9].path" == "/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.entries[9].identifier" == "{{base}}/test/openapi-split-entry"
+variable "text" jsonpath "$.entries[9].identifier" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.entries[9].title" == "Split"
+variable "text" jsonpath "$.entries[9].title" == "Split"
+jsonpath "$.result.structuredContent.entries[9].description" == "What a listing says of this API"
+variable "text" jsonpath "$.entries[9].description" == "What a listing says of this API"
+jsonpath "$.result.structuredContent.entries[9].priority" == 50
+variable "text" jsonpath "$.entries[9].priority" == 50
 jsonpath "$.result.structuredContent.entries[10].name" == "openapi-split-shared"
 variable "text" jsonpath "$.entries[10].name" == "openapi-split-shared"
 jsonpath "$.result.structuredContent.entries[10].private" == false
@@ -4495,6 +4721,14 @@ jsonpath "$.result.structuredContent.entries[10].operations" == 0
 variable "text" jsonpath "$.entries[10].operations" == 0
 jsonpath "$.result.structuredContent.entries[10].path" == "/test/openapi-split-shared"
 variable "text" jsonpath "$.entries[10].path" == "/test/openapi-split-shared"
+jsonpath "$.result.structuredContent.entries[10].identifier" == "{{base}}/test/openapi-split-shared"
+variable "text" jsonpath "$.entries[10].identifier" == "{{base}}/test/openapi-split-shared"
+jsonpath "$.result.structuredContent.entries[10].title" == "Shared"
+variable "text" jsonpath "$.entries[10].title" == "Shared"
+jsonpath "$.result.structuredContent.entries[10].description" not exists
+variable "text" jsonpath "$.entries[10].description" not exists
+jsonpath "$.result.structuredContent.entries[10].priority" == 50
+variable "text" jsonpath "$.entries[10].priority" == 50
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
