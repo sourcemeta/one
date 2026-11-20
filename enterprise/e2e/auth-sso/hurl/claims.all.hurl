@@ -126,6 +126,8 @@ jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
 jsonpath "$.schemas" == 78
+jsonpath "$.openapi" == 0
+jsonpath "$.health" == 50
 jsonpath "$.private" == false
 jsonpath "$.entries" count == 2
 jsonpath "$.entries[0].name" == "public"
@@ -133,12 +135,14 @@ jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].path" == "/public/"
 jsonpath "$.entries[0].private" == false
 jsonpath "$.entries[0].schemas" == 1
+jsonpath "$.entries[0].openapi" == 0
 jsonpath "$.entries[0].health" == 0
 jsonpath "$.entries[1].name" == "self"
 jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.entries[1].path" == "/self/"
 jsonpath "$.entries[1].private" == false
 jsonpath "$.entries[1].schemas" == 77
+jsonpath "$.entries[1].openapi" == 0
 jsonpath "$.entries[1].health" == 100
 
 POST {{base}}/self/v1/api/schemas/evaluate{{root_listing_schema}}

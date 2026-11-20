@@ -6,6 +6,7 @@
     {
       "health": 100,
       "schemas": 42,
+      "openapi": 3,
       "entries": [],
       "path": "/schemas",
       "url": "https://example.com/schemas",
@@ -22,6 +23,7 @@
   "required": [
     "health",
     "schemas",
+    "openapi",
     "entries",
     "path",
     "url",
@@ -70,6 +72,7 @@
             "required": [
               "health",
               "schemas",
+              "openapi",
               "name",
               "type",
               "path",
@@ -105,6 +108,10 @@
                 "type": "integer",
                 "minimum": 0
               },
+              "openapi": {
+                "type": "integer",
+                "minimum": 0
+              },
               "name": {
                 "type": "string"
               },
@@ -133,6 +140,29 @@
               }
             },
             "unevaluatedProperties": false
+          },
+          {
+            "$ref": "../catalog-entry.json",
+            "required": [ "type", "name", "openapi", "version", "operations" ],
+            "properties": {
+              "type": {
+                "const": "openapi"
+              },
+              "name": {
+                "type": "string"
+              },
+              "openapi": {
+                "enum": [ "3.0", "3.1", "3.2" ]
+              },
+              "version": {
+                "type": "string"
+              },
+              "operations": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "unevaluatedProperties": false
           }
         ]
       }
@@ -146,6 +176,10 @@
       "minimum": 0
     },
     "schemas": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "openapi": {
       "type": "integer",
       "minimum": 0
     },

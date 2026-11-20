@@ -274,6 +274,8 @@ listing: body
 listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.schemas" == 1
+jsonpath "$.openapi" == 0
+jsonpath "$.health" == 67
 jsonpath "$.entries" count == 1
 jsonpath "$.private" == true
 jsonpath "$.entries[0].name" == "report"

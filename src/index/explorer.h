@@ -188,6 +188,7 @@ struct MetapackDirectoryExtension {
   MetapackVersionInfo version;
   std::int64_t health;
   std::int64_t schemas;
+  std::int64_t openapi;
   std::uint16_t path_length;
   std::uint16_t title_length;
   std::uint16_t description_length;
@@ -224,10 +225,11 @@ inline auto directory_extension_string(const MetapackDirectoryExtension *,
 
 static auto make_directory_extension(
     const MetapackVersionInfo &version, const std::int64_t health,
-    const std::int64_t schemas, const std::string_view path,
-    const std::string_view title, const std::string_view description,
-    const std::string_view email, const std::string_view github,
-    const std::string_view website) -> std::vector<std::uint8_t> {
+    const std::int64_t schemas, const std::int64_t openapi,
+    const std::string_view path, const std::string_view title,
+    const std::string_view description, const std::string_view email,
+    const std::string_view github, const std::string_view website)
+    -> std::vector<std::uint8_t> {
   assert(path.size() <= std::numeric_limits<std::uint16_t>::max());
   assert(title.size() <= std::numeric_limits<std::uint16_t>::max());
   assert(description.size() <= std::numeric_limits<std::uint16_t>::max());
@@ -244,6 +246,7 @@ static auto make_directory_extension(
   header.version = version;
   header.health = health;
   header.schemas = schemas;
+  header.openapi = openapi;
   header.path_length = static_cast<std::uint16_t>(path.size());
   header.title_length = static_cast<std::uint16_t>(title.size());
   header.description_length = static_cast<std::uint16_t>(description.size());
@@ -1430,6 +1433,63 @@ static auto in_overlay_synchronised(const sourcemeta::one::BuildState &state,
   return state.in_overlay(key);
 }
 
+// What a listing says of an OpenAPI description, which is what its metadata
+// says of it less the parts that only a page about one document needs
+static auto
+make_openapi_listing_entry(const std::string_view name,
+                           const MetapackExplorerOpenAPIExtension *extension,
+                           const std::uint8_t *base) -> sourcemeta::core::JSON {
+  auto result{sourcemeta::core::JSON::make_object()};
+  result.assign("name", sourcemeta::core::JSON{name});
+  result.assign("type", sourcemeta::core::JSON{"openapi"});
+  result.assign("path", sourcemeta::core::JSON{std::filesystem::path{
+                            explorer_extension_path(extension, base)}});
+  result.assign(
+      "identifier",
+      sourcemeta::core::JSON{explorer_extension_identifier(extension, base)});
+  result.assign("bytes", sourcemeta::core::JSON{extension->bytes});
+  result.assign("bytesBundled",
+                sourcemeta::core::JSON{extension->bytes_bundled});
+  result.assign(
+      "baseDialect",
+      sourcemeta::core::JSON{explorer_extension_base_dialect(extension, base)});
+  result.assign("dialect", sourcemeta::core::JSON{
+                               explorer_extension_dialect(extension, base)});
+  result.assign("health", sourcemeta::core::JSON{extension->health});
+  result.assign("dependencies",
+                sourcemeta::core::JSON{extension->dependencies});
+  result.assign("priority", sourcemeta::core::JSON{
+                                static_cast<sourcemeta::core::JSON::Integer>(
+                                    extension->priority)});
+  result.assign(
+      "openapi",
+      sourcemeta::core::JSON{sourcemeta::core::openapi_version_name(
+          static_cast<sourcemeta::core::OpenAPIVersion>(extension->revision))});
+  result.assign(
+      "version",
+      sourcemeta::core::JSON{explorer_extension_api_version(extension, base)});
+  result.assign("operations", sourcemeta::core::JSON{extension->operations});
+
+  const auto title{explorer_extension_title(extension, base)};
+  if (!title.empty()) {
+    result.assign("title", sourcemeta::core::JSON{title});
+  }
+
+  const auto description{explorer_extension_description(extension, base)};
+  if (!description.empty()) {
+    result.assign("description", sourcemeta::core::JSON{description});
+  }
+
+  const auto alert{explorer_extension_alert(extension, base)};
+  if (alert.empty()) {
+    result.assign("alert", sourcemeta::core::JSON{nullptr});
+  } else {
+    result.assign("alert", sourcemeta::core::JSON{alert});
+  }
+
+  return result;
+}
+
 struct GenerateExplorerDirectoryList {
   static auto handler(const sourcemeta::one::BuildState &state,
                       const sourcemeta::one::BuildPlan::Action &action,
@@ -1440,6 +1500,7 @@ struct GenerateExplorerDirectoryList {
     auto entries{sourcemeta::core::JSON::make_array()};
     std::vector<sourcemeta::core::JSON::Integer> scores;
     std::int64_t child_schemas_total{0};
+    std::int64_t child_openapi_total{0};
 
     const auto directory_path{action.destination.parent_path().parent_path()};
     std::filesystem::path relative_path;
@@ -1469,6 +1530,7 @@ struct GenerateExplorerDirectoryList {
 
     std::vector<SortableEntry> directory_entries;
     std::vector<SortableEntry> schema_entries;
+    std::vector<SortableEntry> openapi_entries;
 
     const auto old_listing{
         std::filesystem::exists(action.destination)
@@ -1478,14 +1540,21 @@ struct GenerateExplorerDirectoryList {
         old_schema_entries;
     std::unordered_map<std::string_view, const sourcemeta::core::JSON *>
         old_directory_entries;
+    std::unordered_map<std::string_view, const sourcemeta::core::JSON *>
+        old_openapi_entries;
     if (old_listing.has_value()) {
       assert(old_listing->defines("entries"));
       for (const auto &old_entry : old_listing->at("entries").as_array()) {
         assert(old_entry.defines("name"));
         const auto &old_name{old_entry.at("name").to_string()};
-        if (old_entry.defines("type") &&
-            old_entry.at("type").to_string() == "directory") {
+        const auto *old_type{old_entry.try_at("type")};
+        const std::string_view old_kind{
+            old_type == nullptr ? std::string_view{}
+                                : std::string_view{old_type->to_string()}};
+        if (old_kind == "directory") {
           old_directory_entries.emplace(old_name, &old_entry);
+        } else if (old_kind == "openapi") {
+          old_openapi_entries.emplace(old_name, &old_entry);
         } else {
           old_schema_entries.emplace(old_name, &old_entry);
         }
@@ -1509,6 +1578,10 @@ struct GenerateExplorerDirectoryList {
             if (old_entry.defines("schemas")) {
               assert(old_entry.at("schemas").is_positive());
               child_schemas_total += old_entry.at("schemas").to_integer();
+            }
+            if (old_entry.defines("openapi")) {
+              assert(old_entry.at("openapi").is_positive());
+              child_openapi_total += old_entry.at("openapi").to_integer();
             }
             directory_entries.push_back(
                 {.json = old_entry,
@@ -1543,6 +1616,10 @@ struct GenerateExplorerDirectoryList {
           entry_json.assign(
               "schemas", sourcemeta::core::JSON{directory_extension->schemas});
           child_schemas_total += directory_extension->schemas;
+          assert(directory_extension->openapi >= 0);
+          entry_json.assign(
+              "openapi", sourcemeta::core::JSON{directory_extension->openapi});
+          child_openapi_total += directory_extension->openapi;
 
           const auto directory_path_string{
               directory_extension_string(directory_extension, directory_base, 0,
@@ -1615,6 +1692,11 @@ struct GenerateExplorerDirectoryList {
           assert(directory_json.at("schemas").is_positive());
           entry_json.assign("schemas", directory_json.at("schemas"));
           child_schemas_total += directory_json.at("schemas").to_integer();
+          assert(directory_json.defines("openapi"));
+          assert(directory_json.at("openapi").is_integer());
+          assert(directory_json.at("openapi").is_positive());
+          entry_json.assign("openapi", directory_json.at("openapi"));
+          child_openapi_total += directory_json.at("openapi").to_integer();
           assert(directory_json.defines("path"));
           entry_json.assign("path",
                             sourcemeta::core::JSON{
@@ -1655,6 +1737,19 @@ struct GenerateExplorerDirectoryList {
                                       .name = child_name});
             continue;
           }
+
+          const auto openapi_match{old_openapi_entries.find(child_name)};
+          if (openapi_match != old_openapi_entries.end()) {
+            const auto &old_entry{*openapi_match->second};
+            if (old_entry.defines("health")) {
+              scores.emplace_back(old_entry.at("health").to_integer());
+            }
+            openapi_entries.push_back(
+                {.json = old_entry,
+                 .version = parse_version_info(child_name),
+                 .name = child_name});
+            continue;
+          }
         }
 
         sourcemeta::core::FileView dependency_view{dependency};
@@ -1668,6 +1763,22 @@ struct GenerateExplorerDirectoryList {
             MetapackExplorerSchemaExtension>(
             dependency_parsed->extension, sourcemeta::one::LeafKind::Schema)};
         if (extension == nullptr) {
+          const auto *openapi_extension{
+              sourcemeta::one::metapack_leaf_extension_as<
+                  MetapackExplorerOpenAPIExtension>(
+                  dependency_parsed->extension,
+                  sourcemeta::one::LeafKind::OpenAPI)};
+          if (openapi_extension != nullptr) {
+            openapi_entries.push_back({.json = make_openapi_listing_entry(
+                                           child_name, openapi_extension,
+                                           dependency_parsed->extension.data()),
+                                       .version = openapi_extension->version,
+                                       .name = {}});
+            openapi_entries.back().name =
+                openapi_entries.back().json.at("name").to_string();
+            scores.emplace_back(openapi_extension->health);
+          }
+
           continue;
         }
 
@@ -1750,6 +1861,7 @@ struct GenerateExplorerDirectoryList {
 
     std::ranges::sort(directory_entries, version_comparator);
     std::ranges::sort(schema_entries, version_comparator);
+    std::ranges::sort(openapi_entries, version_comparator);
 
     for (auto &entry : directory_entries) {
       entry.json.assign(
@@ -1759,6 +1871,13 @@ struct GenerateExplorerDirectoryList {
       entries.push_back(std::move(entry.json));
     }
     for (auto &entry : schema_entries) {
+      entry.json.assign(
+          "private", make_private(authentication,
+                                  child_registry_path(directory_registry_path,
+                                                      entry.name)));
+      entries.push_back(std::move(entry.json));
+    }
+    for (auto &entry : openapi_entries) {
       entry.json.assign(
           "private", make_private(authentication,
                                   child_registry_path(directory_registry_path,
@@ -1785,6 +1904,11 @@ struct GenerateExplorerDirectoryList {
     assert(total_schemas >= 0);
     meta.assign("schemas", sourcemeta::core::JSON{total_schemas});
 
+    const auto total_openapi{static_cast<std::int64_t>(openapi_entries.size()) +
+                             child_openapi_total};
+    assert(total_openapi >= 0);
+    meta.assign("openapi", sourcemeta::core::JSON{total_openapi});
+
     meta.assign("entries", std::move(entries));
     meta.assign("private",
                 make_private(authentication, directory_registry_path));
@@ -1804,7 +1928,8 @@ struct GenerateExplorerDirectoryList {
         action.destination.parent_path().parent_path().filename().string()};
     const auto directory_extension_bytes{make_directory_extension(
         parse_version_info(directory_name), meta.at("health").to_integer(),
-        meta.at("schemas").to_integer(), meta.at("path").to_string(),
+        meta.at("schemas").to_integer(), meta.at("openapi").to_integer(),
+        meta.at("path").to_string(),
         meta.defines("title") ? meta.at("title").to_string() : "",
         meta.defines("description") ? meta.at("description").to_string() : "",
         meta.defines("email") ? meta.at("email").to_string() : "",
