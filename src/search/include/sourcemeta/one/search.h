@@ -67,7 +67,8 @@ struct SearchRecordHeader {
 // it holds, and ranks within a kind. Ranking is fixed and intentionally not
 // configurable: higher-priority entries come first, then entries with richer
 // metadata, then healthier ones. The scope only narrows which fields are
-// searched
+// searched, and a search answers for the schemas of the catalog alone however
+// wide a scope it is given
 inline constexpr std::uint8_t SEARCH_SCOPE_PATH{0b001};
 inline constexpr std::uint8_t SEARCH_SCOPE_TITLE{0b010};
 inline constexpr std::uint8_t SEARCH_SCOPE_DESCRIPTION{0b100};

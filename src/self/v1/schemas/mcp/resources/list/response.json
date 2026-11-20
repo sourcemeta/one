@@ -81,7 +81,10 @@
                 "type": "string"
               },
               "mimeType": {
-                "enum": [ "application/schema+json", "application/openapi+json" ]
+                "enum": [
+                  "application/schema+json",
+                  "application/openapi+json"
+                ]
               },
               "size": {
                 "type": "integer",

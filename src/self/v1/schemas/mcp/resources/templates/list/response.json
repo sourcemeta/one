@@ -39,11 +39,33 @@
       "properties": {
         "resourceTemplates": {
           "type": "array",
+          "allOf": [
+            {
+              "contains": {
+                "required": [ "name" ],
+                "properties": {
+                  "name": {
+                    "const": "JSON Schema"
+                  }
+                }
+              }
+            },
+            {
+              "contains": {
+                "required": [ "name" ],
+                "properties": {
+                  "name": {
+                    "const": "OpenAPI Description"
+                  }
+                }
+              }
+            }
+          ],
           "maxItems": 2,
           "minItems": 2,
           "items": {
             "type": "object",
-            "oneOf": [
+            "anyOf": [
               {
                 "properties": {
                   "name": {
@@ -85,7 +107,10 @@
                 "type": "string"
               },
               "mimeType": {
-                "enum": [ "application/schema+json", "application/openapi+json" ]
+                "enum": [
+                  "application/schema+json",
+                  "application/openapi+json"
+                ]
               }
             },
             "additionalProperties": false

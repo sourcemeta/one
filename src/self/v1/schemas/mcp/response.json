@@ -366,11 +366,33 @@
     "modernResourceTemplateDescriptors": {
       "$comment": "Mirrors the same shape in the per-method response beside this one. That schema closes `result`, which is what keeps an era that adds fields to `result` from matching it, so the payload is restated here rather than shared",
       "type": "array",
+      "allOf": [
+        {
+          "contains": {
+            "required": [ "name" ],
+            "properties": {
+              "name": {
+                "const": "JSON Schema"
+              }
+            }
+          }
+        },
+        {
+          "contains": {
+            "required": [ "name" ],
+            "properties": {
+              "name": {
+                "const": "OpenAPI Description"
+              }
+            }
+          }
+        }
+      ],
       "maxItems": 2,
       "minItems": 2,
       "items": {
         "type": "object",
-        "oneOf": [
+        "anyOf": [
           {
             "properties": {
               "name": {

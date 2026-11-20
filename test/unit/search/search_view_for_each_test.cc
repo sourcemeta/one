@@ -480,3 +480,42 @@ TEST(malformed_record_field_lengths_stops) {
   sourcemeta::one::SearchView view{path};
   EXPECT_EQ(collect(view, 0, 100), std::vector<VisitedEntry>{});
 }
+
+TEST(visits_both_kinds_marking_what_each_one_is) {
+  const auto path{test_path("both_kinds.metapack")};
+  write_search_file(path, {{.path = "/pets/api",
+                            .identifier = "http://example.com/pets/api",
+                            .title = "Pets API",
+                            .description = "Pets Desc",
+                            .health = 100,
+                            .priority = 100,
+                            .bytes_raw = 11,
+                            .bytes_bundled = 22,
+                            .kind = sourcemeta::one::LeafKind::OpenAPI},
+                           {.path = "/pets/schema",
+                            .identifier = "http://example.com/pets/schema",
+                            .title = "Pets Schema",
+                            .description = "Schema Desc",
+                            .health = 80,
+                            .priority = 100,
+                            .bytes_raw = 33,
+                            .bytes_bundled = 44,
+                            .kind = sourcemeta::one::LeafKind::Schema}});
+  sourcemeta::one::SearchView view{path};
+  EXPECT_EQ(collect(view, 0, 2),
+            (std::vector<VisitedEntry>{
+                {.path = "/pets/schema",
+                 .identifier = "http://example.com/pets/schema",
+                 .title = "Pets Schema",
+                 .description = "Schema Desc",
+                 .bytes_raw = 33,
+                 .bytes_bundled = 44,
+                 .kind = sourcemeta::one::LeafKind::Schema},
+                {.path = "/pets/api",
+                 .identifier = "http://example.com/pets/api",
+                 .title = "Pets API",
+                 .description = "Pets Desc",
+                 .bytes_raw = 11,
+                 .bytes_bundled = 22,
+                 .kind = sourcemeta::one::LeafKind::OpenAPI}}));
+}

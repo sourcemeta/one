@@ -51,7 +51,7 @@ jsonpath "$.result.supportedVersions[3]" == "2026-07-28"
 jsonpath "$.result.capabilities.resources" isObject
 jsonpath "$.result.capabilities.resources" isEmpty
 jsonpath "$.result.capabilities.tools" not exists
-jsonpath "$.result.instructions" == "This is an instance of Sourcemeta One named \"Sourcemeta\" (The next-generation JSON Schema platform). Sourcemeta One is a JSON Schema registry. It serves a catalog of JSON Schemas organized as a tree of directories. Every schema is exposed as an MCP resource via the `JSON Schema` resource template (see `resources/templates/list`) and is addressable by its canonical absolute URI. This instance is sovereign over its own URL namespace. Schemas whose URIs lie outside this namespace will not be served here. Use `tools/list` to discover the operations this catalog exposes. Because this server is a JSON Schema registry, the schemas defining each tool's input parameters are themselves resources in this registry. To inspect a tool's full parameter shape, call `resources/read` on the `$ref` URL in that tool's `inputSchema`. Learn more at https://one.sourcemeta.com"
+jsonpath "$.result.instructions" == "This is an instance of Sourcemeta One named \"Sourcemeta\" (The next-generation JSON Schema platform). Sourcemeta One is a JSON Schema registry. It serves a catalog of JSON Schemas organized as a tree of directories. Every schema is exposed as an MCP resource via the `JSON Schema` resource template (see `resources/templates/list`) and is addressable by its canonical absolute URI. A catalog may also hold OpenAPI descriptions, exposed the same way via the `OpenAPI Description` resource template. This instance is sovereign over its own URL namespace. Schemas whose URIs lie outside this namespace will not be served here. Use `tools/list` to discover the operations this catalog exposes. Because this server is a JSON Schema registry, the schemas defining each tool's input parameters are themselves resources in this registry. To inspect a tool's full parameter shape, call `resources/read` on the `$ref` URL in that tool's `inputSchema`. Learn more at https://one.sourcemeta.com"
 jsonpath "$.result.ttlMs" == 300000
 jsonpath "$.result.cacheScope" == "public"
 jsonpath "$.result.resultType" == "complete"
@@ -122,8 +122,9 @@ header "X-Frame-Options" not exists
 header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.id" == 2
-jsonpath "$.result.resourceTemplates" count == 1
+jsonpath "$.result.resourceTemplates" count == 2
 jsonpath "$.result.resourceTemplates[0].name" == "JSON Schema"
+jsonpath "$.result.resourceTemplates[1].name" == "OpenAPI Description"
 jsonpath "$.result.ttlMs" == 300000
 jsonpath "$.result.cacheScope" == "public"
 jsonpath "$.result.resultType" == "complete"
