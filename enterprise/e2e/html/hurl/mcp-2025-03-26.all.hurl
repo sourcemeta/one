@@ -819,6 +819,7 @@ variable "text" jsonpath "$.url" == "{{base}}"
 variable "text" jsonpath "$.breadcrumb" count == 0
 variable "text" jsonpath "$.schemas" == 161
 variable "text" jsonpath "$.openapi" == 3
+variable "text" jsonpath "$.health" == 63
 variable "text" jsonpath "$.entries" count == 5
 variable "text" jsonpath "$.private" == false
 variable "text" jsonpath "$.entries[0].name" == "no-blaze"
@@ -849,7 +850,7 @@ variable "text" jsonpath "$.entries[2].path" == "/self/"
 variable "text" jsonpath "$.entries[3].name" == "test"
 variable "text" jsonpath "$.entries[3].private" == false
 variable "text" jsonpath "$.entries[3].type" == "directory"
-variable "text" jsonpath "$.entries[3].health" == 31
+variable "text" jsonpath "$.entries[3].health" == 50
 variable "text" jsonpath "$.entries[3].schemas" == 77
 variable "text" jsonpath "$.entries[3].openapi" == 3
 variable "text" jsonpath "$.entries[3].path" == "/test/"

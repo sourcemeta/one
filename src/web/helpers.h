@@ -6,6 +6,7 @@
 #include <sourcemeta/one/configuration.h>
 #include <sourcemeta/one/shared.h>
 
+#include <algorithm>   // std::ranges::none_of
 #include <cassert>     // assert
 #include <cctype>      // std::toupper
 #include <string>      // std::string
@@ -373,9 +374,15 @@ inline auto make_file_manager_table_header(sourcemeta::core::HTMLWriter &writer)
   writer.close();
 }
 
+// What a listing can take the visitor to, which an OpenAPI description is not
+// until a page answers for one
+inline auto is_navigable(const sourcemeta::core::JSON &entry) -> bool {
+  return entry.at("type").to_string() != "openapi";
+}
+
 inline auto make_file_manager(sourcemeta::core::HTMLWriter &writer,
                               const sourcemeta::core::JSON &directory) -> void {
-  if (directory.at("entries").empty()) {
+  if (std::ranges::none_of(directory.at("entries").as_array(), is_navigable)) {
     writer.div().attribute("class", "container-fluid p-4 flex-grow-1");
     writer.p(
         "Things look a bit empty over here. Try ingesting some schemas using "
@@ -392,7 +399,7 @@ inline auto make_file_manager(sourcemeta::core::HTMLWriter &writer,
   bool has_regular_entries{false};
   for (const auto &entry : directory.at("entries").as_array()) {
     const auto path{entry.at("path").to_string()};
-    if (path != SELF_PATH && path != SELF_PATH_SLASH) {
+    if (path != SELF_PATH && path != SELF_PATH_SLASH && is_navigable(entry)) {
       if (!has_regular_entries) {
         writer.table().attribute(
             "class", "table table-bordered border-light-subtle table-light");

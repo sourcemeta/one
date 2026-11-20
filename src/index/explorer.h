@@ -1740,8 +1740,12 @@ struct GenerateExplorerDirectoryList {
 
           const auto openapi_match{old_openapi_entries.find(child_name)};
           if (openapi_match != old_openapi_entries.end()) {
+            const auto &old_entry{*openapi_match->second};
+            if (old_entry.defines("health")) {
+              scores.emplace_back(old_entry.at("health").to_integer());
+            }
             openapi_entries.push_back(
-                {.json = *openapi_match->second,
+                {.json = old_entry,
                  .version = parse_version_info(child_name),
                  .name = child_name});
             continue;
@@ -1772,6 +1776,7 @@ struct GenerateExplorerDirectoryList {
                                        .name = {}});
             openapi_entries.back().name =
                 openapi_entries.back().json.at("name").to_string();
+            scores.emplace_back(openapi_extension->health);
           }
 
           continue;

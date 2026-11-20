@@ -21,6 +21,7 @@ jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
 jsonpath "$.schemas" == 79
 jsonpath "$.openapi" == 0
+jsonpath "$.health" == 50
 jsonpath "$.private" == false
 jsonpath "$.entries" count == 3
 jsonpath "$.entries[0].name" == "orphan"
@@ -78,6 +79,7 @@ jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
 jsonpath "$.schemas" == 82
 jsonpath "$.openapi" == 0
+jsonpath "$.health" == 47
 jsonpath "$.private" == false
 jsonpath "$.entries" count == 5
 jsonpath "$.entries[0].name" == "orphan"
@@ -140,6 +142,7 @@ public_listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.schemas" == 1
 jsonpath "$.openapi" == 0
+jsonpath "$.health" == 0
 jsonpath "$.entries" count == 1
 jsonpath "$.private" == false
 jsonpath "$.entries[0].name" == "string"
@@ -169,6 +172,7 @@ orphan_listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.schemas" == 1
 jsonpath "$.openapi" == 0
+jsonpath "$.health" == 50
 jsonpath "$.private" == false
 jsonpath "$.entries" count == 1
 jsonpath "$.entries[0].name" == "lonely"

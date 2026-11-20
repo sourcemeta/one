@@ -21,6 +21,7 @@ jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
 jsonpath "$.schemas" == 161
 jsonpath "$.openapi" == 3
+jsonpath "$.health" == 63
 jsonpath "$.entries" count == 5
 jsonpath "$.private" == false
 jsonpath "$.entries[0].name" == "no-blaze"
@@ -51,7 +52,7 @@ jsonpath "$.entries[2].path" == "/self/"
 jsonpath "$.entries[3].name" == "test"
 jsonpath "$.entries[3].private" == false
 jsonpath "$.entries[3].type" == "directory"
-jsonpath "$.entries[3].health" == 31
+jsonpath "$.entries[3].health" == 50
 jsonpath "$.entries[3].schemas" == 77
 jsonpath "$.entries[3].openapi" == 3
 jsonpath "$.entries[3].path" == "/test/"
@@ -62,6 +63,7 @@ jsonpath "$.entries[4].description" == "Schemas whose base name collides with a 
 jsonpath "$.entries[4].type" == "directory"
 jsonpath "$.entries[4].schemas" == 2
 jsonpath "$.entries[4].openapi" == 0
+jsonpath "$.entries[4].health" == 100
 jsonpath "$.entries[4].path" == "/twins/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}

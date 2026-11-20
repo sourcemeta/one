@@ -21,6 +21,7 @@ jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
 jsonpath "$.schemas" == 93
 jsonpath "$.openapi" == 9
+jsonpath "$.health" == 59
 jsonpath "$.entries" count >= 2
 jsonpath "$.private" == false
 jsonpath "$.entries[0].name" == "self"
@@ -39,6 +40,7 @@ jsonpath "$.entries[1].description" == "A directory full of testing schemas"
 jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.entries[1].schemas" == 16
 jsonpath "$.entries[1].openapi" == 9
+jsonpath "$.entries[1].health" == 18
 jsonpath "$.entries[1].path" == "/test/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -83,6 +85,7 @@ jsonpath "$.description" == "A directory full of testing schemas"
 jsonpath "$.title" == "Test"
 jsonpath "$.schemas" == 16
 jsonpath "$.openapi" == 9
+jsonpath "$.health" == 18
 jsonpath "$.entries" count == 3
 jsonpath "$.private" == false
 
@@ -163,6 +166,7 @@ jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
 jsonpath "$.schemas" == 93
 jsonpath "$.openapi" == 9
+jsonpath "$.health" == 59
 jsonpath "$.entries" count >= 2
 jsonpath "$.private" == false
 jsonpath "$.entries[0].name" == "self"
@@ -181,6 +185,7 @@ jsonpath "$.entries[1].description" == "A directory full of testing schemas"
 jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.entries[1].schemas" == 16
 jsonpath "$.entries[1].openapi" == 9
+jsonpath "$.entries[1].health" == 18
 jsonpath "$.entries[1].path" == "/test/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -228,6 +233,7 @@ jsonpath "$.description" == "A directory full of testing schemas"
 jsonpath "$.title" == "Test"
 jsonpath "$.schemas" == 16
 jsonpath "$.openapi" == 9
+jsonpath "$.health" == 18
 jsonpath "$.entries" count == 3
 jsonpath "$.private" == false
 jsonpath "$.entries[0].name" == "no-base"
@@ -286,6 +292,7 @@ jsonpath "$.description" == "A directory full of testing schemas"
 jsonpath "$.title" == "Test"
 jsonpath "$.schemas" == 16
 jsonpath "$.openapi" == 9
+jsonpath "$.health" == 18
 jsonpath "$.entries" count == 3
 jsonpath "$.private" == false
 jsonpath "$.entries[0].name" == "no-base"

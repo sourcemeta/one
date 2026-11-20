@@ -127,6 +127,7 @@ jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
 jsonpath "$.schemas" == 78
 jsonpath "$.openapi" == 0
+jsonpath "$.health" == 50
 jsonpath "$.private" == false
 jsonpath "$.entries" count == 2
 jsonpath "$.entries[0].name" == "public"

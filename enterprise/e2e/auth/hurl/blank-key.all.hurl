@@ -227,6 +227,7 @@ jsonpath "$.path" == "/mixed"
 jsonpath "$.url" == "{{base}}/mixed"
 jsonpath "$.schemas" == 1
 jsonpath "$.openapi" == 0
+jsonpath "$.health" == 0
 jsonpath "$.breadcrumb" count == 1
 jsonpath "$.breadcrumb[0].name" == "mixed"
 jsonpath "$.breadcrumb[0].path" == "/mixed/"

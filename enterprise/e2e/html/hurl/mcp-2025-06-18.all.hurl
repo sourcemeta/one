@@ -847,8 +847,10 @@ jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
 jsonpath "$.result.structuredContent.schemas" == 161
 jsonpath "$.result.structuredContent.openapi" == 3
+jsonpath "$.result.structuredContent.health" == 63
 variable "text" jsonpath "$.schemas" == 161
 variable "text" jsonpath "$.openapi" == 3
+variable "text" jsonpath "$.health" == 63
 jsonpath "$.result.structuredContent.entries" count == 5
 jsonpath "$.result.structuredContent.private" == false
 variable "text" jsonpath "$.entries" count == 5
@@ -909,8 +911,8 @@ jsonpath "$.result.structuredContent.entries[3].private" == false
 variable "text" jsonpath "$.entries[3].private" == false
 jsonpath "$.result.structuredContent.entries[3].type" == "directory"
 variable "text" jsonpath "$.entries[3].type" == "directory"
-jsonpath "$.result.structuredContent.entries[3].health" == 31
-variable "text" jsonpath "$.entries[3].health" == 31
+jsonpath "$.result.structuredContent.entries[3].health" == 50
+variable "text" jsonpath "$.entries[3].health" == 50
 jsonpath "$.result.structuredContent.entries[3].schemas" == 77
 jsonpath "$.result.structuredContent.entries[3].openapi" == 3
 variable "text" jsonpath "$.entries[3].schemas" == 77

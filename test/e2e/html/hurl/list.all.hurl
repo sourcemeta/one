@@ -21,6 +21,7 @@ jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
 jsonpath "$.schemas" == 133
 jsonpath "$.openapi" == 0
+jsonpath "$.health" == 61
 jsonpath "$.entries" count >= 2
 jsonpath "$.private" == false
 jsonpath "$.entries[0].name" == "self"
@@ -84,6 +85,7 @@ jsonpath "$.description" == "A directory full of testing schemas"
 jsonpath "$.title" == "Test"
 jsonpath "$.schemas" == 56
 jsonpath "$.openapi" == 0
+jsonpath "$.health" == 22
 jsonpath "$.entries" count == 15
 jsonpath "$.private" == false
 jsonpath "$.entries[0].name" == "v2.0"
@@ -143,6 +145,7 @@ jsonpath "$.entries[7].private" == false
 jsonpath "$.entries[7].type" == "directory"
 jsonpath "$.entries[7].schemas" == 1
 jsonpath "$.entries[7].openapi" == 0
+jsonpath "$.entries[7].health" == 0
 jsonpath "$.entries[7].path" == "/test/markdown-alert/"
 jsonpath "$.entries[8].name" == "no-base"
 jsonpath "$.entries[8].private" == false
@@ -191,6 +194,7 @@ jsonpath "$.entries[14].private" == false
 jsonpath "$.entries[14].type" == "directory"
 jsonpath "$.entries[14].schemas" == 1
 jsonpath "$.entries[14].openapi" == 0
+jsonpath "$.entries[14].health" == 0
 jsonpath "$.entries[14].path" == "/test/unsafe-alert/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -230,6 +234,7 @@ jsonpath "$.path" == "/test/v2.0"
 jsonpath "$.url" == "{{base}}/test/v2.0"
 jsonpath "$.schemas" == 1
 jsonpath "$.openapi" == 0
+jsonpath "$.health" == 0
 jsonpath "$.breadcrumb" count == 2
 jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.breadcrumb[0].path" == "/test/"
@@ -288,6 +293,7 @@ jsonpath "$.path" == "/test/v2.0"
 jsonpath "$.url" == "{{base}}/test/v2.0"
 jsonpath "$.schemas" == 1
 jsonpath "$.openapi" == 0
+jsonpath "$.health" == 0
 jsonpath "$.breadcrumb" count == 2
 jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.breadcrumb[0].path" == "/test/"
