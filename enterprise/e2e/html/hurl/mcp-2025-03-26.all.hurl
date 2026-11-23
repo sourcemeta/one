@@ -821,7 +821,7 @@ jsonpath "$..mimeType" not exists
 variable "text" jsonpath "$.path" == "/"
 variable "text" jsonpath "$.url" == "{{base}}"
 variable "text" jsonpath "$.breadcrumb" count == 0
-variable "text" jsonpath "$.schemas" == 161
+variable "text" jsonpath "$.schemas" == 164
 variable "text" jsonpath "$.openapi" == 3
 variable "text" jsonpath "$.health" == 63
 variable "text" jsonpath "$.entries" count == 5
@@ -847,8 +847,8 @@ variable "text" jsonpath "$.entries[2].private" == false
 variable "text" jsonpath "$.entries[2].title" == "Self"
 variable "text" jsonpath "$.entries[2].description" == "The schemas that define the current version of this instance"
 variable "text" jsonpath "$.entries[2].type" == "directory"
-variable "text" jsonpath "$.entries[2].health" == 100
-variable "text" jsonpath "$.entries[2].schemas" == 77
+variable "text" jsonpath "$.entries[2].health" == 99
+variable "text" jsonpath "$.entries[2].schemas" == 80
 variable "text" jsonpath "$.entries[2].openapi" == 0
 variable "text" jsonpath "$.entries[2].path" == "/self/"
 variable "text" jsonpath "$.entries[3].name" == "test"

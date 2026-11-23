@@ -88,15 +88,15 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1100
 jsonpath "$.result.isError" == false
-jsonpath "$.result.content" count == 2
+jsonpath "$.result.content" count == 4
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
 jsonpath "$.result.content[1].uri" == "{{base}}/test/object"
 jsonpath "$.result.content[1].name" == "My Object"
 jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
-jsonpath "$.result.structuredContent.results" count == 1
-variable "text" jsonpath "$.results" count == 1
+jsonpath "$.result.structuredContent.results" count == 3
+variable "text" jsonpath "$.results" count == 3
 jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
 jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"

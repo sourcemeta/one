@@ -19,7 +19,7 @@ header "ETag" exists
 jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
-jsonpath "$.schemas" == 79
+jsonpath "$.schemas" == 82
 jsonpath "$.openapi" == 0
 jsonpath "$.health" == 50
 jsonpath "$.private" == false
@@ -77,7 +77,7 @@ header "ETag" != "{{root_etag}}"
 jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
-jsonpath "$.schemas" == 82
+jsonpath "$.schemas" == 85
 jsonpath "$.openapi" == 0
 jsonpath "$.health" == 47
 jsonpath "$.private" == false
