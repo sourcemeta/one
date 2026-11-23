@@ -47,9 +47,9 @@ private:
   std::string stacktrace_;
 };
 
-// A description that does not hold up as one of the revision it declares,
-// named alongside the schema this instance holds every description of that
-// revision to
+// Which revision an OpenAPI description was held to, as this instance
+// publishes a schema for each one it serves and the message alone would not
+// say which of them the document was read against
 class OpenAPIDocumentError : public sourcemeta::core::Error {
 public:
   OpenAPIDocumentError(const sourcemeta::blaze::SimpleOutput &output,

@@ -577,7 +577,11 @@
             "type": "string"
           }
         }
-      }
+      },
+      "patternProperties": {
+        "^x-": true
+      },
+      "additionalProperties": false
     },
     "XML": {
       "type": "object",
@@ -1493,10 +1497,14 @@
     },
     "Link": {
       "type": "object",
-      "not": {
-        "description": "Operation Id and Operation Ref are mutually exclusive",
-        "required": [ "operationId", "operationRef" ]
-      },
+      "oneOf": [
+        {
+          "required": [ "operationRef" ]
+        },
+        {
+          "required": [ "operationId" ]
+        }
+      ],
       "properties": {
         "operationId": {
           "type": "string"
