@@ -420,23 +420,61 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1101
 jsonpath "$.result.isError" == false
-jsonpath "$.result.content" count == 2
+jsonpath "$.result.content" count == 4
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
 jsonpath "$.result.content[1].uri" == "{{base}}/test/object"
 jsonpath "$.result.content[1].name" == "My Object"
 jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
-jsonpath "$.result.structuredContent.results" count == 1
-variable "text" jsonpath "$.results" count == 1
+jsonpath "$.result.content[2].type" == "resource_link"
+jsonpath "$.result.content[2].uri" == "{{base}}/self/v1/schemas/common/openapi/3.1"
+jsonpath "$.result.content[2].name" == "OpenAPI 3.1 Document"
+jsonpath "$.result.content[2].description" == "The document format of an OpenAPI Description that declares revision 3.1 of the OpenAPI Specification, leaving every Schema Object within it to the dialect that one declares"
+jsonpath "$.result.content[2].mimeType" == "application/schema+json"
+jsonpath "$.result.content[3].type" == "resource_link"
+jsonpath "$.result.content[3].uri" == "{{base}}/self/v1/schemas/common/openapi/3.2"
+jsonpath "$.result.content[3].name" == "OpenAPI 3.2 Document"
+jsonpath "$.result.content[3].description" == "The document format of an OpenAPI Description that declares revision 3.2 of the OpenAPI Specification, leaving every Schema Object within it to the dialect that one declares"
+jsonpath "$.result.content[3].mimeType" == "application/schema+json"
+jsonpath "$.result.structuredContent.results" count == 3
+variable "text" jsonpath "$.results" count == 3
 jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
 jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.results[0].title" == "My Object"
+variable "text" jsonpath "$.results[0].title" == "My Object"
+jsonpath "$.result.structuredContent.results[0].description" == "An Object Example"
+variable "text" jsonpath "$.results[0].description" == "An Object Example"
 jsonpath "$.result.structuredContent.results[0].priority" == 50
 variable "text" jsonpath "$.results[0].priority" == 50
 jsonpath "$.result.structuredContent.results[0].health" == 67
 variable "text" jsonpath "$.results[0].health" == 67
+jsonpath "$.result.structuredContent.results[1].path" == "/self/v1/schemas/common/openapi/3.1"
+variable "text" jsonpath "$.results[1].path" == "/self/v1/schemas/common/openapi/3.1"
+jsonpath "$.result.structuredContent.results[1].identifier" == "{{base}}/self/v1/schemas/common/openapi/3.1"
+variable "text" jsonpath "$.results[1].identifier" == "{{base}}/self/v1/schemas/common/openapi/3.1"
+jsonpath "$.result.structuredContent.results[1].title" == "OpenAPI 3.1 Document"
+variable "text" jsonpath "$.results[1].title" == "OpenAPI 3.1 Document"
+jsonpath "$.result.structuredContent.results[1].description" == "The document format of an OpenAPI Description that declares revision 3.1 of the OpenAPI Specification, leaving every Schema Object within it to the dialect that one declares"
+variable "text" jsonpath "$.results[1].description" == "The document format of an OpenAPI Description that declares revision 3.1 of the OpenAPI Specification, leaving every Schema Object within it to the dialect that one declares"
+jsonpath "$.result.structuredContent.results[1].priority" == 0
+variable "text" jsonpath "$.results[1].priority" == 0
+jsonpath "$.result.structuredContent.results[1].health" == 99
+variable "text" jsonpath "$.results[1].health" == 99
+jsonpath "$.result.structuredContent.results[2].path" == "/self/v1/schemas/common/openapi/3.2"
+variable "text" jsonpath "$.results[2].path" == "/self/v1/schemas/common/openapi/3.2"
+jsonpath "$.result.structuredContent.results[2].identifier" == "{{base}}/self/v1/schemas/common/openapi/3.2"
+variable "text" jsonpath "$.results[2].identifier" == "{{base}}/self/v1/schemas/common/openapi/3.2"
+jsonpath "$.result.structuredContent.results[2].title" == "OpenAPI 3.2 Document"
+variable "text" jsonpath "$.results[2].title" == "OpenAPI 3.2 Document"
+jsonpath "$.result.structuredContent.results[2].description" == "The document format of an OpenAPI Description that declares revision 3.2 of the OpenAPI Specification, leaving every Schema Object within it to the dialect that one declares"
+variable "text" jsonpath "$.results[2].description" == "The document format of an OpenAPI Description that declares revision 3.2 of the OpenAPI Specification, leaving every Schema Object within it to the dialect that one declares"
+jsonpath "$.result.structuredContent.results[2].priority" == 0
+variable "text" jsonpath "$.results[2].priority" == 0
+jsonpath "$.result.structuredContent.results[2].health" == 99
+variable "text" jsonpath "$.results[2].health" == 99
 jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
 jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
@@ -2695,23 +2733,61 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == "search-call-string-id"
 jsonpath "$.result.isError" == false
-jsonpath "$.result.content" count == 2
+jsonpath "$.result.content" count == 4
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
 jsonpath "$.result.content[1].uri" == "{{base}}/test/object"
 jsonpath "$.result.content[1].name" == "My Object"
 jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
-jsonpath "$.result.structuredContent.results" count == 1
-variable "text" jsonpath "$.results" count == 1
+jsonpath "$.result.content[2].type" == "resource_link"
+jsonpath "$.result.content[2].uri" == "{{base}}/self/v1/schemas/common/openapi/3.1"
+jsonpath "$.result.content[2].name" == "OpenAPI 3.1 Document"
+jsonpath "$.result.content[2].description" == "The document format of an OpenAPI Description that declares revision 3.1 of the OpenAPI Specification, leaving every Schema Object within it to the dialect that one declares"
+jsonpath "$.result.content[2].mimeType" == "application/schema+json"
+jsonpath "$.result.content[3].type" == "resource_link"
+jsonpath "$.result.content[3].uri" == "{{base}}/self/v1/schemas/common/openapi/3.2"
+jsonpath "$.result.content[3].name" == "OpenAPI 3.2 Document"
+jsonpath "$.result.content[3].description" == "The document format of an OpenAPI Description that declares revision 3.2 of the OpenAPI Specification, leaving every Schema Object within it to the dialect that one declares"
+jsonpath "$.result.content[3].mimeType" == "application/schema+json"
+jsonpath "$.result.structuredContent.results" count == 3
+variable "text" jsonpath "$.results" count == 3
 jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
 jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.results[0].title" == "My Object"
+variable "text" jsonpath "$.results[0].title" == "My Object"
+jsonpath "$.result.structuredContent.results[0].description" == "An Object Example"
+variable "text" jsonpath "$.results[0].description" == "An Object Example"
 jsonpath "$.result.structuredContent.results[0].priority" == 50
 variable "text" jsonpath "$.results[0].priority" == 50
 jsonpath "$.result.structuredContent.results[0].health" == 67
 variable "text" jsonpath "$.results[0].health" == 67
+jsonpath "$.result.structuredContent.results[1].path" == "/self/v1/schemas/common/openapi/3.1"
+variable "text" jsonpath "$.results[1].path" == "/self/v1/schemas/common/openapi/3.1"
+jsonpath "$.result.structuredContent.results[1].identifier" == "{{base}}/self/v1/schemas/common/openapi/3.1"
+variable "text" jsonpath "$.results[1].identifier" == "{{base}}/self/v1/schemas/common/openapi/3.1"
+jsonpath "$.result.structuredContent.results[1].title" == "OpenAPI 3.1 Document"
+variable "text" jsonpath "$.results[1].title" == "OpenAPI 3.1 Document"
+jsonpath "$.result.structuredContent.results[1].description" == "The document format of an OpenAPI Description that declares revision 3.1 of the OpenAPI Specification, leaving every Schema Object within it to the dialect that one declares"
+variable "text" jsonpath "$.results[1].description" == "The document format of an OpenAPI Description that declares revision 3.1 of the OpenAPI Specification, leaving every Schema Object within it to the dialect that one declares"
+jsonpath "$.result.structuredContent.results[1].priority" == 0
+variable "text" jsonpath "$.results[1].priority" == 0
+jsonpath "$.result.structuredContent.results[1].health" == 99
+variable "text" jsonpath "$.results[1].health" == 99
+jsonpath "$.result.structuredContent.results[2].path" == "/self/v1/schemas/common/openapi/3.2"
+variable "text" jsonpath "$.results[2].path" == "/self/v1/schemas/common/openapi/3.2"
+jsonpath "$.result.structuredContent.results[2].identifier" == "{{base}}/self/v1/schemas/common/openapi/3.2"
+variable "text" jsonpath "$.results[2].identifier" == "{{base}}/self/v1/schemas/common/openapi/3.2"
+jsonpath "$.result.structuredContent.results[2].title" == "OpenAPI 3.2 Document"
+variable "text" jsonpath "$.results[2].title" == "OpenAPI 3.2 Document"
+jsonpath "$.result.structuredContent.results[2].description" == "The document format of an OpenAPI Description that declares revision 3.2 of the OpenAPI Specification, leaving every Schema Object within it to the dialect that one declares"
+variable "text" jsonpath "$.results[2].description" == "The document format of an OpenAPI Description that declares revision 3.2 of the OpenAPI Specification, leaving every Schema Object within it to the dialect that one declares"
+jsonpath "$.result.structuredContent.results[2].priority" == 0
+variable "text" jsonpath "$.results[2].priority" == 0
+jsonpath "$.result.structuredContent.results[2].health" == 99
+variable "text" jsonpath "$.results[2].health" == 99
 jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
 jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"

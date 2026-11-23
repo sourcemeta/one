@@ -141,9 +141,9 @@ jsonpath "$.entries[1].name" == "self"
 jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.entries[1].path" == "/self/"
 jsonpath "$.entries[1].private" == false
-jsonpath "$.entries[1].schemas" == 77
+jsonpath "$.entries[1].schemas" == 80
 jsonpath "$.entries[1].openapi" == 0
-jsonpath "$.entries[1].health" == 100
+jsonpath "$.entries[1].health" == 99
 
 POST {{base}}/self/v1/api/schemas/evaluate{{root_listing_schema}}
 ```
