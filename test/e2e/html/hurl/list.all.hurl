@@ -19,9 +19,9 @@ header "Last-Modified" exists
 jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
-jsonpath "$.schemas" == 136
+jsonpath "$.schemas" == 137
 jsonpath "$.openapi" == 0
-jsonpath "$.health" == 61
+jsonpath "$.health" == 63
 jsonpath "$.entries" count >= 2
 jsonpath "$.private" == false
 jsonpath "$.entries[0].name" == "self"
@@ -29,7 +29,7 @@ jsonpath "$.entries[0].private" == false
 jsonpath "$.entries[0].title" == "Self"
 jsonpath "$.entries[0].description" == "The schemas that define the current version of this instance"
 jsonpath "$.entries[0].type" == "directory"
-jsonpath "$.entries[0].health" == 99
+jsonpath "$.entries[0].health" == 100
 jsonpath "$.entries[0].schemas" == 80
 jsonpath "$.entries[0].openapi" == 0
 jsonpath "$.entries[0].path" == "/self/"
@@ -38,8 +38,8 @@ jsonpath "$.entries[1].private" == false
 jsonpath "$.entries[1].title" == "Test"
 jsonpath "$.entries[1].description" == "A directory full of testing schemas"
 jsonpath "$.entries[1].type" == "directory"
-jsonpath "$.entries[1].health" == 22
-jsonpath "$.entries[1].schemas" == 56
+jsonpath "$.entries[1].health" == 26
+jsonpath "$.entries[1].schemas" == 57
 jsonpath "$.entries[1].openapi" == 0
 jsonpath "$.entries[1].path" == "/test/"
 
@@ -83,16 +83,16 @@ jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.breadcrumb[0].path" == "/test/"
 jsonpath "$.description" == "A directory full of testing schemas"
 jsonpath "$.title" == "Test"
-jsonpath "$.schemas" == 56
+jsonpath "$.schemas" == 57
 jsonpath "$.openapi" == 0
-jsonpath "$.health" == 22
+jsonpath "$.health" == 26
 jsonpath "$.entries" count == 15
 jsonpath "$.private" == false
 jsonpath "$.entries[0].name" == "v2.0"
 jsonpath "$.entries[0].private" == false
 jsonpath "$.entries[0].type" == "directory"
-jsonpath "$.entries[0].health" == 0
-jsonpath "$.entries[0].schemas" == 1
+jsonpath "$.entries[0].health" == 50
+jsonpath "$.entries[0].schemas" == 2
 jsonpath "$.entries[0].openapi" == 0
 jsonpath "$.entries[0].path" == "/test/v2.0/"
 jsonpath "$.entries[1].name" == "bundling"
@@ -232,15 +232,15 @@ header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$.path" == "/test/v2.0"
 jsonpath "$.url" == "{{base}}/test/v2.0"
-jsonpath "$.schemas" == 1
+jsonpath "$.schemas" == 2
 jsonpath "$.openapi" == 0
-jsonpath "$.health" == 0
+jsonpath "$.health" == 50
 jsonpath "$.breadcrumb" count == 2
 jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.breadcrumb[0].path" == "/test/"
 jsonpath "$.breadcrumb[1].name" == "v2.0"
 jsonpath "$.breadcrumb[1].path" == "/test/v2.0/"
-jsonpath "$.entries" count == 1
+jsonpath "$.entries" count == 2
 jsonpath "$.private" == false
 jsonpath "$.entries[0].bytes" == 130
 jsonpath "$.entries[0].bytesBundled" == 130
@@ -255,6 +255,21 @@ jsonpath "$.entries[0].path" == "/test/v2.0/schema"
 jsonpath "$.entries[0].health" == 0
 jsonpath "$.entries[0].dependencies" == 0
 jsonpath "$.entries[0].priority" == 50
+jsonpath "$.entries[1].bytes" == 363
+jsonpath "$.entries[1].bytesBundled" == 363
+jsonpath "$.entries[1].baseDialect" == "http://json-schema.org/draft-07/schema#"
+jsonpath "$.entries[1].dialect" == "http://json-schema.org/draft-07/schema#"
+jsonpath "$.entries[1].identifier" == "{{base}}/test/v2.0/with-exclusion"
+jsonpath "$.entries[1].name" == "with-exclusion"
+jsonpath "$.entries[1].private" == false
+jsonpath "$.entries[1].type" == "schema"
+jsonpath "$.entries[1].alert" == null
+jsonpath "$.entries[1].path" == "/test/v2.0/with-exclusion"
+jsonpath "$.entries[1].health" == 100
+jsonpath "$.entries[1].dependencies" == 0
+jsonpath "$.entries[1].priority" == 50
+jsonpath "$.entries[1].title" == "With Exclusion"
+jsonpath "$.entries[1].description" == "A schema that holds itself exempt from a linter rule it breaks on purpose"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -291,15 +306,15 @@ header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$.path" == "/test/v2.0"
 jsonpath "$.url" == "{{base}}/test/v2.0"
-jsonpath "$.schemas" == 1
+jsonpath "$.schemas" == 2
 jsonpath "$.openapi" == 0
-jsonpath "$.health" == 0
+jsonpath "$.health" == 50
 jsonpath "$.breadcrumb" count == 2
 jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.breadcrumb[0].path" == "/test/"
 jsonpath "$.breadcrumb[1].name" == "v2.0"
 jsonpath "$.breadcrumb[1].path" == "/test/v2.0/"
-jsonpath "$.entries" count == 1
+jsonpath "$.entries" count == 2
 jsonpath "$.private" == false
 jsonpath "$.entries[0].bytes" == 130
 jsonpath "$.entries[0].bytesBundled" == 130
@@ -314,6 +329,21 @@ jsonpath "$.entries[0].path" == "/test/v2.0/schema"
 jsonpath "$.entries[0].health" == 0
 jsonpath "$.entries[0].dependencies" == 0
 jsonpath "$.entries[0].priority" == 50
+jsonpath "$.entries[1].bytes" == 363
+jsonpath "$.entries[1].bytesBundled" == 363
+jsonpath "$.entries[1].baseDialect" == "http://json-schema.org/draft-07/schema#"
+jsonpath "$.entries[1].dialect" == "http://json-schema.org/draft-07/schema#"
+jsonpath "$.entries[1].identifier" == "{{base}}/test/v2.0/with-exclusion"
+jsonpath "$.entries[1].name" == "with-exclusion"
+jsonpath "$.entries[1].private" == false
+jsonpath "$.entries[1].type" == "schema"
+jsonpath "$.entries[1].alert" == null
+jsonpath "$.entries[1].path" == "/test/v2.0/with-exclusion"
+jsonpath "$.entries[1].health" == 100
+jsonpath "$.entries[1].dependencies" == 0
+jsonpath "$.entries[1].priority" == 50
+jsonpath "$.entries[1].title" == "With Exclusion"
+jsonpath "$.entries[1].description" == "A schema that holds itself exempt from a linter rule it breaks on purpose"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

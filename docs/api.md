@@ -845,6 +845,10 @@ GET /self/v1/api/schemas/dependents/{path}
 GET /self/v1/api/schemas/health/{path}
 ```
 
+A rule that the schema holds itself exempt from through `x-lint-exclude`, or
+that the collection disables through [`lint/exclude`](configuration.md#linter),
+is left out of both the score and the issue list.
+
 === "200"
 
     | Property | Type | Required | Description |

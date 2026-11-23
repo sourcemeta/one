@@ -749,6 +749,9 @@ struct GenerateOpenAPIDependencies {
   }
 };
 
+// Where a schema states the linter rules it is held exempt from
+inline constexpr std::string_view LINT_EXCLUDE_KEYWORD{"x-lint-exclude"};
+
 struct GenerateHealth {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
@@ -802,7 +805,8 @@ struct GenerateHealth {
             entry.assign("pointers", std::move(pointers));
             errors.push_back(std::move(entry));
           },
-          schema_entry.dialect, action.data)};
+          schema_entry.dialect, action.data,
+          sourcemeta::core::JSON::String{LINT_EXCLUDE_KEYWORD})};
       report.assign("score", sourcemeta::core::to_json(result.second));
     }
 

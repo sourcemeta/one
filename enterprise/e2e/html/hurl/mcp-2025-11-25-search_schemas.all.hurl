@@ -346,8 +346,8 @@ jsonpath "$.result.structuredContent.results[1].description" == "The document fo
 variable "text" jsonpath "$.results[1].description" == "The document format of an OpenAPI Description that declares revision 3.1 of the OpenAPI Specification, leaving every Schema Object within it to the dialect that one declares"
 jsonpath "$.result.structuredContent.results[1].priority" == 0
 variable "text" jsonpath "$.results[1].priority" == 0
-jsonpath "$.result.structuredContent.results[1].health" == 99
-variable "text" jsonpath "$.results[1].health" == 99
+jsonpath "$.result.structuredContent.results[1].health" == 100
+variable "text" jsonpath "$.results[1].health" == 100
 jsonpath "$.result.structuredContent.results[2].path" == "/self/v1/schemas/common/openapi/3.2"
 variable "text" jsonpath "$.results[2].path" == "/self/v1/schemas/common/openapi/3.2"
 jsonpath "$.result.structuredContent.results[2].identifier" == "{{base}}/self/v1/schemas/common/openapi/3.2"
@@ -358,8 +358,8 @@ jsonpath "$.result.structuredContent.results[2].description" == "The document fo
 variable "text" jsonpath "$.results[2].description" == "The document format of an OpenAPI Description that declares revision 3.2 of the OpenAPI Specification, leaving every Schema Object within it to the dialect that one declares"
 jsonpath "$.result.structuredContent.results[2].priority" == 0
 variable "text" jsonpath "$.results[2].priority" == 0
-jsonpath "$.result.structuredContent.results[2].health" == 99
-variable "text" jsonpath "$.results[2].health" == 99
+jsonpath "$.result.structuredContent.results[2].health" == 100
+variable "text" jsonpath "$.results[2].health" == 100
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -2109,8 +2109,8 @@ jsonpath "$.result.structuredContent.results[1].description" == "The document fo
 variable "text" jsonpath "$.results[1].description" == "The document format of an OpenAPI Description that declares revision 3.1 of the OpenAPI Specification, leaving every Schema Object within it to the dialect that one declares"
 jsonpath "$.result.structuredContent.results[1].priority" == 0
 variable "text" jsonpath "$.results[1].priority" == 0
-jsonpath "$.result.structuredContent.results[1].health" == 99
-variable "text" jsonpath "$.results[1].health" == 99
+jsonpath "$.result.structuredContent.results[1].health" == 100
+variable "text" jsonpath "$.results[1].health" == 100
 jsonpath "$.result.structuredContent.results[2].path" == "/self/v1/schemas/common/openapi/3.2"
 variable "text" jsonpath "$.results[2].path" == "/self/v1/schemas/common/openapi/3.2"
 jsonpath "$.result.structuredContent.results[2].identifier" == "{{base}}/self/v1/schemas/common/openapi/3.2"
@@ -2121,8 +2121,8 @@ jsonpath "$.result.structuredContent.results[2].description" == "The document fo
 variable "text" jsonpath "$.results[2].description" == "The document format of an OpenAPI Description that declares revision 3.2 of the OpenAPI Specification, leaving every Schema Object within it to the dialect that one declares"
 jsonpath "$.result.structuredContent.results[2].priority" == 0
 variable "text" jsonpath "$.results[2].priority" == 0
-jsonpath "$.result.structuredContent.results[2].health" == 99
-variable "text" jsonpath "$.results[2].health" == 99
+jsonpath "$.result.structuredContent.results[2].health" == 100
+variable "text" jsonpath "$.results[2].health" == 100
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

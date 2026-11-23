@@ -45,7 +45,7 @@ jsonpath "$.entries[2].private" == false
 jsonpath "$.entries[2].title" == "Self"
 jsonpath "$.entries[2].description" == "The schemas that define the current version of this instance"
 jsonpath "$.entries[2].type" == "directory"
-jsonpath "$.entries[2].health" == 99
+jsonpath "$.entries[2].health" == 100
 jsonpath "$.entries[2].schemas" == 80
 jsonpath "$.entries[2].openapi" == 0
 jsonpath "$.entries[2].path" == "/self/"
