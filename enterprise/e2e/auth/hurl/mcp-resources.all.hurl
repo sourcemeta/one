@@ -31,11 +31,13 @@ jsonpath "$.id" == 1
 jsonpath "$.result.resources" count == 50
 jsonpath "$.result.resources[0].uri" == "{{base}}/orphan/lonely"
 jsonpath "$.result.resources[0].name" == "/orphan/lonely"
+jsonpath "$.result.resources[0].description" not exists
 jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[0].size" == 208
 jsonpath "$.result.resources[0].annotations.priority" == 0.5
 jsonpath "$.result.resources[1].uri" == "{{base}}/public/string"
 jsonpath "$.result.resources[1].name" == "/public/string"
+jsonpath "$.result.resources[1].description" not exists
 jsonpath "$.result.resources[1].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[1].size" == 131
 jsonpath "$.result.resources[1].annotations.priority" == 0.5
@@ -572,26 +574,31 @@ jsonpath "$.id" == 3
 jsonpath "$.result.resources" count == 50
 jsonpath "$.result.resources[0].uri" == "{{base}}/private/secret"
 jsonpath "$.result.resources[0].name" == "/private/secret"
+jsonpath "$.result.resources[0].description" not exists
 jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[0].size" == 259
 jsonpath "$.result.resources[0].annotations.priority" == 0.5
 jsonpath "$.result.resources[1].uri" == "{{base}}/orphan/lonely"
 jsonpath "$.result.resources[1].name" == "/orphan/lonely"
+jsonpath "$.result.resources[1].description" not exists
 jsonpath "$.result.resources[1].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[1].size" == 208
 jsonpath "$.result.resources[1].annotations.priority" == 0.5
 jsonpath "$.result.resources[2].uri" == "{{base}}/reports/quarterly"
 jsonpath "$.result.resources[2].name" == "/reports/quarterly"
+jsonpath "$.result.resources[2].description" not exists
 jsonpath "$.result.resources[2].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[2].size" == 183
 jsonpath "$.result.resources[2].annotations.priority" == 0.5
 jsonpath "$.result.resources[3].uri" == "{{base}}/private/open/shared"
 jsonpath "$.result.resources[3].name" == "/private/open/shared"
+jsonpath "$.result.resources[3].description" not exists
 jsonpath "$.result.resources[3].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[3].size" == 138
 jsonpath "$.result.resources[3].annotations.priority" == 0.5
 jsonpath "$.result.resources[4].uri" == "{{base}}/public/string"
 jsonpath "$.result.resources[4].name" == "/public/string"
+jsonpath "$.result.resources[4].description" not exists
 jsonpath "$.result.resources[4].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[4].size" == 131
 jsonpath "$.result.resources[4].annotations.priority" == 0.5
@@ -1121,16 +1128,19 @@ jsonpath "$.id" == 5
 jsonpath "$.result.resources" count == 50
 jsonpath "$.result.resources[0].uri" == "{{base}}/internal/config"
 jsonpath "$.result.resources[0].name" == "/internal/config"
+jsonpath "$.result.resources[0].description" not exists
 jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[0].size" == 166
 jsonpath "$.result.resources[0].annotations.priority" == 0.5
 jsonpath "$.result.resources[1].uri" == "{{base}}/orphan/lonely"
 jsonpath "$.result.resources[1].name" == "/orphan/lonely"
+jsonpath "$.result.resources[1].description" not exists
 jsonpath "$.result.resources[1].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[1].size" == 208
 jsonpath "$.result.resources[1].annotations.priority" == 0.5
 jsonpath "$.result.resources[2].uri" == "{{base}}/public/string"
 jsonpath "$.result.resources[2].name" == "/public/string"
+jsonpath "$.result.resources[2].description" not exists
 jsonpath "$.result.resources[2].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[2].size" == 131
 jsonpath "$.result.resources[2].annotations.priority" == 0.5
