@@ -422,8 +422,12 @@ auto RouterAction::artifact_serve(
   } else {
     const auto dialect{
         sourcemeta::one::metapack_schema_dialect(parsed->extension)};
-    if (!dialect.empty()) {
-      sourcemeta::one::write_link_header(response, dialect);
+    const auto describedby{
+        dialect.empty()
+            ? sourcemeta::one::metapack_openapi_describedby(parsed->extension)
+            : dialect};
+    if (!describedby.empty()) {
+      sourcemeta::one::write_link_header(response, describedby);
     }
   }
 

@@ -1227,6 +1227,11 @@ auto main(int argc, char *argv[]) noexcept -> int {
     }
 
     return EXIT_FAILURE;
+  } catch (const sourcemeta::one::OpenAPIDocumentError &error) {
+    std::print(stderr, "error: {}\n  at path {}\n  at revision {}\n{}",
+               error.what(), error.path().string(), error.revision(),
+               error.stacktrace());
+    return EXIT_FAILURE;
   } catch (const sourcemeta::one::OpenAPISchemaObjectError &error) {
     std::print(stderr,
                "error: {}\n  at path {}\n  at location \"{}\"\n"

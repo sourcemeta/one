@@ -185,15 +185,17 @@ static auto throw_if_unknown_required_vocabulary(
   }
 }
 
-// The template a dialect is held to, compiled once per dialect however many
+// The template something is held to, compiled once per key however many
 // documents ask for it. Wave 0 is exclusively materialisation, so a single lock
 // across the exhaustive compile would serialise every worker. A shared lock
-// lets cache hits proceed without contending, and a per-dialect `once_flag`
-// compiles each dialect exactly once while distinct dialects compile
-// concurrently
-static auto compiled_metaschema(const std::string &cache_key,
-                                const sourcemeta::core::JSON &schema,
-                                const sourcemeta::one::Resolver &resolver)
+// lets cache hits proceed without contending, and a per-key `once_flag`
+// compiles each key exactly once while distinct keys compile concurrently.
+// What to compile is asked for rather than given, so a key that is already
+// cached costs nothing to answer
+template <typename Source>
+static auto compiled_validator(const std::string &cache_key,
+                               const Source &schema,
+                               const sourcemeta::one::Resolver &resolver)
     -> const sourcemeta::blaze::Template & {
   struct Slot {
     std::once_flag flag;
@@ -223,7 +225,7 @@ static auto compiled_metaschema(const std::string &cache_key,
 
   std::call_once(slot->flag, [&] {
     slot->value = sourcemeta::blaze::compile(
-        schema, sourcemeta::core::schema_walker,
+        schema(), sourcemeta::core::schema_walker,
         [&resolver](const auto identifier) { return resolver(identifier); },
         sourcemeta::blaze::default_schema_compiler,
         // The point of this is to show nice errors to the user
@@ -291,8 +293,12 @@ struct GenerateMaterialisedSchema {
     assert(metaschema.has_value());
 
     // Validate the schemas against their meta-schemas
-    const auto &schema_template{compiled_metaschema(
-        std::string{dialect_identifier}, metaschema.value(), resolver)};
+    const auto &schema_template{compiled_validator(
+        std::string{dialect_identifier},
+        [&metaschema]() -> const sourcemeta::core::JSON & {
+          return metaschema.value();
+        },
+        resolver)};
     sourcemeta::blaze::SimpleOutput output{schema_template, schema.value()};
     sourcemeta::blaze::Evaluator evaluator;
     const auto result{
@@ -330,16 +336,41 @@ struct GenerateMaterialisedSchema {
   }
 };
 
-// An OpenAPI description, rewritten to be served by this instance. Nothing here
-// branches on the revision it declares: which field carries the identity and
-// which dialect a Schema Object answers to are the resolver's and core's to
-// settle respectively
+// Where the document schemas sit among the schemas this instance serves as its
+// own, which is the one place the layout of them is written down
+inline constexpr std::string_view OPENAPI_DOCUMENT_SCHEMAS{"common/openapi"};
+
+// What this instance serves the document schema of a revision at, which is
+// what it points a caller fetching a description of that revision to
+static auto
+openapi_document_schema(const sourcemeta::core::OpenAPIVersion revision)
+    -> std::string {
+  return std::format("/self/v1/schemas/{}/{}", OPENAPI_DOCUMENT_SCHEMAS,
+                     sourcemeta::core::openapi_version_name(revision));
+}
+
+// And where the same schema is read from to hold a description to it. The
+// schemas this instance serves as its own ship beside it, so this answers
+// whether or not the instance serves an API of its own
+static auto
+openapi_document_schema_file(const sourcemeta::core::OpenAPIVersion revision)
+    -> std::filesystem::path {
+  return std::filesystem::path{SOURCEMETA_ONE_SELF} / "v1" / "schemas" /
+         OPENAPI_DOCUMENT_SCHEMAS /
+         std::format("{}.json",
+                     sourcemeta::core::openapi_version_name(revision));
+}
+
+// An OpenAPI description, rewritten to be served by this instance. The revision
+// it declares decides nothing but which document schema describes it: which
+// field carries the identity and which dialect a Schema Object answers to are
+// the resolver's and core's to settle respectively
 struct GenerateMaterialisedOpenAPI {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
-                      const sourcemeta::one::Configuration &,
+                      const sourcemeta::one::Configuration &configuration,
                       const sourcemeta::core::JSON &) -> void {
     const auto document{resolver.openapi(action.data, callback)};
     assert(document.has_value());
@@ -375,8 +406,12 @@ struct GenerateMaterialisedOpenAPI {
       const auto metaschema{resolver(dialect, callback)};
       assert(metaschema.has_value());
 
-      const auto &schema_template{
-          compiled_metaschema(dialect, metaschema.value(), resolver)};
+      const auto &schema_template{compiled_validator(
+          dialect,
+          [&metaschema]() -> const sourcemeta::core::JSON & {
+            return metaschema.value();
+          },
+          resolver)};
       sourcemeta::blaze::SimpleOutput output{schema_template, schema};
       sourcemeta::blaze::Evaluator evaluator;
       if (!evaluator.validate(schema_template, schema, std::ref(output))) {
@@ -385,8 +420,32 @@ struct GenerateMaterialisedOpenAPI {
       }
     }
 
-    const auto extension_bytes{sourcemeta::one::make_metapack_leaf_extension(
-        sourcemeta::one::LeafKind::OpenAPI)};
+    // And the document around them against the revision it declares, which
+    // this instance publishes a schema of its own for
+    const auto revision{
+        sourcemeta::core::openapi_version_name(frame.version())};
+    const auto &document_template{compiled_validator(
+        std::format("openapi-{}", revision),
+        [&frame]() {
+          return sourcemeta::core::read_json(
+              openapi_document_schema_file(frame.version()));
+        },
+        resolver)};
+    sourcemeta::blaze::SimpleOutput document_output{document_template,
+                                                    document.value()};
+    sourcemeta::blaze::Evaluator document_evaluator;
+    if (!document_evaluator.validate(document_template, document.value(),
+                                     std::ref(document_output))) {
+      throw OpenAPIDocumentError(document_output,
+                                 resolver.entry(action.data).path,
+                                 std::string{revision});
+    }
+
+    // An instance that serves no API serves none of its own schemas either, so
+    // there is nothing to point a caller at
+    const auto extension_bytes{sourcemeta::one::make_metapack_openapi_extension(
+        configuration.api ? openapi_document_schema(frame.version())
+                          : std::string{})};
     sourcemeta::core::metapack_write_json_pretty(
         action.destination, document.value(), "application/openapi+json",
         sourcemeta::core::MetapackEncoding::GZIP,
@@ -854,7 +913,7 @@ struct GenerateOpenAPIBundle {
                       const sourcemeta::one::BuildPlan::Action &action,
                       const sourcemeta::one::BuildDynamicCallback &callback,
                       sourcemeta::one::Resolver &resolver,
-                      const sourcemeta::one::Configuration &,
+                      const sourcemeta::one::Configuration &configuration,
                       const sourcemeta::core::JSON &) -> void {
     auto contents_option{
         sourcemeta::core::metapack_read_json(action.dependencies.front())};
@@ -877,8 +936,9 @@ struct GenerateOpenAPIBundle {
                                                schema_resolver, action.data};
     sourcemeta::core::openapi_format(document, frame);
 
-    const auto extension_bytes{sourcemeta::one::make_metapack_leaf_extension(
-        sourcemeta::one::LeafKind::OpenAPI)};
+    const auto extension_bytes{sourcemeta::one::make_metapack_openapi_extension(
+        configuration.api ? openapi_document_schema(frame.version())
+                          : std::string{})};
     sourcemeta::core::metapack_write_json_pretty(
         action.destination, document, "application/openapi+json",
         sourcemeta::core::MetapackEncoding::GZIP,

@@ -12,11 +12,11 @@ Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/openapi+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/common/openapi/3.2>; rel="describedby"
 [Captures]
 entry_document: body
 [Asserts]
 header "Vary" == "User-Agent, Accept-Encoding"
-header "Link" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -141,11 +141,11 @@ Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/openapi+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/common/openapi/3.2>; rel="describedby"
 [Captures]
 entry_bundle: body
 [Asserts]
 header "Vary" == "User-Agent, Accept-Encoding"
-header "Link" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -302,11 +302,11 @@ Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/openapi+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/common/openapi/3.0>; rel="describedby"
 [Captures]
 petstore_bundle: body
 [Asserts]
 header "Vary" == "User-Agent, Accept-Encoding"
-header "Link" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
