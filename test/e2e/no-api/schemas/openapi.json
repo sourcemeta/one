@@ -1,0 +1,19 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "Petstore",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/pets": {
+      "get": {
+        "operationId": "listPets",
+        "responses": {
+          "200": {
+            "description": "Every pet"
+          }
+        }
+      }
+    }
+  }
+}

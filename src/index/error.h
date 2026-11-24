@@ -47,6 +47,36 @@ private:
   std::string stacktrace_;
 };
 
+// Which revision an OpenAPI description was held to, as this instance
+// publishes a schema for each one it serves and the message alone would not
+// say which of them the document was read against
+class OpenAPIDocumentError : public sourcemeta::core::Error {
+public:
+  OpenAPIDocumentError(const sourcemeta::blaze::SimpleOutput &output,
+                       std::filesystem::path path, std::string revision)
+      : sourcemeta::core::Error{"The OpenAPI description does not adhere to "
+                                "the revision it declares"},
+        path_{std::move(path)}, revision_{std::move(revision)},
+        stacktrace_{describe_output(output)} {}
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  [[nodiscard]] auto revision() const noexcept -> const std::string & {
+    return this->revision_;
+  }
+
+  [[nodiscard]] auto stacktrace() const noexcept -> const std::string & {
+    return this->stacktrace_;
+  }
+
+private:
+  std::filesystem::path path_;
+  std::string revision_;
+  std::string stacktrace_;
+};
+
 // Which of the schemas an OpenAPI description holds is at fault, as one may
 // hold hundreds and saying only that one of them is invalid is unusable
 class OpenAPISchemaObjectError : public sourcemeta::core::Error {

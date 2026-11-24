@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/schemas/with-exclusion.json",
+  "title": "With Exclusion",
+  "description": "A schema that holds itself exempt from a linter rule it breaks on purpose",
+  "x-lint-exclude": [ "simple_properties_identifiers" ],
+  "properties": {
+    "$ref": {
+      "type": "string"
+    }
+  }
+}

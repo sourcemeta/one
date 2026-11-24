@@ -395,6 +395,30 @@ scope of the rule:
 }
 ```
 
+A single schema can hold itself exempt from named rules, built-in or custom
+alike, by declaring `x-lint-exclude` alongside the keywords the rule reports
+against. The value is a rule name or an array of them, it applies to the
+subschema that declares it rather than to the ones nested inside it, and a rule
+excluded this way no longer counts against the health score:
+
+```json title="schemas/reference.json"
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Reference",
+  "description": "A schema whose property names come from another specification",
+  "x-lint-exclude": [ "simple_properties_identifiers" ],
+  "properties": {
+    "$ref": {
+      "type": "string"
+    }
+  }
+}
+```
+
+Reach for it when one schema breaks a rule on purpose and the rule still earns
+its place across the rest of the collection. Reach for `lint/exclude` instead
+when the rule does not suit the collection at all.
+
 ## Pages
 
 A page functions as an organizational container within the instance.  Unlike

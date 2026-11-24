@@ -29,12 +29,24 @@ struct MetapackSchemaExtension {
   MetapackLeafExtension leaf;
   std::uint16_t dialect_length;
 };
+
+// The extension area of an artifact holding an OpenAPI description, which is
+// where the schema describing the document lives for a revision this instance
+// publishes one for. The identifier follows the layout, as many bytes as it
+// declares
+struct MetapackOpenAPIExtension {
+  MetapackLeafExtension leaf;
+  std::uint16_t describedby_length;
+};
 #pragma pack(pop)
 
 static_assert(sizeof(MetapackLeafExtension) == 1,
               "The tag is read where it lies, ahead of a layout that is only "
               "safe to read once it has been matched");
 static_assert(sizeof(MetapackSchemaExtension) == 3,
+              "The layout is part of the format, so moving, resizing or "
+              "adding a field means every artifact has to be written again");
+static_assert(sizeof(MetapackOpenAPIExtension) == 3,
               "The layout is part of the format, so moving, resizing or "
               "adding a field means every artifact has to be written again");
 
@@ -87,6 +99,23 @@ make_metapack_schema_extension(const std::string_view dialect)
   return result;
 }
 
+// The extension area of an artifact holding an OpenAPI description that the
+// given schema describes
+[[nodiscard]] inline auto
+make_metapack_openapi_extension(const std::string_view describedby)
+    -> std::vector<std::uint8_t> {
+  assert(describedby.size() <= std::numeric_limits<std::uint16_t>::max());
+  std::vector<std::uint8_t> result;
+  result.resize(sizeof(MetapackOpenAPIExtension) + describedby.size());
+  MetapackOpenAPIExtension layout{};
+  layout.leaf.kind = LeafKind::OpenAPI;
+  layout.describedby_length = static_cast<std::uint16_t>(describedby.size());
+  std::memcpy(result.data(), &layout, sizeof(layout));
+  std::memcpy(result.data() + sizeof(layout), describedby.data(),
+              describedby.size());
+  return result;
+}
+
 // The extension area of an artifact that records the kind of leaf it belongs
 // to and nothing else. Both kinds of leaf write some artifacts under one
 // filename, and this tag is what tells those apart
@@ -116,6 +145,25 @@ metapack_schema_dialect(const std::span<const std::uint8_t> extension)
   return {reinterpret_cast<const char *>(extension.data() +
                                          sizeof(MetapackSchemaExtension)),
           layout->dialect_length};
+}
+
+// The schema an artifact records as describing the OpenAPI description it
+// holds, or nothing at all for an extension area that names none
+[[nodiscard]] inline auto
+metapack_openapi_describedby(const std::span<const std::uint8_t> extension)
+    -> std::string_view {
+  const auto *layout{metapack_leaf_extension_as<MetapackOpenAPIExtension>(
+      extension, LeafKind::OpenAPI)};
+  if (layout == nullptr || layout->describedby_length == 0 ||
+      sizeof(MetapackOpenAPIExtension) + layout->describedby_length >
+          extension.size()) {
+    return {};
+  }
+
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+  return {reinterpret_cast<const char *>(extension.data() +
+                                         sizeof(MetapackOpenAPIExtension)),
+          layout->describedby_length};
 }
 
 } // namespace sourcemeta::one

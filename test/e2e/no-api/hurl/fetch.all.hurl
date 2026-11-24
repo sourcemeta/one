@@ -58,6 +58,78 @@ header "ETag" exists
   "type": "integer"
 }
 
+# The schema that describes an OpenAPI description is one this instance
+# serves, and an instance that serves no API serves none of its own schemas
+GET {{base}}/test/schemas/openapi.json
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/openapi+json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
+header "Link" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "Petstore",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/pets": {
+      "get": {
+        "operationId": "listPets",
+        "responses": {
+          "200": {
+            "description": "Every pet"
+          }
+        }
+      }
+    }
+  }
+}
+
+# The same holds of the bundled form, which is the other artifact a
+# description is served from
+GET {{base}}/test/schemas/openapi.json?bundle
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/openapi+json
+Access-Control-Allow-Origin: *
+Access-Control-Expose-Headers: Link, ETag
+[Asserts]
+header "Vary" == "User-Agent, Accept-Encoding"
+header "Link" not exists
+header "Referrer-Policy" not exists
+header "Content-Security-Policy" not exists
+header "X-Frame-Options" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+header "ETag" exists
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "Petstore",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/pets": {
+      "get": {
+        "operationId": "listPets",
+        "responses": {
+          "200": {
+            "description": "Every pet"
+          }
+        }
+      }
+    }
+  }
+}
+
 HEAD {{base}}/test/schemas/string.json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate

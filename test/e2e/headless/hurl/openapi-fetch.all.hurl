@@ -7,11 +7,12 @@ Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/openapi+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/common/openapi/3.0>; rel="describedby"
 [Captures]
 baseline_body: body
+schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Vary" == "User-Agent, Accept-Encoding"
-header "Link" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -56,6 +57,19 @@ body startsWith "{\n  \"openapi\": \"3.0.4\",\n  \"info\": {\n"
   }
 }
 
+# That description conforms to the schema it names as describing it
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{baseline_body}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+header "Vary" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.valid" == true
+
 # A reference an OpenAPI description writes as its own absolute identity
 # would lead nowhere once the identity is the one this instance serves it under
 GET {{base}}/test/schemas/openapi-3-1
@@ -64,9 +78,12 @@ Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/openapi+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/common/openapi/3.1>; rel="describedby"
+[Captures]
+body_3_1: body
+schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Vary" == "User-Agent, Accept-Encoding"
-header "Link" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -107,6 +124,19 @@ body startsWith "{\n  \"openapi\": \"3.1.1\",\n  \"info\": {\n"
   }
 }
 
+# That description conforms to the schema it names as describing it
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{body_3_1}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+header "Vary" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.valid" == true
+
 # The revision that reserves a field for the identity is served under the one
 # this instance gives it, written absolute and ranked where the specification
 # puts the field rather than where the document wrote it
@@ -116,9 +146,9 @@ Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/openapi+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/common/openapi/3.2>; rel="describedby"
 [Asserts]
 header "Vary" == "User-Agent, Accept-Encoding"
-header "Link" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -154,9 +184,12 @@ Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/openapi+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/common/openapi/3.2>; rel="describedby"
+[Captures]
+body_3_2: body
+schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Vary" == "User-Agent, Accept-Encoding"
-header "Link" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -355,6 +388,19 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/sche
   }
 }
 
+# That description conforms to the schema it names as describing it
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{body_3_2}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+header "Vary" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.valid" == true
+
 # An OpenAPI description built out of several documents is served as the
 # documents it is made of, each of them reaching the others under the identity
 # this instance gives them rather than the one they came with. Every position
@@ -368,9 +414,9 @@ Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/openapi+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/common/openapi/3.2>; rel="describedby"
 [Asserts]
 header "Vary" == "User-Agent, Accept-Encoding"
-header "Link" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -473,9 +519,9 @@ Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/openapi+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/common/openapi/3.2>; rel="describedby"
 [Asserts]
 header "Vary" == "User-Agent, Accept-Encoding"
-header "Link" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -593,9 +639,9 @@ Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/openapi+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/common/openapi/3.2>; rel="describedby"
 [Asserts]
 header "Vary" == "User-Agent, Accept-Encoding"
-header "Link" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -656,9 +702,9 @@ Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/openapi+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/common/openapi/3.2>; rel="describedby"
 [Asserts]
 header "Vary" == "User-Agent, Accept-Encoding"
-header "Link" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -737,9 +783,9 @@ Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/openapi+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/common/openapi/3.1>; rel="describedby"
 [Asserts]
 header "Vary" == "User-Agent, Accept-Encoding"
-header "Link" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -773,9 +819,9 @@ Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/openapi+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/common/openapi/3.1>; rel="describedby"
 [Asserts]
 header "Vary" == "User-Agent, Accept-Encoding"
-header "Link" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -820,9 +866,9 @@ Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/openapi+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/common/openapi/3.0>; rel="describedby"
 [Asserts]
 header "Vary" == "User-Agent, Accept-Encoding"
-header "Link" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -840,9 +886,9 @@ Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/openapi+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/common/openapi/3.0>; rel="describedby"
 [Asserts]
 header "Vary" == "User-Agent, Accept-Encoding"
-header "Link" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -859,9 +905,9 @@ Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/openapi+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/common/openapi/3.0>; rel="describedby"
 [Asserts]
 header "Vary" == "User-Agent, Accept-Encoding"
-header "Link" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -913,9 +959,9 @@ Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/openapi+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/common/openapi/3.0>; rel="describedby"
 [Asserts]
 header "Vary" == "User-Agent, Accept-Encoding"
-header "Link" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -936,9 +982,12 @@ Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/openapi+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/common/openapi/3.2>; rel="describedby"
+[Captures]
+bundled_body: body
+schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
 header "Vary" == "User-Agent, Accept-Encoding"
-header "Link" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
@@ -1129,6 +1178,20 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/sche
   }
 }
 
+# The bundled form conforms to the same schema, which is the one place a
+# reference the bundler rewrote could have left a document that does not
+POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
+```
+{{bundled_body}}
+```
+HTTP 200
+Cache-Control: no-store
+Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
+[Asserts]
+header "Vary" not exists
+header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
+jsonpath "$.valid" == true
+
 # And the document it reached bundles to what it already holds, as it reaches
 # nothing of its own
 GET {{base}}/test/schemas/openapi-split-shared?bundle
@@ -1137,9 +1200,9 @@ Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/openapi+json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
+Link: </self/v1/schemas/common/openapi/3.2>; rel="describedby"
 [Asserts]
 header "Vary" == "User-Agent, Accept-Encoding"
-header "Link" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists

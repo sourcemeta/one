@@ -218,8 +218,8 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 1210
 jsonpath "$.result.isError" == false
-jsonpath "$.result.structuredContent.results" count == 1
-variable "text" jsonpath "$.results" count == 1
+jsonpath "$.result.structuredContent.results" count == 3
+variable "text" jsonpath "$.results" count == 3
 variable "hit_path" == "/test/object"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}

@@ -296,126 +296,151 @@ jsonpath "$.result.resources[24].size" == 200
 jsonpath "$.result.resources[24].annotations.priority" == 0.5
 jsonpath "$.result.resources[25].uri" == "{{base}}/test/title-only/01"
 jsonpath "$.result.resources[25].name" == "Title Only 01"
+jsonpath "$.result.resources[25].description" not exists
 jsonpath "$.result.resources[25].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[25].size" == 164
 jsonpath "$.result.resources[25].annotations.priority" == 0.5
 jsonpath "$.result.resources[26].uri" == "{{base}}/test/title-only/02"
 jsonpath "$.result.resources[26].name" == "Title Only 02"
+jsonpath "$.result.resources[26].description" not exists
 jsonpath "$.result.resources[26].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[26].size" == 164
 jsonpath "$.result.resources[26].annotations.priority" == 0.5
 jsonpath "$.result.resources[27].uri" == "{{base}}/test/title-only/03"
 jsonpath "$.result.resources[27].name" == "Title Only 03"
+jsonpath "$.result.resources[27].description" not exists
 jsonpath "$.result.resources[27].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[27].size" == 164
 jsonpath "$.result.resources[27].annotations.priority" == 0.5
 jsonpath "$.result.resources[28].uri" == "{{base}}/test/title-only/04"
 jsonpath "$.result.resources[28].name" == "Title Only 04"
+jsonpath "$.result.resources[28].description" not exists
 jsonpath "$.result.resources[28].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[28].size" == 164
 jsonpath "$.result.resources[28].annotations.priority" == 0.5
 jsonpath "$.result.resources[29].uri" == "{{base}}/test/title-only/05"
 jsonpath "$.result.resources[29].name" == "Title Only 05"
+jsonpath "$.result.resources[29].description" not exists
 jsonpath "$.result.resources[29].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[29].size" == 164
 jsonpath "$.result.resources[29].annotations.priority" == 0.5
 jsonpath "$.result.resources[30].uri" == "{{base}}/test/draft3/with-ref"
 jsonpath "$.result.resources[30].name" == "/test/draft3/with-ref"
+jsonpath "$.result.resources[30].description" not exists
 jsonpath "$.result.resources[30].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[30].size" == 306
 jsonpath "$.result.resources[30].annotations.priority" == 0.5
 jsonpath "$.result.resources[31].uri" == "{{base}}/no-blaze/jsonld"
 jsonpath "$.result.resources[31].name" == "/no-blaze/jsonld"
+jsonpath "$.result.resources[31].description" not exists
 jsonpath "$.result.resources[31].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[31].size" == 180
 jsonpath "$.result.resources[31].annotations.priority" == 0.5
 jsonpath "$.result.resources[32].uri" == "{{base}}/no-blaze/string"
 jsonpath "$.result.resources[32].name" == "/no-blaze/string"
+jsonpath "$.result.resources[32].description" not exists
 jsonpath "$.result.resources[32].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[32].size" == 133
 jsonpath "$.result.resources[32].annotations.priority" == 0.5
 jsonpath "$.result.resources[33].uri" == "{{base}}/test/bare/01"
 jsonpath "$.result.resources[33].name" == "/test/bare/01"
+jsonpath "$.result.resources[33].description" not exists
 jsonpath "$.result.resources[33].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[33].size" == 130
 jsonpath "$.result.resources[33].annotations.priority" == 0.5
 jsonpath "$.result.resources[34].uri" == "{{base}}/test/bare/02"
 jsonpath "$.result.resources[34].name" == "/test/bare/02"
+jsonpath "$.result.resources[34].description" not exists
 jsonpath "$.result.resources[34].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[34].size" == 130
 jsonpath "$.result.resources[34].annotations.priority" == 0.5
 jsonpath "$.result.resources[35].uri" == "{{base}}/test/bare/03"
 jsonpath "$.result.resources[35].name" == "/test/bare/03"
+jsonpath "$.result.resources[35].description" not exists
 jsonpath "$.result.resources[35].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[35].size" == 130
 jsonpath "$.result.resources[35].annotations.priority" == 0.5
 jsonpath "$.result.resources[36].uri" == "{{base}}/test/bare/04"
 jsonpath "$.result.resources[36].name" == "/test/bare/04"
+jsonpath "$.result.resources[36].description" not exists
 jsonpath "$.result.resources[36].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[36].size" == 130
 jsonpath "$.result.resources[36].annotations.priority" == 0.5
 jsonpath "$.result.resources[37].uri" == "{{base}}/test/bare/05"
 jsonpath "$.result.resources[37].name" == "/test/bare/05"
+jsonpath "$.result.resources[37].description" not exists
 jsonpath "$.result.resources[37].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[37].size" == 130
 jsonpath "$.result.resources[37].annotations.priority" == 0.5
 jsonpath "$.result.resources[38].uri" == "{{base}}/test/bare/06"
 jsonpath "$.result.resources[38].name" == "/test/bare/06"
+jsonpath "$.result.resources[38].description" not exists
 jsonpath "$.result.resources[38].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[38].size" == 130
 jsonpath "$.result.resources[38].annotations.priority" == 0.5
 jsonpath "$.result.resources[39].uri" == "{{base}}/test/bare/07"
 jsonpath "$.result.resources[39].name" == "/test/bare/07"
+jsonpath "$.result.resources[39].description" not exists
 jsonpath "$.result.resources[39].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[39].size" == 130
 jsonpath "$.result.resources[39].annotations.priority" == 0.5
 jsonpath "$.result.resources[40].uri" == "{{base}}/test/bare/08"
 jsonpath "$.result.resources[40].name" == "/test/bare/08"
+jsonpath "$.result.resources[40].description" not exists
 jsonpath "$.result.resources[40].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[40].size" == 130
 jsonpath "$.result.resources[40].annotations.priority" == 0.5
 jsonpath "$.result.resources[41].uri" == "{{base}}/test/bare/09"
 jsonpath "$.result.resources[41].name" == "/test/bare/09"
+jsonpath "$.result.resources[41].description" not exists
 jsonpath "$.result.resources[41].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[41].size" == 130
 jsonpath "$.result.resources[41].annotations.priority" == 0.5
 jsonpath "$.result.resources[42].uri" == "{{base}}/test/bare/10"
 jsonpath "$.result.resources[42].name" == "/test/bare/10"
+jsonpath "$.result.resources[42].description" not exists
 jsonpath "$.result.resources[42].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[42].size" == 130
 jsonpath "$.result.resources[42].annotations.priority" == 0.5
 jsonpath "$.result.resources[43].uri" == "{{base}}/test/bare/11"
 jsonpath "$.result.resources[43].name" == "/test/bare/11"
+jsonpath "$.result.resources[43].description" not exists
 jsonpath "$.result.resources[43].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[43].size" == 130
 jsonpath "$.result.resources[43].annotations.priority" == 0.5
 jsonpath "$.result.resources[44].uri" == "{{base}}/test/bare/12"
 jsonpath "$.result.resources[44].name" == "/test/bare/12"
+jsonpath "$.result.resources[44].description" not exists
 jsonpath "$.result.resources[44].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[44].size" == 130
 jsonpath "$.result.resources[44].annotations.priority" == 0.5
 jsonpath "$.result.resources[45].uri" == "{{base}}/test/bare/13"
 jsonpath "$.result.resources[45].name" == "/test/bare/13"
+jsonpath "$.result.resources[45].description" not exists
 jsonpath "$.result.resources[45].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[45].size" == 130
 jsonpath "$.result.resources[45].annotations.priority" == 0.5
 jsonpath "$.result.resources[46].uri" == "{{base}}/test/bare/14"
 jsonpath "$.result.resources[46].name" == "/test/bare/14"
+jsonpath "$.result.resources[46].description" not exists
 jsonpath "$.result.resources[46].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[46].size" == 130
 jsonpath "$.result.resources[46].annotations.priority" == 0.5
 jsonpath "$.result.resources[47].uri" == "{{base}}/test/bare/15"
 jsonpath "$.result.resources[47].name" == "/test/bare/15"
+jsonpath "$.result.resources[47].description" not exists
 jsonpath "$.result.resources[47].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[47].size" == 130
 jsonpath "$.result.resources[47].annotations.priority" == 0.5
 jsonpath "$.result.resources[48].uri" == "{{base}}/test/bare/16"
 jsonpath "$.result.resources[48].name" == "/test/bare/16"
+jsonpath "$.result.resources[48].description" not exists
 jsonpath "$.result.resources[48].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[48].size" == 130
 jsonpath "$.result.resources[48].annotations.priority" == 0.5
 jsonpath "$.result.resources[49].uri" == "{{base}}/test/bare/17"
 jsonpath "$.result.resources[49].name" == "/test/bare/17"
+jsonpath "$.result.resources[49].description" not exists
 jsonpath "$.result.resources[49].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[49].size" == 130
 jsonpath "$.result.resources[49].annotations.priority" == 0.5
@@ -821,7 +846,7 @@ jsonpath "$..mimeType" not exists
 variable "text" jsonpath "$.path" == "/"
 variable "text" jsonpath "$.url" == "{{base}}"
 variable "text" jsonpath "$.breadcrumb" count == 0
-variable "text" jsonpath "$.schemas" == 161
+variable "text" jsonpath "$.schemas" == 164
 variable "text" jsonpath "$.openapi" == 3
 variable "text" jsonpath "$.health" == 63
 variable "text" jsonpath "$.entries" count == 5
@@ -848,7 +873,7 @@ variable "text" jsonpath "$.entries[2].title" == "Self"
 variable "text" jsonpath "$.entries[2].description" == "The schemas that define the current version of this instance"
 variable "text" jsonpath "$.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].health" == 100
-variable "text" jsonpath "$.entries[2].schemas" == 77
+variable "text" jsonpath "$.entries[2].schemas" == 80
 variable "text" jsonpath "$.entries[2].openapi" == 0
 variable "text" jsonpath "$.entries[2].path" == "/self/"
 variable "text" jsonpath "$.entries[3].name" == "test"
