@@ -674,7 +674,7 @@ jsonpath "$.result.tools[12].annotations.openWorldHint" == false
 jsonpath "$.result.tools[13].name" == "get_openapi_metadata"
 jsonpath "$.result.tools[13].description" == "Return navigation metadata for an OpenAPI description in the catalog, including title, description, revision, API version, byte size, operation count, dependency count, and breadcrumb path"
 jsonpath "$.result.tools[13].inputSchema.type" == "object"
-jsonpath "$.result.tools[13].inputSchema['$ref']" == "http://localhost:8000/self/v1/schemas/mcp/tools/call/get-openapi-metadata/request"
+jsonpath "$.result.tools[13].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-openapi-metadata/request"
 jsonpath "$.result.tools[13].inputSchema['$comment']" == "The full input schema for this tool is published at the `$ref` URL above. A client that does not resolve it can call `resources/read` on that URL to fetch it, since this server is a JSON Schema registry and every `$ref` URL is itself reachable as an MCP resource"
 jsonpath "$.result.tools[13].annotations.title" == "Get OpenAPI Metadata"
 jsonpath "$.result.tools[13].annotations.readOnlyHint" == true
@@ -701,8 +701,6 @@ jsonpath "$.result.tools[10].title" not exists
 jsonpath "$.result.tools[11].title" not exists
 jsonpath "$.result.tools[12].title" not exists
 jsonpath "$.result.tools[13].title" not exists
-jsonpath "$.result.tools[14].title" not exists
-jsonpath "$.result.tools[15].title" not exists
 # Added in 2025-11-25 (SEP-973)
 # https://github.com/modelcontextprotocol/modelcontextprotocol/issues/973
 jsonpath "$..icons" not exists

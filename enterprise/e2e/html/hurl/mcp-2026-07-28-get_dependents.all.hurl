@@ -472,7 +472,7 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/uri/format"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "http://localhost:8000/self/v1/schemas/mcp/tools/call/get-dependents/request#/properties/uri/format"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependents/request#/properties/uri/format"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/uri"
 jsonpath "$.error.data.errors[0].error" == "The string value \"self/v1/schemas/mcp/error\" was expected to represent a valid URI"
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
@@ -1180,7 +1180,7 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/uri/pattern"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "http://localhost:8000/self/v1/schemas/mcp/tools/call/get-dependents/request#/properties/uri/pattern"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependents/request#/properties/uri/pattern"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/uri"
 jsonpath "$.error.data.errors[0].error" == "The string value \"{{base}}/test/object#meta\" was expected to match the regular expression \"^[^#?]*$\""
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
@@ -1329,7 +1329,7 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/uri/format"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "http://localhost:8000/self/v1/schemas/mcp/tools/call/get-dependents/request#/properties/uri/format"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependents/request#/properties/uri/format"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/uri"
 jsonpath "$.error.data.errors[0].error" == "The string value \"\" was expected to represent a valid URI"
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
@@ -1407,7 +1407,7 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/uri/type"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "http://localhost:8000/self/v1/schemas/mcp/tools/call/get-dependents/request#/properties/uri/type"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependents/request#/properties/uri/type"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/uri"
 jsonpath "$.error.data.errors[0].error" == "The value was expected to be of type string but it was of type integer"
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
@@ -2201,7 +2201,7 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/uri/pattern"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "http://localhost:8000/self/v1/schemas/mcp/tools/call/get-dependents/request#/properties/uri/pattern"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependents/request#/properties/uri/pattern"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/uri"
 jsonpath "$.error.data.errors[0].error" == "The string value \"{{base}}/test/object?foo=bar\" was expected to match the regular expression \"^[^#?]*$\""
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"

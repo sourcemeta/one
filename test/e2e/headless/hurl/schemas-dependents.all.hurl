@@ -229,8 +229,8 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 # A schema that only an OpenAPI description reaches has that description for
-# its dependent, and such an entry carries no dialect, as a description
-# declares none of its own
+# its dependent, and the base dialect such an entry carries is the one its
+# Schema Objects default to, as a description declares none of its own
 GET {{base}}/self/v1/api/dependents/test/schemas/repeated-refs
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate

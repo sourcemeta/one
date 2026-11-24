@@ -71,23 +71,36 @@ inline auto edge_end(const std::string_view uri,
     return cached->second;
   }
 
-  const auto kind{resolver.kind_of(uri)};
+  // A reference may spell a resource with the file extension its catalog
+  // identity leaves out, so the spelling this instance knows it by is tried
+  // after the one the reference used, and everything below asks about that one
+  sourcemeta::core::JSON::String known{uri};
+  auto kind{resolver.kind_of(known)};
+  if (!kind.has_value()) {
+    sourcemeta::core::JSON::String alternative{
+        edge_identifier(uri).to_string()};
+    kind = resolver.kind_of(alternative);
+    if (kind.has_value()) {
+      known = std::move(alternative);
+    }
+  }
+
   const auto describes_api{kind == sourcemeta::one::LeafKind::OpenAPI};
   std::string base_dialect;
   if (describes_api) {
-    const auto document{resolver.openapi(uri, callback)};
+    const auto document{resolver.openapi(known, callback)};
     assert(document.has_value());
     const sourcemeta::core::OpenAPIFrame frame{
         document.value(), sourcemeta::core::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
-        uri};
+        known};
     const auto *const root{frame.traverse(frame.base())};
     assert(root != nullptr);
     base_dialect = base_dialect_of(root->default_dialect, resolver, callback);
   } else {
-    const auto schema{resolver(uri, callback)};
+    const auto schema{resolver(known, callback)};
     assert(schema.has_value());
     const sourcemeta::core::SchemaFrame frame{
         sourcemeta::core::SchemaFrame::Mode::Root,
@@ -96,8 +109,8 @@ inline auto edge_end(const std::string_view uri,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
-        resolver.dialect_of(uri),
-        uri};
+        resolver.dialect_of(known),
+        known};
     base_dialect =
         std::format("{}", frame.root_location().value().get().base_dialect);
   }
