@@ -162,17 +162,16 @@ resource this report is of ends in such a position, so that resource is listed
 among its own dependencies. A reference whose destination is the document
 spelling it is left out, as it reaches nothing beyond that document.
 
-A schema reaching an OpenAPI description is refused, so the dependencies of a
-schema are schemas alone, while those of a description are the other documents
-of it and the schemas of this catalog its Schema Objects name.
-
 !!! note "A base dialect is a default for an OpenAPI description"
 
-    An OpenAPI description declares no dialect of its own, so the one its
-    Schema Objects default to is the only way to its base. Revision 3.0 fixes
-    that dialect, which makes the base reported for such a description the
-    whole truth. Revisions 3.1 and later let a Schema Object override it, and
-    the base reported is then the one in force wherever no Schema Object says
+    A description is no schema itself, so the base reported for one is the
+    base of the dialect its Schema Objects answer to by default. Revision 3.0
+    fixes that dialect and gives a description no way to name another, which
+    makes the base reported the whole truth for one. Revisions 3.1 and later
+    let the document set it with `jsonSchemaDialect` and let any Schema Object
+    override that with
+    [`$schema`](https://www.learnjsonschema.com/2020-12/core/schema/), so the
+    base reported is the one in force wherever no Schema Object says
     otherwise.
 
 === "200"
@@ -189,15 +188,8 @@ of it and the schemas of this catalog its Schema Objects name.
     | `/*/to/type` | `schema` / `openapi` | Yes | What this instance serves at that URL, or `schema` for a resource it resolves without serving |
     | `/*/to/baseDialect` | String | Yes | The absolute URI of the base dialect of that resource. For an OpenAPI description, the base of the dialect its Schema Objects default to |
 
-    Each end names the resource it is rather than the reference that reached
-    it, so `to` carries no `location`: this report says where a reference sits
-    within the document that spells it, and not where in its destination it
-    lands.
-
     An end may name a resource this instance resolves without serving, as an
-    official JSON Schema dialect is. A reference reaches an OpenAPI
-    description only through the catalog, so such an end is always a schema
-    and is reported as one.
+    official JSON Schema dialect is. Such an end is reported as a `schema`.
 
 === "400"
 
@@ -221,11 +213,6 @@ GET /self/v1/api/dependents/{path}
 Every entry carries the same shape as a [dependency](#dependencies) entry, read
 the other way around: `from` is the resource that reaches this one, and `to` is
 the resource of this catalog that it reaches.
-
-An OpenAPI description reaches a schema of this catalog by embedding it, so a
-schema may be reported as the dependent of a description as well as of another
-schema. Only another description reaches a description, so the dependents of
-one name descriptions alone.
 
 === "200"
 

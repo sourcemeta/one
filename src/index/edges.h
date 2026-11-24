@@ -30,8 +30,7 @@ inline auto edge_identifier(const std::string_view uri)
 }
 
 // What a dialect rests on, which is what the document declaring that dialect
-// says of itself. An OpenAPI description declares no dialect of its own, so
-// the dialect its Schema Objects default to is the only way to its base
+// says of itself
 inline auto
 base_dialect_of(const sourcemeta::core::JSON::String &dialect,
                 sourcemeta::one::Resolver &resolver,
@@ -59,8 +58,8 @@ using EdgeEndCache =
 // Everything an edge says about the resource at one of its ends. A reference
 // reaches an OpenAPI description only through the catalog, so an end this
 // instance serves nothing at is a schema it resolved from elsewhere. An
-// OpenAPI description names no dialect of its own, so the one its Schema
-// Objects default to is the only way to its base
+// OpenAPI description is no schema itself, so the base reported for one is
+// the base of the dialect its Schema Objects answer to by default
 inline auto edge_end(const std::string_view uri,
                      sourcemeta::one::Resolver &resolver,
                      const sourcemeta::one::BuildDynamicCallback &callback,

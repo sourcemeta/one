@@ -507,7 +507,7 @@ jsonpath "$.result.resources[15].size" == 130
 jsonpath "$.result.resources[15].annotations.priority" == 0.5
 jsonpath "$.result.resources[16].uri" == "{{base}}/test/bare/34"
 jsonpath "$.result.resources[16].name" == "/test/bare/34"
-jsonpath "$.result.resources[11].description" not exists
+jsonpath "$.result.resources[16].description" not exists
 jsonpath "$.result.resources[16].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[16].size" == 130
 jsonpath "$.result.resources[16].annotations.priority" == 0.5
@@ -1584,7 +1584,7 @@ jsonpath "$.result.resources[15].size" == 130
 jsonpath "$.result.resources[15].annotations.priority" == 0.5
 jsonpath "$.result.resources[16].uri" == "{{base}}/test/bare/34"
 jsonpath "$.result.resources[16].name" == "/test/bare/34"
-jsonpath "$.result.resources[11].description" not exists
+jsonpath "$.result.resources[16].description" not exists
 jsonpath "$.result.resources[16].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[16].size" == 130
 jsonpath "$.result.resources[16].annotations.priority" == 0.5
