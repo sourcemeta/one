@@ -20,14 +20,14 @@ Content-Type: application/json
 HTTP 200
 Cache-Control: no-store
 [Captures]
-output_schema_path: jsonpath "$.result.tools[?@.name=='get_schema_dependents'].outputSchema['$ref']" regex "https?://[^/]+(.+)"
+output_schema_path: jsonpath "$.result.tools[?@.name=='get_dependents'].outputSchema['$ref']" regex "https?://[^/]+(.+)"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.result.tools[?@.name=='get_schema_dependents'].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependents/response"
+jsonpath "$.result.tools[?@.name=='get_dependents'].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependents/response"
 
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
@@ -39,8 +39,8 @@ Content-Type: application/json
   "id": 300,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependents",
-    "arguments": { "schema": "{{base}}/test/bare/01" }
+    "name": "get_dependents",
+    "arguments": { "uri": "{{base}}/test/bare/01" }
   }
 }
 ```
@@ -75,18 +75,22 @@ jsonpath "$.result.content[2].uri" == "{{base}}/test/openapi-split-entry"
 jsonpath "$.result.content[2].mimeType" == "application/openapi+json"
 jsonpath "$.result.structuredContent.results" exists
 jsonpath "$.result.structuredContent.results" count == 1
-jsonpath "$.result.structuredContent.results[0].from" == "{{base}}/test/openapi-split-entry"
-jsonpath "$.result.structuredContent.results[0].to" == "{{base}}/test/bare/01"
-jsonpath "$.result.structuredContent.results[0].at" == "/components/schemas/Any/discriminator/mapping/nested"
-jsonpath "$.result.structuredContent.results[0].kind" == "openapi"
-jsonpath "$.result.structuredContent.results[0].baseDialect" not exists
+jsonpath "$.result.structuredContent.results[0].from.identifier" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.results[0].from.type" == "openapi"
+jsonpath "$.result.structuredContent.results[0].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[0].from.location" == "/components/schemas/Any/discriminator/mapping/nested"
+jsonpath "$.result.structuredContent.results[0].to.identifier" == "{{base}}/test/bare/01"
+jsonpath "$.result.structuredContent.results[0].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[0].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.results" exists
 variable "text" jsonpath "$.results" count == 1
-variable "text" jsonpath "$.results[0].from" == "{{base}}/test/openapi-split-entry"
-variable "text" jsonpath "$.results[0].to" == "{{base}}/test/bare/01"
-variable "text" jsonpath "$.results[0].at" == "/components/schemas/Any/discriminator/mapping/nested"
-variable "text" jsonpath "$.results[0].kind" == "openapi"
-variable "text" jsonpath "$.results[0].baseDialect" not exists
+variable "text" jsonpath "$.results[0].from.identifier" == "{{base}}/test/openapi-split-entry"
+variable "text" jsonpath "$.results[0].from.type" == "openapi"
+variable "text" jsonpath "$.results[0].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[0].from.location" == "/components/schemas/Any/discriminator/mapping/nested"
+variable "text" jsonpath "$.results[0].to.identifier" == "{{base}}/test/bare/01"
+variable "text" jsonpath "$.results[0].to.type" == "schema"
+variable "text" jsonpath "$.results[0].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -126,8 +130,8 @@ Content-Type: application/json
   "id": 301,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependents",
-    "arguments": { "schema": "{{base}}/test/object" }
+    "name": "get_dependents",
+    "arguments": { "uri": "{{base}}/test/object" }
   }
 }
 ```
@@ -162,38 +166,50 @@ jsonpath "$.result.content[2].uri" == "{{base}}/test/openapi-split-entry"
 jsonpath "$.result.content[2].mimeType" == "application/openapi+json"
 jsonpath "$.result.structuredContent.results" exists
 jsonpath "$.result.structuredContent.results" count == 3
-jsonpath "$.result.structuredContent.results[0].from" == "{{base}}/test/openapi-split-entry"
-jsonpath "$.result.structuredContent.results[0].to" == "{{base}}/test/object"
-jsonpath "$.result.structuredContent.results[0].at" == "/components/schemas/Any/discriminator/mapping/sibling"
-jsonpath "$.result.structuredContent.results[0].kind" == "openapi"
-jsonpath "$.result.structuredContent.results[0].baseDialect" not exists
-jsonpath "$.result.structuredContent.results[1].from" == "{{base}}/test/openapi-split-entry"
-jsonpath "$.result.structuredContent.results[1].to" == "{{base}}/test/object"
-jsonpath "$.result.structuredContent.results[1].at" == "/components/schemas/Any/oneOf/0/$ref"
-jsonpath "$.result.structuredContent.results[1].kind" == "openapi"
-jsonpath "$.result.structuredContent.results[1].baseDialect" not exists
-jsonpath "$.result.structuredContent.results[2].from" == "{{base}}/test/openapi-split-entry"
-jsonpath "$.result.structuredContent.results[2].to" == "{{base}}/test/object"
-jsonpath "$.result.structuredContent.results[2].at" == "/components/schemas/Dog/properties/name/$ref"
-jsonpath "$.result.structuredContent.results[2].kind" == "openapi"
-jsonpath "$.result.structuredContent.results[2].baseDialect" not exists
+jsonpath "$.result.structuredContent.results[0].from.identifier" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.results[0].from.type" == "openapi"
+jsonpath "$.result.structuredContent.results[0].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[0].from.location" == "/components/schemas/Any/discriminator/mapping/sibling"
+jsonpath "$.result.structuredContent.results[0].to.identifier" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.results[0].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[0].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[1].from.identifier" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.results[1].from.type" == "openapi"
+jsonpath "$.result.structuredContent.results[1].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[1].from.location" == "/components/schemas/Any/oneOf/0/$ref"
+jsonpath "$.result.structuredContent.results[1].to.identifier" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.results[1].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[1].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[2].from.identifier" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.results[2].from.type" == "openapi"
+jsonpath "$.result.structuredContent.results[2].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[2].from.location" == "/components/schemas/Dog/properties/name/$ref"
+jsonpath "$.result.structuredContent.results[2].to.identifier" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.results[2].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[2].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.results" exists
 variable "text" jsonpath "$.results" count == 3
-variable "text" jsonpath "$.results[0].from" == "{{base}}/test/openapi-split-entry"
-variable "text" jsonpath "$.results[0].to" == "{{base}}/test/object"
-variable "text" jsonpath "$.results[0].at" == "/components/schemas/Any/discriminator/mapping/sibling"
-variable "text" jsonpath "$.results[0].kind" == "openapi"
-variable "text" jsonpath "$.results[0].baseDialect" not exists
-variable "text" jsonpath "$.results[1].from" == "{{base}}/test/openapi-split-entry"
-variable "text" jsonpath "$.results[1].to" == "{{base}}/test/object"
-variable "text" jsonpath "$.results[1].at" == "/components/schemas/Any/oneOf/0/$ref"
-variable "text" jsonpath "$.results[1].kind" == "openapi"
-variable "text" jsonpath "$.results[1].baseDialect" not exists
-variable "text" jsonpath "$.results[2].from" == "{{base}}/test/openapi-split-entry"
-variable "text" jsonpath "$.results[2].to" == "{{base}}/test/object"
-variable "text" jsonpath "$.results[2].at" == "/components/schemas/Dog/properties/name/$ref"
-variable "text" jsonpath "$.results[2].kind" == "openapi"
-variable "text" jsonpath "$.results[2].baseDialect" not exists
+variable "text" jsonpath "$.results[0].from.identifier" == "{{base}}/test/openapi-split-entry"
+variable "text" jsonpath "$.results[0].from.type" == "openapi"
+variable "text" jsonpath "$.results[0].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[0].from.location" == "/components/schemas/Any/discriminator/mapping/sibling"
+variable "text" jsonpath "$.results[0].to.identifier" == "{{base}}/test/object"
+variable "text" jsonpath "$.results[0].to.type" == "schema"
+variable "text" jsonpath "$.results[0].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[1].from.identifier" == "{{base}}/test/openapi-split-entry"
+variable "text" jsonpath "$.results[1].from.type" == "openapi"
+variable "text" jsonpath "$.results[1].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[1].from.location" == "/components/schemas/Any/oneOf/0/$ref"
+variable "text" jsonpath "$.results[1].to.identifier" == "{{base}}/test/object"
+variable "text" jsonpath "$.results[1].to.type" == "schema"
+variable "text" jsonpath "$.results[1].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[2].from.identifier" == "{{base}}/test/openapi-split-entry"
+variable "text" jsonpath "$.results[2].from.type" == "openapi"
+variable "text" jsonpath "$.results[2].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[2].from.location" == "/components/schemas/Dog/properties/name/$ref"
+variable "text" jsonpath "$.results[2].to.identifier" == "{{base}}/test/object"
+variable "text" jsonpath "$.results[2].to.type" == "schema"
+variable "text" jsonpath "$.results[2].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -233,8 +249,8 @@ Content-Type: application/json
   "id": 302,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependents",
-    "arguments": { "schema": "{{base}}/self/v1/schemas/mcp/error" }
+    "name": "get_dependents",
+    "arguments": { "uri": "{{base}}/self/v1/schemas/mcp/error" }
   }
 }
 ```
@@ -268,15 +284,21 @@ jsonpath "$.result.content[2].type" == "resource_link"
 jsonpath "$.result.content[2].uri" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.content[2].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 1
-jsonpath "$.result.structuredContent.results[0].from" == "{{base}}/self/v1/schemas/mcp/response"
-jsonpath "$.result.structuredContent.results[0].to" == "{{base}}/self/v1/schemas/mcp/error"
-jsonpath "$.result.structuredContent.results[0].at" == "/$defs/single/anyOf/2/$ref"
-jsonpath "$.result.structuredContent.results[0].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[0].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[0].from.type" == "schema"
+jsonpath "$.result.structuredContent.results[0].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[0].from.location" == "/$defs/single/anyOf/2/$ref"
+jsonpath "$.result.structuredContent.results[0].to.identifier" == "{{base}}/self/v1/schemas/mcp/error"
+jsonpath "$.result.structuredContent.results[0].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[0].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.results" count == 1
-variable "text" jsonpath "$.results[0].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$.results[0].to" == "{{base}}/self/v1/schemas/mcp/error"
-variable "text" jsonpath "$.results[0].at" == "/$defs/single/anyOf/2/$ref"
-variable "text" jsonpath "$.results[0].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[0].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[0].from.type" == "schema"
+variable "text" jsonpath "$.results[0].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[0].from.location" == "/$defs/single/anyOf/2/$ref"
+variable "text" jsonpath "$.results[0].to.identifier" == "{{base}}/self/v1/schemas/mcp/error"
+variable "text" jsonpath "$.results[0].to.type" == "schema"
+variable "text" jsonpath "$.results[0].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -316,8 +338,8 @@ Content-Type: application/json
   "id": 303,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependents",
-    "arguments": { "schema": "self/v1/schemas/mcp/error" }
+    "name": "get_dependents",
+    "arguments": { "uri": "self/v1/schemas/mcp/error" }
   }
 }
 ```
@@ -343,12 +365,12 @@ jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
-jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/schema/format"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependents/request#/properties/schema/format"
-jsonpath "$.error.data.errors[0].instanceLocation" == "/schema"
+jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/uri/format"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependents/request#/properties/uri/format"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/uri"
 jsonpath "$.error.data.errors[0].error" == "The string value \"self/v1/schemas/mcp/error\" was expected to represent a valid URI"
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependents/request#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependents/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the defined properties subschemas"
 jsonpath "$.result" not exists
@@ -377,8 +399,8 @@ Content-Type: application/json
   "id": 304,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependents",
-    "arguments": { "schema": "{{base}}/self/v1/schemas/mcp/error" }
+    "name": "get_dependents",
+    "arguments": { "uri": "{{base}}/self/v1/schemas/mcp/error" }
   }
 }
 ```
@@ -413,15 +435,21 @@ jsonpath "$.result.content[2].type" == "resource_link"
 jsonpath "$.result.content[2].uri" == "{{base}}/self/v1/schemas/mcp/response"
 jsonpath "$.result.content[2].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 1
-jsonpath "$.result.structuredContent.results[0].from" == "{{base}}/self/v1/schemas/mcp/response"
-jsonpath "$.result.structuredContent.results[0].to" == "{{base}}/self/v1/schemas/mcp/error"
-jsonpath "$.result.structuredContent.results[0].at" == "/$defs/single/anyOf/2/$ref"
-jsonpath "$.result.structuredContent.results[0].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[0].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[0].from.type" == "schema"
+jsonpath "$.result.structuredContent.results[0].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[0].from.location" == "/$defs/single/anyOf/2/$ref"
+jsonpath "$.result.structuredContent.results[0].to.identifier" == "{{base}}/self/v1/schemas/mcp/error"
+jsonpath "$.result.structuredContent.results[0].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[0].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.results" count == 1
-variable "text" jsonpath "$.results[0].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$.results[0].to" == "{{base}}/self/v1/schemas/mcp/error"
-variable "text" jsonpath "$.results[0].at" == "/$defs/single/anyOf/2/$ref"
-variable "text" jsonpath "$.results[0].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[0].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[0].from.type" == "schema"
+variable "text" jsonpath "$.results[0].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[0].from.location" == "/$defs/single/anyOf/2/$ref"
+variable "text" jsonpath "$.results[0].to.identifier" == "{{base}}/self/v1/schemas/mcp/error"
+variable "text" jsonpath "$.results[0].to.type" == "schema"
+variable "text" jsonpath "$.results[0].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -524,8 +552,8 @@ Content-Type: application/json
   "id": 310,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependents",
-    "arguments": { "schema": "{{base}}/test/does-not-exist" }
+    "name": "get_dependents",
+    "arguments": { "uri": "{{base}}/test/does-not-exist" }
   }
 }
 ```
@@ -549,7 +577,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 310
 jsonpath "$.result.isError" == true
 jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.content[0].text" == "Schema not found"
+jsonpath "$.result.content[0].text" == "There is nothing at this URL"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -575,8 +603,8 @@ Content-Type: application/json
   "id": 311,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependents",
-    "arguments": { "schema": "{{base}}/test" }
+    "name": "get_dependents",
+    "arguments": { "uri": "{{base}}/test" }
   }
 }
 ```
@@ -600,7 +628,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 311
 jsonpath "$.result.isError" == true
 jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.content[0].text" == "Schema not found"
+jsonpath "$.result.content[0].text" == "There is nothing at this URL"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -626,8 +654,8 @@ Content-Type: application/json
   "id": 312,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependents",
-    "arguments": { "schema": "https://example.com/test/object" }
+    "name": "get_dependents",
+    "arguments": { "uri": "https://example.com/test/object" }
   }
 }
 ```
@@ -650,7 +678,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 312
 jsonpath "$.result.isError" == true
-jsonpath "$.result.content[0].text" == "Schema not found"
+jsonpath "$.result.content[0].text" == "There is nothing at this URL"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -676,8 +704,8 @@ Content-Type: application/json
   "id": 313,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependents",
-    "arguments": { "schema": "{{base}}/test/foo/../object" }
+    "name": "get_dependents",
+    "arguments": { "uri": "{{base}}/test/foo/../object" }
   }
 }
 ```
@@ -712,38 +740,50 @@ jsonpath "$.result.content[2].uri" == "{{base}}/test/openapi-split-entry"
 jsonpath "$.result.content[2].mimeType" == "application/openapi+json"
 jsonpath "$.result.structuredContent.results" exists
 jsonpath "$.result.structuredContent.results" count == 3
-jsonpath "$.result.structuredContent.results[0].from" == "{{base}}/test/openapi-split-entry"
-jsonpath "$.result.structuredContent.results[0].to" == "{{base}}/test/object"
-jsonpath "$.result.structuredContent.results[0].at" == "/components/schemas/Any/discriminator/mapping/sibling"
-jsonpath "$.result.structuredContent.results[0].kind" == "openapi"
-jsonpath "$.result.structuredContent.results[0].baseDialect" not exists
-jsonpath "$.result.structuredContent.results[1].from" == "{{base}}/test/openapi-split-entry"
-jsonpath "$.result.structuredContent.results[1].to" == "{{base}}/test/object"
-jsonpath "$.result.structuredContent.results[1].at" == "/components/schemas/Any/oneOf/0/$ref"
-jsonpath "$.result.structuredContent.results[1].kind" == "openapi"
-jsonpath "$.result.structuredContent.results[1].baseDialect" not exists
-jsonpath "$.result.structuredContent.results[2].from" == "{{base}}/test/openapi-split-entry"
-jsonpath "$.result.structuredContent.results[2].to" == "{{base}}/test/object"
-jsonpath "$.result.structuredContent.results[2].at" == "/components/schemas/Dog/properties/name/$ref"
-jsonpath "$.result.structuredContent.results[2].kind" == "openapi"
-jsonpath "$.result.structuredContent.results[2].baseDialect" not exists
+jsonpath "$.result.structuredContent.results[0].from.identifier" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.results[0].from.type" == "openapi"
+jsonpath "$.result.structuredContent.results[0].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[0].from.location" == "/components/schemas/Any/discriminator/mapping/sibling"
+jsonpath "$.result.structuredContent.results[0].to.identifier" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.results[0].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[0].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[1].from.identifier" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.results[1].from.type" == "openapi"
+jsonpath "$.result.structuredContent.results[1].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[1].from.location" == "/components/schemas/Any/oneOf/0/$ref"
+jsonpath "$.result.structuredContent.results[1].to.identifier" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.results[1].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[1].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[2].from.identifier" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.results[2].from.type" == "openapi"
+jsonpath "$.result.structuredContent.results[2].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[2].from.location" == "/components/schemas/Dog/properties/name/$ref"
+jsonpath "$.result.structuredContent.results[2].to.identifier" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.results[2].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[2].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.results" exists
 variable "text" jsonpath "$.results" count == 3
-variable "text" jsonpath "$.results[0].from" == "{{base}}/test/openapi-split-entry"
-variable "text" jsonpath "$.results[0].to" == "{{base}}/test/object"
-variable "text" jsonpath "$.results[0].at" == "/components/schemas/Any/discriminator/mapping/sibling"
-variable "text" jsonpath "$.results[0].kind" == "openapi"
-variable "text" jsonpath "$.results[0].baseDialect" not exists
-variable "text" jsonpath "$.results[1].from" == "{{base}}/test/openapi-split-entry"
-variable "text" jsonpath "$.results[1].to" == "{{base}}/test/object"
-variable "text" jsonpath "$.results[1].at" == "/components/schemas/Any/oneOf/0/$ref"
-variable "text" jsonpath "$.results[1].kind" == "openapi"
-variable "text" jsonpath "$.results[1].baseDialect" not exists
-variable "text" jsonpath "$.results[2].from" == "{{base}}/test/openapi-split-entry"
-variable "text" jsonpath "$.results[2].to" == "{{base}}/test/object"
-variable "text" jsonpath "$.results[2].at" == "/components/schemas/Dog/properties/name/$ref"
-variable "text" jsonpath "$.results[2].kind" == "openapi"
-variable "text" jsonpath "$.results[2].baseDialect" not exists
+variable "text" jsonpath "$.results[0].from.identifier" == "{{base}}/test/openapi-split-entry"
+variable "text" jsonpath "$.results[0].from.type" == "openapi"
+variable "text" jsonpath "$.results[0].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[0].from.location" == "/components/schemas/Any/discriminator/mapping/sibling"
+variable "text" jsonpath "$.results[0].to.identifier" == "{{base}}/test/object"
+variable "text" jsonpath "$.results[0].to.type" == "schema"
+variable "text" jsonpath "$.results[0].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[1].from.identifier" == "{{base}}/test/openapi-split-entry"
+variable "text" jsonpath "$.results[1].from.type" == "openapi"
+variable "text" jsonpath "$.results[1].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[1].from.location" == "/components/schemas/Any/oneOf/0/$ref"
+variable "text" jsonpath "$.results[1].to.identifier" == "{{base}}/test/object"
+variable "text" jsonpath "$.results[1].to.type" == "schema"
+variable "text" jsonpath "$.results[1].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[2].from.identifier" == "{{base}}/test/openapi-split-entry"
+variable "text" jsonpath "$.results[2].from.type" == "openapi"
+variable "text" jsonpath "$.results[2].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[2].from.location" == "/components/schemas/Dog/properties/name/$ref"
+variable "text" jsonpath "$.results[2].to.identifier" == "{{base}}/test/object"
+variable "text" jsonpath "$.results[2].to.type" == "schema"
+variable "text" jsonpath "$.results[2].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -783,8 +823,8 @@ Content-Type: application/json
   "id": 314,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependents",
-    "arguments": { "schema": "{{base}}/../etc/passwd" }
+    "name": "get_dependents",
+    "arguments": { "uri": "{{base}}/../etc/passwd" }
   }
 }
 ```
@@ -807,7 +847,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 314
 jsonpath "$.result.isError" == true
-jsonpath "$.result.content[0].text" == "Schema not found"
+jsonpath "$.result.content[0].text" == "There is nothing at this URL"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -834,8 +874,8 @@ Content-Type: application/json
   "id": 315,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependents",
-    "arguments": { "schema": "{{base}}/test/object#meta" }
+    "name": "get_dependents",
+    "arguments": { "uri": "{{base}}/test/object#meta" }
   }
 }
 ```
@@ -861,12 +901,12 @@ jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
-jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/schema/pattern"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependents/request#/properties/schema/pattern"
-jsonpath "$.error.data.errors[0].instanceLocation" == "/schema"
+jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/uri/pattern"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependents/request#/properties/uri/pattern"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/uri"
 jsonpath "$.error.data.errors[0].error" == "The string value \"{{base}}/test/object#meta\" was expected to match the regular expression \"^[^#?]*$\""
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependents/request#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependents/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the defined properties subschemas"
 jsonpath "$.result" not exists
@@ -895,7 +935,7 @@ Content-Type: application/json
   "id": 320,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependents",
+    "name": "get_dependents",
     "arguments": {}
   }
 }
@@ -923,9 +963,9 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 1
 jsonpath "$.error.data.errors[0].keywordLocation" == "/required"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependents/request#/required"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependents/request#/required"
 jsonpath "$.error.data.errors[0].instanceLocation" == ""
-jsonpath "$.error.data.errors[0].error" == "The value was expected to be an object that defines the property \"schema\""
+jsonpath "$.error.data.errors[0].error" == "The value was expected to be an object that defines the property \"uri\""
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -951,8 +991,8 @@ Content-Type: application/json
   "id": 321,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependents",
-    "arguments": { "schema": "" }
+    "name": "get_dependents",
+    "arguments": { "uri": "" }
   }
 }
 ```
@@ -978,12 +1018,12 @@ jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
-jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/schema/format"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependents/request#/properties/schema/format"
-jsonpath "$.error.data.errors[0].instanceLocation" == "/schema"
+jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/uri/format"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependents/request#/properties/uri/format"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/uri"
 jsonpath "$.error.data.errors[0].error" == "The string value \"\" was expected to represent a valid URI"
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependents/request#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependents/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the defined properties subschemas"
 jsonpath "$.result" not exists
@@ -1012,8 +1052,8 @@ Content-Type: application/json
   "id": 322,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependents",
-    "arguments": { "schema": 42 }
+    "name": "get_dependents",
+    "arguments": { "uri": 42 }
   }
 }
 ```
@@ -1039,12 +1079,12 @@ jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
-jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/schema/type"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependents/request#/properties/schema/type"
-jsonpath "$.error.data.errors[0].instanceLocation" == "/schema"
+jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/uri/type"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependents/request#/properties/uri/type"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/uri"
 jsonpath "$.error.data.errors[0].error" == "The value was expected to be of type string but it was of type integer"
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependents/request#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependents/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the defined properties subschemas"
 
@@ -1072,8 +1112,8 @@ Content-Type: application/json
   "id": 323,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependents",
-    "arguments": { "schema": "{{base}}/test/object", "extra": "foo" }
+    "name": "get_dependents",
+    "arguments": { "uri": "{{base}}/test/object", "extra": "foo" }
   }
 }
 ```
@@ -1100,11 +1140,11 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/additionalProperties"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependents/request#/additionalProperties"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependents/request#/additionalProperties"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/extra"
 jsonpath "$.error.data.errors[0].error" == "The object value was not expected to define the property \"extra\""
 jsonpath "$.error.data.errors[1].keywordLocation" == "/additionalProperties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependents/request#/additionalProperties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependents/request#/additionalProperties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was not expected to define additional properties"
 
@@ -1132,7 +1172,7 @@ Content-Type: application/json
   "id": 324,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependents"
+    "name": "get_dependents"
   }
 }
 ```
@@ -1159,9 +1199,9 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 1
 jsonpath "$.error.data.errors[0].keywordLocation" == "/required"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependents/request#/required"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependents/request#/required"
 jsonpath "$.error.data.errors[0].instanceLocation" == ""
-jsonpath "$.error.data.errors[0].error" == "The value was expected to be an object that defines the property \"schema\""
+jsonpath "$.error.data.errors[0].error" == "The value was expected to be an object that defines the property \"uri\""
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1187,7 +1227,7 @@ Content-Type: application/json
   "id": 325,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependents",
+    "name": "get_dependents",
     "arguments": null
   }
 }
@@ -1237,8 +1277,8 @@ Content-Type: application/json
   "id": "dependents-call-string-id",
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependents",
-    "arguments": { "schema": "{{base}}/test/object" }
+    "name": "get_dependents",
+    "arguments": { "uri": "{{base}}/test/object" }
   }
 }
 ```
@@ -1273,38 +1313,50 @@ jsonpath "$.result.content[2].uri" == "{{base}}/test/openapi-split-entry"
 jsonpath "$.result.content[2].mimeType" == "application/openapi+json"
 jsonpath "$.result.structuredContent.results" exists
 jsonpath "$.result.structuredContent.results" count == 3
-jsonpath "$.result.structuredContent.results[0].from" == "{{base}}/test/openapi-split-entry"
-jsonpath "$.result.structuredContent.results[0].to" == "{{base}}/test/object"
-jsonpath "$.result.structuredContent.results[0].at" == "/components/schemas/Any/discriminator/mapping/sibling"
-jsonpath "$.result.structuredContent.results[0].kind" == "openapi"
-jsonpath "$.result.structuredContent.results[0].baseDialect" not exists
-jsonpath "$.result.structuredContent.results[1].from" == "{{base}}/test/openapi-split-entry"
-jsonpath "$.result.structuredContent.results[1].to" == "{{base}}/test/object"
-jsonpath "$.result.structuredContent.results[1].at" == "/components/schemas/Any/oneOf/0/$ref"
-jsonpath "$.result.structuredContent.results[1].kind" == "openapi"
-jsonpath "$.result.structuredContent.results[1].baseDialect" not exists
-jsonpath "$.result.structuredContent.results[2].from" == "{{base}}/test/openapi-split-entry"
-jsonpath "$.result.structuredContent.results[2].to" == "{{base}}/test/object"
-jsonpath "$.result.structuredContent.results[2].at" == "/components/schemas/Dog/properties/name/$ref"
-jsonpath "$.result.structuredContent.results[2].kind" == "openapi"
-jsonpath "$.result.structuredContent.results[2].baseDialect" not exists
+jsonpath "$.result.structuredContent.results[0].from.identifier" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.results[0].from.type" == "openapi"
+jsonpath "$.result.structuredContent.results[0].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[0].from.location" == "/components/schemas/Any/discriminator/mapping/sibling"
+jsonpath "$.result.structuredContent.results[0].to.identifier" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.results[0].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[0].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[1].from.identifier" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.results[1].from.type" == "openapi"
+jsonpath "$.result.structuredContent.results[1].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[1].from.location" == "/components/schemas/Any/oneOf/0/$ref"
+jsonpath "$.result.structuredContent.results[1].to.identifier" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.results[1].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[1].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[2].from.identifier" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.structuredContent.results[2].from.type" == "openapi"
+jsonpath "$.result.structuredContent.results[2].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[2].from.location" == "/components/schemas/Dog/properties/name/$ref"
+jsonpath "$.result.structuredContent.results[2].to.identifier" == "{{base}}/test/object"
+jsonpath "$.result.structuredContent.results[2].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[2].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.results" exists
 variable "text" jsonpath "$.results" count == 3
-variable "text" jsonpath "$.results[0].from" == "{{base}}/test/openapi-split-entry"
-variable "text" jsonpath "$.results[0].to" == "{{base}}/test/object"
-variable "text" jsonpath "$.results[0].at" == "/components/schemas/Any/discriminator/mapping/sibling"
-variable "text" jsonpath "$.results[0].kind" == "openapi"
-variable "text" jsonpath "$.results[0].baseDialect" not exists
-variable "text" jsonpath "$.results[1].from" == "{{base}}/test/openapi-split-entry"
-variable "text" jsonpath "$.results[1].to" == "{{base}}/test/object"
-variable "text" jsonpath "$.results[1].at" == "/components/schemas/Any/oneOf/0/$ref"
-variable "text" jsonpath "$.results[1].kind" == "openapi"
-variable "text" jsonpath "$.results[1].baseDialect" not exists
-variable "text" jsonpath "$.results[2].from" == "{{base}}/test/openapi-split-entry"
-variable "text" jsonpath "$.results[2].to" == "{{base}}/test/object"
-variable "text" jsonpath "$.results[2].at" == "/components/schemas/Dog/properties/name/$ref"
-variable "text" jsonpath "$.results[2].kind" == "openapi"
-variable "text" jsonpath "$.results[2].baseDialect" not exists
+variable "text" jsonpath "$.results[0].from.identifier" == "{{base}}/test/openapi-split-entry"
+variable "text" jsonpath "$.results[0].from.type" == "openapi"
+variable "text" jsonpath "$.results[0].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[0].from.location" == "/components/schemas/Any/discriminator/mapping/sibling"
+variable "text" jsonpath "$.results[0].to.identifier" == "{{base}}/test/object"
+variable "text" jsonpath "$.results[0].to.type" == "schema"
+variable "text" jsonpath "$.results[0].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[1].from.identifier" == "{{base}}/test/openapi-split-entry"
+variable "text" jsonpath "$.results[1].from.type" == "openapi"
+variable "text" jsonpath "$.results[1].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[1].from.location" == "/components/schemas/Any/oneOf/0/$ref"
+variable "text" jsonpath "$.results[1].to.identifier" == "{{base}}/test/object"
+variable "text" jsonpath "$.results[1].to.type" == "schema"
+variable "text" jsonpath "$.results[1].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[2].from.identifier" == "{{base}}/test/openapi-split-entry"
+variable "text" jsonpath "$.results[2].from.type" == "openapi"
+variable "text" jsonpath "$.results[2].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[2].from.location" == "/components/schemas/Dog/properties/name/$ref"
+variable "text" jsonpath "$.results[2].to.identifier" == "{{base}}/test/object"
+variable "text" jsonpath "$.results[2].to.type" == "schema"
+variable "text" jsonpath "$.results[2].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1344,8 +1396,8 @@ Content-Type: application/json
   "id": 350,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependents",
-    "arguments": { "schema": "{{base}}/test/object" }
+    "name": "get_dependents",
+    "arguments": { "uri": "{{base}}/test/object" }
   }
 }
 ```
@@ -1409,8 +1461,8 @@ Content-Type: application/json
   "id": 351,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependents",
-    "arguments": { "schema": "{{base}}/TEST/OBJECT" }
+    "name": "get_dependents",
+    "arguments": { "uri": "{{base}}/TEST/OBJECT" }
   }
 }
 ```
@@ -1474,8 +1526,8 @@ Content-Type: application/json
   "id": 352,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependents",
-    "arguments": { "schema": "{{base}}/test/object.JSON" }
+    "name": "get_dependents",
+    "arguments": { "uri": "{{base}}/test/object.JSON" }
   }
 }
 ```
@@ -1539,8 +1591,8 @@ Content-Type: application/json
   "id": 353,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependents",
-    "arguments": { "schema": "HTTP://LOCALHOST:{{port}}/test/object" }
+    "name": "get_dependents",
+    "arguments": { "uri": "HTTP://LOCALHOST:{{port}}/test/object" }
   }
 }
 ```
@@ -1604,8 +1656,8 @@ Content-Type: application/json
   "id": 354,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependents",
-    "arguments": { "schema": "{{base}}/test/object?foo=bar" }
+    "name": "get_dependents",
+    "arguments": { "uri": "{{base}}/test/object?foo=bar" }
   }
 }
 ```
@@ -1631,12 +1683,12 @@ jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
-jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/schema/pattern"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependents/request#/properties/schema/pattern"
-jsonpath "$.error.data.errors[0].instanceLocation" == "/schema"
+jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/uri/pattern"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependents/request#/properties/uri/pattern"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/uri"
 jsonpath "$.error.data.errors[0].error" == "The string value \"{{base}}/test/object?foo=bar\" was expected to match the regular expression \"^[^#?]*$\""
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependents/request#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependents/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the defined properties subschemas"
 jsonpath "$.result" not exists

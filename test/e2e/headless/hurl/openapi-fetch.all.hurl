@@ -1344,29 +1344,27 @@ header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-# The schema surface holds the edges of a schema, and what an OpenAPI
-# description records is shaped for a surface of its own, so there is
-# nothing about one here
-GET {{base}}/self/v1/api/schemas/dependencies/test/schemas/openapi-3-0
-HTTP 404
-Cache-Control: no-store
-Content-Type: application/problem+json
+# The edges of an OpenAPI description come from the endpoint that answers
+# for a schema, and a description that reaches nothing reports nothing
+GET {{base}}/self/v1/api/dependencies/test/schemas/openapi-3-0
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/error>; rel="describedby"
+Link: </self/v1/schemas/api/dependencies/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
-header "Vary" not exists
+header "Vary" == "Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.status" == 404
-jsonpath "$.type" == "urn:sourcemeta:one:not-found"
-jsonpath "$.title" == "Not Found"
-jsonpath "$.detail" == "There is nothing at this URL"
+header "ETag" exists
+header "Last-Modified" exists
+jsonpath "$" count == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1381,26 +1379,25 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 # And the same the other way around
-GET {{base}}/self/v1/api/schemas/dependents/test/schemas/openapi-3-0
-HTTP 404
-Cache-Control: no-store
-Content-Type: application/problem+json
+GET {{base}}/self/v1/api/dependents/test/schemas/openapi-3-0
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/error>; rel="describedby"
+Link: </self/v1/schemas/api/dependents/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
-header "Vary" not exists
+header "Vary" == "Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.status" == 404
-jsonpath "$.type" == "urn:sourcemeta:one:not-found"
-jsonpath "$.title" == "Not Found"
-jsonpath "$.detail" == "There is nothing at this URL"
+header "ETag" exists
+header "Last-Modified" exists
+jsonpath "$" count == 0
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

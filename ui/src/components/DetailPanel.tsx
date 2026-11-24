@@ -165,20 +165,23 @@ const DetailPanel = ({
                 // /at only points into this schema for a direct edge — an
                 // indirect one names a spot in whichever intermediate schema
                 // it actually came from, which isn't open here to highlight.
-                const local = edge.from === schemaMetadata?.identifier;
+                const local =
+                  edge.from.identifier === schemaMetadata?.identifier;
                 return (
                   <tr key={i} className="border-t border-[var(--border)]">
                     <td className="py-1 pr-2 text-[var(--info)] align-top">
                       {local ? (
                         <button
                           type="button"
-                          onClick={() => onFocusPointers([edge.at])}
+                          onClick={() =>
+                            onFocusPointers([edge.from.location])
+                          }
                           className="text-left hover:underline"
                         >
-                          {edge.at}
+                          {edge.from.location}
                         </button>
                       ) : (
-                        // edge.at is a pointer into edge.from, not this
+                        // The location is a pointer into the origin, not this
                         // schema — showing it here would look like a local
                         // origin when it isn't one.
                         <span className="text-[var(--text-secondary)] opacity-70">
@@ -187,7 +190,7 @@ const DetailPanel = ({
                       )}
                     </td>
                     <td className="py-1 text-[var(--text-nav)] break-all">
-                      <SchemaLinkCell url={edge.to} />
+                      <SchemaLinkCell url={edge.to.identifier} />
                     </td>
                   </tr>
                 );
@@ -215,10 +218,10 @@ const DetailPanel = ({
               {dependents?.map((edge, i) => (
                 <tr key={i} className="border-t border-[var(--border)]">
                   <td className="py-1 pr-2 text-[var(--text-nav)] break-all align-top">
-                    <SchemaLinkCell url={edge.from} />
+                    <SchemaLinkCell url={edge.from.identifier} />
                   </td>
                   <td className="py-1 text-[var(--info)]">
-                    {edge.at}
+                    {edge.from.location}
                   </td>
                 </tr>
               ))}

@@ -98,10 +98,15 @@ export type TraceResult = {
   steps: TraceStep[];
 };
 
+export type DependencyEdgeEnd = {
+  identifier: string;
+  type: "schema" | "openapi";
+  baseDialect: string;
+};
+
 export type DependencyEdge = {
-  from: string;
-  to: string;
-  at: string;
+  from: DependencyEdgeEnd & { location: string };
+  to: DependencyEdgeEnd;
 };
 
 export type LintFinding = {

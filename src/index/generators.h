@@ -1,6 +1,7 @@
 #ifndef SOURCEMETA_ONE_INDEX_GENERATORS_H_
 #define SOURCEMETA_ONE_INDEX_GENERATORS_H_
 
+#include "edges.h"
 #include "endpoints.h"
 #include "error.h"
 #include "metaschema.h"
@@ -76,8 +77,8 @@ reject_cross_policy_edges(const sourcemeta::core::JSON &edges,
   const sourcemeta::one::Authentication::Table authentication{
       authentication_path};
   for (const auto &edge : edges.as_array()) {
-    const auto &referrer_uri{edge.at("from").to_string()};
-    const auto &referent_uri{edge.at("to").to_string()};
+    const auto &referrer_uri{edge.at("from").at("identifier").to_string()};
+    const auto &referent_uri{edge.at("to").at("identifier").to_string()};
     const auto referrer{sourcemeta::one::Authentication::Path::parse(
         referrer_uri, configuration.url)};
     const auto referent{sourcemeta::one::Authentication::Path::parse(
@@ -623,58 +624,23 @@ struct GenerateDependencies {
     assert(contents_option.has_value());
     const auto &contents{contents_option.value()};
     auto result{sourcemeta::core::JSON::make_array()};
-    // What a dependency is written in is part of what this report is for, and
-    // the same schema is commonly reached more than once
-    std::unordered_map<sourcemeta::core::JSON::String,
-                       sourcemeta::core::JSON::String>
-        base_dialects;
+    // What the resource at either end is written in is part of what this
+    // report is for, and the same resource is commonly reached more than once
+    sourcemeta::one::EdgeEndCache ends;
     const auto &schema_entry{resolver.entry(action.data)};
     sourcemeta::core::schema_dependencies(
         contents, sourcemeta::core::schema_walker,
         [&callback, &resolver](const auto identifier) {
           return resolver(identifier, callback);
         },
-        [&result, &base_dialects, &callback,
+        [&result, &ends, &callback,
          &resolver](const sourcemeta::core::SchemaDependency &dependency) {
-          const auto &origin{dependency.origin};
-          const auto &pointer{dependency.pointer};
-          const auto &target{dependency.destination};
-          auto trace{sourcemeta::core::JSON::make_object()};
-          trace.assign("from", without_json_extension(origin));
-          trace.assign("to", without_json_extension(target));
-          trace.assign("at", sourcemeta::core::JSON{
-                                 sourcemeta::core::to_string(pointer)});
-          sourcemeta::core::JSON::String target_uri{target};
-          const auto match{base_dialects.find(target_uri)};
-          if (match == base_dialects.cend()) {
-            // Only the reference that had analysis resolve a document carries
-            // it, so what another reference brought in is read here
-            const auto fetched{dependency.document == nullptr
-                                   ? resolver(target, callback)
-                                   : std::nullopt};
-            assert(dependency.document != nullptr || fetched.has_value());
-            const auto &schema{dependency.document == nullptr
-                                   ? fetched.value()
-                                   : *dependency.document};
-            const sourcemeta::core::SchemaFrame frame{
-                sourcemeta::core::SchemaFrame::Mode::Root,
-                schema,
-                sourcemeta::core::schema_walker,
-                [&callback, &resolver](const auto identifier) {
-                  return resolver(identifier, callback);
-                },
-                resolver.dialect_of(target),
-                target};
-            auto base_dialect{std::format(
-                "{}", frame.root_location().value().get().base_dialect)};
-            trace.assign("baseDialect", sourcemeta::core::JSON{base_dialect});
-            base_dialects.emplace(std::move(target_uri),
-                                  std::move(base_dialect));
-          } else {
-            trace.assign("baseDialect", sourcemeta::core::JSON{match->second});
-          }
-
-          result.push_back(std::move(trace));
+          const auto origin{sourcemeta::one::edge_end(
+              dependency.origin, resolver, callback, ends)};
+          const auto target{sourcemeta::one::edge_end(
+              dependency.destination, resolver, callback, ends)};
+          result.push_back(sourcemeta::one::make_edge(
+              origin, sourcemeta::core::to_string(dependency.pointer), target));
         },
         {.default_dialect = schema_entry.dialect, .default_id = action.data});
     // Otherwise we are returning non-sense
@@ -688,16 +654,6 @@ struct GenerateDependencies {
         action.destination, result, "application/json",
         sourcemeta::core::MetapackEncoding::GZIP,
         std::span<const std::uint8_t>{extension_bytes});
-  }
-
-private:
-  static auto without_json_extension(const std::string_view uri)
-      -> sourcemeta::core::JSON {
-    if (uri.ends_with(".json")) {
-      return sourcemeta::core::JSON{uri.substr(0, uri.size() - 5)};
-    }
-
-    return sourcemeta::core::JSON{uri};
   }
 };
 
@@ -718,21 +674,22 @@ struct GenerateOpenAPIDependencies {
           return resolver(identifier, callback);
         }};
     auto result{sourcemeta::core::JSON::make_array()};
+    // What the resource at either end is written in is part of what this
+    // report is for, and the same resource is commonly reached more than once
+    sourcemeta::one::EdgeEndCache ends;
     sourcemeta::core::openapi_dependencies(
         contents, sourcemeta::core::schema_walker, schema_resolver,
         [&callback, &resolver](const auto identifier) {
           return resolver.openapi(identifier, callback);
         },
-        [&result](const sourcemeta::core::OpenAPIDependency &dependency) {
-          auto trace{sourcemeta::core::JSON::make_object()};
-          trace.assign("from", sourcemeta::core::JSON{dependency.origin});
-          trace.assign("to", sourcemeta::core::JSON{dependency.destination});
-          trace.assign("at", sourcemeta::core::JSON{sourcemeta::core::to_string(
-                                 dependency.pointer)});
-          trace.assign("kind", sourcemeta::core::JSON{
-                                   sourcemeta::core::openapi_kind_name(
-                                       dependency.expected)});
-          result.push_back(std::move(trace));
+        [&result, &ends, &callback,
+         &resolver](const sourcemeta::core::OpenAPIDependency &dependency) {
+          const auto origin{sourcemeta::one::edge_end(
+              dependency.origin, resolver, callback, ends)};
+          const auto target{sourcemeta::one::edge_end(
+              dependency.destination, resolver, callback, ends)};
+          result.push_back(sourcemeta::one::make_edge(
+              origin, sourcemeta::core::to_string(dependency.pointer), target));
         },
         {.default_base = action.data});
     // Otherwise we are returning non-sense
@@ -1118,15 +1075,11 @@ struct GenerateURITemplateRoutes {
     constexpr std::string_view LIST_SCHEMA{
         "/self/v1/schemas/api/list/response"};
     constexpr std::string_view DEPENDENCIES_SCHEMA{
-        "/self/v1/schemas/api/schemas/dependencies/response"};
+        "/self/v1/schemas/api/dependencies/response"};
     constexpr std::string_view DEPENDENTS_SCHEMA{
-        "/self/v1/schemas/api/schemas/dependents/response"};
-    constexpr std::string_view OPENAPI_DEPENDENCIES_SCHEMA{
-        "/self/v1/schemas/api/openapi/dependencies/response"};
+        "/self/v1/schemas/api/dependents/response"};
     constexpr std::string_view OPENAPI_METADATA_SCHEMA{
         "/self/v1/schemas/api/openapi/metadata/response"};
-    constexpr std::string_view OPENAPI_DEPENDENTS_SCHEMA{
-        "/self/v1/schemas/api/openapi/dependents/response"};
     constexpr std::string_view HEALTH_SCHEMA{
         "/self/v1/schemas/api/schemas/health/response"};
     constexpr std::string_view LOCATIONS_SCHEMA{
@@ -1161,26 +1114,18 @@ struct GenerateURITemplateRoutes {
         "/self/v1/schemas/mcp/tools/call/list-directory/request"};
     constexpr std::string_view LIST_DIRECTORY_RESPONSE_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/list-directory/response"};
-    constexpr std::string_view GET_SCHEMA_DEPENDENCIES_REQUEST_SCHEMA{
-        "/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request"};
-    constexpr std::string_view GET_SCHEMA_DEPENDENCIES_RESPONSE_SCHEMA{
-        "/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response"};
-    constexpr std::string_view GET_SCHEMA_DEPENDENTS_REQUEST_SCHEMA{
-        "/self/v1/schemas/mcp/tools/call/get-schema-dependents/request"};
-    constexpr std::string_view GET_SCHEMA_DEPENDENTS_RESPONSE_SCHEMA{
-        "/self/v1/schemas/mcp/tools/call/get-schema-dependents/response"};
-    constexpr std::string_view GET_OPENAPI_DEPENDENCIES_REQUEST_SCHEMA{
-        "/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/request"};
-    constexpr std::string_view GET_OPENAPI_DEPENDENCIES_RESPONSE_SCHEMA{
-        "/self/v1/schemas/mcp/tools/call/get-openapi-dependencies/response"};
+    constexpr std::string_view GET_DEPENDENCIES_REQUEST_SCHEMA{
+        "/self/v1/schemas/mcp/tools/call/get-dependencies/request"};
+    constexpr std::string_view GET_DEPENDENCIES_RESPONSE_SCHEMA{
+        "/self/v1/schemas/mcp/tools/call/get-dependencies/response"};
+    constexpr std::string_view GET_DEPENDENTS_REQUEST_SCHEMA{
+        "/self/v1/schemas/mcp/tools/call/get-dependents/request"};
+    constexpr std::string_view GET_DEPENDENTS_RESPONSE_SCHEMA{
+        "/self/v1/schemas/mcp/tools/call/get-dependents/response"};
     constexpr std::string_view GET_OPENAPI_METADATA_REQUEST_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/get-openapi-metadata/request"};
     constexpr std::string_view GET_OPENAPI_METADATA_RESPONSE_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/get-openapi-metadata/response"};
-    constexpr std::string_view GET_OPENAPI_DEPENDENTS_REQUEST_SCHEMA{
-        "/self/v1/schemas/mcp/tools/call/get-openapi-dependents/request"};
-    constexpr std::string_view GET_OPENAPI_DEPENDENTS_RESPONSE_SCHEMA{
-        "/self/v1/schemas/mcp/tools/call/get-openapi-dependents/response"};
     constexpr std::string_view GET_SCHEMA_HEALTH_REQUEST_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/get-schema-health/request"};
     constexpr std::string_view GET_SCHEMA_HEALTH_RESPONSE_SCHEMA{
@@ -1263,26 +1208,24 @@ struct GenerateURITemplateRoutes {
           std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
               {{"responseSchema", std::string_view{DEPENDENCIES_SCHEMA}},
                {"mcpRequestSchema",
-                std::string_view{GET_SCHEMA_DEPENDENCIES_REQUEST_SCHEMA}},
+                std::string_view{GET_DEPENDENCIES_REQUEST_SCHEMA}},
                {"mcpResponseSchema",
-                std::string_view{GET_SCHEMA_DEPENDENCIES_RESPONSE_SCHEMA}},
+                std::string_view{GET_DEPENDENCIES_RESPONSE_SCHEMA}},
                {"errorSchema", std::string_view{ERROR_SCHEMA}}})};
-      router.add(sourcemeta::one::ENDPOINT_SCHEMA_DEPENDENCIES,
-                 "get_schema_dependencies", next_id++,
-                 sourcemeta::one::ACTION_TYPE_GET_SCHEMA_DEPENDENCIES_V1,
+      router.add(sourcemeta::one::ENDPOINT_DEPENDENCIES, "get_dependencies",
+                 next_id++, sourcemeta::one::ACTION_TYPE_GET_DEPENDENCIES_V1,
                  dependencies_arguments);
 
       const auto dependents_arguments{
           std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
               {{"responseSchema", std::string_view{DEPENDENTS_SCHEMA}},
                {"mcpRequestSchema",
-                std::string_view{GET_SCHEMA_DEPENDENTS_REQUEST_SCHEMA}},
+                std::string_view{GET_DEPENDENTS_REQUEST_SCHEMA}},
                {"mcpResponseSchema",
-                std::string_view{GET_SCHEMA_DEPENDENTS_RESPONSE_SCHEMA}},
+                std::string_view{GET_DEPENDENTS_RESPONSE_SCHEMA}},
                {"errorSchema", std::string_view{ERROR_SCHEMA}}})};
-      router.add(sourcemeta::one::ENDPOINT_SCHEMA_DEPENDENTS,
-                 "get_schema_dependents", next_id++,
-                 sourcemeta::one::ACTION_TYPE_GET_SCHEMA_DEPENDENTS_V1,
+      router.add(sourcemeta::one::ENDPOINT_DEPENDENTS, "get_dependents",
+                 next_id++, sourcemeta::one::ACTION_TYPE_GET_DEPENDENTS_V1,
                  dependents_arguments);
 
       const auto health_arguments{
@@ -1415,33 +1358,6 @@ struct GenerateURITemplateRoutes {
       router.add(sourcemeta::one::ENDPOINT_SCHEMA_SEARCH, "search_schemas",
                  next_id++, sourcemeta::one::ACTION_TYPE_SCHEMA_SEARCH_V1,
                  search_arguments);
-
-      const auto openapi_dependencies_arguments{
-          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
-              {{"responseSchema",
-                std::string_view{OPENAPI_DEPENDENCIES_SCHEMA}},
-               {"mcpRequestSchema",
-                std::string_view{GET_OPENAPI_DEPENDENCIES_REQUEST_SCHEMA}},
-               {"mcpResponseSchema",
-                std::string_view{GET_OPENAPI_DEPENDENCIES_RESPONSE_SCHEMA}},
-               {"errorSchema", std::string_view{ERROR_SCHEMA}}})};
-      router.add(sourcemeta::one::ENDPOINT_OPENAPI_DEPENDENCIES,
-                 "get_openapi_dependencies", next_id++,
-                 sourcemeta::one::ACTION_TYPE_GET_OPENAPI_DEPENDENCIES_V1,
-                 openapi_dependencies_arguments);
-
-      const auto openapi_dependents_arguments{
-          std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
-              {{"responseSchema", std::string_view{OPENAPI_DEPENDENTS_SCHEMA}},
-               {"mcpRequestSchema",
-                std::string_view{GET_OPENAPI_DEPENDENTS_REQUEST_SCHEMA}},
-               {"mcpResponseSchema",
-                std::string_view{GET_OPENAPI_DEPENDENTS_RESPONSE_SCHEMA}},
-               {"errorSchema", std::string_view{ERROR_SCHEMA}}})};
-      router.add(sourcemeta::one::ENDPOINT_OPENAPI_DEPENDENTS,
-                 "get_openapi_dependents", next_id++,
-                 sourcemeta::one::ACTION_TYPE_GET_OPENAPI_DEPENDENTS_V1,
-                 openapi_dependents_arguments);
 
       const auto openapi_metadata_arguments{
           std::to_array<sourcemeta::core::URITemplateRouter::Argument>(

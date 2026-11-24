@@ -384,14 +384,14 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 # A reference between two Schema Objects is traced like any other
-GET {{base}}/self/v1/api/schemas/dependencies/openapi3.0/product
+GET {{base}}/self/v1/api/dependencies/openapi3.0/product
 Accept: application/json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/dependencies/response>; rel="describedby"
+Link: </self/v1/schemas/api/dependencies/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -402,10 +402,17 @@ header "ETag" exists
 header "Last-Modified" exists
 [
   {
-    "from": "{{base}}/openapi3.0/product",
-    "to": "{{base}}/openapi3.0/identifier",
-    "at": "/properties/id/$ref",
-    "baseDialect": "http://json-schema.org/draft-04/schema#"
+    "from": {
+      "identifier": "{{base}}/openapi3.0/product",
+      "type": "schema",
+      "baseDialect": "http://json-schema.org/draft-04/schema#",
+      "location": "/properties/id/$ref"
+    },
+    "to": {
+      "identifier": "{{base}}/openapi3.0/identifier",
+      "type": "schema",
+      "baseDialect": "http://json-schema.org/draft-04/schema#"
+    }
   }
 ]
 

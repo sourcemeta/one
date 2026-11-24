@@ -1,0 +1,35 @@
+#ifndef SOURCEMETA_ONE_ACTIONS_GET_DEPENDENTS_V1_H
+#define SOURCEMETA_ONE_ACTIONS_GET_DEPENDENTS_V1_H
+
+#include "action_dependency_tree_v1.h"
+
+#include <filesystem>  // std::filesystem
+#include <string_view> // std::string_view
+
+class ActionGetDependentsV1 : public ActionDependencyTreeV1 {
+public:
+  static constexpr std::string_view TITLE{"Get Dependents"};
+  static constexpr std::string_view DESCRIPTION{
+      "List the resources of this catalog that directly or transitively "
+      "reference this one, the incoming edges of the dependency graph"};
+  static constexpr bool READ_ONLY{true};
+  static constexpr bool DESTRUCTIVE{false};
+  static constexpr bool IDEMPOTENT{true};
+  static constexpr bool OPEN_WORLD{false};
+
+  ActionGetDependentsV1(
+      const std::filesystem::path &base,
+      const sourcemeta::core::URITemplateRouterView &router,
+      const sourcemeta::core::URITemplateRouter::Identifier identifier,
+      sourcemeta::one::Router &dispatcher)
+      : ActionDependencyTreeV1{base,
+                               router,
+                               identifier,
+                               "dependents",
+                               Tree::Explorer,
+                               "uri",
+                               "There is nothing at this URL",
+                               dispatcher} {}
+};
+
+#endif

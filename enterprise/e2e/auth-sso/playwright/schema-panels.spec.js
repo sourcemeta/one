@@ -73,8 +73,8 @@ test.describe('Schema page panels under a session', () => {
     request
   }) => {
     for (const endpoint of [
-      '/self/v1/api/schemas/dependencies/private/secret',
-      '/self/v1/api/schemas/dependents/private/secret'
+      '/self/v1/api/dependencies/private/secret',
+      '/self/v1/api/dependents/private/secret'
     ]) {
       const missing = await request.get(endpoint);
       expect(missing.status()).toBe(404);

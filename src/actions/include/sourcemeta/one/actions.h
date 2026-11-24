@@ -35,10 +35,8 @@ namespace sourcemeta::one {
     "get_schema_metadata_v1")                                                  \
   X(LIST_DIRECTORY_V1, ActionListDirectoryV1, "list_directory_v1")             \
   X(DEPENDENCY_TREE_V1, ActionDependencyTreeV1, "dependency_tree_v1")          \
-  X(GET_SCHEMA_DEPENDENCIES_V1, ActionGetSchemaDependenciesV1,                 \
-    "get_schema_dependencies_v1")                                              \
-  X(GET_SCHEMA_DEPENDENTS_V1, ActionGetSchemaDependentsV1,                     \
-    "get_schema_dependents_v1")                                                \
+  X(GET_DEPENDENCIES_V1, ActionGetDependenciesV1, "get_dependencies_v1")       \
+  X(GET_DEPENDENTS_V1, ActionGetDependentsV1, "get_dependents_v1")             \
   X(JSONSCHEMA_EVALUATE_V1, ActionJSONSchemaEvaluateV1,                        \
     "jsonschema_evaluate_v1")                                                  \
   X(JSONSCHEMA_RDF_V1, ActionJSONSchemaRDFV1, "jsonschema_rdf_v1")             \
@@ -55,10 +53,6 @@ namespace sourcemeta::one {
   X(METRICS_V1, ActionMetricsV1, "metrics_v1")                                 \
   X(PLAYGROUND_SCHEMA_TRACE_V1, ActionPlaygroundSchemaTraceV1,                 \
     "playground_schema_trace_v1")                                              \
-  X(GET_OPENAPI_DEPENDENCIES_V1, ActionGetOpenAPIDependenciesV1,               \
-    "get_openapi_dependencies_v1")                                             \
-  X(GET_OPENAPI_DEPENDENTS_V1, ActionGetOpenAPIDependentsV1,                   \
-    "get_openapi_dependents_v1")                                               \
   X(GET_OPENAPI_METADATA_V1, ActionGetOpenAPIMetadataV1,                       \
     "get_openapi_metadata_v1")
 

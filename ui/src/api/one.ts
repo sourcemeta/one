@@ -102,13 +102,13 @@ export const getSchemaDependencies = (
   registryUrl: string,
   schemaPath: string
 ): Promise<DependencyEdge[]> =>
-  request(registryUrl, `/self/v1/api/schemas/dependencies${schemaPath}`);
+  request(registryUrl, `/self/v1/api/dependencies${schemaPath}`);
 
 export const getSchemaDependents = (
   registryUrl: string,
   schemaPath: string
 ): Promise<DependencyEdge[]> =>
-  request(registryUrl, `/self/v1/api/schemas/dependents${schemaPath}`);
+  request(registryUrl, `/self/v1/api/dependents${schemaPath}`);
 
 export const getSchemaHealthReport = (
   registryUrl: string,

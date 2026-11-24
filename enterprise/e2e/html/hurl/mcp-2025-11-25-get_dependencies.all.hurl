@@ -20,14 +20,14 @@ Content-Type: application/json
 HTTP 200
 Cache-Control: no-store
 [Captures]
-output_schema_path: jsonpath "$.result.tools[?@.name=='get_schema_dependencies'].outputSchema['$ref']" regex "https?://[^/]+(.+)"
+output_schema_path: jsonpath "$.result.tools[?@.name=='get_dependencies'].outputSchema['$ref']" regex "https?://[^/]+(.+)"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.result.tools[?@.name=='get_schema_dependencies'].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependencies/response"
+jsonpath "$.result.tools[?@.name=='get_dependencies'].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependencies/response"
 
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
@@ -39,8 +39,8 @@ Content-Type: application/json
   "id": 200,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependencies",
-    "arguments": { "schema": "{{base}}/test/bare/01" }
+    "name": "get_dependencies",
+    "arguments": { "uri": "{{base}}/test/bare/01" }
   }
 }
 ```
@@ -110,8 +110,8 @@ Content-Type: application/json
   "id": 201,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependencies",
-    "arguments": { "schema": "{{base}}/test/object" }
+    "name": "get_dependencies",
+    "arguments": { "uri": "{{base}}/test/object" }
   }
 }
 ```
@@ -181,8 +181,8 @@ Content-Type: application/json
   "id": 202,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependencies",
-    "arguments": { "schema": "{{base}}/self/v1/schemas/mcp/response" }
+    "name": "get_dependencies",
+    "arguments": { "uri": "{{base}}/self/v1/schemas/mcp/response" }
   }
 }
 ```
@@ -243,87 +243,147 @@ jsonpath "$.result.content[11].type" == "resource_link"
 jsonpath "$.result.content[11].uri" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
 jsonpath "$.result.content[11].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 10
-jsonpath "$.result.structuredContent.results[0].from" == "{{base}}/self/v1/schemas/mcp/response"
-jsonpath "$.result.structuredContent.results[0].to" == "{{base}}/self/v1/schemas/mcp/initialize/response"
-jsonpath "$.result.structuredContent.results[0].at" == "/$defs/single/anyOf/0/$ref"
-jsonpath "$.result.structuredContent.results[0].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.results[1].from" == "{{base}}/self/v1/schemas/mcp/response"
-jsonpath "$.result.structuredContent.results[1].to" == "{{base}}/self/v1/schemas/mcp/ping/response"
-jsonpath "$.result.structuredContent.results[1].at" == "/$defs/single/anyOf/1/$ref"
-jsonpath "$.result.structuredContent.results[1].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.results[2].from" == "{{base}}/self/v1/schemas/mcp/response"
-jsonpath "$.result.structuredContent.results[2].to" == "{{base}}/self/v1/schemas/mcp/error"
-jsonpath "$.result.structuredContent.results[2].at" == "/$defs/single/anyOf/2/$ref"
-jsonpath "$.result.structuredContent.results[2].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.results[3].from" == "{{base}}/self/v1/schemas/mcp/response"
-jsonpath "$.result.structuredContent.results[3].to" == "{{base}}/self/v1/schemas/mcp/resources/list/response"
-jsonpath "$.result.structuredContent.results[3].at" == "/$defs/single/anyOf/3/$ref"
-jsonpath "$.result.structuredContent.results[3].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.results[4].from" == "{{base}}/self/v1/schemas/mcp/response"
-jsonpath "$.result.structuredContent.results[4].to" == "{{base}}/self/v1/schemas/mcp/resources/templates/list/response"
-jsonpath "$.result.structuredContent.results[4].at" == "/$defs/single/anyOf/4/$ref"
-jsonpath "$.result.structuredContent.results[4].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.results[5].from" == "{{base}}/self/v1/schemas/mcp/response"
-jsonpath "$.result.structuredContent.results[5].to" == "{{base}}/self/v1/schemas/mcp/resources/read/response"
-jsonpath "$.result.structuredContent.results[5].at" == "/$defs/single/anyOf/5/$ref"
-jsonpath "$.result.structuredContent.results[5].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.results[6].from" == "{{base}}/self/v1/schemas/mcp/response"
-jsonpath "$.result.structuredContent.results[6].to" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
-jsonpath "$.result.structuredContent.results[6].at" == "/$defs/single/anyOf/6/$ref"
-jsonpath "$.result.structuredContent.results[6].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.results[7].from" == "{{base}}/self/v1/schemas/mcp/response"
-jsonpath "$.result.structuredContent.results[7].to" == "{{base}}/self/v1/schemas/mcp/tools/call/response"
-jsonpath "$.result.structuredContent.results[7].at" == "/$defs/single/anyOf/7/$ref"
-jsonpath "$.result.structuredContent.results[7].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.results[8].from" == "{{base}}/self/v1/schemas/mcp/error"
-jsonpath "$.result.structuredContent.results[8].to" == "{{base}}/self/v1/schemas/api/schemas/evaluate/response"
-jsonpath "$.result.structuredContent.results[8].at" == "/$defs/standard/anyOf/4/properties/data/$ref"
-jsonpath "$.result.structuredContent.results[8].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.results[9].from" == "{{base}}/self/v1/schemas/api/schemas/evaluate/response"
-jsonpath "$.result.structuredContent.results[9].to" == "{{base}}/self/v1/schemas/api/schemas/output-error"
-jsonpath "$.result.structuredContent.results[9].at" == "/anyOf/1/properties/errors/items/$ref"
-jsonpath "$.result.structuredContent.results[9].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[0].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[0].from.type" == "schema"
+jsonpath "$.result.structuredContent.results[0].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[0].from.location" == "/$defs/single/anyOf/0/$ref"
+jsonpath "$.result.structuredContent.results[0].to.identifier" == "{{base}}/self/v1/schemas/mcp/initialize/response"
+jsonpath "$.result.structuredContent.results[0].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[0].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[1].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[1].from.type" == "schema"
+jsonpath "$.result.structuredContent.results[1].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[1].from.location" == "/$defs/single/anyOf/1/$ref"
+jsonpath "$.result.structuredContent.results[1].to.identifier" == "{{base}}/self/v1/schemas/mcp/ping/response"
+jsonpath "$.result.structuredContent.results[1].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[1].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[2].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[2].from.type" == "schema"
+jsonpath "$.result.structuredContent.results[2].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[2].from.location" == "/$defs/single/anyOf/2/$ref"
+jsonpath "$.result.structuredContent.results[2].to.identifier" == "{{base}}/self/v1/schemas/mcp/error"
+jsonpath "$.result.structuredContent.results[2].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[2].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[3].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[3].from.type" == "schema"
+jsonpath "$.result.structuredContent.results[3].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[3].from.location" == "/$defs/single/anyOf/3/$ref"
+jsonpath "$.result.structuredContent.results[3].to.identifier" == "{{base}}/self/v1/schemas/mcp/resources/list/response"
+jsonpath "$.result.structuredContent.results[3].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[3].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[4].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[4].from.type" == "schema"
+jsonpath "$.result.structuredContent.results[4].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[4].from.location" == "/$defs/single/anyOf/4/$ref"
+jsonpath "$.result.structuredContent.results[4].to.identifier" == "{{base}}/self/v1/schemas/mcp/resources/templates/list/response"
+jsonpath "$.result.structuredContent.results[4].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[4].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[5].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[5].from.type" == "schema"
+jsonpath "$.result.structuredContent.results[5].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[5].from.location" == "/$defs/single/anyOf/5/$ref"
+jsonpath "$.result.structuredContent.results[5].to.identifier" == "{{base}}/self/v1/schemas/mcp/resources/read/response"
+jsonpath "$.result.structuredContent.results[5].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[5].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[6].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[6].from.type" == "schema"
+jsonpath "$.result.structuredContent.results[6].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[6].from.location" == "/$defs/single/anyOf/6/$ref"
+jsonpath "$.result.structuredContent.results[6].to.identifier" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
+jsonpath "$.result.structuredContent.results[6].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[6].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[7].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[7].from.type" == "schema"
+jsonpath "$.result.structuredContent.results[7].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[7].from.location" == "/$defs/single/anyOf/7/$ref"
+jsonpath "$.result.structuredContent.results[7].to.identifier" == "{{base}}/self/v1/schemas/mcp/tools/call/response"
+jsonpath "$.result.structuredContent.results[7].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[7].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[8].from.identifier" == "{{base}}/self/v1/schemas/mcp/error"
+jsonpath "$.result.structuredContent.results[8].from.type" == "schema"
+jsonpath "$.result.structuredContent.results[8].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[8].from.location" == "/$defs/standard/anyOf/4/properties/data/$ref"
+jsonpath "$.result.structuredContent.results[8].to.identifier" == "{{base}}/self/v1/schemas/api/schemas/evaluate/response"
+jsonpath "$.result.structuredContent.results[8].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[8].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[9].from.identifier" == "{{base}}/self/v1/schemas/api/schemas/evaluate/response"
+jsonpath "$.result.structuredContent.results[9].from.type" == "schema"
+jsonpath "$.result.structuredContent.results[9].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[9].from.location" == "/anyOf/1/properties/errors/items/$ref"
+jsonpath "$.result.structuredContent.results[9].to.identifier" == "{{base}}/self/v1/schemas/api/schemas/output-error"
+jsonpath "$.result.structuredContent.results[9].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[9].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.results" count == 10
-variable "text" jsonpath "$.results[0].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$.results[0].to" == "{{base}}/self/v1/schemas/mcp/initialize/response"
-variable "text" jsonpath "$.results[0].at" == "/$defs/single/anyOf/0/$ref"
-variable "text" jsonpath "$.results[0].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-variable "text" jsonpath "$.results[1].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$.results[1].to" == "{{base}}/self/v1/schemas/mcp/ping/response"
-variable "text" jsonpath "$.results[1].at" == "/$defs/single/anyOf/1/$ref"
-variable "text" jsonpath "$.results[1].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-variable "text" jsonpath "$.results[2].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$.results[2].to" == "{{base}}/self/v1/schemas/mcp/error"
-variable "text" jsonpath "$.results[2].at" == "/$defs/single/anyOf/2/$ref"
-variable "text" jsonpath "$.results[2].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-variable "text" jsonpath "$.results[3].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$.results[3].to" == "{{base}}/self/v1/schemas/mcp/resources/list/response"
-variable "text" jsonpath "$.results[3].at" == "/$defs/single/anyOf/3/$ref"
-variable "text" jsonpath "$.results[3].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-variable "text" jsonpath "$.results[4].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$.results[4].to" == "{{base}}/self/v1/schemas/mcp/resources/templates/list/response"
-variable "text" jsonpath "$.results[4].at" == "/$defs/single/anyOf/4/$ref"
-variable "text" jsonpath "$.results[4].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-variable "text" jsonpath "$.results[5].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$.results[5].to" == "{{base}}/self/v1/schemas/mcp/resources/read/response"
-variable "text" jsonpath "$.results[5].at" == "/$defs/single/anyOf/5/$ref"
-variable "text" jsonpath "$.results[5].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-variable "text" jsonpath "$.results[6].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$.results[6].to" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
-variable "text" jsonpath "$.results[6].at" == "/$defs/single/anyOf/6/$ref"
-variable "text" jsonpath "$.results[6].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-variable "text" jsonpath "$.results[7].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$.results[7].to" == "{{base}}/self/v1/schemas/mcp/tools/call/response"
-variable "text" jsonpath "$.results[7].at" == "/$defs/single/anyOf/7/$ref"
-variable "text" jsonpath "$.results[7].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-variable "text" jsonpath "$.results[8].from" == "{{base}}/self/v1/schemas/mcp/error"
-variable "text" jsonpath "$.results[8].to" == "{{base}}/self/v1/schemas/api/schemas/evaluate/response"
-variable "text" jsonpath "$.results[8].at" == "/$defs/standard/anyOf/4/properties/data/$ref"
-variable "text" jsonpath "$.results[8].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-variable "text" jsonpath "$.results[9].from" == "{{base}}/self/v1/schemas/api/schemas/evaluate/response"
-variable "text" jsonpath "$.results[9].to" == "{{base}}/self/v1/schemas/api/schemas/output-error"
-variable "text" jsonpath "$.results[9].at" == "/anyOf/1/properties/errors/items/$ref"
-variable "text" jsonpath "$.results[9].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[0].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[0].from.type" == "schema"
+variable "text" jsonpath "$.results[0].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[0].from.location" == "/$defs/single/anyOf/0/$ref"
+variable "text" jsonpath "$.results[0].to.identifier" == "{{base}}/self/v1/schemas/mcp/initialize/response"
+variable "text" jsonpath "$.results[0].to.type" == "schema"
+variable "text" jsonpath "$.results[0].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[1].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[1].from.type" == "schema"
+variable "text" jsonpath "$.results[1].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[1].from.location" == "/$defs/single/anyOf/1/$ref"
+variable "text" jsonpath "$.results[1].to.identifier" == "{{base}}/self/v1/schemas/mcp/ping/response"
+variable "text" jsonpath "$.results[1].to.type" == "schema"
+variable "text" jsonpath "$.results[1].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[2].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[2].from.type" == "schema"
+variable "text" jsonpath "$.results[2].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[2].from.location" == "/$defs/single/anyOf/2/$ref"
+variable "text" jsonpath "$.results[2].to.identifier" == "{{base}}/self/v1/schemas/mcp/error"
+variable "text" jsonpath "$.results[2].to.type" == "schema"
+variable "text" jsonpath "$.results[2].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[3].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[3].from.type" == "schema"
+variable "text" jsonpath "$.results[3].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[3].from.location" == "/$defs/single/anyOf/3/$ref"
+variable "text" jsonpath "$.results[3].to.identifier" == "{{base}}/self/v1/schemas/mcp/resources/list/response"
+variable "text" jsonpath "$.results[3].to.type" == "schema"
+variable "text" jsonpath "$.results[3].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[4].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[4].from.type" == "schema"
+variable "text" jsonpath "$.results[4].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[4].from.location" == "/$defs/single/anyOf/4/$ref"
+variable "text" jsonpath "$.results[4].to.identifier" == "{{base}}/self/v1/schemas/mcp/resources/templates/list/response"
+variable "text" jsonpath "$.results[4].to.type" == "schema"
+variable "text" jsonpath "$.results[4].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[5].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[5].from.type" == "schema"
+variable "text" jsonpath "$.results[5].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[5].from.location" == "/$defs/single/anyOf/5/$ref"
+variable "text" jsonpath "$.results[5].to.identifier" == "{{base}}/self/v1/schemas/mcp/resources/read/response"
+variable "text" jsonpath "$.results[5].to.type" == "schema"
+variable "text" jsonpath "$.results[5].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[6].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[6].from.type" == "schema"
+variable "text" jsonpath "$.results[6].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[6].from.location" == "/$defs/single/anyOf/6/$ref"
+variable "text" jsonpath "$.results[6].to.identifier" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
+variable "text" jsonpath "$.results[6].to.type" == "schema"
+variable "text" jsonpath "$.results[6].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[7].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[7].from.type" == "schema"
+variable "text" jsonpath "$.results[7].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[7].from.location" == "/$defs/single/anyOf/7/$ref"
+variable "text" jsonpath "$.results[7].to.identifier" == "{{base}}/self/v1/schemas/mcp/tools/call/response"
+variable "text" jsonpath "$.results[7].to.type" == "schema"
+variable "text" jsonpath "$.results[7].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[8].from.identifier" == "{{base}}/self/v1/schemas/mcp/error"
+variable "text" jsonpath "$.results[8].from.type" == "schema"
+variable "text" jsonpath "$.results[8].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[8].from.location" == "/$defs/standard/anyOf/4/properties/data/$ref"
+variable "text" jsonpath "$.results[8].to.identifier" == "{{base}}/self/v1/schemas/api/schemas/evaluate/response"
+variable "text" jsonpath "$.results[8].to.type" == "schema"
+variable "text" jsonpath "$.results[8].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[9].from.identifier" == "{{base}}/self/v1/schemas/api/schemas/evaluate/response"
+variable "text" jsonpath "$.results[9].from.type" == "schema"
+variable "text" jsonpath "$.results[9].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[9].from.location" == "/anyOf/1/properties/errors/items/$ref"
+variable "text" jsonpath "$.results[9].to.identifier" == "{{base}}/self/v1/schemas/api/schemas/output-error"
+variable "text" jsonpath "$.results[9].to.type" == "schema"
+variable "text" jsonpath "$.results[9].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -363,8 +423,8 @@ Content-Type: application/json
   "id": 203,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependencies",
-    "arguments": { "schema": "self/v1/schemas/mcp/response" }
+    "name": "get_dependencies",
+    "arguments": { "uri": "self/v1/schemas/mcp/response" }
   }
 }
 ```
@@ -390,12 +450,12 @@ jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
-jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/schema/format"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request#/properties/schema/format"
-jsonpath "$.error.data.errors[0].instanceLocation" == "/schema"
+jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/uri/format"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependencies/request#/properties/uri/format"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/uri"
 jsonpath "$.error.data.errors[0].error" == "The string value \"self/v1/schemas/mcp/response\" was expected to represent a valid URI"
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependencies/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the defined properties subschemas"
 jsonpath "$.result" not exists
@@ -424,8 +484,8 @@ Content-Type: application/json
   "id": 204,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependencies",
-    "arguments": { "schema": "{{base}}/self/v1/schemas/mcp/response" }
+    "name": "get_dependencies",
+    "arguments": { "uri": "{{base}}/self/v1/schemas/mcp/response" }
   }
 }
 ```
@@ -487,52 +547,147 @@ jsonpath "$.result.content[11].type" == "resource_link"
 jsonpath "$.result.content[11].uri" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
 jsonpath "$.result.content[11].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 10
-jsonpath "$.result.structuredContent.results[0].from" == "{{base}}/self/v1/schemas/mcp/response"
-jsonpath "$.result.structuredContent.results[0].to" == "{{base}}/self/v1/schemas/mcp/initialize/response"
-jsonpath "$.result.structuredContent.results[0].at" == "/$defs/single/anyOf/0/$ref"
-jsonpath "$.result.structuredContent.results[0].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-jsonpath "$.result.structuredContent.results[2].to" == "{{base}}/self/v1/schemas/mcp/error"
+jsonpath "$.result.structuredContent.results[0].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[0].from.type" == "schema"
+jsonpath "$.result.structuredContent.results[0].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[0].from.location" == "/$defs/single/anyOf/0/$ref"
+jsonpath "$.result.structuredContent.results[0].to.identifier" == "{{base}}/self/v1/schemas/mcp/initialize/response"
+jsonpath "$.result.structuredContent.results[0].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[0].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[1].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[1].from.type" == "schema"
+jsonpath "$.result.structuredContent.results[1].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[1].from.location" == "/$defs/single/anyOf/1/$ref"
+jsonpath "$.result.structuredContent.results[1].to.identifier" == "{{base}}/self/v1/schemas/mcp/ping/response"
+jsonpath "$.result.structuredContent.results[1].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[1].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[2].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[2].from.type" == "schema"
+jsonpath "$.result.structuredContent.results[2].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[2].from.location" == "/$defs/single/anyOf/2/$ref"
+jsonpath "$.result.structuredContent.results[2].to.identifier" == "{{base}}/self/v1/schemas/mcp/error"
+jsonpath "$.result.structuredContent.results[2].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[2].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[3].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[3].from.type" == "schema"
+jsonpath "$.result.structuredContent.results[3].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[3].from.location" == "/$defs/single/anyOf/3/$ref"
+jsonpath "$.result.structuredContent.results[3].to.identifier" == "{{base}}/self/v1/schemas/mcp/resources/list/response"
+jsonpath "$.result.structuredContent.results[3].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[3].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[4].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[4].from.type" == "schema"
+jsonpath "$.result.structuredContent.results[4].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[4].from.location" == "/$defs/single/anyOf/4/$ref"
+jsonpath "$.result.structuredContent.results[4].to.identifier" == "{{base}}/self/v1/schemas/mcp/resources/templates/list/response"
+jsonpath "$.result.structuredContent.results[4].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[4].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[5].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[5].from.type" == "schema"
+jsonpath "$.result.structuredContent.results[5].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[5].from.location" == "/$defs/single/anyOf/5/$ref"
+jsonpath "$.result.structuredContent.results[5].to.identifier" == "{{base}}/self/v1/schemas/mcp/resources/read/response"
+jsonpath "$.result.structuredContent.results[5].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[5].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[6].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[6].from.type" == "schema"
+jsonpath "$.result.structuredContent.results[6].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[6].from.location" == "/$defs/single/anyOf/6/$ref"
+jsonpath "$.result.structuredContent.results[6].to.identifier" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
+jsonpath "$.result.structuredContent.results[6].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[6].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[7].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+jsonpath "$.result.structuredContent.results[7].from.type" == "schema"
+jsonpath "$.result.structuredContent.results[7].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[7].from.location" == "/$defs/single/anyOf/7/$ref"
+jsonpath "$.result.structuredContent.results[7].to.identifier" == "{{base}}/self/v1/schemas/mcp/tools/call/response"
+jsonpath "$.result.structuredContent.results[7].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[7].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[8].from.identifier" == "{{base}}/self/v1/schemas/mcp/error"
+jsonpath "$.result.structuredContent.results[8].from.type" == "schema"
+jsonpath "$.result.structuredContent.results[8].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[8].from.location" == "/$defs/standard/anyOf/4/properties/data/$ref"
+jsonpath "$.result.structuredContent.results[8].to.identifier" == "{{base}}/self/v1/schemas/api/schemas/evaluate/response"
+jsonpath "$.result.structuredContent.results[8].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[8].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[9].from.identifier" == "{{base}}/self/v1/schemas/api/schemas/evaluate/response"
+jsonpath "$.result.structuredContent.results[9].from.type" == "schema"
+jsonpath "$.result.structuredContent.results[9].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+jsonpath "$.result.structuredContent.results[9].from.location" == "/anyOf/1/properties/errors/items/$ref"
+jsonpath "$.result.structuredContent.results[9].to.identifier" == "{{base}}/self/v1/schemas/api/schemas/output-error"
+jsonpath "$.result.structuredContent.results[9].to.type" == "schema"
+jsonpath "$.result.structuredContent.results[9].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 variable "text" jsonpath "$.results" count == 10
-variable "text" jsonpath "$.results[0].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$.results[0].to" == "{{base}}/self/v1/schemas/mcp/initialize/response"
-variable "text" jsonpath "$.results[0].at" == "/$defs/single/anyOf/0/$ref"
-variable "text" jsonpath "$.results[0].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-variable "text" jsonpath "$.results[1].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$.results[1].to" == "{{base}}/self/v1/schemas/mcp/ping/response"
-variable "text" jsonpath "$.results[1].at" == "/$defs/single/anyOf/1/$ref"
-variable "text" jsonpath "$.results[1].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-variable "text" jsonpath "$.results[2].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$.results[2].to" == "{{base}}/self/v1/schemas/mcp/error"
-variable "text" jsonpath "$.results[2].at" == "/$defs/single/anyOf/2/$ref"
-variable "text" jsonpath "$.results[2].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-variable "text" jsonpath "$.results[3].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$.results[3].to" == "{{base}}/self/v1/schemas/mcp/resources/list/response"
-variable "text" jsonpath "$.results[3].at" == "/$defs/single/anyOf/3/$ref"
-variable "text" jsonpath "$.results[3].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-variable "text" jsonpath "$.results[4].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$.results[4].to" == "{{base}}/self/v1/schemas/mcp/resources/templates/list/response"
-variable "text" jsonpath "$.results[4].at" == "/$defs/single/anyOf/4/$ref"
-variable "text" jsonpath "$.results[4].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-variable "text" jsonpath "$.results[5].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$.results[5].to" == "{{base}}/self/v1/schemas/mcp/resources/read/response"
-variable "text" jsonpath "$.results[5].at" == "/$defs/single/anyOf/5/$ref"
-variable "text" jsonpath "$.results[5].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-variable "text" jsonpath "$.results[6].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$.results[6].to" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
-variable "text" jsonpath "$.results[6].at" == "/$defs/single/anyOf/6/$ref"
-variable "text" jsonpath "$.results[6].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-variable "text" jsonpath "$.results[7].from" == "{{base}}/self/v1/schemas/mcp/response"
-variable "text" jsonpath "$.results[7].to" == "{{base}}/self/v1/schemas/mcp/tools/call/response"
-variable "text" jsonpath "$.results[7].at" == "/$defs/single/anyOf/7/$ref"
-variable "text" jsonpath "$.results[7].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-variable "text" jsonpath "$.results[8].from" == "{{base}}/self/v1/schemas/mcp/error"
-variable "text" jsonpath "$.results[8].to" == "{{base}}/self/v1/schemas/api/schemas/evaluate/response"
-variable "text" jsonpath "$.results[8].at" == "/$defs/standard/anyOf/4/properties/data/$ref"
-variable "text" jsonpath "$.results[8].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
-variable "text" jsonpath "$.results[9].from" == "{{base}}/self/v1/schemas/api/schemas/evaluate/response"
-variable "text" jsonpath "$.results[9].to" == "{{base}}/self/v1/schemas/api/schemas/output-error"
-variable "text" jsonpath "$.results[9].at" == "/anyOf/1/properties/errors/items/$ref"
-variable "text" jsonpath "$.results[9].baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[0].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[0].from.type" == "schema"
+variable "text" jsonpath "$.results[0].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[0].from.location" == "/$defs/single/anyOf/0/$ref"
+variable "text" jsonpath "$.results[0].to.identifier" == "{{base}}/self/v1/schemas/mcp/initialize/response"
+variable "text" jsonpath "$.results[0].to.type" == "schema"
+variable "text" jsonpath "$.results[0].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[1].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[1].from.type" == "schema"
+variable "text" jsonpath "$.results[1].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[1].from.location" == "/$defs/single/anyOf/1/$ref"
+variable "text" jsonpath "$.results[1].to.identifier" == "{{base}}/self/v1/schemas/mcp/ping/response"
+variable "text" jsonpath "$.results[1].to.type" == "schema"
+variable "text" jsonpath "$.results[1].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[2].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[2].from.type" == "schema"
+variable "text" jsonpath "$.results[2].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[2].from.location" == "/$defs/single/anyOf/2/$ref"
+variable "text" jsonpath "$.results[2].to.identifier" == "{{base}}/self/v1/schemas/mcp/error"
+variable "text" jsonpath "$.results[2].to.type" == "schema"
+variable "text" jsonpath "$.results[2].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[3].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[3].from.type" == "schema"
+variable "text" jsonpath "$.results[3].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[3].from.location" == "/$defs/single/anyOf/3/$ref"
+variable "text" jsonpath "$.results[3].to.identifier" == "{{base}}/self/v1/schemas/mcp/resources/list/response"
+variable "text" jsonpath "$.results[3].to.type" == "schema"
+variable "text" jsonpath "$.results[3].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[4].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[4].from.type" == "schema"
+variable "text" jsonpath "$.results[4].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[4].from.location" == "/$defs/single/anyOf/4/$ref"
+variable "text" jsonpath "$.results[4].to.identifier" == "{{base}}/self/v1/schemas/mcp/resources/templates/list/response"
+variable "text" jsonpath "$.results[4].to.type" == "schema"
+variable "text" jsonpath "$.results[4].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[5].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[5].from.type" == "schema"
+variable "text" jsonpath "$.results[5].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[5].from.location" == "/$defs/single/anyOf/5/$ref"
+variable "text" jsonpath "$.results[5].to.identifier" == "{{base}}/self/v1/schemas/mcp/resources/read/response"
+variable "text" jsonpath "$.results[5].to.type" == "schema"
+variable "text" jsonpath "$.results[5].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[6].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[6].from.type" == "schema"
+variable "text" jsonpath "$.results[6].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[6].from.location" == "/$defs/single/anyOf/6/$ref"
+variable "text" jsonpath "$.results[6].to.identifier" == "{{base}}/self/v1/schemas/mcp/tools/list/response"
+variable "text" jsonpath "$.results[6].to.type" == "schema"
+variable "text" jsonpath "$.results[6].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[7].from.identifier" == "{{base}}/self/v1/schemas/mcp/response"
+variable "text" jsonpath "$.results[7].from.type" == "schema"
+variable "text" jsonpath "$.results[7].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[7].from.location" == "/$defs/single/anyOf/7/$ref"
+variable "text" jsonpath "$.results[7].to.identifier" == "{{base}}/self/v1/schemas/mcp/tools/call/response"
+variable "text" jsonpath "$.results[7].to.type" == "schema"
+variable "text" jsonpath "$.results[7].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[8].from.identifier" == "{{base}}/self/v1/schemas/mcp/error"
+variable "text" jsonpath "$.results[8].from.type" == "schema"
+variable "text" jsonpath "$.results[8].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[8].from.location" == "/$defs/standard/anyOf/4/properties/data/$ref"
+variable "text" jsonpath "$.results[8].to.identifier" == "{{base}}/self/v1/schemas/api/schemas/evaluate/response"
+variable "text" jsonpath "$.results[8].to.type" == "schema"
+variable "text" jsonpath "$.results[8].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[9].from.identifier" == "{{base}}/self/v1/schemas/api/schemas/evaluate/response"
+variable "text" jsonpath "$.results[9].from.type" == "schema"
+variable "text" jsonpath "$.results[9].from.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
+variable "text" jsonpath "$.results[9].from.location" == "/anyOf/1/properties/errors/items/$ref"
+variable "text" jsonpath "$.results[9].to.identifier" == "{{base}}/self/v1/schemas/api/schemas/output-error"
+variable "text" jsonpath "$.results[9].to.type" == "schema"
+variable "text" jsonpath "$.results[9].to.baseDialect" == "https://json-schema.org/draft/2020-12/schema"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -635,8 +790,8 @@ Content-Type: application/json
   "id": 210,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependencies",
-    "arguments": { "schema": "{{base}}/test/does-not-exist" }
+    "name": "get_dependencies",
+    "arguments": { "uri": "{{base}}/test/does-not-exist" }
   }
 }
 ```
@@ -660,7 +815,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 210
 jsonpath "$.result.isError" == true
 jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.content[0].text" == "Schema not found"
+jsonpath "$.result.content[0].text" == "There is nothing at this URL"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -686,8 +841,8 @@ Content-Type: application/json
   "id": 211,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependencies",
-    "arguments": { "schema": "{{base}}/test" }
+    "name": "get_dependencies",
+    "arguments": { "uri": "{{base}}/test" }
   }
 }
 ```
@@ -711,7 +866,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 211
 jsonpath "$.result.isError" == true
 jsonpath "$.result.content[0].type" == "text"
-jsonpath "$.result.content[0].text" == "Schema not found"
+jsonpath "$.result.content[0].text" == "There is nothing at this URL"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -737,8 +892,8 @@ Content-Type: application/json
   "id": 212,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependencies",
-    "arguments": { "schema": "https://example.com/test/object" }
+    "name": "get_dependencies",
+    "arguments": { "uri": "https://example.com/test/object" }
   }
 }
 ```
@@ -761,7 +916,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 212
 jsonpath "$.result.isError" == true
-jsonpath "$.result.content[0].text" == "Schema not found"
+jsonpath "$.result.content[0].text" == "There is nothing at this URL"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -787,8 +942,8 @@ Content-Type: application/json
   "id": 213,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependencies",
-    "arguments": { "schema": "{{base}}/test/foo/../object" }
+    "name": "get_dependencies",
+    "arguments": { "uri": "{{base}}/test/foo/../object" }
   }
 }
 ```
@@ -858,8 +1013,8 @@ Content-Type: application/json
   "id": 214,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependencies",
-    "arguments": { "schema": "{{base}}/../etc/passwd" }
+    "name": "get_dependencies",
+    "arguments": { "uri": "{{base}}/../etc/passwd" }
   }
 }
 ```
@@ -882,7 +1037,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 214
 jsonpath "$.result.isError" == true
-jsonpath "$.result.content[0].text" == "Schema not found"
+jsonpath "$.result.content[0].text" == "There is nothing at this URL"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -909,8 +1064,8 @@ Content-Type: application/json
   "id": 215,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependencies",
-    "arguments": { "schema": "{{base}}/test/object#meta" }
+    "name": "get_dependencies",
+    "arguments": { "uri": "{{base}}/test/object#meta" }
   }
 }
 ```
@@ -936,12 +1091,12 @@ jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
-jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/schema/pattern"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request#/properties/schema/pattern"
-jsonpath "$.error.data.errors[0].instanceLocation" == "/schema"
+jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/uri/pattern"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependencies/request#/properties/uri/pattern"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/uri"
 jsonpath "$.error.data.errors[0].error" == "The string value \"{{base}}/test/object#meta\" was expected to match the regular expression \"^[^#?]*$\""
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependencies/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the defined properties subschemas"
 jsonpath "$.result" not exists
@@ -970,7 +1125,7 @@ Content-Type: application/json
   "id": 220,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependencies",
+    "name": "get_dependencies",
     "arguments": {}
   }
 }
@@ -998,9 +1153,9 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 1
 jsonpath "$.error.data.errors[0].keywordLocation" == "/required"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request#/required"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependencies/request#/required"
 jsonpath "$.error.data.errors[0].instanceLocation" == ""
-jsonpath "$.error.data.errors[0].error" == "The value was expected to be an object that defines the property \"schema\""
+jsonpath "$.error.data.errors[0].error" == "The value was expected to be an object that defines the property \"uri\""
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1026,8 +1181,8 @@ Content-Type: application/json
   "id": 221,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependencies",
-    "arguments": { "schema": "" }
+    "name": "get_dependencies",
+    "arguments": { "uri": "" }
   }
 }
 ```
@@ -1053,12 +1208,12 @@ jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
-jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/schema/format"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request#/properties/schema/format"
-jsonpath "$.error.data.errors[0].instanceLocation" == "/schema"
+jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/uri/format"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependencies/request#/properties/uri/format"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/uri"
 jsonpath "$.error.data.errors[0].error" == "The string value \"\" was expected to represent a valid URI"
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependencies/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the defined properties subschemas"
 jsonpath "$.result" not exists
@@ -1087,8 +1242,8 @@ Content-Type: application/json
   "id": 222,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependencies",
-    "arguments": { "schema": 42 }
+    "name": "get_dependencies",
+    "arguments": { "uri": 42 }
   }
 }
 ```
@@ -1114,12 +1269,12 @@ jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
-jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/schema/type"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request#/properties/schema/type"
-jsonpath "$.error.data.errors[0].instanceLocation" == "/schema"
+jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/uri/type"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependencies/request#/properties/uri/type"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/uri"
 jsonpath "$.error.data.errors[0].error" == "The value was expected to be of type string but it was of type integer"
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependencies/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the defined properties subschemas"
 
@@ -1147,8 +1302,8 @@ Content-Type: application/json
   "id": 223,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependencies",
-    "arguments": { "schema": "{{base}}/test/object", "extra": "foo" }
+    "name": "get_dependencies",
+    "arguments": { "uri": "{{base}}/test/object", "extra": "foo" }
   }
 }
 ```
@@ -1175,11 +1330,11 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/additionalProperties"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request#/additionalProperties"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependencies/request#/additionalProperties"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/extra"
 jsonpath "$.error.data.errors[0].error" == "The object value was not expected to define the property \"extra\""
 jsonpath "$.error.data.errors[1].keywordLocation" == "/additionalProperties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request#/additionalProperties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependencies/request#/additionalProperties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was not expected to define additional properties"
 
@@ -1207,7 +1362,7 @@ Content-Type: application/json
   "id": 224,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependencies"
+    "name": "get_dependencies"
   }
 }
 ```
@@ -1234,9 +1389,9 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 1
 jsonpath "$.error.data.errors[0].keywordLocation" == "/required"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request#/required"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependencies/request#/required"
 jsonpath "$.error.data.errors[0].instanceLocation" == ""
-jsonpath "$.error.data.errors[0].error" == "The value was expected to be an object that defines the property \"schema\""
+jsonpath "$.error.data.errors[0].error" == "The value was expected to be an object that defines the property \"uri\""
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1262,7 +1417,7 @@ Content-Type: application/json
   "id": 225,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependencies",
+    "name": "get_dependencies",
     "arguments": null
   }
 }
@@ -1312,8 +1467,8 @@ Content-Type: application/json
   "id": "dependencies-call-string-id",
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependencies",
-    "arguments": { "schema": "{{base}}/test/object" }
+    "name": "get_dependencies",
+    "arguments": { "uri": "{{base}}/test/object" }
   }
 }
 ```
@@ -1383,8 +1538,8 @@ Content-Type: application/json
   "id": 250,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependencies",
-    "arguments": { "schema": "{{base}}/self/v1/schemas/mcp/response" }
+    "name": "get_dependencies",
+    "arguments": { "uri": "{{base}}/self/v1/schemas/mcp/response" }
   }
 }
 ```
@@ -1434,8 +1589,8 @@ Content-Type: application/json
   "id": 251,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependencies",
-    "arguments": { "schema": "{{base}}/SELF/V1/SCHEMAS/MCP/RESPONSE" }
+    "name": "get_dependencies",
+    "arguments": { "uri": "{{base}}/SELF/V1/SCHEMAS/MCP/RESPONSE" }
   }
 }
 ```
@@ -1499,8 +1654,8 @@ Content-Type: application/json
   "id": 252,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependencies",
-    "arguments": { "schema": "{{base}}/self/v1/schemas/mcp/response.JSON" }
+    "name": "get_dependencies",
+    "arguments": { "uri": "{{base}}/self/v1/schemas/mcp/response.JSON" }
   }
 }
 ```
@@ -1564,8 +1719,8 @@ Content-Type: application/json
   "id": 253,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependencies",
-    "arguments": { "schema": "HTTP://LOCALHOST:{{port}}/self/v1/schemas/mcp/response" }
+    "name": "get_dependencies",
+    "arguments": { "uri": "HTTP://LOCALHOST:{{port}}/self/v1/schemas/mcp/response" }
   }
 }
 ```
@@ -1629,8 +1784,8 @@ Content-Type: application/json
   "id": 254,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_dependencies",
-    "arguments": { "schema": "{{base}}/test/object?foo=bar" }
+    "name": "get_dependencies",
+    "arguments": { "uri": "{{base}}/test/object?foo=bar" }
   }
 }
 ```
@@ -1656,12 +1811,12 @@ jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
-jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/schema/pattern"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request#/properties/schema/pattern"
-jsonpath "$.error.data.errors[0].instanceLocation" == "/schema"
+jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/uri/pattern"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependencies/request#/properties/uri/pattern"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/uri"
 jsonpath "$.error.data.errors[0].error" == "The string value \"{{base}}/test/object?foo=bar\" was expected to match the regular expression \"^[^#?]*$\""
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-dependencies/request#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-dependencies/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the defined properties subschemas"
 jsonpath "$.result" not exists

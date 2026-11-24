@@ -113,20 +113,22 @@ TEST(get_schema_metadata_v1) {
                 "dependency count, and breadcrumb path"});
 }
 
-TEST(get_schema_dependencies_v1) {
+TEST(get_dependencies_v1) {
   EXPECT_EQ(sourcemeta::one::action_description(
-                sourcemeta::one::ACTION_TYPE_GET_SCHEMA_DEPENDENCIES_V1),
+                sourcemeta::one::ACTION_TYPE_GET_DEPENDENCIES_V1),
             std::string_view{
-                "List the schemas this schema directly or transitively "
-                "references, the outgoing edges of the dependency graph"});
+                "List the resources of this catalog that this one directly or "
+                "transitively references, the outgoing edges of the "
+                "dependency graph"});
 }
 
-TEST(get_schema_dependents_v1) {
+TEST(get_dependents_v1) {
   EXPECT_EQ(sourcemeta::one::action_description(
-                sourcemeta::one::ACTION_TYPE_GET_SCHEMA_DEPENDENTS_V1),
+                sourcemeta::one::ACTION_TYPE_GET_DEPENDENTS_V1),
             std::string_view{
-                "List the schemas that directly or transitively reference "
-                "this schema, the incoming edges of the dependency graph"});
+                "List the resources of this catalog that directly or "
+                "transitively reference this one, the incoming edges of the "
+                "dependency graph"});
 }
 
 TEST(schema_search_v1) {

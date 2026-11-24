@@ -88,7 +88,7 @@ jsonpath "$.type" == "urn:sourcemeta:one:not-found"
 jsonpath "$.title" == "Not Found"
 jsonpath "$.detail" == "There is nothing at this URL"
 
-GET {{base}}/self/v1/api/schemas/dependencies/test/schemas/string
+GET {{base}}/self/v1/api/dependencies/test/schemas/string
 HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -106,7 +106,7 @@ jsonpath "$.type" == "urn:sourcemeta:one:not-found"
 jsonpath "$.title" == "Not Found"
 jsonpath "$.detail" == "There is nothing at this URL"
 
-GET {{base}}/self/v1/api/schemas/dependents/test/schemas/string
+GET {{base}}/self/v1/api/dependents/test/schemas/string
 HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json

@@ -146,6 +146,97 @@ navigation and discovery purposes.
 
     The directory does not exist.
 
+### Dependencies
+
+*This endpoint retrieves all direct and indirect dependencies of the resource
+located at the specified `{path}` parameter, which may be a JSON Schema or an
+OpenAPI description alike.*
+
+```
+GET /self/v1/api/dependencies/{path}
+```
+
+Where a reference sits is part of what this report is for, so a resource is
+reported once for each position that names it. A cycle that leads back to the
+resource this report is of ends in such a position, so that resource is listed
+among its own dependencies. A reference whose destination is the document
+spelling it is left out, as it reaches nothing beyond that document.
+
+!!! note "A base dialect is a default for an OpenAPI description"
+
+    A description is no schema itself, so the base reported for one is the
+    base of the dialect its Schema Objects answer to by default. Revision 3.0
+    fixes that dialect and gives a description no way to name another, which
+    makes the base reported the whole truth for one. Revisions 3.1 and later
+    let the document set it with `jsonSchemaDialect` and let any Schema Object
+    override that with
+    [`$schema`](https://www.learnjsonschema.com/2020-12/core/schema/), so the
+    base reported is the one in force wherever no Schema Object says
+    otherwise.
+
+=== "200"
+
+    | Property | Type | Required | Description |
+    |----------|------|----------|-------------|
+    | `/*/from` | Object | Yes | The resource that originates the reference, and where within it the reference sits |
+    | `/*/from/identifier` | String | Yes | The absolute URL of that resource |
+    | `/*/from/type` | `schema` / `openapi` | Yes | What this instance serves at that URL, or `schema` for a resource it resolves without serving |
+    | `/*/from/baseDialect` | String | Yes | The absolute URI of the base dialect of that resource. For an OpenAPI description, the base of the dialect its Schema Objects default to |
+    | `/*/from/location` | String | Yes | The JSON Pointer to the position within that resource where the reference sits |
+    | `/*/to` | Object | Yes | The resource being referenced |
+    | `/*/to/identifier` | String | Yes | The absolute URL of that resource |
+    | `/*/to/type` | `schema` / `openapi` | Yes | What this instance serves at that URL, or `schema` for a resource it resolves without serving |
+    | `/*/to/baseDialect` | String | Yes | The absolute URI of the base dialect of that resource. For an OpenAPI description, the base of the dialect its Schema Objects default to |
+
+    An end may name a resource this instance resolves without serving, as an
+    official JSON Schema dialect is. Such an end is reported as a `schema`.
+
+=== "400"
+
+    The query carries a parameter this endpoint does not read. It declares
+    none, so any name at all is refused rather than ignored.
+
+=== "404"
+
+    There is nothing at this URL.
+
+### Dependents
+
+*This endpoint retrieves all direct and transitive dependents of the resource
+located at the specified `{path}` parameter, which may be a JSON Schema or an
+OpenAPI description alike.*
+
+```
+GET /self/v1/api/dependents/{path}
+```
+
+Every entry carries the same shape as a [dependency](#dependencies) entry, read
+the other way around: `from` is the resource that reaches this one, and `to` is
+the resource of this catalog that it reaches.
+
+=== "200"
+
+    | Property | Type | Required | Description |
+    |----------|------|----------|-------------|
+    | `/*/from` | Object | Yes | The resource that originates the reference, and where within it the reference sits |
+    | `/*/from/identifier` | String | Yes | The absolute URL of that resource |
+    | `/*/from/type` | `schema` / `openapi` | Yes | What this instance serves at that URL, or `schema` for a resource it resolves without serving |
+    | `/*/from/baseDialect` | String | Yes | The absolute URI of the base dialect of that resource. For an OpenAPI description, the base of the dialect its Schema Objects default to |
+    | `/*/from/location` | String | Yes | The JSON Pointer to the position within that resource where the reference sits |
+    | `/*/to` | Object | Yes | The resource being referenced |
+    | `/*/to/identifier` | String | Yes | The absolute URL of that resource |
+    | `/*/to/type` | `schema` / `openapi` | Yes | What this instance serves at that URL, or `schema` for a resource it resolves without serving |
+    | `/*/to/baseDialect` | String | Yes | The absolute URI of the base dialect of that resource. For an OpenAPI description, the base of the dialect its Schema Objects default to |
+
+=== "400"
+
+    The query carries a parameter this endpoint does not read. It declares
+    none, so any name at all is refused rather than ignored.
+
+=== "404"
+
+    There is nothing at this URL.
+
 ### Static
 
 *This endpoint serves static assets such as stylesheets, scripts, icons, and
@@ -775,67 +866,6 @@ be combined in any order (i.e. `scope=title,description`).
     their corresponding ranges, when `scope` names anything other than the
     three fields above, or when the query carries a name other than `q`,
     `limit` and `scope`.
-
-### Dependencies
-
-*This endpoint retrieves all direct and indirect dependencies of the JSON
-Schema located at the specified `{path}` parameter.*
-
-```
-GET /self/v1/api/schemas/dependencies/{path}
-```
-
-Where a reference sits is part of what this report is for, so a schema is
-reported once for each position that names it. A cycle that leads back to the
-schema this report is of ends in such a position, so that schema is listed
-among its own dependencies. A reference whose destination is the document
-spelling it is left out, as it reaches nothing beyond that document.
-
-=== "200"
-
-    | Property | Type | Required | Description |
-    |----------|------|----------|-------------|
-    | `/*/from` | String | Yes | The absolute URL of the schema that originates the dependency |
-    | `/*/to` | String | Yes | The absolute URL of the schema being referenced |
-    | `/*/at` | String | Yes | The JSON Pointer to the schema location where the dependency originates |
-    | `/*/baseDialect` | String | Yes | The absolute URI of the base dialect of the schema being referenced |
-
-=== "400"
-
-    The query carries a parameter this endpoint does not read. It declares
-    none, so any name at all is refused rather than ignored.
-
-=== "404"
-
-    The schema does not exist.
-
-### Dependents
-
-*This endpoint retrieves all direct and transitive dependents of the resource
-located at the specified `{path}` parameter.*
-
-```
-GET /self/v1/api/schemas/dependents/{path}
-```
-
-=== "200"
-
-    | Property | Type | Required | Description |
-    |----------|------|----------|-------------|
-    | `/*/from` | String | Yes | The absolute URL of the schema or OpenAPI description that originates the dependency |
-    | `/*/to` | String | Yes | The absolute URL of the resource being referenced |
-    | `/*/at` | String | Yes | The JSON Pointer to the location where the dependency originates |
-    | `/*/kind` | `schema` / `openapi` | Yes | What the resource that originates the dependency is |
-    | `/*/baseDialect` | String | Only for `schema` | The absolute URI of the base dialect of the schema that originates the dependency, which an OpenAPI description does not declare |
-
-=== "400"
-
-    The query carries a parameter this endpoint does not read. It declares
-    none, so any name at all is refused rather than ignored.
-
-=== "404"
-
-    The schema does not exist.
 
 ### Health
 
