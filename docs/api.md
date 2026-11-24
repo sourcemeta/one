@@ -95,9 +95,11 @@ GET /self/v1/api/list/{path?}
 ```
 
 If no path is provided, the endpoint returns the contents of the root
-directory. The response includes all schemas and subdirectories available at
-the requested path, providing a hierarchical view of the instance structure for
-navigation and discovery purposes.
+directory. The response includes every subdirectory, schema and [OpenAPI
+description](#openapi-descriptions) available at the requested path, providing
+a hierarchical view of the instance structure for navigation and discovery
+purposes. Entries are grouped by what they are, subdirectories first, then
+schemas, then OpenAPI descriptions.
 
 === "200"
 
@@ -114,28 +116,33 @@ navigation and discovery purposes.
     | `/github` | String | No | The GitHub organisation or repository associated with the directory |
     | `/website` | String | No | The external URL associated with the directory  |
     | `/schemas` | Integer | Yes | The recursive count of schemas in this directory |
-    | `/health` | Integer | Yes | The aggregated health of the directory |
+    | `/openapi` | Integer | Yes | The recursive count of OpenAPI descriptions in this directory |
+    | `/health` | Integer | Yes | The aggregated health of the directory, over the schemas and the OpenAPI descriptions it holds alike |
     | `/private` | Boolean | Yes | Whether an authentication policy governs this directory |
     | `/entries` | Array | Yes | The entries inside the directory |
-    | `/entries/*/type` | String | Yes | The type of the entry (`schema` or `directory`) |
+    | `/entries/*/type` | `directory` / `schema` / `openapi` | Yes | What the entry is |
     | `/entries/*/name` | String | Yes | The last URL path segment of the entry |
     | `/entries/*/path` | String | Yes | The relative URL of the entry |
     | `/entries/*/private` | Boolean | Yes | Whether an authentication policy governs the entry |
     | `/entries/*/health` | Integer | Yes | The aggregated health of the entry |
     | `/entries/*/schemas` | Integer | No | For `directory` entries, the recursive count of schemas in the directory |
+    | `/entries/*/openapi` | Integer | No | For `directory` entries, the recursive count of OpenAPI descriptions in the directory |
+    | `/entries/*/openapi` | `3.0` / `3.1` / `3.2` | No | For `openapi` entries, the revision of the OpenAPI Specification the description declares. The `type` of the entry decides which of the two readings of this property name applies |
     | `/entries/*/title` | String | No | The title associated with the entry |
     | `/entries/*/description` | String | No | The description associated with the entry. The web explorer renders this as Markdown |
     | `/entries/*/email` | String | No | For `directory` entries, the e-mail address associated with the entry |
     | `/entries/*/github` | String | No | For `directory` entries, the GitHub organisation or repository associated with the entry |
     | `/entries/*/website` | String | No | For `directory` entries, the website URL associated with the entry |
-    | `/entries/*/dependencies` | Integer | Yes | For `schema` entries, the number of references the schema makes to other schemas, directly and indirectly |
-    | `/entries/*/bytes` | Integer | No | For `schema` entries, the bytes that the entry occupies |
-    | `/entries/*/bytesBundled` | Integer | No | For `schema` entries, the bytes that the entry occupies when bundled |
-    | `/entries/*/baseDialect` | String | No | For `schema` entries, the base dialect URI of the entry |
-    | `/entries/*/dialect` | String | No | For `schema` entries, the dialect URI of the entry |
-    | `/entries/*/identifier` | String | No | For `schema` entries, the absolute URI of the entry |
-    | `/entries/*/alert` | String / Null | No | For `schema` entries, the human readable alert message for the schema collection. The web explorer renders this as Markdown |
-    | `/entries/*/priority` | Integer | No | For `schema` entries, an importance hint from `0` (least important) to `100` (most important), inherited from the schema collection's [`x-sourcemeta-one:priority`](configuration.md) configuration value |
+    | `/entries/*/version` | String | No | For `openapi` entries, the version of the API the description declares |
+    | `/entries/*/operations` | Integer | No | For `openapi` entries, the number of operations the description holds |
+    | `/entries/*/dependencies` | Integer | Yes | For `schema` and `openapi` entries, the number of references the entry makes to other resources, directly and indirectly |
+    | `/entries/*/bytes` | Integer | No | For `schema` and `openapi` entries, the bytes that the entry occupies |
+    | `/entries/*/bytesBundled` | Integer | No | For `schema` and `openapi` entries, the bytes that the entry occupies when bundled |
+    | `/entries/*/dialect` | String | No | For `schema` entries, the dialect URI of the entry. For `openapi` entries, the dialect URI its Schema Objects are read under |
+    | `/entries/*/baseDialect` | String | No | For `schema` and `openapi` entries, the base dialect URI that the entry's `dialect` rests on |
+    | `/entries/*/identifier` | String | No | For `schema` and `openapi` entries, the absolute URI of the entry |
+    | `/entries/*/alert` | String / Null | No | For `schema` and `openapi` entries, the human readable alert message for the collection. The web explorer renders this as Markdown |
+    | `/entries/*/priority` | Integer | No | For `schema` and `openapi` entries, an importance hint from `0` (least important) to `100` (most important), inherited from the collection's [`x-sourcemeta-one:priority`](configuration.md) configuration value |
 
 === "400"
 
@@ -392,6 +399,11 @@ Bundling](https://json-schema.org/blog/posts/bundling-json-schema-compound-docum
 process. Meta-schemas are not embedded, as the registry serves every
 meta-schema that a schema may declare.
 
+!!! note "An OpenAPI description is fetched from here too"
+
+    This endpoint serves whatever the catalog holds at the path. See [OpenAPI
+    Descriptions](#openapi-descriptions) for how one differs.
+
 !!! warning "`bundle` is a presence flag, not a boolean"
 
     Bundling is triggered by the presence of the `bundle` query parameter
@@ -499,7 +511,8 @@ property reports none for that schema.
 === "400"
 
     The `as` query parameter names a dialect the schema cannot be converted
-    into, or is combined with a query parameter other than `bundle`.
+    into, is set on an [OpenAPI description](#openapi-descriptions), or is
+    combined with a query parameter other than `bundle`.
 
 === "403"
 
@@ -551,6 +564,11 @@ Format](https://json-schema.org/draft/2020-12/json-schema-core#name-output-struc
 === "417"
 
     The `Expect` header carries an expectation other than `100-continue`. See [RFC 9110 §10.1.1](https://datatracker.ietf.org/doc/html/rfc9110#section-10.1.1).
+
+=== "501"
+
+    The path names an [OpenAPI description](#openapi-descriptions), which this
+    operation does not support.
 
 ### Trace
 
@@ -610,6 +628,11 @@ insight into the validation engine's behavior and logic flow.
 === "417"
 
     The `Expect` header carries an expectation other than `100-continue`. See [RFC 9110 §10.1.1](https://datatracker.ietf.org/doc/html/rfc9110#section-10.1.1).
+
+=== "501"
+
+    The path names an [OpenAPI description](#openapi-descriptions), which this
+    operation does not support.
 
 ### RDF
 
@@ -698,6 +721,11 @@ contexts are not fetched.
     (the problem details carry the offending annotation facet and instance
     location).
 
+=== "501"
+
+    The path names an [OpenAPI description](#openapi-descriptions), which this
+    operation does not support.
+
 ### Metadata
 
 *This endpoint retrieves metadata information about the JSON Schema located at
@@ -739,7 +767,9 @@ GET /self/v1/api/schemas/metadata/{path}
 
 === "404"
 
-    The schema does not exist.
+    The schema does not exist. An [OpenAPI
+    description](#openapi-descriptions) answers this way too, as the
+    [metadata](#openapi-metadata) endpoint answers about one instead.
 
 ### Search
 
@@ -757,6 +787,9 @@ GET /self/v1/api/schemas/search?q={term}[&limit={n}][&scope={fields}]
 
 The valid values for `scope` are `path`, `title`, and `description`, which can
 be combined in any order (i.e. `scope=title,description`).
+
+A search answers for the schemas of the catalog. An [OpenAPI
+description](#openapi-descriptions) is never among the results.
 
 === "200"
 
@@ -807,7 +840,9 @@ spelling it is left out, as it reaches nothing beyond that document.
 
 === "404"
 
-    The schema does not exist.
+    The schema does not exist. An [OpenAPI
+    description](#openapi-descriptions) answers this way too, as the
+    [dependencies](#openapi-dependencies) endpoint answers about one instead.
 
 ### Dependents
 
@@ -835,7 +870,9 @@ GET /self/v1/api/schemas/dependents/{path}
 
 === "404"
 
-    The schema does not exist.
+    The schema does not exist. An [OpenAPI
+    description](#openapi-descriptions) answers this way too, as the
+    [dependents](#openapi-dependents) endpoint answers about one instead.
 
 ### Health
 
@@ -870,6 +907,11 @@ is left out of both the score and the issue list.
 === "404"
 
     The schema does not exist.
+
+=== "501"
+
+    The path names an [OpenAPI description](#openapi-descriptions), which this
+    operation does not support.
 
 ### Locations
 
@@ -933,6 +975,11 @@ GET /self/v1/api/schemas/locations/{path}
 
     The [configuration file](configuration.md) marks the schema collection as listed but not served.
 
+=== "501"
+
+    The path names an [OpenAPI description](#openapi-descriptions), which this
+    operation does not support.
+
 ### Stats
 
 *This endpoint retrieves keyword statistics, by vocabulary, about every URI
@@ -960,6 +1007,11 @@ GET /self/v1/api/schemas/stats/{path}
 === "405"
 
     The [configuration file](configuration.md) marks the schema collection as listed but not served.
+
+=== "501"
+
+    The path names an [OpenAPI description](#openapi-descriptions), which this
+    operation does not support.
 
 ### Positions
 
@@ -994,6 +1046,156 @@ schema.
 === "405"
 
     The [configuration file](configuration.md) marks the schema collection as listed but not served.
+
+=== "501"
+
+    The path names an [OpenAPI description](#openapi-descriptions), which this
+    operation does not support.
+
+## OpenAPI Descriptions
+
+*An OpenAPI description is a leaf of the catalog in its own right, served,
+bundled and reported on beside the schemas.*
+
+Revisions [3.0](https://spec.openapis.org/oas/v3.0.4.html),
+[3.1](https://spec.openapis.org/oas/v3.1.1.html) and
+[3.2](https://spec.openapis.org/oas/v3.2.0.html) are all supported. A
+description is one leaf, served whole, and the Schema Objects inside it are not
+served as schemas of their own. Where a description is split across files, each
+document is a leaf of its own.
+
+A description is fetched from the [same endpoint as a schema](#fetch) and is
+served as `application/openapi+json`. The `bundle` query parameter behaves as
+it does for a schema. The `as` query parameter is refused with `400`, as no
+JSON Schema dialect conversion applies to a description.
+
+!!! note "Health is not measured for a description yet"
+
+    Every description reports a health of `100`, and that score takes part in
+    the health a directory aggregates.
+
+### Metadata { #openapi-metadata }
+
+*This endpoint retrieves metadata information about the OpenAPI description
+located at the `{path}` parameter.*
+
+```
+GET /self/v1/api/openapi/metadata/{path}
+```
+
+=== "200"
+
+    | Property                       | Type                     | Required | Description |
+    |--------------------------------|--------------------------|-----|-------------------------------------|
+    | `/path` | String | Yes | The relative URL of the OpenAPI description |
+    | `/identifier` | String | Yes | The absolute URI of the OpenAPI description |
+    | `/openapi` | `3.0` / `3.1` / `3.2` | Yes | The revision of the OpenAPI Specification the description declares |
+    | `/version` | String | Yes | The version of the API the description declares |
+    | `/operations` | Integer | Yes | The number of operations the description holds |
+    | `/dialect` | String | Yes | The dialect URI the Schema Objects of the description are read under |
+    | `/baseDialect` | String | Yes | The base dialect URI that dialect rests on |
+    | `/health` | Integer | Yes | The health score of the OpenAPI description |
+    | `/priority` | Integer | Yes | An importance hint from `0` (least important) to `100` (most important), inherited from the collection's [`x-sourcemeta-one:priority`](configuration.md) configuration value |
+    | `/private` | Boolean | Yes | Whether an authentication policy governs this OpenAPI description |
+    | `/dependencies` | Integer | Yes | The number of references the description makes to other documents and to schemas, directly and indirectly |
+    | `/bytes` | Integer | Yes | The bytes that the OpenAPI description occupies |
+    | `/bytesBundled` | Integer | Yes | The bytes that the OpenAPI description occupies when bundled |
+    | `/alert` | String / Null | No | The human readable alert message for the collection, if any. The web explorer renders this as Markdown |
+    | `/title` | String | No | The title of the API, if any |
+    | `/description` | String | No | The summary of the API, if any, falling back to its description. The web explorer renders this as Markdown |
+    | `/breadcrumb` | Array | Yes | The breadcrumb of the OpenAPI description |
+    | `/breadcrumb/*/name` | String | Yes | The breadcrumb entry URL path |
+    | `/breadcrumb/*/path` | String | Yes | The relative URL of the breadcrumb location |
+
+=== "400"
+
+    The query carries a parameter this endpoint does not read. It declares
+    none, so any name at all is refused rather than ignored.
+
+=== "404"
+
+    The OpenAPI description does not exist.
+
+### Dependencies { #openapi-dependencies }
+
+*This endpoint retrieves all direct and indirect dependencies of the OpenAPI
+description located at the specified `{path}` parameter.*
+
+```
+GET /self/v1/api/openapi/dependencies/{path}
+```
+
+A report carries the other documents of the description and the schemas of this
+catalog its Schema Objects name. Where a reference sits is part of what this
+report is for, so a destination that several positions name is an edge for each
+of them.
+
+=== "200"
+
+    | Property | Type | Required | Description |
+    |----------|------|----------|-------------|
+    | `/*/from` | String | Yes | The absolute URL of the OpenAPI description that originates the dependency |
+    | `/*/to` | String | Yes | The absolute URL of the document or schema being referenced |
+    | `/*/at` | String | Yes | The JSON Pointer to the location where the dependency originates |
+    | `/*/kind` | String | Yes | The kind of OpenAPI Object being referenced: `path-item`, `parameter`, `request-body`, `response`, `example`, `header`, `link`, `callback`, `security-scheme`, `media-type`, `operation` or `schema` |
+
+=== "400"
+
+    The query carries a parameter this endpoint does not read. It declares
+    none, so any name at all is refused rather than ignored.
+
+=== "404"
+
+    The OpenAPI description does not exist.
+
+### Dependents { #openapi-dependents }
+
+*This endpoint retrieves all direct and transitive dependents of the OpenAPI
+description located at the specified `{path}` parameter.*
+
+```
+GET /self/v1/api/openapi/dependents/{path}
+```
+
+Only another OpenAPI description reaches a description, so every entry of this
+report names one.
+
+=== "200"
+
+    | Property | Type | Required | Description |
+    |----------|------|----------|-------------|
+    | `/*/from` | String | Yes | The absolute URL of the OpenAPI description that originates the dependency |
+    | `/*/to` | String | Yes | The absolute URL of the document being referenced |
+    | `/*/at` | String | Yes | The JSON Pointer to the location where the dependency originates |
+    | `/*/kind` | String | Yes | The kind of OpenAPI Object being referenced, from the same set as [Dependencies](#openapi-dependencies) |
+
+=== "400"
+
+    The query carries a parameter this endpoint does not read. It declares
+    none, so any name at all is refused rather than ignored.
+
+=== "404"
+
+    The OpenAPI description does not exist.
+
+### Unsupported Operations
+
+The schema surfaces of this API answer for schemas. Pointed at an OpenAPI
+description, each answers as follows.
+
+| Endpoint | Answer |
+|----------|--------|
+| `/self/v1/api/schemas/metadata/{path}` | `404`, the [metadata](#openapi-metadata) endpoint above answers instead |
+| `/self/v1/api/schemas/dependencies/{path}` | `404`, the [dependencies](#openapi-dependencies) endpoint above answers instead |
+| `/self/v1/api/schemas/dependents/{path}` | `404`, the [dependents](#openapi-dependents) endpoint above answers instead |
+| `/self/v1/api/schemas/health/{path}` | `501` |
+| `/self/v1/api/schemas/locations/{path}` | `501` |
+| `/self/v1/api/schemas/positions/{path}` | `501` |
+| `/self/v1/api/schemas/stats/{path}` | `501` |
+| `/self/v1/api/schemas/evaluate/{path}` | `501` |
+| `/self/v1/api/schemas/trace/{path}` | `501` |
+| `/self/v1/api/schemas/rdf/{path}` | `501` |
+| `/self/v1/api/schemas/search` | the description is not among the results |
 
 ## Playground
 
@@ -1057,9 +1259,9 @@ ingested into the catalog the normal way.
     licensing](commercial.md).
 
 *This endpoint exposes the entire instance as a [Model Context
-Protocol](https://modelcontextprotocol.io) server, offering every JSON Schema
-in the catalog as an MCP resource and every action documented above as an
-MCP tool.*
+Protocol](https://modelcontextprotocol.io) server, offering every schema and
+every OpenAPI description in the catalog as an MCP resource and every action
+documented above as an MCP tool.*
 
 ```
 POST /self/v1/mcp
@@ -1133,12 +1335,16 @@ We recommend connecting with the latest revision to take advantage of all
 available features, but the server gracefully degrades to support older
 clients as needed.
 
-**Resources.** Every JSON Schema in the catalog is offered as an MCP resource
-addressable by its canonical absolute URI, served in paginated form. The
-configured [`x-sourcemeta-one:priority`](configuration.md) hint of each
-schema is mapped to the standard MCP `annotations.priority` value, so that
-AI clients can rank schemas by their declared importance. A resource listing
-names only the schemas the client's credential reaches.
+**Resources.** Every schema and every [OpenAPI
+description](#openapi-descriptions) in the catalog is offered as an MCP
+resource addressable by its canonical absolute URI, served in paginated form
+and labelled with the media type its kind is served as. The configured
+[`x-sourcemeta-one:priority`](configuration.md) hint of each resource is mapped
+to the standard MCP `annotations.priority` value, so that AI clients can rank
+resources by their declared importance. A resource listing names only what the
+client's credential reaches, and holds every schema before every OpenAPI
+description. `resources/templates/list` names the two kinds as the `JSON
+Schema` and `OpenAPI Description` templates.
 
 **Tools.** Every action documented in this page is also exposed as an MCP tool
 that performs the same work over JSON-RPC. The server supports the full range
