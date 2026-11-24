@@ -11,16 +11,12 @@ namespace sourcemeta::one {
 
 inline constexpr std::string_view ENDPOINT_LIST_DIRECTORY{
     "/self/v1/api/list{/path*}"};
-inline constexpr std::string_view ENDPOINT_SCHEMA_DEPENDENCIES{
-    "/self/v1/api/schemas/dependencies/{+schema}"};
-inline constexpr std::string_view ENDPOINT_SCHEMA_DEPENDENTS{
-    "/self/v1/api/schemas/dependents/{+schema}"};
+inline constexpr std::string_view ENDPOINT_DEPENDENCIES{
+    "/self/v1/api/dependencies/{+path}"};
+inline constexpr std::string_view ENDPOINT_DEPENDENTS{
+    "/self/v1/api/dependents/{+path}"};
 inline constexpr std::string_view ENDPOINT_OPENAPI_METADATA{
     "/self/v1/api/openapi/metadata/{+openapi}"};
-inline constexpr std::string_view ENDPOINT_OPENAPI_DEPENDENCIES{
-    "/self/v1/api/openapi/dependencies/{+openapi}"};
-inline constexpr std::string_view ENDPOINT_OPENAPI_DEPENDENTS{
-    "/self/v1/api/openapi/dependents/{+openapi}"};
 inline constexpr std::string_view ENDPOINT_SCHEMA_HEALTH{
     "/self/v1/api/schemas/health/{+schema}"};
 inline constexpr std::string_view ENDPOINT_SCHEMA_LOCATIONS{

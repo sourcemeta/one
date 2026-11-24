@@ -19,7 +19,7 @@ header "ETag" exists
 jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
-jsonpath "$.schemas" == 82
+jsonpath "$.schemas" == 77
 jsonpath "$.openapi" == 0
 jsonpath "$.health" == 50
 jsonpath "$.private" == false
@@ -42,7 +42,7 @@ jsonpath "$.entries[2].name" == "self"
 jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.entries[2].path" == "/self/"
 jsonpath "$.entries[2].private" == false
-jsonpath "$.entries[2].schemas" == 80
+jsonpath "$.entries[2].schemas" == 75
 jsonpath "$.entries[2].openapi" == 0
 jsonpath "$.entries[2].health" == 100
 POST {{base}}/self/v1/api/schemas/evaluate{{root_listing_schema}}
@@ -77,7 +77,7 @@ header "ETag" != "{{root_etag}}"
 jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
-jsonpath "$.schemas" == 85
+jsonpath "$.schemas" == 80
 jsonpath "$.openapi" == 0
 jsonpath "$.health" == 47
 jsonpath "$.private" == false
@@ -114,7 +114,7 @@ jsonpath "$.entries[4].name" == "self"
 jsonpath "$.entries[4].type" == "directory"
 jsonpath "$.entries[4].path" == "/self/"
 jsonpath "$.entries[4].private" == false
-jsonpath "$.entries[4].schemas" == 80
+jsonpath "$.entries[4].schemas" == 75
 jsonpath "$.entries[4].openapi" == 0
 jsonpath "$.entries[4].health" == 100
 

@@ -5,11 +5,11 @@ GET {{base}}/self/v1/api/schemas/health/private/secret
 HTTP 404
 Content-Type: application/problem+json
 
-GET {{base}}/self/v1/api/schemas/dependencies/private/secret
+GET {{base}}/self/v1/api/dependencies/private/secret
 HTTP 404
 Content-Type: application/problem+json
 
-GET {{base}}/self/v1/api/schemas/dependents/private/secret
+GET {{base}}/self/v1/api/dependents/private/secret
 HTTP 404
 Content-Type: application/problem+json
 

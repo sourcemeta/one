@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Dependents RPC Output",
+  "description": "Get all direct and transitive dependents of a resource in the catalog, whether it is a JSON Schema or an OpenAPI description",
+  "examples": [
+    {
+      "results": [
+        {
+          "from": {
+            "identifier": "https://example.com/schemas/user",
+            "type": "schema",
+            "baseDialect": "https://json-schema.org/draft/2020-12/schema",
+            "location": "/properties/address/$ref"
+          },
+          "to": {
+            "identifier": "https://example.com/schemas/address",
+            "type": "schema",
+            "baseDialect": "https://json-schema.org/draft/2020-12/schema"
+          }
+        }
+      ]
+    }
+  ],
+  "type": "object",
+  "required": [ "results" ],
+  "properties": {
+    "results": {
+      "$ref": "../../../../api/dependents/response.json"
+    }
+  },
+  "additionalProperties": false
+}

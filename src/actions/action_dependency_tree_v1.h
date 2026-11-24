@@ -90,11 +90,7 @@ public:
     const sourcemeta::one::RequestCookies cookies{request};
     const auto resolution{this->artifact_resolve_path(
         caller, matches.front(), this->tree_, this->metapack_)};
-    // Both kinds of leaf record their connections under one filename, and what
-    // each kind records differs enough to have a surface of its own. This
-    // surface therefore holds nothing for an artifact of the other kind
-    if (!resolution.path.has_value() ||
-        this->artifact_kind(resolution.path.value()) != this->kind_) {
+    if (!resolution.path.has_value()) {
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
           "urn:sourcemeta:one:not-found", "There is nothing at this URL",
@@ -127,8 +123,7 @@ public:
     const auto &leaf_uri{arguments.at(this->argument_).to_string()};
     const auto resolution{this->artifact_resolve_path(
         caller, leaf_uri, this->tree_, this->metapack_)};
-    if (!resolution.path.has_value() ||
-        this->artifact_kind(resolution.path.value()) != this->kind_) {
+    if (!resolution.path.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(version, request_id,
                                                    this->missing_);
     }
@@ -141,29 +136,19 @@ public:
     auto envelope{sourcemeta::core::JSON::make_object()};
     envelope.assign_assume_new("results", std::move(contents.value()));
 
-    // What the dependents of a schema report of every edge is which kind of
-    // resource reached it, so this reads the kinds it already carries. The
-    // reports of a description say which kind of Object each reference reaches
-    // instead, which is no claim about the resource that spelled it
-    const auto reports_resource_kind{this->metapack_ == "dependents" &&
-                                     this->kind_ ==
-                                         sourcemeta::one::LeafKind::Schema};
+    // Every edge names what this instance serves at either of its ends, so
+    // what a resource is comes off the report rather than being asked again
     std::set<std::string_view> unique_uris;
     std::map<std::string_view, std::string_view> kinds;
     for (const auto &entry : envelope.at("results").as_array()) {
       for (const auto *const field : {"from", "to"}) {
-        if (!entry.defines(field)) {
-          continue;
-        }
-        const std::string_view uri{entry.at(field).to_string()};
+        const auto &end{entry.at(field)};
+        const std::string_view uri{end.at("identifier").to_string()};
         if (uri.starts_with(this->server_uri())) {
           unique_uris.emplace(uri);
         }
-      }
 
-      if (reports_resource_kind && entry.defines("kind")) {
-        kinds.emplace(entry.at("from").to_string(),
-                      entry.at("kind").to_string());
+        kinds.emplace(uri, end.at("type").to_string());
       }
     }
 
@@ -172,9 +157,6 @@ public:
     sourcemeta::core::prettify(envelope, payload);
     content.push_back(sourcemeta::core::mcp_make_text_block(payload.str()));
     for (const auto uri : unique_uris) {
-      // An edge of this report may name an OpenAPI description, which is no
-      // JSON Schema however a caller came to reach it. What the report does
-      // not say of a resource is asked of what this instance serves there
       const auto known{kinds.find(uri)};
       const auto describes_api{known == kinds.cend()
                                    ? this->describes_api(caller, uri)
@@ -194,12 +176,11 @@ protected:
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
       const std::string_view metapack, const Tree tree,
-      const sourcemeta::one::LeafKind kind, const std::string_view argument,
-      const std::string_view missing, sourcemeta::one::Router &dispatcher)
+      const std::string_view argument, const std::string_view missing,
+      sourcemeta::one::Router &dispatcher)
       : sourcemeta::one::RouterAction{base, router.base_url(), dispatcher} {
     this->metapack_ = metapack;
     this->tree_ = tree;
-    this->kind_ = kind;
     this->argument_ = argument;
     this->missing_ = missing;
     router.arguments(
@@ -226,8 +207,7 @@ private:
   // A caller that never names a direction resolves nothing, which the tree it
   // resolves against must not decide
   Tree tree_{Tree::Schemas};
-  sourcemeta::one::LeafKind kind_{sourcemeta::one::LeafKind::Schema};
-  std::string_view argument_{"schema"};
+  std::string_view argument_{"uri"};
   std::string_view missing_{"Schema not found"};
   std::string_view response_schema_;
   std::string_view rpc_request_schema_;

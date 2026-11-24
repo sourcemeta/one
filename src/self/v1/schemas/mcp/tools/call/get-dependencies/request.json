@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Dependencies RPC Input",
+  "description": "Get all direct and indirect dependencies of a resource in the catalog, whether it is a JSON Schema or an OpenAPI description",
+  "examples": [
+    {
+      "uri": "https://example.com/foo"
+    }
+  ],
+  "type": "object",
+  "required": [ "uri" ],
+  "properties": {
+    "uri": {
+      "description": "Absolute URI of a JSON Schema or an OpenAPI description in this catalog",
+      "x-format-assertion": true,
+      "type": "string",
+      "pattern": "^[^#?]*$",
+      "format": "uri"
+    }
+  },
+  "additionalProperties": false
+}

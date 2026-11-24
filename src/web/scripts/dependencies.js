@@ -26,15 +26,15 @@ document.querySelectorAll("[data-sourcemeta-ui-dependencies]").forEach(async (el
   const path = element.getAttribute("data-sourcemeta-ui-dependencies");
   const origin = window.location.origin;
   const identifier = element.getAttribute("data-sourcemeta-ui-identifier");
-  const response = await window.fetch(`/self/v1/api/schemas/dependencies${path}`);
+  const response = await window.fetch(`/self/v1/api/dependencies${path}`);
   if (!response.ok) {
     element.textContent = "Failed to load dependencies.";
     return;
   }
 
   const dependencies = await response.json();
-  const direct = dependencies.filter((dependency) => dependency.from === identifier);
-  const indirect = dependencies.filter((dependency) => dependency.from !== identifier);
+  const direct = dependencies.filter((dependency) => dependency.from.identifier === identifier);
+  const indirect = dependencies.filter((dependency) => dependency.from.identifier !== identifier);
 
   element.innerHTML = "";
   const summary = document.createElement("p");
@@ -65,14 +65,14 @@ document.querySelectorAll("[data-sourcemeta-ui-dependencies]").forEach(async (el
     for (const dependency of dependencies) {
       const row = document.createElement("tr");
       const originCell = document.createElement("td");
-      if (dependency.from === identifier) {
+      if (dependency.from.identifier === identifier) {
         const anchor = document.createElement("a");
         anchor.href = "#";
         anchor.setAttribute("data-sourcemeta-ui-editor-highlight", path);
         anchor.setAttribute("data-sourcemeta-ui-editor-highlight-pointers",
-          JSON.stringify(dependency.at));
+          JSON.stringify(dependency.from.location));
         const code = document.createElement("code");
-        code.textContent = dependency.at;
+        code.textContent = dependency.from.location;
         anchor.appendChild(code);
         originCell.appendChild(anchor);
       } else {
@@ -83,7 +83,7 @@ document.querySelectorAll("[data-sourcemeta-ui-dependencies]").forEach(async (el
       }
 
       const depCell = document.createElement("td");
-      depCell.appendChild(schemaLink(dependency.to, origin));
+      depCell.appendChild(schemaLink(dependency.to.identifier, origin));
       row.appendChild(originCell);
       row.appendChild(depCell);
       tbody.appendChild(row);
@@ -104,7 +104,7 @@ document.querySelectorAll("[data-sourcemeta-ui-dependents]").forEach(async (elem
   const path = element.getAttribute("data-sourcemeta-ui-dependents");
   const origin = window.location.origin;
   const identifier = element.getAttribute("data-sourcemeta-ui-identifier");
-  const response = await window.fetch(`/self/v1/api/schemas/dependents${path}`);
+  const response = await window.fetch(`/self/v1/api/dependents${path}`);
   if (!response.ok) {
     element.textContent = "Failed to load dependents.";
     return;
@@ -114,10 +114,10 @@ document.querySelectorAll("[data-sourcemeta-ui-dependents]").forEach(async (elem
   const directSchemas = new Set();
   const indirectSchemas = new Set();
   for (const dependent of dependents) {
-    if (dependent.to === identifier) {
-      directSchemas.add(dependent.from);
+    if (dependent.to.identifier === identifier) {
+      directSchemas.add(dependent.from.identifier);
     } else {
-      indirectSchemas.add(dependent.from);
+      indirectSchemas.add(dependent.from.identifier);
     }
   }
 

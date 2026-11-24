@@ -1,6 +1,7 @@
 #ifndef SOURCEMETA_ONE_INDEX_EXPLORER_H_
 #define SOURCEMETA_ONE_INDEX_EXPLORER_H_
 
+#include "edges.h"
 #include "endpoints.h"
 #include "metaschema.h"
 
@@ -357,28 +358,6 @@ inline auto explorer_extension_alert(const T *extension,
                            extension->description_length};
   return explorer_extension_string(extension, base, offset,
                                    extension->alert_length);
-}
-
-// What a dialect rests on, which is what the document declaring that dialect
-// says of itself. An OpenAPI description declares no dialect of its own, so
-// the dialect its Schema Objects default to is the only way to its base
-static auto
-base_dialect_of(const sourcemeta::core::JSON::String &dialect,
-                sourcemeta::one::Resolver &resolver,
-                const sourcemeta::one::BuildDynamicCallback &callback)
-    -> std::string {
-  const auto document{resolver(dialect, callback)};
-  assert(document.has_value());
-  const sourcemeta::core::SchemaFrame frame{
-      sourcemeta::core::SchemaFrame::Mode::Root,
-      document.value(),
-      sourcemeta::core::schema_walker,
-      [&callback, &resolver](const auto identifier) {
-        return resolver(identifier, callback);
-      },
-      "",
-      dialect};
-  return std::format("{}", frame.root_location().value().get().base_dialect);
 }
 
 // The version the described API gives itself, which is the one string an
@@ -775,8 +754,9 @@ struct GenerateOpenAPIMetadata {
     // revision reserves to override it says nothing
     const auto &dialect{root->default_dialect};
     result.assign("dialect", sourcemeta::core::JSON{dialect});
-    result.assign("baseDialect", sourcemeta::core::JSON{base_dialect_of(
-                                     dialect, resolver, callback)});
+    result.assign("baseDialect",
+                  sourcemeta::core::JSON{sourcemeta::one::base_dialect_of(
+                      dialect, resolver, callback)});
 
     const auto *const info{document.try_at("info")};
     assert(info != nullptr && info->is_object());
@@ -884,8 +864,8 @@ struct GenerateOpenAPIMetadata {
 struct GenerateDependents {
   static auto handler(const sourcemeta::one::BuildState &,
                       const sourcemeta::one::BuildPlan::Action &action,
-                      const sourcemeta::one::BuildDynamicCallback &callback,
-                      sourcemeta::one::Resolver &resolver,
+                      const sourcemeta::one::BuildDynamicCallback &,
+                      sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
 
@@ -896,6 +876,9 @@ struct GenerateDependents {
     // What this reads is chosen for it, so a referrer a view is without never
     // reaches here and there is nothing to leave out
     DirectMap direct;
+    // What each end says about itself is settled where the reference was
+    // recorded, so this carries it over rather than working it out again
+    sourcemeta::one::EdgeEndCache ends;
     for (const auto &dependency : action.dependencies) {
       if (dependency.filename() == "authentication.bin") {
         continue;
@@ -912,8 +895,13 @@ struct GenerateDependents {
         // which is what makes it a dependent. What a description reports
         // covers the schemas its schemas reach as well, so one edge arrives
         // here from more than one report and is counted once
-        direct[entry.at("to").to_string()].emplace(entry.at("from").to_string(),
-                                                   entry.at("at").to_string());
+        const auto &origin{entry.at("from")};
+        const auto &target{entry.at("to")};
+        direct[target.at("identifier").to_string()].emplace(
+            origin.at("identifier").to_string(),
+            origin.at("location").to_string());
+        sourcemeta::one::harvest_edge_end(ends, origin);
+        sourcemeta::one::harvest_edge_end(ends, target);
       }
     }
 
@@ -945,54 +933,10 @@ struct GenerateDependents {
       }
     }
 
-    // What a dependent is written in is part of what this report is for, and
-    // a schema commonly reaches this one along more than one path
-    std::unordered_map<sourcemeta::core::JSON::String,
-                       sourcemeta::core::JSON::String>
-        base_dialects;
     auto result{sourcemeta::core::JSON::make_array()};
     for (const auto &[from, target, pointer] : edges) {
-      auto object{sourcemeta::core::JSON::make_object()};
-      object.assign("from", sourcemeta::core::JSON{from});
-      object.assign("to", sourcemeta::core::JSON{target});
-      object.assign("at", sourcemeta::core::JSON{pointer});
-      // Which kind of resource a dependent is is what this instance serves it
-      // as, rather than anything the edge that reached it looks like
-      const auto served{resolver.kind_of(from)};
-      assert(served.has_value());
-      const auto describes_api{served == sourcemeta::one::LeafKind::OpenAPI};
-      object.assign(
-          "kind", sourcemeta::core::JSON{describes_api ? "openapi" : "schema"});
-      // A dialect is what a schema is written against, and a description
-      // declares none of its own, so this says it of the dependents that have
-      // one and leaves the field out of the others
-      if (describes_api) {
-        result.push_back(std::move(object));
-        continue;
-      }
-
-      const auto match{base_dialects.find(from)};
-      if (match == base_dialects.cend()) {
-        const auto schema{resolver(from, callback)};
-        assert(schema.has_value());
-        const sourcemeta::core::SchemaFrame frame{
-            sourcemeta::core::SchemaFrame::Mode::Root,
-            schema.value(),
-            sourcemeta::core::schema_walker,
-            [&callback, &resolver](const auto identifier) {
-              return resolver(identifier, callback);
-            },
-            resolver.dialect_of(from),
-            from};
-        auto base_dialect{std::format(
-            "{}", frame.root_location().value().get().base_dialect)};
-        object.assign("baseDialect", sourcemeta::core::JSON{base_dialect});
-        base_dialects.emplace(from, std::move(base_dialect));
-      } else {
-        object.assign("baseDialect", sourcemeta::core::JSON{match->second});
-      }
-
-      result.push_back(std::move(object));
+      result.push_back(
+          sourcemeta::one::make_edge(ends.at(from), pointer, ends.at(target)));
     }
 
     const auto extension_bytes{sourcemeta::one::make_metapack_leaf_extension(
@@ -1015,12 +959,14 @@ struct GenerateOpenAPIDependents {
                       sourcemeta::one::Resolver &,
                       const sourcemeta::one::Configuration &,
                       const sourcemeta::core::JSON &) -> void {
-    using DirectMap = std::unordered_map<
-        sourcemeta::core::JSON::String,
-        std::set<std::tuple<sourcemeta::core::JSON::String,
-                            sourcemeta::core::JSON::String,
-                            sourcemeta::core::JSON::String>>>;
+    using DirectMap =
+        std::unordered_map<sourcemeta::core::JSON::String,
+                           std::set<std::pair<sourcemeta::core::JSON::String,
+                                              sourcemeta::core::JSON::String>>>;
     DirectMap direct;
+    // What each end says about itself is settled where the reference was
+    // recorded, so this carries it over rather than working it out again
+    sourcemeta::one::EdgeEndCache ends;
     for (const auto &dependency : action.dependencies) {
       if (dependency.filename() == "authentication.bin") {
         continue;
@@ -1032,21 +978,25 @@ struct GenerateOpenAPIDependents {
       const auto &contents{contents_option.value()};
       assert(contents.is_array());
       for (const auto &entry : contents.as_array()) {
+        const auto &origin{entry.at("from")};
         // A schema reaching an OpenAPI description is refused, so an edge that
-        // names one is an edge another description spells
-        if (!entry.defines("kind")) {
+        // reaches one is an edge another description spells
+        if (origin.at("type").to_string() != "openapi") {
           continue;
         }
 
-        direct[entry.at("to").to_string()].emplace(
-            entry.at("from").to_string(), entry.at("at").to_string(),
-            entry.at("kind").to_string());
+        const auto &target{entry.at("to")};
+        direct[target.at("identifier").to_string()].emplace(
+            origin.at("identifier").to_string(),
+            origin.at("location").to_string());
+        sourcemeta::one::harvest_edge_end(ends, origin);
+        sourcemeta::one::harvest_edge_end(ends, target);
       }
     }
 
-    std::set<std::tuple<
-        sourcemeta::core::JSON::String, sourcemeta::core::JSON::String,
-        sourcemeta::core::JSON::String, sourcemeta::core::JSON::String>>
+    std::set<std::tuple<sourcemeta::core::JSON::String,
+                        sourcemeta::core::JSON::String,
+                        sourcemeta::core::JSON::String>>
         edges;
     const sourcemeta::core::JSON::String origin{action.data};
     std::unordered_set<sourcemeta::core::JSON::StringView> visited;
@@ -1061,8 +1011,8 @@ struct GenerateOpenAPIDependents {
         continue;
       }
 
-      for (const auto &[dependent, pointer, kind] : match->second) {
-        edges.emplace(dependent, current, pointer, kind);
+      for (const auto &[dependent, pointer] : match->second) {
+        edges.emplace(dependent, current, pointer);
         if (visited.emplace(dependent).second) {
           queue.emplace(dependent);
         }
@@ -1070,13 +1020,9 @@ struct GenerateOpenAPIDependents {
     }
 
     auto result{sourcemeta::core::JSON::make_array()};
-    for (const auto &[from, target, pointer, kind] : edges) {
-      auto object{sourcemeta::core::JSON::make_object()};
-      object.assign("from", sourcemeta::core::JSON{from});
-      object.assign("to", sourcemeta::core::JSON{target});
-      object.assign("at", sourcemeta::core::JSON{pointer});
-      object.assign("kind", sourcemeta::core::JSON{kind});
-      result.push_back(std::move(object));
+    for (const auto &[from, target, pointer] : edges) {
+      result.push_back(
+          sourcemeta::one::make_edge(ends.at(from), pointer, ends.at(target)));
     }
 
     const auto extension_bytes{sourcemeta::one::make_metapack_leaf_extension(

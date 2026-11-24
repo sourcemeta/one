@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Dependencies API Response",
+  "description": "The response format for the dependencies API endpoint, which answers for a schema and for an OpenAPI description alike",
+  "examples": [
+    [
+      {
+        "from": {
+          "identifier": "https://example.com/schemas/user",
+          "type": "schema",
+          "baseDialect": "https://json-schema.org/draft/2020-12/schema",
+          "location": "/properties/address/$ref"
+        },
+        "to": {
+          "identifier": "https://example.com/schemas/address",
+          "type": "schema",
+          "baseDialect": "https://json-schema.org/draft/2020-12/schema"
+        }
+      }
+    ]
+  ],
+  "type": "array",
+  "items": {
+    "$ref": "../dependency-edge.json"
+  }
+}

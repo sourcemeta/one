@@ -14,12 +14,12 @@
 # the answer every anonymous caller receives, so handing a stored copy to the
 # next of them serves what they would have been given anyway. That is true of
 # this view alone: the same URL answers differently below.
-GET {{base}}/self/v1/api/schemas/dependents/public/string
+GET {{base}}/self/v1/api/dependents/public/string
 HTTP 200
 Content-Type: application/json
 Cache-Control: public, max-age=0, must-revalidate
 Vary: Accept-Encoding
-Link: </self/v1/schemas/api/schemas/dependents/response>; rel="describedby"
+Link: </self/v1/schemas/api/dependents/response>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Captures]
@@ -30,11 +30,17 @@ anonymous_schema: header "Link" regex "<([^>]+)>"
 header "ETag" matches /^"[0-9a-f]{64}"$/
 [
   {
-    "from": "{{base}}/orphan/lonely",
-    "to": "{{base}}/public/string",
-    "at": "/properties/label/$ref",
-    "kind": "schema",
-    "baseDialect": "https://json-schema.org/draft/2020-12/schema"
+    "from": {
+      "identifier": "{{base}}/orphan/lonely",
+      "type": "schema",
+      "baseDialect": "https://json-schema.org/draft/2020-12/schema",
+      "location": "/properties/label/$ref"
+    },
+    "to": {
+      "identifier": "{{base}}/public/string",
+      "type": "schema",
+      "baseDialect": "https://json-schema.org/draft/2020-12/schema"
+    }
   }
 ]
 
@@ -61,13 +67,13 @@ jsonpath "$.valid" == true
 # artifact, and the artifacts differ, so a conditional request carrying one
 # view's validator misses in another rather than matching something it was
 # never served.
-GET {{base}}/self/v1/api/schemas/dependents/public/string
+GET {{base}}/self/v1/api/dependents/public/string
 Authorization: Bearer primary-secret-key
 HTTP 200
 Content-Type: application/json
 Cache-Control: private, max-age=0, must-revalidate
 Vary: Accept-Encoding
-Link: </self/v1/schemas/api/schemas/dependents/response>; rel="describedby"
+Link: </self/v1/schemas/api/dependents/response>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Captures]
@@ -79,18 +85,30 @@ header "ETag" matches /^"[0-9a-f]{64}"$/
 header "ETag" != {{anonymous_etag}}
 [
   {
-    "from": "{{base}}/orphan/lonely",
-    "to": "{{base}}/public/string",
-    "at": "/properties/label/$ref",
-    "kind": "schema",
-    "baseDialect": "https://json-schema.org/draft/2020-12/schema"
+    "from": {
+      "identifier": "{{base}}/orphan/lonely",
+      "type": "schema",
+      "baseDialect": "https://json-schema.org/draft/2020-12/schema",
+      "location": "/properties/label/$ref"
+    },
+    "to": {
+      "identifier": "{{base}}/public/string",
+      "type": "schema",
+      "baseDialect": "https://json-schema.org/draft/2020-12/schema"
+    }
   },
   {
-    "from": "{{base}}/reports/quarterly",
-    "to": "{{base}}/public/string",
-    "at": "/items/$ref",
-    "kind": "schema",
-    "baseDialect": "https://json-schema.org/draft/2020-12/schema"
+    "from": {
+      "identifier": "{{base}}/reports/quarterly",
+      "type": "schema",
+      "baseDialect": "https://json-schema.org/draft/2020-12/schema",
+      "location": "/items/$ref"
+    },
+    "to": {
+      "identifier": "{{base}}/public/string",
+      "type": "schema",
+      "baseDialect": "https://json-schema.org/draft/2020-12/schema"
+    }
   }
 ]
 
@@ -107,13 +125,13 @@ jsonpath "$.valid" == true
 # The second key the same policy accepts reads the same graph and carries the
 # same validator, since what is served follows the policies a credential
 # satisfies rather than the credential itself
-GET {{base}}/self/v1/api/schemas/dependents/public/string
+GET {{base}}/self/v1/api/dependents/public/string
 Authorization: Bearer secondary-secret-key
 HTTP 200
 Content-Type: application/json
 Cache-Control: private, max-age=0, must-revalidate
 Vary: Accept-Encoding
-Link: </self/v1/schemas/api/schemas/dependents/response>; rel="describedby"
+Link: </self/v1/schemas/api/dependents/response>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
@@ -121,18 +139,30 @@ header "ETag" != {{anonymous_etag}}
 header "ETag" == {{reports_etag}}
 [
   {
-    "from": "{{base}}/orphan/lonely",
-    "to": "{{base}}/public/string",
-    "at": "/properties/label/$ref",
-    "kind": "schema",
-    "baseDialect": "https://json-schema.org/draft/2020-12/schema"
+    "from": {
+      "identifier": "{{base}}/orphan/lonely",
+      "type": "schema",
+      "baseDialect": "https://json-schema.org/draft/2020-12/schema",
+      "location": "/properties/label/$ref"
+    },
+    "to": {
+      "identifier": "{{base}}/public/string",
+      "type": "schema",
+      "baseDialect": "https://json-schema.org/draft/2020-12/schema"
+    }
   },
   {
-    "from": "{{base}}/reports/quarterly",
-    "to": "{{base}}/public/string",
-    "at": "/items/$ref",
-    "kind": "schema",
-    "baseDialect": "https://json-schema.org/draft/2020-12/schema"
+    "from": {
+      "identifier": "{{base}}/reports/quarterly",
+      "type": "schema",
+      "baseDialect": "https://json-schema.org/draft/2020-12/schema",
+      "location": "/items/$ref"
+    },
+    "to": {
+      "identifier": "{{base}}/public/string",
+      "type": "schema",
+      "baseDialect": "https://json-schema.org/draft/2020-12/schema"
+    }
   }
 ]
 
@@ -145,30 +175,36 @@ header "ETag" == {{reports_etag}}
 # for rather than the bytes that came out of it, so an answer that happens to
 # match the anonymous one is not offered for reuse on the strength of a
 # coincidence
-GET {{base}}/self/v1/api/schemas/dependents/public/string
+GET {{base}}/self/v1/api/dependents/public/string
 Authorization: Bearer internal-secret-key
 HTTP 200
 Content-Type: application/json
 Cache-Control: private, max-age=0, must-revalidate
 Vary: Accept-Encoding
-Link: </self/v1/schemas/api/schemas/dependents/response>; rel="describedby"
+Link: </self/v1/schemas/api/dependents/response>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Asserts]
 header "ETag" == {{anonymous_etag}}
 [
   {
-    "from": "{{base}}/orphan/lonely",
-    "to": "{{base}}/public/string",
-    "at": "/properties/label/$ref",
-    "kind": "schema",
-    "baseDialect": "https://json-schema.org/draft/2020-12/schema"
+    "from": {
+      "identifier": "{{base}}/orphan/lonely",
+      "type": "schema",
+      "baseDialect": "https://json-schema.org/draft/2020-12/schema",
+      "location": "/properties/label/$ref"
+    },
+    "to": {
+      "identifier": "{{base}}/public/string",
+      "type": "schema",
+      "baseDialect": "https://json-schema.org/draft/2020-12/schema"
+    }
   }
 ]
 
 # And the gated schema's own graph is still withheld outright, so nothing here
 # turned a path the caller cannot reach into an empty answer
-GET {{base}}/self/v1/api/schemas/dependents/reports/quarterly
+GET {{base}}/self/v1/api/dependents/reports/quarterly
 HTTP 404
 Content-Type: application/problem+json
 Cache-Control: no-store
