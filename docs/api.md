@@ -282,8 +282,7 @@ GET /self/v1/api/metadata/{path}
     it answers to. For an OpenAPI description they are different subjects.
     `conformsTo` is the revision of the OpenAPI Specification the document
     itself is written in, while `dialect` and `baseDialect` describe the Schema
-    Objects inside it. A description written in revision 3.1 whose Schema
-    Objects default to 2020-12 reports all three.
+    Objects inside it.
 
 === "400"
 
