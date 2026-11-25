@@ -253,6 +253,15 @@ static auto execute_plan(sourcemeta::one::BuildState &entries,
             const auto *entry{
                 action.data.empty() ? nullptr : &resolver.entry(action.data)};
             if (entry) {
+              // An identity the schema half of the resolver answers nothing
+              // for may still be one this instance serves as a description
+              if (resolver.kind_of(error.identifier()) ==
+                  sourcemeta::one::LeafKind::OpenAPI) {
+                throw sourcemeta::one::ResolverSchemaReferenceToOpenAPIError(
+                    entry->path,
+                    sourcemeta::core::JSON::String{error.identifier()});
+              }
+
               throw sourcemeta::core::FileError<
                   sourcemeta::core::SchemaResolutionError>(entry->path, error);
             }
@@ -1237,6 +1246,14 @@ auto main(int argc, char *argv[]) noexcept -> int {
                  sourcemeta::core::to_string(error.location()));
     }
 
+    return EXIT_FAILURE;
+  } catch (
+      const sourcemeta::one::ResolverSchemaReferenceToOpenAPIError &error) {
+    std::print(stderr,
+               "error: {}\n  at path {}\n  at identifier {}\n\n"
+               "An OpenAPI description is served whole, so its Schema Objects "
+               "have no URI of their own\n",
+               error.what(), error.path().string(), error.identifier());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::OpenAPIDocumentError &error) {
     std::print(stderr, "error: {}\n  at path {}\n  at revision {}\n{}",

@@ -123,6 +123,31 @@ private:
   sourcemeta::core::Pointer location_;
 };
 
+// An OpenAPI description is served whole rather than as schemas of its own, so
+// a schema whose reference reaches one finds no schema at the far end
+class ResolverSchemaReferenceToOpenAPIError : public sourcemeta::core::Error {
+public:
+  ResolverSchemaReferenceToOpenAPIError(
+      std::filesystem::path path, sourcemeta::core::JSON::String identifier)
+      : sourcemeta::core::Error{"A schema cannot reference an OpenAPI "
+                                "description"},
+        path_{std::move(path)}, identifier_{std::move(identifier)} {}
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  // The identity the reference reaches, as this instance serves it
+  [[nodiscard]] auto identifier() const noexcept
+      -> const sourcemeta::core::JSON::String & {
+    return this->identifier_;
+  }
+
+private:
+  std::filesystem::path path_;
+  sourcemeta::core::JSON::String identifier_;
+};
+
 // The output directory belongs to the indexer, so a recorded artifact that is
 // gone from disk means something else modified the directory, which is the one
 // assumption the build cannot recover from on its own

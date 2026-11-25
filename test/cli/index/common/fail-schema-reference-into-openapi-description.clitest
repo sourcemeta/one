@@ -45,11 +45,11 @@ RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING
 DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
 
 WRITE expected.txt UNTIL EOF
-2> error: Could not resolve the reference to an external schema
-2>   at identifier http://localhost:8000/example/petstore
+2> error: A schema cannot reference an OpenAPI description
 2>   at path [CWD]/schemas/pet.json
+2>   at identifier http://localhost:8000/example/petstore
 2>
-2> Did you forget to register a schema with such URI?
+2> An OpenAPI description is served whole, so its Schema Objects have no URI of their own
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt
