@@ -1,14 +1,14 @@
 # The dialect is reported as declared and the base dialect it rests on. The
 # enterprise edition answers with a conversions property this edition has no
 # notion of, so each asserts this response in a file of its own
-GET {{base}}/self/v1/api/schemas/metadata/test/openapi3.0/product
+GET {{base}}/self/v1/api/metadata/test/openapi3.0/product
 Accept: application/json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
+Link: </self/v1/schemas/api/metadata/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -22,7 +22,9 @@ header "Last-Modified" exists
   "bytesBundled": 1285,
   "identifier": "{{base}}/test/openapi3.0/product",
   "path": "/test/openapi3.0/product",
+  "type": "schema",
   "baseDialect": "http://json-schema.org/draft-04/schema#",
+  "conformsTo": "http://json-schema.org/draft-04/schema#",
   "dialect": "tag:spec.openapis.org,2024-10-18:oas/3.0/dialect",
   "metaschema": false,
   "title": "Product",

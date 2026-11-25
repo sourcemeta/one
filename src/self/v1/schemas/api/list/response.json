@@ -41,22 +41,7 @@
       "type": "string"
     },
     "breadcrumb": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [ "name", "path" ],
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "path": {
-            "x-format-assertion": true,
-            "type": "string",
-            "format": "uri-reference"
-          }
-        },
-        "additionalProperties": false
-      }
+      "$ref": "../breadcrumb.json"
     },
     "email": {
       "x-format-assertion": true,
@@ -133,33 +118,10 @@
             "required": [ "type", "name" ],
             "properties": {
               "type": {
-                "const": "schema"
+                "enum": [ "schema", "openapi" ]
               },
               "name": {
                 "type": "string"
-              }
-            },
-            "unevaluatedProperties": false
-          },
-          {
-            "$ref": "../catalog-entry.json",
-            "required": [ "type", "name", "openapi", "version", "operations" ],
-            "properties": {
-              "type": {
-                "const": "openapi"
-              },
-              "name": {
-                "type": "string"
-              },
-              "openapi": {
-                "enum": [ "3.0", "3.1", "3.2" ]
-              },
-              "version": {
-                "type": "string"
-              },
-              "operations": {
-                "type": "integer",
-                "minimum": 0
               }
             },
             "unevaluatedProperties": false

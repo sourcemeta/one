@@ -1,6 +1,6 @@
 # The REST endpoints reject schema paths that embed a URI fragment.
 
-GET {{base}}/self/v1/api/schemas/metadata/test/object%23meta
+GET {{base}}/self/v1/api/metadata/test/object%23meta
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json

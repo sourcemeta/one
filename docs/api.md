@@ -95,7 +95,7 @@ GET /self/v1/api/list/{path?}
 ```
 
 If no path is provided, the endpoint returns the contents of the root
-directory. The response includes all schemas and subdirectories available at
+directory. The response includes every resource and subdirectory available at
 the requested path, providing a hierarchical view of the instance structure for
 navigation and discovery purposes.
 
@@ -114,28 +114,31 @@ navigation and discovery purposes.
     | `/github` | String | No | The GitHub organisation or repository associated with the directory |
     | `/website` | String | No | The external URL associated with the directory  |
     | `/schemas` | Integer | Yes | The recursive count of schemas in this directory |
+    | `/openapi` | Integer | Yes | The recursive count of OpenAPI descriptions in this directory |
     | `/health` | Integer | Yes | The aggregated health of the directory |
     | `/private` | Boolean | Yes | Whether an authentication policy governs this directory |
     | `/entries` | Array | Yes | The entries inside the directory |
-    | `/entries/*/type` | String | Yes | The type of the entry (`schema` or `directory`) |
+    | `/entries/*/type` | `schema` / `openapi` / `directory` | Yes | What the entry is |
     | `/entries/*/name` | String | Yes | The last URL path segment of the entry |
     | `/entries/*/path` | String | Yes | The relative URL of the entry |
     | `/entries/*/private` | Boolean | Yes | Whether an authentication policy governs the entry |
     | `/entries/*/health` | Integer | Yes | The aggregated health of the entry |
     | `/entries/*/schemas` | Integer | No | For `directory` entries, the recursive count of schemas in the directory |
+    | `/entries/*/openapi` | Integer | No | For `directory` entries, the recursive count of OpenAPI descriptions in the directory |
     | `/entries/*/title` | String | No | The title associated with the entry |
     | `/entries/*/description` | String | No | The description associated with the entry. The web explorer renders this as Markdown |
     | `/entries/*/email` | String | No | For `directory` entries, the e-mail address associated with the entry |
     | `/entries/*/github` | String | No | For `directory` entries, the GitHub organisation or repository associated with the entry |
     | `/entries/*/website` | String | No | For `directory` entries, the website URL associated with the entry |
-    | `/entries/*/dependencies` | Integer | Yes | For `schema` entries, the number of references the schema makes to other schemas, directly and indirectly |
-    | `/entries/*/bytes` | Integer | No | For `schema` entries, the bytes that the entry occupies |
-    | `/entries/*/bytesBundled` | Integer | No | For `schema` entries, the bytes that the entry occupies when bundled |
-    | `/entries/*/baseDialect` | String | No | For `schema` entries, the base dialect URI of the entry |
-    | `/entries/*/dialect` | String | No | For `schema` entries, the dialect URI of the entry |
-    | `/entries/*/identifier` | String | No | For `schema` entries, the absolute URI of the entry |
-    | `/entries/*/alert` | String / Null | No | For `schema` entries, the human readable alert message for the schema collection. The web explorer renders this as Markdown |
-    | `/entries/*/priority` | Integer | No | For `schema` entries, an importance hint from `0` (least important) to `100` (most important), inherited from the schema collection's [`x-sourcemeta-one:priority`](configuration.md) configuration value |
+    | `/entries/*/dependencies` | Integer | No | For resource entries, the number of references the resource makes to other resources, directly and indirectly |
+    | `/entries/*/bytes` | Integer | No | For resource entries, the bytes that the entry occupies |
+    | `/entries/*/bytesBundled` | Integer | No | For resource entries, the bytes that the entry occupies when bundled |
+    | `/entries/*/conformsTo` | String | No | For resource entries, the absolute URI of what defines the format of the entry, as the [metadata](#metadata) endpoint reports it |
+    | `/entries/*/baseDialect` | String | No | For resource entries, the base dialect URI of the entry |
+    | `/entries/*/dialect` | String | No | For resource entries, the dialect URI of the entry |
+    | `/entries/*/identifier` | String | No | For resource entries, the absolute URI of the entry |
+    | `/entries/*/alert` | String / Null | No | For resource entries, the human readable alert message for the collection. The web explorer renders this as Markdown |
+    | `/entries/*/priority` | Integer | No | For resource entries, an importance hint from `0` (least important) to `100` (most important), inherited from the collection's [`x-sourcemeta-one:priority`](configuration.md) configuration value |
 
 === "400"
 
@@ -227,6 +230,59 @@ the resource of this catalog that it reaches.
     | `/*/to/identifier` | String | Yes | The absolute URL of that resource |
     | `/*/to/type` | `schema` / `openapi` | Yes | What this instance serves at that URL, or `schema` for a resource it resolves without serving |
     | `/*/to/baseDialect` | String | Yes | The absolute URI of the base dialect of that resource. For an OpenAPI description, the base of the dialect its Schema Objects default to |
+
+=== "400"
+
+    The query carries a parameter this endpoint does not read. It declares
+    none, so any name at all is refused rather than ignored.
+
+=== "404"
+
+    There is nothing at this URL.
+
+### Metadata
+
+*This endpoint retrieves metadata information about the resource located at the
+`{path}` parameter, which may be a JSON Schema or an OpenAPI description alike.*
+
+```
+GET /self/v1/api/metadata/{path}
+```
+
+=== "200"
+
+    | Property | Type | Required | Description |
+    |----------|------|----------|-------------|
+    | `/path` | String | Yes | The relative URL of the resource |
+    | `/identifier` | String | Yes | The absolute URI of the resource |
+    | `/type` | `schema` / `openapi` | Yes | What this instance serves at that URL |
+    | `/conformsTo` | String | Yes | The absolute URI of what defines the format of this resource. For a schema, its base dialect. For an OpenAPI description, the revision of the OpenAPI Specification it declares |
+    | `/dialect` | String | Yes | The dialect URI of the resource. For an OpenAPI description, the dialect its Schema Objects answer to where none of them declares another |
+    | `/baseDialect` | String | Yes | The base dialect URI of the resource. For an OpenAPI description, the base of the dialect above |
+    | `/metaschema` | Boolean | Yes | Whether the resource is a meta-schema, as it either declares [`$vocabulary`](https://www.learnjsonschema.com/2020-12/core/vocabulary/) or another schema in this instance declares it as its [`$schema`](https://www.learnjsonschema.com/2020-12/core/schema/). Always `false` for an OpenAPI description |
+    | `/conversions` | Object | No | Only in the [Enterprise](commercial.md) edition, where it is always present. What the resource can be [fetched](#fetch) as with the `as` query parameter, keyed by that value, and empty when there is nothing |
+    | `/conversions/*/mediaType` | String | Yes | The media type a fetch with that `as` value responds with |
+    | `/health` | Integer | Yes | The health score of the resource |
+    | `/priority` | Integer | Yes | An importance hint from `0` (least important) to `100` (most important), inherited from the collection's [`x-sourcemeta-one:priority`](configuration.md) configuration value |
+    | `/private` | Boolean | Yes | Whether an authentication policy governs this resource |
+    | `/dependencies` | Integer | Yes | The number of references the resource makes to other resources, directly and indirectly |
+    | `/bytes` | Integer | Yes | The bytes that the resource occupies |
+    | `/bytesBundled` | Integer | Yes | The bytes that the resource occupies when bundled |
+    | `/alert` | String / Null | No | The human readable alert message for the collection, if any. The web explorer renders this as Markdown |
+    | `/title` | String | No | The title of the resource, if any |
+    | `/description` | String | No | The description of the resource, if any. The web explorer renders this as Markdown |
+    | `/examples` | Array | Yes | Up to 10 of the schema examples, if any. Always empty for an OpenAPI description |
+    | `/breadcrumb` | Array | Yes | The breadcrumb of the resource |
+    | `/breadcrumb/*/name` | String | Yes | The breadcrumb entry URL path |
+    | `/breadcrumb/*/path` | String | Yes | The relative URL of the breadcrumb location |
+
+!!! note "What a resource conforms to, and the dialect of the schemas in it"
+
+    For a schema the two coincide, as what defines a schema is the base dialect
+    it answers to. For an OpenAPI description they are different subjects.
+    `conformsTo` is the revision of the OpenAPI Specification the document
+    itself is written in, while `dialect` and `baseDialect` describe the Schema
+    Objects inside it.
 
 === "400"
 
@@ -788,49 +844,6 @@ contexts are not fetched.
     or the schema's JSON-LD annotations cannot be resolved for this instance
     (the problem details carry the offending annotation facet and instance
     location).
-
-### Metadata
-
-*This endpoint retrieves metadata information about the JSON Schema located at
-the `{path}` parameter.*
-
-```
-GET /self/v1/api/schemas/metadata/{path}
-```
-
-=== "200"
-
-    | Property                       | Type                     | Required | Description |
-    |--------------------------------|--------------------------|-----|-------------------------------------|
-    | `/path` | String | Yes | The relative URL of the schema |
-    | `/identifier` | String | Yes | The absolute URI of the schema |
-    | `/dialect` | String | Yes | The dialect URI of the schema |
-    | `/baseDialect` | String | Yes | The base dialect URI of the schema |
-    | `/metaschema` | Boolean | Yes | Whether the schema is a meta-schema, as it either declares [`$vocabulary`](https://www.learnjsonschema.com/2020-12/core/vocabulary/) or another schema in this instance declares it as its [`$schema`](https://www.learnjsonschema.com/2020-12/core/schema/) |
-    | `/conversions` | Object | No | Only in the [Enterprise](commercial.md) edition, where it is always present. What the schema can be [fetched](#fetch) as with the `as` query parameter, keyed by that value, and empty when there is nothing |
-    | `/conversions/*/mediaType` | String | Yes | The media type a fetch with that `as` value responds with |
-    | `/health` | Integer | Yes | The health score of the schema |
-    | `/priority` | Integer | Yes | An importance hint from `0` (least important) to `100` (most important), inherited from the schema collection's [`x-sourcemeta-one:priority`](configuration.md) configuration value |
-    | `/private` | Boolean | Yes | Whether an authentication policy governs this schema |
-    | `/dependencies` | Integer | Yes | The number of references the schema makes to other schemas, directly and indirectly |
-    | `/bytes` | Integer | Yes | The bytes that the schema occupies |
-    | `/bytesBundled` | Integer | Yes | The bytes that the schema occupies when bundled |
-    | `/alert` | String / Null | No | The human readable alert message for the schema collection, if any. The web explorer renders this as Markdown |
-    | `/title` | String | No | The title of the schema, if any |
-    | `/description` | String | No | The description of the schema, if any. The web explorer renders this as Markdown |
-    | `/examples` | Array | Yes | Up to 10 of the schema examples, if any |
-    | `/breadcrumb` | Array | Yes | The breadcrumb of the schema |
-    | `/breadcrumb/*/name` | String | Yes | The breadcrumb entry URL path |
-    | `/breadcrumb/*/path` | String | Yes | The relative URL of the breadcrumb location |
-
-=== "400"
-
-    The query carries a parameter this endpoint does not read. It declares
-    none, so any name at all is refused rather than ignored.
-
-=== "404"
-
-    The schema does not exist.
 
 ### Search
 

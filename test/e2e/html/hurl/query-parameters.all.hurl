@@ -282,7 +282,7 @@ jsonpath "$.valid" == true
 
 # Every other endpoint under `/self/v1/api` reads nothing out of the query
 # string, so any name at all is refused
-GET {{base}}/self/v1/api/schemas/metadata/test/schemas/string?bundle=1
+GET {{base}}/self/v1/api/metadata/test/schemas/string?bundle=1
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json

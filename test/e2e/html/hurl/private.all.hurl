@@ -52,11 +52,11 @@ xpath "count(//span[contains(@class, 'badge')][normalize-space(.) = 'Private'])"
 
 # The data underneath both says the same, which is what the render is drawn
 # from rather than a second answer computed for the page
-GET {{base}}/self/v1/api/schemas/metadata/test/no-blaze/string
+GET {{base}}/self/v1/api/metadata/test/no-blaze/string
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
-Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
+Link: </self/v1/schemas/api/metadata/response>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Captures]

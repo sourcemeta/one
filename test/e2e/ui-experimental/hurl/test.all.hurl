@@ -73,7 +73,7 @@ Content-Type: application/json
 jsonpath "$.path" == "/"
 jsonpath "$.entries" count == 2
 
-GET {{base}}/self/v1/api/schemas/metadata/test/example
+GET {{base}}/self/v1/api/metadata/test/example
 HTTP 200
 Content-Type: application/json
 [Asserts]

@@ -72,6 +72,14 @@ static auto make_breadcrumb(const std::filesystem::path &relative_path,
   return result;
 }
 
+// Where the OpenAPI Specification publishes the revision that a description
+// declares, which is what such a document conforms to
+static auto openapi_revision_uri(const sourcemeta::core::OpenAPIVersion version)
+    -> std::string {
+  return "https://spec.openapis.org/oas/v" +
+         std::string{sourcemeta::core::openapi_version_name(version)};
+}
+
 static auto
 inflate_metadata(const sourcemeta::one::Configuration &configuration,
                  const std::filesystem::path &path,
@@ -171,7 +179,6 @@ struct MetapackExplorerOpenAPIExtension {
   std::int64_t bytes;
   std::int64_t bytes_bundled;
   std::int64_t dependencies;
-  std::int64_t operations;
   MetapackVersionInfo version;
   std::uint8_t priority;
   std::uint8_t revision;
@@ -182,7 +189,6 @@ struct MetapackExplorerOpenAPIExtension {
   std::uint16_t title_length;
   std::uint16_t description_length;
   std::uint16_t alert_length;
-  std::uint16_t api_version_length;
 };
 
 struct MetapackDirectoryExtension {
@@ -360,31 +366,15 @@ inline auto explorer_extension_alert(const T *extension,
                                    extension->alert_length);
 }
 
-// The version the described API gives itself, which is the one string an
-// OpenAPI description packs that a schema has no field for
-inline auto explorer_extension_api_version(
-    const MetapackExplorerOpenAPIExtension *extension, const std::uint8_t *base)
-    -> std::string_view {
-  const std::size_t offset{
-      static_cast<std::size_t>(extension->path_length) +
-      extension->identifier_length + extension->base_dialect_length +
-      extension->dialect_length + extension->title_length +
-      extension->description_length + extension->alert_length};
-  return explorer_extension_string(extension, base, offset,
-                                   extension->api_version_length);
-}
-
 static auto make_explorer_openapi_extension(
     const std::int64_t health, const std::int64_t bytes,
     const std::int64_t bytes_bundled, const std::int64_t dependencies,
-    const std::int64_t operations, const MetapackVersionInfo &version,
-    const std::uint8_t priority,
+    const MetapackVersionInfo &version, const std::uint8_t priority,
     const sourcemeta::core::OpenAPIVersion revision,
     const std::string_view path, const std::string_view identifier,
     const std::string_view base_dialect, const std::string_view dialect,
     const std::string_view title, const std::string_view description,
-    const std::string_view alert, const std::string_view api_version)
-    -> std::vector<std::uint8_t> {
+    const std::string_view alert) -> std::vector<std::uint8_t> {
   assert(path.size() <= std::numeric_limits<std::uint16_t>::max());
   assert(identifier.size() <= std::numeric_limits<std::uint16_t>::max());
   assert(base_dialect.size() <= std::numeric_limits<std::uint16_t>::max());
@@ -392,11 +382,10 @@ static auto make_explorer_openapi_extension(
   assert(title.size() <= std::numeric_limits<std::uint16_t>::max());
   assert(description.size() <= std::numeric_limits<std::uint16_t>::max());
   assert(alert.size() <= std::numeric_limits<std::uint16_t>::max());
-  assert(api_version.size() <= std::numeric_limits<std::uint16_t>::max());
 
-  const auto strings_size{
-      path.size() + identifier.size() + base_dialect.size() + dialect.size() +
-      title.size() + description.size() + alert.size() + api_version.size()};
+  const auto strings_size{path.size() + identifier.size() +
+                          base_dialect.size() + dialect.size() + title.size() +
+                          description.size() + alert.size()};
   std::vector<std::uint8_t> result;
   result.resize(sizeof(MetapackExplorerOpenAPIExtension) + strings_size);
 
@@ -406,7 +395,6 @@ static auto make_explorer_openapi_extension(
   header.bytes = bytes;
   header.bytes_bundled = bytes_bundled;
   header.dependencies = dependencies;
-  header.operations = operations;
   header.version = version;
   header.priority = priority;
   header.revision = static_cast<std::uint8_t>(revision);
@@ -417,7 +405,6 @@ static auto make_explorer_openapi_extension(
   header.title_length = static_cast<std::uint16_t>(title.size());
   header.description_length = static_cast<std::uint16_t>(description.size());
   header.alert_length = static_cast<std::uint16_t>(alert.size());
-  header.api_version_length = static_cast<std::uint16_t>(api_version.size());
 
   auto *cursor{result.data()};
   std::memcpy(cursor, &header, sizeof(header));
@@ -435,7 +422,6 @@ static auto make_explorer_openapi_extension(
   append(title);
   append(description);
   append(alert);
-  append(api_version);
 
   return result;
 }
@@ -545,8 +531,10 @@ struct GenerateExplorerSchemaMetadata {
     result.assign("identifier", sourcemeta::core::JSON{frame.root()});
     result.assign("path", sourcemeta::core::JSON{
                               "/" + resolver_entry.relative_path.string()});
+    result.assign("type", sourcemeta::core::JSON{"schema"});
     result.assign("baseDialect", sourcemeta::core::JSON{std::format(
                                      "{}", schema_location.base_dialect)});
+    result.assign("conformsTo", result.at("baseDialect"));
     result.assign("dialect", sourcemeta::core::JSON{schema_location.dialect});
     const auto is_metaschema{
         has_dialect_dependents ||
@@ -744,10 +732,9 @@ struct GenerateOpenAPIMetadata {
                   sourcemeta::core::JSON{std::string{frame.base()}});
     result.assign("path", sourcemeta::core::JSON{
                               "/" + resolver_entry.relative_path.string()});
-    result.assign(
-        "openapi",
-        sourcemeta::core::JSON{std::string{
-            sourcemeta::core::openapi_version_name(frame.version())}});
+    result.assign("type", sourcemeta::core::JSON{"openapi"});
+    result.assign("conformsTo", sourcemeta::core::JSON{
+                                    openapi_revision_uri(frame.version())});
 
     // The dialect a Schema Object of this description is read under unless it
     // declares its own, which is the revision's own wherever the field a later
@@ -760,7 +747,6 @@ struct GenerateOpenAPIMetadata {
 
     const auto *const info{document.try_at("info")};
     assert(info != nullptr && info->is_object());
-    result.assign("version", info->at("version"));
     const auto *const title{info->try_at("title")};
     if (title != nullptr && title->is_string()) {
       result.assign("title", sourcemeta::core::JSON{title->trim()});
@@ -782,8 +768,13 @@ struct GenerateOpenAPIMetadata {
     // hold before any of this is written, so there is no check left to lower
     // this until linting arrives
     result.assign("health", sourcemeta::core::JSON{100});
-    result.assign("operations",
-                  sourcemeta::core::to_json(frame.operations().size()));
+    // What a document that is no schema answers to the questions a schema
+    // answers about itself
+    result.assign("metaschema", sourcemeta::core::JSON{false});
+    result.assign("examples", sourcemeta::core::JSON::make_array());
+#if defined(SOURCEMETA_ONE_ENTERPRISE)
+    result.assign("conversions", sourcemeta::core::JSON::make_object());
+#endif
 
     const auto dependencies_option{
         sourcemeta::core::metapack_read_json(action.dependencies.at(1))};
@@ -833,24 +824,17 @@ struct GenerateOpenAPIMetadata {
                                MAX_EXTENSION_FIELD_LENGTH -
                                    EXTENSION_TRUNCATION_MARKER.size(),
                                EXTENSION_TRUNCATION_MARKER);
-    std::string extension_api_version{result.at("version").to_string()};
-    sourcemeta::core::truncate(extension_api_version,
-                               MAX_EXTENSION_FIELD_LENGTH -
-                                   EXTENSION_TRUNCATION_MARKER.size(),
-                               EXTENSION_TRUNCATION_MARKER);
     const auto extension_bytes{make_explorer_openapi_extension(
         result.at("health").to_integer(), static_cast<std::int64_t>(data_bytes),
         static_cast<std::int64_t>(bundle_bytes),
         result.at("dependencies").to_integer(),
-        result.at("operations").to_integer(),
         parse_version_info(description_name),
         static_cast<std::uint8_t>(result.at("priority").to_integer()),
         frame.version(), result.at("path").to_string(),
         result.at("identifier").to_string(),
         result.at("baseDialect").to_string(), result.at("dialect").to_string(),
         extension_title, extension_description,
-        result.at("alert").is_string() ? result.at("alert").to_string() : "",
-        extension_api_version)};
+        result.at("alert").is_string() ? result.at("alert").to_string() : "")};
 
     sourcemeta::core::metapack_write_json_pretty(
         action.destination, result, "application/json",
@@ -1434,13 +1418,9 @@ make_openapi_listing_entry(const std::string_view name,
                                 static_cast<sourcemeta::core::JSON::Integer>(
                                     extension->priority)});
   result.assign(
-      "openapi",
-      sourcemeta::core::JSON{sourcemeta::core::openapi_version_name(
+      "conformsTo",
+      sourcemeta::core::JSON{openapi_revision_uri(
           static_cast<sourcemeta::core::OpenAPIVersion>(extension->revision))});
-  result.assign(
-      "version",
-      sourcemeta::core::JSON{explorer_extension_api_version(extension, base)});
-  result.assign("operations", sourcemeta::core::JSON{extension->operations});
 
   const auto title{explorer_extension_title(extension, base)};
   if (!title.empty()) {
@@ -1772,6 +1752,7 @@ struct GenerateExplorerDirectoryList {
         entry_json.assign("baseDialect", sourcemeta::core::JSON{
                                              explorer_extension_base_dialect(
                                                  extension, extension_base)});
+        entry_json.assign("conformsTo", entry_json.at("baseDialect"));
         entry_json.assign("dialect",
                           sourcemeta::core::JSON{explorer_extension_dialect(
                               extension, extension_base)});

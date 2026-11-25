@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Breadcrumb",
+  "description": "The trail of directories that leads to an entry of the catalog",
+  "examples": [
+    [
+      {
+        "name": "Home",
+        "path": "/"
+      }
+    ]
+  ],
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [ "name", "path" ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "path": {
+        "x-format-assertion": true,
+        "type": "string",
+        "format": "uri-reference"
+      }
+    },
+    "additionalProperties": false
+  }
+}

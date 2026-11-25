@@ -1,14 +1,16 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Sourcemeta One Schema Metadata API Response",
-  "description": "The response format for the schema metadata API endpoint",
+  "title": "Sourcemeta One Metadata API Response",
+  "description": "The response format for the resource metadata API endpoint",
   "examples": [
     {
       "bytes": 512,
       "bytesBundled": 1024,
       "identifier": "https://example.com/schemas/user.json",
       "path": "/schemas/user.json",
+      "type": "schema",
       "baseDialect": "https://json-schema.org/draft/2020-12/schema",
+      "conformsTo": "https://json-schema.org/draft/2020-12/schema",
       "dialect": "https://json-schema.org/draft/2020-12/schema",
       "health": 100,
       "priority": 100,
@@ -21,17 +23,47 @@
         }
       ],
       "examples": []
+    },
+    {
+      "bytes": 2048,
+      "bytesBundled": 4096,
+      "identifier": "https://example.com/api/petstore",
+      "path": "/api/petstore",
+      "type": "openapi",
+      "baseDialect": "https://json-schema.org/draft/2020-12/schema",
+      "conformsTo": "https://spec.openapis.org/oas/v3.1",
+      "dialect": "https://spec.openapis.org/oas/3.1/dialect/base",
+      "title": "Petstore",
+      "description": "A sample API for managing pets",
+      "health": 100,
+      "dependencies": 3,
+      "priority": 50,
+      "private": false,
+      "metaschema": false,
+      "breadcrumb": [
+        {
+          "name": "Home",
+          "path": "/"
+        }
+      ],
+      "examples": []
     }
   ],
-  "$ref": "../../catalog-entry.json",
-  "required": [ "breadcrumb", "examples", "metaschema" ],
+  "$ref": "../catalog-entry.json",
+  "required": [ "type", "breadcrumb", "metaschema", "examples" ],
   "properties": {
-    "examples": {
-      "type": "array",
-      "maxItems": 10
+    "type": {
+      "enum": [ "schema", "openapi" ]
+    },
+    "breadcrumb": {
+      "$ref": "../breadcrumb.json"
     },
     "metaschema": {
       "type": "boolean"
+    },
+    "examples": {
+      "type": "array",
+      "maxItems": 10
     },
     "conversions": {
       "type": "object",
@@ -52,24 +84,6 @@
         "properties": {
           "mediaType": {
             "const": "application/schema+json"
-          }
-        },
-        "additionalProperties": false
-      }
-    },
-    "breadcrumb": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [ "name", "path" ],
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "path": {
-            "x-format-assertion": true,
-            "type": "string",
-            "format": "uri-reference"
           }
         },
         "additionalProperties": false

@@ -1,13 +1,13 @@
 # A Draft 3 schema can be asked for in every newer dialect on the ladder,
 # the OpenAPI Schema Object dialects at the top of it included
-GET {{base}}/self/v1/api/schemas/metadata/test/draft3/string
+GET {{base}}/self/v1/api/metadata/test/draft3/string
 Accept: application/json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
+Link: </self/v1/schemas/api/metadata/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -305,14 +305,14 @@ header "Last-Modified" exists
 }
 
 # A Draft 7 schema can only be asked for in the dialects that came after it
-GET {{base}}/self/v1/api/schemas/metadata/test/jsonld/draft7
+GET {{base}}/self/v1/api/metadata/test/jsonld/draft7
 Accept: application/json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
+Link: </self/v1/schemas/api/metadata/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"

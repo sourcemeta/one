@@ -126,8 +126,8 @@ Content-Type: application/json
   "id": 1202,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_metadata",
-    "arguments": { "schema": "{{base}}{{object_path}}" }
+    "name": "get_metadata",
+    "arguments": { "uri": "{{base}}{{object_path}}" }
   }
 }
 ```
@@ -246,8 +246,8 @@ Content-Type: application/json
   "id": 1211,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_metadata",
-    "arguments": { "schema": "{{base}}{{hit_path}}" }
+    "name": "get_metadata",
+    "arguments": { "uri": "{{base}}{{hit_path}}" }
   }
 }
 ```

@@ -119,7 +119,7 @@ Link: </self/v1/schemas/mcp/response>; rel="describedby"
 [Captures]
 page_two_body: body
 [Asserts]
-jsonpath "$.result.resources" count == 28
+jsonpath "$.result.resources" count == 26
 jsonpath "$.result.nextCursor" not exists
 jsonpath "$.result.resources[*].uri" not includes "{{base}}/strict/rule"
 jsonpath "$.result.resources[*].uri" not includes "{{base}}/typed/thing"
@@ -227,8 +227,8 @@ Content-Type: application/json
   "id": 6,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_metadata",
-    "arguments": { "schema": "{{base}}/private/secret" }
+    "name": "get_metadata",
+    "arguments": { "uri": "{{base}}/private/secret" }
   }
 }
 ```
@@ -265,8 +265,8 @@ Content-Type: application/json
   "id": 7,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_metadata",
-    "arguments": { "schema": "{{base}}/machine/config" }
+    "name": "get_metadata",
+    "arguments": { "uri": "{{base}}/machine/config" }
   }
 }
 ```

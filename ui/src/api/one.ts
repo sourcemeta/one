@@ -72,7 +72,7 @@ export const getSchemaMetadata = (
   registryUrl: string,
   schemaPath: string
 ): Promise<SchemaMetadata> =>
-  request(registryUrl, `/self/v1/api/schemas/metadata${schemaPath}`);
+  request(registryUrl, `/self/v1/api/metadata${schemaPath}`);
 
 export const getSchemaContent = async (
   registryUrl: string,

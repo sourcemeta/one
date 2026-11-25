@@ -160,7 +160,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: get_schema_metadata
+Mcp-Name: get_metadata
 Content-Type: application/json
 ```
 {
@@ -168,9 +168,9 @@ Content-Type: application/json
   "id": 1202,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_metadata",
+    "name": "get_metadata",
     "arguments": {
-      "schema": "{{base}}{{object_path}}"
+      "uri": "{{base}}{{object_path}}"
     },
     "_meta": {
       "io.modelcontextprotocol/protocolVersion": "2026-07-28",
@@ -322,7 +322,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: get_schema_metadata
+Mcp-Name: get_metadata
 Content-Type: application/json
 ```
 {
@@ -330,9 +330,9 @@ Content-Type: application/json
   "id": 1211,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_metadata",
+    "name": "get_metadata",
     "arguments": {
-      "schema": "{{base}}{{hit_path}}"
+      "uri": "{{base}}{{hit_path}}"
     },
     "_meta": {
       "io.modelcontextprotocol/protocolVersion": "2026-07-28",

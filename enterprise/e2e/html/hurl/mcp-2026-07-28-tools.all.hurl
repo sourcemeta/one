@@ -39,7 +39,7 @@ header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 50
-jsonpath "$.result.tools" count == 14
+jsonpath "$.result.tools" count == 13
 jsonpath "$.result.tools[0].name" == "list_directory"
 jsonpath "$.result.tools[1].name" == "get_dependencies"
 jsonpath "$.result.tools[2].name" == "get_dependents"
@@ -47,13 +47,12 @@ jsonpath "$.result.tools[3].name" == "get_schema_health"
 jsonpath "$.result.tools[4].name" == "get_schema_locations"
 jsonpath "$.result.tools[5].name" == "get_schema_positions"
 jsonpath "$.result.tools[6].name" == "get_schema_stats"
-jsonpath "$.result.tools[7].name" == "get_schema_metadata"
+jsonpath "$.result.tools[7].name" == "get_metadata"
 jsonpath "$.result.tools[8].name" == "evaluate_schema"
 jsonpath "$.result.tools[9].name" == "instance_to_rdf"
 jsonpath "$.result.tools[10].name" == "trace_schema_evaluation"
 jsonpath "$.result.tools[11].name" == "playground_trace_schema"
 jsonpath "$.result.tools[12].name" == "search_schemas"
-jsonpath "$.result.tools[13].name" == "get_openapi_metadata"
 # The display title is sent both on the tool and under its annotations, since
 # the revisions differ on where a client reads it from
 jsonpath "$.result.tools[0].title" == "List Directory"
@@ -146,15 +145,15 @@ jsonpath "$.result.tools[6].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[6].annotations.destructiveHint" == false
 jsonpath "$.result.tools[6].annotations.idempotentHint" == true
 jsonpath "$.result.tools[6].annotations.openWorldHint" == false
-jsonpath "$.result.tools[7].name" == "get_schema_metadata"
-jsonpath "$.result.tools[7].title" == "Get Schema Metadata"
-jsonpath "$.result.tools[7].description" == "Return navigation metadata for a schema in the catalog, including title, description, dialect, byte size, dependency count, and breadcrumb path"
+jsonpath "$.result.tools[7].name" == "get_metadata"
+jsonpath "$.result.tools[7].title" == "Get Metadata"
+jsonpath "$.result.tools[7].description" == "Return navigation metadata for a resource in the catalog, whether it is a JSON Schema or an OpenAPI description, including title, description, what it conforms to, dialect, byte size, dependency count, and breadcrumb path"
 jsonpath "$.result.tools[7].inputSchema.type" == "object"
-jsonpath "$.result.tools[7].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-metadata/request"
+jsonpath "$.result.tools[7].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-metadata/request"
 jsonpath "$.result.tools[7].inputSchema['$comment']" == "The full input schema for this tool is published at the `$ref` URL above. A client that does not resolve it can call `resources/read` on that URL to fetch it, since this server is a JSON Schema registry and every `$ref` URL is itself reachable as an MCP resource"
 jsonpath "$.result.tools[7].outputSchema.type" == "object"
-jsonpath "$.result.tools[7].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-metadata/response"
-jsonpath "$.result.tools[7].annotations.title" == "Get Schema Metadata"
+jsonpath "$.result.tools[7].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-metadata/response"
+jsonpath "$.result.tools[7].annotations.title" == "Get Metadata"
 jsonpath "$.result.tools[7].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[7].annotations.destructiveHint" == false
 jsonpath "$.result.tools[7].annotations.idempotentHint" == true
@@ -224,19 +223,6 @@ jsonpath "$.result.tools[12].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[12].annotations.destructiveHint" == false
 jsonpath "$.result.tools[12].annotations.idempotentHint" == true
 jsonpath "$.result.tools[12].annotations.openWorldHint" == false
-jsonpath "$.result.tools[13].name" == "get_openapi_metadata"
-jsonpath "$.result.tools[13].title" == "Get OpenAPI Metadata"
-jsonpath "$.result.tools[13].description" == "Return navigation metadata for an OpenAPI description in the catalog, including title, description, revision, API version, byte size, operation count, dependency count, and breadcrumb path"
-jsonpath "$.result.tools[13].inputSchema.type" == "object"
-jsonpath "$.result.tools[13].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-openapi-metadata/request"
-jsonpath "$.result.tools[13].inputSchema['$comment']" == "The full input schema for this tool is published at the `$ref` URL above. A client that does not resolve it can call `resources/read` on that URL to fetch it, since this server is a JSON Schema registry and every `$ref` URL is itself reachable as an MCP resource"
-jsonpath "$.result.tools[13].outputSchema.type" == "object"
-jsonpath "$.result.tools[13].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-openapi-metadata/response"
-jsonpath "$.result.tools[13].annotations.title" == "Get OpenAPI Metadata"
-jsonpath "$.result.tools[13].annotations.readOnlyHint" == true
-jsonpath "$.result.tools[13].annotations.destructiveHint" == false
-jsonpath "$.result.tools[13].annotations.idempotentHint" == true
-jsonpath "$.result.tools[13].annotations.openWorldHint" == false
 jsonpath "$.result.resultType" == "complete"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"

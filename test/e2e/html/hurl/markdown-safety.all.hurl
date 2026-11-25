@@ -26,7 +26,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 xpath "count(//div[contains(@class, 'alert')]//script)" == 0
 xpath "count(//div[contains(@class, 'alert')]//iframe)" == 0
 
-GET {{base}}/self/v1/api/schemas/metadata/test/doc/unsafe
+GET {{base}}/self/v1/api/metadata/test/doc/unsafe
 Accept: application/json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate

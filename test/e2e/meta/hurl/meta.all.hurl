@@ -169,14 +169,14 @@ header "ETag" exists
 
 # A 2020-12 schema declaring its vocabularies is a meta-schema even when no
 # schema declares it as its dialect
-GET {{base}}/self/v1/api/schemas/metadata/meta/keywords/x-author
+GET {{base}}/self/v1/api/metadata/meta/keywords/x-author
 Accept: application/json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
+Link: </self/v1/schemas/api/metadata/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -229,14 +229,14 @@ jsonpath "$.valid" == true
 
 # A schema taking a custom dialect from its collection is not a meta-schema, and
 # names that dialect as the identifier of the schema it points at
-GET {{base}}/self/v1/api/schemas/metadata/with-relative-default-dialect/sample
+GET {{base}}/self/v1/api/metadata/with-relative-default-dialect/sample
 Accept: application/json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
+Link: </self/v1/schemas/api/metadata/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"

@@ -9,6 +9,7 @@
       "identifier": "https://example.com/schemas/user.json",
       "path": "/schemas/user.json",
       "baseDialect": "https://json-schema.org/draft/2020-12/schema",
+      "conformsTo": "https://json-schema.org/draft/2020-12/schema",
       "dialect": "https://json-schema.org/draft/2020-12/schema",
       "health": 100,
       "priority": 100,
@@ -22,6 +23,7 @@
     "identifier",
     "path",
     "baseDialect",
+    "conformsTo",
     "dialect",
     "health",
     "priority",
@@ -45,6 +47,28 @@
       "x-format-assertion": true,
       "type": "string",
       "format": "uri"
+    },
+    "conformsTo": {
+      "enum": [
+        "https://json-schema.org/draft/2020-12/schema",
+        "https://json-schema.org/draft/2020-12/hyper-schema",
+        "https://json-schema.org/draft/2019-09/schema",
+        "https://json-schema.org/draft/2019-09/hyper-schema",
+        "http://json-schema.org/draft-07/schema#",
+        "http://json-schema.org/draft-07/hyper-schema#",
+        "http://json-schema.org/draft-06/schema#",
+        "http://json-schema.org/draft-06/hyper-schema#",
+        "http://json-schema.org/draft-04/schema#",
+        "http://json-schema.org/draft-04/hyper-schema#",
+        "http://json-schema.org/draft-03/schema#",
+        "http://json-schema.org/draft-03/hyper-schema#",
+        "http://json-schema.org/draft-02/hyper-schema#",
+        "http://json-schema.org/draft-01/hyper-schema#",
+        "http://json-schema.org/draft-00/hyper-schema#",
+        "https://spec.openapis.org/oas/v3.0",
+        "https://spec.openapis.org/oas/v3.1",
+        "https://spec.openapis.org/oas/v3.2"
+      ]
     },
     "bytes": {
       "type": "integer",

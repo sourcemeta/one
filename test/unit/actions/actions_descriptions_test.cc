@@ -104,13 +104,14 @@ TEST(get_schema_stats_v1) {
                 "keywords the schema relies on and how often each appears"});
 }
 
-TEST(get_schema_metadata_v1) {
+TEST(get_metadata_v1) {
   EXPECT_EQ(sourcemeta::one::action_description(
-                sourcemeta::one::ACTION_TYPE_GET_SCHEMA_METADATA_V1),
+                sourcemeta::one::ACTION_TYPE_GET_METADATA_V1),
             std::string_view{
-                "Return navigation metadata for a schema in the catalog, "
-                "including title, description, dialect, byte size, "
-                "dependency count, and breadcrumb path"});
+                "Return navigation metadata for a resource in the catalog, "
+                "whether it is a JSON Schema or an OpenAPI description, "
+                "including title, description, what it conforms to, dialect, "
+                "byte size, dependency count, and breadcrumb path"});
 }
 
 TEST(get_dependencies_v1) {

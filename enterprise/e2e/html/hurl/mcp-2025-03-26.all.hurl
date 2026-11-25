@@ -540,7 +540,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 5
-jsonpath "$.result.tools" count == 14
+jsonpath "$.result.tools" count == 13
 jsonpath "$.result.tools[0].name" == "list_directory"
 jsonpath "$.result.tools[0].description" == "List the contents of a directory in the catalog"
 jsonpath "$.result.tools[0].inputSchema.type" == "object"
@@ -611,12 +611,12 @@ jsonpath "$.result.tools[6].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[6].annotations.destructiveHint" == false
 jsonpath "$.result.tools[6].annotations.idempotentHint" == true
 jsonpath "$.result.tools[6].annotations.openWorldHint" == false
-jsonpath "$.result.tools[7].name" == "get_schema_metadata"
-jsonpath "$.result.tools[7].description" == "Return navigation metadata for a schema in the catalog, including title, description, dialect, byte size, dependency count, and breadcrumb path"
+jsonpath "$.result.tools[7].name" == "get_metadata"
+jsonpath "$.result.tools[7].description" == "Return navigation metadata for a resource in the catalog, whether it is a JSON Schema or an OpenAPI description, including title, description, what it conforms to, dialect, byte size, dependency count, and breadcrumb path"
 jsonpath "$.result.tools[7].inputSchema.type" == "object"
-jsonpath "$.result.tools[7].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-metadata/request"
+jsonpath "$.result.tools[7].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-metadata/request"
 jsonpath "$.result.tools[7].inputSchema['$comment']" == "The full input schema for this tool is published at the `$ref` URL above. A client that does not resolve it can call `resources/read` on that URL to fetch it, since this server is a JSON Schema registry and every `$ref` URL is itself reachable as an MCP resource"
-jsonpath "$.result.tools[7].annotations.title" == "Get Schema Metadata"
+jsonpath "$.result.tools[7].annotations.title" == "Get Metadata"
 jsonpath "$.result.tools[7].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[7].annotations.destructiveHint" == false
 jsonpath "$.result.tools[7].annotations.idempotentHint" == true
@@ -671,16 +671,6 @@ jsonpath "$.result.tools[12].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[12].annotations.destructiveHint" == false
 jsonpath "$.result.tools[12].annotations.idempotentHint" == true
 jsonpath "$.result.tools[12].annotations.openWorldHint" == false
-jsonpath "$.result.tools[13].name" == "get_openapi_metadata"
-jsonpath "$.result.tools[13].description" == "Return navigation metadata for an OpenAPI description in the catalog, including title, description, revision, API version, byte size, operation count, dependency count, and breadcrumb path"
-jsonpath "$.result.tools[13].inputSchema.type" == "object"
-jsonpath "$.result.tools[13].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-openapi-metadata/request"
-jsonpath "$.result.tools[13].inputSchema['$comment']" == "The full input schema for this tool is published at the `$ref` URL above. A client that does not resolve it can call `resources/read` on that URL to fetch it, since this server is a JSON Schema registry and every `$ref` URL is itself reachable as an MCP resource"
-jsonpath "$.result.tools[13].annotations.title" == "Get OpenAPI Metadata"
-jsonpath "$.result.tools[13].annotations.readOnlyHint" == true
-jsonpath "$.result.tools[13].annotations.destructiveHint" == false
-jsonpath "$.result.tools[13].annotations.idempotentHint" == true
-jsonpath "$.result.tools[13].annotations.openWorldHint" == false
 # Added in 2025-06-18 ("outputSchema" on Tool)
 # https://modelcontextprotocol.io/specification/2025-06-18/changelog
 jsonpath "$..outputSchema" not exists
@@ -700,7 +690,6 @@ jsonpath "$.result.tools[9].title" not exists
 jsonpath "$.result.tools[10].title" not exists
 jsonpath "$.result.tools[11].title" not exists
 jsonpath "$.result.tools[12].title" not exists
-jsonpath "$.result.tools[13].title" not exists
 # Added in 2025-11-25 (SEP-973)
 # https://github.com/modelcontextprotocol/modelcontextprotocol/issues/973
 jsonpath "$..icons" not exists
@@ -824,7 +813,7 @@ jsonpath "$..mimeType" not exists
 variable "text" jsonpath "$.path" == "/"
 variable "text" jsonpath "$.url" == "{{base}}"
 variable "text" jsonpath "$.breadcrumb" count == 0
-variable "text" jsonpath "$.schemas" == 159
+variable "text" jsonpath "$.schemas" == 157
 variable "text" jsonpath "$.openapi" == 3
 variable "text" jsonpath "$.health" == 63
 variable "text" jsonpath "$.entries" count == 5
@@ -851,7 +840,7 @@ variable "text" jsonpath "$.entries[2].title" == "Self"
 variable "text" jsonpath "$.entries[2].description" == "The schemas that define the current version of this instance"
 variable "text" jsonpath "$.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].health" == 100
-variable "text" jsonpath "$.entries[2].schemas" == 75
+variable "text" jsonpath "$.entries[2].schemas" == 73
 variable "text" jsonpath "$.entries[2].openapi" == 0
 variable "text" jsonpath "$.entries[2].path" == "/self/"
 variable "text" jsonpath "$.entries[3].name" == "test"
