@@ -80,6 +80,17 @@ static auto openapi_revision_uri(const sourcemeta::core::OpenAPIVersion version)
          std::string{sourcemeta::core::openapi_version_name(version)};
 }
 
+// How much of each kind a directory holds, keyed by what an entry of that kind
+// calls itself
+static auto make_resource_counts(const std::int64_t schemas,
+                                 const std::int64_t openapi)
+    -> sourcemeta::core::JSON {
+  auto result{sourcemeta::core::JSON::make_object()};
+  result.assign("schema", sourcemeta::core::JSON{schemas});
+  result.assign("openapi", sourcemeta::core::JSON{openapi});
+  return result;
+}
+
 static auto
 inflate_metadata(const sourcemeta::one::Configuration &configuration,
                  const std::filesystem::path &path,
@@ -1527,13 +1538,12 @@ struct GenerateExplorerDirectoryList {
             if (old_entry.defines("health")) {
               scores.emplace_back(old_entry.at("health").to_integer());
             }
-            if (old_entry.defines("schemas")) {
-              assert(old_entry.at("schemas").is_positive());
-              child_schemas_total += old_entry.at("schemas").to_integer();
-            }
-            if (old_entry.defines("openapi")) {
-              assert(old_entry.at("openapi").is_positive());
-              child_openapi_total += old_entry.at("openapi").to_integer();
+            if (old_entry.defines("resources")) {
+              const auto &old_counts{old_entry.at("resources")};
+              assert(old_counts.at("schema").is_positive());
+              child_schemas_total += old_counts.at("schema").to_integer();
+              assert(old_counts.at("openapi").is_positive());
+              child_openapi_total += old_counts.at("openapi").to_integer();
             }
             directory_entries.push_back(
                 {.json = old_entry,
@@ -1565,12 +1575,11 @@ struct GenerateExplorerDirectoryList {
               "health", sourcemeta::core::JSON{directory_extension->health});
           scores.emplace_back(directory_extension->health);
           assert(directory_extension->schemas >= 0);
-          entry_json.assign(
-              "schemas", sourcemeta::core::JSON{directory_extension->schemas});
-          child_schemas_total += directory_extension->schemas;
           assert(directory_extension->openapi >= 0);
-          entry_json.assign(
-              "openapi", sourcemeta::core::JSON{directory_extension->openapi});
+          entry_json.assign("resources",
+                            make_resource_counts(directory_extension->schemas,
+                                                 directory_extension->openapi));
+          child_schemas_total += directory_extension->schemas;
           child_openapi_total += directory_extension->openapi;
 
           const auto directory_path_string{
@@ -1639,16 +1648,15 @@ struct GenerateExplorerDirectoryList {
           scores.emplace_back(directory_json.at("health").to_integer());
 
           entry_json.assign("health", directory_json.at("health"));
-          assert(directory_json.defines("schemas"));
-          assert(directory_json.at("schemas").is_integer());
-          assert(directory_json.at("schemas").is_positive());
-          entry_json.assign("schemas", directory_json.at("schemas"));
-          child_schemas_total += directory_json.at("schemas").to_integer();
-          assert(directory_json.defines("openapi"));
-          assert(directory_json.at("openapi").is_integer());
-          assert(directory_json.at("openapi").is_positive());
-          entry_json.assign("openapi", directory_json.at("openapi"));
-          child_openapi_total += directory_json.at("openapi").to_integer();
+          assert(directory_json.defines("resources"));
+          const auto &directory_counts{directory_json.at("resources")};
+          assert(directory_counts.at("schema").is_integer());
+          assert(directory_counts.at("schema").is_positive());
+          assert(directory_counts.at("openapi").is_integer());
+          assert(directory_counts.at("openapi").is_positive());
+          entry_json.assign("resources", directory_counts);
+          child_schemas_total += directory_counts.at("schema").to_integer();
+          child_openapi_total += directory_counts.at("openapi").to_integer();
           assert(directory_json.defines("path"));
           entry_json.assign("path",
                             sourcemeta::core::JSON{
@@ -1855,12 +1863,11 @@ struct GenerateExplorerDirectoryList {
     const auto total_schemas{static_cast<std::int64_t>(schema_entries.size()) +
                              child_schemas_total};
     assert(total_schemas >= 0);
-    meta.assign("schemas", sourcemeta::core::JSON{total_schemas});
-
     const auto total_openapi{static_cast<std::int64_t>(openapi_entries.size()) +
                              child_openapi_total};
     assert(total_openapi >= 0);
-    meta.assign("openapi", sourcemeta::core::JSON{total_openapi});
+    meta.assign("resources",
+                make_resource_counts(total_schemas, total_openapi));
 
     meta.assign("entries", std::move(entries));
     meta.assign("private",
@@ -1881,7 +1888,8 @@ struct GenerateExplorerDirectoryList {
         action.destination.parent_path().parent_path().filename().string()};
     const auto directory_extension_bytes{make_directory_extension(
         parse_version_info(directory_name), meta.at("health").to_integer(),
-        meta.at("schemas").to_integer(), meta.at("openapi").to_integer(),
+        meta.at("resources").at("schema").to_integer(),
+        meta.at("resources").at("openapi").to_integer(),
         meta.at("path").to_string(),
         meta.defines("title") ? meta.at("title").to_string() : "",
         meta.defines("description") ? meta.at("description").to_string() : "",

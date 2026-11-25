@@ -19,8 +19,8 @@ header "Last-Modified" exists
 jsonpath "$.path" == "/"
 jsonpath "$.url" == "{{base}}"
 jsonpath "$.breadcrumb" count == 0
-jsonpath "$.schemas" == 130
-jsonpath "$.openapi" == 0
+jsonpath "$.resources.schema" == 130
+jsonpath "$.resources.openapi" == 0
 jsonpath "$.health" == 63
 jsonpath "$.entries" count >= 2
 jsonpath "$.private" == false
@@ -30,8 +30,8 @@ jsonpath "$.entries[0].title" == "Self"
 jsonpath "$.entries[0].description" == "The schemas that define the current version of this instance"
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].health" == 100
-jsonpath "$.entries[0].schemas" == 73
-jsonpath "$.entries[0].openapi" == 0
+jsonpath "$.entries[0].resources.schema" == 73
+jsonpath "$.entries[0].resources.openapi" == 0
 jsonpath "$.entries[0].path" == "/self/"
 jsonpath "$.entries[1].name" == "test"
 jsonpath "$.entries[1].private" == false
@@ -39,8 +39,8 @@ jsonpath "$.entries[1].title" == "Test"
 jsonpath "$.entries[1].description" == "A directory full of testing schemas"
 jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.entries[1].health" == 26
-jsonpath "$.entries[1].schemas" == 57
-jsonpath "$.entries[1].openapi" == 0
+jsonpath "$.entries[1].resources.schema" == 57
+jsonpath "$.entries[1].resources.openapi" == 0
 jsonpath "$.entries[1].path" == "/test/"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -83,8 +83,8 @@ jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.breadcrumb[0].path" == "/test/"
 jsonpath "$.description" == "A directory full of testing schemas"
 jsonpath "$.title" == "Test"
-jsonpath "$.schemas" == 57
-jsonpath "$.openapi" == 0
+jsonpath "$.resources.schema" == 57
+jsonpath "$.resources.openapi" == 0
 jsonpath "$.health" == 26
 jsonpath "$.entries" count == 15
 jsonpath "$.private" == false
@@ -92,29 +92,29 @@ jsonpath "$.entries[0].name" == "v2.0"
 jsonpath "$.entries[0].private" == false
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].health" == 50
-jsonpath "$.entries[0].schemas" == 2
-jsonpath "$.entries[0].openapi" == 0
+jsonpath "$.entries[0].resources.schema" == 2
+jsonpath "$.entries[0].resources.openapi" == 0
 jsonpath "$.entries[0].path" == "/test/v2.0/"
 jsonpath "$.entries[1].name" == "bundling"
 jsonpath "$.entries[1].private" == false
 jsonpath "$.entries[1].type" == "directory"
 jsonpath "$.entries[1].health" == 59
-jsonpath "$.entries[1].schemas" == 2
-jsonpath "$.entries[1].openapi" == 0
+jsonpath "$.entries[1].resources.schema" == 2
+jsonpath "$.entries[1].resources.openapi" == 0
 jsonpath "$.entries[1].path" == "/test/bundling/"
 jsonpath "$.entries[2].name" == "camelcase"
 jsonpath "$.entries[2].private" == false
 jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.entries[2].health" == 25
-jsonpath "$.entries[2].schemas" == 2
-jsonpath "$.entries[2].openapi" == 0
+jsonpath "$.entries[2].resources.schema" == 2
+jsonpath "$.entries[2].resources.openapi" == 0
 jsonpath "$.entries[2].path" == "/test/camelcase/"
 jsonpath "$.entries[3].name" == "doc"
 jsonpath "$.entries[3].private" == false
 jsonpath "$.entries[3].type" == "directory"
 jsonpath "$.entries[3].health" == 0
-jsonpath "$.entries[3].schemas" == 4
-jsonpath "$.entries[3].openapi" == 0
+jsonpath "$.entries[3].resources.schema" == 4
+jsonpath "$.entries[3].resources.openapi" == 0
 jsonpath "$.entries[3].path" == "/test/doc/"
 jsonpath "$.entries[3].title" == "A sample schema folder"
 jsonpath "$.entries[3].description" == "For **testing** purposes with a [link](https://example.com)"
@@ -123,77 +123,77 @@ jsonpath "$.entries[4].name" == "draft3"
 jsonpath "$.entries[4].private" == false
 jsonpath "$.entries[4].type" == "directory"
 jsonpath "$.entries[4].health" == 25
-jsonpath "$.entries[4].schemas" == 2
-jsonpath "$.entries[4].openapi" == 0
+jsonpath "$.entries[4].resources.schema" == 2
+jsonpath "$.entries[4].resources.openapi" == 0
 jsonpath "$.entries[4].path" == "/test/draft3/"
 jsonpath "$.entries[5].name" == "extension"
 jsonpath "$.entries[5].private" == false
 jsonpath "$.entries[5].type" == "directory"
 jsonpath "$.entries[5].health" == 17
-jsonpath "$.entries[5].schemas" == 3
-jsonpath "$.entries[5].openapi" == 0
+jsonpath "$.entries[5].resources.schema" == 3
+jsonpath "$.entries[5].resources.openapi" == 0
 jsonpath "$.entries[5].path" == "/test/extension/"
 jsonpath "$.entries[6].name" == "hyper"
 jsonpath "$.entries[6].private" == false
 jsonpath "$.entries[6].type" == "directory"
 jsonpath "$.entries[6].health" == 34
-jsonpath "$.entries[6].schemas" == 1
-jsonpath "$.entries[6].openapi" == 0
+jsonpath "$.entries[6].resources.schema" == 1
+jsonpath "$.entries[6].resources.openapi" == 0
 jsonpath "$.entries[6].path" == "/test/hyper/"
 jsonpath "$.entries[7].name" == "markdown-alert"
 jsonpath "$.entries[7].private" == false
 jsonpath "$.entries[7].type" == "directory"
-jsonpath "$.entries[7].schemas" == 1
-jsonpath "$.entries[7].openapi" == 0
+jsonpath "$.entries[7].resources.schema" == 1
+jsonpath "$.entries[7].resources.openapi" == 0
 jsonpath "$.entries[7].health" == 0
 jsonpath "$.entries[7].path" == "/test/markdown-alert/"
 jsonpath "$.entries[8].name" == "no-base"
 jsonpath "$.entries[8].private" == false
 jsonpath "$.entries[8].type" == "directory"
 jsonpath "$.entries[8].health" == 0
-jsonpath "$.entries[8].schemas" == 2
-jsonpath "$.entries[8].openapi" == 0
+jsonpath "$.entries[8].resources.schema" == 2
+jsonpath "$.entries[8].resources.openapi" == 0
 jsonpath "$.entries[8].path" == "/test/no-base/"
 jsonpath "$.entries[9].name" == "no-blaze"
 jsonpath "$.entries[9].private" == false
 jsonpath "$.entries[9].type" == "directory"
 jsonpath "$.entries[9].health" == 0
-jsonpath "$.entries[9].schemas" == 1
-jsonpath "$.entries[9].openapi" == 0
+jsonpath "$.entries[9].resources.schema" == 1
+jsonpath "$.entries[9].resources.openapi" == 0
 jsonpath "$.entries[9].path" == "/test/no-blaze/"
 jsonpath "$.entries[10].name" == "openapi"
 jsonpath "$.entries[10].private" == false
 jsonpath "$.entries[10].type" == "directory"
 jsonpath "$.entries[10].health" == 100
-jsonpath "$.entries[10].schemas" == 3
-jsonpath "$.entries[10].openapi" == 0
+jsonpath "$.entries[10].resources.schema" == 3
+jsonpath "$.entries[10].resources.openapi" == 0
 jsonpath "$.entries[10].path" == "/test/openapi/"
 jsonpath "$.entries[11].name" == "openapi3.0"
 jsonpath "$.entries[11].private" == false
 jsonpath "$.entries[11].type" == "directory"
 jsonpath "$.entries[11].health" == 67
-jsonpath "$.entries[11].schemas" == 3
-jsonpath "$.entries[11].openapi" == 0
+jsonpath "$.entries[11].resources.schema" == 3
+jsonpath "$.entries[11].resources.openapi" == 0
 jsonpath "$.entries[11].path" == "/test/openapi3.0/"
 jsonpath "$.entries[12].name" == "same"
 jsonpath "$.entries[12].private" == false
 jsonpath "$.entries[12].type" == "directory"
 jsonpath "$.entries[12].health" == 0
-jsonpath "$.entries[12].schemas" == 1
-jsonpath "$.entries[12].openapi" == 0
+jsonpath "$.entries[12].resources.schema" == 1
+jsonpath "$.entries[12].resources.openapi" == 0
 jsonpath "$.entries[12].path" == "/test/same/"
 jsonpath "$.entries[13].name" == "schemas"
 jsonpath "$.entries[13].private" == false
 jsonpath "$.entries[13].type" == "directory"
 jsonpath "$.entries[13].health" == 6
-jsonpath "$.entries[13].schemas" == 29
-jsonpath "$.entries[13].openapi" == 0
+jsonpath "$.entries[13].resources.schema" == 29
+jsonpath "$.entries[13].resources.openapi" == 0
 jsonpath "$.entries[13].path" == "/test/schemas/"
 jsonpath "$.entries[14].name" == "unsafe-alert"
 jsonpath "$.entries[14].private" == false
 jsonpath "$.entries[14].type" == "directory"
-jsonpath "$.entries[14].schemas" == 1
-jsonpath "$.entries[14].openapi" == 0
+jsonpath "$.entries[14].resources.schema" == 1
+jsonpath "$.entries[14].resources.openapi" == 0
 jsonpath "$.entries[14].health" == 0
 jsonpath "$.entries[14].path" == "/test/unsafe-alert/"
 
@@ -232,8 +232,8 @@ header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$.path" == "/test/v2.0"
 jsonpath "$.url" == "{{base}}/test/v2.0"
-jsonpath "$.schemas" == 2
-jsonpath "$.openapi" == 0
+jsonpath "$.resources.schema" == 2
+jsonpath "$.resources.openapi" == 0
 jsonpath "$.health" == 50
 jsonpath "$.breadcrumb" count == 2
 jsonpath "$.breadcrumb[0].name" == "test"
@@ -306,8 +306,8 @@ header "ETag" exists
 header "Last-Modified" exists
 jsonpath "$.path" == "/test/v2.0"
 jsonpath "$.url" == "{{base}}/test/v2.0"
-jsonpath "$.schemas" == 2
-jsonpath "$.openapi" == 0
+jsonpath "$.resources.schema" == 2
+jsonpath "$.resources.openapi" == 0
 jsonpath "$.health" == 50
 jsonpath "$.breadcrumb" count == 2
 jsonpath "$.breadcrumb[0].name" == "test"
@@ -381,8 +381,8 @@ header "Last-Modified" exists
 jsonpath "$.path" == "/test/schemas/versions"
 jsonpath "$.url" == "{{base}}/test/schemas/versions"
 jsonpath "$.health" == 0
-jsonpath "$.schemas" == 1
-jsonpath "$.openapi" == 0
+jsonpath "$.resources.schema" == 1
+jsonpath "$.resources.openapi" == 0
 jsonpath "$.breadcrumb" count == 3
 jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.breadcrumb[0].path" == "/test/"
@@ -442,8 +442,8 @@ header "Last-Modified" exists
 jsonpath "$.path" == "/test/schemas/clash/foo"
 jsonpath "$.url" == "{{base}}/test/schemas/clash/foo"
 jsonpath "$.health" == 0
-jsonpath "$.schemas" == 1
-jsonpath "$.openapi" == 0
+jsonpath "$.resources.schema" == 1
+jsonpath "$.resources.openapi" == 0
 jsonpath "$.breadcrumb" count == 4
 jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.breadcrumb[0].path" == "/test/"
@@ -505,8 +505,8 @@ header "Last-Modified" exists
 jsonpath "$.path" == "/test/schemas/clash"
 jsonpath "$.url" == "{{base}}/test/schemas/clash"
 jsonpath "$.health" == 0
-jsonpath "$.schemas" == 2
-jsonpath "$.openapi" == 0
+jsonpath "$.resources.schema" == 2
+jsonpath "$.resources.openapi" == 0
 jsonpath "$.breadcrumb" count == 3
 jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.breadcrumb[0].path" == "/test/"
@@ -520,8 +520,8 @@ jsonpath "$.entries[0].name" == "foo"
 jsonpath "$.entries[0].private" == false
 jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.entries[0].health" == 0
-jsonpath "$.entries[0].schemas" == 1
-jsonpath "$.entries[0].openapi" == 0
+jsonpath "$.entries[0].resources.schema" == 1
+jsonpath "$.entries[0].resources.openapi" == 0
 jsonpath "$.entries[0].path" == "/test/schemas/clash/foo/"
 jsonpath "$.entries[1].name" == "foo"
 jsonpath "$.entries[1].private" == false
@@ -573,8 +573,8 @@ header "Last-Modified" exists
 jsonpath "$.path" == "/test/extension"
 jsonpath "$.url" == "{{base}}/test/extension"
 jsonpath "$.health" == 17
-jsonpath "$.schemas" == 3
-jsonpath "$.openapi" == 0
+jsonpath "$.resources.schema" == 3
+jsonpath "$.resources.openapi" == 0
 jsonpath "$.breadcrumb" count == 2
 jsonpath "$.breadcrumb[0].name" == "test"
 jsonpath "$.breadcrumb[0].path" == "/test/"

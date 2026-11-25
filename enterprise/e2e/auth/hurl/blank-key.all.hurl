@@ -225,8 +225,8 @@ enumerated_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
 jsonpath "$.path" == "/mixed"
 jsonpath "$.url" == "{{base}}/mixed"
-jsonpath "$.schemas" == 1
-jsonpath "$.openapi" == 0
+jsonpath "$.resources.schema" == 1
+jsonpath "$.resources.openapi" == 0
 jsonpath "$.health" == 0
 jsonpath "$.breadcrumb" count == 1
 jsonpath "$.breadcrumb[0].name" == "mixed"

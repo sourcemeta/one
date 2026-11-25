@@ -348,9 +348,10 @@ inline auto make_file_manager_row(sourcemeta::core::HTMLWriter &writer,
 
   // Schemas column
   writer.td();
-  writer.small(entry.defines("schemas")
-                   ? std::to_string(entry.at("schemas").to_integer())
-                   : "-");
+  writer.small(
+      entry.defines("resources")
+          ? std::to_string(entry.at("resources").at("schema").to_integer())
+          : "-");
   writer.close();
 
   // Dependencies column

@@ -149,8 +149,8 @@ jsonpath "$.result.content" count == 2
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
 jsonpath "$.result.content[1].uri" == "http://localhost:8000/private/secret"
-jsonpath "$.result.structuredContent.schemas" == 2
-jsonpath "$.result.structuredContent.openapi" == 0
+jsonpath "$.result.structuredContent.resources.schema" == 2
+jsonpath "$.result.structuredContent.resources.openapi" == 0
 jsonpath "$.result.structuredContent.health" == 34
 jsonpath "$.result.structuredContent.entries" count == 2
 jsonpath "$.result.structuredContent.entries[0].name" == "open"
