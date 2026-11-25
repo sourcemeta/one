@@ -1,0 +1,56 @@
+// A schema of this catalog may not reach into an OpenAPI description, which
+// this instance serves whole rather than as schemas of its own
+
+WRITE one.json UNTIL EOF
+{
+  "url": "http://localhost:8000",
+  "html": false,
+  "contents": {
+    "example": {
+      "baseUri": "https://example.com/",
+      "path": "./schemas",
+      "defaultDialect": "https://json-schema.org/draft/2020-12/schema"
+    }
+  }
+}
+EOF
+
+MAKE DIRECTORY schemas
+
+WRITE schemas/pet.json UNTIL EOF
+{
+  "$ref": "https://example.com/petstore#/components/schemas/Pet"
+}
+EOF
+
+WRITE schemas/petstore.json UNTIL EOF
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Petstore",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "Pet": {
+        "type": "object"
+      }
+    }
+  }
+}
+EOF
+
+RUN --skip-banner one.json output STDIN /dev/null IN . INTO output.txt EXPECTING 1
+DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([ 0-9]+%\) )' IN output.txt
+
+WRITE expected.txt UNTIL EOF
+2> error: Could not resolve the reference to an external schema
+2>   at identifier http://localhost:8000/example/petstore
+2>   at path [CWD]/schemas/pet.json
+2>
+2> Did you forget to register a schema with such URI?
+EOF
+
+REPLACE $CWD WITH '[CWD]' IN output.txt
+COMPARE output.txt AGAINST expected.txt
