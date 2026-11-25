@@ -16,7 +16,7 @@ export type DirectoryEntry =
     }
   | {
       name: string;
-      type: "schema";
+      type: "schema" | "openapi";
       path: string;
       identifier: string;
       bytes: number;

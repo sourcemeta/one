@@ -25,7 +25,7 @@ const DirectoryNode = ({
 
   const indent = { paddingLeft: `${depth * 14 + 10}px` };
 
-  if (entry.type === "schema") {
+  if (entry.type !== "directory") {
     const isSelected = selectedSchemaPath === entry.path;
     return (
       <button
