@@ -928,7 +928,7 @@ jsonpath "$.result.resources[46].uri" == "{{base}}/self/v1/schemas/mcp/tools/cal
 jsonpath "$.result.resources[46].name" == "Sourcemeta One Directory Listing RPC Output"
 jsonpath "$.result.resources[46].description" == "List the contents of a directory in the catalog"
 jsonpath "$.result.resources[46].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[46].size" == 629
+jsonpath "$.result.resources[46].size" == 661
 jsonpath "$.result.resources[46].annotations.priority" == 0.0
 jsonpath "$.result.resources[47].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/playground-trace-schema/request"
 jsonpath "$.result.resources[47].name" == "Sourcemeta One Playground Schema Trace RPC Input"
@@ -1429,7 +1429,7 @@ jsonpath "$.result.resources[46].uri" == "{{base}}/self/v1/schemas/mcp/tools/cal
 jsonpath "$.result.resources[46].name" == "Sourcemeta One Directory Listing RPC Output"
 jsonpath "$.result.resources[46].description" == "List the contents of a directory in the catalog"
 jsonpath "$.result.resources[46].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[46].size" == 629
+jsonpath "$.result.resources[46].size" == 661
 jsonpath "$.result.resources[46].annotations.priority" == 0.0
 jsonpath "$.result.resources[47].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/playground-trace-schema/request"
 jsonpath "$.result.resources[47].name" == "Sourcemeta One Playground Schema Trace RPC Input"

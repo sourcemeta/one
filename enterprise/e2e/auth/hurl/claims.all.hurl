@@ -273,8 +273,8 @@ Access-Control-Expose-Headers: Link, ETag
 listing: body
 listing_schema: header "Link" regex "<([^>]+)>"
 [Asserts]
-jsonpath "$.schemas" == 1
-jsonpath "$.openapi" == 0
+jsonpath "$.resources.schema" == 1
+jsonpath "$.resources.openapi" == 0
 jsonpath "$.health" == 67
 jsonpath "$.entries" count == 1
 jsonpath "$.private" == true

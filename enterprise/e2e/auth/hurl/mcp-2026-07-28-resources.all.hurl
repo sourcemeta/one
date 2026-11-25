@@ -98,7 +98,7 @@ jsonpath "$.result.resources[9].uri" == "{{base}}/self/v1/schemas/api/list/respo
 jsonpath "$.result.resources[9].name" == "Sourcemeta One List API Response"
 jsonpath "$.result.resources[9].description" == "The response format for the directory listing API endpoint"
 jsonpath "$.result.resources[9].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[9].size" == 3752
+jsonpath "$.result.resources[9].size" == 4198
 jsonpath "$.result.resources[9].annotations.priority" == 0.0
 jsonpath "$.result.resources[10].uri" == "{{base}}/self/v1/schemas/api/metadata/response"
 jsonpath "$.result.resources[10].name" == "Sourcemeta One Metadata API Response"
@@ -474,7 +474,7 @@ jsonpath "$.result.resources[14].uri" == "{{base}}/self/v1/schemas/mcp/tools/cal
 jsonpath "$.result.resources[14].name" == "Sourcemeta One Directory Listing RPC Output"
 jsonpath "$.result.resources[14].description" == "List the contents of a directory in the catalog"
 jsonpath "$.result.resources[14].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[14].size" == 629
+jsonpath "$.result.resources[14].size" == 661
 jsonpath "$.result.resources[14].annotations.priority" == 0.0
 jsonpath "$.result.resources[15].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/playground-trace-schema/request"
 jsonpath "$.result.resources[15].name" == "Sourcemeta One Playground Schema Trace RPC Input"
@@ -651,7 +651,7 @@ jsonpath "$.result.resources[12].uri" == "{{base}}/self/v1/schemas/api/list/resp
 jsonpath "$.result.resources[12].name" == "Sourcemeta One List API Response"
 jsonpath "$.result.resources[12].description" == "The response format for the directory listing API endpoint"
 jsonpath "$.result.resources[12].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[12].size" == 3752
+jsonpath "$.result.resources[12].size" == 4198
 jsonpath "$.result.resources[12].annotations.priority" == 0.0
 jsonpath "$.result.resources[13].uri" == "{{base}}/self/v1/schemas/api/metadata/response"
 jsonpath "$.result.resources[13].name" == "Sourcemeta One Metadata API Response"
@@ -1020,7 +1020,7 @@ jsonpath "$.result.resources[17].uri" == "{{base}}/self/v1/schemas/mcp/tools/cal
 jsonpath "$.result.resources[17].name" == "Sourcemeta One Directory Listing RPC Output"
 jsonpath "$.result.resources[17].description" == "List the contents of a directory in the catalog"
 jsonpath "$.result.resources[17].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[17].size" == 629
+jsonpath "$.result.resources[17].size" == 661
 jsonpath "$.result.resources[17].annotations.priority" == 0.0
 jsonpath "$.result.resources[18].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/playground-trace-schema/request"
 jsonpath "$.result.resources[18].name" == "Sourcemeta One Playground Schema Trace RPC Input"
@@ -1185,7 +1185,7 @@ jsonpath "$.result.resources[10].uri" == "{{base}}/self/v1/schemas/api/list/resp
 jsonpath "$.result.resources[10].name" == "Sourcemeta One List API Response"
 jsonpath "$.result.resources[10].description" == "The response format for the directory listing API endpoint"
 jsonpath "$.result.resources[10].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[10].size" == 3752
+jsonpath "$.result.resources[10].size" == 4198
 jsonpath "$.result.resources[10].annotations.priority" == 0.0
 jsonpath "$.result.resources[11].uri" == "{{base}}/self/v1/schemas/api/metadata/response"
 jsonpath "$.result.resources[11].name" == "Sourcemeta One Metadata API Response"
@@ -1554,7 +1554,7 @@ jsonpath "$.result.resources[15].uri" == "{{base}}/self/v1/schemas/mcp/tools/cal
 jsonpath "$.result.resources[15].name" == "Sourcemeta One Directory Listing RPC Output"
 jsonpath "$.result.resources[15].description" == "List the contents of a directory in the catalog"
 jsonpath "$.result.resources[15].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[15].size" == 629
+jsonpath "$.result.resources[15].size" == 661
 jsonpath "$.result.resources[15].annotations.priority" == 0.0
 jsonpath "$.result.resources[16].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/playground-trace-schema/request"
 jsonpath "$.result.resources[16].name" == "Sourcemeta One Playground Schema Trace RPC Input"

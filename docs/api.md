@@ -113,9 +113,10 @@ navigation and discovery purposes.
     | `/email` | String | No | The e-mail address associated with the directory |
     | `/github` | String | No | The GitHub organisation or repository associated with the directory |
     | `/website` | String | No | The external URL associated with the directory  |
-    | `/schemas` | Integer | Yes | The recursive count of schemas in this directory |
-    | `/openapi` | Integer | Yes | The recursive count of OpenAPI descriptions in this directory |
-    | `/health` | Integer | Yes | The aggregated health of the directory |
+    | `/resources` | Object | Yes | How much of each kind this directory holds, recursively, keyed by what an entry of that kind calls itself |
+    | `/resources/schema` | Integer | Yes | The recursive count of schemas |
+    | `/resources/openapi` | Integer | Yes | The recursive count of OpenAPI descriptions |
+    | `/health` | Integer | Yes | The aggregated health of the directory, over every resource it holds of either kind |
     | `/private` | Boolean | Yes | Whether an authentication policy governs this directory |
     | `/entries` | Array | Yes | The entries inside the directory |
     | `/entries/*/type` | `schema` / `openapi` / `directory` | Yes | What the entry is |
@@ -123,8 +124,9 @@ navigation and discovery purposes.
     | `/entries/*/path` | String | Yes | The relative URL of the entry |
     | `/entries/*/private` | Boolean | Yes | Whether an authentication policy governs the entry |
     | `/entries/*/health` | Integer | Yes | The aggregated health of the entry |
-    | `/entries/*/schemas` | Integer | No | For `directory` entries, the recursive count of schemas in the directory |
-    | `/entries/*/openapi` | Integer | No | For `directory` entries, the recursive count of OpenAPI descriptions in the directory |
+    | `/entries/*/resources` | Object | No | For `directory` entries, how much of each kind the entry holds, recursively |
+    | `/entries/*/resources/schema` | Integer | Yes | The recursive count of schemas |
+    | `/entries/*/resources/openapi` | Integer | Yes | The recursive count of OpenAPI descriptions |
     | `/entries/*/title` | String | No | The title associated with the entry |
     | `/entries/*/description` | String | No | The description associated with the entry. The web explorer renders this as Markdown |
     | `/entries/*/email` | String | No | For `directory` entries, the e-mail address associated with the entry |

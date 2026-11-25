@@ -25,7 +25,7 @@ const DirectoryNode = ({
 
   const indent = { paddingLeft: `${depth * 14 + 10}px` };
 
-  if (entry.type === "schema") {
+  if (entry.type !== "directory") {
     const isSelected = selectedSchemaPath === entry.path;
     return (
       <button
@@ -75,7 +75,7 @@ const DirectoryNode = ({
         <span className="truncate">📁 {entry.name}</span>
         <span className="ml-auto flex items-center gap-2 shrink-0">
           <span className="text-[var(--text-secondary)] text-xs">
-            {entry.schemas}
+            {entry.resources.schema}
           </span>
         </span>
       </button>

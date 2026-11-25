@@ -5,8 +5,10 @@
   "examples": [
     {
       "health": 100,
-      "schemas": 42,
-      "openapi": 3,
+      "resources": {
+        "schema": 42,
+        "openapi": 3
+      },
       "entries": [],
       "path": "/schemas",
       "url": "https://example.com/schemas",
@@ -22,8 +24,7 @@
   "type": "object",
   "required": [
     "health",
-    "schemas",
-    "openapi",
+    "resources",
     "entries",
     "path",
     "url",
@@ -56,8 +57,7 @@
             "type": "object",
             "required": [
               "health",
-              "schemas",
-              "openapi",
+              "resources",
               "name",
               "type",
               "path",
@@ -89,13 +89,20 @@
                 "maximum": 100,
                 "minimum": 0
               },
-              "schemas": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "openapi": {
-                "type": "integer",
-                "minimum": 0
+              "resources": {
+                "type": "object",
+                "required": [ "schema", "openapi" ],
+                "properties": {
+                  "schema": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "openapi": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "additionalProperties": false
               },
               "name": {
                 "type": "string"
@@ -137,13 +144,20 @@
       "maximum": 100,
       "minimum": 0
     },
-    "schemas": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "openapi": {
-      "type": "integer",
-      "minimum": 0
+    "resources": {
+      "type": "object",
+      "required": [ "schema", "openapi" ],
+      "properties": {
+        "schema": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "openapi": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
     },
     "path": {
       "x-format-assertion": true,
