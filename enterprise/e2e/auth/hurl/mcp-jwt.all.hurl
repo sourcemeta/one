@@ -227,8 +227,8 @@ Content-Type: application/json
   "id": 6,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_metadata",
-    "arguments": { "schema": "{{base}}/private/secret" }
+    "name": "get_metadata",
+    "arguments": { "uri": "{{base}}/private/secret" }
   }
 }
 ```
@@ -265,8 +265,8 @@ Content-Type: application/json
   "id": 7,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_metadata",
-    "arguments": { "schema": "{{base}}/machine/config" }
+    "name": "get_metadata",
+    "arguments": { "uri": "{{base}}/machine/config" }
   }
 }
 ```

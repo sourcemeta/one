@@ -1,11 +1,11 @@
-GET {{base}}/self/v1/api/schemas/metadata/test/schemas/no-id
+GET {{base}}/self/v1/api/metadata/test/schemas/no-id
 Accept: application/json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
+Link: </self/v1/schemas/api/metadata/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -50,14 +50,14 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/metadata/test/schemas/string
+GET {{base}}/self/v1/api/metadata/test/schemas/string
 Accept: application/json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
+Link: </self/v1/schemas/api/metadata/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -114,14 +114,14 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-HEAD {{base}}/self/v1/api/schemas/metadata/test/schemas/no-id
+HEAD {{base}}/self/v1/api/metadata/test/schemas/no-id
 Accept: application/json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
+Link: </self/v1/schemas/api/metadata/response>; rel="describedby"
 [Asserts]
 header "Vary" == "Accept-Encoding"
 header "Referrer-Policy" not exists
@@ -132,7 +132,7 @@ header "ETag" exists
 header "Last-Modified" exists
 bytes count == 0
 
-POST {{base}}/self/v1/api/schemas/metadata/test/schemas/no-id
+POST {{base}}/self/v1/api/metadata/test/schemas/no-id
 HTTP 405
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -169,7 +169,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/metadata/xyz
+GET {{base}}/self/v1/api/metadata/xyz
 Accept: application/json
 HTTP 404
 Cache-Control: no-store
@@ -206,7 +206,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/metadata
+GET {{base}}/self/v1/api/metadata
 HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -242,14 +242,14 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/metadata/test/schemas/bundling-double
+GET {{base}}/self/v1/api/metadata/test/schemas/bundling-double
 Accept: application/json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
+Link: </self/v1/schemas/api/metadata/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -294,27 +294,27 @@ jsonpath "$.valid" == true
 # RFC 9110 §9.3.2: HEAD MUST produce the same header fields as the
 # corresponding GET, with no content body. Capture the GET response so
 # the subsequent HEAD asserts header parity and zero body.
-GET {{base}}/self/v1/api/schemas/metadata/test/schemas/no-id
+GET {{base}}/self/v1/api/metadata/test/schemas/no-id
 Accept: application/json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
+Link: </self/v1/schemas/api/metadata/response>; rel="describedby"
 [Captures]
 get_content_length: header "Content-Length"
 [Asserts]
 header "Vary" == "Accept-Encoding"
 
-HEAD {{base}}/self/v1/api/schemas/metadata/test/schemas/no-id
+HEAD {{base}}/self/v1/api/metadata/test/schemas/no-id
 Accept: application/json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
+Link: </self/v1/schemas/api/metadata/response>; rel="describedby"
 [Asserts]
 header "Vary" == "Accept-Encoding"
 header "Referrer-Policy" not exists

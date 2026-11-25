@@ -99,7 +99,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 xpath "count(//div[@data-sourcemeta-ui-tab-id='health']//div[contains(@class, 'mb-0')]//p)" > 0
 
 # API returns raw markdown text for description, not HTML
-GET {{base}}/self/v1/api/schemas/metadata/test/doc/markdown
+GET {{base}}/self/v1/api/metadata/test/doc/markdown
 Accept: application/json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate

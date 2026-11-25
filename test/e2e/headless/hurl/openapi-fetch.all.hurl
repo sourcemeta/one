@@ -1308,42 +1308,6 @@ body startsWith "{\n  \"openapi\": \"3.2.0\",\n  \"$self\": \"{{base}}/test/sche
   }
 }
 
-# An OpenAPI description keeps its own navigation metadata, which the schema
-# surface holds nothing of, as the two kinds record it under one filename and
-# what each records differs enough to have a surface of its own
-GET {{base}}/self/v1/api/schemas/metadata/test/schemas/openapi-3-0
-HTTP 404
-Cache-Control: no-store
-Content-Type: application/problem+json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/error>; rel="describedby"
-[Captures]
-last_response: body
-schema_path: header "Link" regex "<([^>]+)>"
-[Asserts]
-header "Vary" not exists
-header "Referrer-Policy" not exists
-header "Content-Security-Policy" not exists
-header "X-Frame-Options" not exists
-header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.status" == 404
-jsonpath "$.type" == "urn:sourcemeta:one:not-found"
-jsonpath "$.title" == "Not Found"
-jsonpath "$.detail" == "There is nothing at this URL"
-
-POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
-```
-{{last_response}}
-```
-HTTP 200
-Cache-Control: no-store
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
-[Asserts]
-header "Vary" not exists
-header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.valid" == true
-
 # The edges of an OpenAPI description come from the endpoint that answers
 # for a schema, and a description that reaches nothing reports nothing
 GET {{base}}/self/v1/api/dependencies/test/schemas/openapi-3-0
@@ -1626,7 +1590,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 # And a path with nothing at it is still a path with nothing at it
-GET {{base}}/self/v1/api/schemas/metadata/test/schemas/openapi-nothing
+GET {{base}}/self/v1/api/metadata/test/schemas/openapi-nothing
 HTTP 404
 Cache-Control: no-store
 Content-Type: application/problem+json

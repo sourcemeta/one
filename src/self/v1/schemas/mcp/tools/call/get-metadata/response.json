@@ -1,14 +1,16 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Sourcemeta One Schema Metadata RPC Output",
-  "description": "Get metadata information about a schema in the catalog",
+  "title": "Sourcemeta One Metadata RPC Output",
+  "description": "Get metadata information about a resource in the catalog, whether it is a JSON Schema or an OpenAPI description",
   "examples": [
     {
       "bytes": 512,
       "bytesBundled": 1024,
       "identifier": "https://example.com/schemas/user.json",
       "path": "/schemas/user.json",
+      "type": "schema",
       "baseDialect": "https://json-schema.org/draft/2020-12/schema",
+      "conformsTo": "https://json-schema.org/draft/2020-12/schema",
       "dialect": "https://json-schema.org/draft/2020-12/schema",
       "health": 100,
       "priority": 100,
@@ -23,5 +25,5 @@
       "examples": []
     }
   ],
-  "$ref": "../../../../api/schemas/metadata/response.json"
+  "$ref": "../../../../api/metadata/response.json"
 }

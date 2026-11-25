@@ -54,7 +54,9 @@ export type SchemaMetadata = {
   bytesBundled: number;
   identifier: string;
   path: string;
+  type: "schema" | "openapi";
   baseDialect: string;
+  conformsTo: string;
   dialect: string;
   health: number;
   priority: number;

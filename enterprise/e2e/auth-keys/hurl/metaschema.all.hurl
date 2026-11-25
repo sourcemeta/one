@@ -2,14 +2,14 @@
 # meta-schema whoever asks, since the answer does not depend on the view
 
 # Nobody anonymous can see the schema declaring it as its dialect
-GET {{base}}/self/v1/api/schemas/metadata/open/meta
+GET {{base}}/self/v1/api/metadata/open/meta
 Accept: application/json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
+Link: </self/v1/schemas/api/metadata/response>; rel="describedby"
 [Captures]
 anonymous_metadata: body
 anonymous_metadata_schema: header "Link" regex "<([^>]+)>"
@@ -53,7 +53,7 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 jsonpath "$.valid" == true
 
 # The view holding the private schema gets the same answer
-GET {{base}}/self/v1/api/schemas/metadata/open/meta
+GET {{base}}/self/v1/api/metadata/open/meta
 Accept: application/json
 Authorization: Bearer vault-secret-key
 HTTP 200
@@ -61,7 +61,7 @@ Cache-Control: private, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
+Link: </self/v1/schemas/api/metadata/response>; rel="describedby"
 [Captures]
 vault_metadata: body
 vault_metadata_schema: header "Link" regex "<([^>]+)>"
@@ -105,7 +105,7 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 jsonpath "$.valid" == true
 
 # So does a view admitted elsewhere, which cannot see the private schema either
-GET {{base}}/self/v1/api/schemas/metadata/open/meta
+GET {{base}}/self/v1/api/metadata/open/meta
 Accept: application/json
 Authorization: Bearer ledger-secret-key
 HTTP 200
@@ -113,7 +113,7 @@ Cache-Control: private, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
+Link: </self/v1/schemas/api/metadata/response>; rel="describedby"
 [Captures]
 ledger_metadata: body
 ledger_metadata_schema: header "Link" regex "<([^>]+)>"
@@ -157,7 +157,7 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 jsonpath "$.valid" == true
 
 # The private schema declaring the dialect is not a meta-schema itself
-GET {{base}}/self/v1/api/schemas/metadata/vault/typed
+GET {{base}}/self/v1/api/metadata/vault/typed
 Accept: application/json
 Authorization: Bearer vault-secret-key
 HTTP 200
@@ -165,7 +165,7 @@ Cache-Control: private, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
+Link: </self/v1/schemas/api/metadata/response>; rel="describedby"
 [Captures]
 typed_metadata: body
 typed_metadata_schema: header "Link" regex "<([^>]+)>"
@@ -219,8 +219,8 @@ MCP-Protocol-Version: 2025-11-25
   "id": 1,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_metadata",
-    "arguments": { "schema": "{{base}}/open/meta" }
+    "name": "get_metadata",
+    "arguments": { "uri": "{{base}}/open/meta" }
   }
 }
 ```
@@ -285,8 +285,8 @@ Authorization: Bearer vault-secret-key
   "id": 2,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_metadata",
-    "arguments": { "schema": "{{base}}/open/meta" }
+    "name": "get_metadata",
+    "arguments": { "uri": "{{base}}/open/meta" }
   }
 }
 ```

@@ -131,12 +131,12 @@ xpath "count(//span[contains(@class, 'badge')][normalize-space(.) = 'Private'])"
 xpath "count(//i[contains(@class, 'bi-lock-fill')])" == 1
 
 # The page is rendered from this, so the two cannot drift
-GET {{base}}/self/v1/api/schemas/metadata/vault/secret
+GET {{base}}/self/v1/api/metadata/vault/secret
 Authorization: Bearer vault-secret-key
 HTTP 200
 Cache-Control: private, max-age=0, must-revalidate
 Content-Type: application/json
-Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
+Link: </self/v1/schemas/api/metadata/response>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Captures]
@@ -161,11 +161,11 @@ Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/metadata/open/string
+GET {{base}}/self/v1/api/metadata/open/string
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
-Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
+Link: </self/v1/schemas/api/metadata/response>; rel="describedby"
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 [Captures]
@@ -231,8 +231,8 @@ Authorization: Bearer vault-secret-key
   "id": 1,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_metadata",
-    "arguments": { "schema": "{{base}}/vault/secret" }
+    "name": "get_metadata",
+    "arguments": { "uri": "{{base}}/vault/secret" }
   }
 }
 ```

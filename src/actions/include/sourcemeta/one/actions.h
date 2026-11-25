@@ -31,8 +31,7 @@ namespace sourcemeta::one {
   X(GET_SCHEMA_POSITIONS_V1, ActionGetSchemaPositionsV1,                       \
     "get_schema_positions_v1")                                                 \
   X(GET_SCHEMA_STATS_V1, ActionGetSchemaStatsV1, "get_schema_stats_v1")        \
-  X(GET_SCHEMA_METADATA_V1, ActionGetSchemaMetadataV1,                         \
-    "get_schema_metadata_v1")                                                  \
+  X(GET_METADATA_V1, ActionGetMetadataV1, "get_metadata_v1")                   \
   X(LIST_DIRECTORY_V1, ActionListDirectoryV1, "list_directory_v1")             \
   X(DEPENDENCY_TREE_V1, ActionDependencyTreeV1, "dependency_tree_v1")          \
   X(GET_DEPENDENCIES_V1, ActionGetDependenciesV1, "get_dependencies_v1")       \
@@ -52,9 +51,7 @@ namespace sourcemeta::one {
     "mcp_protected_resource_metadata_v1")                                      \
   X(METRICS_V1, ActionMetricsV1, "metrics_v1")                                 \
   X(PLAYGROUND_SCHEMA_TRACE_V1, ActionPlaygroundSchemaTraceV1,                 \
-    "playground_schema_trace_v1")                                              \
-  X(GET_OPENAPI_METADATA_V1, ActionGetOpenAPIMetadataV1,                       \
-    "get_openapi_metadata_v1")
+    "playground_schema_trace_v1")
 
 #define SOURCEMETA_ONE_DEFINE_ACTION_TYPE(Name, Class, Label)                  \
   ACTION_TYPE_##Name,

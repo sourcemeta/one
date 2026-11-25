@@ -15,8 +15,8 @@ inline constexpr std::string_view ENDPOINT_DEPENDENCIES{
     "/self/v1/api/dependencies/{+path}"};
 inline constexpr std::string_view ENDPOINT_DEPENDENTS{
     "/self/v1/api/dependents/{+path}"};
-inline constexpr std::string_view ENDPOINT_OPENAPI_METADATA{
-    "/self/v1/api/openapi/metadata/{+openapi}"};
+inline constexpr std::string_view ENDPOINT_METADATA{
+    "/self/v1/api/metadata/{+path}"};
 inline constexpr std::string_view ENDPOINT_SCHEMA_HEALTH{
     "/self/v1/api/schemas/health/{+schema}"};
 inline constexpr std::string_view ENDPOINT_SCHEMA_LOCATIONS{
@@ -25,8 +25,6 @@ inline constexpr std::string_view ENDPOINT_SCHEMA_POSITIONS{
     "/self/v1/api/schemas/positions/{+schema}"};
 inline constexpr std::string_view ENDPOINT_SCHEMA_STATS{
     "/self/v1/api/schemas/stats/{+schema}"};
-inline constexpr std::string_view ENDPOINT_SCHEMA_METADATA{
-    "/self/v1/api/schemas/metadata/{+schema}"};
 inline constexpr std::string_view ENDPOINT_SCHEMA_EVALUATE{
     "/self/v1/api/schemas/evaluate/{+schema}"};
 inline constexpr std::string_view ENDPOINT_SCHEMA_RDF{

@@ -2,14 +2,14 @@
 # as the base dialect. The enterprise edition answers with a conversions
 # property this edition has no notion of, so each asserts this response in a
 # file of its own
-GET {{base}}/self/v1/api/schemas/metadata/test/openapi/product
+GET {{base}}/self/v1/api/metadata/test/openapi/product
 Accept: application/json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
+Link: </self/v1/schemas/api/metadata/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -23,7 +23,9 @@ header "Last-Modified" exists
   "bytesBundled": 1481,
   "identifier": "{{base}}/test/openapi/product",
   "path": "/test/openapi/product",
+  "type": "schema",
   "baseDialect": "https://json-schema.org/draft/2020-12/schema",
+  "conformsTo": "https://json-schema.org/draft/2020-12/schema",
   "dialect": "https://spec.openapis.org/oas/3.1/dialect/base",
   "metaschema": false,
   "title": "Product",
@@ -67,14 +69,14 @@ header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/metadata/test/openapi/order
+GET {{base}}/self/v1/api/metadata/test/openapi/order
 Accept: application/json
 HTTP 200
 Cache-Control: public, max-age=0, must-revalidate
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/metadata/response>; rel="describedby"
+Link: </self/v1/schemas/api/metadata/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -88,7 +90,9 @@ header "Last-Modified" exists
   "bytesBundled": 2436,
   "identifier": "{{base}}/test/openapi/order",
   "path": "/test/openapi/order",
+  "type": "schema",
   "baseDialect": "https://json-schema.org/draft/2020-12/schema",
+  "conformsTo": "https://json-schema.org/draft/2020-12/schema",
   "dialect": "https://spec.openapis.org/oas/3.2/dialect/2025-09-17",
   "metaschema": false,
   "title": "Order",

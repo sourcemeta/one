@@ -122,10 +122,10 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 159
+jsonpath "$.result.structuredContent.schemas" == 157
 jsonpath "$.result.structuredContent.openapi" == 3
 jsonpath "$.result.structuredContent.health" == 63
-variable "text" jsonpath "$.schemas" == 159
+variable "text" jsonpath "$.schemas" == 157
 variable "text" jsonpath "$.openapi" == 3
 variable "text" jsonpath "$.health" == 63
 jsonpath "$.result.structuredContent.entries" count == 5
@@ -176,9 +176,9 @@ jsonpath "$.result.structuredContent.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.result.structuredContent.entries[2].health" == 100
 variable "text" jsonpath "$.entries[2].health" == 100
-jsonpath "$.result.structuredContent.entries[2].schemas" == 75
+jsonpath "$.result.structuredContent.entries[2].schemas" == 73
 jsonpath "$.result.structuredContent.entries[2].openapi" == 0
-variable "text" jsonpath "$.entries[2].schemas" == 75
+variable "text" jsonpath "$.entries[2].schemas" == 73
 variable "text" jsonpath "$.entries[2].openapi" == 0
 jsonpath "$.result.structuredContent.entries[2].path" == "/self/"
 variable "text" jsonpath "$.entries[2].path" == "/self/"
@@ -287,10 +287,10 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 159
+jsonpath "$.result.structuredContent.schemas" == 157
 jsonpath "$.result.structuredContent.openapi" == 3
 jsonpath "$.result.structuredContent.health" == 63
-variable "text" jsonpath "$.schemas" == 159
+variable "text" jsonpath "$.schemas" == 157
 variable "text" jsonpath "$.openapi" == 3
 variable "text" jsonpath "$.health" == 63
 jsonpath "$.result.structuredContent.entries" count == 5
@@ -341,9 +341,9 @@ jsonpath "$.result.structuredContent.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.result.structuredContent.entries[2].health" == 100
 variable "text" jsonpath "$.entries[2].health" == 100
-jsonpath "$.result.structuredContent.entries[2].schemas" == 75
+jsonpath "$.result.structuredContent.entries[2].schemas" == 73
 jsonpath "$.result.structuredContent.entries[2].openapi" == 0
-variable "text" jsonpath "$.entries[2].schemas" == 75
+variable "text" jsonpath "$.entries[2].schemas" == 73
 variable "text" jsonpath "$.entries[2].openapi" == 0
 jsonpath "$.result.structuredContent.entries[2].path" == "/self/"
 variable "text" jsonpath "$.entries[2].path" == "/self/"
@@ -452,10 +452,10 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 159
+jsonpath "$.result.structuredContent.schemas" == 157
 jsonpath "$.result.structuredContent.openapi" == 3
 jsonpath "$.result.structuredContent.health" == 63
-variable "text" jsonpath "$.schemas" == 159
+variable "text" jsonpath "$.schemas" == 157
 variable "text" jsonpath "$.openapi" == 3
 variable "text" jsonpath "$.health" == 63
 jsonpath "$.result.structuredContent.entries" count == 5
@@ -502,9 +502,9 @@ jsonpath "$.result.structuredContent.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.result.structuredContent.entries[2].health" == 100
 variable "text" jsonpath "$.entries[2].health" == 100
-jsonpath "$.result.structuredContent.entries[2].schemas" == 75
+jsonpath "$.result.structuredContent.entries[2].schemas" == 73
 jsonpath "$.result.structuredContent.entries[2].openapi" == 0
-variable "text" jsonpath "$.entries[2].schemas" == 75
+variable "text" jsonpath "$.entries[2].schemas" == 73
 variable "text" jsonpath "$.entries[2].openapi" == 0
 jsonpath "$.result.structuredContent.entries[2].path" == "/self/"
 variable "text" jsonpath "$.entries[2].path" == "/self/"
@@ -775,12 +775,8 @@ jsonpath "$.result.structuredContent.entries[8].type" == "openapi"
 variable "text" jsonpath "$.entries[8].type" == "openapi"
 jsonpath "$.result.structuredContent.entries[8].health" == 100
 variable "text" jsonpath "$.entries[8].health" == 100
-jsonpath "$.result.structuredContent.entries[8].openapi" == "3.0"
-variable "text" jsonpath "$.entries[8].openapi" == "3.0"
-jsonpath "$.result.structuredContent.entries[8].version" == "1.0.0"
-variable "text" jsonpath "$.entries[8].version" == "1.0.0"
-jsonpath "$.result.structuredContent.entries[8].operations" == 1
-variable "text" jsonpath "$.entries[8].operations" == 1
+jsonpath "$.result.structuredContent.entries[8].conformsTo" == "https://spec.openapis.org/oas/v3.0"
+variable "text" jsonpath "$.entries[8].conformsTo" == "https://spec.openapis.org/oas/v3.0"
 jsonpath "$.result.structuredContent.entries[8].path" == "/test/openapi-petstore"
 variable "text" jsonpath "$.entries[8].path" == "/test/openapi-petstore"
 jsonpath "$.result.structuredContent.entries[8].identifier" == "{{base}}/test/openapi-petstore"
@@ -799,12 +795,8 @@ jsonpath "$.result.structuredContent.entries[9].type" == "openapi"
 variable "text" jsonpath "$.entries[9].type" == "openapi"
 jsonpath "$.result.structuredContent.entries[9].health" == 100
 variable "text" jsonpath "$.entries[9].health" == 100
-jsonpath "$.result.structuredContent.entries[9].openapi" == "3.2"
-variable "text" jsonpath "$.entries[9].openapi" == "3.2"
-jsonpath "$.result.structuredContent.entries[9].version" == "1.0.0"
-variable "text" jsonpath "$.entries[9].version" == "1.0.0"
-jsonpath "$.result.structuredContent.entries[9].operations" == 0
-variable "text" jsonpath "$.entries[9].operations" == 0
+jsonpath "$.result.structuredContent.entries[9].conformsTo" == "https://spec.openapis.org/oas/v3.2"
+variable "text" jsonpath "$.entries[9].conformsTo" == "https://spec.openapis.org/oas/v3.2"
 jsonpath "$.result.structuredContent.entries[9].path" == "/test/openapi-split-entry"
 variable "text" jsonpath "$.entries[9].path" == "/test/openapi-split-entry"
 jsonpath "$.result.structuredContent.entries[9].identifier" == "{{base}}/test/openapi-split-entry"
@@ -823,12 +815,8 @@ jsonpath "$.result.structuredContent.entries[10].type" == "openapi"
 variable "text" jsonpath "$.entries[10].type" == "openapi"
 jsonpath "$.result.structuredContent.entries[10].health" == 100
 variable "text" jsonpath "$.entries[10].health" == 100
-jsonpath "$.result.structuredContent.entries[10].openapi" == "3.2"
-variable "text" jsonpath "$.entries[10].openapi" == "3.2"
-jsonpath "$.result.structuredContent.entries[10].version" == "1.0.0"
-variable "text" jsonpath "$.entries[10].version" == "1.0.0"
-jsonpath "$.result.structuredContent.entries[10].operations" == 0
-variable "text" jsonpath "$.entries[10].operations" == 0
+jsonpath "$.result.structuredContent.entries[10].conformsTo" == "https://spec.openapis.org/oas/v3.2"
+variable "text" jsonpath "$.entries[10].conformsTo" == "https://spec.openapis.org/oas/v3.2"
 jsonpath "$.result.structuredContent.entries[10].path" == "/test/openapi-split-shared"
 variable "text" jsonpath "$.entries[10].path" == "/test/openapi-split-shared"
 jsonpath "$.result.structuredContent.entries[10].identifier" == "{{base}}/test/openapi-split-shared"
@@ -2389,12 +2377,8 @@ jsonpath "$.result.structuredContent.entries[8].type" == "openapi"
 variable "text" jsonpath "$.entries[8].type" == "openapi"
 jsonpath "$.result.structuredContent.entries[8].health" == 100
 variable "text" jsonpath "$.entries[8].health" == 100
-jsonpath "$.result.structuredContent.entries[8].openapi" == "3.0"
-variable "text" jsonpath "$.entries[8].openapi" == "3.0"
-jsonpath "$.result.structuredContent.entries[8].version" == "1.0.0"
-variable "text" jsonpath "$.entries[8].version" == "1.0.0"
-jsonpath "$.result.structuredContent.entries[8].operations" == 1
-variable "text" jsonpath "$.entries[8].operations" == 1
+jsonpath "$.result.structuredContent.entries[8].conformsTo" == "https://spec.openapis.org/oas/v3.0"
+variable "text" jsonpath "$.entries[8].conformsTo" == "https://spec.openapis.org/oas/v3.0"
 jsonpath "$.result.structuredContent.entries[8].path" == "/test/openapi-petstore"
 variable "text" jsonpath "$.entries[8].path" == "/test/openapi-petstore"
 jsonpath "$.result.structuredContent.entries[8].identifier" == "{{base}}/test/openapi-petstore"
@@ -2413,12 +2397,8 @@ jsonpath "$.result.structuredContent.entries[9].type" == "openapi"
 variable "text" jsonpath "$.entries[9].type" == "openapi"
 jsonpath "$.result.structuredContent.entries[9].health" == 100
 variable "text" jsonpath "$.entries[9].health" == 100
-jsonpath "$.result.structuredContent.entries[9].openapi" == "3.2"
-variable "text" jsonpath "$.entries[9].openapi" == "3.2"
-jsonpath "$.result.structuredContent.entries[9].version" == "1.0.0"
-variable "text" jsonpath "$.entries[9].version" == "1.0.0"
-jsonpath "$.result.structuredContent.entries[9].operations" == 0
-variable "text" jsonpath "$.entries[9].operations" == 0
+jsonpath "$.result.structuredContent.entries[9].conformsTo" == "https://spec.openapis.org/oas/v3.2"
+variable "text" jsonpath "$.entries[9].conformsTo" == "https://spec.openapis.org/oas/v3.2"
 jsonpath "$.result.structuredContent.entries[9].path" == "/test/openapi-split-entry"
 variable "text" jsonpath "$.entries[9].path" == "/test/openapi-split-entry"
 jsonpath "$.result.structuredContent.entries[9].identifier" == "{{base}}/test/openapi-split-entry"
@@ -2437,12 +2417,8 @@ jsonpath "$.result.structuredContent.entries[10].type" == "openapi"
 variable "text" jsonpath "$.entries[10].type" == "openapi"
 jsonpath "$.result.structuredContent.entries[10].health" == 100
 variable "text" jsonpath "$.entries[10].health" == 100
-jsonpath "$.result.structuredContent.entries[10].openapi" == "3.2"
-variable "text" jsonpath "$.entries[10].openapi" == "3.2"
-jsonpath "$.result.structuredContent.entries[10].version" == "1.0.0"
-variable "text" jsonpath "$.entries[10].version" == "1.0.0"
-jsonpath "$.result.structuredContent.entries[10].operations" == 0
-variable "text" jsonpath "$.entries[10].operations" == 0
+jsonpath "$.result.structuredContent.entries[10].conformsTo" == "https://spec.openapis.org/oas/v3.2"
+variable "text" jsonpath "$.entries[10].conformsTo" == "https://spec.openapis.org/oas/v3.2"
 jsonpath "$.result.structuredContent.entries[10].path" == "/test/openapi-split-shared"
 variable "text" jsonpath "$.entries[10].path" == "/test/openapi-split-shared"
 jsonpath "$.result.structuredContent.entries[10].identifier" == "{{base}}/test/openapi-split-shared"
@@ -2597,9 +2573,9 @@ jsonpath "$.result.structuredContent.breadcrumb[0].name" == "self"
 variable "text" jsonpath "$.breadcrumb[0].name" == "self"
 jsonpath "$.result.structuredContent.breadcrumb[0].path" == "/self/"
 variable "text" jsonpath "$.breadcrumb[0].path" == "/self/"
-jsonpath "$.result.structuredContent.schemas" == 75
+jsonpath "$.result.structuredContent.schemas" == 73
 jsonpath "$.result.structuredContent.openapi" == 0
-variable "text" jsonpath "$.schemas" == 75
+variable "text" jsonpath "$.schemas" == 73
 variable "text" jsonpath "$.openapi" == 0
 jsonpath "$.result.structuredContent.health" == 100
 variable "text" jsonpath "$.health" == 100
@@ -2615,9 +2591,9 @@ jsonpath "$.result.structuredContent.entries[0].type" == "directory"
 variable "text" jsonpath "$.entries[0].type" == "directory"
 jsonpath "$.result.structuredContent.entries[0].health" == 100
 variable "text" jsonpath "$.entries[0].health" == 100
-jsonpath "$.result.structuredContent.entries[0].schemas" == 75
+jsonpath "$.result.structuredContent.entries[0].schemas" == 73
 jsonpath "$.result.structuredContent.entries[0].openapi" == 0
-variable "text" jsonpath "$.entries[0].schemas" == 75
+variable "text" jsonpath "$.entries[0].schemas" == 73
 variable "text" jsonpath "$.entries[0].openapi" == 0
 jsonpath "$.result.structuredContent.entries[0].path" == "/self/v1/"
 variable "text" jsonpath "$.entries[0].path" == "/self/v1/"
@@ -2955,12 +2931,8 @@ jsonpath "$.result.structuredContent.entries[8].type" == "openapi"
 variable "text" jsonpath "$.entries[8].type" == "openapi"
 jsonpath "$.result.structuredContent.entries[8].health" == 100
 variable "text" jsonpath "$.entries[8].health" == 100
-jsonpath "$.result.structuredContent.entries[8].openapi" == "3.0"
-variable "text" jsonpath "$.entries[8].openapi" == "3.0"
-jsonpath "$.result.structuredContent.entries[8].version" == "1.0.0"
-variable "text" jsonpath "$.entries[8].version" == "1.0.0"
-jsonpath "$.result.structuredContent.entries[8].operations" == 1
-variable "text" jsonpath "$.entries[8].operations" == 1
+jsonpath "$.result.structuredContent.entries[8].conformsTo" == "https://spec.openapis.org/oas/v3.0"
+variable "text" jsonpath "$.entries[8].conformsTo" == "https://spec.openapis.org/oas/v3.0"
 jsonpath "$.result.structuredContent.entries[8].path" == "/test/openapi-petstore"
 variable "text" jsonpath "$.entries[8].path" == "/test/openapi-petstore"
 jsonpath "$.result.structuredContent.entries[8].identifier" == "{{base}}/test/openapi-petstore"
@@ -2979,12 +2951,8 @@ jsonpath "$.result.structuredContent.entries[9].type" == "openapi"
 variable "text" jsonpath "$.entries[9].type" == "openapi"
 jsonpath "$.result.structuredContent.entries[9].health" == 100
 variable "text" jsonpath "$.entries[9].health" == 100
-jsonpath "$.result.structuredContent.entries[9].openapi" == "3.2"
-variable "text" jsonpath "$.entries[9].openapi" == "3.2"
-jsonpath "$.result.structuredContent.entries[9].version" == "1.0.0"
-variable "text" jsonpath "$.entries[9].version" == "1.0.0"
-jsonpath "$.result.structuredContent.entries[9].operations" == 0
-variable "text" jsonpath "$.entries[9].operations" == 0
+jsonpath "$.result.structuredContent.entries[9].conformsTo" == "https://spec.openapis.org/oas/v3.2"
+variable "text" jsonpath "$.entries[9].conformsTo" == "https://spec.openapis.org/oas/v3.2"
 jsonpath "$.result.structuredContent.entries[9].path" == "/test/openapi-split-entry"
 variable "text" jsonpath "$.entries[9].path" == "/test/openapi-split-entry"
 jsonpath "$.result.structuredContent.entries[9].identifier" == "{{base}}/test/openapi-split-entry"
@@ -3003,12 +2971,8 @@ jsonpath "$.result.structuredContent.entries[10].type" == "openapi"
 variable "text" jsonpath "$.entries[10].type" == "openapi"
 jsonpath "$.result.structuredContent.entries[10].health" == 100
 variable "text" jsonpath "$.entries[10].health" == 100
-jsonpath "$.result.structuredContent.entries[10].openapi" == "3.2"
-variable "text" jsonpath "$.entries[10].openapi" == "3.2"
-jsonpath "$.result.structuredContent.entries[10].version" == "1.0.0"
-variable "text" jsonpath "$.entries[10].version" == "1.0.0"
-jsonpath "$.result.structuredContent.entries[10].operations" == 0
-variable "text" jsonpath "$.entries[10].operations" == 0
+jsonpath "$.result.structuredContent.entries[10].conformsTo" == "https://spec.openapis.org/oas/v3.2"
+variable "text" jsonpath "$.entries[10].conformsTo" == "https://spec.openapis.org/oas/v3.2"
 jsonpath "$.result.structuredContent.entries[10].path" == "/test/openapi-split-shared"
 variable "text" jsonpath "$.entries[10].path" == "/test/openapi-split-shared"
 jsonpath "$.result.structuredContent.entries[10].identifier" == "{{base}}/test/openapi-split-shared"
@@ -3250,12 +3214,8 @@ jsonpath "$.result.structuredContent.entries[8].type" == "openapi"
 variable "text" jsonpath "$.entries[8].type" == "openapi"
 jsonpath "$.result.structuredContent.entries[8].health" == 100
 variable "text" jsonpath "$.entries[8].health" == 100
-jsonpath "$.result.structuredContent.entries[8].openapi" == "3.0"
-variable "text" jsonpath "$.entries[8].openapi" == "3.0"
-jsonpath "$.result.structuredContent.entries[8].version" == "1.0.0"
-variable "text" jsonpath "$.entries[8].version" == "1.0.0"
-jsonpath "$.result.structuredContent.entries[8].operations" == 1
-variable "text" jsonpath "$.entries[8].operations" == 1
+jsonpath "$.result.structuredContent.entries[8].conformsTo" == "https://spec.openapis.org/oas/v3.0"
+variable "text" jsonpath "$.entries[8].conformsTo" == "https://spec.openapis.org/oas/v3.0"
 jsonpath "$.result.structuredContent.entries[8].path" == "/test/openapi-petstore"
 variable "text" jsonpath "$.entries[8].path" == "/test/openapi-petstore"
 jsonpath "$.result.structuredContent.entries[8].identifier" == "{{base}}/test/openapi-petstore"
@@ -3274,12 +3234,8 @@ jsonpath "$.result.structuredContent.entries[9].type" == "openapi"
 variable "text" jsonpath "$.entries[9].type" == "openapi"
 jsonpath "$.result.structuredContent.entries[9].health" == 100
 variable "text" jsonpath "$.entries[9].health" == 100
-jsonpath "$.result.structuredContent.entries[9].openapi" == "3.2"
-variable "text" jsonpath "$.entries[9].openapi" == "3.2"
-jsonpath "$.result.structuredContent.entries[9].version" == "1.0.0"
-variable "text" jsonpath "$.entries[9].version" == "1.0.0"
-jsonpath "$.result.structuredContent.entries[9].operations" == 0
-variable "text" jsonpath "$.entries[9].operations" == 0
+jsonpath "$.result.structuredContent.entries[9].conformsTo" == "https://spec.openapis.org/oas/v3.2"
+variable "text" jsonpath "$.entries[9].conformsTo" == "https://spec.openapis.org/oas/v3.2"
 jsonpath "$.result.structuredContent.entries[9].path" == "/test/openapi-split-entry"
 variable "text" jsonpath "$.entries[9].path" == "/test/openapi-split-entry"
 jsonpath "$.result.structuredContent.entries[9].identifier" == "{{base}}/test/openapi-split-entry"
@@ -3298,12 +3254,8 @@ jsonpath "$.result.structuredContent.entries[10].type" == "openapi"
 variable "text" jsonpath "$.entries[10].type" == "openapi"
 jsonpath "$.result.structuredContent.entries[10].health" == 100
 variable "text" jsonpath "$.entries[10].health" == 100
-jsonpath "$.result.structuredContent.entries[10].openapi" == "3.2"
-variable "text" jsonpath "$.entries[10].openapi" == "3.2"
-jsonpath "$.result.structuredContent.entries[10].version" == "1.0.0"
-variable "text" jsonpath "$.entries[10].version" == "1.0.0"
-jsonpath "$.result.structuredContent.entries[10].operations" == 0
-variable "text" jsonpath "$.entries[10].operations" == 0
+jsonpath "$.result.structuredContent.entries[10].conformsTo" == "https://spec.openapis.org/oas/v3.2"
+variable "text" jsonpath "$.entries[10].conformsTo" == "https://spec.openapis.org/oas/v3.2"
 jsonpath "$.result.structuredContent.entries[10].path" == "/test/openapi-split-shared"
 variable "text" jsonpath "$.entries[10].path" == "/test/openapi-split-shared"
 jsonpath "$.result.structuredContent.entries[10].identifier" == "{{base}}/test/openapi-split-shared"
@@ -3545,12 +3497,8 @@ jsonpath "$.result.structuredContent.entries[8].type" == "openapi"
 variable "text" jsonpath "$.entries[8].type" == "openapi"
 jsonpath "$.result.structuredContent.entries[8].health" == 100
 variable "text" jsonpath "$.entries[8].health" == 100
-jsonpath "$.result.structuredContent.entries[8].openapi" == "3.0"
-variable "text" jsonpath "$.entries[8].openapi" == "3.0"
-jsonpath "$.result.structuredContent.entries[8].version" == "1.0.0"
-variable "text" jsonpath "$.entries[8].version" == "1.0.0"
-jsonpath "$.result.structuredContent.entries[8].operations" == 1
-variable "text" jsonpath "$.entries[8].operations" == 1
+jsonpath "$.result.structuredContent.entries[8].conformsTo" == "https://spec.openapis.org/oas/v3.0"
+variable "text" jsonpath "$.entries[8].conformsTo" == "https://spec.openapis.org/oas/v3.0"
 jsonpath "$.result.structuredContent.entries[8].path" == "/test/openapi-petstore"
 variable "text" jsonpath "$.entries[8].path" == "/test/openapi-petstore"
 jsonpath "$.result.structuredContent.entries[8].identifier" == "{{base}}/test/openapi-petstore"
@@ -3569,12 +3517,8 @@ jsonpath "$.result.structuredContent.entries[9].type" == "openapi"
 variable "text" jsonpath "$.entries[9].type" == "openapi"
 jsonpath "$.result.structuredContent.entries[9].health" == 100
 variable "text" jsonpath "$.entries[9].health" == 100
-jsonpath "$.result.structuredContent.entries[9].openapi" == "3.2"
-variable "text" jsonpath "$.entries[9].openapi" == "3.2"
-jsonpath "$.result.structuredContent.entries[9].version" == "1.0.0"
-variable "text" jsonpath "$.entries[9].version" == "1.0.0"
-jsonpath "$.result.structuredContent.entries[9].operations" == 0
-variable "text" jsonpath "$.entries[9].operations" == 0
+jsonpath "$.result.structuredContent.entries[9].conformsTo" == "https://spec.openapis.org/oas/v3.2"
+variable "text" jsonpath "$.entries[9].conformsTo" == "https://spec.openapis.org/oas/v3.2"
 jsonpath "$.result.structuredContent.entries[9].path" == "/test/openapi-split-entry"
 variable "text" jsonpath "$.entries[9].path" == "/test/openapi-split-entry"
 jsonpath "$.result.structuredContent.entries[9].identifier" == "{{base}}/test/openapi-split-entry"
@@ -3593,12 +3537,8 @@ jsonpath "$.result.structuredContent.entries[10].type" == "openapi"
 variable "text" jsonpath "$.entries[10].type" == "openapi"
 jsonpath "$.result.structuredContent.entries[10].health" == 100
 variable "text" jsonpath "$.entries[10].health" == 100
-jsonpath "$.result.structuredContent.entries[10].openapi" == "3.2"
-variable "text" jsonpath "$.entries[10].openapi" == "3.2"
-jsonpath "$.result.structuredContent.entries[10].version" == "1.0.0"
-variable "text" jsonpath "$.entries[10].version" == "1.0.0"
-jsonpath "$.result.structuredContent.entries[10].operations" == 0
-variable "text" jsonpath "$.entries[10].operations" == 0
+jsonpath "$.result.structuredContent.entries[10].conformsTo" == "https://spec.openapis.org/oas/v3.2"
+variable "text" jsonpath "$.entries[10].conformsTo" == "https://spec.openapis.org/oas/v3.2"
 jsonpath "$.result.structuredContent.entries[10].path" == "/test/openapi-split-shared"
 variable "text" jsonpath "$.entries[10].path" == "/test/openapi-split-shared"
 jsonpath "$.result.structuredContent.entries[10].identifier" == "{{base}}/test/openapi-split-shared"
@@ -3682,10 +3622,10 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 159
+jsonpath "$.result.structuredContent.schemas" == 157
 jsonpath "$.result.structuredContent.openapi" == 3
 jsonpath "$.result.structuredContent.health" == 63
-variable "text" jsonpath "$.schemas" == 159
+variable "text" jsonpath "$.schemas" == 157
 variable "text" jsonpath "$.openapi" == 3
 variable "text" jsonpath "$.health" == 63
 jsonpath "$.result.structuredContent.entries" count == 5
@@ -3736,9 +3676,9 @@ jsonpath "$.result.structuredContent.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.result.structuredContent.entries[2].health" == 100
 variable "text" jsonpath "$.entries[2].health" == 100
-jsonpath "$.result.structuredContent.entries[2].schemas" == 75
+jsonpath "$.result.structuredContent.entries[2].schemas" == 73
 jsonpath "$.result.structuredContent.entries[2].openapi" == 0
-variable "text" jsonpath "$.entries[2].schemas" == 75
+variable "text" jsonpath "$.entries[2].schemas" == 73
 variable "text" jsonpath "$.entries[2].openapi" == 0
 jsonpath "$.result.structuredContent.entries[2].path" == "/self/"
 variable "text" jsonpath "$.entries[2].path" == "/self/"
@@ -3847,10 +3787,10 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 159
+jsonpath "$.result.structuredContent.schemas" == 157
 jsonpath "$.result.structuredContent.openapi" == 3
 jsonpath "$.result.structuredContent.health" == 63
-variable "text" jsonpath "$.schemas" == 159
+variable "text" jsonpath "$.schemas" == 157
 variable "text" jsonpath "$.openapi" == 3
 variable "text" jsonpath "$.health" == 63
 jsonpath "$.result.structuredContent.entries" count == 5
@@ -3901,9 +3841,9 @@ jsonpath "$.result.structuredContent.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.result.structuredContent.entries[2].health" == 100
 variable "text" jsonpath "$.entries[2].health" == 100
-jsonpath "$.result.structuredContent.entries[2].schemas" == 75
+jsonpath "$.result.structuredContent.entries[2].schemas" == 73
 jsonpath "$.result.structuredContent.entries[2].openapi" == 0
-variable "text" jsonpath "$.entries[2].schemas" == 75
+variable "text" jsonpath "$.entries[2].schemas" == 73
 variable "text" jsonpath "$.entries[2].openapi" == 0
 jsonpath "$.result.structuredContent.entries[2].path" == "/self/"
 variable "text" jsonpath "$.entries[2].path" == "/self/"
@@ -4012,10 +3952,10 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 159
+jsonpath "$.result.structuredContent.schemas" == 157
 jsonpath "$.result.structuredContent.openapi" == 3
 jsonpath "$.result.structuredContent.health" == 63
-variable "text" jsonpath "$.schemas" == 159
+variable "text" jsonpath "$.schemas" == 157
 variable "text" jsonpath "$.openapi" == 3
 variable "text" jsonpath "$.health" == 63
 jsonpath "$.result.structuredContent.entries" count == 5
@@ -4066,9 +4006,9 @@ jsonpath "$.result.structuredContent.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.result.structuredContent.entries[2].health" == 100
 variable "text" jsonpath "$.entries[2].health" == 100
-jsonpath "$.result.structuredContent.entries[2].schemas" == 75
+jsonpath "$.result.structuredContent.entries[2].schemas" == 73
 jsonpath "$.result.structuredContent.entries[2].openapi" == 0
-variable "text" jsonpath "$.entries[2].schemas" == 75
+variable "text" jsonpath "$.entries[2].schemas" == 73
 variable "text" jsonpath "$.entries[2].openapi" == 0
 jsonpath "$.result.structuredContent.entries[2].path" == "/self/"
 variable "text" jsonpath "$.entries[2].path" == "/self/"
@@ -4177,10 +4117,10 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 159
+jsonpath "$.result.structuredContent.schemas" == 157
 jsonpath "$.result.structuredContent.openapi" == 3
 jsonpath "$.result.structuredContent.health" == 63
-variable "text" jsonpath "$.schemas" == 159
+variable "text" jsonpath "$.schemas" == 157
 variable "text" jsonpath "$.openapi" == 3
 variable "text" jsonpath "$.health" == 63
 jsonpath "$.result.structuredContent.entries" count == 5
@@ -4227,9 +4167,9 @@ jsonpath "$.result.structuredContent.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.result.structuredContent.entries[2].health" == 100
 variable "text" jsonpath "$.entries[2].health" == 100
-jsonpath "$.result.structuredContent.entries[2].schemas" == 75
+jsonpath "$.result.structuredContent.entries[2].schemas" == 73
 jsonpath "$.result.structuredContent.entries[2].openapi" == 0
-variable "text" jsonpath "$.entries[2].schemas" == 75
+variable "text" jsonpath "$.entries[2].schemas" == 73
 variable "text" jsonpath "$.entries[2].openapi" == 0
 jsonpath "$.result.structuredContent.entries[2].path" == "/self/"
 variable "text" jsonpath "$.entries[2].path" == "/self/"
@@ -4342,10 +4282,10 @@ jsonpath "$.result.structuredContent.url" == "{{base}}"
 variable "text" jsonpath "$.url" == "{{base}}"
 jsonpath "$.result.structuredContent.breadcrumb" count == 0
 variable "text" jsonpath "$.breadcrumb" count == 0
-jsonpath "$.result.structuredContent.schemas" == 159
+jsonpath "$.result.structuredContent.schemas" == 157
 jsonpath "$.result.structuredContent.openapi" == 3
 jsonpath "$.result.structuredContent.health" == 63
-variable "text" jsonpath "$.schemas" == 159
+variable "text" jsonpath "$.schemas" == 157
 variable "text" jsonpath "$.openapi" == 3
 variable "text" jsonpath "$.health" == 63
 jsonpath "$.result.structuredContent.entries" count == 5
@@ -4392,9 +4332,9 @@ jsonpath "$.result.structuredContent.entries[2].type" == "directory"
 variable "text" jsonpath "$.entries[2].type" == "directory"
 jsonpath "$.result.structuredContent.entries[2].health" == 100
 variable "text" jsonpath "$.entries[2].health" == 100
-jsonpath "$.result.structuredContent.entries[2].schemas" == 75
+jsonpath "$.result.structuredContent.entries[2].schemas" == 73
 jsonpath "$.result.structuredContent.entries[2].openapi" == 0
-variable "text" jsonpath "$.entries[2].schemas" == 75
+variable "text" jsonpath "$.entries[2].schemas" == 73
 variable "text" jsonpath "$.entries[2].openapi" == 0
 jsonpath "$.result.structuredContent.entries[2].path" == "/self/"
 variable "text" jsonpath "$.entries[2].path" == "/self/"
@@ -4665,12 +4605,8 @@ jsonpath "$.result.structuredContent.entries[8].type" == "openapi"
 variable "text" jsonpath "$.entries[8].type" == "openapi"
 jsonpath "$.result.structuredContent.entries[8].health" == 100
 variable "text" jsonpath "$.entries[8].health" == 100
-jsonpath "$.result.structuredContent.entries[8].openapi" == "3.0"
-variable "text" jsonpath "$.entries[8].openapi" == "3.0"
-jsonpath "$.result.structuredContent.entries[8].version" == "1.0.0"
-variable "text" jsonpath "$.entries[8].version" == "1.0.0"
-jsonpath "$.result.structuredContent.entries[8].operations" == 1
-variable "text" jsonpath "$.entries[8].operations" == 1
+jsonpath "$.result.structuredContent.entries[8].conformsTo" == "https://spec.openapis.org/oas/v3.0"
+variable "text" jsonpath "$.entries[8].conformsTo" == "https://spec.openapis.org/oas/v3.0"
 jsonpath "$.result.structuredContent.entries[8].path" == "/test/openapi-petstore"
 variable "text" jsonpath "$.entries[8].path" == "/test/openapi-petstore"
 jsonpath "$.result.structuredContent.entries[8].identifier" == "{{base}}/test/openapi-petstore"
@@ -4689,12 +4625,8 @@ jsonpath "$.result.structuredContent.entries[9].type" == "openapi"
 variable "text" jsonpath "$.entries[9].type" == "openapi"
 jsonpath "$.result.structuredContent.entries[9].health" == 100
 variable "text" jsonpath "$.entries[9].health" == 100
-jsonpath "$.result.structuredContent.entries[9].openapi" == "3.2"
-variable "text" jsonpath "$.entries[9].openapi" == "3.2"
-jsonpath "$.result.structuredContent.entries[9].version" == "1.0.0"
-variable "text" jsonpath "$.entries[9].version" == "1.0.0"
-jsonpath "$.result.structuredContent.entries[9].operations" == 0
-variable "text" jsonpath "$.entries[9].operations" == 0
+jsonpath "$.result.structuredContent.entries[9].conformsTo" == "https://spec.openapis.org/oas/v3.2"
+variable "text" jsonpath "$.entries[9].conformsTo" == "https://spec.openapis.org/oas/v3.2"
 jsonpath "$.result.structuredContent.entries[9].path" == "/test/openapi-split-entry"
 variable "text" jsonpath "$.entries[9].path" == "/test/openapi-split-entry"
 jsonpath "$.result.structuredContent.entries[9].identifier" == "{{base}}/test/openapi-split-entry"
@@ -4713,12 +4645,8 @@ jsonpath "$.result.structuredContent.entries[10].type" == "openapi"
 variable "text" jsonpath "$.entries[10].type" == "openapi"
 jsonpath "$.result.structuredContent.entries[10].health" == 100
 variable "text" jsonpath "$.entries[10].health" == 100
-jsonpath "$.result.structuredContent.entries[10].openapi" == "3.2"
-variable "text" jsonpath "$.entries[10].openapi" == "3.2"
-jsonpath "$.result.structuredContent.entries[10].version" == "1.0.0"
-variable "text" jsonpath "$.entries[10].version" == "1.0.0"
-jsonpath "$.result.structuredContent.entries[10].operations" == 0
-variable "text" jsonpath "$.entries[10].operations" == 0
+jsonpath "$.result.structuredContent.entries[10].conformsTo" == "https://spec.openapis.org/oas/v3.2"
+variable "text" jsonpath "$.entries[10].conformsTo" == "https://spec.openapis.org/oas/v3.2"
 jsonpath "$.result.structuredContent.entries[10].path" == "/test/openapi-split-shared"
 variable "text" jsonpath "$.entries[10].path" == "/test/openapi-split-shared"
 jsonpath "$.result.structuredContent.entries[10].identifier" == "{{base}}/test/openapi-split-shared"

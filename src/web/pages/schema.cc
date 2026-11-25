@@ -217,7 +217,7 @@ auto GenerateWebSchema::handler(
         body.text("Base Dialect");
         body.close();
         body.td();
-        html::make_dialect_badge(body, meta.at("baseDialect").to_string());
+        html::make_conformance_badge(body, meta.at("conformsTo").to_string());
         body.close();
         body.close();
 

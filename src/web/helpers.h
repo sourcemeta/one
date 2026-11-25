@@ -96,62 +96,86 @@ make_schema_health_progress_bar(sourcemeta::core::HTMLWriter &writer,
   writer.close();
 }
 
-inline auto
-make_dialect_badge(sourcemeta::core::HTMLWriter &writer,
-                   const sourcemeta::core::JSON::String &base_dialect_uri)
-    -> void {
-  const auto [short_name, is_current] =
-      [&base_dialect_uri]() -> std::pair<std::string, bool> {
-    if (base_dialect_uri == "https://json-schema.org/draft/2020-12/schema" ||
-        base_dialect_uri ==
-            "https://json-schema.org/draft/2020-12/hyper-schema") {
-      return {"2020-12", true};
-    }
+// What a badge says of what a resource conforms to, which is the name the
+// ecosystem knows it by, whether that name is the latest one, and where a
+// reader can go to read about it
+struct ConformanceBadge {
+  std::string name;
+  bool is_latest;
+  std::string reference;
+};
 
-    if (base_dialect_uri == "https://json-schema.org/draft/2019-09/schema" ||
-        base_dialect_uri ==
-            "https://json-schema.org/draft/2019-09/hyper-schema") {
-      return {"2019-09", false};
-    }
+inline auto learnjsonschema_badge(const std::string_view name,
+                                  const bool is_latest) -> ConformanceBadge {
+  std::string display{name};
+  display[0] =
+      static_cast<char>(std::toupper(static_cast<unsigned char>(display[0])));
+  return {.name = std::move(display),
+          .is_latest = is_latest,
+          .reference = "https://www.learnjsonschema.com/" + std::string{name}};
+}
 
-    if (base_dialect_uri == "http://json-schema.org/draft-07/schema#" ||
-        base_dialect_uri == "http://json-schema.org/draft-07/hyper-schema#") {
-      return {"draft7", false};
-    }
-
-    if (base_dialect_uri == "http://json-schema.org/draft-06/schema#" ||
-        base_dialect_uri == "http://json-schema.org/draft-06/hyper-schema#") {
-      return {"draft6", false};
-    }
-
-    if (base_dialect_uri == "http://json-schema.org/draft-04/schema#" ||
-        base_dialect_uri == "http://json-schema.org/draft-04/hyper-schema#") {
-      return {"draft4", false};
-    }
-
-    if (base_dialect_uri == "http://json-schema.org/draft-03/schema#" ||
-        base_dialect_uri == "http://json-schema.org/draft-03/hyper-schema#") {
-      return {"draft3", false};
-    }
-
-    return {"unknown", false};
-  }();
-
-  // Capitalize first character
-  std::string display_name = short_name;
-  if (!display_name.empty()) {
-    display_name[0] = static_cast<char>(
-        std::toupper(static_cast<unsigned char>(display_name[0])));
+inline auto conformance_badge_of(const sourcemeta::core::JSON::String &uri)
+    -> ConformanceBadge {
+  if (uri == "https://json-schema.org/draft/2020-12/schema" ||
+      uri == "https://json-schema.org/draft/2020-12/hyper-schema") {
+    return learnjsonschema_badge("2020-12", true);
   }
 
-  writer.a()
-      .attribute("href", "https://www.learnjsonschema.com/" + short_name)
-      .attribute("target", "_blank");
+  if (uri == "https://json-schema.org/draft/2019-09/schema" ||
+      uri == "https://json-schema.org/draft/2019-09/hyper-schema") {
+    return learnjsonschema_badge("2019-09", false);
+  }
+
+  if (uri == "http://json-schema.org/draft-07/schema#" ||
+      uri == "http://json-schema.org/draft-07/hyper-schema#") {
+    return learnjsonschema_badge("draft7", false);
+  }
+
+  if (uri == "http://json-schema.org/draft-06/schema#" ||
+      uri == "http://json-schema.org/draft-06/hyper-schema#") {
+    return learnjsonschema_badge("draft6", false);
+  }
+
+  if (uri == "http://json-schema.org/draft-04/schema#" ||
+      uri == "http://json-schema.org/draft-04/hyper-schema#") {
+    return learnjsonschema_badge("draft4", false);
+  }
+
+  if (uri == "http://json-schema.org/draft-03/schema#" ||
+      uri == "http://json-schema.org/draft-03/hyper-schema#") {
+    return learnjsonschema_badge("draft3", false);
+  }
+
+  // A revision of the OpenAPI Specification names itself at the URL that
+  // publishes it, so the badge sends a reader there rather than to a
+  // reference that only covers dialects
+  if (uri == "https://spec.openapis.org/oas/v3.2") {
+    return {.name = "OpenAPI 3.2", .is_latest = true, .reference = uri};
+  }
+
+  if (uri == "https://spec.openapis.org/oas/v3.1") {
+    return {.name = "OpenAPI 3.1", .is_latest = false, .reference = uri};
+  }
+
+  if (uri == "https://spec.openapis.org/oas/v3.0") {
+    return {.name = "OpenAPI 3.0", .is_latest = false, .reference = uri};
+  }
+
+  return learnjsonschema_badge("unknown", false);
+}
+
+inline auto
+make_conformance_badge(sourcemeta::core::HTMLWriter &writer,
+                       const sourcemeta::core::JSON::String &conforms_to)
+    -> void {
+  const auto badge{conformance_badge_of(conforms_to)};
+  writer.a().attribute("href", badge.reference).attribute("target", "_blank");
   writer.span().attribute(
       "class",
       "align-middle badge " +
-          std::string(is_current ? "text-bg-primary" : "text-bg-danger"));
-  writer.text(display_name);
+          std::string(badge.is_latest ? "text-bg-primary" : "text-bg-danger"));
+  writer.text(badge.name);
   writer.close();
   writer.close();
 }
@@ -296,7 +320,7 @@ inline auto make_file_manager_row(sourcemeta::core::HTMLWriter &writer,
       writer.i().attribute("class", "bi bi-folder-fill").close();
     }
   } else {
-    make_dialect_badge(writer, entry.at("baseDialect").to_string());
+    make_conformance_badge(writer, entry.at("conformsTo").to_string());
   }
   writer.close();
 

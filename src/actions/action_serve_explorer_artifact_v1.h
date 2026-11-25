@@ -78,36 +78,7 @@ public:
     const sourcemeta::one::RequestCookies cookies{request};
     const auto resolution{this->artifact_resolve_path(
         caller, path_match, Tree::Explorer, this->artifact_)};
-    // Both kinds of leaf record their navigation under one filename, and what
-    // each kind records differs enough to have a surface of its own. This
-    // surface therefore holds nothing for an artifact of the other kind, nor
-    // for one that says nothing of the kind it belongs to
-    if (resolution.path.has_value()) {
-      if (this->artifact_kind(resolution.path.value()) != this->kind_) {
-        sourcemeta::one::json_error(
-            request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
-            "urn:sourcemeta:one:not-found", "There is nothing at this URL",
-            this->error_schema_, "*");
-        return;
-      }
-    }
-
     if (!resolution.path.has_value()) {
-      // A path that names an OpenAPI description is a place that exists
-      // without navigation written for it yet, so this surface refuses instead
-      // of claiming there is nothing here. Only the surface that answers for
-      // schemas refuses this way, as an artifact absent from the surface that
-      // answers for a description means there is no such description
-      if (this->kind_ == sourcemeta::one::LeafKind::Schema &&
-          this->describes_api(caller, path_match)) {
-        sourcemeta::one::json_error(
-            request, response, sourcemeta::core::HTTP_STATUS_NOT_IMPLEMENTED,
-            "urn:sourcemeta:one:openapi-description-unsupported",
-            "This operation is not supported on an OpenAPI description yet",
-            this->error_schema_, "*");
-        return;
-      }
-
       sourcemeta::one::json_error(
           request, response, sourcemeta::core::HTTP_STATUS_NOT_FOUND,
           "urn:sourcemeta:one:not-found", "There is nothing at this URL",
@@ -137,27 +108,18 @@ public:
 
     // A tool call reaches one artifact, so placing the caller here is still
     // once for the request that carried them
-    const auto &schema_uri{arguments.at(this->argument_).to_string()};
+    const auto &resource_uri{arguments.at("uri").to_string()};
     const auto resolution{this->artifact_resolve_path(
-        caller, schema_uri, Tree::Explorer, this->artifact_)};
-    if (resolution.path.has_value() &&
-        this->artifact_kind(resolution.path.value()) != this->kind_) {
+        caller, resource_uri, Tree::Explorer, this->artifact_)};
+    if (!resolution.path.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(version, request_id,
-                                                   this->missing_);
+                                                   MISSING);
     }
 
-    if (!resolution.path.has_value()) {
-      return sourcemeta::core::mcp_make_tool_error(
-          version, request_id,
-          this->kind_ == sourcemeta::one::LeafKind::Schema &&
-                  this->describes_api(caller, schema_uri)
-              ? "This operation is not supported on an OpenAPI description yet"
-              : this->missing_);
-    }
     auto contents{this->artifact_read_json(resolution.path.value())};
     if (!contents.has_value()) {
       return sourcemeta::core::mcp_make_tool_error(version, request_id,
-                                                   this->missing_);
+                                                   MISSING);
     }
 
     return sourcemeta::core::mcp_make_tool_success(version, request_id,
@@ -170,27 +132,8 @@ protected:
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
       const std::string_view artifact, sourcemeta::one::Router &dispatcher)
-      : ActionServeExplorerArtifactV1{base,
-                                      router,
-                                      identifier,
-                                      artifact,
-                                      sourcemeta::one::LeafKind::Schema,
-                                      "schema",
-                                      "Schema not found",
-                                      dispatcher} {}
-
-  ActionServeExplorerArtifactV1(
-      const std::filesystem::path &base,
-      const sourcemeta::core::URITemplateRouterView &router,
-      const sourcemeta::core::URITemplateRouter::Identifier identifier,
-      const std::string_view artifact, const sourcemeta::one::LeafKind kind,
-      const std::string_view argument, const std::string_view missing,
-      sourcemeta::one::Router &dispatcher)
       : sourcemeta::one::RouterAction{base, router.base_url(), dispatcher} {
     this->artifact_ = artifact;
-    this->kind_ = kind;
-    this->argument_ = argument;
-    this->missing_ = missing;
     router.arguments(
         identifier, [this](const auto &key, const auto &value) -> void {
           if (key == "responseSchema") {
@@ -206,10 +149,8 @@ protected:
   }
 
 private:
+  static constexpr std::string_view MISSING{"There is nothing at this URL"};
   std::string_view artifact_;
-  sourcemeta::one::LeafKind kind_{sourcemeta::one::LeafKind::Schema};
-  std::string_view argument_{"schema"};
-  std::string_view missing_{"Schema not found"};
   std::string_view response_schema_;
   std::string_view rpc_request_schema_;
   std::string_view rpc_response_schema_;
