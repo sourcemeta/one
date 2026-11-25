@@ -254,12 +254,18 @@ static auto execute_plan(sourcemeta::one::BuildState &entries,
                 action.data.empty() ? nullptr : &resolver.entry(action.data)};
             if (entry) {
               // An identity the schema half of the resolver answers nothing
-              // for may still be one this instance serves as a description
+              // for may still be one this instance serves as a description,
+              // which the schema either names as its dialect or reaches
               if (resolver.kind_of(error.identifier()) ==
                   sourcemeta::one::LeafKind::OpenAPI) {
+                sourcemeta::core::JSON::String identifier{error.identifier()};
+                if (identifier == entry->dialect) {
+                  throw sourcemeta::one::ResolverSchemaDialectIsOpenAPIError(
+                      entry->path, std::move(identifier));
+                }
+
                 throw sourcemeta::one::ResolverSchemaReferenceToOpenAPIError(
-                    entry->path,
-                    sourcemeta::core::JSON::String{error.identifier()});
+                    entry->path, std::move(identifier));
               }
 
               throw sourcemeta::core::FileError<
@@ -1253,6 +1259,13 @@ auto main(int argc, char *argv[]) noexcept -> int {
                "error: {}\n  at path {}\n  at identifier {}\n\n"
                "An OpenAPI description is served whole, so its Schema Objects "
                "have no URI of their own\n",
+               error.what(), error.path().string(), error.identifier());
+    return EXIT_FAILURE;
+  } catch (const sourcemeta::one::ResolverSchemaDialectIsOpenAPIError &error) {
+    std::print(stderr,
+               "error: {}\n  at path {}\n  at identifier {}\n\n"
+               "An OpenAPI description is not a schema, so no schema can "
+               "be written against it\n",
                error.what(), error.path().string(), error.identifier());
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::OpenAPIDocumentError &error) {
