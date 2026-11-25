@@ -5,7 +5,7 @@ export type DirectoryEntry =
       name: string;
       type: "directory";
       health: number;
-      schemas: number;
+      resources: { schema: number; openapi: number };
       path: string;
       title?: string;
       description?: string;
@@ -22,6 +22,7 @@ export type DirectoryEntry =
       bytes: number;
       bytesBundled: number;
       baseDialect: string;
+      conformsTo: string;
       dialect: string;
       health: number;
       dependencies: number;
@@ -32,7 +33,7 @@ export type DirectoryEntry =
 
 export type DirectoryListing = {
   health: number;
-  schemas: number;
+  resources: { schema: number; openapi: number };
   entries: DirectoryEntry[];
   private: boolean;
   path: string;
