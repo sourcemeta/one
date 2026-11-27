@@ -1749,31 +1749,26 @@ TEST(query_only_null_bytes_matches_nothing) {
   EXPECT_EQ(result.size(), 0);
 }
 
-// What the catalog holds of either kind, so that a filter has both to choose
-// between
-static auto mixed_entries() -> std::vector<sourcemeta::one::SearchEntry> {
-  return {{.path = "/example/schema",
-           .identifier = "http://example.com/example/schema",
-           .title = "Pets",
-           .description = "A schema",
-           .health = 80,
-           .priority = 100,
-           .bytes_raw = 0,
-           .bytes_bundled = 0,
-           .kind = sourcemeta::one::LeafKind::Schema},
-          {.path = "/example/description",
-           .identifier = "http://example.com/example/description",
-           .title = "Pets",
-           .description = "An OpenAPI description",
-           .health = 80,
-           .priority = 100,
-           .bytes_raw = 0,
-           .bytes_bundled = 0,
-           .kind = sourcemeta::one::LeafKind::OpenAPI}};
-}
-
 TEST(kinds_schema_only) {
-  auto entries{mixed_entries()};
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {.path = "/example/schema",
+       .identifier = "http://example.com/example/schema",
+       .title = "Pets",
+       .description = "A schema",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema},
+      {.path = "/example/description",
+       .identifier = "http://example.com/example/description",
+       .title = "Pets",
+       .description = "An OpenAPI description",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::OpenAPI}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "Pets", 10,
@@ -1786,7 +1781,25 @@ TEST(kinds_schema_only) {
 }
 
 TEST(kinds_openapi_only) {
-  auto entries{mixed_entries()};
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {.path = "/example/schema",
+       .identifier = "http://example.com/example/schema",
+       .title = "Pets",
+       .description = "A schema",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema},
+      {.path = "/example/description",
+       .identifier = "http://example.com/example/description",
+       .title = "Pets",
+       .description = "An OpenAPI description",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::OpenAPI}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "Pets", 10,
@@ -1799,7 +1812,25 @@ TEST(kinds_openapi_only) {
 }
 
 TEST(kinds_any_answers_for_both) {
-  auto entries{mixed_entries()};
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {.path = "/example/schema",
+       .identifier = "http://example.com/example/schema",
+       .title = "Pets",
+       .description = "A schema",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema},
+      {.path = "/example/description",
+       .identifier = "http://example.com/example/description",
+       .title = "Pets",
+       .description = "An OpenAPI description",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::OpenAPI}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "Pets", 10,
@@ -1811,7 +1842,25 @@ TEST(kinds_any_answers_for_both) {
 }
 
 TEST(kinds_defaults_to_both) {
-  auto entries{mixed_entries()};
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {.path = "/example/schema",
+       .identifier = "http://example.com/example/schema",
+       .title = "Pets",
+       .description = "A schema",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema},
+      {.path = "/example/description",
+       .identifier = "http://example.com/example/description",
+       .title = "Pets",
+       .description = "An OpenAPI description",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::OpenAPI}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
   const auto result{sourcemeta::one::search(
       payload.data(), payload.size(), "Pets", 10,
