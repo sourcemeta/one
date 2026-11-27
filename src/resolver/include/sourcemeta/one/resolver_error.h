@@ -139,8 +139,8 @@ public:
     return this->path_;
   }
 
-  // The reference that reaches the description, as the schema spells it once
-  // this instance has settled what it names
+  // What the reference resolves to, which is the identity this instance serves
+  // the description as, followed by the fragment the reference named
   [[nodiscard]] auto reference() const noexcept
       -> const sourcemeta::core::JSON::String & {
     return this->reference_;
