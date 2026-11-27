@@ -47,9 +47,10 @@ DROP LINES MATCHING '^2> (Writing output to:|Using configuration:|Detecting:|\([
 WRITE expected.txt UNTIL EOF
 2> error: A schema cannot reference an OpenAPI description
 2>   at path [CWD]/schemas/pet.json
-2>   at identifier http://localhost:8000/example/petstore
+2>   at reference http://localhost:8000/example/petstore#/components/schemas/Pet
+2>   at location "/$ref"
 2>
-2> An OpenAPI description is served whole, so its Schema Objects have no URI of their own
+2> An OpenAPI description is not a schema, so no reference can reach one or anything inside it
 EOF
 
 REPLACE $CWD WITH '[CWD]' IN output.txt

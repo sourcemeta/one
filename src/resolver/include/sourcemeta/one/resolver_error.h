@@ -128,24 +128,34 @@ private:
 class ResolverSchemaReferenceToOpenAPIError : public sourcemeta::core::Error {
 public:
   ResolverSchemaReferenceToOpenAPIError(
-      std::filesystem::path path, sourcemeta::core::JSON::String identifier)
+      std::filesystem::path path, sourcemeta::core::JSON::String reference,
+      sourcemeta::core::Pointer location)
       : sourcemeta::core::Error{"A schema cannot reference an OpenAPI "
                                 "description"},
-        path_{std::move(path)}, identifier_{std::move(identifier)} {}
+        path_{std::move(path)}, reference_{std::move(reference)},
+        location_{std::move(location)} {}
 
   [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
     return this->path_;
   }
 
-  // The identity the reference reaches, as this instance serves it
-  [[nodiscard]] auto identifier() const noexcept
+  // The reference that reaches the description, as the schema spells it once
+  // this instance has settled what it names
+  [[nodiscard]] auto reference() const noexcept
       -> const sourcemeta::core::JSON::String & {
-    return this->identifier_;
+    return this->reference_;
+  }
+
+  // Where the member that spells it sits
+  [[nodiscard]] auto location() const noexcept
+      -> const sourcemeta::core::Pointer & {
+    return this->location_;
   }
 
 private:
   std::filesystem::path path_;
-  sourcemeta::core::JSON::String identifier_;
+  sourcemeta::core::JSON::String reference_;
+  sourcemeta::core::Pointer location_;
 };
 
 // A dialect is named by a schema that describes schemas, and an OpenAPI

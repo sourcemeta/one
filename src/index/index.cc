@@ -202,6 +202,38 @@ private:
 
 } // namespace
 
+// What a resolution failure of a leaf means, which turns on what this instance
+// serves at the identity that did not resolve
+[[noreturn]] static auto
+rethrow_resolution_failure(const sourcemeta::core::SchemaResolutionError &error,
+                           const sourcemeta::one::Resolver::Entry &entry,
+                           const sourcemeta::one::Resolver &resolver) -> void {
+  // An identity the schema half of the resolver answers nothing for may still
+  // be one this instance serves as a description, which the schema either
+  // names as its dialect or reaches
+  if (resolver.kind_of(error.identifier()) ==
+      sourcemeta::one::LeafKind::OpenAPI) {
+    // Only a reference is spelled by a member of a schema, so only one of the
+    // two has a place to name
+    if (error.location().empty()) {
+      throw sourcemeta::one::ResolverSchemaDialectIsOpenAPIError(
+          entry.path, sourcemeta::core::JSON::String{error.identifier()});
+    }
+
+    sourcemeta::core::JSON::String reference{error.identifier()};
+    if (error.fragment().has_value()) {
+      reference.push_back('#');
+      reference.append(error.fragment().value());
+    }
+
+    throw sourcemeta::one::ResolverSchemaReferenceToOpenAPIError(
+        entry.path, std::move(reference), error.location());
+  }
+
+  throw sourcemeta::core::FileError<sourcemeta::core::SchemaResolutionError>(
+      entry.path, error);
+}
+
 static auto execute_plan(sourcemeta::one::BuildState &entries,
                          const std::filesystem::path &canonical_output,
                          sourcemeta::one::Resolver &resolver,
@@ -253,23 +285,7 @@ static auto execute_plan(sourcemeta::one::BuildState &entries,
             const auto *entry{
                 action.data.empty() ? nullptr : &resolver.entry(action.data)};
             if (entry) {
-              // An identity the schema half of the resolver answers nothing
-              // for may still be one this instance serves as a description,
-              // which the schema either names as its dialect or reaches
-              if (resolver.kind_of(error.identifier()) ==
-                  sourcemeta::one::LeafKind::OpenAPI) {
-                sourcemeta::core::JSON::String identifier{error.identifier()};
-                if (identifier == entry->dialect) {
-                  throw sourcemeta::one::ResolverSchemaDialectIsOpenAPIError(
-                      entry->path, std::move(identifier));
-                }
-
-                throw sourcemeta::one::ResolverSchemaReferenceToOpenAPIError(
-                    entry->path, std::move(identifier));
-              }
-
-              throw sourcemeta::core::FileError<
-                  sourcemeta::core::SchemaResolutionError>(entry->path, error);
+              rethrow_resolution_failure(error, *entry, resolver);
             }
 
             throw;
@@ -1256,10 +1272,12 @@ auto main(int argc, char *argv[]) noexcept -> int {
   } catch (
       const sourcemeta::one::ResolverSchemaReferenceToOpenAPIError &error) {
     std::print(stderr,
-               "error: {}\n  at path {}\n  at identifier {}\n\n"
-               "An OpenAPI description is served whole, so its Schema Objects "
-               "have no URI of their own\n",
-               error.what(), error.path().string(), error.identifier());
+               "error: {}\n  at path {}\n  at reference {}\n"
+               "  at location \"{}\"\n\n"
+               "An OpenAPI description is not a schema, so no reference can "
+               "reach one or anything inside it\n",
+               error.what(), error.path().string(), error.reference(),
+               sourcemeta::core::to_string(error.location()));
     return EXIT_FAILURE;
   } catch (const sourcemeta::one::ResolverSchemaDialectIsOpenAPIError &error) {
     std::print(stderr,
