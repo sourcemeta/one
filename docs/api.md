@@ -849,10 +849,11 @@ contexts are not fetched.
 
 ### Search
 
-*This endpoint searches for JSON Schemas based on the provided query `{term}`.*
+*This endpoint searches the catalog based on the provided query `{term}`, over
+JSON Schemas and OpenAPI descriptions alike.*
 
 ```
-GET /self/v1/api/schemas/search?q={term}[&limit={n}][&scope={fields}]
+GET /self/v1/api/search?q={term}[&limit={n}][&scope={fields}][&type={kinds}]
 ```
 
 | Parameter | Type | Required | Default | Description |
@@ -860,27 +861,39 @@ GET /self/v1/api/schemas/search?q={term}[&limit={n}][&scope={fields}]
 | `q` | String | Yes | - | Search term (case-insensitive substring, at most 256 characters) |
 | `limit` | Integer | No | 10 | Maximum number of results, between 1 and 100 |
 | `scope` | String | No | `path,title,description` | Comma-separated fields to match against |
+| `type` | String | No | `schema,openapi` | Comma-separated kinds of resource to answer for |
 
 The valid values for `scope` are `path`, `title`, and `description`, which can
-be combined in any order (i.e. `scope=title,description`).
+be combined in any order (i.e. `scope=title,description`). The valid values for
+`type` are `schema` and `openapi`, likewise combinable (i.e. `type=openapi`).
 
 === "200"
 
     | Property | Type | Required | Description |
     |----------|------|----------|-------------|
-    | `/*/path` | String | Yes | The relative URL of the schema |
-    | `/*/identifier` | String | Yes | The absolute URL of the schema |
-    | `/*/title` | String | Yes | The title of the schema |
-    | `/*/description` | String | Yes | The description of the schema. The web explorer renders this as Markdown |
-    | `/*/priority` | Integer | Yes | An importance hint from `0` (least important) to `100` (most important), inherited from the schema collection's [`x-sourcemeta-one:priority`](configuration.md) configuration value |
-    | `/*/health` | Integer | Yes | The health score of the schema (0 to 100) |
+    | `/*/type` | `schema` / `openapi` | Yes | What this instance serves at that URL |
+    | `/*/path` | String | Yes | The relative URL of the resource |
+    | `/*/identifier` | String | Yes | The absolute URL of the resource |
+    | `/*/title` | String | Yes | The title of the resource |
+    | `/*/description` | String | Yes | The description of the resource. The web explorer renders this as Markdown |
+    | `/*/priority` | Integer | Yes | An importance hint from `0` (least important) to `100` (most important), inherited from the collection's [`x-sourcemeta-one:priority`](configuration.md) configuration value |
+    | `/*/health` | Integer | Yes | The health score of the resource (0 to 100) |
+
+!!! note "Ranking does not depend on the kind"
+
+    Results are ranked by priority, then by how much metadata each one carries,
+    then by health, and finally by path. Nothing about being a schema or an
+    OpenAPI description enters that order. An OpenAPI description carries a
+    title by construction and its health is not measured yet, so it ranks above
+    a schema that lacks either.
 
 === "400"
 
     Returned when `q` is missing or empty, when `q` or `limit` do not match
     their corresponding ranges, when `scope` names anything other than the
-    three fields above, or when the query carries a name other than `q`,
-    `limit` and `scope`.
+    three fields above, when `type` names anything other than the two kinds
+    above, or when the query carries a name other than `q`, `limit`, `scope`
+    and `type`.
 
 ### Health
 

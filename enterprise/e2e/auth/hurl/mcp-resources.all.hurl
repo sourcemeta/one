@@ -162,8 +162,8 @@ jsonpath "$.result.resources[21].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[21].size" == 799
 jsonpath "$.result.resources[21].annotations.priority" == 0.0
 jsonpath "$.result.resources[22].uri" == "{{base}}/self/v1/schemas/api/search/response"
-jsonpath "$.result.resources[22].name" == "Sourcemeta One Schema Search API Response"
-jsonpath "$.result.resources[22].description" == "The response format for the schema search API endpoint"
+jsonpath "$.result.resources[22].name" == "Sourcemeta One Search API Response"
+jsonpath "$.result.resources[22].description" == "The response format for the search API endpoint"
 jsonpath "$.result.resources[22].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[22].size" == 1446
 jsonpath "$.result.resources[22].annotations.priority" == 0.0
@@ -473,14 +473,14 @@ jsonpath "$.result.resources[18].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[18].size" == 4751
 jsonpath "$.result.resources[18].annotations.priority" == 0.0
 jsonpath "$.result.resources[19].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request"
-jsonpath "$.result.resources[19].name" == "Sourcemeta One Schema Search RPC Input"
-jsonpath "$.result.resources[19].description" == "Search for schemas in the catalog by query term"
+jsonpath "$.result.resources[19].name" == "Sourcemeta One Search RPC Input"
+jsonpath "$.result.resources[19].description" == "Search the catalog by query term"
 jsonpath "$.result.resources[19].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[19].size" == 2155
 jsonpath "$.result.resources[19].annotations.priority" == 0.0
 jsonpath "$.result.resources[20].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/search/response"
-jsonpath "$.result.resources[20].name" == "Sourcemeta One Schema Search RPC Output"
-jsonpath "$.result.resources[20].description" == "Search for schemas in the catalog by query term"
+jsonpath "$.result.resources[20].name" == "Sourcemeta One Search RPC Output"
+jsonpath "$.result.resources[20].description" == "Search the catalog by query term"
 jsonpath "$.result.resources[20].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[20].size" == 777
 jsonpath "$.result.resources[20].annotations.priority" == 0.0
@@ -681,8 +681,8 @@ jsonpath "$.result.resources[24].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[24].size" == 799
 jsonpath "$.result.resources[24].annotations.priority" == 0.0
 jsonpath "$.result.resources[25].uri" == "{{base}}/self/v1/schemas/api/search/response"
-jsonpath "$.result.resources[25].name" == "Sourcemeta One Schema Search API Response"
-jsonpath "$.result.resources[25].description" == "The response format for the schema search API endpoint"
+jsonpath "$.result.resources[25].name" == "Sourcemeta One Search API Response"
+jsonpath "$.result.resources[25].description" == "The response format for the search API endpoint"
 jsonpath "$.result.resources[25].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[25].size" == 1446
 jsonpath "$.result.resources[25].annotations.priority" == 0.0
@@ -985,14 +985,14 @@ jsonpath "$.result.resources[21].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[21].size" == 4751
 jsonpath "$.result.resources[21].annotations.priority" == 0.0
 jsonpath "$.result.resources[22].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request"
-jsonpath "$.result.resources[22].name" == "Sourcemeta One Schema Search RPC Input"
-jsonpath "$.result.resources[22].description" == "Search for schemas in the catalog by query term"
+jsonpath "$.result.resources[22].name" == "Sourcemeta One Search RPC Input"
+jsonpath "$.result.resources[22].description" == "Search the catalog by query term"
 jsonpath "$.result.resources[22].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[22].size" == 2155
 jsonpath "$.result.resources[22].annotations.priority" == 0.0
 jsonpath "$.result.resources[23].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/search/response"
-jsonpath "$.result.resources[23].name" == "Sourcemeta One Schema Search RPC Output"
-jsonpath "$.result.resources[23].description" == "Search for schemas in the catalog by query term"
+jsonpath "$.result.resources[23].name" == "Sourcemeta One Search RPC Output"
+jsonpath "$.result.resources[23].description" == "Search the catalog by query term"
 jsonpath "$.result.resources[23].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[23].size" == 777
 jsonpath "$.result.resources[23].annotations.priority" == 0.0
@@ -1181,8 +1181,8 @@ jsonpath "$.result.resources[22].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[22].size" == 799
 jsonpath "$.result.resources[22].annotations.priority" == 0.0
 jsonpath "$.result.resources[23].uri" == "{{base}}/self/v1/schemas/api/search/response"
-jsonpath "$.result.resources[23].name" == "Sourcemeta One Schema Search API Response"
-jsonpath "$.result.resources[23].description" == "The response format for the schema search API endpoint"
+jsonpath "$.result.resources[23].name" == "Sourcemeta One Search API Response"
+jsonpath "$.result.resources[23].description" == "The response format for the search API endpoint"
 jsonpath "$.result.resources[23].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[23].size" == 1446
 jsonpath "$.result.resources[23].annotations.priority" == 0.0
@@ -1485,14 +1485,14 @@ jsonpath "$.result.resources[19].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[19].size" == 4751
 jsonpath "$.result.resources[19].annotations.priority" == 0.0
 jsonpath "$.result.resources[20].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request"
-jsonpath "$.result.resources[20].name" == "Sourcemeta One Schema Search RPC Input"
-jsonpath "$.result.resources[20].description" == "Search for schemas in the catalog by query term"
+jsonpath "$.result.resources[20].name" == "Sourcemeta One Search RPC Input"
+jsonpath "$.result.resources[20].description" == "Search the catalog by query term"
 jsonpath "$.result.resources[20].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[20].size" == 2155
 jsonpath "$.result.resources[20].annotations.priority" == 0.0
 jsonpath "$.result.resources[21].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/search/response"
-jsonpath "$.result.resources[21].name" == "Sourcemeta One Schema Search RPC Output"
-jsonpath "$.result.resources[21].description" == "Search for schemas in the catalog by query term"
+jsonpath "$.result.resources[21].name" == "Sourcemeta One Search RPC Output"
+jsonpath "$.result.resources[21].description" == "Search the catalog by query term"
 jsonpath "$.result.resources[21].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[21].size" == 777
 jsonpath "$.result.resources[21].annotations.priority" == 0.0

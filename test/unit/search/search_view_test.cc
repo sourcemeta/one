@@ -162,7 +162,7 @@ TEST(at_returns_empty_strings_for_empty_metadata) {
   EXPECT_EQ(entry.bytes_bundled, 8);
 }
 
-TEST(one_kind_follows_the_other_whatever_each_ranks) {
+TEST(both_kinds_rank_together_whatever_each_one_is) {
   const auto path{test_path("kind_order.metapack")};
   write_search_file(path, {{.path = "/api/rich",
                             .identifier = "http://example.com/api/rich",
@@ -184,8 +184,8 @@ TEST(one_kind_follows_the_other_whatever_each_ranks) {
                             .kind = sourcemeta::one::LeafKind::Schema}});
   sourcemeta::one::SearchView view{path};
   EXPECT_EQ(view.count(), 2);
-  EXPECT_EQ(view.at(0).path, "/schema/bare");
-  EXPECT_EQ(view.at(0).kind, sourcemeta::one::LeafKind::Schema);
-  EXPECT_EQ(view.at(1).path, "/api/rich");
-  EXPECT_EQ(view.at(1).kind, sourcemeta::one::LeafKind::OpenAPI);
+  EXPECT_EQ(view.at(0).path, "/api/rich");
+  EXPECT_EQ(view.at(0).kind, sourcemeta::one::LeafKind::OpenAPI);
+  EXPECT_EQ(view.at(1).path, "/schema/bare");
+  EXPECT_EQ(view.at(1).kind, sourcemeta::one::LeafKind::Schema);
 }

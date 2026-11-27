@@ -42,6 +42,7 @@ export type DirectoryListing = {
 };
 
 export type SearchResult = {
+  type: "schema" | "openapi";
   path: string;
   identifier: string;
   title: string;

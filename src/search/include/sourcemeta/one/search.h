@@ -63,8 +63,8 @@ struct SearchRecordHeader {
 };
 #pragma pack(pop)
 
-// The catalog holds one kind after the other, the way a directory lists what
-// it holds, and ranks within a kind. Ranking is fixed and intentionally not
+// The catalog ranks every kind together, since what a caller searches for is
+// a resource rather than a kind of one. Ranking is fixed and intentionally not
 // configurable: higher-priority entries come first, then entries with richer
 // metadata, then healthier ones. The scope narrows which fields are searched,
 // and the kinds narrow which of them answer at all

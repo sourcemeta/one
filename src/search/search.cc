@@ -15,12 +15,12 @@ namespace sourcemeta::one {
 
 auto make_search(std::vector<SearchEntry> &&entries)
     -> std::vector<std::uint8_t> {
+  // TODO: Revisit this ranking once an OpenAPI description carries a health
+  // score of its own. A description holds a title and a summary by
+  // construction and its health is the constant 100, so it outranks a schema
+  // on both of the tiebreakers below without having earned either
   std::ranges::sort(
       entries, [](const SearchEntry &left, const SearchEntry &right) -> bool {
-        if (left.kind != right.kind) {
-          return left.kind < right.kind;
-        }
-
         if (left.priority != right.priority) {
           return left.priority > right.priority;
         }
