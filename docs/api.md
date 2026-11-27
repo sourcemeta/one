@@ -879,14 +879,6 @@ be combined in any order (i.e. `scope=title,description`). The valid values for
     | `/*/priority` | Integer | Yes | An importance hint from `0` (least important) to `100` (most important), inherited from the collection's [`x-sourcemeta-one:priority`](configuration.md) configuration value |
     | `/*/health` | Integer | Yes | The health score of the resource (0 to 100) |
 
-!!! note "Ranking does not depend on the kind"
-
-    Results are ranked by priority, then by how much metadata each one carries,
-    then by health, and finally by path. Nothing about being a schema or an
-    OpenAPI description enters that order. An OpenAPI description carries a
-    title by construction and its health is not measured yet, so it ranks above
-    a schema that lacks either.
-
 === "400"
 
     Returned when `q` is missing or empty, when `q` or `limit` do not match
