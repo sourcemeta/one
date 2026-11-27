@@ -789,7 +789,7 @@ static auto declare_container_view(
           if (!scope.visible(view, leaf_relative.native()) ||
               !holds_kind(scope.metadata_kinds,
                           all_relative_kinds[leaf_index])) {
-            return;
+            continue;
           }
 
           if (leaf_relative.parent_path() == relative ||
