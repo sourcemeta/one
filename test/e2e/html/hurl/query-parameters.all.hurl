@@ -7,14 +7,14 @@
 
 # The search endpoint reads `q`, `limit` and `scope`, and all three are
 # honoured together
-GET {{base}}/self/v1/api/schemas/search?q=test&limit=2&scope=path,title
+GET {{base}}/self/v1/api/search?q=test&limit=2&scope=path,title
 HTTP 200
 Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
 Vary: Accept-Encoding, Authorization, Cookie
-Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
+Link: </self/v1/schemas/api/search/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -49,7 +49,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 # A mistyped `limit` is refused rather than answered with the default
-GET {{base}}/self/v1/api/schemas/search?q=test&limti=2
+GET {{base}}/self/v1/api/search?q=test&limti=2
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -96,7 +96,7 @@ jsonpath "$.valid" == true
 
 # A name is matched exactly, so a differently cased one is not the one
 # this endpoint reads
-GET {{base}}/self/v1/api/schemas/search?q=test&LIMIT=2
+GET {{base}}/self/v1/api/search?q=test&LIMIT=2
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -142,7 +142,7 @@ header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) 
 jsonpath "$.valid" == true
 
 # A name this endpoint never had is refused the same way
-GET {{base}}/self/v1/api/schemas/search?q=test&nonsense=yes
+GET {{base}}/self/v1/api/search?q=test&nonsense=yes
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -189,7 +189,7 @@ jsonpath "$.valid" == true
 
 # A name percent-encoded into something else is not the name it encodes, so it
 # is refused rather than silently read as `q`
-GET {{base}}/self/v1/api/schemas/search?%71=test
+GET {{base}}/self/v1/api/search?%71=test
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -236,7 +236,7 @@ jsonpath "$.valid" == true
 
 # An unusable value for a parameter this endpoint does read is still reported
 # as that parameter being wrong rather than as an unknown one
-GET {{base}}/self/v1/api/schemas/search?q=test&scope=bogus
+GET {{base}}/self/v1/api/search?q=test&scope=bogus
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -828,7 +828,7 @@ jsonpath "$.valid" == true
 
 # A wrong method is still reported as a wrong method, since what the query
 # string carries does not make a method any more valid for the URL
-POST {{base}}/self/v1/api/schemas/search?bogus=1
+POST {{base}}/self/v1/api/search?bogus=1
 HTTP 405
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -876,7 +876,7 @@ jsonpath "$.valid" == true
 # it is answered whatever the query string carries. Refusing it would leave a
 # browser unable to ask
 
-OPTIONS {{base}}/self/v1/api/schemas/search?bogus=1
+OPTIONS {{base}}/self/v1/api/search?bogus=1
 Origin: {{base}}
 Access-Control-Request-Method: GET
 HTTP 204

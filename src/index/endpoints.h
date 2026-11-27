@@ -33,8 +33,7 @@ inline constexpr std::string_view ENDPOINT_SCHEMA_TRACE{
     "/self/v1/api/schemas/trace/{+schema}"};
 inline constexpr std::string_view ENDPOINT_PLAYGROUND_SCHEMA_TRACE{
     "/self/v1/api/playground/schemas/trace"};
-inline constexpr std::string_view ENDPOINT_SCHEMA_SEARCH{
-    "/self/v1/api/schemas/search"};
+inline constexpr std::string_view ENDPOINT_SEARCH{"/self/v1/api/search"};
 inline constexpr std::string_view ENDPOINT_HEALTH{"/self/v1/health"};
 inline constexpr std::string_view ENDPOINT_METRICS{"/self/v1/metrics"};
 inline constexpr std::string_view ENDPOINT_AUTH_LOGOUT{"/self/v1/auth/logout"};

@@ -41,7 +41,7 @@ jsonpath "$.id" == 1
 jsonpath "$.result.tools" count == 11
 jsonpath "$.result.tools[*].name" not contains "trace_schema_evaluation"
 jsonpath "$.result.tools[*].name" not contains "playground_trace_schema"
-jsonpath "$.result.tools[*].name" contains "search_schemas"
+jsonpath "$.result.tools[*].name" contains "search"
 jsonpath "$.result.tools[*].name" contains "evaluate_schema"
 jsonpath "$.result.resultType" == "complete"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"

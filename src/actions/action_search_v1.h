@@ -1,5 +1,5 @@
-#ifndef SOURCEMETA_ONE_ACTIONS_SCHEMA_SEARCH_V1_H
-#define SOURCEMETA_ONE_ACTIONS_SCHEMA_SEARCH_V1_H
+#ifndef SOURCEMETA_ONE_ACTIONS_SEARCH_V1_H
+#define SOURCEMETA_ONE_ACTIONS_SEARCH_V1_H
 
 #include <sourcemeta/blaze/evaluator.h>
 #include <sourcemeta/core/json.h>
@@ -26,17 +26,18 @@
 #include <unordered_map> // std::unordered_map
 #include <utility>       // std::move
 
-class ActionSchemaSearchV1 : public sourcemeta::one::RouterAction {
+class ActionSearchV1 : public sourcemeta::one::RouterAction {
 public:
-  static constexpr std::string_view TITLE{"Search Schemas"};
+  static constexpr std::string_view TITLE{"Search"};
   static constexpr std::string_view DESCRIPTION{
-      "Search for schemas by query term"};
+      "Search the catalog by query term, for JSON Schemas, OpenAPI "
+      "descriptions, or both"};
   static constexpr bool READ_ONLY{true};
   static constexpr bool DESTRUCTIVE{false};
   static constexpr bool IDEMPOTENT{true};
   static constexpr bool OPEN_WORLD{false};
 
-  ActionSchemaSearchV1(
+  ActionSearchV1(
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
@@ -104,9 +105,9 @@ public:
       return;
     }
 
-    if (sourcemeta::one::reject_unknown_query(
-            request, response, ActionSchemaSearchV1::QUERY_PARAMETERS,
-            this->error_schema_, "*")) {
+    if (sourcemeta::one::reject_unknown_query(request, response,
+                                              ActionSearchV1::QUERY_PARAMETERS,
+                                              this->error_schema_, "*")) {
       return;
     }
 
@@ -210,8 +211,52 @@ public:
       }
     }
 
-    auto result{
-        this->search_view_for(caller.view()).search(query, limit, scope)};
+    // A query spells the kinds the way it spells the scope, as a list of
+    // tokens, while the same choice travels as an array over the RPC
+    std::uint8_t kinds{sourcemeta::one::SEARCH_KIND_ANY};
+    const auto kinds_param{request.query("type")};
+    if (!kinds_param.empty()) {
+      kinds = 0;
+      std::string_view remaining{kinds_param};
+      while (!remaining.empty()) {
+        const auto comma{remaining.find(',')};
+        const auto token{comma != std::string_view::npos
+                             ? remaining.substr(0, comma)
+                             : remaining};
+        if (token.empty()) {
+          // Skip empty tokens from trailing commas
+        } else if (token == "schema") {
+          kinds |= sourcemeta::one::SEARCH_KIND_SCHEMA;
+        } else if (token == "openapi") {
+          kinds |= sourcemeta::one::SEARCH_KIND_OPENAPI;
+        } else {
+          sourcemeta::one::json_error(
+              request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+              "urn:sourcemeta:one:invalid-search-type",
+              "The type must be a comma-separated list of: schema, openapi",
+              this->error_schema_, "*");
+          return;
+        }
+
+        if (comma != std::string_view::npos) {
+          remaining = remaining.substr(comma + 1);
+        } else {
+          break;
+        }
+      }
+
+      if (kinds == 0) {
+        sourcemeta::one::json_error(
+            request, response, sourcemeta::core::HTTP_STATUS_BAD_REQUEST,
+            "urn:sourcemeta:one:invalid-search-type",
+            "The type must be a comma-separated list of: schema, openapi",
+            this->error_schema_, "*");
+        return;
+      }
+    }
+
+    auto result{this->search_view_for(caller.view())
+                    .search(query, limit, scope, kinds)};
     response.write_status(sourcemeta::core::HTTP_STATUS_OK);
     response.write_header("Access-Control-Allow-Origin", "*");
     response.write_header("Access-Control-Expose-Headers", "Link, ETag");
@@ -317,8 +362,55 @@ public:
       }
     }
 
-    auto results{this->search_view_for(caller.view())
-                     .search(arguments.at("q").to_string(), limit, scope)};
+    std::uint8_t kinds{sourcemeta::one::SEARCH_KIND_ANY};
+    if (arguments.defines("type")) {
+      kinds = 0;
+      const auto &kinds_argument{arguments.at("type")};
+      sourcemeta::core::JSON parsed_kinds{nullptr};
+      const sourcemeta::core::JSON *kinds_array{nullptr};
+      if (kinds_argument.is_string()) {
+        try {
+          parsed_kinds =
+              sourcemeta::core::parse_json(kinds_argument.to_string());
+        } catch (const std::exception &) {
+          return sourcemeta::core::mcp_make_tool_error(
+              version, request_id, "The type is not valid JSON");
+        }
+        if (!parsed_kinds.is_array()) {
+          return sourcemeta::core::mcp_make_tool_error(
+              version, request_id,
+              "The type must be a JSON-encoded array of strings");
+        }
+        if (parsed_kinds.empty()) {
+          return sourcemeta::core::mcp_make_tool_error(
+              version, request_id, "The type must contain at least one item");
+        }
+        kinds_array = &parsed_kinds;
+      } else {
+        kinds_array = &kinds_argument;
+      }
+      for (const auto &item : kinds_array->as_array()) {
+        if (!item.is_string()) {
+          return sourcemeta::core::mcp_make_tool_error(
+              version, request_id,
+              R"(The type items must be "schema" or "openapi")");
+        }
+
+        if (item.to_string() == "schema") {
+          kinds |= sourcemeta::one::SEARCH_KIND_SCHEMA;
+        } else if (item.to_string() == "openapi") {
+          kinds |= sourcemeta::one::SEARCH_KIND_OPENAPI;
+        } else {
+          return sourcemeta::core::mcp_make_tool_error(
+              version, request_id,
+              R"(The type items must be "schema" or "openapi")");
+        }
+      }
+    }
+
+    auto results{
+        this->search_view_for(caller.view())
+            .search(arguments.at("q").to_string(), limit, scope, kinds)};
     auto envelope{sourcemeta::core::JSON::make_object()};
     envelope.assign_assume_new("results", std::move(results));
 
@@ -344,8 +436,8 @@ private:
   // What this endpoint reads out of the query string. A name that is not one
   // of these is refused rather than ignored, so a caller that mistypes one is
   // told rather than quietly answered as though they had not asked
-  static constexpr std::array<std::string_view, 3> QUERY_PARAMETERS{
-      {"q", "limit", "scope"}};
+  static constexpr std::array<std::string_view, 4> QUERY_PARAMETERS{
+      {"q", "limit", "scope", "type"}};
 
   // A caller is answered out of the index their view holds, so what a search
   // can name is what the caller could have reached by looking

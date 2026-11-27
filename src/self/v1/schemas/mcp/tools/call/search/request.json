@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Sourcemeta One Schema Search RPC Input",
-  "description": "Search for schemas in the catalog by query term",
+  "title": "Sourcemeta One Search RPC Input",
+  "description": "Search the catalog by query term",
   "examples": [
     {
       "q": "string"
@@ -13,6 +13,10 @@
     {
       "q": "address",
       "scope": [ "title", "description" ]
+    },
+    {
+      "q": "pets",
+      "type": [ "openapi" ]
     },
     {
       "q": "user",
@@ -38,6 +42,19 @@
       "maximum": 100,
       "minimum": 1,
       "pattern": "^([1-9]|[1-9][0-9]|100)$"
+    },
+    "type": {
+      "description": "Kinds of resource to search",
+      "$comment": "Accepting a JSON-encoded string form (e.g. \"[\\\"schema\\\"]\") is a workaround for MCP clients that stringify non-string tool arguments before sending them. The server parses the string before validation, so non-string MCP clients can still send the array form. See https://github.com/anthropics/claude-code/issues/24599 and https://github.com/modelcontextprotocol/python-sdk/issues/1112",
+      "default": [ "schema", "openapi" ],
+      "type": [ "array", "string" ],
+      "contentEncoding": "identity",
+      "contentMediaType": "application/json",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [ "schema", "openapi" ]
+      }
     },
     "scope": {
       "description": "Schema fields to match the query against",

@@ -1348,9 +1348,8 @@ struct GenerateURITemplateRoutes {
                {"mcpResponseSchema",
                 std::string_view{SEARCH_SCHEMAS_RESPONSE_SCHEMA}},
                {"errorSchema", std::string_view{ERROR_SCHEMA}}})};
-      router.add(sourcemeta::one::ENDPOINT_SCHEMA_SEARCH, "search_schemas",
-                 next_id++, sourcemeta::one::ACTION_TYPE_SCHEMA_SEARCH_V1,
-                 search_arguments);
+      router.add(sourcemeta::one::ENDPOINT_SEARCH, "search", next_id++,
+                 sourcemeta::one::ACTION_TYPE_SEARCH_V1, search_arguments);
 
       const auto health_check_arguments{
           std::to_array<sourcemeta::core::URITemplateRouter::Argument>(

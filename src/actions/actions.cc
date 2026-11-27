@@ -26,7 +26,7 @@
 #include "action_metrics_v1.h"
 #include "action_not_found_v1.h"
 #include "action_playground_schema_trace_v1.h"
-#include "action_schema_search_v1.h"
+#include "action_search_v1.h"
 #include "action_serve_explorer_artifact_v1.h"
 #include "action_serve_schema_artifact_v1.h"
 #include "action_serve_static_v1.h"

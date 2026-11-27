@@ -65,7 +65,7 @@ export const searchSchemas = (
 ): Promise<SearchResult[]> =>
   request(
     registryUrl,
-    `/self/v1/api/schemas/search?q=${encodeURIComponent(query)}`
+    `/self/v1/api/search?q=${encodeURIComponent(query)}`
   );
 
 export const getSchemaMetadata = (

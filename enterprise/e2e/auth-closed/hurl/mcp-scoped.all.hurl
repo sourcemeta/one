@@ -163,7 +163,7 @@ jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 31
 jsonpath "$.result.tools" count == 13
 jsonpath "$.result.tools[*].name" includes "list_directory"
-jsonpath "$.result.tools[*].name" includes "search_schemas"
+jsonpath "$.result.tools[*].name" includes "search"
 jsonpath "$.result.tools[*].name" includes "evaluate_schema"
 jsonpath "$.result.tools[*].name" includes "trace_schema_evaluation"
 jsonpath "$.result.tools[*].name" includes "playground_trace_schema"

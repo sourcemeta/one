@@ -1,4 +1,4 @@
-GET {{base}}/self/v1/api/schemas/search
+GET {{base}}/self/v1/api/search
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -34,7 +34,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=
+GET {{base}}/self/v1/api/search?q=
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -70,7 +70,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=%20%20%20
+GET {{base}}/self/v1/api/search?q=%20%20%20
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -106,7 +106,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=%09%0A%0D
+GET {{base}}/self/v1/api/search?q=%09%0A%0D
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -142,7 +142,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-POST {{base}}/self/v1/api/schemas/search?q=foo
+POST {{base}}/self/v1/api/search?q=foo
 HTTP 405
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -179,13 +179,13 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=xxxxxxxxxxxx
+GET {{base}}/self/v1/api/search?q=xxxxxxxxxxxx
 HTTP 200
 Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
+Link: </self/v1/schemas/api/search/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -212,13 +212,13 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bundling
+GET {{base}}/self/v1/api/search?q=bundling
 HTTP 200
 Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
+Link: </self/v1/schemas/api/search/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -229,12 +229,14 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$" count == 2
+jsonpath "$[0].type" == "schema"
 jsonpath "$[0].path" == "/test/schemas/bundling-single"
 jsonpath "$[0].identifier" == "{{base}}/test/schemas/bundling-single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
 jsonpath "$[0].priority" == 50
 jsonpath "$[0].health" == 50
+jsonpath "$[1].type" == "schema"
 jsonpath "$[1].path" == "/test/schemas/bundling-double"
 jsonpath "$[1].identifier" == "{{base}}/test/schemas/bundling-double"
 jsonpath "$[1].title" == ""
@@ -257,13 +259,13 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bUNdLing
+GET {{base}}/self/v1/api/search?q=bUNdLing
 HTTP 200
 Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
+Link: </self/v1/schemas/api/search/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -274,12 +276,14 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$" count == 2
+jsonpath "$[0].type" == "schema"
 jsonpath "$[0].path" == "/test/schemas/bundling-single"
 jsonpath "$[0].identifier" == "{{base}}/test/schemas/bundling-single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
 jsonpath "$[0].priority" == 50
 jsonpath "$[0].health" == 50
+jsonpath "$[1].type" == "schema"
 jsonpath "$[1].path" == "/test/schemas/bundling-double"
 jsonpath "$[1].identifier" == "{{base}}/test/schemas/bundling-double"
 jsonpath "$[1].title" == ""
@@ -302,13 +306,13 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=e
+GET {{base}}/self/v1/api/search?q=e
 HTTP 200
 Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
+Link: </self/v1/schemas/api/search/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -335,13 +339,13 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bundling&limit=1
+GET {{base}}/self/v1/api/search?q=bundling&limit=1
 HTTP 200
 Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
+Link: </self/v1/schemas/api/search/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -352,6 +356,7 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$" count == 1
+jsonpath "$[0].type" == "schema"
 jsonpath "$[0].path" == "/test/schemas/bundling-single"
 jsonpath "$[0].identifier" == "{{base}}/test/schemas/bundling-single"
 jsonpath "$[0].title" == "Bundling"
@@ -374,13 +379,13 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=title
+GET {{base}}/self/v1/api/search?q=bundling&scope=title
 HTTP 200
 Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
+Link: </self/v1/schemas/api/search/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -391,6 +396,7 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$" count == 1
+jsonpath "$[0].type" == "schema"
 jsonpath "$[0].path" == "/test/schemas/bundling-single"
 jsonpath "$[0].identifier" == "{{base}}/test/schemas/bundling-single"
 jsonpath "$[0].title" == "Bundling"
@@ -413,13 +419,13 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=path,description
+GET {{base}}/self/v1/api/search?q=bundling&scope=path,description
 HTTP 200
 Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
+Link: </self/v1/schemas/api/search/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -430,12 +436,14 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$" count == 2
+jsonpath "$[0].type" == "schema"
 jsonpath "$[0].path" == "/test/schemas/bundling-single"
 jsonpath "$[0].identifier" == "{{base}}/test/schemas/bundling-single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
 jsonpath "$[0].priority" == 50
 jsonpath "$[0].health" == 50
+jsonpath "$[1].type" == "schema"
 jsonpath "$[1].path" == "/test/schemas/bundling-double"
 jsonpath "$[1].identifier" == "{{base}}/test/schemas/bundling-double"
 jsonpath "$[1].title" == ""
@@ -458,13 +466,13 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=description
+GET {{base}}/self/v1/api/search?q=bundling&scope=description
 HTTP 200
 Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
+Link: </self/v1/schemas/api/search/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -475,6 +483,7 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$" count == 1
+jsonpath "$[0].type" == "schema"
 jsonpath "$[0].path" == "/test/schemas/bundling-single"
 jsonpath "$[0].identifier" == "{{base}}/test/schemas/bundling-single"
 jsonpath "$[0].title" == "Bundling"
@@ -497,13 +506,13 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bundling&limit=1&scope=path
+GET {{base}}/self/v1/api/search?q=bundling&limit=1&scope=path
 HTTP 200
 Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
+Link: </self/v1/schemas/api/search/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -514,6 +523,7 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$" count == 1
+jsonpath "$[0].type" == "schema"
 jsonpath "$[0].path" == "/test/schemas/bundling-single"
 jsonpath "$[0].identifier" == "{{base}}/test/schemas/bundling-single"
 jsonpath "$[0].title" == "Bundling"
@@ -536,7 +546,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bundling&limit=0
+GET {{base}}/self/v1/api/search?q=bundling&limit=0
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -572,7 +582,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bundling&limit=-1
+GET {{base}}/self/v1/api/search?q=bundling&limit=-1
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -608,7 +618,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bundling&limit=abc
+GET {{base}}/self/v1/api/search?q=bundling&limit=abc
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -644,7 +654,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bundling&limit=101
+GET {{base}}/self/v1/api/search?q=bundling&limit=101
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -680,7 +690,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=invalid
+GET {{base}}/self/v1/api/search?q=bundling&scope=invalid
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -716,7 +726,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=title,invalid
+GET {{base}}/self/v1/api/search?q=bundling&scope=title,invalid
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -752,7 +762,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bundling&limit=3.5
+GET {{base}}/self/v1/api/search?q=bundling&limit=3.5
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -788,13 +798,13 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bundling&limit=&scope=
+GET {{base}}/self/v1/api/search?q=bundling&limit=&scope=
 HTTP 200
 Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
+Link: </self/v1/schemas/api/search/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -805,12 +815,14 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$" count == 2
+jsonpath "$[0].type" == "schema"
 jsonpath "$[0].path" == "/test/schemas/bundling-single"
 jsonpath "$[0].identifier" == "{{base}}/test/schemas/bundling-single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
 jsonpath "$[0].priority" == 50
 jsonpath "$[0].health" == 50
+jsonpath "$[1].type" == "schema"
 jsonpath "$[1].path" == "/test/schemas/bundling-double"
 jsonpath "$[1].identifier" == "{{base}}/test/schemas/bundling-double"
 jsonpath "$[1].title" == ""
@@ -833,7 +845,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=Path
+GET {{base}}/self/v1/api/search?q=bundling&scope=Path
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -869,7 +881,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=path,%20title
+GET {{base}}/self/v1/api/search?q=bundling&scope=path,%20title
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -905,13 +917,13 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=title,
+GET {{base}}/self/v1/api/search?q=bundling&scope=title,
 HTTP 200
 Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
+Link: </self/v1/schemas/api/search/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -922,6 +934,7 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$" count == 1
+jsonpath "$[0].type" == "schema"
 jsonpath "$[0].path" == "/test/schemas/bundling-single"
 jsonpath "$[0].identifier" == "{{base}}/test/schemas/bundling-single"
 jsonpath "$[0].title" == "Bundling"
@@ -944,7 +957,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=,
+GET {{base}}/self/v1/api/search?q=bundling&scope=,
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -980,7 +993,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=,,
+GET {{base}}/self/v1/api/search?q=bundling&scope=,,
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -1016,13 +1029,13 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=path,path
+GET {{base}}/self/v1/api/search?q=bundling&scope=path,path
 HTTP 200
 Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
+Link: </self/v1/schemas/api/search/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -1033,12 +1046,14 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$" count == 2
+jsonpath "$[0].type" == "schema"
 jsonpath "$[0].path" == "/test/schemas/bundling-single"
 jsonpath "$[0].identifier" == "{{base}}/test/schemas/bundling-single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
 jsonpath "$[0].priority" == 50
 jsonpath "$[0].health" == 50
+jsonpath "$[1].type" == "schema"
 jsonpath "$[1].path" == "/test/schemas/bundling-double"
 jsonpath "$[1].identifier" == "{{base}}/test/schemas/bundling-double"
 jsonpath "$[1].title" == ""
@@ -1061,13 +1076,13 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bundling&limit=100
+GET {{base}}/self/v1/api/search?q=bundling&limit=100
 HTTP 200
 Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
+Link: </self/v1/schemas/api/search/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -1078,12 +1093,14 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$" count == 2
+jsonpath "$[0].type" == "schema"
 jsonpath "$[0].path" == "/test/schemas/bundling-single"
 jsonpath "$[0].identifier" == "{{base}}/test/schemas/bundling-single"
 jsonpath "$[0].title" == "Bundling"
 jsonpath "$[0].description" == "A bundling example"
 jsonpath "$[0].priority" == 50
 jsonpath "$[0].health" == 50
+jsonpath "$[1].type" == "schema"
 jsonpath "$[1].path" == "/test/schemas/bundling-double"
 jsonpath "$[1].identifier" == "{{base}}/test/schemas/bundling-double"
 jsonpath "$[1].title" == ""
@@ -1106,7 +1123,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bundling&limit=%2B5
+GET {{base}}/self/v1/api/search?q=bundling&limit=%2B5
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -1142,7 +1159,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+GET {{base}}/self/v1/api/search?q=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -1178,13 +1195,13 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bundling%00extra
+GET {{base}}/self/v1/api/search?q=bundling%00extra
 HTTP 200
 Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
+Link: </self/v1/schemas/api/search/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -1211,13 +1228,13 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bundling%09single
+GET {{base}}/self/v1/api/search?q=bundling%09single
 HTTP 200
 Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
+Link: </self/v1/schemas/api/search/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -1244,13 +1261,13 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bundling%0Asingle
+GET {{base}}/self/v1/api/search?q=bundling%0Asingle
 HTTP 200
 Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
+Link: </self/v1/schemas/api/search/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -1277,7 +1294,7 @@ header "X-Frame-Options" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-GET {{base}}/self/v1/api/schemas/search?q=bundling&scope=path%00extra
+GET {{base}}/self/v1/api/search?q=bundling&scope=path%00extra
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json
@@ -1316,25 +1333,25 @@ jsonpath "$.valid" == true
 # RFC 9110 §9.3.2: HEAD MUST produce the same header fields as the
 # corresponding GET, with no content body. Capture the GET response so the
 # subsequent HEAD asserts header parity and zero body.
-GET {{base}}/self/v1/api/schemas/search?q=xxxxxxxxxxxx
+GET {{base}}/self/v1/api/search?q=xxxxxxxxxxxx
 HTTP 200
 Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
+Link: </self/v1/schemas/api/search/response>; rel="describedby"
 [Captures]
 get_content_length: header "Content-Length"
 [Asserts]
 header "Vary" == "Accept-Encoding, Authorization, Cookie"
 
-HEAD {{base}}/self/v1/api/schemas/search?q=xxxxxxxxxxxx
+HEAD {{base}}/self/v1/api/search?q=xxxxxxxxxxxx
 HTTP 200
 Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
+Link: </self/v1/schemas/api/search/response>; rel="describedby"
 [Asserts]
 header "Vary" == "Accept-Encoding, Authorization, Cookie"
 header "Referrer-Policy" not exists
@@ -1345,25 +1362,25 @@ header "Content-Length" == {{get_content_length}}
 bytes count == 0
 
 # HEAD against a successful result (with matches) keeps parity too.
-GET {{base}}/self/v1/api/schemas/search?q=bundling
+GET {{base}}/self/v1/api/search?q=bundling
 HTTP 200
 Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
+Link: </self/v1/schemas/api/search/response>; rel="describedby"
 [Captures]
 get_content_length: header "Content-Length"
 [Asserts]
 header "Vary" == "Accept-Encoding, Authorization, Cookie"
 
-HEAD {{base}}/self/v1/api/schemas/search?q=bundling
+HEAD {{base}}/self/v1/api/search?q=bundling
 HTTP 200
 Cache-Control: public, max-age=60
 Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/search/response>; rel="describedby"
+Link: </self/v1/schemas/api/search/response>; rel="describedby"
 [Asserts]
 header "Vary" == "Accept-Encoding, Authorization, Cookie"
 header "Referrer-Policy" not exists
@@ -1375,7 +1392,7 @@ bytes count == 0
 
 # HEAD against a 400 (missing query) returns the same Problem Details
 # headers with an empty body.
-HEAD {{base}}/self/v1/api/schemas/search
+HEAD {{base}}/self/v1/api/search
 HTTP 400
 Cache-Control: no-store
 Content-Type: application/problem+json

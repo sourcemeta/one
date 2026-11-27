@@ -621,7 +621,7 @@ jsonpath "$.result.resources[40].uri" == "{{base}}/self/v1/schemas/api/error"
 jsonpath "$.result.resources[40].name" == "Sourcemeta One API Error"
 jsonpath "$.result.resources[40].description" == "The error response format returned by the Sourcemeta One API endpoints"
 jsonpath "$.result.resources[40].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[40].size" == 13494
+jsonpath "$.result.resources[40].size" == 13725
 jsonpath "$.result.resources[40].annotations.priority" == 0.0
 jsonpath "$.result.resources[41].uri" == "{{base}}/self/v1/schemas/api/list/response"
 jsonpath "$.result.resources[41].name" == "Sourcemeta One List API Response"
@@ -750,11 +750,11 @@ jsonpath "$.result.resources[3].description" == "The instance promoted to JSON-L
 jsonpath "$.result.resources[3].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[3].size" == 799
 jsonpath "$.result.resources[3].annotations.priority" == 0.0
-jsonpath "$.result.resources[4].uri" == "{{base}}/self/v1/schemas/api/schemas/search/response"
+jsonpath "$.result.resources[4].uri" == "{{base}}/self/v1/schemas/api/search/response"
 jsonpath "$.result.resources[4].name" == "Sourcemeta One Schema Search API Response"
 jsonpath "$.result.resources[4].description" == "The response format for the schema search API endpoint"
 jsonpath "$.result.resources[4].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[4].size" == 1341
+jsonpath "$.result.resources[4].size" == 1446
 jsonpath "$.result.resources[4].annotations.priority" == 0.0
 jsonpath "$.result.resources[5].uri" == "{{base}}/self/v1/schemas/api/schemas/stats/response"
 jsonpath "$.result.resources[5].name" == "Sourcemeta One Schema Stats API Response"
@@ -1081,17 +1081,17 @@ jsonpath "$.result.resources[0].description" == "Sourcemeta One's response to a 
 jsonpath "$.result.resources[0].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[0].size" == 4751
 jsonpath "$.result.resources[0].annotations.priority" == 0.0
-jsonpath "$.result.resources[1].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request"
+jsonpath "$.result.resources[1].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request"
 jsonpath "$.result.resources[1].name" == "Sourcemeta One Schema Search RPC Input"
 jsonpath "$.result.resources[1].description" == "Search for schemas in the catalog by query term"
 jsonpath "$.result.resources[1].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[1].size" == 2155
+jsonpath "$.result.resources[1].size" == 2974
 jsonpath "$.result.resources[1].annotations.priority" == 0.0
-jsonpath "$.result.resources[2].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/response"
+jsonpath "$.result.resources[2].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/search/response"
 jsonpath "$.result.resources[2].name" == "Sourcemeta One Schema Search RPC Output"
 jsonpath "$.result.resources[2].description" == "Search for schemas in the catalog by query term"
 jsonpath "$.result.resources[2].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[2].size" == 777
+jsonpath "$.result.resources[2].size" == 805
 jsonpath "$.result.resources[2].annotations.priority" == 0.0
 jsonpath "$.result.resources[3].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/trace-schema-evaluation/request"
 jsonpath "$.result.resources[3].name" == "Sourcemeta One Schema Trace RPC Input"
@@ -1584,7 +1584,7 @@ jsonpath "$.result.resources[40].uri" == "{{base}}/self/v1/schemas/api/error"
 jsonpath "$.result.resources[40].name" == "Sourcemeta One API Error"
 jsonpath "$.result.resources[40].description" == "The error response format returned by the Sourcemeta One API endpoints"
 jsonpath "$.result.resources[40].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[40].size" == 13494
+jsonpath "$.result.resources[40].size" == 13725
 jsonpath "$.result.resources[40].annotations.priority" == 0.0
 jsonpath "$.result.resources[41].uri" == "{{base}}/self/v1/schemas/api/list/response"
 jsonpath "$.result.resources[41].name" == "Sourcemeta One List API Response"

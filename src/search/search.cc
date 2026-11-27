@@ -161,9 +161,11 @@ static auto offset_table_entry(const std::uint8_t *payload,
 
 auto search(const std::uint8_t *payload, const std::size_t payload_size,
             const std::string_view query, const std::size_t limit,
-            const std::uint8_t scope) -> sourcemeta::core::JSON {
+            const std::uint8_t scope, const std::uint8_t kinds)
+    -> sourcemeta::core::JSON {
   assert((scope & ~(SEARCH_SCOPE_PATH | SEARCH_SCOPE_TITLE |
                     SEARCH_SCOPE_DESCRIPTION)) == 0);
+  assert((kinds & ~SEARCH_KIND_ANY) == 0);
   auto result{sourcemeta::core::JSON::make_array()};
   if (limit == 0 || payload == nullptr ||
       payload_size < sizeof(SearchIndexHeader)) {
@@ -222,9 +224,12 @@ auto search(const std::uint8_t *payload, const std::size_t payload_size,
                                        record_header->title_length),
         record_header->description_length};
 
-    // What a search answers for is the schemas of the catalog, while the
-    // catalog itself holds every kind
-    if (static_cast<LeafKind>(record_header->kind) != LeafKind::Schema) {
+    // What a search answers for is what it was asked for, while the catalog
+    // itself holds every kind
+    const auto kind{static_cast<LeafKind>(record_header->kind)};
+    const auto kind_flag{kind == LeafKind::OpenAPI ? SEARCH_KIND_OPENAPI
+                                                   : SEARCH_KIND_SCHEMA};
+    if ((kinds & kind_flag) == 0) {
       continue;
     }
 
@@ -247,6 +252,8 @@ auto search(const std::uint8_t *payload, const std::size_t payload_size,
     }
 
     auto entry{sourcemeta::core::JSON::make_object()};
+    entry.assign("type", sourcemeta::core::JSON{
+                             kind == LeafKind::OpenAPI ? "openapi" : "schema"});
     entry.assign("path", sourcemeta::core::JSON{path});
     entry.assign("identifier", sourcemeta::core::JSON{identifier});
     entry.assign("title", sourcemeta::core::JSON{title});
@@ -289,9 +296,10 @@ SearchView::SearchView(const std::filesystem::path &path) {
 SearchView::~SearchView() = default;
 
 auto SearchView::search(const std::string_view query, const std::size_t limit,
-                        const std::uint8_t scope) -> sourcemeta::core::JSON {
+                        const std::uint8_t scope, const std::uint8_t kinds)
+    -> sourcemeta::core::JSON {
   return sourcemeta::one::search(this->payload_, this->payload_size_, query,
-                                 limit, scope);
+                                 limit, scope, kinds);
 }
 
 auto SearchView::count() -> std::size_t {

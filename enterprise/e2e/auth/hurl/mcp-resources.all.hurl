@@ -81,7 +81,7 @@ jsonpath "$.result.resources[8].uri" == "{{base}}/self/v1/schemas/api/error"
 jsonpath "$.result.resources[8].name" == "Sourcemeta One API Error"
 jsonpath "$.result.resources[8].description" == "The error response format returned by the Sourcemeta One API endpoints"
 jsonpath "$.result.resources[8].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[8].size" == 13494
+jsonpath "$.result.resources[8].size" == 13725
 jsonpath "$.result.resources[8].annotations.priority" == 0.0
 jsonpath "$.result.resources[9].uri" == "{{base}}/self/v1/schemas/api/list/response"
 jsonpath "$.result.resources[9].name" == "Sourcemeta One List API Response"
@@ -161,11 +161,11 @@ jsonpath "$.result.resources[21].description" == "The instance promoted to JSON-
 jsonpath "$.result.resources[21].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[21].size" == 799
 jsonpath "$.result.resources[21].annotations.priority" == 0.0
-jsonpath "$.result.resources[22].uri" == "{{base}}/self/v1/schemas/api/schemas/search/response"
+jsonpath "$.result.resources[22].uri" == "{{base}}/self/v1/schemas/api/search/response"
 jsonpath "$.result.resources[22].name" == "Sourcemeta One Schema Search API Response"
 jsonpath "$.result.resources[22].description" == "The response format for the schema search API endpoint"
 jsonpath "$.result.resources[22].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[22].size" == 1341
+jsonpath "$.result.resources[22].size" == 1446
 jsonpath "$.result.resources[22].annotations.priority" == 0.0
 jsonpath "$.result.resources[23].uri" == "{{base}}/self/v1/schemas/api/schemas/stats/response"
 jsonpath "$.result.resources[23].name" == "Sourcemeta One Schema Stats API Response"
@@ -472,13 +472,13 @@ jsonpath "$.result.resources[18].description" == "Sourcemeta One's response to a
 jsonpath "$.result.resources[18].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[18].size" == 4751
 jsonpath "$.result.resources[18].annotations.priority" == 0.0
-jsonpath "$.result.resources[19].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request"
+jsonpath "$.result.resources[19].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request"
 jsonpath "$.result.resources[19].name" == "Sourcemeta One Schema Search RPC Input"
 jsonpath "$.result.resources[19].description" == "Search for schemas in the catalog by query term"
 jsonpath "$.result.resources[19].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[19].size" == 2155
 jsonpath "$.result.resources[19].annotations.priority" == 0.0
-jsonpath "$.result.resources[20].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/response"
+jsonpath "$.result.resources[20].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/search/response"
 jsonpath "$.result.resources[20].name" == "Sourcemeta One Schema Search RPC Output"
 jsonpath "$.result.resources[20].description" == "Search for schemas in the catalog by query term"
 jsonpath "$.result.resources[20].mimeType" == "application/schema+json"
@@ -600,7 +600,7 @@ jsonpath "$.result.resources[11].uri" == "{{base}}/self/v1/schemas/api/error"
 jsonpath "$.result.resources[11].name" == "Sourcemeta One API Error"
 jsonpath "$.result.resources[11].description" == "The error response format returned by the Sourcemeta One API endpoints"
 jsonpath "$.result.resources[11].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[11].size" == 13494
+jsonpath "$.result.resources[11].size" == 13725
 jsonpath "$.result.resources[11].annotations.priority" == 0.0
 jsonpath "$.result.resources[12].uri" == "{{base}}/self/v1/schemas/api/list/response"
 jsonpath "$.result.resources[12].name" == "Sourcemeta One List API Response"
@@ -680,11 +680,11 @@ jsonpath "$.result.resources[24].description" == "The instance promoted to JSON-
 jsonpath "$.result.resources[24].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[24].size" == 799
 jsonpath "$.result.resources[24].annotations.priority" == 0.0
-jsonpath "$.result.resources[25].uri" == "{{base}}/self/v1/schemas/api/schemas/search/response"
+jsonpath "$.result.resources[25].uri" == "{{base}}/self/v1/schemas/api/search/response"
 jsonpath "$.result.resources[25].name" == "Sourcemeta One Schema Search API Response"
 jsonpath "$.result.resources[25].description" == "The response format for the schema search API endpoint"
 jsonpath "$.result.resources[25].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[25].size" == 1341
+jsonpath "$.result.resources[25].size" == 1446
 jsonpath "$.result.resources[25].annotations.priority" == 0.0
 jsonpath "$.result.resources[26].uri" == "{{base}}/self/v1/schemas/api/schemas/stats/response"
 jsonpath "$.result.resources[26].name" == "Sourcemeta One Schema Stats API Response"
@@ -984,13 +984,13 @@ jsonpath "$.result.resources[21].description" == "Sourcemeta One's response to a
 jsonpath "$.result.resources[21].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[21].size" == 4751
 jsonpath "$.result.resources[21].annotations.priority" == 0.0
-jsonpath "$.result.resources[22].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request"
+jsonpath "$.result.resources[22].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request"
 jsonpath "$.result.resources[22].name" == "Sourcemeta One Schema Search RPC Input"
 jsonpath "$.result.resources[22].description" == "Search for schemas in the catalog by query term"
 jsonpath "$.result.resources[22].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[22].size" == 2155
 jsonpath "$.result.resources[22].annotations.priority" == 0.0
-jsonpath "$.result.resources[23].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/response"
+jsonpath "$.result.resources[23].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/search/response"
 jsonpath "$.result.resources[23].name" == "Sourcemeta One Schema Search RPC Output"
 jsonpath "$.result.resources[23].description" == "Search for schemas in the catalog by query term"
 jsonpath "$.result.resources[23].mimeType" == "application/schema+json"
@@ -1100,7 +1100,7 @@ jsonpath "$.result.resources[9].uri" == "{{base}}/self/v1/schemas/api/error"
 jsonpath "$.result.resources[9].name" == "Sourcemeta One API Error"
 jsonpath "$.result.resources[9].description" == "The error response format returned by the Sourcemeta One API endpoints"
 jsonpath "$.result.resources[9].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[9].size" == 13494
+jsonpath "$.result.resources[9].size" == 13725
 jsonpath "$.result.resources[9].annotations.priority" == 0.0
 jsonpath "$.result.resources[10].uri" == "{{base}}/self/v1/schemas/api/list/response"
 jsonpath "$.result.resources[10].name" == "Sourcemeta One List API Response"
@@ -1180,11 +1180,11 @@ jsonpath "$.result.resources[22].description" == "The instance promoted to JSON-
 jsonpath "$.result.resources[22].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[22].size" == 799
 jsonpath "$.result.resources[22].annotations.priority" == 0.0
-jsonpath "$.result.resources[23].uri" == "{{base}}/self/v1/schemas/api/schemas/search/response"
+jsonpath "$.result.resources[23].uri" == "{{base}}/self/v1/schemas/api/search/response"
 jsonpath "$.result.resources[23].name" == "Sourcemeta One Schema Search API Response"
 jsonpath "$.result.resources[23].description" == "The response format for the schema search API endpoint"
 jsonpath "$.result.resources[23].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[23].size" == 1341
+jsonpath "$.result.resources[23].size" == 1446
 jsonpath "$.result.resources[23].annotations.priority" == 0.0
 jsonpath "$.result.resources[24].uri" == "{{base}}/self/v1/schemas/api/schemas/stats/response"
 jsonpath "$.result.resources[24].name" == "Sourcemeta One Schema Stats API Response"
@@ -1484,13 +1484,13 @@ jsonpath "$.result.resources[19].description" == "Sourcemeta One's response to a
 jsonpath "$.result.resources[19].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[19].size" == 4751
 jsonpath "$.result.resources[19].annotations.priority" == 0.0
-jsonpath "$.result.resources[20].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request"
+jsonpath "$.result.resources[20].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request"
 jsonpath "$.result.resources[20].name" == "Sourcemeta One Schema Search RPC Input"
 jsonpath "$.result.resources[20].description" == "Search for schemas in the catalog by query term"
 jsonpath "$.result.resources[20].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[20].size" == 2155
 jsonpath "$.result.resources[20].annotations.priority" == 0.0
-jsonpath "$.result.resources[21].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/response"
+jsonpath "$.result.resources[21].uri" == "{{base}}/self/v1/schemas/mcp/tools/call/search/response"
 jsonpath "$.result.resources[21].name" == "Sourcemeta One Schema Search RPC Output"
 jsonpath "$.result.resources[21].description" == "Search for schemas in the catalog by query term"
 jsonpath "$.result.resources[21].mimeType" == "application/schema+json"

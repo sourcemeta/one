@@ -455,7 +455,7 @@ TEST(priority_and_health_surface_in_search_output) {
   EXPECT_EQ(result.at(0).at("health").to_integer(), 80);
 }
 
-TEST(a_search_passes_over_what_is_no_schema) {
+TEST(a_search_answers_for_the_kinds_it_was_asked_for) {
   std::vector<sourcemeta::one::SearchEntry> entries{
       {.path = "/pets/api",
        .identifier = "http://example.com/pets/api",
@@ -476,9 +476,21 @@ TEST(a_search_passes_over_what_is_no_schema) {
        .bytes_bundled = 0,
        .kind = sourcemeta::one::LeafKind::Schema}};
   const auto payload{sourcemeta::one::make_search(std::move(entries))};
-  const auto result{
+  const auto schemas{sourcemeta::one::search(
+      payload.data(), payload.size(), "pets", 10,
+      sourcemeta::one::SEARCH_SCOPE_PATH, sourcemeta::one::SEARCH_KIND_SCHEMA)};
+  EXPECT_EQ(schemas.size(), 1);
+  EXPECT_EQ(schemas.at(0).at("path").to_string(), "/pets/schema");
+
+  const auto descriptions{
       sourcemeta::one::search(payload.data(), payload.size(), "pets", 10,
-                              sourcemeta::one::SEARCH_SCOPE_PATH)};
-  EXPECT_EQ(result.size(), 1);
-  EXPECT_EQ(result.at(0).at("path").to_string(), "/pets/schema");
+                              sourcemeta::one::SEARCH_SCOPE_PATH,
+                              sourcemeta::one::SEARCH_KIND_OPENAPI)};
+  EXPECT_EQ(descriptions.size(), 1);
+  EXPECT_EQ(descriptions.at(0).at("path").to_string(), "/pets/api");
+
+  const auto both{sourcemeta::one::search(payload.data(), payload.size(),
+                                          "pets", 10,
+                                          sourcemeta::one::SEARCH_SCOPE_PATH)};
+  EXPECT_EQ(both.size(), 2);
 }

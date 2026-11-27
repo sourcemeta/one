@@ -40,7 +40,7 @@ namespace sourcemeta::one {
     "jsonschema_evaluate_v1")                                                  \
   X(JSONSCHEMA_RDF_V1, ActionJSONSchemaRDFV1, "jsonschema_rdf_v1")             \
   X(JSONSCHEMA_TRACE_V1, ActionJSONSchemaTraceV1, "jsonschema_trace_v1")       \
-  X(SCHEMA_SEARCH_V1, ActionSchemaSearchV1, "schema_search_v1")                \
+  X(SEARCH_V1, ActionSearchV1, "search_v1")                                    \
   X(SERVE_STATIC_V1, ActionServeStaticV1, "serve_static_v1")                   \
   X(MCP_V1, ActionMCPV1, "mcp_v1")                                             \
   X(AUTH_LOGOUT_V1, ActionAuthLogoutV1, "auth_logout_v1")                      \

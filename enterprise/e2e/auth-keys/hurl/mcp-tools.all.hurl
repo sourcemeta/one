@@ -26,7 +26,7 @@ jsonpath "$.id" == 1
 jsonpath "$.result.tools" count == 11
 jsonpath "$.result.tools[*].name" not contains "trace_schema_evaluation"
 jsonpath "$.result.tools[*].name" not contains "playground_trace_schema"
-jsonpath "$.result.tools[*].name" contains "search_schemas"
+jsonpath "$.result.tools[*].name" contains "search"
 jsonpath "$.result.tools[*].name" contains "evaluate_schema"
 
 POST {{base}}/self/v1/api/schemas/evaluate/self/v1/schemas/mcp/response
