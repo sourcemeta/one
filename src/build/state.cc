@@ -755,6 +755,419 @@ auto BuildState::leaf_relative_paths(const std::string &output) const
   return result;
 }
 
+auto BuildState::patch_table(
+    std::vector<std::uint8_t> &slots, std::uint32_t &capacity,
+    std::uint32_t &old_pool_size,
+    std::unordered_set<std::string, TransparentHash, TransparentEqual>
+        &overlay_updates,
+    std::unordered_set<std::string, TransparentHash, TransparentEqual>
+        &resolver_updates) const -> void {
+  capacity = this->table_capacity_;
+  const auto old_slots_size{static_cast<std::size_t>(capacity) * SLOT_SIZE};
+  slots.resize(old_slots_size);
+  std::memcpy(slots.data(), this->table_slots_, old_slots_size);
+
+  sourcemeta::core::BinaryReader pool_size_reader{*this->view_};
+  // Layout: [magic, version, fingerprint, inputs, capacity, entry_count,
+  // pool_size, resolver_entry_count], so the pool size is the second dword
+  // from the end. Counted back from the header size rather than written out,
+  // so that adding a field cannot leave this reading the wrong one
+  pool_size_reader.seek(HEADER_SIZE - (2 * sizeof(std::uint32_t)));
+  old_pool_size = pool_size_reader.get_dword();
+
+  auto find_slot{[&](std::string_view entry_key) -> std::uint32_t {
+    const auto hash{fnv1a(entry_key.data(), entry_key.size())};
+    auto index{static_cast<std::uint32_t>(hash & (capacity - 1))};
+    while (slots[(index * SLOT_SIZE) + SLOT_OCCUPIED] != 0) {
+      const auto *slot{slots.data() + (index * SLOT_SIZE)};
+      if (read_field<std::uint64_t>(slot, SLOT_HASH) == hash &&
+          slot_key(slot, this->string_pool_) == entry_key) {
+        return index;
+      }
+      index = (index + 1) & (capacity - 1);
+    }
+    return capacity;
+  }};
+
+  for (const auto &deleted_key : this->deleted_) {
+    const auto slot_index{find_slot(deleted_key)};
+    if (slot_index < capacity) {
+      auto empty{slot_index};
+      for (;;) {
+        const auto next{(empty + 1) & (capacity - 1)};
+        if (slots[(next * SLOT_SIZE) + SLOT_OCCUPIED] == 0) {
+          break;
+        }
+
+        const auto next_hash{read_field<std::uint64_t>(
+            slots.data() + (next * SLOT_SIZE), SLOT_HASH)};
+        const auto natural{
+            static_cast<std::uint32_t>(next_hash & (capacity - 1))};
+        const auto distance_current{(next - natural) & (capacity - 1)};
+        const auto distance_new{(empty - natural) & (capacity - 1)};
+        if (distance_new <= distance_current) {
+          std::memcpy(slots.data() + (empty * SLOT_SIZE),
+                      slots.data() + (next * SLOT_SIZE), SLOT_SIZE);
+          empty = next;
+        } else {
+          break;
+        }
+      }
+
+      slots[(empty * SLOT_SIZE) + SLOT_OCCUPIED] = 0;
+    }
+  }
+
+  for (const auto &[overlay_key, overlay_entry] : this->overlay_) {
+    if (find_slot(overlay_key) < capacity) {
+      overlay_updates.insert(overlay_key);
+    }
+  }
+
+  for (const auto &[overlay_key, overlay_entry] : this->resolver_overlay_) {
+    if (find_slot(overlay_key) < capacity) {
+      resolver_updates.insert(overlay_key);
+    }
+  }
+}
+
+auto BuildState::rebuild_table(std::string &pool,
+                               std::vector<std::uint8_t> &slots,
+                               std::uint32_t &capacity,
+                               const std::uint32_t total_count) const -> void {
+  capacity = 16;
+  while (capacity < total_count * 2) {
+    capacity <<= 1;
+  }
+
+  pool.reserve(static_cast<std::size_t>(total_count) * 100);
+  slots.resize(static_cast<std::size_t>(capacity) * SLOT_SIZE, 0);
+
+  for (std::uint32_t slot_index = 0; slot_index < this->table_capacity_;
+       ++slot_index) {
+    const auto *old_slot{this->table_slots_ + (slot_index * SLOT_SIZE)};
+    if (old_slot[SLOT_OCCUPIED] == 0) {
+      continue;
+    }
+
+    const auto old_kind{old_slot[SLOT_KIND]};
+    const auto key{slot_key(old_slot, this->string_pool_)};
+
+    if (old_kind == KIND_OUTPUT) {
+      if (this->deleted_.contains(key) || this->overlay_.contains(key)) {
+        continue;
+      }
+    } else if (old_kind == KIND_RESOLVER) {
+      if (this->resolver_overlay_.contains(key)) {
+        continue;
+      }
+    }
+
+    const auto timestamp{read_field<std::int64_t>(old_slot, SLOT_TIMESTAMP)};
+    const auto old_data_offset{
+        read_field<std::uint32_t>(old_slot, SLOT_DATA_OFFSET)};
+    const auto data_count{read_field<std::uint16_t>(old_slot, SLOT_DATA_COUNT)};
+
+    const auto new_data_offset{static_cast<std::uint32_t>(pool.size())};
+    if (data_count > 0) {
+      auto raw_offset{static_cast<std::size_t>(old_data_offset)};
+      for (std::uint16_t item_index = 0; item_index < data_count;
+           ++item_index) {
+        const auto item_length{
+            read_field<std::uint32_t>(this->string_pool_, raw_offset)};
+        raw_offset += sizeof(std::uint32_t) + item_length;
+      }
+
+      const auto raw_size{raw_offset - old_data_offset};
+      pool.append(
+          reinterpret_cast<const char *>(this->string_pool_ + old_data_offset),
+          raw_size);
+    }
+
+    const auto hash{fnv1a(key.data(), key.size())};
+    auto index{static_cast<std::uint32_t>(hash & (capacity - 1))};
+    while (slots[(index * SLOT_SIZE) + SLOT_OCCUPIED] != 0) {
+      index = (index + 1) & (capacity - 1);
+    }
+
+    auto *slot{slots.data() + (index * SLOT_SIZE)};
+    const auto key_offset{static_cast<std::uint32_t>(pool.size())};
+    pool.append(key);
+    const auto key_length{static_cast<std::uint32_t>(key.size())};
+
+    std::memcpy(slot + SLOT_HASH, &hash, sizeof(hash));
+    std::memcpy(slot + SLOT_KEY_OFFSET, &key_offset, sizeof(key_offset));
+    std::memcpy(slot + SLOT_KEY_LENGTH, &key_length, sizeof(key_length));
+    std::memcpy(slot + SLOT_TIMESTAMP, &timestamp, sizeof(timestamp));
+    std::memcpy(slot + SLOT_DATA_OFFSET, &new_data_offset,
+                sizeof(new_data_offset));
+    std::memcpy(slot + SLOT_DATA_COUNT, &data_count, sizeof(data_count));
+    slot[SLOT_OCCUPIED] = 1;
+    slot[SLOT_KIND] = old_kind;
+  }
+}
+
+auto BuildState::patched_slot_key(const std::uint8_t *slot,
+                                  const PoolView &view) const
+    -> std::string_view {
+  const auto key_offset{read_field<std::uint32_t>(slot, SLOT_KEY_OFFSET)};
+  const auto key_length{read_field<std::uint32_t>(slot, SLOT_KEY_LENGTH)};
+  if (view.can_patch && key_offset < view.old_pool_size) {
+    return {reinterpret_cast<const char *>(this->string_pool_ + key_offset),
+            key_length};
+  }
+
+  const auto offset_in_pool{view.can_patch ? key_offset - view.old_pool_size
+                                           : key_offset};
+  return {view.pool.data() + offset_in_pool, key_length};
+}
+
+auto BuildState::patched_pool_string(std::size_t &offset,
+                                     const PoolView &view) const
+    -> std::string {
+  if (view.can_patch && offset < view.old_pool_size) {
+    return read_pool_string(this->string_pool_, offset);
+  }
+
+  auto adjusted_offset{view.can_patch ? offset - view.old_pool_size : offset};
+  auto result{
+      read_pool_string(reinterpret_cast<const std::uint8_t *>(view.pool.data()),
+                       adjusted_offset)};
+  offset = (view.can_patch ? view.old_pool_size : 0) + adjusted_offset;
+  return result;
+}
+
+auto BuildState::collect_leaf_index(
+    const std::string &pool, const std::uint32_t old_pool_size,
+    const bool can_patch, const std::vector<std::uint8_t> &slots,
+    const std::uint32_t capacity, const std::string &primary_prefix,
+    const std::string &secondary_prefix, const bool secondary_namespaced,
+    std::unordered_map<std::string, LeafStateEntry, TransparentHash,
+                       TransparentEqual> &save_leaf_index) const -> void {
+  const PoolView view{
+      .pool = pool, .old_pool_size = old_pool_size, .can_patch = can_patch};
+  if (can_patch && this->persisted_leaf_table_ != nullptr) {
+    const auto *record_ptr{this->persisted_leaf_table_};
+    for (std::uint32_t record_index = 0;
+         record_index < this->persisted_leaf_count_; ++record_index) {
+      const auto *record{reinterpret_cast<const LeafIndexRecord *>(record_ptr)};
+      const auto relative_path{std::string{
+          reinterpret_cast<const char *>(record_ptr + sizeof(*record)),
+          record->relative_path_length}};
+      auto &leaf_entry{save_leaf_index[relative_path]};
+      using file_time = std::filesystem::file_time_type;
+      leaf_entry.root_mtime =
+          file_time{std::chrono::duration_cast<file_time::duration>(
+              std::chrono::nanoseconds{record->root_mtime})};
+      leaf_entry.target_bitmap = record->target_bitmap;
+      leaf_entry.has_cross_leaf_deps = record->has_cross_leaf_deps != 0;
+      record_ptr += sizeof(*record) + record->relative_path_length;
+    }
+
+    for (const auto &deleted_key : this->deleted_) {
+      const auto [relative_path, filename] =
+          split_leaf_base(deleted_key, primary_prefix, secondary_prefix,
+                          secondary_namespaced, this->sentinel_separator_);
+      if (relative_path.empty()) {
+        continue;
+      }
+
+      save_leaf_index.erase(std::string{relative_path});
+    }
+
+    std::unordered_set<std::string, TransparentHash, TransparentEqual>
+        affected_leaves;
+    for (const auto &[overlay_key, overlay_entry] : this->overlay_) {
+      const auto [relative_path, filename] =
+          split_leaf_base(overlay_key, primary_prefix, secondary_prefix,
+                          secondary_namespaced, this->sentinel_separator_);
+      if (relative_path.empty()) {
+        continue;
+      }
+
+      affected_leaves.insert(std::string{relative_path});
+    }
+
+    for (const auto &affected_relative : affected_leaves) {
+      auto &leaf_entry{save_leaf_index[affected_relative]};
+      leaf_entry = LeafStateEntry{};
+
+      for (std::uint32_t slot_index = 0; slot_index < capacity; ++slot_index) {
+        const auto *slot{slots.data() + (slot_index * SLOT_SIZE)};
+        if (slot[SLOT_OCCUPIED] == 0 || slot[SLOT_KIND] != KIND_OUTPUT) {
+          continue;
+        }
+
+        const auto key{this->patched_slot_key(slot, view)};
+        const auto [relative_path, filename] =
+            split_leaf_base(key, primary_prefix, secondary_prefix,
+                            secondary_namespaced, this->sentinel_separator_);
+        if (relative_path.empty() || relative_path != affected_relative) {
+          continue;
+        }
+
+        const bool is_explorer{key.starts_with(secondary_prefix)};
+        for (std::size_t rule_index{0}; rule_index < this->leaf_rules_.size();
+             rule_index++) {
+          const auto &rule{this->leaf_rules_[rule_index]};
+          if (filename == rule.filename && ((rule.base == 1) == is_explorer)) {
+            leaf_entry.target_bitmap |= this->leaf_artifacts_.mask(rule_index);
+            if (rule.is_root) {
+              const auto nanoseconds{
+                  read_field<std::int64_t>(slot, SLOT_TIMESTAMP)};
+              using file_time = std::filesystem::file_time_type;
+              leaf_entry.root_mtime =
+                  file_time{std::chrono::duration_cast<file_time::duration>(
+                      std::chrono::nanoseconds{nanoseconds})};
+            }
+            break;
+          }
+        }
+
+        const auto data_count{read_field<std::uint16_t>(slot, SLOT_DATA_COUNT)};
+        if (data_count > 0 && !leaf_entry.has_cross_leaf_deps) {
+          auto offset{static_cast<std::size_t>(
+              read_field<std::uint32_t>(slot, SLOT_DATA_OFFSET))};
+          for (std::uint16_t dep_index = 0; dep_index < data_count;
+               ++dep_index) {
+            const auto dependency_path{this->patched_pool_string(offset, view)};
+            const auto [dep_relative, dep_filename] = split_leaf_base(
+                dependency_path, primary_prefix, secondary_prefix,
+                secondary_namespaced, this->sentinel_separator_);
+            if (!dep_relative.empty() && dep_relative != affected_relative) {
+              leaf_entry.has_cross_leaf_deps = true;
+              break;
+            }
+          }
+        }
+      }
+    }
+  } else {
+
+    for (std::uint32_t slot_index = 0; slot_index < capacity; ++slot_index) {
+      const auto *slot{slots.data() + (slot_index * SLOT_SIZE)};
+      if (slot[SLOT_OCCUPIED] == 0 || slot[SLOT_KIND] != KIND_OUTPUT) {
+        continue;
+      }
+
+      const auto key{this->patched_slot_key(slot, view)};
+      const auto [relative_path, filename] =
+          split_leaf_base(key, primary_prefix, secondary_prefix,
+                          secondary_namespaced, this->sentinel_separator_);
+      if (relative_path.empty()) {
+        continue;
+      }
+
+      const bool is_explorer{key.starts_with(secondary_prefix)};
+      auto &leaf_entry{save_leaf_index[std::string{relative_path}]};
+
+      for (std::size_t rule_index{0}; rule_index < this->leaf_rules_.size();
+           rule_index++) {
+        const auto &rule{this->leaf_rules_[rule_index]};
+        if (filename == rule.filename && ((rule.base == 1) == is_explorer)) {
+          leaf_entry.target_bitmap |= this->leaf_artifacts_.mask(rule_index);
+          if (rule.is_root) {
+            const auto nanoseconds{
+                read_field<std::int64_t>(slot, SLOT_TIMESTAMP)};
+            using file_time = std::filesystem::file_time_type;
+            leaf_entry.root_mtime =
+                file_time{std::chrono::duration_cast<file_time::duration>(
+                    std::chrono::nanoseconds{nanoseconds})};
+          }
+          break;
+        }
+      }
+
+      const auto data_count{read_field<std::uint16_t>(slot, SLOT_DATA_COUNT)};
+      if (data_count > 0 && !leaf_entry.has_cross_leaf_deps) {
+        auto offset{static_cast<std::size_t>(
+            read_field<std::uint32_t>(slot, SLOT_DATA_OFFSET))};
+        for (std::uint16_t dep_index = 0; dep_index < data_count; ++dep_index) {
+          const auto dependency_path{this->patched_pool_string(offset, view)};
+          const auto [dep_relative, dep_filename] =
+              split_leaf_base(dependency_path, primary_prefix, secondary_prefix,
+                              secondary_namespaced, this->sentinel_separator_);
+          if (!dep_relative.empty() && dep_relative != relative_path) {
+            leaf_entry.has_cross_leaf_deps = true;
+            break;
+          }
+        }
+      }
+    }
+  }
+}
+
+auto BuildState::write_table(
+    const std::filesystem::path &path, const std::string &pool,
+    const std::vector<std::uint8_t> &slots, const std::uint32_t capacity,
+    const std::uint32_t old_pool_size, const std::uint32_t total_pool_size,
+    const std::uint32_t output_count, const std::uint32_t resolver_count,
+    const bool can_patch) const -> void {
+
+  const auto output_dir{path.parent_path().string()};
+  const auto primary_prefix{output_dir + "/" +
+                            std::string{this->directories_[0].name} + "/"};
+  const auto secondary_prefix{output_dir + "/" +
+                              std::string{this->directories_[1].name} + "/"};
+  const auto secondary_namespaced{this->directories_[1].namespaced};
+
+  std::unordered_map<std::string, LeafStateEntry, TransparentHash,
+                     TransparentEqual>
+      save_leaf_index;
+
+  this->collect_leaf_index(pool, old_pool_size, can_patch, slots, capacity,
+                           primary_prefix, secondary_prefix,
+                           secondary_namespaced, save_leaf_index);
+
+  std::string leaf_index_buffer;
+  const auto leaf_count{static_cast<std::uint32_t>(save_leaf_index.size())};
+  leaf_index_buffer.reserve(sizeof(LEAF_INDEX_MAGIC) + sizeof(leaf_count) +
+                            (leaf_count * (sizeof(LeafIndexRecord) + 64)));
+  leaf_index_buffer.append(reinterpret_cast<const char *>(&LEAF_INDEX_MAGIC),
+                           sizeof(LEAF_INDEX_MAGIC));
+  leaf_index_buffer.append(reinterpret_cast<const char *>(&leaf_count),
+                           sizeof(leaf_count));
+
+  for (const auto &[relative_path, leaf_entry] : save_leaf_index) {
+    LeafIndexRecord record{};
+    record.relative_path_offset = 0;
+    record.relative_path_length =
+        static_cast<std::uint16_t>(relative_path.size());
+    record.root_mtime = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                            leaf_entry.root_mtime.time_since_epoch())
+                            .count();
+    record.target_bitmap = leaf_entry.target_bitmap;
+    record.has_cross_leaf_deps = leaf_entry.has_cross_leaf_deps ? 1 : 0;
+    record.padding = 0;
+    leaf_index_buffer.append(reinterpret_cast<const char *>(&record),
+                             sizeof(record));
+    leaf_index_buffer.append(relative_path);
+  }
+
+  sourcemeta::core::atomic_write_file(path, [&](std::ostream &stream) -> void {
+    sourcemeta::core::BinaryWriter writer{stream};
+    writer.put_dword(STATE_MAGIC);
+    writer.put_dword(STATE_VERSION);
+    writer.put_dword(this->rules_fingerprint_);
+    writer.put_qword(this->inputs_fingerprint_);
+    writer.put_dword(capacity);
+    writer.put_dword(output_count);
+    writer.put_dword(total_pool_size);
+    writer.put_dword(resolver_count);
+
+    writer.put_bytes(reinterpret_cast<const std::byte *>(slots.data()),
+                     slots.size());
+
+    if (can_patch && old_pool_size > 0) {
+      writer.put_bytes(reinterpret_cast<const std::byte *>(this->string_pool_),
+                       old_pool_size);
+    }
+    writer.put_string(pool);
+
+    writer.put_string(leaf_index_buffer);
+  });
+}
+
 auto BuildState::save(const std::filesystem::path &path) const -> void {
   if (!this->dirty_ && this->view_ && path == this->loaded_path_) {
     return;
@@ -780,145 +1193,10 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
       resolver_updates;
 
   if (can_patch) {
-    capacity = this->table_capacity_;
-    const auto old_slots_size{static_cast<std::size_t>(capacity) * SLOT_SIZE};
-    slots.resize(old_slots_size);
-    std::memcpy(slots.data(), this->table_slots_, old_slots_size);
-
-    sourcemeta::core::BinaryReader pool_size_reader{*this->view_};
-    // Layout: [magic, version, fingerprint, inputs, capacity, entry_count,
-    // pool_size, resolver_entry_count], so the pool size is the second dword
-    // from the end. Counted back from the header size rather than written out,
-    // so that adding a field cannot leave this reading the wrong one
-    pool_size_reader.seek(HEADER_SIZE - (2 * sizeof(std::uint32_t)));
-    old_pool_size = pool_size_reader.get_dword();
-
-    auto find_slot{[&](std::string_view entry_key) -> std::uint32_t {
-      const auto hash{fnv1a(entry_key.data(), entry_key.size())};
-      auto index{static_cast<std::uint32_t>(hash & (capacity - 1))};
-      while (slots[(index * SLOT_SIZE) + SLOT_OCCUPIED] != 0) {
-        const auto *slot{slots.data() + (index * SLOT_SIZE)};
-        if (read_field<std::uint64_t>(slot, SLOT_HASH) == hash &&
-            slot_key(slot, this->string_pool_) == entry_key) {
-          return index;
-        }
-        index = (index + 1) & (capacity - 1);
-      }
-      return capacity;
-    }};
-
-    for (const auto &deleted_key : this->deleted_) {
-      const auto slot_index{find_slot(deleted_key)};
-      if (slot_index < capacity) {
-        auto empty{slot_index};
-        for (;;) {
-          const auto next{(empty + 1) & (capacity - 1)};
-          if (slots[(next * SLOT_SIZE) + SLOT_OCCUPIED] == 0) {
-            break;
-          }
-
-          const auto next_hash{read_field<std::uint64_t>(
-              slots.data() + (next * SLOT_SIZE), SLOT_HASH)};
-          const auto natural{
-              static_cast<std::uint32_t>(next_hash & (capacity - 1))};
-          const auto distance_current{(next - natural) & (capacity - 1)};
-          const auto distance_new{(empty - natural) & (capacity - 1)};
-          if (distance_new <= distance_current) {
-            std::memcpy(slots.data() + (empty * SLOT_SIZE),
-                        slots.data() + (next * SLOT_SIZE), SLOT_SIZE);
-            empty = next;
-          } else {
-            break;
-          }
-        }
-
-        slots[(empty * SLOT_SIZE) + SLOT_OCCUPIED] = 0;
-      }
-    }
-
-    for (const auto &[overlay_key, overlay_entry] : this->overlay_) {
-      if (find_slot(overlay_key) < capacity) {
-        overlay_updates.insert(overlay_key);
-      }
-    }
-
-    for (const auto &[overlay_key, overlay_entry] : this->resolver_overlay_) {
-      if (find_slot(overlay_key) < capacity) {
-        resolver_updates.insert(overlay_key);
-      }
-    }
+    this->patch_table(slots, capacity, old_pool_size, overlay_updates,
+                      resolver_updates);
   } else {
-    capacity = 16;
-    while (capacity < total_count * 2) {
-      capacity <<= 1;
-    }
-
-    pool.reserve(static_cast<std::size_t>(total_count) * 100);
-    slots.resize(static_cast<std::size_t>(capacity) * SLOT_SIZE, 0);
-
-    for (std::uint32_t slot_index = 0; slot_index < this->table_capacity_;
-         ++slot_index) {
-      const auto *old_slot{this->table_slots_ + (slot_index * SLOT_SIZE)};
-      if (old_slot[SLOT_OCCUPIED] == 0) {
-        continue;
-      }
-
-      const auto old_kind{old_slot[SLOT_KIND]};
-      const auto key{slot_key(old_slot, this->string_pool_)};
-
-      if (old_kind == KIND_OUTPUT) {
-        if (this->deleted_.contains(key) || this->overlay_.contains(key)) {
-          continue;
-        }
-      } else if (old_kind == KIND_RESOLVER) {
-        if (this->resolver_overlay_.contains(key)) {
-          continue;
-        }
-      }
-
-      const auto timestamp{read_field<std::int64_t>(old_slot, SLOT_TIMESTAMP)};
-      const auto old_data_offset{
-          read_field<std::uint32_t>(old_slot, SLOT_DATA_OFFSET)};
-      const auto data_count{
-          read_field<std::uint16_t>(old_slot, SLOT_DATA_COUNT)};
-
-      const auto new_data_offset{static_cast<std::uint32_t>(pool.size())};
-      if (data_count > 0) {
-        auto raw_offset{static_cast<std::size_t>(old_data_offset)};
-        for (std::uint16_t item_index = 0; item_index < data_count;
-             ++item_index) {
-          const auto item_length{
-              read_field<std::uint32_t>(this->string_pool_, raw_offset)};
-          raw_offset += sizeof(std::uint32_t) + item_length;
-        }
-
-        const auto raw_size{raw_offset - old_data_offset};
-        pool.append(reinterpret_cast<const char *>(this->string_pool_ +
-                                                   old_data_offset),
-                    raw_size);
-      }
-
-      const auto hash{fnv1a(key.data(), key.size())};
-      auto index{static_cast<std::uint32_t>(hash & (capacity - 1))};
-      while (slots[(index * SLOT_SIZE) + SLOT_OCCUPIED] != 0) {
-        index = (index + 1) & (capacity - 1);
-      }
-
-      auto *slot{slots.data() + (index * SLOT_SIZE)};
-      const auto key_offset{static_cast<std::uint32_t>(pool.size())};
-      pool.append(key);
-      const auto key_length{static_cast<std::uint32_t>(key.size())};
-
-      std::memcpy(slot + SLOT_HASH, &hash, sizeof(hash));
-      std::memcpy(slot + SLOT_KEY_OFFSET, &key_offset, sizeof(key_offset));
-      std::memcpy(slot + SLOT_KEY_LENGTH, &key_length, sizeof(key_length));
-      std::memcpy(slot + SLOT_TIMESTAMP, &timestamp, sizeof(timestamp));
-      std::memcpy(slot + SLOT_DATA_OFFSET, &new_data_offset,
-                  sizeof(new_data_offset));
-      std::memcpy(slot + SLOT_DATA_COUNT, &data_count, sizeof(data_count));
-      slot[SLOT_OCCUPIED] = 1;
-      slot[SLOT_KIND] = old_kind;
-    }
+    this->rebuild_table(pool, slots, capacity, total_count);
   }
 
   auto write_new_slot{[&](std::string_view entry_key, std::int64_t timestamp,
@@ -1021,248 +1299,8 @@ auto BuildState::save(const std::filesystem::path &path) const -> void {
   const auto total_pool_size{
       static_cast<std::uint32_t>(old_pool_size + pool.size())};
 
-  {
-    auto read_slot_key{[&](const std::uint8_t *slot) -> std::string_view {
-      const auto key_offset{read_field<std::uint32_t>(slot, SLOT_KEY_OFFSET)};
-      const auto key_length{read_field<std::uint32_t>(slot, SLOT_KEY_LENGTH)};
-      if (can_patch && key_offset < old_pool_size) {
-        return {reinterpret_cast<const char *>(this->string_pool_ + key_offset),
-                key_length};
-      }
-      const auto offset_in_pool{can_patch ? key_offset - old_pool_size
-                                          : key_offset};
-      return {pool.data() + offset_in_pool, key_length};
-    }};
-
-    auto read_slot_pool_string{[&](std::size_t &offset) -> std::string {
-      if (can_patch && offset < old_pool_size) {
-        return read_pool_string(this->string_pool_, offset);
-      }
-      auto adjusted_offset{can_patch ? offset - old_pool_size : offset};
-      auto result{
-          read_pool_string(reinterpret_cast<const std::uint8_t *>(pool.data()),
-                           adjusted_offset)};
-      offset = (can_patch ? old_pool_size : 0) + adjusted_offset;
-      return result;
-    }};
-
-    const auto output_dir{path.parent_path().string()};
-    const auto primary_prefix{output_dir + "/" +
-                              std::string{this->directories_[0].name} + "/"};
-    const auto secondary_prefix{output_dir + "/" +
-                                std::string{this->directories_[1].name} + "/"};
-    const auto secondary_namespaced{this->directories_[1].namespaced};
-
-    std::unordered_map<std::string, LeafStateEntry, TransparentHash,
-                       TransparentEqual>
-        save_leaf_index;
-
-    if (can_patch && this->persisted_leaf_table_ != nullptr) {
-      const auto *record_ptr{this->persisted_leaf_table_};
-      for (std::uint32_t record_index = 0;
-           record_index < this->persisted_leaf_count_; ++record_index) {
-        const auto *record{
-            reinterpret_cast<const LeafIndexRecord *>(record_ptr)};
-        const auto relative_path{std::string{
-            reinterpret_cast<const char *>(record_ptr + sizeof(*record)),
-            record->relative_path_length}};
-        auto &leaf_entry{save_leaf_index[relative_path]};
-        using file_time = std::filesystem::file_time_type;
-        leaf_entry.root_mtime =
-            file_time{std::chrono::duration_cast<file_time::duration>(
-                std::chrono::nanoseconds{record->root_mtime})};
-        leaf_entry.target_bitmap = record->target_bitmap;
-        leaf_entry.has_cross_leaf_deps = record->has_cross_leaf_deps != 0;
-        record_ptr += sizeof(*record) + record->relative_path_length;
-      }
-
-      for (const auto &deleted_key : this->deleted_) {
-        const auto [relative_path, filename] =
-            split_leaf_base(deleted_key, primary_prefix, secondary_prefix,
-                            secondary_namespaced, this->sentinel_separator_);
-        if (relative_path.empty()) {
-          continue;
-        }
-
-        save_leaf_index.erase(std::string{relative_path});
-      }
-
-      std::unordered_set<std::string, TransparentHash, TransparentEqual>
-          affected_leaves;
-      for (const auto &[overlay_key, overlay_entry] : this->overlay_) {
-        const auto [relative_path, filename] =
-            split_leaf_base(overlay_key, primary_prefix, secondary_prefix,
-                            secondary_namespaced, this->sentinel_separator_);
-        if (relative_path.empty()) {
-          continue;
-        }
-
-        affected_leaves.insert(std::string{relative_path});
-      }
-
-      for (const auto &affected_relative : affected_leaves) {
-        auto &leaf_entry{save_leaf_index[affected_relative]};
-        leaf_entry = LeafStateEntry{};
-
-        for (std::uint32_t slot_index = 0; slot_index < capacity;
-             ++slot_index) {
-          const auto *slot{slots.data() + (slot_index * SLOT_SIZE)};
-          if (slot[SLOT_OCCUPIED] == 0 || slot[SLOT_KIND] != KIND_OUTPUT) {
-            continue;
-          }
-
-          const auto key{read_slot_key(slot)};
-          const auto [relative_path, filename] =
-              split_leaf_base(key, primary_prefix, secondary_prefix,
-                              secondary_namespaced, this->sentinel_separator_);
-          if (relative_path.empty() || relative_path != affected_relative) {
-            continue;
-          }
-
-          const bool is_explorer{key.starts_with(secondary_prefix)};
-          for (std::size_t rule_index{0}; rule_index < this->leaf_rules_.size();
-               rule_index++) {
-            const auto &rule{this->leaf_rules_[rule_index]};
-            if (filename == rule.filename &&
-                ((rule.base == 1) == is_explorer)) {
-              leaf_entry.target_bitmap |=
-                  this->leaf_artifacts_.mask(rule_index);
-              if (rule.is_root) {
-                const auto nanoseconds{
-                    read_field<std::int64_t>(slot, SLOT_TIMESTAMP)};
-                using file_time = std::filesystem::file_time_type;
-                leaf_entry.root_mtime =
-                    file_time{std::chrono::duration_cast<file_time::duration>(
-                        std::chrono::nanoseconds{nanoseconds})};
-              }
-              break;
-            }
-          }
-
-          const auto data_count{
-              read_field<std::uint16_t>(slot, SLOT_DATA_COUNT)};
-          if (data_count > 0 && !leaf_entry.has_cross_leaf_deps) {
-            auto offset{static_cast<std::size_t>(
-                read_field<std::uint32_t>(slot, SLOT_DATA_OFFSET))};
-            for (std::uint16_t dep_index = 0; dep_index < data_count;
-                 ++dep_index) {
-              const auto dependency_path{read_slot_pool_string(offset)};
-              const auto [dep_relative, dep_filename] = split_leaf_base(
-                  dependency_path, primary_prefix, secondary_prefix,
-                  secondary_namespaced, this->sentinel_separator_);
-              if (!dep_relative.empty() && dep_relative != affected_relative) {
-                leaf_entry.has_cross_leaf_deps = true;
-                break;
-              }
-            }
-          }
-        }
-      }
-    } else {
-
-      for (std::uint32_t slot_index = 0; slot_index < capacity; ++slot_index) {
-        const auto *slot{slots.data() + (slot_index * SLOT_SIZE)};
-        if (slot[SLOT_OCCUPIED] == 0 || slot[SLOT_KIND] != KIND_OUTPUT) {
-          continue;
-        }
-
-        const auto key{read_slot_key(slot)};
-        const auto [relative_path, filename] =
-            split_leaf_base(key, primary_prefix, secondary_prefix,
-                            secondary_namespaced, this->sentinel_separator_);
-        if (relative_path.empty()) {
-          continue;
-        }
-
-        const bool is_explorer{key.starts_with(secondary_prefix)};
-        auto &leaf_entry{save_leaf_index[std::string{relative_path}]};
-
-        for (std::size_t rule_index{0}; rule_index < this->leaf_rules_.size();
-             rule_index++) {
-          const auto &rule{this->leaf_rules_[rule_index]};
-          if (filename == rule.filename && ((rule.base == 1) == is_explorer)) {
-            leaf_entry.target_bitmap |= this->leaf_artifacts_.mask(rule_index);
-            if (rule.is_root) {
-              const auto nanoseconds{
-                  read_field<std::int64_t>(slot, SLOT_TIMESTAMP)};
-              using file_time = std::filesystem::file_time_type;
-              leaf_entry.root_mtime =
-                  file_time{std::chrono::duration_cast<file_time::duration>(
-                      std::chrono::nanoseconds{nanoseconds})};
-            }
-            break;
-          }
-        }
-
-        const auto data_count{read_field<std::uint16_t>(slot, SLOT_DATA_COUNT)};
-        if (data_count > 0 && !leaf_entry.has_cross_leaf_deps) {
-          auto offset{static_cast<std::size_t>(
-              read_field<std::uint32_t>(slot, SLOT_DATA_OFFSET))};
-          for (std::uint16_t dep_index = 0; dep_index < data_count;
-               ++dep_index) {
-            const auto dependency_path{read_slot_pool_string(offset)};
-            const auto [dep_relative, dep_filename] = split_leaf_base(
-                dependency_path, primary_prefix, secondary_prefix,
-                secondary_namespaced, this->sentinel_separator_);
-            if (!dep_relative.empty() && dep_relative != relative_path) {
-              leaf_entry.has_cross_leaf_deps = true;
-              break;
-            }
-          }
-        }
-      }
-    }
-
-    std::string leaf_index_buffer;
-    const auto leaf_count{static_cast<std::uint32_t>(save_leaf_index.size())};
-    leaf_index_buffer.reserve(sizeof(LEAF_INDEX_MAGIC) + sizeof(leaf_count) +
-                              (leaf_count * (sizeof(LeafIndexRecord) + 64)));
-    leaf_index_buffer.append(reinterpret_cast<const char *>(&LEAF_INDEX_MAGIC),
-                             sizeof(LEAF_INDEX_MAGIC));
-    leaf_index_buffer.append(reinterpret_cast<const char *>(&leaf_count),
-                             sizeof(leaf_count));
-
-    for (const auto &[relative_path, leaf_entry] : save_leaf_index) {
-      LeafIndexRecord record{};
-      record.relative_path_offset = 0;
-      record.relative_path_length =
-          static_cast<std::uint16_t>(relative_path.size());
-      record.root_mtime = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                              leaf_entry.root_mtime.time_since_epoch())
-                              .count();
-      record.target_bitmap = leaf_entry.target_bitmap;
-      record.has_cross_leaf_deps = leaf_entry.has_cross_leaf_deps ? 1 : 0;
-      record.padding = 0;
-      leaf_index_buffer.append(reinterpret_cast<const char *>(&record),
-                               sizeof(record));
-      leaf_index_buffer.append(relative_path);
-    }
-
-    sourcemeta::core::atomic_write_file(
-        path, [&](std::ostream &stream) -> void {
-          sourcemeta::core::BinaryWriter writer{stream};
-          writer.put_dword(STATE_MAGIC);
-          writer.put_dword(STATE_VERSION);
-          writer.put_dword(this->rules_fingerprint_);
-          writer.put_qword(this->inputs_fingerprint_);
-          writer.put_dword(capacity);
-          writer.put_dword(output_count);
-          writer.put_dword(total_pool_size);
-          writer.put_dword(resolver_count);
-
-          writer.put_bytes(reinterpret_cast<const std::byte *>(slots.data()),
-                           slots.size());
-
-          if (can_patch && old_pool_size > 0) {
-            writer.put_bytes(
-                reinterpret_cast<const std::byte *>(this->string_pool_),
-                old_pool_size);
-          }
-          writer.put_string(pool);
-
-          writer.put_string(leaf_index_buffer);
-        });
-  }
+  this->write_table(path, pool, slots, capacity, old_pool_size, total_pool_size,
+                    output_count, resolver_count, can_patch);
 }
 
 } // namespace sourcemeta::one

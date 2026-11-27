@@ -1416,7 +1416,7 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
     std::string raw_dialect{declares_dialect ? declared_dialect->to_string()
                                              : default_dialect_str};
     if (raw_dialect.empty()) {
-      throw sourcemeta::core::SchemaUnknownDialectError();
+      throw ResolverUnknownDialectError(path);
     }
     // Only a dialect the schema names itself is measured against the schema.
     // One the collection names for it is the collection's to resolve, as there
@@ -1467,9 +1467,6 @@ auto Resolver::add(const std::filesystem::path &collection_relative_path,
   } catch (const sourcemeta::core::SchemaKeywordError &error) {
     throw sourcemeta::core::FileError<sourcemeta::core::SchemaKeywordError>(
         path, error);
-  } catch (const sourcemeta::core::SchemaUnknownDialectError &) {
-    throw sourcemeta::core::FileError<
-        sourcemeta::core::SchemaUnknownDialectError>(path);
   } catch (const sourcemeta::core::URIParseError &) {
     const auto reread{sourcemeta::core::read_yaml_or_json(path)};
     const auto &id_keyword{reread.defines("$id") ? "$id" : "id"};

@@ -1276,8 +1276,9 @@ TEST(no_dialect) {
   try {
     RESOLVER_IMPORT(resolver, "no-base", "no-dialect.json");
     FAIL();
-  } catch (const sourcemeta::core::SchemaUnknownDialectError &error) {
+  } catch (const sourcemeta::one::ResolverUnknownDialectError &error) {
     EXPECT_STREQ(error.what(), "Could not determine the dialect of the schema");
+    EXPECT_EQ(error.path().filename(), "no-dialect.json");
   }
 }
 

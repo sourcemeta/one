@@ -172,6 +172,173 @@ auto entries_from_json(T &result, const std::filesystem::path &location,
   }
 }
 
+using AuthenticationEntry = sourcemeta::one::Configuration::AuthenticationEntry;
+
+// What one authentication policy of the configuration says of itself
+auto authentication_entry_from_json(const sourcemeta::core::JSON &entry)
+    -> AuthenticationEntry {
+  AuthenticationEntry parsed;
+  parsed.name = entry.at("name").to_string();
+  parsed.title = parsed.name;
+  for (const auto &path : entry.at("paths").as_array()) {
+    parsed.paths.push_back(path.to_string());
+  }
+
+  if (entry.at("type").to_string() == "jwt") {
+    parsed.type = AuthenticationEntry::Type::JWT;
+    parsed.issuer = entry.at("issuer").to_string();
+    parsed.audience = entry.at("audience").to_string();
+    if (entry.defines("jwksUri")) {
+      parsed.jwks_uri = entry.at("jwksUri").to_string();
+    }
+
+    if (entry.defines("tokenType")) {
+      parsed.token_type = entry.at("tokenType").to_string();
+    }
+
+    for (const auto &algorithm : entry.at("algorithms").as_array()) {
+      parsed.algorithms.push_back(
+          sourcemeta::core::to_jws_algorithm(algorithm.to_string()).value());
+    }
+
+    const auto *claims{entry.try_at("claims")};
+    if (claims != nullptr) {
+      parsed.claims = claims_from_json(*claims);
+    }
+  } else if (entry.at("type").to_string() == "oidc") {
+    parsed.type = AuthenticationEntry::Type::OIDC;
+    parsed.issuer = entry.at("issuer").to_string();
+    parsed.client_id = entry.at("clientId").to_string();
+    parsed.client_secret_variable =
+        entry.at("clientSecret").at("environmentVariable").to_string();
+    for (const auto &secret : entry.at("sessionSecrets").as_array()) {
+      parsed.session_secret_variables.push_back(
+          secret.at("environmentVariable").to_string());
+    }
+    const auto *title{entry.try_at("title")};
+    if (title != nullptr) {
+      parsed.title = title->to_string();
+    }
+
+    const auto *claims{entry.try_at("claims")};
+    if (claims != nullptr) {
+      parsed.claims = claims_from_json(*claims);
+    }
+
+    const auto *domains{entry.try_at("emailDomains")};
+    if (domains != nullptr) {
+      for (const auto &domain : domains->as_array()) {
+        parsed.email_domains.push_back(domain.to_string());
+        sourcemeta::core::to_lowercase(parsed.email_domains.back());
+      }
+
+      std::ranges::sort(parsed.email_domains);
+    }
+  } else {
+    parsed.type = AuthenticationEntry::Type::ApiKey;
+    parsed.algorithm = entry.at("algorithm").to_string() == "sha256"
+                           ? AuthenticationEntry::Algorithm::Sha256
+                           : AuthenticationEntry::Algorithm::Identity;
+    for (const auto &key : entry.at("keys").as_array()) {
+      parsed.keys.push_back(key.at("environmentVariable").to_string());
+    }
+  }
+
+  return parsed;
+}
+
+// An issuer this instance fetches a discovery document from must be one it
+// could complete that exchange against. A policy naming its key set directly
+// never makes the exchange, so its issuer is only an identifier compared
+// against a token's claim, and nothing here applies to it
+auto settle_authentication_issuers(
+    sourcemeta::one::Configuration &result,
+    const std::filesystem::path &configuration_path) -> void {
+  for (auto &entry : result.authentication) {
+    const auto discovers{entry.type == AuthenticationEntry::Type::OIDC ||
+                         (entry.type == AuthenticationEntry::Type::JWT &&
+                          !entry.jwks_uri.has_value())};
+    if (!discovers) {
+      continue;
+    }
+
+    // OpenID Connect Discovery 1.0 Section 4.1 removes a trailing slash before
+    // appending the well-known suffix, and Section 4.3 requires the document to
+    // declare the prefix that was actually used. So the slash is not part of
+    // the identifier and is dropped here, once, rather than left to disagree
+    // with itself between building the URL and comparing what comes back
+    if (entry.issuer.ends_with("/")) {
+      entry.issuer.pop_back();
+    }
+
+    // OpenID Connect Discovery 1.0 Section 3: the issuer is an https URL
+    if (!sourcemeta::core::URI{entry.issuer}.is_https()) {
+      throw sourcemeta::one::ConfigurationInvalidAuthenticationIssuerError(
+          configuration_path, entry.name, entry.issuer);
+    }
+
+    if (entry.type == AuthenticationEntry::Type::OIDC &&
+        !serves_securely(result.url)) {
+      throw sourcemeta::one::ConfigurationInsecureAuthenticationURLError(
+          configuration_path, entry.name, result.url);
+    }
+  }
+}
+
+// Policy names are unique, and "public" is reserved because an empty policy
+// array on a listing already means public
+auto refuse_authentication_collisions(
+    const sourcemeta::one::Configuration &result,
+    const std::filesystem::path &configuration_path) -> void {
+  std::set<std::string_view> authentication_names;
+  std::set<std::string_view> authentication_keys;
+  std::set<std::string_view> authentication_secrets;
+  for (const auto &entry : result.authentication) {
+    if (entry.name == "public") {
+      throw sourcemeta::one::ConfigurationReservedAuthenticationNameError(
+          configuration_path, entry.name);
+    }
+
+    if (!authentication_names.emplace(entry.name).second) {
+      throw sourcemeta::one::ConfigurationDuplicateAuthenticationNameError(
+          configuration_path, entry.name);
+    }
+
+    // A key opening more than one policy makes a caller belong to several at
+    // once, which no single view names.
+    //
+    // A variable naming both a credential callers present and a secret the
+    // instance signs with is worse than that: whoever holds the credential can
+    // derive the key sessions are sealed under, and mint one naming whichever
+    // policy they please. Secrets alone may repeat, as several policies
+    // fronting the same provider is ordinary
+    for (const auto &key : entry.keys) {
+      if (authentication_secrets.contains(key) ||
+          !authentication_keys.emplace(key).second) {
+        throw sourcemeta::one::ConfigurationSharedAuthenticationKeyError(
+            configuration_path, entry.name, key);
+      }
+    }
+
+    if (!entry.client_secret_variable.empty()) {
+      if (authentication_keys.contains(entry.client_secret_variable)) {
+        throw sourcemeta::one::ConfigurationSharedAuthenticationKeyError(
+            configuration_path, entry.name, entry.client_secret_variable);
+      }
+
+      authentication_secrets.emplace(entry.client_secret_variable);
+    }
+
+    for (const auto &secret : entry.session_secret_variables) {
+      if (authentication_keys.contains(secret)) {
+        throw sourcemeta::one::ConfigurationSharedAuthenticationKeyError(
+            configuration_path, entry.name, secret);
+      }
+
+      authentication_secrets.emplace(secret);
+    }
+  }
+}
 } // namespace
 
 namespace sourcemeta::one {
@@ -269,164 +436,13 @@ auto Configuration::parse(const sourcemeta::core::JSON &data,
 
   if (data.defines("authentication")) {
     for (const auto &entry : data.at("authentication").as_array()) {
-      Configuration::AuthenticationEntry parsed;
-      parsed.name = entry.at("name").to_string();
-      parsed.title = parsed.name;
-      for (const auto &path : entry.at("paths").as_array()) {
-        parsed.paths.push_back(path.to_string());
-      }
-
-      if (entry.at("type").to_string() == "jwt") {
-        parsed.type = Configuration::AuthenticationEntry::Type::JWT;
-        parsed.issuer = entry.at("issuer").to_string();
-        parsed.audience = entry.at("audience").to_string();
-        if (entry.defines("jwksUri")) {
-          parsed.jwks_uri = entry.at("jwksUri").to_string();
-        }
-
-        if (entry.defines("tokenType")) {
-          parsed.token_type = entry.at("tokenType").to_string();
-        }
-
-        for (const auto &algorithm : entry.at("algorithms").as_array()) {
-          parsed.algorithms.push_back(
-              sourcemeta::core::to_jws_algorithm(algorithm.to_string())
-                  .value());
-        }
-
-        const auto *claims{entry.try_at("claims")};
-        if (claims != nullptr) {
-          parsed.claims = claims_from_json(*claims);
-        }
-      } else if (entry.at("type").to_string() == "oidc") {
-        parsed.type = Configuration::AuthenticationEntry::Type::OIDC;
-        parsed.issuer = entry.at("issuer").to_string();
-        parsed.client_id = entry.at("clientId").to_string();
-        parsed.client_secret_variable =
-            entry.at("clientSecret").at("environmentVariable").to_string();
-        for (const auto &secret : entry.at("sessionSecrets").as_array()) {
-          parsed.session_secret_variables.push_back(
-              secret.at("environmentVariable").to_string());
-        }
-        const auto *title{entry.try_at("title")};
-        if (title != nullptr) {
-          parsed.title = title->to_string();
-        }
-
-        const auto *claims{entry.try_at("claims")};
-        if (claims != nullptr) {
-          parsed.claims = claims_from_json(*claims);
-        }
-
-        const auto *domains{entry.try_at("emailDomains")};
-        if (domains != nullptr) {
-          for (const auto &domain : domains->as_array()) {
-            parsed.email_domains.push_back(domain.to_string());
-            sourcemeta::core::to_lowercase(parsed.email_domains.back());
-          }
-
-          std::ranges::sort(parsed.email_domains);
-        }
-      } else {
-        parsed.type = Configuration::AuthenticationEntry::Type::ApiKey;
-        parsed.algorithm =
-            entry.at("algorithm").to_string() == "sha256"
-                ? Configuration::AuthenticationEntry::Algorithm::Sha256
-                : Configuration::AuthenticationEntry::Algorithm::Identity;
-        for (const auto &key : entry.at("keys").as_array()) {
-          parsed.keys.push_back(key.at("environmentVariable").to_string());
-        }
-      }
-
-      result.authentication.push_back(std::move(parsed));
+      result.authentication.push_back(authentication_entry_from_json(entry));
     }
   }
 
-  // An issuer this instance fetches a discovery document from must be one it
-  // could complete that exchange against. A policy naming its key set directly
-  // never makes the exchange, so its issuer is only an identifier compared
-  // against a token's claim, and nothing here applies to it
-  for (auto &entry : result.authentication) {
-    const auto discovers{
-        entry.type == Configuration::AuthenticationEntry::Type::OIDC ||
-        (entry.type == Configuration::AuthenticationEntry::Type::JWT &&
-         !entry.jwks_uri.has_value())};
-    if (!discovers) {
-      continue;
-    }
+  settle_authentication_issuers(result, configuration_path);
 
-    // OpenID Connect Discovery 1.0 Section 4.1 removes a trailing slash before
-    // appending the well-known suffix, and Section 4.3 requires the document to
-    // declare the prefix that was actually used. So the slash is not part of
-    // the identifier and is dropped here, once, rather than left to disagree
-    // with itself between building the URL and comparing what comes back
-    if (entry.issuer.ends_with("/")) {
-      entry.issuer.pop_back();
-    }
-
-    // OpenID Connect Discovery 1.0 Section 3: the issuer is an https URL
-    if (!sourcemeta::core::URI{entry.issuer}.is_https()) {
-      throw ConfigurationInvalidAuthenticationIssuerError(
-          configuration_path, entry.name, entry.issuer);
-    }
-
-    if (entry.type == Configuration::AuthenticationEntry::Type::OIDC &&
-        !serves_securely(result.url)) {
-      throw ConfigurationInsecureAuthenticationURLError(configuration_path,
-                                                        entry.name, result.url);
-    }
-  }
-
-  // Policy names are unique, and "public" is reserved because an empty policy
-  // array on a listing already means public
-  std::set<std::string_view> authentication_names;
-  std::set<std::string_view> authentication_keys;
-  std::set<std::string_view> authentication_secrets;
-  for (const auto &entry : result.authentication) {
-    if (entry.name == "public") {
-      throw ConfigurationReservedAuthenticationNameError(configuration_path,
-                                                         entry.name);
-    }
-
-    if (!authentication_names.emplace(entry.name).second) {
-      throw ConfigurationDuplicateAuthenticationNameError(configuration_path,
-                                                          entry.name);
-    }
-
-    // A key opening more than one policy makes a caller belong to several at
-    // once, which no single view names.
-    //
-    // A variable naming both a credential callers present and a secret the
-    // instance signs with is worse than that: whoever holds the credential can
-    // derive the key sessions are sealed under, and mint one naming whichever
-    // policy they please. Secrets alone may repeat, as several policies
-    // fronting the same provider is ordinary
-    for (const auto &key : entry.keys) {
-      if (authentication_secrets.contains(key) ||
-          !authentication_keys.emplace(key).second) {
-        throw ConfigurationSharedAuthenticationKeyError(configuration_path,
-                                                        entry.name, key);
-      }
-    }
-
-    if (!entry.client_secret_variable.empty()) {
-      if (authentication_keys.contains(entry.client_secret_variable)) {
-        throw ConfigurationSharedAuthenticationKeyError(
-            configuration_path, entry.name, entry.client_secret_variable);
-      }
-
-      authentication_secrets.emplace(entry.client_secret_variable);
-    }
-
-    for (const auto &secret : entry.session_secret_variables) {
-      if (authentication_keys.contains(secret)) {
-        throw ConfigurationSharedAuthenticationKeyError(configuration_path,
-                                                        entry.name, secret);
-      }
-
-      authentication_secrets.emplace(secret);
-    }
-  }
+  refuse_authentication_collisions(result, configuration_path);
 
   entries_from_json(result.entries, "", data, default_base_path);
 
