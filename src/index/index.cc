@@ -369,6 +369,86 @@ Output Directory:
 For more documentation, visit https://one.sourcemeta.com
 )EOF"};
 
+struct DetectedSchema {
+  std::filesystem::path collection_relative_path;
+  std::reference_wrapper<const sourcemeta::one::Configuration::Collection>
+      collection;
+  std::filesystem::path path;
+  std::filesystem::file_time_type mtime;
+};
+
+// Which files of the collections the configuration names are candidates for
+// the catalog
+static auto
+detect_schemas(const sourcemeta::one::Configuration &configuration,
+               const std::unordered_set<std::string> &configuration_files,
+               const bool deterministic) -> std::vector<DetectedSchema> {
+  std::vector<DetectedSchema> detected_schemas;
+  for (const auto &pair : configuration.entries) {
+    const auto *collection{
+        std::get_if<sourcemeta::one::Configuration::Collection>(&pair.second)};
+    if (collection == nullptr) {
+      continue;
+    }
+
+    if (!std::filesystem::is_directory(collection->absolute_path)) {
+      continue;
+    }
+
+    for (auto iterator =
+             std::filesystem::recursive_directory_iterator{
+                 collection->absolute_path};
+         iterator != std::filesystem::recursive_directory_iterator{};
+         ++iterator) {
+      const auto &entry{*iterator};
+
+      if (std::ranges::any_of(collection->ignore, [&entry](
+                                                      const auto &ignore_path) {
+            return sourcemeta::core::is_under_path(entry.path(), ignore_path);
+          })) {
+        if (entry.is_directory()) {
+          iterator.disable_recursion_pending();
+        }
+        continue;
+      }
+
+      if (!entry.is_regular_file()) {
+        continue;
+      }
+
+      const auto entry_path{entry.path().string()};
+      if (!std::ranges::any_of(collection->extension,
+                               [&entry, &entry_path](const auto &extension) {
+                                 return extension.empty()
+                                            ? !entry.path().has_extension()
+                                            : entry_path.ends_with(extension);
+                               })) {
+        continue;
+      }
+
+      // Only schema-extension files can be configuration files, so the
+      // canonicalisation (per-component syscalls) is deferred until after the
+      // cheap extension filter has rejected everything else
+      if (configuration_files.contains(
+              std::filesystem::weakly_canonical(entry.path()).native())) {
+        continue;
+      }
+
+      if (!deterministic) {
+        std::println(stderr, "Detecting: {} (#{})", entry.path().string(),
+                     detected_schemas.size() + 1);
+      }
+
+      detected_schemas.push_back({.collection_relative_path = pair.first,
+                                  .collection = std::cref(*collection),
+                                  .path = entry.path(),
+                                  .mtime = entry.last_write_time()});
+    }
+  }
+
+  return detected_schemas;
+}
+
 static auto index_main(const std::string_view &program,
                        const sourcemeta::core::Options &app) -> int {
   if (app.contains("help")) {
@@ -544,77 +624,9 @@ static auto index_main(const std::string_view &program,
   // NOTE: No files are generated. We only want to know what's out there
   /////////////////////////////////////////////////////////////////////////////
 
-  struct DetectedSchema {
-    std::filesystem::path collection_relative_path;
-    std::reference_wrapper<const sourcemeta::one::Configuration::Collection>
-        collection;
-    std::filesystem::path path;
-    std::filesystem::file_time_type mtime;
-  };
-
   const auto deterministic{app.contains("deterministic")};
-  std::vector<DetectedSchema> detected_schemas;
-  for (const auto &pair : configuration.entries) {
-    const auto *collection{
-        std::get_if<sourcemeta::one::Configuration::Collection>(&pair.second)};
-    if (collection == nullptr) {
-      continue;
-    }
-
-    if (!std::filesystem::is_directory(collection->absolute_path)) {
-      continue;
-    }
-
-    for (auto iterator =
-             std::filesystem::recursive_directory_iterator{
-                 collection->absolute_path};
-         iterator != std::filesystem::recursive_directory_iterator{};
-         ++iterator) {
-      const auto &entry{*iterator};
-
-      if (std::ranges::any_of(collection->ignore, [&entry](
-                                                      const auto &ignore_path) {
-            return sourcemeta::core::is_under_path(entry.path(), ignore_path);
-          })) {
-        if (entry.is_directory()) {
-          iterator.disable_recursion_pending();
-        }
-        continue;
-      }
-
-      if (!entry.is_regular_file()) {
-        continue;
-      }
-
-      const auto entry_path{entry.path().string()};
-      if (!std::ranges::any_of(collection->extension,
-                               [&entry, &entry_path](const auto &extension) {
-                                 return extension.empty()
-                                            ? !entry.path().has_extension()
-                                            : entry_path.ends_with(extension);
-                               })) {
-        continue;
-      }
-
-      // Only schema-extension files can be configuration files, so the
-      // canonicalisation (per-component syscalls) is deferred until after the
-      // cheap extension filter has rejected everything else
-      if (configuration_files.contains(
-              std::filesystem::weakly_canonical(entry.path()).native())) {
-        continue;
-      }
-
-      if (!deterministic) {
-        std::println(stderr, "Detecting: {} (#{})", entry.path().string(),
-                     detected_schemas.size() + 1);
-      }
-
-      detected_schemas.push_back({.collection_relative_path = pair.first,
-                                  .collection = std::cref(*collection),
-                                  .path = entry.path(),
-                                  .mtime = entry.last_write_time()});
-    }
-  };
+  auto detected_schemas{
+      detect_schemas(configuration, configuration_files, deterministic)};
 
   if (deterministic) {
     std::ranges::sort(detected_schemas, [](const auto &left,
@@ -1187,8 +1199,7 @@ auto main(int argc, char *argv[]) noexcept -> int {
   } catch (const sourcemeta::core::SchemaUnknownBaseDialectError &error) {
     std::println(stderr, "error: {}", error.what());
     return EXIT_FAILURE;
-  } catch (const sourcemeta::core::FileError<
-           sourcemeta::core::SchemaUnknownDialectError> &error) {
+  } catch (const sourcemeta::one::ResolverUnknownDialectError &error) {
     std::print(stderr, "error: {}\n  at path {}\n", error.what(),
                error.path().string());
     return EXIT_FAILURE;

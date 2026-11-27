@@ -26,6 +26,23 @@ private:
   std::filesystem::path path_;
 };
 
+// A schema that declares no dialect and whose collection names none for it
+// leaves nothing to measure it against
+class ResolverUnknownDialectError : public sourcemeta::core::Error {
+public:
+  ResolverUnknownDialectError(std::filesystem::path path)
+      : sourcemeta::core::Error{"Could not determine the dialect of the "
+                                "schema"},
+        path_{std::move(path)} {}
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+private:
+  std::filesystem::path path_;
+};
+
 // A boolean is a valid JSON Schema, but every schema in a catalog is addressed
 // by an identifier and described by metadata that only an object can carry
 class ResolverBooleanSchemaError : public sourcemeta::core::Error {

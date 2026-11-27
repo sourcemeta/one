@@ -351,6 +351,47 @@ public:
 
 private:
   auto reset_loaded_state() -> void;
+  // Reusing the table a previous build wrote, and building one afresh,
+  // which answer for the same values either way
+  auto
+  patch_table(std::vector<std::uint8_t> &slots, std::uint32_t &capacity,
+              std::uint32_t &old_pool_size,
+              std::unordered_set<std::string, TransparentHash, TransparentEqual>
+                  &overlay_updates,
+              std::unordered_set<std::string, TransparentHash, TransparentEqual>
+                  &resolver_updates) const -> void;
+  // Where a key or a string of the pool is read from, as a patched table
+  // addresses what it kept apart from what this build appended
+  struct PoolView {
+    const std::string &pool;
+    std::uint32_t old_pool_size;
+    bool can_patch;
+  };
+  [[nodiscard]] auto patched_slot_key(const std::uint8_t *slot,
+                                      const PoolView &view) const
+      -> std::string_view;
+  [[nodiscard]] auto patched_pool_string(std::size_t &offset,
+                                         const PoolView &view) const
+      -> std::string;
+  // What every leaf of the output holds, read back from the table a previous
+  // build wrote where that one may be reused
+  auto collect_leaf_index(
+      const std::string &pool, std::uint32_t old_pool_size, bool can_patch,
+      const std::vector<std::uint8_t> &slots, std::uint32_t capacity,
+      const std::string &primary_prefix, const std::string &secondary_prefix,
+      bool secondary_namespaced,
+      std::unordered_map<std::string, LeafStateEntry, TransparentHash,
+                         TransparentEqual> &save_leaf_index) const -> void;
+  // Writing the table and the pool out, which is the whole of the file a
+  // build leaves behind
+  auto write_table(const std::filesystem::path &path, const std::string &pool,
+                   const std::vector<std::uint8_t> &slots,
+                   std::uint32_t capacity, std::uint32_t old_pool_size,
+                   std::uint32_t total_pool_size, std::uint32_t output_count,
+                   std::uint32_t resolver_count, bool can_patch) const -> void;
+  auto rebuild_table(std::string &pool, std::vector<std::uint8_t> &slots,
+                     std::uint32_t &capacity, std::uint32_t total_count) const
+      -> void;
   auto index_leaf_target(std::filesystem::file_time_type mtime,
                          bool is_explorer, std::string_view relative_path,
                          std::string_view filename) const -> void;

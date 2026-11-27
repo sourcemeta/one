@@ -14,6 +14,9 @@
 
 namespace sourcemeta::one {
 
+static constexpr std::array<std::string_view, 1> UNNAMESPACED{
+    {std::string_view{}}};
+
 static auto make_base_string(const std::string &output,
                              const std::string_view directory,
                              const std::string_view view,
@@ -407,6 +410,1656 @@ static auto collect_affected_directories(
   return result;
 }
 
+// Which other leaves a leaf's recorded dependencies reach, named by the
+// relative path each of them is served under
+static auto cross_leaf_references(const BuildState::Entry *state_entry,
+                                  const std::string_view owner_base,
+                                  const std::string &primary_prefix,
+                                  const std::string &sentinel_separator)
+    -> std::unordered_set<std::string> {
+  std::unordered_set<std::string> result;
+  if (state_entry == nullptr) {
+    return result;
+  }
+
+  for (const auto &dependency : state_entry->dependencies) {
+    const auto &dependency_path{dependency.native()};
+    if (!dependency_path.starts_with(primary_prefix)) {
+      continue;
+    }
+
+    const auto sentinel_position{dependency_path.find(sentinel_separator)};
+    if (sentinel_position == std::string::npos) {
+      continue;
+    }
+
+    const auto relative{dependency_path.substr(
+        primary_prefix.size(), sentinel_position - primary_prefix.size())};
+    if (relative != owner_base) {
+      result.insert(std::string{relative});
+    }
+  }
+
+  return result;
+}
+
+struct ActiveLeaf {
+  std::string_view uri;
+  const LeafView *info;
+  std::string primary_base;
+  // One per view, positionally, since a leaf occupies the same place in every
+  // view's tree and only the segment naming the view differs
+  std::vector<std::string> secondary_bases;
+  std::string root_path;
+};
+
+// What a phase of the plan is settled against, which is every input the build
+// was handed plus the few values a phase would otherwise derive again
+struct DeltaScope {
+  BuildPlan::Type build_type;
+  const BuildState &entries;
+  const std::filesystem::path &output;
+  const LeafSet &leaves;
+  std::span<const LeafRule> leaf_rules;
+  std::span<const DirectoryRule> directories;
+  const ViewFilter &visible;
+  std::string_view sentinel;
+  std::string_view primary_directory;
+  std::string_view secondary_directory;
+  std::span<const std::string_view> secondary_views;
+  std::string sentinel_separator;
+  std::string dependencies_suffix;
+  std::string output_string;
+  std::string primary_prefix;
+  std::size_t owner_start;
+  // Settled once the produce phase is the one being planned, as the combine
+  // phase answers before any of it is worth deriving
+  bool is_full{false};
+  BuildPlan::Type full_mode{};
+  std::span<const ContainerRule> container_rules{};
+  std::span<const GlobalRule> global_rules{};
+  const BuildLimits *limits{nullptr};
+  const DeltaRuleIndices *indices{nullptr};
+  LeafArtifacts artifacts{};
+  std::uint32_t metadata_kinds{0};
+  std::filesystem::path primary_path{};
+  std::vector<std::filesystem::path> secondary_paths{};
+  std::string configuration_string{};
+  BuildPhase phase{};
+  std::string_view version{};
+  std::string_view comment{};
+  std::string_view mode_label{};
+  BuildPlan::Action::Type remove_action{};
+  std::vector<bool> missing_globals{};
+  bool has_missing_globals{false};
+  std::filesystem::path version_path{};
+  std::filesystem::path configuration_path{};
+  std::filesystem::path comment_path{};
+  std::string comment_string{};
+};
+
+// The wave that answers for every leaf a changed leaf is reached from,
+// which is what a combine rule reads rather than the leaf it sits on
+static auto
+settle_dependents_wave(const DeltaScope &scope,
+                       const std::unordered_set<std::string> &affected_leaves,
+                       BuildPlan &plan) -> void {
+  std::unordered_map<std::string, std::vector<std::string>>
+      reverse_dependency_index;
+  for (const auto dependency_key : scope.entries.keys()) {
+    if (!dependency_key.ends_with(scope.dependencies_suffix)) {
+      continue;
+    }
+
+    const auto *dependency_entry{scope.entries.entry(dependency_key)};
+    if (dependency_entry == nullptr) {
+      continue;
+    }
+
+    for (const auto &dependency : dependency_entry->dependencies) {
+      const auto &dependency_path{dependency.native()};
+      if (!dependency_path.starts_with(scope.primary_prefix)) {
+        continue;
+      }
+
+      const auto sentinel_position{
+          dependency_path.find(scope.sentinel_separator, scope.owner_start)};
+      if (sentinel_position == std::string::npos) {
+        continue;
+      }
+
+      auto referenced_leaf{dependency_path.substr(
+          scope.owner_start, sentinel_position - scope.owner_start)};
+      if (affected_leaves.contains(referenced_leaf)) {
+        reverse_dependency_index[std::move(referenced_leaf)].emplace_back(
+            dependency_key);
+      }
+    }
+  }
+
+  for (auto &[leaf, dependency_keys] : reverse_dependency_index) {
+    std::ranges::sort(dependency_keys);
+    const auto [first, last] = std::ranges::unique(dependency_keys);
+    dependency_keys.erase(first, last);
+  }
+
+  std::vector<BuildPlan::Action> dependents_wave;
+  for (const auto &[uri, info] : scope.leaves) {
+    const auto *rule{combine_only_rule(scope.leaf_rules, info.kind)};
+    if (rule == nullptr) {
+      continue;
+    }
+
+    const auto &dependents_rule{*rule};
+    const auto in_secondary{dependents_rule.base != 0};
+    const auto destination_directory{in_secondary ? scope.secondary_directory
+                                                  : scope.primary_directory};
+    const std::span<const std::string_view> destination_views{
+        in_secondary ? scope.secondary_views
+                     : std::span<const std::string_view>{UNNAMESPACED}};
+
+    const auto &relative_string{info.relative_path->native()};
+    if (!affected_leaves.contains(relative_string)) {
+      continue;
+    }
+
+    for (std::size_t view{0}; view < destination_views.size(); view++) {
+      if (in_secondary && !scope.visible(view, relative_string)) {
+        continue;
+      }
+
+      auto destination_base{make_base_string(
+          scope.output_string, destination_directory, destination_views[view],
+          relative_string, scope.sentinel)};
+      auto destination{std::filesystem::path{
+          append_filename(destination_base, dependents_rule.filename)}};
+
+      BuildPlan::Action::Dependencies action_dependencies;
+      const auto reverse_iterator{
+          reverse_dependency_index.find(relative_string)};
+      if (reverse_iterator != reverse_dependency_index.end()) {
+        action_dependencies.reserve(reverse_iterator->second.size());
+        for (const auto &dependency_key : reverse_iterator->second) {
+          // A view is told who points at something out of what it holds, so
+          // a referrer it is without contributes nothing here. Choosing the
+          // inputs is what leaves the handler with nothing to decide
+          const auto referrer_sentinel{
+              dependency_key.find(scope.sentinel_separator, scope.owner_start)};
+          if (in_secondary && referrer_sentinel != std::string::npos &&
+              !scope.visible(view,
+                             dependency_key.substr(scope.owner_start,
+                                                   referrer_sentinel -
+                                                       scope.owner_start))) {
+            continue;
+          }
+
+          action_dependencies.emplace_back(dependency_key);
+        }
+      }
+
+      // What this reads beyond the graph it is derived from, named by the
+      // rule rather than assumed here, and last so that whatever walks the
+      // graph reaches the same entries it always did
+      for (std::uint8_t index{0}; index < dependents_rule.dependency_count;
+           index++) {
+        const auto &dependency{dependents_rule.dependencies[index]};
+        if (dependency.source == DependencySource::GlobalOutput) {
+          action_dependencies.emplace_back(scope.output / dependency.filename);
+        }
+      }
+
+      dependents_wave.push_back({.type = dependents_rule.action,
+                                 .destination = std::move(destination),
+                                 .dependencies = std::move(action_dependencies),
+                                 .data = uri,
+                                 .view = in_secondary
+                                             ? scope.secondary_views[view]
+                                             : std::string_view{}});
+    }
+  }
+
+  std::ranges::sort(dependents_wave,
+                    [](const BuildPlan::Action &left,
+                       const BuildPlan::Action &right) -> bool {
+                      return left.destination < right.destination;
+                    });
+  plan.size = dependents_wave.size();
+  plan.waves.push_back(std::move(dependents_wave));
+}
+
+// The combine phase settles one wave, over the rules that read what other
+// leaves produced rather than what their own leaf holds
+static auto settle_combine_plan(const DeltaScope &scope) -> BuildPlan {
+  std::unordered_set<std::string> affected_leaves;
+  for (const auto key : scope.entries.keys()) {
+    if (!key.ends_with(scope.dependencies_suffix)) {
+      continue;
+    }
+
+    if (!scope.entries.in_overlay(std::string{key})) {
+      continue;
+    }
+
+    const auto *new_entry{scope.entries.entry(key)};
+    const auto *old_entry{scope.entries.disk_entry(key)};
+
+    const auto owner_sentinel{
+        key.find(scope.sentinel_separator, scope.owner_start)};
+    if (owner_sentinel == std::string_view::npos) {
+      continue;
+    }
+
+    const auto owner_base{
+        key.substr(scope.owner_start, owner_sentinel - scope.owner_start)};
+    const auto old_references{cross_leaf_references(
+        old_entry, owner_base, scope.primary_prefix, scope.sentinel_separator)};
+    const auto new_references{cross_leaf_references(
+        new_entry, owner_base, scope.primary_prefix, scope.sentinel_separator)};
+
+    for (const auto &reference : new_references) {
+      if (!old_references.contains(reference)) {
+        affected_leaves.insert(reference);
+      }
+    }
+
+    for (const auto &reference : old_references) {
+      if (!new_references.contains(reference)) {
+        affected_leaves.insert(reference);
+      }
+    }
+
+    if (old_entry == nullptr) {
+      affected_leaves.insert(std::string{owner_base});
+    }
+  }
+
+  for (const auto &deleted_key : scope.entries.deleted_keys()) {
+    if (!deleted_key.ends_with(scope.dependencies_suffix)) {
+      continue;
+    }
+
+    if (!deleted_key.starts_with(scope.primary_prefix)) {
+      continue;
+    }
+
+    const auto *old_entry{scope.entries.raw_disk_entry(deleted_key)};
+    if (old_entry == nullptr) {
+      continue;
+    }
+
+    const auto owner_sentinel{
+        deleted_key.find(scope.sentinel_separator, scope.owner_start)};
+    if (owner_sentinel == std::string::npos) {
+      continue;
+    }
+
+    const auto owner_base{deleted_key.substr(
+        scope.owner_start, owner_sentinel - scope.owner_start)};
+    for (const auto &reference :
+         cross_leaf_references(old_entry, owner_base, scope.primary_prefix,
+                               scope.sentinel_separator)) {
+      affected_leaves.insert(reference);
+    }
+  }
+
+  BuildPlan plan;
+  plan.output = scope.output;
+  plan.type = scope.build_type;
+
+  {
+    // A view that appeared since the last build holds no artifact for any
+    // leaf, and the graph it would be derived from did not move, so nothing
+    // above notices it. The same is true of a view that keeps its name but
+    // widens, since a leaf it could not reach before arrives with no
+    // artifact behind it either
+    for (const auto &[uri, info] : scope.leaves) {
+      const auto *missing_rule{combine_only_rule(scope.leaf_rules, info.kind)};
+      if (missing_rule == nullptr || missing_rule->base == 0) {
+        continue;
+      }
+
+      const auto &relative_string{info.relative_path->native()};
+      if (affected_leaves.contains(relative_string)) {
+        continue;
+      }
+
+      for (std::size_t view{0}; view < scope.secondary_views.size(); view++) {
+        if (scope.visible(view, relative_string) &&
+            !scope.entries.contains(append_filename(
+                make_base_string(scope.output.native(),
+                                 scope.secondary_directory,
+                                 scope.secondary_views[view], relative_string,
+                                 scope.sentinel),
+                missing_rule->filename))) {
+          affected_leaves.insert(relative_string);
+          break;
+        }
+      }
+    }
+  }
+
+  if (!affected_leaves.empty()) {
+    settle_dependents_wave(scope, affected_leaves, plan);
+  }
+
+  return plan;
+}
+
+// What one view of one directory asks of the plan
+static auto declare_container_view(
+    const DeltaScope &scope, const ContainerRule &rule, std::size_t view,
+    const std::filesystem::path &directory, const std::string &relative,
+    bool is_root_directory,
+    const std::vector<std::filesystem::path> &affected_directories,
+    const std::vector<std::filesystem::path> &all_directories,
+    const std::vector<std::filesystem::path> &all_relative_paths,
+    const std::vector<LeafKind> &all_relative_kinds, TargetMap &targets,
+    std::unordered_set<std::string> &dirty_set) -> void {
+  if (rule.scope == ContainerScope::PrimaryRootOnly && view != 0) {
+    return;
+  }
+
+  // The root answers every view, since a caller shown nothing is still
+  // shown that, beside whatever refuses them
+  if (!is_root_directory &&
+      !holds_visible_leaf(all_relative_paths, relative, view, scope.visible)) {
+    return;
+  }
+
+  const auto &secondary_path{scope.secondary_paths[view]};
+  auto destination{(secondary_path / relative / scope.sentinel / rule.filename)
+                       .lexically_normal()
+                       .string()};
+
+  std::vector<std::string> rule_dependencies;
+  std::size_t global_dependency_count{0};
+
+  for (std::uint8_t dependency_index{0};
+       dependency_index < rule.dependency_count; dependency_index++) {
+    const auto &dependency{rule.dependencies[dependency_index]};
+    switch (dependency.kind) {
+      case ContainerDependencyKind::LeafMetadata:
+        for (std::size_t leaf_index{0}; leaf_index < all_relative_paths.size();
+             leaf_index++) {
+          const auto &leaf_relative{all_relative_paths[leaf_index]};
+          // A listing is built from what its view holds, so a leaf the
+          // view is without is not read here either. Naming one anyway
+          // would have this wait on something nothing produces, and so
+          // would naming a leaf of a kind no rule describes
+          if (!scope.visible(view, leaf_relative.native()) ||
+              !holds_kind(scope.metadata_kinds,
+                          all_relative_kinds[leaf_index])) {
+            return;
+          }
+
+          if (leaf_relative.parent_path() == relative ||
+              (is_root_directory && !leaf_relative.has_parent_path())) {
+            rule_dependencies.push_back(append_filename(
+                make_base_string(scope.output_string, scope.secondary_directory,
+                                 scope.secondary_views[view],
+                                 leaf_relative.native(), scope.sentinel),
+                scope.leaf_rules[scope.indices->metadata].filename));
+          }
+        }
+        break;
+      case ContainerDependencyKind::ChildContainers:
+        for (const auto &other_directory : affected_directories) {
+          auto other_relative{
+              other_directory.lexically_relative(scope.primary_path)};
+          if (other_relative == relative) {
+            continue;
+          }
+
+          auto other_parent{other_relative.parent_path()};
+          if (other_parent.empty()) {
+            other_parent = ".";
+          }
+
+          if (other_parent == relative &&
+              holds_visible_leaf(all_relative_paths, other_relative, view,
+                                 scope.visible)) {
+            rule_dependencies.push_back(
+                (secondary_path / other_relative / scope.sentinel /
+                 scope.container_rules[scope.indices->container_list].filename)
+                    .lexically_normal()
+                    .string());
+          }
+        }
+        break;
+      case ContainerDependencyKind::AllContainerListings:
+        for (const auto &any_directory : all_directories) {
+          const auto directory_relative{
+              any_directory.lexically_relative(scope.primary_path)};
+          if (directory_relative != "." &&
+              !holds_visible_leaf(all_relative_paths, directory_relative, view,
+                                  scope.visible)) {
+            continue;
+          }
+
+          rule_dependencies.push_back(
+              (directory_relative == "."
+                   ? secondary_path / scope.sentinel /
+                         scope.container_rules[scope.indices->container_list]
+                             .filename
+                   : secondary_path / directory_relative / scope.sentinel /
+                         scope.container_rules[scope.indices->container_list]
+                             .filename)
+                  .lexically_normal()
+                  .string());
+        }
+        break;
+      case ContainerDependencyKind::SameContainerTarget:
+        rule_dependencies.push_back(
+            (secondary_path / relative / scope.sentinel / dependency.filename)
+                .lexically_normal()
+                .string());
+        break;
+      case ContainerDependencyKind::ExternalConfig:
+        rule_dependencies.push_back(scope.configuration_string);
+        break;
+      case ContainerDependencyKind::Global:
+        rule_dependencies.push_back(
+            (scope.output /
+             (dependency.filename != nullptr
+                  ? dependency.filename
+                  : scope.global_rules[scope.indices->mode_global].filename))
+                .lexically_normal()
+                .string());
+        global_dependency_count += 1;
+        break;
+    }
+  }
+
+  const auto directory_entry_count{rule_dependencies.size() -
+                                   global_dependency_count};
+  if (rule.action ==
+          scope.container_rules[scope.indices->container_list].action &&
+      scope.limits->maximum_direct_directory_entries > 0 &&
+      directory_entry_count > scope.limits->maximum_direct_directory_entries) {
+    throw BuildTooManyDirectoryEntriesError(directory, directory_entry_count);
+  }
+
+  declare_target(targets, rule.action, destination,
+                 std::move(rule_dependencies), {}, scope.secondary_views[view]);
+  dirty_set.insert(std::move(destination));
+}
+
+// What the directories holding this build's leaves ask of the plan, which
+// every view answers separately
+static auto settle_container_work(
+    const DeltaScope &scope,
+    const std::vector<std::filesystem::path> &affected_directories,
+    const std::vector<std::filesystem::path> &all_directories,
+    const std::vector<std::filesystem::path> &all_relative_paths,
+    const std::vector<LeafKind> &all_relative_kinds, TargetMap &targets,
+    std::unordered_set<std::string> &dirty_set) -> void {
+  for (const auto &rule : scope.container_rules) {
+    if (rule.gate == TargetGate::OnlyInFullMode &&
+        scope.build_type != scope.full_mode) {
+      continue;
+    }
+
+    for (const auto &directory : affected_directories) {
+      const auto relative{directory.lexically_relative(scope.primary_path)};
+      const auto is_root_directory{relative == "."};
+
+      if ((rule.scope == ContainerScope::RootOnly ||
+           rule.scope == ContainerScope::PrimaryRootOnly) &&
+          !is_root_directory) {
+        continue;
+      }
+
+      if (rule.scope == ContainerScope::NonRoot && is_root_directory) {
+        continue;
+      }
+
+      if (rule.only_full_rebuild && !scope.is_full) {
+        continue;
+      }
+
+      // One container artifact per view, each naming only its own view's
+      // children, since a listing in one view is built from that view's
+      // children rather than from another's
+      for (std::size_t view{0}; view < scope.secondary_paths.size(); view++) {
+        declare_container_view(scope, rule, view, directory, relative,
+                               is_root_directory, affected_directories,
+                               all_directories, all_relative_paths,
+                               all_relative_kinds, targets, dirty_set);
+      }
+    }
+  }
+}
+
+// What every leaf of this build asks of the plan, and what the directories
+// holding them ask in turn
+static auto settle_leaf_work(
+    const DeltaScope &scope, const std::vector<ActiveLeaf> &active_leaves,
+    const std::vector<std::filesystem::path> &all_relative_paths,
+    const std::vector<LeafKind> &all_relative_kinds,
+    std::vector<std::filesystem::path> &affected_relative_paths,
+    TargetMap &targets, std::unordered_set<std::string> &dirty_set) -> void {
+  for (const auto &leaf : active_leaves) {
+    if (scope.is_full) {
+      affected_relative_paths.emplace_back(*leaf.info->relative_path);
+      continue;
+    }
+
+    if (dirty_set.contains(leaf.root_path)) {
+      affected_relative_paths.emplace_back(*leaf.info->relative_path);
+    }
+  }
+
+  auto has_graph_change{false};
+  if (!has_graph_change) {
+    for (const auto &leaf : active_leaves) {
+      if (!scope.entries.contains(leaf.root_path)) {
+        has_graph_change = true;
+        break;
+      }
+    }
+  }
+
+  for (const auto &leaf : active_leaves) {
+    const auto leaf_is_dirty{dirty_set.contains(leaf.root_path)};
+
+    for (std::size_t index{0}; index < scope.leaf_rules.size(); index++) {
+      const auto &rule{scope.leaf_rules[index]};
+      if (rule.dirty == DirtyOverride::Normal) {
+        continue;
+      }
+
+      if (rule.gate == TargetGate::OnlyInFullMode &&
+          scope.build_type != scope.full_mode) {
+        continue;
+      }
+
+      // Each view holds its own copy, so each is asked about separately and
+      // one being absent does not speak for the rest
+      const std::span<const std::string> rule_bases{
+          rule.base == 0 ? std::span<const std::string>{&leaf.primary_base, 1}
+                         : std::span<const std::string>{leaf.secondary_bases}};
+      for (const auto &base : rule_bases) {
+        if (base.empty()) {
+          continue;
+        }
+
+        auto target_path_string{append_filename(base, rule.filename)};
+        auto should_force{scope.is_full || leaf_is_dirty ||
+                          !scope.entries.contains(target_path_string)};
+
+        if (!should_force && has_graph_change &&
+            (rule.dirty == DirtyOverride::ForceOnGraphChange ||
+             rule.dirty == DirtyOverride::ForceIfAffected)) {
+          should_force = true;
+        }
+
+        if (should_force) {
+          dirty_set.insert(std::move(target_path_string));
+        }
+      }
+    }
+  }
+
+  const auto affected_directories{collect_affected_directories(
+      scope.primary_path, affected_relative_paths)};
+  const auto all_directories{
+      collect_affected_directories(scope.primary_path, all_relative_paths)};
+
+  settle_container_work(scope, affected_directories, all_directories,
+                        all_relative_paths, all_relative_kinds, targets,
+                        dirty_set);
+}
+
+// The leaves an earlier build left behind, which nothing of this one claims
+static auto
+settle_stale_removals(const DeltaScope &scope,
+                      const std::vector<ActiveLeaf> &active_leaves,
+                      const std::vector<std::string> &secondary_strings,
+                      const BuildPlan::Action::Type remove_action,
+                      std::vector<BuildPlan::Action> &remove_wave) -> void {
+  std::unordered_set<std::string> known_bases;
+  known_bases.reserve((active_leaves.size() * 2) + 1);
+  for (const auto &leaf : active_leaves) {
+    known_bases.insert(leaf.primary_base);
+    // Only the views holding this leaf know it, so a view without it leaves
+    // nothing here to account for and nothing on disk to keep
+    for (const auto &secondary_base : leaf.secondary_bases) {
+      if (!secondary_base.empty()) {
+        known_bases.insert(secondary_base);
+      }
+    }
+
+    auto current{*leaf.info->relative_path};
+    while (current.has_parent_path() && current.parent_path() != current) {
+      current = current.parent_path();
+      for (const auto &secondary_string : secondary_strings) {
+        known_bases.insert(secondary_string + '/' + current.string() + '/' +
+                           std::string{scope.sentinel});
+      }
+    }
+  }
+
+  for (const auto &secondary_string : secondary_strings) {
+    known_bases.insert(secondary_string + '/' + std::string{scope.sentinel});
+  }
+
+  std::unordered_set<std::string> known_ancestors;
+  known_ancestors.reserve(known_bases.size() * 3);
+  for (const auto &base : known_bases) {
+    auto slash_position{base.rfind('/')};
+    while (slash_position != std::string::npos && slash_position > 0) {
+      const auto ancestor{base.substr(0, slash_position)};
+      if (!known_ancestors.insert(ancestor).second) {
+        break;
+      }
+      slash_position = ancestor.rfind('/');
+    }
+  }
+
+  const auto output_prefix{scope.output_string + "/"};
+
+  std::unordered_set<std::string> global_skip_paths;
+  for (const auto &rule : scope.global_rules) {
+    global_skip_paths.insert(scope.output_string + '/' + rule.filename);
+  }
+
+  std::unordered_set<std::string> stale_roots;
+  for (const auto entry_key : scope.entries.keys()) {
+    const std::string entry_path{entry_key};
+    if (!entry_path.starts_with(output_prefix)) {
+      continue;
+    }
+
+    if (global_skip_paths.contains(entry_path)) {
+      continue;
+    }
+
+    bool is_known{false};
+    const auto sentinel_position{entry_path.find(scope.sentinel_separator)};
+    if (sentinel_position != std::string::npos) {
+      is_known =
+          known_bases.contains(entry_path.substr(0, sentinel_position + 2));
+    }
+
+    if (!is_known) {
+      is_known = known_bases.contains(entry_path) ||
+                 known_ancestors.contains(entry_path);
+    }
+
+    if (!is_known) {
+      auto stale_end{entry_path.size()};
+      while (true) {
+        const auto slash_position{entry_path.rfind('/', stale_end - 1)};
+        if (slash_position == std::string::npos ||
+            slash_position < output_prefix.size()) {
+          break;
+        }
+        const auto parent{entry_path.substr(0, slash_position)};
+        if (known_bases.contains(parent) || known_ancestors.contains(parent)) {
+          break;
+        }
+        stale_end = slash_position;
+      }
+
+      stale_roots.insert(entry_path.substr(0, stale_end));
+    }
+  }
+
+  for (const auto &root : stale_roots) {
+    remove_wave.push_back({.type = remove_action,
+                           .destination = std::filesystem::path{root},
+                           .dependencies = {},
+                           .data = {}});
+  }
+}
+
+// What every leaf of the catalog contributes, which is where this build
+// learns which of them it still has work for
+static auto collect_active_leaves(
+    const DeltaScope &scope,
+    const std::unordered_map<std::string_view,
+                             std::vector<const std::filesystem::path *>>
+        &dialect_dependents,
+    const std::unordered_set<std::string_view> &changed_dialects,
+    std::unordered_set<std::string> &dirty_relative_paths,
+    std::vector<ActiveLeaf> &active_leaves,
+    std::vector<std::filesystem::path> &all_relative_paths,
+    std::vector<LeafKind> &all_relative_kinds, TargetMap &targets) -> void {
+  for (const auto &[uri, info] : scope.leaves) {
+    const auto &relative_string{info.relative_path->native()};
+    all_relative_paths.emplace_back(*info.relative_path);
+    all_relative_kinds.push_back(info.kind);
+
+    auto primary_base{make_base_string(scope.output_string,
+                                       scope.primary_directory, {},
+                                       relative_string, scope.sentinel)};
+    // A leaf has a place only in the views holding it, so what it has bases in
+    // is what the build was told can see it. An entry left empty here is a view
+    // this leaf is absent from, which is what everything downstream reads
+    std::vector<std::string> secondary_bases;
+    secondary_bases.reserve(scope.secondary_views.size());
+    for (std::size_t view{0}; view < scope.secondary_views.size(); view++) {
+      secondary_bases.push_back(
+          scope.visible(view, relative_string)
+              ? make_base_string(scope.output_string, scope.secondary_directory,
+                                 scope.secondary_views[view], relative_string,
+                                 scope.sentinel)
+              : std::string{});
+    }
+
+    auto root_path{append_filename(
+        primary_base, scope.leaf_rules[scope.indices->root].filename)};
+
+    const auto *cached_leaf_state{
+        scope.is_full ? nullptr
+                      : scope.entries.leaf_state(
+                            scope.output_string, relative_string, info.evaluate,
+                            scope.build_type == scope.full_mode)};
+
+    bool leaf_dirty{scope.is_full || cached_leaf_state == nullptr};
+    if (!leaf_dirty) {
+      leaf_dirty = info.mtime > cached_leaf_state->root_mtime;
+    }
+
+    bool has_missing_targets{false};
+    if (!leaf_dirty && cached_leaf_state != nullptr) {
+      std::uint32_t expected_bitmap{0};
+      for (std::size_t rule_index{0}; rule_index < scope.leaf_rules.size();
+           rule_index++) {
+        const auto &rule{scope.leaf_rules[rule_index]};
+        if (rule.kind != info.kind) {
+          continue;
+        }
+        if (rule.gate == TargetGate::IfEvaluate && !info.evaluate) {
+          continue;
+        }
+        if (is_deselected(rule, info.selected)) {
+          continue;
+        }
+        if (rule.gate == TargetGate::OnlyInFullMode &&
+            scope.build_type != scope.full_mode) {
+          continue;
+        }
+        expected_bitmap |= scope.artifacts.mask(rule_index);
+      }
+      has_missing_targets = (cached_leaf_state->target_bitmap &
+                             expected_bitmap) != expected_bitmap;
+
+      // What a leaf is selected for can stop holding without the leaf itself
+      // changing, as when another leaf starts declaring it as its dialect.
+      // Treating that as a change is what disposes of what the leaf no longer
+      // has
+      if ((cached_leaf_state->target_bitmap & ~expected_bitmap) != 0) {
+        leaf_dirty = true;
+      }
+    }
+
+    // A leaf that a changed leaf declares as its dialect is reconsidered even
+    // when nothing of its own changed, since what it reads may have
+    const bool needs_targets{leaf_dirty || has_missing_targets ||
+                             (cached_leaf_state != nullptr &&
+                              cached_leaf_state->has_cross_leaf_deps) ||
+                             changed_dialects.contains(uri)};
+
+    if (leaf_dirty) {
+      dirty_relative_paths.insert(relative_string);
+    }
+
+    if (needs_targets) {
+      const auto dependents_match{dialect_dependents.find(uri)};
+      const std::span<const std::filesystem::path *const>
+          leaf_dialect_dependents{
+              dependents_match == dialect_dependents.end()
+                  ? std::span<const std::filesystem::path *const>{}
+                  : std::span<const std::filesystem::path *const>{
+                        dependents_match->second}};
+      bool declared_primary{false};
+      for (std::size_t view{0}; view < secondary_bases.size(); view++) {
+        if (secondary_bases[view].empty()) {
+          continue;
+        }
+
+        const std::array<std::string, 2> bases{
+            {primary_base, secondary_bases[view]}};
+        declare_leaf_targets(targets, bases, scope.output_string,
+                             info.path->native(), info.evaluate, info.selected,
+                             info.kind, scope.build_type, scope.full_mode,
+                             scope.configuration_string, uri, scope.phase,
+                             scope.leaf_rules, scope.primary_directory,
+                             scope.sentinel, leaf_dialect_dependents,
+                             scope.secondary_views[view], declared_primary);
+        declared_primary = true;
+      }
+
+      // Nothing in the view tree holds this leaf anywhere, so what it has in
+      // the unit tree is declared on its own rather than left undeclared
+      if (!declared_primary) {
+        const std::array<std::string, 2> bases{{primary_base, std::string{}}};
+        declare_leaf_targets(
+            targets, bases, scope.output_string, info.path->native(),
+            info.evaluate, info.selected, info.kind, scope.build_type,
+            scope.full_mode, scope.configuration_string, uri, scope.phase,
+            scope.leaf_rules, scope.primary_directory, scope.sentinel,
+            leaf_dialect_dependents, {}, false, true);
+      }
+    }
+
+    active_leaves.push_back({.uri = uri,
+                             .info = &info,
+                             .primary_base = std::move(primary_base),
+                             .secondary_bases = std::move(secondary_bases),
+                             .root_path = std::move(root_path)});
+  }
+}
+
+// The plan an incremental build settles on when nothing of the catalog
+// itself changed, which answers with nothing where that is not the case
+static auto settle_fast_path(const DeltaScope &scope)
+    -> std::optional<BuildPlan> {
+  bool fast_path_dirty{false};
+
+  const auto mode_global_string{
+      (scope.output / scope.global_rules[scope.indices->mode_global].filename)
+          .string()};
+  const auto had_full_mode{scope.entries.contains(mode_global_string)};
+  const auto needs_full_mode{scope.build_type == scope.full_mode};
+  if (had_full_mode != needs_full_mode) {
+    fast_path_dirty = true;
+  }
+
+  std::string primary_buffer;
+  std::string secondary_buffer;
+  primary_buffer.reserve(scope.output_string.size() + 64);
+  secondary_buffer.reserve(scope.output_string.size() + 64);
+  std::vector<std::string> current_bases;
+  current_bases.reserve(scope.leaves.size());
+
+  if (!fast_path_dirty) {
+    for (const auto &[uri, info] : scope.leaves) {
+      const auto &relative_string{info.relative_path->native()};
+
+      primary_buffer.clear();
+      primary_buffer += scope.output_string;
+      primary_buffer += '/';
+      primary_buffer += scope.primary_directory;
+      primary_buffer += '/';
+      primary_buffer += relative_string;
+      primary_buffer += '/';
+      primary_buffer += scope.sentinel;
+      current_bases.push_back(primary_buffer);
+
+      const auto *leaf_entry{scope.entries.leaf_state(
+          scope.output_string, relative_string, info.evaluate,
+          scope.build_type == scope.full_mode)};
+      if (leaf_entry == nullptr) {
+        fast_path_dirty = true;
+        break;
+      }
+
+      if (info.mtime > leaf_entry->root_mtime) {
+        fast_path_dirty = true;
+        break;
+      }
+
+      std::uint32_t expected_bitmap{0};
+      for (std::size_t rule_index{0}; rule_index < scope.leaf_rules.size();
+           rule_index++) {
+        const auto &rule{scope.leaf_rules[rule_index]};
+        if (rule.kind != info.kind) {
+          continue;
+        }
+
+        if (rule.gate == TargetGate::IfEvaluate && !info.evaluate) {
+          continue;
+        }
+
+        if (is_deselected(rule, info.selected)) {
+          continue;
+        }
+
+        if (rule.gate == TargetGate::OnlyInFullMode &&
+            scope.build_type != scope.full_mode) {
+          continue;
+        }
+
+        expected_bitmap |= scope.artifacts.mask(rule_index);
+      }
+
+      if ((leaf_entry->target_bitmap & expected_bitmap) != expected_bitmap) {
+        fast_path_dirty = true;
+        break;
+      }
+    }
+  }
+
+  if (!fast_path_dirty) {
+    std::unordered_set<std::string_view> base_set;
+    base_set.reserve(current_bases.size());
+    for (const auto &base : current_bases) {
+      base_set.insert(base);
+    }
+
+    for (const auto entry_path : scope.entries.keys()) {
+      if (!entry_path.starts_with(scope.primary_prefix)) {
+        continue;
+      }
+
+      const auto sentinel_position{entry_path.find(scope.sentinel_separator)};
+      if (sentinel_position == std::string_view::npos) {
+        continue;
+      }
+
+      if (!base_set.contains(entry_path.substr(0, sentinel_position + 2))) {
+        fast_path_dirty = true;
+        break;
+      }
+    }
+  }
+
+  if (!fast_path_dirty) {
+    BuildPlan plan;
+    plan.output = scope.output;
+    plan.type = scope.build_type;
+    if (!scope.comment.empty()) {
+      plan.waves.push_back(
+          {{.type = scope.global_rules[scope.indices->comment].action,
+            .destination = scope.comment_path,
+            .dependencies = {},
+            .data = scope.comment}});
+    } else if (scope.entries.contains(scope.comment_string)) {
+      plan.waves.push_back({{.type = scope.remove_action,
+                             .destination = scope.comment_path,
+                             .dependencies = {},
+                             .data = {}}});
+    }
+
+    if (scope.has_missing_globals) {
+      auto independent_wave{missing_independent_global_wave(
+          scope.missing_globals, scope.global_rules, scope.output,
+          scope.version)};
+      if (!independent_wave.empty()) {
+        plan.waves.push_back(std::move(independent_wave));
+      }
+
+      auto mode_wave{missing_mode_global_wave(
+          scope.missing_globals, scope.global_rules, scope.output,
+          scope.configuration_path, scope.mode_label)};
+      if (!mode_wave.empty()) {
+        plan.waves.push_back(std::move(mode_wave));
+      }
+
+      auto dependent_wave{missing_dependent_global_wave(
+          scope.missing_globals, scope.global_rules, scope.output,
+          scope.configuration_path)};
+      if (!dependent_wave.empty()) {
+        plan.waves.push_back(std::move(dependent_wave));
+      }
+    }
+
+    for (auto &wave : plan.waves) {
+      std::ranges::sort(wave,
+                        [](const BuildPlan::Action &left,
+                           const BuildPlan::Action &right) -> bool {
+                          return left.destination < right.destination;
+                        });
+      plan.size += wave.size();
+    }
+
+    return plan;
+  }
+
+  return std::nullopt;
+}
+
+// Whether an incremental build has anything left to do, and the plan it
+// settles on where it has not
+static auto settle_unchanged_plan(
+    const DeltaScope &scope, const std::vector<ActiveLeaf> &active_leaves,
+    const std::unordered_set<std::string> &dirty_set,
+    const std::unordered_set<std::string> &removed_entries,
+    const std::string &secondary_tree_prefix, bool &has_missing_mode_outputs,
+    bool &has_potential_stale) -> std::optional<BuildPlan> {
+  if (scope.build_type == scope.full_mode && dirty_set.empty() &&
+      !scope.is_full) {
+    for (const auto &leaf : active_leaves) {
+      for (const auto &rule : scope.leaf_rules) {
+        if (rule.gate != TargetGate::OnlyInFullMode) {
+          continue;
+        }
+
+        if (rule.base == 0) {
+          if (!scope.entries.contains(
+                  append_filename(leaf.primary_base, rule.filename))) {
+            has_missing_mode_outputs = true;
+            break;
+          }
+
+          continue;
+        }
+
+        // Missing in any view is missing, since each holds its own copy
+        for (const auto &secondary_base : leaf.secondary_bases) {
+          if (!secondary_base.empty() &&
+              !scope.entries.contains(
+                  append_filename(secondary_base, rule.filename))) {
+            has_missing_mode_outputs = true;
+            break;
+          }
+        }
+
+        if (has_missing_mode_outputs) {
+          break;
+        }
+      }
+
+      if (has_missing_mode_outputs) {
+        break;
+      }
+    }
+  }
+
+  bool has_stale_mode_outputs{false};
+  if (scope.build_type != scope.full_mode && dirty_set.empty() &&
+      !scope.is_full) {
+    const auto &secondary_prefix{secondary_tree_prefix};
+    for (const auto entry_path : scope.entries.keys()) {
+      if (!entry_path.starts_with(secondary_prefix)) {
+        continue;
+      }
+
+      const auto last_slash{entry_path.rfind('/')};
+      if (last_slash == std::string_view::npos) {
+        continue;
+      }
+
+      const std::string_view filename{entry_path.data() + last_slash + 1,
+                                      entry_path.size() - last_slash - 1};
+      for (const auto &rule : scope.leaf_rules) {
+        if (rule.gate == TargetGate::OnlyInFullMode &&
+            filename == rule.filename) {
+          has_stale_mode_outputs = true;
+          break;
+        }
+      }
+
+      if (!has_stale_mode_outputs) {
+        for (const auto &rule : scope.container_rules) {
+          if (rule.gate == TargetGate::OnlyInFullMode &&
+              filename == rule.filename) {
+            has_stale_mode_outputs = true;
+            break;
+          }
+        }
+      }
+
+      if (has_stale_mode_outputs) {
+        break;
+      }
+    }
+  }
+
+  has_potential_stale = !removed_entries.empty();
+
+  if (!scope.is_full && dirty_set.empty() && !has_missing_mode_outputs &&
+      !has_stale_mode_outputs && !has_potential_stale &&
+      !scope.has_missing_globals) {
+    if (!scope.comment.empty()) {
+      BuildPlan plan;
+      plan.output = scope.output;
+      plan.type = scope.build_type;
+      plan.waves.push_back(
+          {{.type = scope.global_rules[scope.indices->comment].action,
+            .destination = scope.comment_path,
+            .dependencies = {},
+            .data = scope.comment}});
+      plan.size = 1;
+      return plan;
+    }
+
+    if (scope.comment.empty() &&
+        scope.entries.contains(scope.comment_path.native())) {
+      BuildPlan plan;
+      plan.output = scope.output;
+      plan.type = scope.build_type;
+      plan.waves.push_back({{.type = scope.remove_action,
+                             .destination = scope.comment_path,
+                             .dependencies = {},
+                             .data = {}}});
+      plan.size = 1;
+      return plan;
+    }
+
+    return BuildPlan{.output = scope.output,
+                     .type = scope.build_type,
+                     .waves = {},
+                     .size = 0};
+  }
+
+  return std::nullopt;
+}
+
+// The waves the dirty targets of this build compose into, ordered so that
+// nothing runs before what it reads
+static auto compute_dag_waves(TargetMap &targets,
+                              const std::unordered_set<std::string> &dirty_set)
+    -> std::vector<std::vector<BuildPlan::Action>> {
+  std::unordered_map<std::string_view, std::size_t> wave_cache;
+  std::size_t max_wave{0};
+  std::vector<std::vector<BuildPlan::Action>> dag_waves;
+
+  for (const auto &target_path : dirty_set) {
+    if (targets.find(target_path) == targets.end()) {
+      continue;
+    }
+
+    const auto wave{compute_wave(target_path, targets, dirty_set, wave_cache)};
+    max_wave = std::max(wave, max_wave);
+  }
+
+  if (!dirty_set.empty()) {
+    dag_waves.resize(max_wave + 1);
+    for (const auto &target_path : dirty_set) {
+      auto target_iterator{targets.find(target_path)};
+      if (target_iterator == targets.end()) {
+        continue;
+      }
+
+      auto &target{target_iterator->second};
+      const auto wave_iterator{wave_cache.find(target_path)};
+      const auto wave{wave_iterator != wave_cache.end() ? wave_iterator->second
+                                                        : std::size_t{0}};
+      BuildPlan::Action::Dependencies action_dependencies;
+      action_dependencies.reserve(target.dependencies.size());
+      for (auto &dependency : target.dependencies) {
+        action_dependencies.emplace_back(std::move(dependency));
+      }
+
+      dag_waves[wave].push_back(
+          {.type = target.action,
+           .destination = std::filesystem::path{target_path},
+           .dependencies = std::move(action_dependencies),
+           .data = target.data,
+           .view = target.view});
+    }
+  }
+
+  return dag_waves;
+}
+
+// What a leaf no longer gets, which goes away whether the leaf stopped
+// evaluating, changed kind, or left the catalog
+static auto
+collect_leaf_removals(const DeltaScope &scope,
+                      const std::vector<ActiveLeaf> &active_leaves,
+                      const std::unordered_set<std::string> &dirty_set,
+                      std::vector<BuildPlan::Action> &remove_wave) -> void {
+  for (const auto &leaf : active_leaves) {
+    const auto leaf_dirty{dirty_set.contains(leaf.root_path)};
+    if (!leaf_dirty && !scope.is_full) {
+      continue;
+    }
+
+    // What a leaf no longer gets goes away, whether it stopped evaluating, it
+    // stopped selecting it, or it is held by a kind the leaf no longer is.
+    // Asked of the artifact rather than of the rule, since two rules may write
+    // one artifact under disjoint kinds, and a rule that does not apply is then
+    // no evidence that what it would have written is not there to stay
+    std::uint32_t retained{0};
+    for (std::size_t rule_index{0}; rule_index < scope.leaf_rules.size();
+         rule_index++) {
+      const auto &rule{scope.leaf_rules[rule_index]};
+      if (rule.kind != leaf.info->kind ||
+          (rule.gate == TargetGate::IfEvaluate && !leaf.info->evaluate) ||
+          is_deselected(rule, leaf.info->selected)) {
+        continue;
+      }
+
+      retained |= scope.artifacts.mask(rule_index);
+    }
+
+    std::uint32_t disposed{0};
+    for (std::size_t rule_index{0}; rule_index < scope.leaf_rules.size();
+         rule_index++) {
+      const auto mask{scope.artifacts.mask(rule_index)};
+      if ((retained & mask) != 0 || (disposed & mask) != 0) {
+        continue;
+      }
+
+      disposed |= mask;
+      const auto &rule{scope.leaf_rules[rule_index]};
+      const std::span<const std::string> target_bases{
+          rule.base == 0 ? std::span<const std::string>{&leaf.primary_base, 1}
+                         : std::span<const std::string>{leaf.secondary_bases}};
+      for (const auto &target_base : target_bases) {
+        if (target_base.empty()) {
+          continue;
+        }
+
+        auto target_path{append_filename(target_base, rule.filename)};
+        if (scope.entries.contains(target_path)) {
+          remove_wave.push_back(
+              {.type = scope.remove_action,
+               .destination = std::filesystem::path{std::move(target_path)},
+               .dependencies = {},
+               .data = {}});
+        }
+      }
+    }
+  }
+}
+
+// The plan the targets of this build compose into, wave by wave, with the
+// globals and the removals the build also owes
+static auto assemble_plan(const DeltaScope &scope, TargetMap &targets,
+                          const std::unordered_set<std::string> &dirty_set,
+                          const std::vector<ActiveLeaf> &active_leaves,
+                          const std::vector<std::string> &secondary_strings,
+                          const std::string &secondary_tree_prefix,
+                          const bool has_potential_stale) -> BuildPlan {
+  auto dag_waves{compute_dag_waves(targets, dirty_set)};
+
+  std::vector<BuildPlan::Action> remove_wave;
+
+  collect_leaf_removals(scope, active_leaves, dirty_set, remove_wave);
+
+  if (has_potential_stale || scope.is_full) {
+    settle_stale_removals(scope, active_leaves, secondary_strings,
+                          scope.remove_action, remove_wave);
+  }
+
+  std::unordered_set<std::string_view> mode_only_filenames;
+  for (const auto &rule : scope.leaf_rules) {
+    if (rule.gate == TargetGate::OnlyInFullMode) {
+      mode_only_filenames.insert(rule.filename);
+    }
+  }
+  for (const auto &rule : scope.container_rules) {
+    if (rule.gate == TargetGate::OnlyInFullMode) {
+      mode_only_filenames.insert(rule.filename);
+    }
+  }
+
+  bool mode_removed{false};
+  if (scope.build_type != scope.full_mode) {
+    const auto &secondary_prefix{secondary_tree_prefix};
+    for (const auto entry_path : scope.entries.keys()) {
+      if (!entry_path.starts_with(secondary_prefix)) {
+        continue;
+      }
+
+      const auto last_slash{entry_path.rfind('/')};
+      if (last_slash == std::string_view::npos) {
+        continue;
+      }
+
+      const std::string_view filename{entry_path.data() + last_slash + 1,
+                                      entry_path.size() - last_slash - 1};
+      if (mode_only_filenames.contains(filename)) {
+        remove_wave.push_back({.type = scope.remove_action,
+                               .destination = std::filesystem::path{entry_path},
+                               .dependencies = {},
+                               .data = {}});
+        mode_removed = true;
+      }
+    }
+  }
+
+  bool mode_added{false};
+  if (scope.build_type == scope.full_mode && !scope.is_full) {
+    const auto &secondary_prefix{secondary_tree_prefix};
+    bool had_mode_entries{false};
+    for (const auto entry_path : scope.entries.keys()) {
+      if (!entry_path.starts_with(secondary_prefix)) {
+        continue;
+      }
+      const auto last_slash{entry_path.rfind('/')};
+      if (last_slash == std::string_view::npos) {
+        continue;
+      }
+      const std::string_view filename{entry_path.data() + last_slash + 1,
+                                      entry_path.size() - last_slash - 1};
+      if (mode_only_filenames.contains(filename)) {
+        had_mode_entries = true;
+        break;
+      }
+    }
+    mode_added = !had_mode_entries;
+  }
+
+  BuildPlan plan;
+  plan.output = scope.output;
+  plan.type = scope.build_type;
+
+  if (scope.is_full) {
+    std::vector<BuildPlan::Action> initialization_wave;
+    initialization_wave.push_back(
+        {.type = scope.global_rules[scope.indices->version].action,
+         .destination = scope.version_path,
+         .dependencies = {},
+         .data = scope.version});
+    initialization_wave.push_back(
+        {.type = scope.global_rules[scope.indices->configuration].action,
+         .destination = scope.configuration_path,
+         .dependencies = {},
+         .data = {}});
+
+    // Globals derived purely from the configuration regenerate on every full
+    // rebuild, which is exactly when the configuration or version changes. The
+    // configuration anchor itself is already scheduled above. A global that
+    // depends on another global's output cannot run in this wave, so it is
+    // scheduled after the dependency below
+    for (const auto &rule : scope.global_rules) {
+      if (rule.trigger != GlobalTrigger::FullRebuild ||
+          rule.external_config_anchor || rule.dependency_count > 0) {
+        continue;
+      }
+
+      initialization_wave.push_back(
+          {.type = rule.action,
+           .destination = scope.output / rule.filename,
+           .dependencies = {},
+           .data = {}});
+    }
+
+    if (!scope.comment.empty()) {
+      initialization_wave.push_back(
+          {.type = scope.global_rules[scope.indices->comment].action,
+           .destination = scope.comment_path,
+           .dependencies = {},
+           .data = scope.comment});
+    } else if (scope.entries.contains(scope.comment_string)) {
+      remove_wave.push_back({.type = scope.remove_action,
+                             .destination = scope.comment_path,
+                             .dependencies = {},
+                             .data = {}});
+    }
+    plan.waves.push_back(std::move(initialization_wave));
+  } else if (!scope.comment.empty()) {
+    plan.waves.push_back(
+        {{.type = scope.global_rules[scope.indices->comment].action,
+          .destination = scope.comment_path,
+          .dependencies = {},
+          .data = scope.comment}});
+  } else if (scope.entries.contains(scope.comment_string)) {
+    remove_wave.push_back({.type = scope.remove_action,
+                           .destination = scope.comment_path,
+                           .dependencies = {},
+                           .data = {}});
+  }
+
+  if (scope.has_missing_globals) {
+    auto independent_wave{missing_independent_global_wave(
+        scope.missing_globals, scope.global_rules, scope.output,
+        scope.version)};
+    if (!independent_wave.empty()) {
+      plan.waves.push_back(std::move(independent_wave));
+    }
+  }
+
+  if (scope.is_full || mode_added || mode_removed) {
+    std::vector<BuildPlan::Action> global_wave;
+    for (const auto &rule : scope.global_rules) {
+      if (rule.trigger != GlobalTrigger::OnModeChange) {
+        continue;
+      }
+
+      global_wave.push_back({.type = rule.action,
+                             .destination = scope.output / rule.filename,
+                             .dependencies = {scope.configuration_path},
+                             .data = scope.mode_label});
+    }
+
+    if (!global_wave.empty()) {
+      plan.waves.push_back(std::move(global_wave));
+    }
+  } else if (scope.has_missing_globals) {
+    auto global_wave{missing_mode_global_wave(
+        scope.missing_globals, scope.global_rules, scope.output,
+        scope.configuration_path, scope.mode_label)};
+    if (!global_wave.empty()) {
+      plan.waves.push_back(std::move(global_wave));
+    }
+  }
+
+  // Globals that depend on another global's output run after it, in their own
+  // wave between the dependency-free globals above and the per-schema work
+  // below. They regenerate on a full rebuild, when the configuration changes
+  if (scope.is_full) {
+    std::vector<BuildPlan::Action> dependent_global_wave;
+    for (const auto &rule : scope.global_rules) {
+      if (rule.trigger != GlobalTrigger::FullRebuild ||
+          rule.external_config_anchor || rule.dependency_count == 0) {
+        continue;
+      }
+
+      dependent_global_wave.push_back(
+          {.type = rule.action,
+           .destination = scope.output / rule.filename,
+           .dependencies = global_rule_dependencies(rule, scope.output,
+                                                    scope.configuration_path),
+           .data = {}});
+    }
+
+    if (!dependent_global_wave.empty()) {
+      plan.waves.push_back(std::move(dependent_global_wave));
+    }
+  } else if (scope.has_missing_globals) {
+    auto dependent_global_wave{
+        missing_dependent_global_wave(scope.missing_globals, scope.global_rules,
+                                      scope.output, scope.configuration_path)};
+    if (!dependent_global_wave.empty()) {
+      plan.waves.push_back(std::move(dependent_global_wave));
+    }
+  }
+
+  for (auto &wave : dag_waves) {
+    if (!wave.empty()) {
+      plan.waves.push_back(std::move(wave));
+    }
+  }
+
+  if (!remove_wave.empty()) {
+    std::ranges::sort(remove_wave,
+                      [](const BuildPlan::Action &left,
+                         const BuildPlan::Action &right) -> bool {
+                        return left.destination < right.destination;
+                      });
+    std::vector<BuildPlan::Action> deduplicated_removals;
+    deduplicated_removals.reserve(remove_wave.size());
+    for (auto &entry : remove_wave) {
+      const auto &path{entry.destination.string()};
+      // The wave is sorted and kept entries form an antichain, so a child's
+      // only possible kept ancestor is the most recently kept entry
+      bool is_child{false};
+      if (!deduplicated_removals.empty()) {
+        const auto &parent{deduplicated_removals.back().destination.string()};
+        is_child = path.size() > parent.size() && path[parent.size()] == '/' &&
+                   path.starts_with(parent);
+      }
+
+      if (!is_child) {
+        deduplicated_removals.push_back(std::move(entry));
+      }
+    }
+
+    plan.waves.push_back(std::move(deduplicated_removals));
+  }
+  for (auto &wave : plan.waves) {
+    std::ranges::sort(wave,
+                      [](const BuildPlan::Action &left,
+                         const BuildPlan::Action &right) -> bool {
+                        return left.destination < right.destination;
+                      });
+    plan.size += wave.size();
+  }
+
+  return plan;
+}
+
+// Which targets this build owes work for, which spreads from the leaves
+// that changed to everything recorded as reading them
+static auto collect_dirty_targets(
+    const DeltaScope &scope, const std::vector<ActiveLeaf> &active_leaves,
+    const std::unordered_set<std::string_view> &force_dirty,
+    const std::unordered_set<std::string> &removed_entries,
+    const std::string &secondary_tree_prefix, TargetMap &targets,
+    std::unordered_set<std::string> &dirty_set) -> void {
+  for (const auto &leaf : active_leaves) {
+    if (!force_dirty.contains(leaf.root_path)) {
+      continue;
+    }
+
+    for (std::size_t index{0}; index < scope.leaf_rules.size(); index++) {
+      const auto &rule{scope.leaf_rules[index]};
+      if (rule.gate == TargetGate::IfEvaluate && !leaf.info->evaluate) {
+        continue;
+      }
+
+      if (is_deselected(rule, leaf.info->selected)) {
+        continue;
+      }
+
+      if (rule.gate == TargetGate::OnlyInFullMode &&
+          scope.build_type != scope.full_mode) {
+        continue;
+      }
+
+      if (rule.base == 0) {
+        dirty_set.insert(append_filename(leaf.primary_base, rule.filename));
+        continue;
+      }
+
+      for (const auto &secondary_base : leaf.secondary_bases) {
+        if (!secondary_base.empty()) {
+          dirty_set.insert(append_filename(secondary_base, rule.filename));
+        }
+      }
+    }
+  }
+
+  const auto primary_prefix_string{scope.output_string + "/" +
+                                   std::string{scope.primary_directory} + "/"};
+  const auto &secondary_prefix_string{secondary_tree_prefix};
+  std::unordered_map<std::string_view, std::vector<std::string_view>>
+      reverse_adjacency;
+  std::unordered_map<std::string, std::vector<std::string>>
+      reverse_state_dependencies;
+  for (const auto &[target_path, target] : targets) {
+    for (const auto &dependency : target.dependencies) {
+      reverse_adjacency[dependency].push_back(target_path);
+    }
+
+    if (dirty_set.contains(target_path)) {
+      continue;
+    }
+
+    const std::string_view target_view{target_path};
+    std::string_view after_prefix;
+    bool in_secondary{false};
+    if (target_view.starts_with(primary_prefix_string)) {
+      after_prefix = target_view.substr(primary_prefix_string.size());
+    } else if (target_view.starts_with(secondary_prefix_string)) {
+      in_secondary = true;
+      after_prefix = target_view.substr(secondary_prefix_string.size());
+      // The segment naming the view sits between the tree and the leaf, so
+      // stepping over it is what leaves the relative path a leaf occupies in
+      // every view rather than one prefixed by the view it was found in
+      if (scope.directories[1].namespaced) {
+        const auto separator{after_prefix.find('/')};
+        if (separator == std::string_view::npos) {
+          continue;
+        }
+
+        after_prefix = after_prefix.substr(separator + 1);
+      }
+    }
+
+    if (!after_prefix.empty()) {
+      const auto sentinel_position{after_prefix.find(scope.sentinel_separator)};
+      if (sentinel_position != std::string_view::npos) {
+        const auto target_relative{after_prefix.substr(0, sentinel_position)};
+        const auto *leaf_entry{scope.entries.leaf_state(
+            scope.output_string, std::string{target_relative}, true, true)};
+        if (leaf_entry != nullptr && !leaf_entry->has_cross_leaf_deps) {
+          const auto target_filename{
+              after_prefix.substr(sentinel_position + 3)};
+          bool target_known{false};
+          for (std::size_t rule_index{0}; rule_index < scope.leaf_rules.size();
+               rule_index++) {
+            const auto &rule{scope.leaf_rules[rule_index]};
+            if (target_filename == rule.filename &&
+                ((rule.base == 1) == in_secondary)) {
+              target_known = (leaf_entry->target_bitmap &
+                              scope.artifacts.mask(rule_index)) != 0;
+              break;
+            }
+          }
+
+          if (!target_known) {
+            dirty_set.insert(target_path);
+          }
+
+          continue;
+        }
+      }
+    }
+
+    const auto *state_entry{scope.entries.entry(target_path)};
+    if (state_entry == nullptr) {
+      dirty_set.insert(target_path);
+      continue;
+    }
+
+    for (const auto &dependency : state_entry->dependencies) {
+      reverse_state_dependencies[dependency.native()].push_back(target_path);
+    }
+  }
+
+  // Snapshot the dirty set before propagating: inserting into an
+  // unordered_set while range-iterating it invalidates the iterator on
+  // rehash. This mirrors the one-level propagation the removed-entries pass
+  // below performs, while the transitive closure over the current plan's
+  // graph happens in the worklist that follows
+  const std::vector<std::string> dirty_snapshot{dirty_set.begin(),
+                                                dirty_set.end()};
+  for (const auto &dirty_path : dirty_snapshot) {
+    const auto match{reverse_state_dependencies.find(dirty_path)};
+    if (match != reverse_state_dependencies.end()) {
+      for (const auto &dependent : match->second) {
+        dirty_set.insert(dependent);
+      }
+    }
+  }
+
+  for (const auto &removed_path : removed_entries) {
+    const auto match{reverse_state_dependencies.find(removed_path)};
+    if (match != reverse_state_dependencies.end()) {
+      for (const auto &dependent : match->second) {
+        dirty_set.insert(dependent);
+      }
+    }
+  }
+
+  std::vector<std::string_view> worklist;
+  worklist.reserve(dirty_set.size());
+  for (const auto &dirty_path : dirty_set) {
+    worklist.push_back(dirty_path);
+  }
+
+  for (std::size_t index{0}; index < worklist.size(); index++) {
+    const auto match{reverse_adjacency.find(worklist[index])};
+    if (match == reverse_adjacency.end()) {
+      continue;
+    }
+
+    for (const auto &dependent : match->second) {
+      if (dirty_set.insert(std::string{dependent}).second) {
+        worklist.push_back(dependent);
+      }
+    }
+  }
+}
+
 // The plan is settled in one pass over every rule kind, since what a wave holds
 // depends on what the waves before it decided
 // NOLINTNEXTLINE(google-readability-function-size,hicpp-function-size,readability-function-size)
@@ -439,8 +2092,6 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
   // same thing as holding one view whose name is nothing, so the rest of this
   // iterates a list either way rather than asking which kind of tree it has
   assert(!views.empty());
-  static constexpr std::array<std::string_view, 1> UNNAMESPACED{
-      {std::string_view{}}};
   const std::span<const std::string_view> secondary_views{
       directories[1].namespaced
           ? views
@@ -452,273 +2103,42 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
   const auto artifacts{leaf_artifacts(leaf_rules)};
   const auto metadata_kinds{container_target_kinds(leaf_rules)};
 
+  auto scope_primary_prefix{output.native() + "/" +
+                            std::string{primary_directory} + "/"};
+  const auto scope_owner_start{scope_primary_prefix.size()};
+  DeltaScope scope{.build_type = build_type,
+                   .entries = entries,
+                   .output = output,
+                   .leaves = leaves,
+                   .leaf_rules = leaf_rules,
+                   .directories = directories,
+                   .visible = visible,
+                   .sentinel = sentinel,
+                   .primary_directory = primary_directory,
+                   .secondary_directory = secondary_directory,
+                   .secondary_views = secondary_views,
+                   .sentinel_separator = sentinel_separator,
+                   .dependencies_suffix = dependencies_suffix,
+                   .output_string = output.native(),
+                   .primary_prefix = std::move(scope_primary_prefix),
+                   .owner_start = scope_owner_start};
+
   if (phase == BuildPhase::Combine) {
-    const auto &output_string{output.native()};
-    const auto primary_prefix{output_string + "/" +
-                              std::string{primary_directory} + "/"};
-
-    auto extract_cross_leaf_references{[&primary_prefix, &sentinel_separator](
-                                           const BuildState::Entry *state_entry,
-                                           std::string_view owner_base)
-                                           -> std::unordered_set<std::string> {
-      std::unordered_set<std::string> result;
-      if (state_entry == nullptr) {
-        return result;
-      }
-
-      for (const auto &dependency : state_entry->dependencies) {
-        const auto &dependency_path{dependency.native()};
-        if (!dependency_path.starts_with(primary_prefix)) {
-          continue;
-        }
-
-        const auto sentinel_position{dependency_path.find(sentinel_separator)};
-        if (sentinel_position == std::string::npos) {
-          continue;
-        }
-
-        const auto relative{dependency_path.substr(
-            primary_prefix.size(), sentinel_position - primary_prefix.size())};
-        if (relative != owner_base) {
-          result.insert(std::string{relative});
-        }
-      }
-
-      return result;
-    }};
-
-    const auto owner_start{primary_prefix.size()};
-
-    std::unordered_set<std::string> affected_leaves;
-    for (const auto key : entries.keys()) {
-      if (!key.ends_with(dependencies_suffix)) {
-        continue;
-      }
-
-      if (!entries.in_overlay(std::string{key})) {
-        continue;
-      }
-
-      const auto *new_entry{entries.entry(key)};
-      const auto *old_entry{entries.disk_entry(key)};
-
-      const auto owner_sentinel{key.find(sentinel_separator, owner_start)};
-      if (owner_sentinel == std::string_view::npos) {
-        continue;
-      }
-
-      const auto owner_base{
-          key.substr(owner_start, owner_sentinel - owner_start)};
-      const auto old_references{
-          extract_cross_leaf_references(old_entry, owner_base)};
-      const auto new_references{
-          extract_cross_leaf_references(new_entry, owner_base)};
-
-      for (const auto &reference : new_references) {
-        if (!old_references.contains(reference)) {
-          affected_leaves.insert(reference);
-        }
-      }
-
-      for (const auto &reference : old_references) {
-        if (!new_references.contains(reference)) {
-          affected_leaves.insert(reference);
-        }
-      }
-
-      if (old_entry == nullptr) {
-        affected_leaves.insert(std::string{owner_base});
-      }
-    }
-
-    for (const auto &deleted_key : entries.deleted_keys()) {
-      if (!deleted_key.ends_with(dependencies_suffix)) {
-        continue;
-      }
-
-      if (!deleted_key.starts_with(primary_prefix)) {
-        continue;
-      }
-
-      const auto *old_entry{entries.raw_disk_entry(deleted_key)};
-      if (old_entry == nullptr) {
-        continue;
-      }
-
-      const auto owner_sentinel{
-          deleted_key.find(sentinel_separator, owner_start)};
-      if (owner_sentinel == std::string::npos) {
-        continue;
-      }
-
-      const auto owner_base{
-          deleted_key.substr(owner_start, owner_sentinel - owner_start)};
-      for (const auto &reference :
-           extract_cross_leaf_references(old_entry, owner_base)) {
-        affected_leaves.insert(reference);
-      }
-    }
-
-    BuildPlan plan;
-    plan.output = output;
-    plan.type = build_type;
-
-    {
-      // A view that appeared since the last build holds no artifact for any
-      // leaf, and the graph it would be derived from did not move, so nothing
-      // above notices it. The same is true of a view that keeps its name but
-      // widens, since a leaf it could not reach before arrives with no
-      // artifact behind it either
-      for (const auto &[uri, info] : leaves) {
-        const auto *missing_rule{combine_only_rule(leaf_rules, info.kind)};
-        if (missing_rule == nullptr || missing_rule->base == 0) {
-          continue;
-        }
-
-        const auto &relative_string{info.relative_path->native()};
-        if (affected_leaves.contains(relative_string)) {
-          continue;
-        }
-
-        for (std::size_t view{0}; view < secondary_views.size(); view++) {
-          if (visible(view, relative_string) &&
-              !entries.contains(append_filename(
-                  make_base_string(output.native(), secondary_directory,
-                                   secondary_views[view], relative_string,
-                                   sentinel),
-                  missing_rule->filename))) {
-            affected_leaves.insert(relative_string);
-            break;
-          }
-        }
-      }
-    }
-
-    if (!affected_leaves.empty()) {
-      std::unordered_map<std::string, std::vector<std::string>>
-          reverse_dependency_index;
-      for (const auto dependency_key : entries.keys()) {
-        if (!dependency_key.ends_with(dependencies_suffix)) {
-          continue;
-        }
-
-        const auto *dependency_entry{entries.entry(dependency_key)};
-        if (dependency_entry == nullptr) {
-          continue;
-        }
-
-        for (const auto &dependency : dependency_entry->dependencies) {
-          const auto &dependency_path{dependency.native()};
-          if (!dependency_path.starts_with(primary_prefix)) {
-            continue;
-          }
-
-          const auto sentinel_position{
-              dependency_path.find(sentinel_separator, owner_start)};
-          if (sentinel_position == std::string::npos) {
-            continue;
-          }
-
-          auto referenced_leaf{dependency_path.substr(
-              owner_start, sentinel_position - owner_start)};
-          if (affected_leaves.contains(referenced_leaf)) {
-            reverse_dependency_index[std::move(referenced_leaf)].emplace_back(
-                dependency_key);
-          }
-        }
-      }
-
-      for (auto &[leaf, dependency_keys] : reverse_dependency_index) {
-        std::ranges::sort(dependency_keys);
-        const auto [first, last] = std::ranges::unique(dependency_keys);
-        dependency_keys.erase(first, last);
-      }
-
-      std::vector<BuildPlan::Action> dependents_wave;
-      for (const auto &[uri, info] : leaves) {
-        const auto *rule{combine_only_rule(leaf_rules, info.kind)};
-        if (rule == nullptr) {
-          continue;
-        }
-
-        const auto &dependents_rule{*rule};
-        const auto in_secondary{dependents_rule.base != 0};
-        const auto destination_directory{in_secondary ? secondary_directory
-                                                      : primary_directory};
-        const std::span<const std::string_view> destination_views{
-            in_secondary ? secondary_views
-                         : std::span<const std::string_view>{UNNAMESPACED}};
-
-        const auto &relative_string{info.relative_path->native()};
-        if (!affected_leaves.contains(relative_string)) {
-          continue;
-        }
-
-        for (std::size_t view{0}; view < destination_views.size(); view++) {
-          if (in_secondary && !visible(view, relative_string)) {
-            continue;
-          }
-
-          auto destination_base{make_base_string(
-              output_string, destination_directory, destination_views[view],
-              relative_string, sentinel)};
-          auto destination{std::filesystem::path{
-              append_filename(destination_base, dependents_rule.filename)}};
-
-          BuildPlan::Action::Dependencies action_dependencies;
-          const auto reverse_iterator{
-              reverse_dependency_index.find(relative_string)};
-          if (reverse_iterator != reverse_dependency_index.end()) {
-            action_dependencies.reserve(reverse_iterator->second.size());
-            for (const auto &dependency_key : reverse_iterator->second) {
-              // A view is told who points at something out of what it holds, so
-              // a referrer it is without contributes nothing here. Choosing the
-              // inputs is what leaves the handler with nothing to decide
-              const auto referrer_sentinel{
-                  dependency_key.find(sentinel_separator, owner_start)};
-              if (in_secondary && referrer_sentinel != std::string::npos &&
-                  !visible(view,
-                           dependency_key.substr(
-                               owner_start, referrer_sentinel - owner_start))) {
-                continue;
-              }
-
-              action_dependencies.emplace_back(dependency_key);
-            }
-          }
-
-          // What this reads beyond the graph it is derived from, named by the
-          // rule rather than assumed here, and last so that whatever walks the
-          // graph reaches the same entries it always did
-          for (std::uint8_t index{0}; index < dependents_rule.dependency_count;
-               index++) {
-            const auto &dependency{dependents_rule.dependencies[index]};
-            if (dependency.source == DependencySource::GlobalOutput) {
-              action_dependencies.emplace_back(output / dependency.filename);
-            }
-          }
-
-          dependents_wave.push_back(
-              {.type = dependents_rule.action,
-               .destination = std::move(destination),
-               .dependencies = std::move(action_dependencies),
-               .data = uri,
-               .view =
-                   in_secondary ? secondary_views[view] : std::string_view{}});
-        }
-      }
-
-      std::ranges::sort(dependents_wave,
-                        [](const BuildPlan::Action &left,
-                           const BuildPlan::Action &right) -> bool {
-                          return left.destination < right.destination;
-                        });
-      plan.size = dependents_wave.size();
-      plan.waves.push_back(std::move(dependents_wave));
-    }
-
-    return plan;
+    return settle_combine_plan(scope);
   }
+
+  scope.phase = phase;
+  scope.version = version;
+  scope.comment = comment;
+  scope.mode_label = mode_label;
+  scope.remove_action = remove_action;
+  scope.full_mode = full_mode;
+  scope.container_rules = container_rules;
+  scope.global_rules = global_rules;
+  scope.limits = &limits;
+  scope.indices = &indices;
+  scope.artifacts = artifacts;
+  scope.metadata_kinds = metadata_kinds;
 
   const auto version_path{output / global_rules[indices.version].filename};
   const auto configuration_path{output /
@@ -741,6 +2161,13 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
   const auto secondary_tree_prefix{(output / secondary_directory).string() +
                                    "/"};
   const auto comment_string{comment_path.string()};
+  scope.is_full = is_full;
+  scope.version_path = version_path;
+  scope.configuration_path = configuration_path;
+  scope.comment_path = comment_path;
+  scope.comment_string = comment_string;
+  scope.primary_path = primary_path;
+  scope.secondary_paths = secondary_paths;
 
   // The state records that a build produced each of these, not that the file
   // is still on disk, so a recorded global gone since must be produced again
@@ -751,6 +2178,7 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
   // tracks the comment argument rather than the state
   std::vector<bool> missing_globals(global_rules.size(), false);
   bool has_missing_globals{false};
+  // Filled just below, and read by the phases that answer off it
   if (!is_full) {
     for (std::size_t index{0}; index < global_rules.size(); index++) {
       const auto &rule{global_rules[index]};
@@ -770,156 +2198,13 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
     }
   }
 
+  scope.missing_globals = missing_globals;
+  scope.has_missing_globals = has_missing_globals;
+
   if (!is_full) {
-    const auto &output_string{output.native()};
-    bool fast_path_dirty{false};
-
-    const auto mode_global_string{
-        (output / global_rules[indices.mode_global].filename).string()};
-    const auto had_full_mode{entries.contains(mode_global_string)};
-    const auto needs_full_mode{build_type == full_mode};
-    if (had_full_mode != needs_full_mode) {
-      fast_path_dirty = true;
-    }
-
-    std::string primary_buffer;
-    std::string secondary_buffer;
-    primary_buffer.reserve(output_string.size() + 64);
-    secondary_buffer.reserve(output_string.size() + 64);
-    std::vector<std::string> current_bases;
-    current_bases.reserve(leaves.size());
-
-    if (!fast_path_dirty) {
-      for (const auto &[uri, info] : leaves) {
-        const auto &relative_string{info.relative_path->native()};
-
-        primary_buffer.clear();
-        primary_buffer += output_string;
-        primary_buffer += '/';
-        primary_buffer += primary_directory;
-        primary_buffer += '/';
-        primary_buffer += relative_string;
-        primary_buffer += '/';
-        primary_buffer += sentinel;
-        current_bases.push_back(primary_buffer);
-
-        const auto *leaf_entry{
-            entries.leaf_state(output_string, relative_string, info.evaluate,
-                               build_type == full_mode)};
-        if (leaf_entry == nullptr) {
-          fast_path_dirty = true;
-          break;
-        }
-
-        if (info.mtime > leaf_entry->root_mtime) {
-          fast_path_dirty = true;
-          break;
-        }
-
-        std::uint32_t expected_bitmap{0};
-        for (std::size_t rule_index{0}; rule_index < leaf_rules.size();
-             rule_index++) {
-          const auto &rule{leaf_rules[rule_index]};
-          if (rule.kind != info.kind) {
-            continue;
-          }
-
-          if (rule.gate == TargetGate::IfEvaluate && !info.evaluate) {
-            continue;
-          }
-
-          if (is_deselected(rule, info.selected)) {
-            continue;
-          }
-
-          if (rule.gate == TargetGate::OnlyInFullMode &&
-              build_type != full_mode) {
-            continue;
-          }
-
-          expected_bitmap |= artifacts.mask(rule_index);
-        }
-
-        if ((leaf_entry->target_bitmap & expected_bitmap) != expected_bitmap) {
-          fast_path_dirty = true;
-          break;
-        }
-      }
-    }
-
-    if (!fast_path_dirty) {
-      std::unordered_set<std::string_view> base_set;
-      base_set.reserve(current_bases.size());
-      for (const auto &base : current_bases) {
-        base_set.insert(base);
-      }
-
-      const auto primary_prefix{output_string + '/' +
-                                std::string{primary_directory} + '/'};
-      for (const auto entry_path : entries.keys()) {
-        if (!entry_path.starts_with(primary_prefix)) {
-          continue;
-        }
-
-        const auto sentinel_position{entry_path.find(sentinel_separator)};
-        if (sentinel_position == std::string_view::npos) {
-          continue;
-        }
-
-        if (!base_set.contains(entry_path.substr(0, sentinel_position + 2))) {
-          fast_path_dirty = true;
-          break;
-        }
-      }
-    }
-
-    if (!fast_path_dirty) {
-      BuildPlan plan;
-      plan.output = output;
-      plan.type = build_type;
-      if (!comment.empty()) {
-        plan.waves.push_back({{.type = global_rules[indices.comment].action,
-                               .destination = comment_path,
-                               .dependencies = {},
-                               .data = comment}});
-      } else if (entries.contains(comment_string)) {
-        plan.waves.push_back({{.type = remove_action,
-                               .destination = comment_path,
-                               .dependencies = {},
-                               .data = {}}});
-      }
-
-      if (has_missing_globals) {
-        auto independent_wave{missing_independent_global_wave(
-            missing_globals, global_rules, output, version)};
-        if (!independent_wave.empty()) {
-          plan.waves.push_back(std::move(independent_wave));
-        }
-
-        auto mode_wave{missing_mode_global_wave(missing_globals, global_rules,
-                                                output, configuration_path,
-                                                mode_label)};
-        if (!mode_wave.empty()) {
-          plan.waves.push_back(std::move(mode_wave));
-        }
-
-        auto dependent_wave{missing_dependent_global_wave(
-            missing_globals, global_rules, output, configuration_path)};
-        if (!dependent_wave.empty()) {
-          plan.waves.push_back(std::move(dependent_wave));
-        }
-      }
-
-      for (auto &wave : plan.waves) {
-        std::ranges::sort(wave,
-                          [](const BuildPlan::Action &left,
-                             const BuildPlan::Action &right) -> bool {
-                            return left.destination < right.destination;
-                          });
-        plan.size += wave.size();
-      }
-
-      return plan;
+    auto fast_path{settle_fast_path(scope)};
+    if (fast_path.has_value()) {
+      return std::move(fast_path).value();
     }
   }
 
@@ -927,21 +2212,12 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
   targets.reserve(leaves.size() * leaf_rules.size());
   const auto &output_string{output.native()};
   const auto configuration_string{configuration_path.string()};
+  scope.configuration_string = configuration_string;
   std::vector<std::string> secondary_strings;
   secondary_strings.reserve(secondary_paths.size());
   for (const auto &path : secondary_paths) {
     secondary_strings.push_back(path.string());
   }
-
-  struct ActiveLeaf {
-    std::string_view uri;
-    const LeafView *info;
-    std::string primary_base;
-    // One per view, positionally, since a leaf occupies the same place in every
-    // view's tree and only the segment naming the view differs
-    std::vector<std::string> secondary_bases;
-    std::string root_path;
-  };
 
   std::vector<ActiveLeaf> active_leaves;
   active_leaves.reserve(leaves.size());
@@ -989,127 +2265,9 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
   }
 
   std::unordered_set<std::string> dirty_relative_paths;
-  for (const auto &[uri, info] : leaves) {
-    const auto &relative_string{info.relative_path->native()};
-    all_relative_paths.emplace_back(*info.relative_path);
-    all_relative_kinds.push_back(info.kind);
-
-    auto primary_base{make_base_string(output_string, primary_directory, {},
-                                       relative_string, sentinel)};
-    // A leaf has a place only in the views holding it, so what it has bases in
-    // is what the build was told can see it. An entry left empty here is a view
-    // this leaf is absent from, which is what everything downstream reads
-    std::vector<std::string> secondary_bases;
-    secondary_bases.reserve(secondary_views.size());
-    for (std::size_t view{0}; view < secondary_views.size(); view++) {
-      secondary_bases.push_back(
-          visible(view, relative_string)
-              ? make_base_string(output_string, secondary_directory,
-                                 secondary_views[view], relative_string,
-                                 sentinel)
-              : std::string{});
-    }
-
-    auto root_path{
-        append_filename(primary_base, leaf_rules[indices.root].filename)};
-
-    const auto *cached_leaf_state{
-        is_full ? nullptr
-                : entries.leaf_state(output_string, relative_string,
-                                     info.evaluate, build_type == full_mode)};
-
-    bool leaf_dirty{is_full || cached_leaf_state == nullptr};
-    if (!leaf_dirty) {
-      leaf_dirty = info.mtime > cached_leaf_state->root_mtime;
-    }
-
-    bool has_missing_targets{false};
-    if (!leaf_dirty && cached_leaf_state != nullptr) {
-      std::uint32_t expected_bitmap{0};
-      for (std::size_t rule_index{0}; rule_index < leaf_rules.size();
-           rule_index++) {
-        const auto &rule{leaf_rules[rule_index]};
-        if (rule.kind != info.kind) {
-          continue;
-        }
-        if (rule.gate == TargetGate::IfEvaluate && !info.evaluate) {
-          continue;
-        }
-        if (is_deselected(rule, info.selected)) {
-          continue;
-        }
-        if (rule.gate == TargetGate::OnlyInFullMode &&
-            build_type != full_mode) {
-          continue;
-        }
-        expected_bitmap |= artifacts.mask(rule_index);
-      }
-      has_missing_targets = (cached_leaf_state->target_bitmap &
-                             expected_bitmap) != expected_bitmap;
-
-      // What a leaf is selected for can stop holding without the leaf itself
-      // changing, as when another leaf starts declaring it as its dialect.
-      // Treating that as a change is what disposes of what the leaf no longer
-      // has
-      if ((cached_leaf_state->target_bitmap & ~expected_bitmap) != 0) {
-        leaf_dirty = true;
-      }
-    }
-
-    // A leaf that a changed leaf declares as its dialect is reconsidered even
-    // when nothing of its own changed, since what it reads may have
-    const bool needs_targets{leaf_dirty || has_missing_targets ||
-                             (cached_leaf_state != nullptr &&
-                              cached_leaf_state->has_cross_leaf_deps) ||
-                             changed_dialects.contains(uri)};
-
-    if (leaf_dirty) {
-      dirty_relative_paths.insert(relative_string);
-    }
-
-    if (needs_targets) {
-      const auto dependents_match{dialect_dependents.find(uri)};
-      const std::span<const std::filesystem::path *const>
-          leaf_dialect_dependents{
-              dependents_match == dialect_dependents.end()
-                  ? std::span<const std::filesystem::path *const>{}
-                  : std::span<const std::filesystem::path *const>{
-                        dependents_match->second}};
-      bool declared_primary{false};
-      for (std::size_t view{0}; view < secondary_bases.size(); view++) {
-        if (secondary_bases[view].empty()) {
-          continue;
-        }
-
-        const std::array<std::string, 2> bases{
-            {primary_base, secondary_bases[view]}};
-        declare_leaf_targets(targets, bases, output_string, info.path->native(),
-                             info.evaluate, info.selected, info.kind,
-                             build_type, full_mode, configuration_string, uri,
-                             phase, leaf_rules, primary_directory, sentinel,
-                             leaf_dialect_dependents, secondary_views[view],
-                             declared_primary);
-        declared_primary = true;
-      }
-
-      // Nothing in the view tree holds this leaf anywhere, so what it has in
-      // the unit tree is declared on its own rather than left undeclared
-      if (!declared_primary) {
-        const std::array<std::string, 2> bases{{primary_base, std::string{}}};
-        declare_leaf_targets(targets, bases, output_string, info.path->native(),
-                             info.evaluate, info.selected, info.kind,
-                             build_type, full_mode, configuration_string, uri,
-                             phase, leaf_rules, primary_directory, sentinel,
-                             leaf_dialect_dependents, {}, false, true);
-      }
-    }
-
-    active_leaves.push_back({.uri = uri,
-                             .info = &info,
-                             .primary_base = std::move(primary_base),
-                             .secondary_bases = std::move(secondary_bases),
-                             .root_path = std::move(root_path)});
-  }
+  collect_active_leaves(scope, dialect_dependents, changed_dialects,
+                        dirty_relative_paths, active_leaves, all_relative_paths,
+                        all_relative_kinds, targets);
 
   std::unordered_set<std::string_view> force_dirty;
   for (const auto &leaf : active_leaves) {
@@ -1147,269 +2305,18 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
   }
 
   std::unordered_set<std::string> dirty_set;
-  {
-    for (const auto &leaf : active_leaves) {
-      if (!force_dirty.contains(leaf.root_path)) {
-        continue;
-      }
-
-      for (std::size_t index{0}; index < leaf_rules.size(); index++) {
-        const auto &rule{leaf_rules[index]};
-        if (rule.gate == TargetGate::IfEvaluate && !leaf.info->evaluate) {
-          continue;
-        }
-
-        if (is_deselected(rule, leaf.info->selected)) {
-          continue;
-        }
-
-        if (rule.gate == TargetGate::OnlyInFullMode &&
-            build_type != full_mode) {
-          continue;
-        }
-
-        if (rule.base == 0) {
-          dirty_set.insert(append_filename(leaf.primary_base, rule.filename));
-          continue;
-        }
-
-        for (const auto &secondary_base : leaf.secondary_bases) {
-          if (!secondary_base.empty()) {
-            dirty_set.insert(append_filename(secondary_base, rule.filename));
-          }
-        }
-      }
-    }
-
-    const auto primary_prefix_string{output_string + "/" +
-                                     std::string{primary_directory} + "/"};
-    const auto &secondary_prefix_string{secondary_tree_prefix};
-    std::unordered_map<std::string_view, std::vector<std::string_view>>
-        reverse_adjacency;
-    std::unordered_map<std::string, std::vector<std::string>>
-        reverse_state_dependencies;
-    for (const auto &[target_path, target] : targets) {
-      for (const auto &dependency : target.dependencies) {
-        reverse_adjacency[dependency].push_back(target_path);
-      }
-
-      if (dirty_set.contains(target_path)) {
-        continue;
-      }
-
-      const std::string_view target_view{target_path};
-      std::string_view after_prefix;
-      bool in_secondary{false};
-      if (target_view.starts_with(primary_prefix_string)) {
-        after_prefix = target_view.substr(primary_prefix_string.size());
-      } else if (target_view.starts_with(secondary_prefix_string)) {
-        in_secondary = true;
-        after_prefix = target_view.substr(secondary_prefix_string.size());
-        // The segment naming the view sits between the tree and the leaf, so
-        // stepping over it is what leaves the relative path a leaf occupies in
-        // every view rather than one prefixed by the view it was found in
-        if (directories[1].namespaced) {
-          const auto separator{after_prefix.find('/')};
-          if (separator == std::string_view::npos) {
-            continue;
-          }
-
-          after_prefix = after_prefix.substr(separator + 1);
-        }
-      }
-
-      if (!after_prefix.empty()) {
-        const auto sentinel_position{after_prefix.find(sentinel_separator)};
-        if (sentinel_position != std::string_view::npos) {
-          const auto target_relative{after_prefix.substr(0, sentinel_position)};
-          const auto *leaf_entry{entries.leaf_state(
-              output_string, std::string{target_relative}, true, true)};
-          if (leaf_entry != nullptr && !leaf_entry->has_cross_leaf_deps) {
-            const auto target_filename{
-                after_prefix.substr(sentinel_position + 3)};
-            bool target_known{false};
-            for (std::size_t rule_index{0}; rule_index < leaf_rules.size();
-                 rule_index++) {
-              const auto &rule{leaf_rules[rule_index]};
-              if (target_filename == rule.filename &&
-                  ((rule.base == 1) == in_secondary)) {
-                target_known = (leaf_entry->target_bitmap &
-                                artifacts.mask(rule_index)) != 0;
-                break;
-              }
-            }
-
-            if (!target_known) {
-              dirty_set.insert(target_path);
-            }
-
-            continue;
-          }
-        }
-      }
-
-      const auto *state_entry{entries.entry(target_path)};
-      if (state_entry == nullptr) {
-        dirty_set.insert(target_path);
-        continue;
-      }
-
-      for (const auto &dependency : state_entry->dependencies) {
-        reverse_state_dependencies[dependency.native()].push_back(target_path);
-      }
-    }
-
-    // Snapshot the dirty set before propagating: inserting into an
-    // unordered_set while range-iterating it invalidates the iterator on
-    // rehash. This mirrors the one-level propagation the removed-entries pass
-    // below performs, while the transitive closure over the current plan's
-    // graph happens in the worklist that follows
-    const std::vector<std::string> dirty_snapshot{dirty_set.begin(),
-                                                  dirty_set.end()};
-    for (const auto &dirty_path : dirty_snapshot) {
-      const auto match{reverse_state_dependencies.find(dirty_path)};
-      if (match != reverse_state_dependencies.end()) {
-        for (const auto &dependent : match->second) {
-          dirty_set.insert(dependent);
-        }
-      }
-    }
-
-    for (const auto &removed_path : removed_entries) {
-      const auto match{reverse_state_dependencies.find(removed_path)};
-      if (match != reverse_state_dependencies.end()) {
-        for (const auto &dependent : match->second) {
-          dirty_set.insert(dependent);
-        }
-      }
-    }
-
-    std::vector<std::string_view> worklist;
-    worklist.reserve(dirty_set.size());
-    for (const auto &dirty_path : dirty_set) {
-      worklist.push_back(dirty_path);
-    }
-
-    for (std::size_t index{0}; index < worklist.size(); index++) {
-      const auto match{reverse_adjacency.find(worklist[index])};
-      if (match == reverse_adjacency.end()) {
-        continue;
-      }
-
-      for (const auto &dependent : match->second) {
-        if (dirty_set.insert(std::string{dependent}).second) {
-          worklist.push_back(dependent);
-        }
-      }
-    }
-  }
+  collect_dirty_targets(scope, active_leaves, force_dirty, removed_entries,
+                        secondary_tree_prefix, targets, dirty_set);
 
   bool has_missing_mode_outputs{false};
-  if (build_type == full_mode && dirty_set.empty() && !is_full) {
-    for (const auto &leaf : active_leaves) {
-      for (const auto &rule : leaf_rules) {
-        if (rule.gate != TargetGate::OnlyInFullMode) {
-          continue;
-        }
-
-        if (rule.base == 0) {
-          if (!entries.contains(
-                  append_filename(leaf.primary_base, rule.filename))) {
-            has_missing_mode_outputs = true;
-            break;
-          }
-
-          continue;
-        }
-
-        // Missing in any view is missing, since each holds its own copy
-        for (const auto &secondary_base : leaf.secondary_bases) {
-          if (!secondary_base.empty() && !entries.contains(append_filename(
-                                             secondary_base, rule.filename))) {
-            has_missing_mode_outputs = true;
-            break;
-          }
-        }
-
-        if (has_missing_mode_outputs) {
-          break;
-        }
-      }
-
-      if (has_missing_mode_outputs) {
-        break;
-      }
+  bool has_potential_stale{false};
+  {
+    auto unchanged{settle_unchanged_plan(
+        scope, active_leaves, dirty_set, removed_entries, secondary_tree_prefix,
+        has_missing_mode_outputs, has_potential_stale)};
+    if (unchanged.has_value()) {
+      return std::move(unchanged).value();
     }
-  }
-
-  bool has_stale_mode_outputs{false};
-  if (build_type != full_mode && dirty_set.empty() && !is_full) {
-    const auto &secondary_prefix{secondary_tree_prefix};
-    for (const auto entry_path : entries.keys()) {
-      if (!entry_path.starts_with(secondary_prefix)) {
-        continue;
-      }
-
-      const auto last_slash{entry_path.rfind('/')};
-      if (last_slash == std::string_view::npos) {
-        continue;
-      }
-
-      const std::string_view filename{entry_path.data() + last_slash + 1,
-                                      entry_path.size() - last_slash - 1};
-      for (const auto &rule : leaf_rules) {
-        if (rule.gate == TargetGate::OnlyInFullMode &&
-            filename == rule.filename) {
-          has_stale_mode_outputs = true;
-          break;
-        }
-      }
-
-      if (!has_stale_mode_outputs) {
-        for (const auto &rule : container_rules) {
-          if (rule.gate == TargetGate::OnlyInFullMode &&
-              filename == rule.filename) {
-            has_stale_mode_outputs = true;
-            break;
-          }
-        }
-      }
-
-      if (has_stale_mode_outputs) {
-        break;
-      }
-    }
-  }
-
-  const auto has_potential_stale{!removed_entries.empty()};
-
-  if (!is_full && dirty_set.empty() && !has_missing_mode_outputs &&
-      !has_stale_mode_outputs && !has_potential_stale && !has_missing_globals) {
-    if (!comment.empty()) {
-      BuildPlan plan;
-      plan.output = output;
-      plan.type = build_type;
-      plan.waves.push_back({{.type = global_rules[indices.comment].action,
-                             .destination = comment_path,
-                             .dependencies = {},
-                             .data = comment}});
-      plan.size = 1;
-      return plan;
-    }
-
-    if (comment.empty() && entries.contains(comment_path.native())) {
-      BuildPlan plan;
-      plan.output = output;
-      plan.type = build_type;
-      plan.waves.push_back({{.type = remove_action,
-                             .destination = comment_path,
-                             .dependencies = {},
-                             .data = {}}});
-      plan.size = 1;
-      return plan;
-    }
-
-    return {.output = output, .type = build_type, .waves = {}, .size = 0};
   }
 
   const auto has_leaf_work{is_full || !dirty_set.empty() ||
@@ -1417,651 +2324,14 @@ auto delta_engine(const BuildPhase phase, const BuildPlan::Type build_type,
 
   std::vector<std::filesystem::path> affected_relative_paths;
   if (has_leaf_work) {
-    for (const auto &leaf : active_leaves) {
-      if (is_full) {
-        affected_relative_paths.emplace_back(*leaf.info->relative_path);
-        continue;
-      }
-
-      if (dirty_set.contains(leaf.root_path)) {
-        affected_relative_paths.emplace_back(*leaf.info->relative_path);
-      }
-    }
-
-    auto has_graph_change{false};
-    if (!has_graph_change) {
-      for (const auto &leaf : active_leaves) {
-        if (!entries.contains(leaf.root_path)) {
-          has_graph_change = true;
-          break;
-        }
-      }
-    }
-
-    for (const auto &leaf : active_leaves) {
-      const auto leaf_is_dirty{dirty_set.contains(leaf.root_path)};
-
-      for (std::size_t index{0}; index < leaf_rules.size(); index++) {
-        const auto &rule{leaf_rules[index]};
-        if (rule.dirty == DirtyOverride::Normal) {
-          continue;
-        }
-
-        if (rule.gate == TargetGate::OnlyInFullMode &&
-            build_type != full_mode) {
-          continue;
-        }
-
-        // Each view holds its own copy, so each is asked about separately and
-        // one being absent does not speak for the rest
-        const std::span<const std::string> rule_bases{
-            rule.base == 0
-                ? std::span<const std::string>{&leaf.primary_base, 1}
-                : std::span<const std::string>{leaf.secondary_bases}};
-        for (const auto &base : rule_bases) {
-          if (base.empty()) {
-            continue;
-          }
-
-          auto target_path_string{append_filename(base, rule.filename)};
-          auto should_force{is_full || leaf_is_dirty ||
-                            !entries.contains(target_path_string)};
-
-          if (!should_force && has_graph_change &&
-              (rule.dirty == DirtyOverride::ForceOnGraphChange ||
-               rule.dirty == DirtyOverride::ForceIfAffected)) {
-            should_force = true;
-          }
-
-          if (should_force) {
-            dirty_set.insert(std::move(target_path_string));
-          }
-        }
-      }
-    }
-
-    const auto affected_directories{
-        collect_affected_directories(primary_path, affected_relative_paths)};
-    const auto all_directories{
-        collect_affected_directories(primary_path, all_relative_paths)};
-
-    for (const auto &rule : container_rules) {
-      if (rule.gate == TargetGate::OnlyInFullMode && build_type != full_mode) {
-        continue;
-      }
-
-      for (const auto &directory : affected_directories) {
-        const auto relative{directory.lexically_relative(primary_path)};
-        const auto is_root_directory{relative == "."};
-
-        if ((rule.scope == ContainerScope::RootOnly ||
-             rule.scope == ContainerScope::PrimaryRootOnly) &&
-            !is_root_directory) {
-          continue;
-        }
-
-        if (rule.scope == ContainerScope::NonRoot && is_root_directory) {
-          continue;
-        }
-
-        if (rule.only_full_rebuild && !is_full) {
-          continue;
-        }
-
-        // One container artifact per view, each naming only its own view's
-        // children, since a listing in one view is built from that view's
-        // children rather than from another's
-        for (std::size_t view{0}; view < secondary_paths.size(); view++) {
-          if (rule.scope == ContainerScope::PrimaryRootOnly && view != 0) {
-            continue;
-          }
-
-          // The root answers every view, since a caller shown nothing is still
-          // shown that, beside whatever refuses them
-          if (!is_root_directory &&
-              !holds_visible_leaf(all_relative_paths, relative, view,
-                                  visible)) {
-            continue;
-          }
-
-          const auto &secondary_path{secondary_paths[view]};
-          auto destination{
-              (secondary_path / relative / sentinel / rule.filename)
-                  .lexically_normal()
-                  .string()};
-
-          std::vector<std::string> rule_dependencies;
-          std::size_t global_dependency_count{0};
-
-          for (std::uint8_t dependency_index{0};
-               dependency_index < rule.dependency_count; dependency_index++) {
-            const auto &dependency{rule.dependencies[dependency_index]};
-            switch (dependency.kind) {
-              case ContainerDependencyKind::LeafMetadata:
-                for (std::size_t leaf_index{0};
-                     leaf_index < all_relative_paths.size(); leaf_index++) {
-                  const auto &leaf_relative{all_relative_paths[leaf_index]};
-                  // A listing is built from what its view holds, so a leaf the
-                  // view is without is not read here either. Naming one anyway
-                  // would have this wait on something nothing produces, and so
-                  // would naming a leaf of a kind no rule describes
-                  if (!visible(view, leaf_relative.native()) ||
-                      !holds_kind(metadata_kinds,
-                                  all_relative_kinds[leaf_index])) {
-                    continue;
-                  }
-
-                  if (leaf_relative.parent_path() == relative ||
-                      (is_root_directory && !leaf_relative.has_parent_path())) {
-                    rule_dependencies.push_back(append_filename(
-                        make_base_string(output_string, secondary_directory,
-                                         secondary_views[view],
-                                         leaf_relative.native(), sentinel),
-                        leaf_rules[indices.metadata].filename));
-                  }
-                }
-                break;
-              case ContainerDependencyKind::ChildContainers:
-                for (const auto &other_directory : affected_directories) {
-                  auto other_relative{
-                      other_directory.lexically_relative(primary_path)};
-                  if (other_relative == relative) {
-                    continue;
-                  }
-
-                  auto other_parent{other_relative.parent_path()};
-                  if (other_parent.empty()) {
-                    other_parent = ".";
-                  }
-
-                  if (other_parent == relative &&
-                      holds_visible_leaf(all_relative_paths, other_relative,
-                                         view, visible)) {
-                    rule_dependencies.push_back(
-                        (secondary_path / other_relative / sentinel /
-                         container_rules[indices.container_list].filename)
-                            .lexically_normal()
-                            .string());
-                  }
-                }
-                break;
-              case ContainerDependencyKind::AllContainerListings:
-                for (const auto &any_directory : all_directories) {
-                  const auto directory_relative{
-                      any_directory.lexically_relative(primary_path)};
-                  if (directory_relative != "." &&
-                      !holds_visible_leaf(all_relative_paths,
-                                          directory_relative, view, visible)) {
-                    continue;
-                  }
-
-                  rule_dependencies.push_back(
-                      (directory_relative == "."
-                           ? secondary_path / sentinel /
-                                 container_rules[indices.container_list]
-                                     .filename
-                           : secondary_path / directory_relative / sentinel /
-                                 container_rules[indices.container_list]
-                                     .filename)
-                          .lexically_normal()
-                          .string());
-                }
-                break;
-              case ContainerDependencyKind::SameContainerTarget:
-                rule_dependencies.push_back(
-                    (secondary_path / relative / sentinel / dependency.filename)
-                        .lexically_normal()
-                        .string());
-                break;
-              case ContainerDependencyKind::ExternalConfig:
-                rule_dependencies.push_back(configuration_string);
-                break;
-              case ContainerDependencyKind::Global:
-                rule_dependencies.push_back(
-                    (output /
-                     (dependency.filename != nullptr
-                          ? dependency.filename
-                          : global_rules[indices.mode_global].filename))
-                        .lexically_normal()
-                        .string());
-                global_dependency_count += 1;
-                break;
-            }
-          }
-
-          const auto directory_entry_count{rule_dependencies.size() -
-                                           global_dependency_count};
-          if (rule.action == container_rules[indices.container_list].action &&
-              limits.maximum_direct_directory_entries > 0 &&
-              directory_entry_count > limits.maximum_direct_directory_entries) {
-            throw BuildTooManyDirectoryEntriesError(directory,
-                                                    directory_entry_count);
-          }
-
-          declare_target(targets, rule.action, destination,
-                         std::move(rule_dependencies), {},
-                         secondary_views[view]);
-          dirty_set.insert(std::move(destination));
-        }
-      }
-    }
+    settle_leaf_work(scope, active_leaves, all_relative_paths,
+                     all_relative_kinds, affected_relative_paths, targets,
+                     dirty_set);
   }
 
-  std::unordered_map<std::string_view, std::size_t> wave_cache;
-  std::size_t max_wave{0};
-
-  for (const auto &target_path : dirty_set) {
-    if (targets.find(target_path) == targets.end()) {
-      continue;
-    }
-
-    const auto wave{compute_wave(target_path, targets, dirty_set, wave_cache)};
-    max_wave = std::max(wave, max_wave);
-  }
-
-  std::vector<std::vector<BuildPlan::Action>> dag_waves;
-  if (!dirty_set.empty()) {
-    dag_waves.resize(max_wave + 1);
-    for (const auto &target_path : dirty_set) {
-      auto target_iterator{targets.find(target_path)};
-      if (target_iterator == targets.end()) {
-        continue;
-      }
-
-      auto &target{target_iterator->second};
-      const auto wave_iterator{wave_cache.find(target_path)};
-      const auto wave{wave_iterator != wave_cache.end() ? wave_iterator->second
-                                                        : std::size_t{0}};
-      BuildPlan::Action::Dependencies action_dependencies;
-      action_dependencies.reserve(target.dependencies.size());
-      for (auto &dependency : target.dependencies) {
-        action_dependencies.emplace_back(std::move(dependency));
-      }
-
-      dag_waves[wave].push_back(
-          {.type = target.action,
-           .destination = std::filesystem::path{target_path},
-           .dependencies = std::move(action_dependencies),
-           .data = target.data,
-           .view = target.view});
-    }
-  }
-
-  std::vector<BuildPlan::Action> remove_wave;
-
-  for (const auto &leaf : active_leaves) {
-    const auto leaf_dirty{dirty_set.contains(leaf.root_path)};
-    if (!leaf_dirty && !is_full) {
-      continue;
-    }
-
-    // What a leaf no longer gets goes away, whether it stopped evaluating, it
-    // stopped selecting it, or it is held by a kind the leaf no longer is.
-    // Asked of the artifact rather than of the rule, since two rules may write
-    // one artifact under disjoint kinds, and a rule that does not apply is then
-    // no evidence that what it would have written is not there to stay
-    std::uint32_t retained{0};
-    for (std::size_t rule_index{0}; rule_index < leaf_rules.size();
-         rule_index++) {
-      const auto &rule{leaf_rules[rule_index]};
-      if (rule.kind != leaf.info->kind ||
-          (rule.gate == TargetGate::IfEvaluate && !leaf.info->evaluate) ||
-          is_deselected(rule, leaf.info->selected)) {
-        continue;
-      }
-
-      retained |= artifacts.mask(rule_index);
-    }
-
-    std::uint32_t disposed{0};
-    for (std::size_t rule_index{0}; rule_index < leaf_rules.size();
-         rule_index++) {
-      const auto mask{artifacts.mask(rule_index)};
-      if ((retained & mask) != 0 || (disposed & mask) != 0) {
-        continue;
-      }
-
-      disposed |= mask;
-      const auto &rule{leaf_rules[rule_index]};
-      const std::span<const std::string> target_bases{
-          rule.base == 0 ? std::span<const std::string>{&leaf.primary_base, 1}
-                         : std::span<const std::string>{leaf.secondary_bases}};
-      for (const auto &target_base : target_bases) {
-        if (target_base.empty()) {
-          continue;
-        }
-
-        auto target_path{append_filename(target_base, rule.filename)};
-        if (entries.contains(target_path)) {
-          remove_wave.push_back(
-              {.type = remove_action,
-               .destination = std::filesystem::path{std::move(target_path)},
-               .dependencies = {},
-               .data = {}});
-        }
-      }
-    }
-  }
-
-  if (has_potential_stale || is_full) {
-    std::unordered_set<std::string> known_bases;
-    known_bases.reserve((active_leaves.size() * 2) + 1);
-    for (const auto &leaf : active_leaves) {
-      known_bases.insert(leaf.primary_base);
-      // Only the views holding this leaf know it, so a view without it leaves
-      // nothing here to account for and nothing on disk to keep
-      for (const auto &secondary_base : leaf.secondary_bases) {
-        if (!secondary_base.empty()) {
-          known_bases.insert(secondary_base);
-        }
-      }
-
-      auto current{*leaf.info->relative_path};
-      while (current.has_parent_path() && current.parent_path() != current) {
-        current = current.parent_path();
-        for (const auto &secondary_string : secondary_strings) {
-          known_bases.insert(secondary_string + '/' + current.string() + '/' +
-                             std::string{sentinel});
-        }
-      }
-    }
-
-    for (const auto &secondary_string : secondary_strings) {
-      known_bases.insert(secondary_string + '/' + std::string{sentinel});
-    }
-
-    std::unordered_set<std::string> known_ancestors;
-    known_ancestors.reserve(known_bases.size() * 3);
-    for (const auto &base : known_bases) {
-      auto slash_position{base.rfind('/')};
-      while (slash_position != std::string::npos && slash_position > 0) {
-        const auto ancestor{base.substr(0, slash_position)};
-        if (!known_ancestors.insert(ancestor).second) {
-          break;
-        }
-        slash_position = ancestor.rfind('/');
-      }
-    }
-
-    const auto output_prefix{output_string + "/"};
-
-    std::unordered_set<std::string> global_skip_paths;
-    for (const auto &rule : global_rules) {
-      global_skip_paths.insert(output_string + '/' + rule.filename);
-    }
-
-    std::unordered_set<std::string> stale_roots;
-    for (const auto entry_key : entries.keys()) {
-      const std::string entry_path{entry_key};
-      if (!entry_path.starts_with(output_prefix)) {
-        continue;
-      }
-
-      if (global_skip_paths.contains(entry_path)) {
-        continue;
-      }
-
-      bool is_known{false};
-      const auto sentinel_position{entry_path.find(sentinel_separator)};
-      if (sentinel_position != std::string::npos) {
-        is_known =
-            known_bases.contains(entry_path.substr(0, sentinel_position + 2));
-      }
-
-      if (!is_known) {
-        is_known = known_bases.contains(entry_path) ||
-                   known_ancestors.contains(entry_path);
-      }
-
-      if (!is_known) {
-        auto stale_end{entry_path.size()};
-        while (true) {
-          const auto slash_position{entry_path.rfind('/', stale_end - 1)};
-          if (slash_position == std::string::npos ||
-              slash_position < output_prefix.size()) {
-            break;
-          }
-          const auto parent{entry_path.substr(0, slash_position)};
-          if (known_bases.contains(parent) ||
-              known_ancestors.contains(parent)) {
-            break;
-          }
-          stale_end = slash_position;
-        }
-
-        stale_roots.insert(entry_path.substr(0, stale_end));
-      }
-    }
-
-    for (const auto &root : stale_roots) {
-      remove_wave.push_back({.type = remove_action,
-                             .destination = std::filesystem::path{root},
-                             .dependencies = {},
-                             .data = {}});
-    }
-  }
-
-  std::unordered_set<std::string_view> mode_only_filenames;
-  for (const auto &rule : leaf_rules) {
-    if (rule.gate == TargetGate::OnlyInFullMode) {
-      mode_only_filenames.insert(rule.filename);
-    }
-  }
-  for (const auto &rule : container_rules) {
-    if (rule.gate == TargetGate::OnlyInFullMode) {
-      mode_only_filenames.insert(rule.filename);
-    }
-  }
-
-  bool mode_removed{false};
-  if (build_type != full_mode) {
-    const auto &secondary_prefix{secondary_tree_prefix};
-    for (const auto entry_path : entries.keys()) {
-      if (!entry_path.starts_with(secondary_prefix)) {
-        continue;
-      }
-
-      const auto last_slash{entry_path.rfind('/')};
-      if (last_slash == std::string_view::npos) {
-        continue;
-      }
-
-      const std::string_view filename{entry_path.data() + last_slash + 1,
-                                      entry_path.size() - last_slash - 1};
-      if (mode_only_filenames.contains(filename)) {
-        remove_wave.push_back({.type = remove_action,
-                               .destination = std::filesystem::path{entry_path},
-                               .dependencies = {},
-                               .data = {}});
-        mode_removed = true;
-      }
-    }
-  }
-
-  bool mode_added{false};
-  if (build_type == full_mode && !is_full) {
-    const auto &secondary_prefix{secondary_tree_prefix};
-    bool had_mode_entries{false};
-    for (const auto entry_path : entries.keys()) {
-      if (!entry_path.starts_with(secondary_prefix)) {
-        continue;
-      }
-      const auto last_slash{entry_path.rfind('/')};
-      if (last_slash == std::string_view::npos) {
-        continue;
-      }
-      const std::string_view filename{entry_path.data() + last_slash + 1,
-                                      entry_path.size() - last_slash - 1};
-      if (mode_only_filenames.contains(filename)) {
-        had_mode_entries = true;
-        break;
-      }
-    }
-    mode_added = !had_mode_entries;
-  }
-
-  BuildPlan plan;
-  plan.output = output;
-  plan.type = build_type;
-
-  if (is_full) {
-    std::vector<BuildPlan::Action> initialization_wave;
-    initialization_wave.push_back({.type = global_rules[indices.version].action,
-                                   .destination = version_path,
-                                   .dependencies = {},
-                                   .data = version});
-    initialization_wave.push_back(
-        {.type = global_rules[indices.configuration].action,
-         .destination = configuration_path,
-         .dependencies = {},
-         .data = {}});
-
-    // Globals derived purely from the configuration regenerate on every full
-    // rebuild, which is exactly when the configuration or version changes. The
-    // configuration anchor itself is already scheduled above. A global that
-    // depends on another global's output cannot run in this wave, so it is
-    // scheduled after the dependency below
-    for (const auto &rule : global_rules) {
-      if (rule.trigger != GlobalTrigger::FullRebuild ||
-          rule.external_config_anchor || rule.dependency_count > 0) {
-        continue;
-      }
-
-      initialization_wave.push_back({.type = rule.action,
-                                     .destination = output / rule.filename,
-                                     .dependencies = {},
-                                     .data = {}});
-    }
-
-    if (!comment.empty()) {
-      initialization_wave.push_back(
-          {.type = global_rules[indices.comment].action,
-           .destination = comment_path,
-           .dependencies = {},
-           .data = comment});
-    } else if (entries.contains(comment_string)) {
-      remove_wave.push_back({.type = remove_action,
-                             .destination = comment_path,
-                             .dependencies = {},
-                             .data = {}});
-    }
-    plan.waves.push_back(std::move(initialization_wave));
-  } else if (!comment.empty()) {
-    plan.waves.push_back({{.type = global_rules[indices.comment].action,
-                           .destination = comment_path,
-                           .dependencies = {},
-                           .data = comment}});
-  } else if (entries.contains(comment_string)) {
-    remove_wave.push_back({.type = remove_action,
-                           .destination = comment_path,
-                           .dependencies = {},
-                           .data = {}});
-  }
-
-  if (has_missing_globals) {
-    auto independent_wave{missing_independent_global_wave(
-        missing_globals, global_rules, output, version)};
-    if (!independent_wave.empty()) {
-      plan.waves.push_back(std::move(independent_wave));
-    }
-  }
-
-  if (is_full || mode_added || mode_removed) {
-    std::vector<BuildPlan::Action> global_wave;
-    for (const auto &rule : global_rules) {
-      if (rule.trigger != GlobalTrigger::OnModeChange) {
-        continue;
-      }
-
-      global_wave.push_back({.type = rule.action,
-                             .destination = output / rule.filename,
-                             .dependencies = {configuration_path},
-                             .data = mode_label});
-    }
-
-    if (!global_wave.empty()) {
-      plan.waves.push_back(std::move(global_wave));
-    }
-  } else if (has_missing_globals) {
-    auto global_wave{missing_mode_global_wave(
-        missing_globals, global_rules, output, configuration_path, mode_label)};
-    if (!global_wave.empty()) {
-      plan.waves.push_back(std::move(global_wave));
-    }
-  }
-
-  // Globals that depend on another global's output run after it, in their own
-  // wave between the dependency-free globals above and the per-schema work
-  // below. They regenerate on a full rebuild, when the configuration changes
-  if (is_full) {
-    std::vector<BuildPlan::Action> dependent_global_wave;
-    for (const auto &rule : global_rules) {
-      if (rule.trigger != GlobalTrigger::FullRebuild ||
-          rule.external_config_anchor || rule.dependency_count == 0) {
-        continue;
-      }
-
-      dependent_global_wave.push_back({.type = rule.action,
-                                       .destination = output / rule.filename,
-                                       .dependencies = global_rule_dependencies(
-                                           rule, output, configuration_path),
-                                       .data = {}});
-    }
-
-    if (!dependent_global_wave.empty()) {
-      plan.waves.push_back(std::move(dependent_global_wave));
-    }
-  } else if (has_missing_globals) {
-    auto dependent_global_wave{missing_dependent_global_wave(
-        missing_globals, global_rules, output, configuration_path)};
-    if (!dependent_global_wave.empty()) {
-      plan.waves.push_back(std::move(dependent_global_wave));
-    }
-  }
-
-  for (auto &wave : dag_waves) {
-    if (!wave.empty()) {
-      plan.waves.push_back(std::move(wave));
-    }
-  }
-
-  if (!remove_wave.empty()) {
-    std::ranges::sort(remove_wave,
-                      [](const BuildPlan::Action &left,
-                         const BuildPlan::Action &right) -> bool {
-                        return left.destination < right.destination;
-                      });
-    std::vector<BuildPlan::Action> deduplicated_removals;
-    deduplicated_removals.reserve(remove_wave.size());
-    for (auto &entry : remove_wave) {
-      const auto &path{entry.destination.string()};
-      // The wave is sorted and kept entries form an antichain, so a child's
-      // only possible kept ancestor is the most recently kept entry
-      bool is_child{false};
-      if (!deduplicated_removals.empty()) {
-        const auto &parent{deduplicated_removals.back().destination.string()};
-        is_child = path.size() > parent.size() && path[parent.size()] == '/' &&
-                   path.starts_with(parent);
-      }
-
-      if (!is_child) {
-        deduplicated_removals.push_back(std::move(entry));
-      }
-    }
-
-    plan.waves.push_back(std::move(deduplicated_removals));
-  }
-
-  for (auto &wave : plan.waves) {
-    std::ranges::sort(wave,
-                      [](const BuildPlan::Action &left,
-                         const BuildPlan::Action &right) -> bool {
-                        return left.destination < right.destination;
-                      });
-    plan.size += wave.size();
-  }
-
-  return plan;
+  return assemble_plan(scope, targets, dirty_set, active_leaves,
+                       secondary_strings, secondary_tree_prefix,
+                       has_potential_stale);
 }
 
 } // namespace sourcemeta::one
