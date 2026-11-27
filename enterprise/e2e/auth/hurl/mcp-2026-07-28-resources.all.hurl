@@ -172,29 +172,29 @@ jsonpath "$.result.resources[21].description" == "The instance promoted to JSON-
 jsonpath "$.result.resources[21].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[21].size" == 799
 jsonpath "$.result.resources[21].annotations.priority" == 0.0
-jsonpath "$.result.resources[22].uri" == "{{base}}/self/v1/schemas/api/search/response"
-jsonpath "$.result.resources[22].name" == "Sourcemeta One Search API Response"
-jsonpath "$.result.resources[22].description" == "The response format for the search API endpoint"
+jsonpath "$.result.resources[22].uri" == "http://localhost:8000/self/v1/schemas/api/schemas/stats/response"
+jsonpath "$.result.resources[22].name" == "Sourcemeta One Schema Stats API Response"
+jsonpath "$.result.resources[22].description" == "The response format for the schema statistics API endpoint"
 jsonpath "$.result.resources[22].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[22].size" == 1446
+jsonpath "$.result.resources[22].size" == 2738
 jsonpath "$.result.resources[22].annotations.priority" == 0.0
-jsonpath "$.result.resources[23].uri" == "{{base}}/self/v1/schemas/api/schemas/stats/response"
-jsonpath "$.result.resources[23].name" == "Sourcemeta One Schema Stats API Response"
-jsonpath "$.result.resources[23].description" == "The response format for the schema statistics API endpoint"
+jsonpath "$.result.resources[23].uri" == "http://localhost:8000/self/v1/schemas/api/schemas/trace/request"
+jsonpath "$.result.resources[23].name" == "Sourcemeta One Schema Trace API Request"
+jsonpath "$.result.resources[23].description" == "The JSON instance to trace evaluation against a schema in the catalog"
 jsonpath "$.result.resources[23].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[23].size" == 2738
+jsonpath "$.result.resources[23].size" == 419
 jsonpath "$.result.resources[23].annotations.priority" == 0.0
-jsonpath "$.result.resources[24].uri" == "{{base}}/self/v1/schemas/api/schemas/trace/request"
-jsonpath "$.result.resources[24].name" == "Sourcemeta One Schema Trace API Request"
-jsonpath "$.result.resources[24].description" == "The JSON instance to trace evaluation against a schema in the catalog"
+jsonpath "$.result.resources[24].uri" == "http://localhost:8000/self/v1/schemas/api/schemas/trace/response"
+jsonpath "$.result.resources[24].name" == "Sourcemeta One Schema Trace API Response"
+jsonpath "$.result.resources[24].description" == "The response format for the schema trace API endpoint"
 jsonpath "$.result.resources[24].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[24].size" == 419
+jsonpath "$.result.resources[24].size" == 2290
 jsonpath "$.result.resources[24].annotations.priority" == 0.0
-jsonpath "$.result.resources[25].uri" == "{{base}}/self/v1/schemas/api/schemas/trace/response"
-jsonpath "$.result.resources[25].name" == "Sourcemeta One Schema Trace API Response"
-jsonpath "$.result.resources[25].description" == "The response format for the schema trace API endpoint"
+jsonpath "$.result.resources[25].uri" == "http://localhost:8000/self/v1/schemas/api/search/response"
+jsonpath "$.result.resources[25].name" == "Sourcemeta One Search API Response"
+jsonpath "$.result.resources[25].description" == "The response format for the search API endpoint"
 jsonpath "$.result.resources[25].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[25].size" == 2290
+jsonpath "$.result.resources[25].size" == 1424
 jsonpath "$.result.resources[25].annotations.priority" == 0.0
 jsonpath "$.result.resources[26].uri" == "{{base}}/self/v1/schemas/common/openapi/3.0"
 jsonpath "$.result.resources[26].name" == "OpenAPI 3.0 Document"
