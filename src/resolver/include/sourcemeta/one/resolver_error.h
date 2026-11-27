@@ -123,6 +123,66 @@ private:
   sourcemeta::core::Pointer location_;
 };
 
+// An OpenAPI description is served whole rather than as schemas of its own, so
+// a schema whose reference reaches one finds no schema at the far end
+class ResolverSchemaReferenceToOpenAPIError : public sourcemeta::core::Error {
+public:
+  ResolverSchemaReferenceToOpenAPIError(
+      std::filesystem::path path, sourcemeta::core::JSON::String reference,
+      sourcemeta::core::Pointer location)
+      : sourcemeta::core::Error{"A schema cannot reference an OpenAPI "
+                                "description"},
+        path_{std::move(path)}, reference_{std::move(reference)},
+        location_{std::move(location)} {}
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  // What the reference resolves to, which is the identity this instance serves
+  // the description as, followed by the fragment the reference named
+  [[nodiscard]] auto reference() const noexcept
+      -> const sourcemeta::core::JSON::String & {
+    return this->reference_;
+  }
+
+  // Where the member that spells it sits
+  [[nodiscard]] auto location() const noexcept
+      -> const sourcemeta::core::Pointer & {
+    return this->location_;
+  }
+
+private:
+  std::filesystem::path path_;
+  sourcemeta::core::JSON::String reference_;
+  sourcemeta::core::Pointer location_;
+};
+
+// A dialect is named by a schema that describes schemas, and an OpenAPI
+// description is no schema at all
+class ResolverSchemaDialectIsOpenAPIError : public sourcemeta::core::Error {
+public:
+  ResolverSchemaDialectIsOpenAPIError(std::filesystem::path path,
+                                      sourcemeta::core::JSON::String identifier)
+      : sourcemeta::core::Error{"A schema cannot declare an OpenAPI "
+                                "description as its dialect"},
+        path_{std::move(path)}, identifier_{std::move(identifier)} {}
+
+  [[nodiscard]] auto path() const noexcept -> const std::filesystem::path & {
+    return this->path_;
+  }
+
+  // The identity the dialect names, as this instance serves it
+  [[nodiscard]] auto identifier() const noexcept
+      -> const sourcemeta::core::JSON::String & {
+    return this->identifier_;
+  }
+
+private:
+  std::filesystem::path path_;
+  sourcemeta::core::JSON::String identifier_;
+};
+
 // The output directory belongs to the indexer, so a recorded artifact that is
 // gone from disk means something else modified the directory, which is the one
 // assumption the build cannot recover from on its own
