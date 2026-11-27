@@ -272,7 +272,7 @@ jsonpath "$.result.resources[21].size" == 212
 jsonpath "$.result.resources[21].annotations.priority" == 0.5
 jsonpath "$.result.resources[22].uri" == "http://localhost:8000/test/openapi-split-shared"
 jsonpath "$.result.resources[22].name" == "Shared"
-jsonpath "$.result.resources[22].description" == "A schema with only a description (03)"
+jsonpath "$.result.resources[22].description" not exists
 jsonpath "$.result.resources[22].mimeType" == "application/openapi+json"
 jsonpath "$.result.resources[22].size" == 404
 jsonpath "$.result.resources[22].annotations.priority" == 0.5
@@ -290,19 +290,19 @@ jsonpath "$.result.resources[24].size" == 200
 jsonpath "$.result.resources[24].annotations.priority" == 0.5
 jsonpath "$.result.resources[25].uri" == "http://localhost:8000/test/description-only/03"
 jsonpath "$.result.resources[25].name" == "/test/description-only/03"
-jsonpath "$.result.resources[25].description" not exists
+jsonpath "$.result.resources[25].description" == "A schema with only a description (03)"
 jsonpath "$.result.resources[25].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[25].size" == 200
 jsonpath "$.result.resources[25].annotations.priority" == 0.5
 jsonpath "$.result.resources[26].uri" == "http://localhost:8000/test/description-only/04"
 jsonpath "$.result.resources[26].name" == "/test/description-only/04"
-jsonpath "$.result.resources[26].description" not exists
+jsonpath "$.result.resources[26].description" == "A schema with only a description (04)"
 jsonpath "$.result.resources[26].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[26].size" == 200
 jsonpath "$.result.resources[26].annotations.priority" == 0.5
 jsonpath "$.result.resources[27].uri" == "http://localhost:8000/test/description-only/05"
 jsonpath "$.result.resources[27].name" == "/test/description-only/05"
-jsonpath "$.result.resources[27].description" not exists
+jsonpath "$.result.resources[27].description" == "A schema with only a description (05)"
 jsonpath "$.result.resources[27].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[27].size" == 200
 jsonpath "$.result.resources[27].annotations.priority" == 0.5
