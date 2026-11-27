@@ -40,7 +40,7 @@ jsonpath "$.result.tools[8].name" == "evaluate_schema"
 jsonpath "$.result.tools[9].name" == "instance_to_rdf"
 jsonpath "$.result.tools[10].name" == "trace_schema_evaluation"
 jsonpath "$.result.tools[11].name" == "playground_trace_schema"
-jsonpath "$.result.tools[12].name" == "search_schemas"
+jsonpath "$.result.tools[12].name" == "search"
 # The display title is sent both on the tool and under its annotations, since
 # the revisions differ on where a client reads it from
 jsonpath "$.result.tools[0].title" == "List Directory"
@@ -198,15 +198,15 @@ jsonpath "$.result.tools[11].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[11].annotations.destructiveHint" == false
 jsonpath "$.result.tools[11].annotations.idempotentHint" == true
 jsonpath "$.result.tools[11].annotations.openWorldHint" == false
-jsonpath "$.result.tools[12].name" == "search_schemas"
-jsonpath "$.result.tools[12].title" == "Search Schemas"
-jsonpath "$.result.tools[12].description" == "Search for schemas by query term"
+jsonpath "$.result.tools[12].name" == "search"
+jsonpath "$.result.tools[12].title" == "Search"
+jsonpath "$.result.tools[12].description" == "Search the catalog by query term, for JSON Schemas, OpenAPI descriptions, or both"
 jsonpath "$.result.tools[12].inputSchema.type" == "object"
-jsonpath "$.result.tools[12].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request"
+jsonpath "$.result.tools[12].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request"
 jsonpath "$.result.tools[12].inputSchema['$comment']" == "The full input schema for this tool is published at the `$ref` URL above. A client that does not resolve it can call `resources/read` on that URL to fetch it, since this server is a JSON Schema registry and every `$ref` URL is itself reachable as an MCP resource"
 jsonpath "$.result.tools[12].outputSchema.type" == "object"
-jsonpath "$.result.tools[12].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/response"
-jsonpath "$.result.tools[12].annotations.title" == "Search Schemas"
+jsonpath "$.result.tools[12].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/search/response"
+jsonpath "$.result.tools[12].annotations.title" == "Search"
 jsonpath "$.result.tools[12].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[12].annotations.destructiveHint" == false
 jsonpath "$.result.tools[12].annotations.idempotentHint" == true

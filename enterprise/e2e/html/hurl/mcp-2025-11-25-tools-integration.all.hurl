@@ -192,7 +192,7 @@ Content-Type: application/json
   "id": 1210,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": { "q": "Object" }
   }
 }

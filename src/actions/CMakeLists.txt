@@ -11,7 +11,7 @@ sourcemeta_library(NAMESPACE sourcemeta PROJECT one NAME actions
     action_jsonschema_trace_v1.h
     action_list_directory_v1.h
     action_not_found_v1.h
-    action_schema_search_v1.h
+    action_search_v1.h
     action_serve_explorer_artifact_v1.h
     action_serve_schema_artifact_v1.h
     action_serve_static_v1.h

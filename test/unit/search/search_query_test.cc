@@ -1748,3 +1748,124 @@ TEST(query_only_null_bytes_matches_nothing) {
           sourcemeta::one::SEARCH_SCOPE_DESCRIPTION)};
   EXPECT_EQ(result.size(), 0);
 }
+
+TEST(kinds_schema_only) {
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {.path = "/example/schema",
+       .identifier = "http://example.com/example/schema",
+       .title = "Pets",
+       .description = "A schema",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema},
+      {.path = "/example/description",
+       .identifier = "http://example.com/example/description",
+       .title = "Pets",
+       .description = "An OpenAPI description",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::OpenAPI}};
+  const auto payload{sourcemeta::one::make_search(std::move(entries))};
+  const auto result{sourcemeta::one::search(
+      payload.data(), payload.size(), "Pets", 10,
+      sourcemeta::one::SEARCH_SCOPE_PATH | sourcemeta::one::SEARCH_SCOPE_TITLE |
+          sourcemeta::one::SEARCH_SCOPE_DESCRIPTION,
+      sourcemeta::one::SEARCH_KIND_SCHEMA)};
+  EXPECT_TRUE(result.is_array());
+  EXPECT_EQ(result.size(), 1);
+  EXPECT_EQ(result.at(0).at("path").to_string(), "/example/schema");
+}
+
+TEST(kinds_openapi_only) {
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {.path = "/example/schema",
+       .identifier = "http://example.com/example/schema",
+       .title = "Pets",
+       .description = "A schema",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema},
+      {.path = "/example/description",
+       .identifier = "http://example.com/example/description",
+       .title = "Pets",
+       .description = "An OpenAPI description",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::OpenAPI}};
+  const auto payload{sourcemeta::one::make_search(std::move(entries))};
+  const auto result{sourcemeta::one::search(
+      payload.data(), payload.size(), "Pets", 10,
+      sourcemeta::one::SEARCH_SCOPE_PATH | sourcemeta::one::SEARCH_SCOPE_TITLE |
+          sourcemeta::one::SEARCH_SCOPE_DESCRIPTION,
+      sourcemeta::one::SEARCH_KIND_OPENAPI)};
+  EXPECT_TRUE(result.is_array());
+  EXPECT_EQ(result.size(), 1);
+  EXPECT_EQ(result.at(0).at("path").to_string(), "/example/description");
+}
+
+TEST(kinds_any_answers_for_both) {
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {.path = "/example/schema",
+       .identifier = "http://example.com/example/schema",
+       .title = "Pets",
+       .description = "A schema",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema},
+      {.path = "/example/description",
+       .identifier = "http://example.com/example/description",
+       .title = "Pets",
+       .description = "An OpenAPI description",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::OpenAPI}};
+  const auto payload{sourcemeta::one::make_search(std::move(entries))};
+  const auto result{sourcemeta::one::search(
+      payload.data(), payload.size(), "Pets", 10,
+      sourcemeta::one::SEARCH_SCOPE_PATH | sourcemeta::one::SEARCH_SCOPE_TITLE |
+          sourcemeta::one::SEARCH_SCOPE_DESCRIPTION,
+      sourcemeta::one::SEARCH_KIND_ANY)};
+  EXPECT_TRUE(result.is_array());
+  EXPECT_EQ(result.size(), 2);
+}
+
+TEST(kinds_defaults_to_both) {
+  std::vector<sourcemeta::one::SearchEntry> entries{
+      {.path = "/example/schema",
+       .identifier = "http://example.com/example/schema",
+       .title = "Pets",
+       .description = "A schema",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::Schema},
+      {.path = "/example/description",
+       .identifier = "http://example.com/example/description",
+       .title = "Pets",
+       .description = "An OpenAPI description",
+       .health = 80,
+       .priority = 100,
+       .bytes_raw = 0,
+       .bytes_bundled = 0,
+       .kind = sourcemeta::one::LeafKind::OpenAPI}};
+  const auto payload{sourcemeta::one::make_search(std::move(entries))};
+  const auto result{sourcemeta::one::search(
+      payload.data(), payload.size(), "Pets", 10,
+      sourcemeta::one::SEARCH_SCOPE_PATH | sourcemeta::one::SEARCH_SCOPE_TITLE |
+          sourcemeta::one::SEARCH_SCOPE_DESCRIPTION)};
+  EXPECT_TRUE(result.is_array());
+  EXPECT_EQ(result.size(), 2);
+}

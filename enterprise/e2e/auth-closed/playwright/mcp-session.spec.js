@@ -60,7 +60,7 @@ test.describe('MCP under a browser session', () => {
         jsonrpc: '2.0',
         id: 1,
         method: 'tools/call',
-        params: { name: 'search_schemas', arguments: { q: 'object' } }
+        params: { name: 'search', arguments: { q: 'object' } }
       },
       session()
     );
@@ -115,7 +115,7 @@ test.describe('MCP under a browser session', () => {
       jsonrpc: '2.0',
       id: 4,
       method: 'tools/call',
-      params: { name: 'search_schemas', arguments: { q: 'object' } }
+      params: { name: 'search', arguments: { q: 'object' } }
     });
     expect(response.status()).toBe(401);
   });
@@ -134,7 +134,7 @@ test.describe('MCP under a browser session', () => {
         jsonrpc: '2.0',
         id: 5,
         method: 'tools/call',
-        params: { name: 'search_schemas', arguments: { q: 'object' } }
+        params: { name: 'search', arguments: { q: 'object' } }
       },
       forged
     );

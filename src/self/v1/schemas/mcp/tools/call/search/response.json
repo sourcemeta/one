@@ -1,11 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Sourcemeta One Schema Search RPC Output",
-  "description": "Search for schemas in the catalog by query term",
+  "title": "Sourcemeta One Search RPC Output",
+  "description": "Search the catalog by query term",
   "examples": [
     {
       "results": [
         {
+          "type": "schema",
           "path": "/schemas/user.json",
           "identifier": "https://example.com/schemas/user.json",
           "title": "User Schema",
@@ -20,7 +21,7 @@
   "required": [ "results" ],
   "properties": {
     "results": {
-      "$ref": "../../../../api/schemas/search/response.json"
+      "$ref": "../../../../api/search/response.json"
     }
   },
   "additionalProperties": false

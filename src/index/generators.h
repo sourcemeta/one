@@ -1105,7 +1105,7 @@ struct GenerateURITemplateRoutes {
     constexpr std::string_view TRACE_RESPONSE_SCHEMA{
         "/self/v1/schemas/api/schemas/trace/response"};
     constexpr std::string_view SEARCH_RESPONSE_SCHEMA{
-        "/self/v1/schemas/api/schemas/search/response"};
+        "/self/v1/schemas/api/search/response"};
     constexpr std::string_view AUTH_LOGIN_PAGE_RESPONSE_SCHEMA{
         "/self/v1/schemas/api/auth/login/response"};
     constexpr std::string_view LIST_DIRECTORY_REQUEST_SCHEMA{
@@ -1156,10 +1156,10 @@ struct GenerateURITemplateRoutes {
         "/self/v1/schemas/mcp/tools/call/playground-trace-schema/request"};
     constexpr std::string_view PLAYGROUND_TRACE_SCHEMA_RESPONSE_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/playground-trace-schema/response"};
-    constexpr std::string_view SEARCH_SCHEMAS_REQUEST_SCHEMA{
-        "/self/v1/schemas/mcp/tools/call/search-schemas/request"};
-    constexpr std::string_view SEARCH_SCHEMAS_RESPONSE_SCHEMA{
-        "/self/v1/schemas/mcp/tools/call/search-schemas/response"};
+    constexpr std::string_view SEARCH_REQUEST_SCHEMA{
+        "/self/v1/schemas/mcp/tools/call/search/request"};
+    constexpr std::string_view SEARCH_RESPONSE_RPC_SCHEMA{
+        "/self/v1/schemas/mcp/tools/call/search/response"};
     constexpr std::string_view ERROR_SCHEMA{"/self/v1/schemas/api/error"};
     constexpr std::string_view MCP_REQUEST_SCHEMA{
         "/self/v1/schemas/mcp/request"};
@@ -1343,14 +1343,12 @@ struct GenerateURITemplateRoutes {
       const auto search_arguments{
           std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
               {{"responseSchema", std::string_view{SEARCH_RESPONSE_SCHEMA}},
-               {"mcpRequestSchema",
-                std::string_view{SEARCH_SCHEMAS_REQUEST_SCHEMA}},
+               {"mcpRequestSchema", std::string_view{SEARCH_REQUEST_SCHEMA}},
                {"mcpResponseSchema",
-                std::string_view{SEARCH_SCHEMAS_RESPONSE_SCHEMA}},
+                std::string_view{SEARCH_RESPONSE_RPC_SCHEMA}},
                {"errorSchema", std::string_view{ERROR_SCHEMA}}})};
-      router.add(sourcemeta::one::ENDPOINT_SCHEMA_SEARCH, "search_schemas",
-                 next_id++, sourcemeta::one::ACTION_TYPE_SCHEMA_SEARCH_V1,
-                 search_arguments);
+      router.add(sourcemeta::one::ENDPOINT_SEARCH, "search", next_id++,
+                 sourcemeta::one::ACTION_TYPE_SEARCH_V1, search_arguments);
 
       const auto health_check_arguments{
           std::to_array<sourcemeta::core::URITemplateRouter::Argument>(

@@ -23,7 +23,7 @@ Content-Type: application/json
 HTTP 200
 Cache-Control: no-store
 [Captures]
-output_schema_path: jsonpath "$.result.tools[?@.name=='search_schemas'].outputSchema['$ref']" regex "https?://[^/]+(.+)"
+output_schema_path: jsonpath "$.result.tools[?@.name=='search'].outputSchema['$ref']" regex "https?://[^/]+(.+)"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -31,7 +31,7 @@ header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
 header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.result.tools[?@.name=='search_schemas'].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/response"
+jsonpath "$.result.tools[?@.name=='search'].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/search/response"
 jsonpath "$.result.resultType" == "complete"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
@@ -43,7 +43,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -51,7 +51,7 @@ Content-Type: application/json
   "id": 1100,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "object"
     },
@@ -97,7 +97,9 @@ jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 3
 variable "text" jsonpath "$.results" count == 3
+jsonpath "$.result.structuredContent.results[0].type" == "schema"
 jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
+variable "text" jsonpath "$.results[0].type" == "schema"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
 jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
@@ -109,7 +111,9 @@ jsonpath "$.result.structuredContent.results[0].priority" == 50
 variable "text" jsonpath "$.results[0].priority" == 50
 jsonpath "$.result.structuredContent.results[0].health" == 67
 variable "text" jsonpath "$.results[0].health" == 67
+jsonpath "$.result.structuredContent.results[0].type" == "schema"
 jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
+variable "text" jsonpath "$.results[0].type" == "schema"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
 jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
@@ -166,7 +170,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -174,7 +178,7 @@ Content-Type: application/json
   "id": 1106,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "object",
       "limit": 1
@@ -221,12 +225,14 @@ jsonpath "$.result.content[1].name" == "My Object"
 jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 1
+jsonpath "$.result.structuredContent.results[0].type" == "schema"
 jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
 jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.results[0].title" == "My Object"
 jsonpath "$.result.structuredContent.results[0].description" == "An Object Example"
 jsonpath "$.result.structuredContent.results[0].priority" == 50
 jsonpath "$.result.structuredContent.results[0].health" == 67
+variable "text" jsonpath "$.results[0].type" == "schema"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
 variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.results[0].title" == "My Object"
@@ -238,12 +244,14 @@ jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcem
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
 variable "text" jsonpath "$.results" count == 1
+jsonpath "$.result.structuredContent.results[0].type" == "schema"
 jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
 jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.results[0].title" == "My Object"
 jsonpath "$.result.structuredContent.results[0].description" == "An Object Example"
 jsonpath "$.result.structuredContent.results[0].priority" == 50
 jsonpath "$.result.structuredContent.results[0].health" == 67
+variable "text" jsonpath "$.results[0].type" == "schema"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
 variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.results[0].title" == "My Object"
@@ -375,7 +383,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -383,7 +391,7 @@ Content-Type: application/json
   "id": 1101,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "OBJECT"
     },
@@ -439,7 +447,9 @@ jsonpath "$.result.content[3].description" == "The document format of an OpenAPI
 jsonpath "$.result.content[3].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 3
 variable "text" jsonpath "$.results" count == 3
+jsonpath "$.result.structuredContent.results[0].type" == "schema"
 jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
+variable "text" jsonpath "$.results[0].type" == "schema"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
 jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
@@ -451,7 +461,9 @@ jsonpath "$.result.structuredContent.results[0].priority" == 50
 variable "text" jsonpath "$.results[0].priority" == 50
 jsonpath "$.result.structuredContent.results[0].health" == 67
 variable "text" jsonpath "$.results[0].health" == 67
+jsonpath "$.result.structuredContent.results[1].type" == "schema"
 jsonpath "$.result.structuredContent.results[1].path" == "/self/v1/schemas/common/openapi/3.1"
+variable "text" jsonpath "$.results[1].type" == "schema"
 variable "text" jsonpath "$.results[1].path" == "/self/v1/schemas/common/openapi/3.1"
 jsonpath "$.result.structuredContent.results[1].identifier" == "{{base}}/self/v1/schemas/common/openapi/3.1"
 variable "text" jsonpath "$.results[1].identifier" == "{{base}}/self/v1/schemas/common/openapi/3.1"
@@ -463,7 +475,9 @@ jsonpath "$.result.structuredContent.results[1].priority" == 0
 variable "text" jsonpath "$.results[1].priority" == 0
 jsonpath "$.result.structuredContent.results[1].health" == 100
 variable "text" jsonpath "$.results[1].health" == 100
+jsonpath "$.result.structuredContent.results[2].type" == "schema"
 jsonpath "$.result.structuredContent.results[2].path" == "/self/v1/schemas/common/openapi/3.2"
+variable "text" jsonpath "$.results[2].type" == "schema"
 variable "text" jsonpath "$.results[2].path" == "/self/v1/schemas/common/openapi/3.2"
 jsonpath "$.result.structuredContent.results[2].identifier" == "{{base}}/self/v1/schemas/common/openapi/3.2"
 variable "text" jsonpath "$.results[2].identifier" == "{{base}}/self/v1/schemas/common/openapi/3.2"
@@ -475,7 +489,9 @@ jsonpath "$.result.structuredContent.results[2].priority" == 0
 variable "text" jsonpath "$.results[2].priority" == 0
 jsonpath "$.result.structuredContent.results[2].health" == 100
 variable "text" jsonpath "$.results[2].health" == 100
+jsonpath "$.result.structuredContent.results[0].type" == "schema"
 jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
+variable "text" jsonpath "$.results[0].type" == "schema"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
 jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
@@ -528,7 +544,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -536,7 +552,7 @@ Content-Type: application/json
   "id": 1102,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "test"
     },
@@ -576,54 +592,54 @@ jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 11
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
-jsonpath "$.result.content[1].uri" == "{{base}}/test/openapi/dialect"
-jsonpath "$.result.content[1].name" == "Custom OpenAPI Dialect"
-jsonpath "$.result.content[1].description" == "A meta-schema extending the OpenAPI 3.1 dialect with a vocabulary of its own"
+jsonpath "$.result.content[1].uri" == "{{base}}/test/openapi-petstore"
+jsonpath "$.result.content[1].name" == "Petstore"
+jsonpath "$.result.content[1].description" == "Everything about the pets this shop keeps"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.content[2].type" == "resource_link"
-jsonpath "$.result.content[2].uri" == "{{base}}/test/openapi/identifier"
-jsonpath "$.result.content[2].name" == "Identifier"
-jsonpath "$.result.content[2].description" == "A product identifier"
+jsonpath "$.result.content[2].uri" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.content[2].name" == "Split"
+jsonpath "$.result.content[2].description" == "What a listing says of this API"
 jsonpath "$.result.content[2].mimeType" == "application/schema+json"
 jsonpath "$.result.content[3].type" == "resource_link"
-jsonpath "$.result.content[3].uri" == "{{base}}/test/openapi/order"
-jsonpath "$.result.content[3].name" == "Order"
-jsonpath "$.result.content[3].description" == "An order on the OpenAPI 3.2 dialect that references a schema on the OpenAPI 3.1 one"
+jsonpath "$.result.content[3].uri" == "{{base}}/test/openapi/dialect"
+jsonpath "$.result.content[3].name" == "Custom OpenAPI Dialect"
+jsonpath "$.result.content[3].description" == "A meta-schema extending the OpenAPI 3.1 dialect with a vocabulary of its own"
 jsonpath "$.result.content[3].mimeType" == "application/schema+json"
 jsonpath "$.result.content[4].type" == "resource_link"
-jsonpath "$.result.content[4].uri" == "{{base}}/test/openapi/product"
-jsonpath "$.result.content[4].name" == "Product"
-jsonpath "$.result.content[4].description" == "A product that exercises every keyword of the OpenAPI 3.1 base vocabulary"
+jsonpath "$.result.content[4].uri" == "{{base}}/test/openapi/identifier"
+jsonpath "$.result.content[4].name" == "Identifier"
+jsonpath "$.result.content[4].description" == "A product identifier"
 jsonpath "$.result.content[4].mimeType" == "application/schema+json"
 jsonpath "$.result.content[5].type" == "resource_link"
-jsonpath "$.result.content[5].uri" == "{{base}}/test/jsonld/product"
-jsonpath "$.result.content[5].name" == "Product"
-jsonpath "$.result.content[5].description" == "A product annotated with JSON-LD mappings"
+jsonpath "$.result.content[5].uri" == "{{base}}/test/openapi/order"
+jsonpath "$.result.content[5].name" == "Order"
+jsonpath "$.result.content[5].description" == "An order on the OpenAPI 3.2 dialect that references a schema on the OpenAPI 3.1 one"
 jsonpath "$.result.content[5].mimeType" == "application/schema+json"
 jsonpath "$.result.content[6].type" == "resource_link"
-jsonpath "$.result.content[6].uri" == "{{base}}/test/jsonld/facets"
-jsonpath "$.result.content[6].name" == "Unresolvable Facets"
-jsonpath "$.result.content[6].description" == "A schema whose JSON-LD annotations fail on a distinct facet per property"
+jsonpath "$.result.content[6].uri" == "{{base}}/test/openapi/product"
+jsonpath "$.result.content[6].name" == "Product"
+jsonpath "$.result.content[6].description" == "A product that exercises every keyword of the OpenAPI 3.1 base vocabulary"
 jsonpath "$.result.content[6].mimeType" == "application/schema+json"
 jsonpath "$.result.content[7].type" == "resource_link"
-jsonpath "$.result.content[7].uri" == "{{base}}/test/object"
-jsonpath "$.result.content[7].name" == "My Object"
-jsonpath "$.result.content[7].description" == "An Object Example"
+jsonpath "$.result.content[7].uri" == "{{base}}/test/jsonld/product"
+jsonpath "$.result.content[7].name" == "Product"
+jsonpath "$.result.content[7].description" == "A product annotated with JSON-LD mappings"
 jsonpath "$.result.content[7].mimeType" == "application/schema+json"
 jsonpath "$.result.content[8].type" == "resource_link"
-jsonpath "$.result.content[8].uri" == "{{base}}/test/jsonld/draft7"
-jsonpath "$.result.content[8].name" == "Legacy Dialect"
-jsonpath "$.result.content[8].description" == "A schema on a dialect without annotation support"
+jsonpath "$.result.content[8].uri" == "{{base}}/test/jsonld/facets"
+jsonpath "$.result.content[8].name" == "Unresolvable Facets"
+jsonpath "$.result.content[8].description" == "A schema whose JSON-LD annotations fail on a distinct facet per property"
 jsonpath "$.result.content[8].mimeType" == "application/schema+json"
 jsonpath "$.result.content[9].type" == "resource_link"
-jsonpath "$.result.content[9].uri" == "{{base}}/test/full/01"
-jsonpath "$.result.content[9].name" == "Full 01"
-jsonpath "$.result.content[9].description" == "A schema with both a title and a description (01)"
+jsonpath "$.result.content[9].uri" == "{{base}}/test/object"
+jsonpath "$.result.content[9].name" == "My Object"
+jsonpath "$.result.content[9].description" == "An Object Example"
 jsonpath "$.result.content[9].mimeType" == "application/schema+json"
 jsonpath "$.result.content[10].type" == "resource_link"
-jsonpath "$.result.content[10].uri" == "{{base}}/test/full/02"
-jsonpath "$.result.content[10].name" == "Full 02"
-jsonpath "$.result.content[10].description" == "A schema with both a title and a description (02)"
+jsonpath "$.result.content[10].uri" == "{{base}}/test/jsonld/draft7"
+jsonpath "$.result.content[10].name" == "Legacy Dialect"
+jsonpath "$.result.content[10].description" == "A schema on a dialect without annotation support"
 jsonpath "$.result.content[10].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 10
 jsonpath "$.result.resultType" == "complete"
@@ -672,7 +688,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -680,7 +696,7 @@ Content-Type: application/json
   "id": 1103,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "test",
       "limit": 1
@@ -721,9 +737,9 @@ jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 2
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
-jsonpath "$.result.content[1].uri" == "{{base}}/test/openapi/dialect"
-jsonpath "$.result.content[1].name" == "Custom OpenAPI Dialect"
-jsonpath "$.result.content[1].description" == "A meta-schema extending the OpenAPI 3.1 dialect with a vocabulary of its own"
+jsonpath "$.result.content[1].uri" == "{{base}}/test/openapi-petstore"
+jsonpath "$.result.content[1].name" == "Petstore"
+jsonpath "$.result.content[1].description" == "Everything about the pets this shop keeps"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 1
 jsonpath "$.result.resultType" == "complete"
@@ -772,7 +788,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -780,7 +796,7 @@ Content-Type: application/json
   "id": 1104,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "xyznonexistent"
     },
@@ -868,7 +884,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -876,7 +892,7 @@ Content-Type: application/json
   "id": 1110,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "description-only",
       "limit": 2
@@ -981,7 +997,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -989,7 +1005,7 @@ Content-Type: application/json
   "id": 1111,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "title-only",
       "limit": 2
@@ -1112,7 +1128,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -1120,7 +1136,7 @@ Content-Type: application/json
   "id": 1112,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "bare",
       "limit": 2
@@ -1243,7 +1259,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -1251,7 +1267,7 @@ Content-Type: application/json
   "id": 1105,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "object",
       "scope": [
@@ -1300,8 +1316,10 @@ jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 1
 variable "text" jsonpath "$.results" count == 1
+jsonpath "$.result.structuredContent.results[0].type" == "schema"
 jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
 jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
+variable "text" jsonpath "$.results[0].type" == "schema"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
 variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.results[0].priority" == 50
@@ -1312,8 +1330,10 @@ jsonpath "$.result.resultType" == "complete"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
+jsonpath "$.result.structuredContent.results[0].type" == "schema"
 jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
 jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
+variable "text" jsonpath "$.results[0].type" == "schema"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
 variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.results[0].priority" == 50
@@ -1361,7 +1381,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -1369,7 +1389,7 @@ Content-Type: application/json
   "id": 1120,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {},
     "_meta": {
       "io.modelcontextprotocol/protocolVersion": "2026-07-28",
@@ -1406,7 +1426,7 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 1
 jsonpath "$.error.data.errors[0].keywordLocation" == "/required"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request#/required"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request#/required"
 jsonpath "$.error.data.errors[0].instanceLocation" == ""
 jsonpath "$.error.data.errors[0].error" == "The value was expected to be an object that defines the property \"q\""
 
@@ -1432,7 +1452,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -1440,7 +1460,7 @@ Content-Type: application/json
   "id": 1121,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "test",
       "limit": 0
@@ -1480,13 +1500,13 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/limit/minimum"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request#/properties/limit/minimum"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request#/properties/limit/minimum"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/limit"
 jsonpath "$.error.data.errors[0].error" == "The integer value 0 was expected to be greater than or equal to the integer 1"
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
-jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 3 defined properties subschemas"
+jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 4 defined properties subschemas"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1510,7 +1530,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -1518,7 +1538,7 @@ Content-Type: application/json
   "id": 1122,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "test",
       "limit": 101
@@ -1558,13 +1578,13 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/limit/maximum"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request#/properties/limit/maximum"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request#/properties/limit/maximum"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/limit"
 jsonpath "$.error.data.errors[0].error" == "The integer value 101 was expected to be less than or equal to the integer 100"
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
-jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 3 defined properties subschemas"
+jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 4 defined properties subschemas"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1588,7 +1608,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -1596,7 +1616,7 @@ Content-Type: application/json
   "id": 1123,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "test",
       "limit": 1.5
@@ -1636,13 +1656,13 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/limit/type"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request#/properties/limit/type"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request#/properties/limit/type"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/limit"
 jsonpath "$.error.data.errors[0].error" == "The value was expected to be of type integer, or string but it was of type number"
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
-jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 3 defined properties subschemas"
+jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 4 defined properties subschemas"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1669,7 +1689,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -1677,7 +1697,7 @@ Content-Type: application/json
   "id": 1124,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "test",
       "limit": "5"
@@ -1718,29 +1738,29 @@ jsonpath "$.result.isError" == false
 jsonpath "$.result.content" count == 6
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[1].type" == "resource_link"
-jsonpath "$.result.content[1].uri" == "{{base}}/test/openapi/dialect"
-jsonpath "$.result.content[1].name" == "Custom OpenAPI Dialect"
-jsonpath "$.result.content[1].description" == "A meta-schema extending the OpenAPI 3.1 dialect with a vocabulary of its own"
+jsonpath "$.result.content[1].uri" == "{{base}}/test/openapi-petstore"
+jsonpath "$.result.content[1].name" == "Petstore"
+jsonpath "$.result.content[1].description" == "Everything about the pets this shop keeps"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.content[2].type" == "resource_link"
-jsonpath "$.result.content[2].uri" == "{{base}}/test/openapi/identifier"
-jsonpath "$.result.content[2].name" == "Identifier"
-jsonpath "$.result.content[2].description" == "A product identifier"
+jsonpath "$.result.content[2].uri" == "{{base}}/test/openapi-split-entry"
+jsonpath "$.result.content[2].name" == "Split"
+jsonpath "$.result.content[2].description" == "What a listing says of this API"
 jsonpath "$.result.content[2].mimeType" == "application/schema+json"
 jsonpath "$.result.content[3].type" == "resource_link"
-jsonpath "$.result.content[3].uri" == "{{base}}/test/openapi/order"
-jsonpath "$.result.content[3].name" == "Order"
-jsonpath "$.result.content[3].description" == "An order on the OpenAPI 3.2 dialect that references a schema on the OpenAPI 3.1 one"
+jsonpath "$.result.content[3].uri" == "{{base}}/test/openapi/dialect"
+jsonpath "$.result.content[3].name" == "Custom OpenAPI Dialect"
+jsonpath "$.result.content[3].description" == "A meta-schema extending the OpenAPI 3.1 dialect with a vocabulary of its own"
 jsonpath "$.result.content[3].mimeType" == "application/schema+json"
 jsonpath "$.result.content[4].type" == "resource_link"
-jsonpath "$.result.content[4].uri" == "{{base}}/test/openapi/product"
-jsonpath "$.result.content[4].name" == "Product"
-jsonpath "$.result.content[4].description" == "A product that exercises every keyword of the OpenAPI 3.1 base vocabulary"
+jsonpath "$.result.content[4].uri" == "{{base}}/test/openapi/identifier"
+jsonpath "$.result.content[4].name" == "Identifier"
+jsonpath "$.result.content[4].description" == "A product identifier"
 jsonpath "$.result.content[4].mimeType" == "application/schema+json"
 jsonpath "$.result.content[5].type" == "resource_link"
-jsonpath "$.result.content[5].uri" == "{{base}}/test/jsonld/product"
-jsonpath "$.result.content[5].name" == "Product"
-jsonpath "$.result.content[5].description" == "A product annotated with JSON-LD mappings"
+jsonpath "$.result.content[5].uri" == "{{base}}/test/openapi/order"
+jsonpath "$.result.content[5].name" == "Order"
+jsonpath "$.result.content[5].description" == "An order on the OpenAPI 3.2 dialect that references a schema on the OpenAPI 3.1 one"
 jsonpath "$.result.content[5].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 5
 jsonpath "$.result.resultType" == "complete"
@@ -1789,7 +1809,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -1797,7 +1817,7 @@ Content-Type: application/json
   "id": 1125,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "test",
       "scope": []
@@ -1837,13 +1857,13 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/scope/minItems"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request#/properties/scope/minItems"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request#/properties/scope/minItems"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/scope"
 jsonpath "$.error.data.errors[0].error" == "The array value was expected to contain at least 1 item but its size was 0"
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
-jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 3 defined properties subschemas"
+jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 4 defined properties subschemas"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1867,7 +1887,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -1875,7 +1895,7 @@ Content-Type: application/json
   "id": 1126,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "test",
       "scope": [
@@ -1918,13 +1938,13 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/scope/uniqueItems"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request#/properties/scope/uniqueItems"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request#/properties/scope/uniqueItems"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/scope"
 jsonpath "$.error.data.errors[0].error" == "The array value contained the following duplicates: \"path\""
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
-jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 3 defined properties subschemas"
+jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 4 defined properties subschemas"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1948,7 +1968,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -1956,7 +1976,7 @@ Content-Type: application/json
   "id": 1127,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "test",
       "scope": [
@@ -1998,17 +2018,17 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 3
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/scope/items/enum"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request#/properties/scope/items/enum"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request#/properties/scope/items/enum"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/scope/0"
 jsonpath "$.error.data.errors[0].error" == "The string value \"bogus\" was expected to equal one of the following values: \"description\", \"path\", and \"title\""
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties/scope/items"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request#/properties/scope/items"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request#/properties/scope/items"
 jsonpath "$.error.data.errors[1].instanceLocation" == "/scope"
 jsonpath "$.error.data.errors[1].error" == "Every item in the array value was expected to validate against the given subschema"
 jsonpath "$.error.data.errors[2].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[2].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request#/properties"
+jsonpath "$.error.data.errors[2].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request#/properties"
 jsonpath "$.error.data.errors[2].instanceLocation" == ""
-jsonpath "$.error.data.errors[2].error" == "The object value was expected to validate against the 3 defined properties subschemas"
+jsonpath "$.error.data.errors[2].error" == "The object value was expected to validate against the 4 defined properties subschemas"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -2036,7 +2056,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -2044,7 +2064,7 @@ Content-Type: application/json
   "id": 1130,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "object",
       "scope": "[\"path\"]"
@@ -2091,8 +2111,10 @@ jsonpath "$.result.content[1].description" == "An Object Example"
 jsonpath "$.result.content[1].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 1
 variable "text" jsonpath "$.results" count == 1
+jsonpath "$.result.structuredContent.results[0].type" == "schema"
 jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
 jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
+variable "text" jsonpath "$.results[0].type" == "schema"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
 variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.results[0].priority" == 50
@@ -2103,8 +2125,10 @@ jsonpath "$.result.resultType" == "complete"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
 jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
+jsonpath "$.result.structuredContent.results[0].type" == "schema"
 jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
 jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
+variable "text" jsonpath "$.results[0].type" == "schema"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
 variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
 jsonpath "$.result.structuredContent.results[0].priority" == 50
@@ -2155,7 +2179,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -2163,7 +2187,7 @@ Content-Type: application/json
   "id": 1131,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "test",
       "scope": "bogus"
@@ -2233,7 +2257,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -2241,7 +2265,7 @@ Content-Type: application/json
   "id": 1133,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "test",
       "scope": "\"path\""
@@ -2311,7 +2335,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -2319,7 +2343,7 @@ Content-Type: application/json
   "id": 1135,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "test",
       "scope": "[]"
@@ -2389,7 +2413,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -2397,7 +2421,7 @@ Content-Type: application/json
   "id": 1134,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "test",
       "scope": "[\"bogus\"]"
@@ -2467,7 +2491,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -2475,7 +2499,7 @@ Content-Type: application/json
   "id": 1132,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "test",
       "limit": "101"
@@ -2515,13 +2539,13 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/limit/pattern"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request#/properties/limit/pattern"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request#/properties/limit/pattern"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/limit"
 jsonpath "$.error.data.errors[0].error" == "The string value \"101\" was expected to match the regular expression \"^([1-9]|[1-9][0-9]|100)$\""
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
-jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 3 defined properties subschemas"
+jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 4 defined properties subschemas"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -2545,7 +2569,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -2553,7 +2577,7 @@ Content-Type: application/json
   "id": 1128,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "test",
       "extra": "foo"
@@ -2593,11 +2617,11 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/additionalProperties"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request#/additionalProperties"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request#/additionalProperties"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/extra"
 jsonpath "$.error.data.errors[0].error" == "The object value was not expected to define the property \"extra\""
 jsonpath "$.error.data.errors[1].keywordLocation" == "/additionalProperties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request#/additionalProperties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request#/additionalProperties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was not expected to define additional properties"
 
@@ -2623,7 +2647,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -2631,7 +2655,7 @@ Content-Type: application/json
   "id": 1129,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": null,
     "_meta": {
       "io.modelcontextprotocol/protocolVersion": "2026-07-28",
@@ -2688,7 +2712,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -2696,7 +2720,7 @@ Content-Type: application/json
   "id": "search-call-string-id",
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "object"
     },
@@ -2752,7 +2776,9 @@ jsonpath "$.result.content[3].description" == "The document format of an OpenAPI
 jsonpath "$.result.content[3].mimeType" == "application/schema+json"
 jsonpath "$.result.structuredContent.results" count == 3
 variable "text" jsonpath "$.results" count == 3
+jsonpath "$.result.structuredContent.results[0].type" == "schema"
 jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
+variable "text" jsonpath "$.results[0].type" == "schema"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
 jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
@@ -2764,7 +2790,9 @@ jsonpath "$.result.structuredContent.results[0].priority" == 50
 variable "text" jsonpath "$.results[0].priority" == 50
 jsonpath "$.result.structuredContent.results[0].health" == 67
 variable "text" jsonpath "$.results[0].health" == 67
+jsonpath "$.result.structuredContent.results[1].type" == "schema"
 jsonpath "$.result.structuredContent.results[1].path" == "/self/v1/schemas/common/openapi/3.1"
+variable "text" jsonpath "$.results[1].type" == "schema"
 variable "text" jsonpath "$.results[1].path" == "/self/v1/schemas/common/openapi/3.1"
 jsonpath "$.result.structuredContent.results[1].identifier" == "{{base}}/self/v1/schemas/common/openapi/3.1"
 variable "text" jsonpath "$.results[1].identifier" == "{{base}}/self/v1/schemas/common/openapi/3.1"
@@ -2776,7 +2804,9 @@ jsonpath "$.result.structuredContent.results[1].priority" == 0
 variable "text" jsonpath "$.results[1].priority" == 0
 jsonpath "$.result.structuredContent.results[1].health" == 100
 variable "text" jsonpath "$.results[1].health" == 100
+jsonpath "$.result.structuredContent.results[2].type" == "schema"
 jsonpath "$.result.structuredContent.results[2].path" == "/self/v1/schemas/common/openapi/3.2"
+variable "text" jsonpath "$.results[2].type" == "schema"
 variable "text" jsonpath "$.results[2].path" == "/self/v1/schemas/common/openapi/3.2"
 jsonpath "$.result.structuredContent.results[2].identifier" == "{{base}}/self/v1/schemas/common/openapi/3.2"
 variable "text" jsonpath "$.results[2].identifier" == "{{base}}/self/v1/schemas/common/openapi/3.2"
@@ -2788,7 +2818,9 @@ jsonpath "$.result.structuredContent.results[2].priority" == 0
 variable "text" jsonpath "$.results[2].priority" == 0
 jsonpath "$.result.structuredContent.results[2].health" == 100
 variable "text" jsonpath "$.results[2].health" == 100
+jsonpath "$.result.structuredContent.results[0].type" == "schema"
 jsonpath "$.result.structuredContent.results[0].path" == "/test/object"
+variable "text" jsonpath "$.results[0].type" == "schema"
 variable "text" jsonpath "$.results[0].path" == "/test/object"
 jsonpath "$.result.structuredContent.results[0].identifier" == "{{base}}/test/object"
 variable "text" jsonpath "$.results[0].identifier" == "{{base}}/test/object"
@@ -2842,7 +2874,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -2850,7 +2882,7 @@ Content-Type: application/json
   "id": 1140,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": ""
     },
@@ -2889,13 +2921,13 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/q/minLength"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request#/properties/q/minLength"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request#/properties/q/minLength"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/q"
 jsonpath "$.error.data.errors[0].error" == "The string value \"\" was expected to consist of at least 1 character but its length was 0"
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
-jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 3 defined properties subschemas"
+jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 4 defined properties subschemas"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -2920,7 +2952,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -2928,7 +2960,7 @@ Content-Type: application/json
   "id": 1141,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "   "
     },
@@ -2967,13 +2999,13 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/q/pattern"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request#/properties/q/pattern"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request#/properties/q/pattern"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/q"
 jsonpath "$.error.data.errors[0].error" == "The string value \"   \" was expected to match the regular expression \"\\S\""
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
-jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 3 defined properties subschemas"
+jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 4 defined properties subschemas"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -2998,7 +3030,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -3006,7 +3038,7 @@ Content-Type: application/json
   "id": 1142,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "\t\n\r "
     },
@@ -3045,13 +3077,13 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/q/pattern"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request#/properties/q/pattern"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request#/properties/q/pattern"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/q"
 jsonpath "$.error.data.errors[0].error" == "The string value \"\t\n\r \" was expected to match the regular expression \"\\S\""
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
-jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 3 defined properties subschemas"
+jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the 4 defined properties subschemas"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

@@ -31,7 +31,9 @@ search.addEventListener('input', (event) => {
     }
 
     console.log('Searching for:', event.target.value);
-    const response = await fetch(`/self/v1/api/schemas/search?q=${encodeURIComponent(event.target.value)}`);
+    // A result is offered as a link to the page of what it names, and only a
+    // schema has one so far
+    const response = await fetch(`/self/v1/api/search?q=${encodeURIComponent(event.target.value)}&type=schema`);
     if (!response.ok) {
       return;
     }

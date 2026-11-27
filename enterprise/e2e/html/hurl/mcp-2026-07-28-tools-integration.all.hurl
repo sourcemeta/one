@@ -247,7 +247,7 @@ POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
 MCP-Protocol-Version: 2026-07-28
 Mcp-Method: tools/call
-Mcp-Name: search_schemas
+Mcp-Name: search
 Content-Type: application/json
 ```
 {
@@ -255,7 +255,7 @@ Content-Type: application/json
   "id": 1210,
   "method": "tools/call",
   "params": {
-    "name": "search_schemas",
+    "name": "search",
     "arguments": {
       "q": "Object"
     },

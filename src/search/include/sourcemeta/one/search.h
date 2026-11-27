@@ -63,15 +63,19 @@ struct SearchRecordHeader {
 };
 #pragma pack(pop)
 
-// The catalog holds one kind after the other, the way a directory lists what
-// it holds, and ranks within a kind. Ranking is fixed and intentionally not
+// The catalog ranks every kind together, since what a caller searches for is
+// a resource rather than a kind of one. Ranking is fixed and intentionally not
 // configurable: higher-priority entries come first, then entries with richer
-// metadata, then healthier ones. The scope only narrows which fields are
-// searched, and a search answers for the schemas of the catalog alone however
-// wide a scope it is given
+// metadata, then healthier ones. The scope narrows which fields are searched,
+// and the kinds narrow which of them answer at all
 inline constexpr std::uint8_t SEARCH_SCOPE_PATH{0b001};
 inline constexpr std::uint8_t SEARCH_SCOPE_TITLE{0b010};
 inline constexpr std::uint8_t SEARCH_SCOPE_DESCRIPTION{0b100};
+
+inline constexpr std::uint8_t SEARCH_KIND_SCHEMA{0b01};
+inline constexpr std::uint8_t SEARCH_KIND_OPENAPI{0b10};
+inline constexpr std::uint8_t SEARCH_KIND_ANY{SEARCH_KIND_SCHEMA |
+                                              SEARCH_KIND_OPENAPI};
 
 SOURCEMETA_ONE_SEARCH_EXPORT
 auto make_search(std::vector<SearchEntry> &&entries)
@@ -79,8 +83,8 @@ auto make_search(std::vector<SearchEntry> &&entries)
 
 SOURCEMETA_ONE_SEARCH_EXPORT
 auto search(const std::uint8_t *payload, std::size_t payload_size,
-            std::string_view query, std::size_t limit, std::uint8_t scope)
-    -> sourcemeta::core::JSON;
+            std::string_view query, std::size_t limit, std::uint8_t scope,
+            std::uint8_t kinds = SEARCH_KIND_ANY) -> sourcemeta::core::JSON;
 
 class SOURCEMETA_ONE_SEARCH_EXPORT SearchView {
 public:
@@ -92,8 +96,8 @@ public:
   auto operator=(const SearchView &) -> SearchView & = delete;
   auto operator=(SearchView &&) -> SearchView & = delete;
 
-  auto search(std::string_view query, std::size_t limit, std::uint8_t scope)
-      -> sourcemeta::core::JSON;
+  auto search(std::string_view query, std::size_t limit, std::uint8_t scope,
+              std::uint8_t kinds = SEARCH_KIND_ANY) -> sourcemeta::core::JSON;
 
   auto count() -> std::size_t;
   auto at(std::size_t index) -> SearchListEntry;

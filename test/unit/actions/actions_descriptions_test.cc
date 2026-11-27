@@ -132,10 +132,11 @@ TEST(get_dependents_v1) {
                 "dependency graph"});
 }
 
-TEST(schema_search_v1) {
+TEST(search_v1) {
   EXPECT_EQ(sourcemeta::one::action_description(
-                sourcemeta::one::ACTION_TYPE_SCHEMA_SEARCH_V1),
-            std::string_view{"Search for schemas by query term"});
+                sourcemeta::one::ACTION_TYPE_SEARCH_V1),
+            std::string_view{"Search the catalog by query term, for JSON "
+                             "Schemas, OpenAPI descriptions, or both"});
 }
 
 TEST(serve_static_v1) {

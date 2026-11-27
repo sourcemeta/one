@@ -150,290 +150,290 @@ jsonpath "$.result.resources[1].description" == "A product that exercises the ke
 jsonpath "$.result.resources[1].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[1].size" == 917
 jsonpath "$.result.resources[1].annotations.priority" == 0.5
-jsonpath "$.result.resources[2].uri" == "{{base}}/test/openapi/dialect"
-jsonpath "$.result.resources[2].name" == "Custom OpenAPI Dialect"
-jsonpath "$.result.resources[2].description" == "A meta-schema extending the OpenAPI 3.1 dialect with a vocabulary of its own"
-jsonpath "$.result.resources[2].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[2].size" == 698
+jsonpath "$.result.resources[2].uri" == "http://localhost:8000/test/openapi-petstore"
+jsonpath "$.result.resources[2].name" == "Petstore"
+jsonpath "$.result.resources[2].description" == "Everything about the pets this shop keeps"
+jsonpath "$.result.resources[2].mimeType" == "application/openapi+json"
+jsonpath "$.result.resources[2].size" == 318
 jsonpath "$.result.resources[2].annotations.priority" == 0.5
-jsonpath "$.result.resources[3].uri" == "{{base}}/test/openapi/identifier"
-jsonpath "$.result.resources[3].name" == "Identifier"
-jsonpath "$.result.resources[3].description" == "A product identifier"
-jsonpath "$.result.resources[3].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[3].size" == 287
+jsonpath "$.result.resources[3].uri" == "http://localhost:8000/test/openapi-split-entry"
+jsonpath "$.result.resources[3].name" == "Split"
+jsonpath "$.result.resources[3].description" == "What a listing says of this API"
+jsonpath "$.result.resources[3].mimeType" == "application/openapi+json"
+jsonpath "$.result.resources[3].size" == 945
 jsonpath "$.result.resources[3].annotations.priority" == 0.5
-jsonpath "$.result.resources[4].uri" == "{{base}}/test/openapi/order"
-jsonpath "$.result.resources[4].name" == "Order"
-jsonpath "$.result.resources[4].description" == "An order on the OpenAPI 3.2 dialect that references a schema on the OpenAPI 3.1 one"
+jsonpath "$.result.resources[4].uri" == "http://localhost:8000/test/openapi/dialect"
+jsonpath "$.result.resources[4].name" == "Custom OpenAPI Dialect"
+jsonpath "$.result.resources[4].description" == "A meta-schema extending the OpenAPI 3.1 dialect with a vocabulary of its own"
 jsonpath "$.result.resources[4].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[4].size" == 694
+jsonpath "$.result.resources[4].size" == 698
 jsonpath "$.result.resources[4].annotations.priority" == 0.5
-jsonpath "$.result.resources[5].uri" == "{{base}}/test/openapi/product"
-jsonpath "$.result.resources[5].name" == "Product"
-jsonpath "$.result.resources[5].description" == "A product that exercises every keyword of the OpenAPI 3.1 base vocabulary"
+jsonpath "$.result.resources[5].uri" == "http://localhost:8000/test/openapi/identifier"
+jsonpath "$.result.resources[5].name" == "Identifier"
+jsonpath "$.result.resources[5].description" == "A product identifier"
 jsonpath "$.result.resources[5].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[5].size" == 991
+jsonpath "$.result.resources[5].size" == 287
 jsonpath "$.result.resources[5].annotations.priority" == 0.5
-jsonpath "$.result.resources[6].uri" == "{{base}}/twins/foo"
-jsonpath "$.result.resources[6].name" == "Twin Foo Schema"
-jsonpath "$.result.resources[6].description" == "A schema whose base name collides with a sibling directory"
+jsonpath "$.result.resources[6].uri" == "http://localhost:8000/test/openapi/order"
+jsonpath "$.result.resources[6].name" == "Order"
+jsonpath "$.result.resources[6].description" == "An order on the OpenAPI 3.2 dialect that references a schema on the OpenAPI 3.1 one"
 jsonpath "$.result.resources[6].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[6].size" == 263
+jsonpath "$.result.resources[6].size" == 694
 jsonpath "$.result.resources[6].annotations.priority" == 0.5
-jsonpath "$.result.resources[7].uri" == "{{base}}/twins/foo/inner"
-jsonpath "$.result.resources[7].name" == "Twin Foo Inner"
-jsonpath "$.result.resources[7].description" == "A schema inside the foo directory whose name collides with a sibling schema"
+jsonpath "$.result.resources[7].uri" == "http://localhost:8000/test/openapi/product"
+jsonpath "$.result.resources[7].name" == "Product"
+jsonpath "$.result.resources[7].description" == "A product that exercises every keyword of the OpenAPI 3.1 base vocabulary"
 jsonpath "$.result.resources[7].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[7].size" == 280
+jsonpath "$.result.resources[7].size" == 991
 jsonpath "$.result.resources[7].annotations.priority" == 0.5
-jsonpath "$.result.resources[8].uri" == "{{base}}/test/jsonld/product"
-jsonpath "$.result.resources[8].name" == "Product"
-jsonpath "$.result.resources[8].description" == "A product annotated with JSON-LD mappings"
+jsonpath "$.result.resources[8].uri" == "http://localhost:8000/twins/foo"
+jsonpath "$.result.resources[8].name" == "Twin Foo Schema"
+jsonpath "$.result.resources[8].description" == "A schema whose base name collides with a sibling directory"
 jsonpath "$.result.resources[8].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[8].size" == 1319
+jsonpath "$.result.resources[8].size" == 263
 jsonpath "$.result.resources[8].annotations.priority" == 0.5
-jsonpath "$.result.resources[9].uri" == "{{base}}/test/jsonld/facets"
-jsonpath "$.result.resources[9].name" == "Unresolvable Facets"
-jsonpath "$.result.resources[9].description" == "A schema whose JSON-LD annotations fail on a distinct facet per property"
+jsonpath "$.result.resources[9].uri" == "http://localhost:8000/twins/foo/inner"
+jsonpath "$.result.resources[9].name" == "Twin Foo Inner"
+jsonpath "$.result.resources[9].description" == "A schema inside the foo directory whose name collides with a sibling schema"
 jsonpath "$.result.resources[9].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[9].size" == 545
+jsonpath "$.result.resources[9].size" == 280
 jsonpath "$.result.resources[9].annotations.priority" == 0.5
-jsonpath "$.result.resources[10].uri" == "{{base}}/test/object"
-jsonpath "$.result.resources[10].name" == "My Object"
-jsonpath "$.result.resources[10].description" == "An Object Example"
+jsonpath "$.result.resources[10].uri" == "http://localhost:8000/test/jsonld/product"
+jsonpath "$.result.resources[10].name" == "Product"
+jsonpath "$.result.resources[10].description" == "A product annotated with JSON-LD mappings"
 jsonpath "$.result.resources[10].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[10].size" == 322
+jsonpath "$.result.resources[10].size" == 1319
 jsonpath "$.result.resources[10].annotations.priority" == 0.5
-jsonpath "$.result.resources[11].uri" == "{{base}}/test/jsonld/draft7"
-jsonpath "$.result.resources[11].name" == "Legacy Dialect"
-jsonpath "$.result.resources[11].description" == "A schema on a dialect without annotation support"
+jsonpath "$.result.resources[11].uri" == "http://localhost:8000/test/jsonld/facets"
+jsonpath "$.result.resources[11].name" == "Unresolvable Facets"
+jsonpath "$.result.resources[11].description" == "A schema whose JSON-LD annotations fail on a distinct facet per property"
 jsonpath "$.result.resources[11].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[11].size" == 343
+jsonpath "$.result.resources[11].size" == 545
 jsonpath "$.result.resources[11].annotations.priority" == 0.5
-jsonpath "$.result.resources[12].uri" == "{{base}}/openapi3.0/identifier"
-jsonpath "$.result.resources[12].name" == "Identifier"
-jsonpath "$.result.resources[12].description" == "A product identifier, which cannot declare a dialect of its own"
+jsonpath "$.result.resources[12].uri" == "http://localhost:8000/test/object"
+jsonpath "$.result.resources[12].name" == "My Object"
+jsonpath "$.result.resources[12].description" == "An Object Example"
 jsonpath "$.result.resources[12].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[12].size" == 204
+jsonpath "$.result.resources[12].size" == 322
 jsonpath "$.result.resources[12].annotations.priority" == 0.5
-jsonpath "$.result.resources[13].uri" == "{{base}}/test/full/01"
-jsonpath "$.result.resources[13].name" == "Full 01"
-jsonpath "$.result.resources[13].description" == "A schema with both a title and a description (01)"
+jsonpath "$.result.resources[13].uri" == "http://localhost:8000/test/jsonld/draft7"
+jsonpath "$.result.resources[13].name" == "Legacy Dialect"
+jsonpath "$.result.resources[13].description" == "A schema on a dialect without annotation support"
 jsonpath "$.result.resources[13].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[13].size" == 222
+jsonpath "$.result.resources[13].size" == 343
 jsonpath "$.result.resources[13].annotations.priority" == 0.5
-jsonpath "$.result.resources[14].uri" == "{{base}}/test/full/02"
-jsonpath "$.result.resources[14].name" == "Full 02"
-jsonpath "$.result.resources[14].description" == "A schema with both a title and a description (02)"
+jsonpath "$.result.resources[14].uri" == "http://localhost:8000/openapi3.0/identifier"
+jsonpath "$.result.resources[14].name" == "Identifier"
+jsonpath "$.result.resources[14].description" == "A product identifier, which cannot declare a dialect of its own"
 jsonpath "$.result.resources[14].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[14].size" == 222
+jsonpath "$.result.resources[14].size" == 204
 jsonpath "$.result.resources[14].annotations.priority" == 0.5
-jsonpath "$.result.resources[15].uri" == "{{base}}/test/full/03"
-jsonpath "$.result.resources[15].name" == "Full 03"
-jsonpath "$.result.resources[15].description" == "A schema with both a title and a description (03)"
+jsonpath "$.result.resources[15].uri" == "http://localhost:8000/test/full/01"
+jsonpath "$.result.resources[15].name" == "Full 01"
+jsonpath "$.result.resources[15].description" == "A schema with both a title and a description (01)"
 jsonpath "$.result.resources[15].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[15].size" == 222
 jsonpath "$.result.resources[15].annotations.priority" == 0.5
-jsonpath "$.result.resources[16].uri" == "{{base}}/test/full/04"
-jsonpath "$.result.resources[16].name" == "Full 04"
-jsonpath "$.result.resources[16].description" == "A schema with both a title and a description (04)"
+jsonpath "$.result.resources[16].uri" == "http://localhost:8000/test/full/02"
+jsonpath "$.result.resources[16].name" == "Full 02"
+jsonpath "$.result.resources[16].description" == "A schema with both a title and a description (02)"
 jsonpath "$.result.resources[16].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[16].size" == 222
 jsonpath "$.result.resources[16].annotations.priority" == 0.5
-jsonpath "$.result.resources[17].uri" == "{{base}}/test/full/05"
-jsonpath "$.result.resources[17].name" == "Full 05"
-jsonpath "$.result.resources[17].description" == "A schema with both a title and a description (05)"
+jsonpath "$.result.resources[17].uri" == "http://localhost:8000/test/full/03"
+jsonpath "$.result.resources[17].name" == "Full 03"
+jsonpath "$.result.resources[17].description" == "A schema with both a title and a description (03)"
 jsonpath "$.result.resources[17].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[17].size" == 222
 jsonpath "$.result.resources[17].annotations.priority" == 0.5
-jsonpath "$.result.resources[18].uri" == "{{base}}/test/jsonld/conflict"
-jsonpath "$.result.resources[18].name" == "Conflicting Mapping"
-jsonpath "$.result.resources[18].description" == "A schema whose JSON-LD annotations cannot resolve"
+jsonpath "$.result.resources[18].uri" == "http://localhost:8000/test/full/04"
+jsonpath "$.result.resources[18].name" == "Full 04"
+jsonpath "$.result.resources[18].description" == "A schema with both a title and a description (04)"
 jsonpath "$.result.resources[18].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[18].size" == 286
+jsonpath "$.result.resources[18].size" == 222
 jsonpath "$.result.resources[18].annotations.priority" == 0.5
-jsonpath "$.result.resources[19].uri" == "{{base}}/test/jsonld/plain"
-jsonpath "$.result.resources[19].name" == "Plain"
-jsonpath "$.result.resources[19].description" == "A schema without JSON-LD annotations"
+jsonpath "$.result.resources[19].uri" == "http://localhost:8000/test/full/05"
+jsonpath "$.result.resources[19].name" == "Full 05"
+jsonpath "$.result.resources[19].description" == "A schema with both a title and a description (05)"
 jsonpath "$.result.resources[19].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[19].size" == 212
+jsonpath "$.result.resources[19].size" == 222
 jsonpath "$.result.resources[19].annotations.priority" == 0.5
-jsonpath "$.result.resources[20].uri" == "{{base}}/test/description-only/01"
-jsonpath "$.result.resources[20].name" == "/test/description-only/01"
-jsonpath "$.result.resources[20].description" == "A schema with only a description (01)"
+jsonpath "$.result.resources[20].uri" == "http://localhost:8000/test/jsonld/conflict"
+jsonpath "$.result.resources[20].name" == "Conflicting Mapping"
+jsonpath "$.result.resources[20].description" == "A schema whose JSON-LD annotations cannot resolve"
 jsonpath "$.result.resources[20].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[20].size" == 200
+jsonpath "$.result.resources[20].size" == 286
 jsonpath "$.result.resources[20].annotations.priority" == 0.5
-jsonpath "$.result.resources[21].uri" == "{{base}}/test/description-only/02"
-jsonpath "$.result.resources[21].name" == "/test/description-only/02"
-jsonpath "$.result.resources[21].description" == "A schema with only a description (02)"
+jsonpath "$.result.resources[21].uri" == "http://localhost:8000/test/jsonld/plain"
+jsonpath "$.result.resources[21].name" == "Plain"
+jsonpath "$.result.resources[21].description" == "A schema without JSON-LD annotations"
 jsonpath "$.result.resources[21].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[21].size" == 200
+jsonpath "$.result.resources[21].size" == 212
 jsonpath "$.result.resources[21].annotations.priority" == 0.5
-jsonpath "$.result.resources[22].uri" == "{{base}}/test/description-only/03"
-jsonpath "$.result.resources[22].name" == "/test/description-only/03"
-jsonpath "$.result.resources[22].description" == "A schema with only a description (03)"
-jsonpath "$.result.resources[22].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[22].size" == 200
+jsonpath "$.result.resources[22].uri" == "http://localhost:8000/test/openapi-split-shared"
+jsonpath "$.result.resources[22].name" == "Shared"
+jsonpath "$.result.resources[22].description" not exists
+jsonpath "$.result.resources[22].mimeType" == "application/openapi+json"
+jsonpath "$.result.resources[22].size" == 404
 jsonpath "$.result.resources[22].annotations.priority" == 0.5
-jsonpath "$.result.resources[23].uri" == "{{base}}/test/description-only/04"
-jsonpath "$.result.resources[23].name" == "/test/description-only/04"
-jsonpath "$.result.resources[23].description" == "A schema with only a description (04)"
+jsonpath "$.result.resources[23].uri" == "http://localhost:8000/test/description-only/01"
+jsonpath "$.result.resources[23].name" == "/test/description-only/01"
+jsonpath "$.result.resources[23].description" == "A schema with only a description (01)"
 jsonpath "$.result.resources[23].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[23].size" == 200
 jsonpath "$.result.resources[23].annotations.priority" == 0.5
-jsonpath "$.result.resources[24].uri" == "{{base}}/test/description-only/05"
-jsonpath "$.result.resources[24].name" == "/test/description-only/05"
-jsonpath "$.result.resources[24].description" == "A schema with only a description (05)"
+jsonpath "$.result.resources[24].uri" == "http://localhost:8000/test/description-only/02"
+jsonpath "$.result.resources[24].name" == "/test/description-only/02"
+jsonpath "$.result.resources[24].description" == "A schema with only a description (02)"
 jsonpath "$.result.resources[24].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[24].size" == 200
 jsonpath "$.result.resources[24].annotations.priority" == 0.5
-jsonpath "$.result.resources[25].uri" == "{{base}}/test/title-only/01"
-jsonpath "$.result.resources[25].name" == "Title Only 01"
-jsonpath "$.result.resources[25].description" not exists
+jsonpath "$.result.resources[25].uri" == "http://localhost:8000/test/description-only/03"
+jsonpath "$.result.resources[25].name" == "/test/description-only/03"
+jsonpath "$.result.resources[25].description" == "A schema with only a description (03)"
 jsonpath "$.result.resources[25].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[25].size" == 164
+jsonpath "$.result.resources[25].size" == 200
 jsonpath "$.result.resources[25].annotations.priority" == 0.5
-jsonpath "$.result.resources[26].uri" == "{{base}}/test/title-only/02"
-jsonpath "$.result.resources[26].name" == "Title Only 02"
-jsonpath "$.result.resources[26].description" not exists
+jsonpath "$.result.resources[26].uri" == "http://localhost:8000/test/description-only/04"
+jsonpath "$.result.resources[26].name" == "/test/description-only/04"
+jsonpath "$.result.resources[26].description" == "A schema with only a description (04)"
 jsonpath "$.result.resources[26].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[26].size" == 164
+jsonpath "$.result.resources[26].size" == 200
 jsonpath "$.result.resources[26].annotations.priority" == 0.5
-jsonpath "$.result.resources[27].uri" == "{{base}}/test/title-only/03"
-jsonpath "$.result.resources[27].name" == "Title Only 03"
-jsonpath "$.result.resources[27].description" not exists
+jsonpath "$.result.resources[27].uri" == "http://localhost:8000/test/description-only/05"
+jsonpath "$.result.resources[27].name" == "/test/description-only/05"
+jsonpath "$.result.resources[27].description" == "A schema with only a description (05)"
 jsonpath "$.result.resources[27].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[27].size" == 164
+jsonpath "$.result.resources[27].size" == 200
 jsonpath "$.result.resources[27].annotations.priority" == 0.5
-jsonpath "$.result.resources[28].uri" == "{{base}}/test/title-only/04"
-jsonpath "$.result.resources[28].name" == "Title Only 04"
+jsonpath "$.result.resources[28].uri" == "http://localhost:8000/test/title-only/01"
+jsonpath "$.result.resources[28].name" == "Title Only 01"
 jsonpath "$.result.resources[28].description" not exists
 jsonpath "$.result.resources[28].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[28].size" == 164
 jsonpath "$.result.resources[28].annotations.priority" == 0.5
-jsonpath "$.result.resources[29].uri" == "{{base}}/test/title-only/05"
-jsonpath "$.result.resources[29].name" == "Title Only 05"
+jsonpath "$.result.resources[29].uri" == "http://localhost:8000/test/title-only/02"
+jsonpath "$.result.resources[29].name" == "Title Only 02"
 jsonpath "$.result.resources[29].description" not exists
 jsonpath "$.result.resources[29].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[29].size" == 164
 jsonpath "$.result.resources[29].annotations.priority" == 0.5
-jsonpath "$.result.resources[30].uri" == "{{base}}/test/draft3/with-ref"
-jsonpath "$.result.resources[30].name" == "/test/draft3/with-ref"
+jsonpath "$.result.resources[30].uri" == "http://localhost:8000/test/title-only/03"
+jsonpath "$.result.resources[30].name" == "Title Only 03"
 jsonpath "$.result.resources[30].description" not exists
 jsonpath "$.result.resources[30].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[30].size" == 306
+jsonpath "$.result.resources[30].size" == 164
 jsonpath "$.result.resources[30].annotations.priority" == 0.5
-jsonpath "$.result.resources[31].uri" == "{{base}}/no-blaze/jsonld"
-jsonpath "$.result.resources[31].name" == "/no-blaze/jsonld"
+jsonpath "$.result.resources[31].uri" == "http://localhost:8000/test/title-only/04"
+jsonpath "$.result.resources[31].name" == "Title Only 04"
 jsonpath "$.result.resources[31].description" not exists
 jsonpath "$.result.resources[31].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[31].size" == 180
+jsonpath "$.result.resources[31].size" == 164
 jsonpath "$.result.resources[31].annotations.priority" == 0.5
-jsonpath "$.result.resources[32].uri" == "{{base}}/no-blaze/string"
-jsonpath "$.result.resources[32].name" == "/no-blaze/string"
+jsonpath "$.result.resources[32].uri" == "http://localhost:8000/test/title-only/05"
+jsonpath "$.result.resources[32].name" == "Title Only 05"
 jsonpath "$.result.resources[32].description" not exists
 jsonpath "$.result.resources[32].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[32].size" == 133
+jsonpath "$.result.resources[32].size" == 164
 jsonpath "$.result.resources[32].annotations.priority" == 0.5
-jsonpath "$.result.resources[33].uri" == "{{base}}/test/bare/01"
-jsonpath "$.result.resources[33].name" == "/test/bare/01"
+jsonpath "$.result.resources[33].uri" == "http://localhost:8000/test/draft3/with-ref"
+jsonpath "$.result.resources[33].name" == "/test/draft3/with-ref"
 jsonpath "$.result.resources[33].description" not exists
 jsonpath "$.result.resources[33].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[33].size" == 130
+jsonpath "$.result.resources[33].size" == 306
 jsonpath "$.result.resources[33].annotations.priority" == 0.5
-jsonpath "$.result.resources[34].uri" == "{{base}}/test/bare/02"
-jsonpath "$.result.resources[34].name" == "/test/bare/02"
+jsonpath "$.result.resources[34].uri" == "http://localhost:8000/no-blaze/jsonld"
+jsonpath "$.result.resources[34].name" == "/no-blaze/jsonld"
 jsonpath "$.result.resources[34].description" not exists
 jsonpath "$.result.resources[34].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[34].size" == 130
+jsonpath "$.result.resources[34].size" == 180
 jsonpath "$.result.resources[34].annotations.priority" == 0.5
-jsonpath "$.result.resources[35].uri" == "{{base}}/test/bare/03"
-jsonpath "$.result.resources[35].name" == "/test/bare/03"
+jsonpath "$.result.resources[35].uri" == "http://localhost:8000/no-blaze/string"
+jsonpath "$.result.resources[35].name" == "/no-blaze/string"
 jsonpath "$.result.resources[35].description" not exists
 jsonpath "$.result.resources[35].mimeType" == "application/schema+json"
-jsonpath "$.result.resources[35].size" == 130
+jsonpath "$.result.resources[35].size" == 133
 jsonpath "$.result.resources[35].annotations.priority" == 0.5
-jsonpath "$.result.resources[36].uri" == "{{base}}/test/bare/04"
-jsonpath "$.result.resources[36].name" == "/test/bare/04"
+jsonpath "$.result.resources[36].uri" == "http://localhost:8000/test/bare/01"
+jsonpath "$.result.resources[36].name" == "/test/bare/01"
 jsonpath "$.result.resources[36].description" not exists
 jsonpath "$.result.resources[36].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[36].size" == 130
 jsonpath "$.result.resources[36].annotations.priority" == 0.5
-jsonpath "$.result.resources[37].uri" == "{{base}}/test/bare/05"
-jsonpath "$.result.resources[37].name" == "/test/bare/05"
+jsonpath "$.result.resources[37].uri" == "http://localhost:8000/test/bare/02"
+jsonpath "$.result.resources[37].name" == "/test/bare/02"
 jsonpath "$.result.resources[37].description" not exists
 jsonpath "$.result.resources[37].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[37].size" == 130
 jsonpath "$.result.resources[37].annotations.priority" == 0.5
-jsonpath "$.result.resources[38].uri" == "{{base}}/test/bare/06"
-jsonpath "$.result.resources[38].name" == "/test/bare/06"
+jsonpath "$.result.resources[38].uri" == "http://localhost:8000/test/bare/03"
+jsonpath "$.result.resources[38].name" == "/test/bare/03"
 jsonpath "$.result.resources[38].description" not exists
 jsonpath "$.result.resources[38].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[38].size" == 130
 jsonpath "$.result.resources[38].annotations.priority" == 0.5
-jsonpath "$.result.resources[39].uri" == "{{base}}/test/bare/07"
-jsonpath "$.result.resources[39].name" == "/test/bare/07"
+jsonpath "$.result.resources[39].uri" == "http://localhost:8000/test/bare/04"
+jsonpath "$.result.resources[39].name" == "/test/bare/04"
 jsonpath "$.result.resources[39].description" not exists
 jsonpath "$.result.resources[39].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[39].size" == 130
 jsonpath "$.result.resources[39].annotations.priority" == 0.5
-jsonpath "$.result.resources[40].uri" == "{{base}}/test/bare/08"
-jsonpath "$.result.resources[40].name" == "/test/bare/08"
+jsonpath "$.result.resources[40].uri" == "http://localhost:8000/test/bare/05"
+jsonpath "$.result.resources[40].name" == "/test/bare/05"
 jsonpath "$.result.resources[40].description" not exists
 jsonpath "$.result.resources[40].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[40].size" == 130
 jsonpath "$.result.resources[40].annotations.priority" == 0.5
-jsonpath "$.result.resources[41].uri" == "{{base}}/test/bare/09"
-jsonpath "$.result.resources[41].name" == "/test/bare/09"
+jsonpath "$.result.resources[41].uri" == "http://localhost:8000/test/bare/06"
+jsonpath "$.result.resources[41].name" == "/test/bare/06"
 jsonpath "$.result.resources[41].description" not exists
 jsonpath "$.result.resources[41].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[41].size" == 130
 jsonpath "$.result.resources[41].annotations.priority" == 0.5
-jsonpath "$.result.resources[42].uri" == "{{base}}/test/bare/10"
-jsonpath "$.result.resources[42].name" == "/test/bare/10"
+jsonpath "$.result.resources[42].uri" == "http://localhost:8000/test/bare/07"
+jsonpath "$.result.resources[42].name" == "/test/bare/07"
 jsonpath "$.result.resources[42].description" not exists
 jsonpath "$.result.resources[42].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[42].size" == 130
 jsonpath "$.result.resources[42].annotations.priority" == 0.5
-jsonpath "$.result.resources[43].uri" == "{{base}}/test/bare/11"
-jsonpath "$.result.resources[43].name" == "/test/bare/11"
+jsonpath "$.result.resources[43].uri" == "http://localhost:8000/test/bare/08"
+jsonpath "$.result.resources[43].name" == "/test/bare/08"
 jsonpath "$.result.resources[43].description" not exists
 jsonpath "$.result.resources[43].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[43].size" == 130
 jsonpath "$.result.resources[43].annotations.priority" == 0.5
-jsonpath "$.result.resources[44].uri" == "{{base}}/test/bare/12"
-jsonpath "$.result.resources[44].name" == "/test/bare/12"
+jsonpath "$.result.resources[44].uri" == "http://localhost:8000/test/bare/09"
+jsonpath "$.result.resources[44].name" == "/test/bare/09"
 jsonpath "$.result.resources[44].description" not exists
 jsonpath "$.result.resources[44].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[44].size" == 130
 jsonpath "$.result.resources[44].annotations.priority" == 0.5
-jsonpath "$.result.resources[45].uri" == "{{base}}/test/bare/13"
-jsonpath "$.result.resources[45].name" == "/test/bare/13"
+jsonpath "$.result.resources[45].uri" == "http://localhost:8000/test/bare/10"
+jsonpath "$.result.resources[45].name" == "/test/bare/10"
 jsonpath "$.result.resources[45].description" not exists
 jsonpath "$.result.resources[45].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[45].size" == 130
 jsonpath "$.result.resources[45].annotations.priority" == 0.5
-jsonpath "$.result.resources[46].uri" == "{{base}}/test/bare/14"
-jsonpath "$.result.resources[46].name" == "/test/bare/14"
+jsonpath "$.result.resources[46].uri" == "http://localhost:8000/test/bare/11"
+jsonpath "$.result.resources[46].name" == "/test/bare/11"
 jsonpath "$.result.resources[46].description" not exists
 jsonpath "$.result.resources[46].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[46].size" == 130
 jsonpath "$.result.resources[46].annotations.priority" == 0.5
-jsonpath "$.result.resources[47].uri" == "{{base}}/test/bare/15"
-jsonpath "$.result.resources[47].name" == "/test/bare/15"
+jsonpath "$.result.resources[47].uri" == "http://localhost:8000/test/bare/12"
+jsonpath "$.result.resources[47].name" == "/test/bare/12"
 jsonpath "$.result.resources[47].description" not exists
 jsonpath "$.result.resources[47].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[47].size" == 130
 jsonpath "$.result.resources[47].annotations.priority" == 0.5
-jsonpath "$.result.resources[48].uri" == "{{base}}/test/bare/16"
-jsonpath "$.result.resources[48].name" == "/test/bare/16"
+jsonpath "$.result.resources[48].uri" == "http://localhost:8000/test/bare/13"
+jsonpath "$.result.resources[48].name" == "/test/bare/13"
 jsonpath "$.result.resources[48].description" not exists
 jsonpath "$.result.resources[48].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[48].size" == 130
 jsonpath "$.result.resources[48].annotations.priority" == 0.5
-jsonpath "$.result.resources[49].uri" == "{{base}}/test/bare/17"
-jsonpath "$.result.resources[49].name" == "/test/bare/17"
+jsonpath "$.result.resources[49].uri" == "http://localhost:8000/test/bare/14"
+jsonpath "$.result.resources[49].name" == "/test/bare/14"
 jsonpath "$.result.resources[49].description" not exists
 jsonpath "$.result.resources[49].mimeType" == "application/schema+json"
 jsonpath "$.result.resources[49].size" == 130
@@ -544,7 +544,7 @@ jsonpath "$.result.tools[8].name" == "evaluate_schema"
 jsonpath "$.result.tools[9].name" == "instance_to_rdf"
 jsonpath "$.result.tools[10].name" == "trace_schema_evaluation"
 jsonpath "$.result.tools[11].name" == "playground_trace_schema"
-jsonpath "$.result.tools[12].name" == "search_schemas"
+jsonpath "$.result.tools[12].name" == "search"
 # The display title is sent both on the tool and under its annotations, since
 # the revisions differ on where a client reads it from
 jsonpath "$.result.tools[0].title" == "List Directory"
@@ -702,15 +702,15 @@ jsonpath "$.result.tools[11].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[11].annotations.destructiveHint" == false
 jsonpath "$.result.tools[11].annotations.idempotentHint" == true
 jsonpath "$.result.tools[11].annotations.openWorldHint" == false
-jsonpath "$.result.tools[12].name" == "search_schemas"
-jsonpath "$.result.tools[12].title" == "Search Schemas"
-jsonpath "$.result.tools[12].description" == "Search for schemas by query term"
+jsonpath "$.result.tools[12].name" == "search"
+jsonpath "$.result.tools[12].title" == "Search"
+jsonpath "$.result.tools[12].description" == "Search the catalog by query term, for JSON Schemas, OpenAPI descriptions, or both"
 jsonpath "$.result.tools[12].inputSchema.type" == "object"
-jsonpath "$.result.tools[12].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/request"
+jsonpath "$.result.tools[12].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/search/request"
 jsonpath "$.result.tools[12].inputSchema['$comment']" == "The full input schema for this tool is published at the `$ref` URL above. A client that does not resolve it can call `resources/read` on that URL to fetch it, since this server is a JSON Schema registry and every `$ref` URL is itself reachable as an MCP resource"
 jsonpath "$.result.tools[12].outputSchema.type" == "object"
-jsonpath "$.result.tools[12].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/search-schemas/response"
-jsonpath "$.result.tools[12].annotations.title" == "Search Schemas"
+jsonpath "$.result.tools[12].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/search/response"
+jsonpath "$.result.tools[12].annotations.title" == "Search"
 jsonpath "$.result.tools[12].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[12].annotations.destructiveHint" == false
 jsonpath "$.result.tools[12].annotations.idempotentHint" == true

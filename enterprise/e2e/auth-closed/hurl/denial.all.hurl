@@ -236,7 +236,7 @@ Access-Control-Allow-Origin: *
 }
 
 # Search denies, so the index cannot be queried for protected titles
-GET {{base}}/self/v1/api/schemas/search?q=a
+GET {{base}}/self/v1/api/search?q=a
 HTTP 401
 Cache-Control: no-store
 Content-Type: application/problem+json

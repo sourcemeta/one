@@ -1,10 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Sourcemeta One Schema Search API Response",
-  "description": "The response format for the schema search API endpoint",
+  "title": "Sourcemeta One Search API Response",
+  "description": "The response format for the search API endpoint",
   "examples": [
     [
       {
+        "type": "schema",
         "path": "/schemas/user.json",
         "identifier": "https://example.com/schemas/user.json",
         "title": "User Schema",
@@ -18,6 +19,7 @@
   "items": {
     "type": "object",
     "required": [
+      "type",
       "path",
       "identifier",
       "title",
@@ -26,6 +28,9 @@
       "health"
     ],
     "properties": {
+      "type": {
+        "enum": [ "schema", "openapi" ]
+      },
       "title": {
         "type": "string"
       },
