@@ -124,7 +124,7 @@ public:
           std::move(request_output));
     }
 
-    const auto &schema_uri{arguments.at("schema").to_string()};
+    const auto &schema_uri{arguments.at(this->argument_).to_string()};
     const auto resolution{this->artifact_resolve_path(
         caller, schema_uri, Tree::Schemas, this->artifact_)};
     if (!resolution.path.has_value()) {
@@ -149,9 +149,11 @@ protected:
       const std::filesystem::path &base,
       const sourcemeta::core::URITemplateRouterView &router,
       const sourcemeta::core::URITemplateRouter::Identifier identifier,
-      const std::string_view artifact, sourcemeta::one::Router &dispatcher)
+      const std::string_view artifact, sourcemeta::one::Router &dispatcher,
+      const std::string_view argument = "schema")
       : sourcemeta::one::RouterAction{base, router.base_url(), dispatcher} {
     this->artifact_ = artifact;
+    this->argument_ = argument;
     router.arguments(
         identifier, [this](const auto &key, const auto &value) -> void {
           if (key == "responseSchema") {
@@ -168,6 +170,8 @@ protected:
 
 private:
   std::string_view artifact_;
+  // What the RPC call names the resource it is asking about
+  std::string_view argument_{"schema"};
   std::string_view response_schema_;
   std::string_view rpc_request_schema_;
   std::string_view rpc_response_schema_;

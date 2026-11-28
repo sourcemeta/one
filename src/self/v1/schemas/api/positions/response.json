@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Sourcemeta One Schema Positions API Response",
-  "description": "The response format for the schema positions API endpoint",
+  "title": "Sourcemeta One Positions API Response",
+  "description": "The response format for the positions API endpoint",
   "examples": [
     {
       "/properties/name": [ 1, 5, 3, 10 ]
@@ -9,6 +9,6 @@
   ],
   "type": "object",
   "additionalProperties": {
-    "$ref": "../position.json"
+    "$ref": "../schemas/position.json"
   }
 }

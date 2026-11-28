@@ -88,11 +88,12 @@ TEST(get_schema_locations_v1) {
                 "expected for large schemas"});
 }
 
-TEST(get_schema_positions_v1) {
+TEST(get_positions_v1) {
   EXPECT_EQ(sourcemeta::one::action_description(
-                sourcemeta::one::ACTION_TYPE_GET_SCHEMA_POSITIONS_V1),
+                sourcemeta::one::ACTION_TYPE_GET_POSITIONS_V1),
             std::string_view{"Return the source line and column position of "
-                             "every JSON Pointer inside a schema"});
+                             "every JSON Pointer inside a resource, whether it "
+                             "is a JSON Schema or an OpenAPI description"});
 }
 
 TEST(get_schema_stats_v1) {

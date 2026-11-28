@@ -17,7 +17,7 @@ GET {{base}}/self/v1/api/schemas/locations/private/secret
 HTTP 404
 Content-Type: application/problem+json
 
-GET {{base}}/self/v1/api/schemas/positions/private/secret
+GET {{base}}/self/v1/api/positions/private/secret
 HTTP 404
 Content-Type: application/problem+json
 

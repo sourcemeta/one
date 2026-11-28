@@ -107,11 +107,13 @@ WRITE expected_tree.txt UNTIL EOF
 ./schemas/example/schemas/petstore/%/bundle.metapack
 ./schemas/example/schemas/petstore/%/data.metapack
 ./schemas/example/schemas/petstore/%/dependencies.metapack
+./schemas/example/schemas/petstore/%/positions.metapack
 ./schemas/example/schemas/shared
 ./schemas/example/schemas/shared/%
 ./schemas/example/schemas/shared/%/bundle.metapack
 ./schemas/example/schemas/shared/%/data.metapack
 ./schemas/example/schemas/shared/%/dependencies.metapack
+./schemas/example/schemas/shared/%/positions.metapack
 ./state.bin
 ./version.json
 EOF

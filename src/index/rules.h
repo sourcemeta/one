@@ -64,9 +64,9 @@ enum : BuildPlan::Action::Type {
 enum : BuildPlan::Type { MODE_HEADLESS, MODE_FULL, MODE_EXPERIMENTAL };
 
 #if defined(SOURCEMETA_ONE_ENTERPRISE)
-inline constexpr std::size_t INDEX_LEAF_RULES{25};
+inline constexpr std::size_t INDEX_LEAF_RULES{26};
 #else
-inline constexpr std::size_t INDEX_LEAF_RULES{18};
+inline constexpr std::size_t INDEX_LEAF_RULES{19};
 #endif
 
 inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
@@ -121,6 +121,21 @@ inline constexpr DeltaRuleSet<INDEX_LEAF_RULES, 8, 5, 2> INDEX_RULES{
                             .filename = "data.metapack"}}},
          .dependency_count = 1,
          .kind = LeafKind::Schema},
+
+        {.action = ACTION_POSITIONS,
+         .base = 0,
+         .filename = "positions.metapack",
+         .gate = TargetGate::Always,
+         .dirty = DirtyOverride::Normal,
+         .is_root = false,
+         .combine_only = false,
+         .container_target = false,
+         .tracks_dependencies = false,
+         .dependencies = {{{.source = DependencySource::Base,
+                            .base = 0,
+                            .filename = "data.metapack"}}},
+         .dependency_count = 1,
+         .kind = LeafKind::OpenAPI},
 
         {.action = ACTION_LOCATIONS,
          .base = 0,

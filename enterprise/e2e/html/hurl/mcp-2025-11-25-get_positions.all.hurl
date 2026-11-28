@@ -8,50 +8,30 @@
 # https://github.com/Orange-OpenSource/hurl/issues/2152
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2026-07-28
-Mcp-Method: tools/list
+MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
 {
   "jsonrpc": "2.0",
   "id": 0,
-  "method": "tools/list",
-  "params": {
-    "_meta": {
-      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
-      "io.modelcontextprotocol/clientCapabilities": {},
-      "io.modelcontextprotocol/clientInfo": {
-        "name": "hurl",
-        "version": "1.0.0"
-      }
-    }
-  }
+  "method": "tools/list"
 }
 ```
 HTTP 200
 Cache-Control: no-store
 [Captures]
-output_schema_path: jsonpath "$.result.tools[?@.name=='get_schema_positions'].outputSchema['$ref']" regex "https?://[^/]+(.+)"
+output_schema_path: jsonpath "$.result.tools[?@.name=='get_positions'].outputSchema['$ref']" regex "https?://[^/]+(.+)"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.result.tools[?@.name=='get_schema_positions'].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/response"
-jsonpath "$.result.resultType" == "complete"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
-jsonpath "$.result.ttlMs" == 300000
-jsonpath "$.result.cacheScope" == "public"
+jsonpath "$.result.tools[?@.name=='get_positions'].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-positions/response"
 
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2026-07-28
-Mcp-Method: tools/call
-Mcp-Name: get_schema_positions
+MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
 {
@@ -59,18 +39,8 @@ Content-Type: application/json
   "id": 600,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_positions",
-    "arguments": {
-      "schema": "{{base}}/test/bare/01"
-    },
-    "_meta": {
-      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
-      "io.modelcontextprotocol/clientCapabilities": {},
-      "io.modelcontextprotocol/clientInfo": {
-        "name": "hurl",
-        "version": "1.0.0"
-      }
-    }
+    "name": "get_positions",
+    "arguments": { "uri": "{{base}}/test/bare/01" }
   }
 }
 ```
@@ -80,7 +50,7 @@ Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2026-07-28
+MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -91,7 +61,6 @@ header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 600
@@ -105,10 +74,6 @@ variable "text" jsonpath "$['/$schema']" count == 4
 jsonpath "$.result.structuredContent['/$id']" count == 4
 variable "text" jsonpath "$['/$id']" count == 4
 jsonpath "$.result.structuredContent['/type']" count == 4
-jsonpath "$.result.resultType" == "complete"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
 variable "text" jsonpath "$['/type']" count == 4
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -117,10 +82,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -135,10 +96,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -149,9 +106,7 @@ jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2026-07-28
-Mcp-Method: tools/call
-Mcp-Name: get_schema_positions
+MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
 {
@@ -159,18 +114,8 @@ Content-Type: application/json
   "id": 601,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_positions",
-    "arguments": {
-      "schema": "{{base}}/test/object"
-    },
-    "_meta": {
-      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
-      "io.modelcontextprotocol/clientCapabilities": {},
-      "io.modelcontextprotocol/clientInfo": {
-        "name": "hurl",
-        "version": "1.0.0"
-      }
-    }
+    "name": "get_positions",
+    "arguments": { "uri": "{{base}}/test/object" }
   }
 }
 ```
@@ -180,7 +125,7 @@ Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2026-07-28
+MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -191,7 +136,6 @@ header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 601
@@ -211,10 +155,6 @@ variable "text" jsonpath "$['/properties/INVALID_PROPERTY_1']" count == 4
 jsonpath "$.result.structuredContent['/examples']" count == 4
 variable "text" jsonpath "$['/examples']" count == 4
 jsonpath "$.result.structuredContent['/examples/0']" count == 4
-jsonpath "$.result.resultType" == "complete"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
 variable "text" jsonpath "$['/examples/0']" count == 4
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -223,10 +163,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -241,10 +177,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -255,9 +187,7 @@ jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2026-07-28
-Mcp-Method: tools/call
-Mcp-Name: get_schema_positions
+MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
 {
@@ -265,18 +195,8 @@ Content-Type: application/json
   "id": 602,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_positions",
-    "arguments": {
-      "schema": "test/object"
-    },
-    "_meta": {
-      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
-      "io.modelcontextprotocol/clientCapabilities": {},
-      "io.modelcontextprotocol/clientInfo": {
-        "name": "hurl",
-        "version": "1.0.0"
-      }
-    }
+    "name": "get_positions",
+    "arguments": { "uri": "test/object" }
   }
 }
 ```
@@ -286,7 +206,7 @@ Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2026-07-28
+MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -295,7 +215,6 @@ header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 602
@@ -303,12 +222,12 @@ jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
-jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/schema/format"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/request#/properties/schema/format"
-jsonpath "$.error.data.errors[0].instanceLocation" == "/schema"
+jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/uri/format"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-positions/request#/properties/uri/format"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/uri"
 jsonpath "$.error.data.errors[0].error" == "The string value \"test/object\" was expected to represent a valid URI"
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/request#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-positions/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the defined properties subschemas"
 jsonpath "$.result" not exists
@@ -319,10 +238,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -333,9 +248,7 @@ jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2026-07-28
-Mcp-Method: tools/call
-Mcp-Name: get_schema_positions
+MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
 {
@@ -343,18 +256,8 @@ Content-Type: application/json
   "id": 610,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_positions",
-    "arguments": {
-      "schema": "{{base}}/test/does-not-exist"
-    },
-    "_meta": {
-      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
-      "io.modelcontextprotocol/clientCapabilities": {},
-      "io.modelcontextprotocol/clientInfo": {
-        "name": "hurl",
-        "version": "1.0.0"
-      }
-    }
+    "name": "get_positions",
+    "arguments": { "uri": "{{base}}/test/does-not-exist" }
   }
 }
 ```
@@ -364,7 +267,7 @@ Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2026-07-28
+MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -373,17 +276,12 @@ header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 610
 jsonpath "$.result.isError" == true
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[0].text" == "Schema not found"
-jsonpath "$.result.resultType" == "complete"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -391,10 +289,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -405,9 +299,7 @@ jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2026-07-28
-Mcp-Method: tools/call
-Mcp-Name: get_schema_positions
+MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
 {
@@ -415,18 +307,8 @@ Content-Type: application/json
   "id": 611,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_positions",
-    "arguments": {
-      "schema": "{{base}}/test"
-    },
-    "_meta": {
-      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
-      "io.modelcontextprotocol/clientCapabilities": {},
-      "io.modelcontextprotocol/clientInfo": {
-        "name": "hurl",
-        "version": "1.0.0"
-      }
-    }
+    "name": "get_positions",
+    "arguments": { "uri": "{{base}}/test" }
   }
 }
 ```
@@ -436,7 +318,7 @@ Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2026-07-28
+MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -445,17 +327,12 @@ header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 611
 jsonpath "$.result.isError" == true
 jsonpath "$.result.content[0].type" == "text"
 jsonpath "$.result.content[0].text" == "Schema not found"
-jsonpath "$.result.resultType" == "complete"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -463,10 +340,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -477,9 +350,7 @@ jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2026-07-28
-Mcp-Method: tools/call
-Mcp-Name: get_schema_positions
+MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
 {
@@ -487,18 +358,8 @@ Content-Type: application/json
   "id": 612,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_positions",
-    "arguments": {
-      "schema": "https://example.com/test/object"
-    },
-    "_meta": {
-      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
-      "io.modelcontextprotocol/clientCapabilities": {},
-      "io.modelcontextprotocol/clientInfo": {
-        "name": "hurl",
-        "version": "1.0.0"
-      }
-    }
+    "name": "get_positions",
+    "arguments": { "uri": "https://example.com/test/object" }
   }
 }
 ```
@@ -508,7 +369,7 @@ Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2026-07-28
+MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -517,16 +378,11 @@ header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 612
 jsonpath "$.result.isError" == true
 jsonpath "$.result.content[0].text" == "Schema not found"
-jsonpath "$.result.resultType" == "complete"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -534,10 +390,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -548,9 +400,7 @@ jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2026-07-28
-Mcp-Method: tools/call
-Mcp-Name: get_schema_positions
+MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
 {
@@ -558,18 +408,8 @@ Content-Type: application/json
   "id": 613,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_positions",
-    "arguments": {
-      "schema": "{{base}}/test/foo/../object"
-    },
-    "_meta": {
-      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
-      "io.modelcontextprotocol/clientCapabilities": {},
-      "io.modelcontextprotocol/clientInfo": {
-        "name": "hurl",
-        "version": "1.0.0"
-      }
-    }
+    "name": "get_positions",
+    "arguments": { "uri": "{{base}}/test/foo/../object" }
   }
 }
 ```
@@ -579,7 +419,7 @@ Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2026-07-28
+MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -590,16 +430,11 @@ header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 613
 jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent" exists
-jsonpath "$.result.resultType" == "complete"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
 variable "text" jsonpath "$" exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -608,10 +443,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -626,10 +457,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -640,9 +467,7 @@ jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2026-07-28
-Mcp-Method: tools/call
-Mcp-Name: get_schema_positions
+MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
 {
@@ -650,18 +475,8 @@ Content-Type: application/json
   "id": 614,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_positions",
-    "arguments": {
-      "schema": "{{base}}/../etc/passwd"
-    },
-    "_meta": {
-      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
-      "io.modelcontextprotocol/clientCapabilities": {},
-      "io.modelcontextprotocol/clientInfo": {
-        "name": "hurl",
-        "version": "1.0.0"
-      }
-    }
+    "name": "get_positions",
+    "arguments": { "uri": "{{base}}/../etc/passwd" }
   }
 }
 ```
@@ -671,7 +486,7 @@ Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2026-07-28
+MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -680,16 +495,11 @@ header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 614
 jsonpath "$.result.isError" == true
 jsonpath "$.result.content[0].text" == "Schema not found"
-jsonpath "$.result.resultType" == "complete"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -697,10 +507,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -712,9 +518,7 @@ jsonpath "$.valid" == true
 # Schema URI with a fragment is rejected
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2026-07-28
-Mcp-Method: tools/call
-Mcp-Name: get_schema_positions
+MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
 {
@@ -722,18 +526,8 @@ Content-Type: application/json
   "id": 615,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_positions",
-    "arguments": {
-      "schema": "{{base}}/test/object#meta"
-    },
-    "_meta": {
-      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
-      "io.modelcontextprotocol/clientCapabilities": {},
-      "io.modelcontextprotocol/clientInfo": {
-        "name": "hurl",
-        "version": "1.0.0"
-      }
-    }
+    "name": "get_positions",
+    "arguments": { "uri": "{{base}}/test/object#meta" }
   }
 }
 ```
@@ -743,7 +537,7 @@ Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2026-07-28
+MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -752,7 +546,6 @@ header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 615
@@ -760,12 +553,12 @@ jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
-jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/schema/pattern"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/request#/properties/schema/pattern"
-jsonpath "$.error.data.errors[0].instanceLocation" == "/schema"
+jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/uri/pattern"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-positions/request#/properties/uri/pattern"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/uri"
 jsonpath "$.error.data.errors[0].error" == "The string value \"{{base}}/test/object#meta\" was expected to match the regular expression \"^[^#?]*$\""
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/request#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-positions/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the defined properties subschemas"
 jsonpath "$.result" not exists
@@ -776,10 +569,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -790,9 +579,7 @@ jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2026-07-28
-Mcp-Method: tools/call
-Mcp-Name: get_schema_positions
+MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
 {
@@ -800,16 +587,8 @@ Content-Type: application/json
   "id": 620,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_positions",
-    "arguments": {},
-    "_meta": {
-      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
-      "io.modelcontextprotocol/clientCapabilities": {},
-      "io.modelcontextprotocol/clientInfo": {
-        "name": "hurl",
-        "version": "1.0.0"
-      }
-    }
+    "name": "get_positions",
+    "arguments": {}
   }
 }
 ```
@@ -819,7 +598,7 @@ Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2026-07-28
+MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -828,7 +607,6 @@ header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 620
@@ -837,9 +615,9 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 1
 jsonpath "$.error.data.errors[0].keywordLocation" == "/required"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/request#/required"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-positions/request#/required"
 jsonpath "$.error.data.errors[0].instanceLocation" == ""
-jsonpath "$.error.data.errors[0].error" == "The value was expected to be an object that defines the property \"schema\""
+jsonpath "$.error.data.errors[0].error" == "The value was expected to be an object that defines the property \"uri\""
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -847,10 +625,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -861,9 +635,7 @@ jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2026-07-28
-Mcp-Method: tools/call
-Mcp-Name: get_schema_positions
+MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
 {
@@ -871,18 +643,8 @@ Content-Type: application/json
   "id": 621,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_positions",
-    "arguments": {
-      "schema": ""
-    },
-    "_meta": {
-      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
-      "io.modelcontextprotocol/clientCapabilities": {},
-      "io.modelcontextprotocol/clientInfo": {
-        "name": "hurl",
-        "version": "1.0.0"
-      }
-    }
+    "name": "get_positions",
+    "arguments": { "uri": "" }
   }
 }
 ```
@@ -892,7 +654,7 @@ Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2026-07-28
+MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -901,7 +663,6 @@ header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 621
@@ -909,12 +670,12 @@ jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
-jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/schema/format"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/request#/properties/schema/format"
-jsonpath "$.error.data.errors[0].instanceLocation" == "/schema"
+jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/uri/format"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-positions/request#/properties/uri/format"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/uri"
 jsonpath "$.error.data.errors[0].error" == "The string value \"\" was expected to represent a valid URI"
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/request#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-positions/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the defined properties subschemas"
 jsonpath "$.result" not exists
@@ -925,10 +686,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -939,9 +696,7 @@ jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2026-07-28
-Mcp-Method: tools/call
-Mcp-Name: get_schema_positions
+MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
 {
@@ -949,18 +704,8 @@ Content-Type: application/json
   "id": 622,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_positions",
-    "arguments": {
-      "schema": 42
-    },
-    "_meta": {
-      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
-      "io.modelcontextprotocol/clientCapabilities": {},
-      "io.modelcontextprotocol/clientInfo": {
-        "name": "hurl",
-        "version": "1.0.0"
-      }
-    }
+    "name": "get_positions",
+    "arguments": { "uri": 42 }
   }
 }
 ```
@@ -970,7 +715,7 @@ Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2026-07-28
+MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -979,7 +724,6 @@ header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 622
@@ -987,12 +731,12 @@ jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
-jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/schema/type"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/request#/properties/schema/type"
-jsonpath "$.error.data.errors[0].instanceLocation" == "/schema"
+jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/uri/type"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-positions/request#/properties/uri/type"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/uri"
 jsonpath "$.error.data.errors[0].error" == "The value was expected to be of type string but it was of type integer"
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/request#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-positions/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the defined properties subschemas"
 
@@ -1002,10 +746,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -1016,9 +756,7 @@ jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2026-07-28
-Mcp-Method: tools/call
-Mcp-Name: get_schema_positions
+MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
 {
@@ -1026,19 +764,8 @@ Content-Type: application/json
   "id": 623,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_positions",
-    "arguments": {
-      "schema": "{{base}}/test/object",
-      "extra": "foo"
-    },
-    "_meta": {
-      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
-      "io.modelcontextprotocol/clientCapabilities": {},
-      "io.modelcontextprotocol/clientInfo": {
-        "name": "hurl",
-        "version": "1.0.0"
-      }
-    }
+    "name": "get_positions",
+    "arguments": { "uri": "{{base}}/test/object", "extra": "foo" }
   }
 }
 ```
@@ -1048,7 +775,7 @@ Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2026-07-28
+MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -1057,7 +784,6 @@ header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 623
@@ -1066,11 +792,11 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
 jsonpath "$.error.data.errors[0].keywordLocation" == "/additionalProperties"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/request#/additionalProperties"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-positions/request#/additionalProperties"
 jsonpath "$.error.data.errors[0].instanceLocation" == "/extra"
 jsonpath "$.error.data.errors[0].error" == "The object value was not expected to define the property \"extra\""
 jsonpath "$.error.data.errors[1].keywordLocation" == "/additionalProperties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/request#/additionalProperties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-positions/request#/additionalProperties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was not expected to define additional properties"
 
@@ -1080,10 +806,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -1094,9 +816,7 @@ jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2026-07-28
-Mcp-Method: tools/call
-Mcp-Name: get_schema_positions
+MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
 {
@@ -1104,15 +824,7 @@ Content-Type: application/json
   "id": 624,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_positions",
-    "_meta": {
-      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
-      "io.modelcontextprotocol/clientCapabilities": {},
-      "io.modelcontextprotocol/clientInfo": {
-        "name": "hurl",
-        "version": "1.0.0"
-      }
-    }
+    "name": "get_positions"
   }
 }
 ```
@@ -1122,7 +834,7 @@ Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2026-07-28
+MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -1131,7 +843,6 @@ header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 624
@@ -1140,9 +851,9 @@ jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 1
 jsonpath "$.error.data.errors[0].keywordLocation" == "/required"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/request#/required"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-positions/request#/required"
 jsonpath "$.error.data.errors[0].instanceLocation" == ""
-jsonpath "$.error.data.errors[0].error" == "The value was expected to be an object that defines the property \"schema\""
+jsonpath "$.error.data.errors[0].error" == "The value was expected to be an object that defines the property \"uri\""
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1150,10 +861,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -1164,9 +871,7 @@ jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2026-07-28
-Mcp-Method: tools/call
-Mcp-Name: get_schema_positions
+MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
 {
@@ -1174,16 +879,8 @@ Content-Type: application/json
   "id": 625,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_positions",
-    "arguments": null,
-    "_meta": {
-      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
-      "io.modelcontextprotocol/clientCapabilities": {},
-      "io.modelcontextprotocol/clientInfo": {
-        "name": "hurl",
-        "version": "1.0.0"
-      }
-    }
+    "name": "get_positions",
+    "arguments": null
   }
 }
 ```
@@ -1193,7 +890,7 @@ Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2026-07-28
+MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -1202,7 +899,6 @@ header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 625
@@ -1215,10 +911,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -1229,9 +921,7 @@ jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2026-07-28
-Mcp-Method: tools/call
-Mcp-Name: get_schema_positions
+MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
 {
@@ -1239,18 +929,8 @@ Content-Type: application/json
   "id": "positions-call-string-id",
   "method": "tools/call",
   "params": {
-    "name": "get_schema_positions",
-    "arguments": {
-      "schema": "{{base}}/test/object"
-    },
-    "_meta": {
-      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
-      "io.modelcontextprotocol/clientCapabilities": {},
-      "io.modelcontextprotocol/clientInfo": {
-        "name": "hurl",
-        "version": "1.0.0"
-      }
-    }
+    "name": "get_positions",
+    "arguments": { "uri": "{{base}}/test/object" }
   }
 }
 ```
@@ -1260,7 +940,7 @@ Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2026-07-28
+MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -1271,16 +951,11 @@ header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == "positions-call-string-id"
 jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent" exists
-jsonpath "$.result.resultType" == "complete"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
 variable "text" jsonpath "$" exists
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
@@ -1289,10 +964,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -1307,10 +978,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -1321,9 +988,7 @@ jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2026-07-28
-Mcp-Method: tools/call
-Mcp-Name: get_schema_positions
+MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
 {
@@ -1331,18 +996,8 @@ Content-Type: application/json
   "id": 800,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_positions",
-    "arguments": {
-      "schema": "{{base}}/test/object"
-    },
-    "_meta": {
-      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
-      "io.modelcontextprotocol/clientCapabilities": {},
-      "io.modelcontextprotocol/clientInfo": {
-        "name": "hurl",
-        "version": "1.0.0"
-      }
-    }
+    "name": "get_positions",
+    "arguments": { "uri": "{{base}}/test/object" }
   }
 }
 ```
@@ -1352,7 +1007,7 @@ Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2026-07-28
+MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -1363,15 +1018,10 @@ header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 800
 jsonpath "$.result.isError" == false
-jsonpath "$.result.resultType" == "complete"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1379,10 +1029,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -1397,10 +1043,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -1411,9 +1053,7 @@ jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2026-07-28
-Mcp-Method: tools/call
-Mcp-Name: get_schema_positions
+MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
 {
@@ -1421,18 +1061,8 @@ Content-Type: application/json
   "id": 801,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_positions",
-    "arguments": {
-      "schema": "{{base}}/TEST/OBJECT"
-    },
-    "_meta": {
-      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
-      "io.modelcontextprotocol/clientCapabilities": {},
-      "io.modelcontextprotocol/clientInfo": {
-        "name": "hurl",
-        "version": "1.0.0"
-      }
-    }
+    "name": "get_positions",
+    "arguments": { "uri": "{{base}}/TEST/OBJECT" }
   }
 }
 ```
@@ -1442,7 +1072,7 @@ Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2026-07-28
+MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -1452,16 +1082,11 @@ header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 801
 jsonpath "$.result.isError" == false
 jsonpath "$.result.content[0].text" == "{{positions_baseline_text}}"
-jsonpath "$.result.resultType" == "complete"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1469,10 +1094,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -1487,10 +1108,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -1501,9 +1118,7 @@ jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2026-07-28
-Mcp-Method: tools/call
-Mcp-Name: get_schema_positions
+MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
 {
@@ -1511,18 +1126,8 @@ Content-Type: application/json
   "id": 802,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_positions",
-    "arguments": {
-      "schema": "{{base}}/test/object.JSON"
-    },
-    "_meta": {
-      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
-      "io.modelcontextprotocol/clientCapabilities": {},
-      "io.modelcontextprotocol/clientInfo": {
-        "name": "hurl",
-        "version": "1.0.0"
-      }
-    }
+    "name": "get_positions",
+    "arguments": { "uri": "{{base}}/test/object.JSON" }
   }
 }
 ```
@@ -1532,7 +1137,7 @@ Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2026-07-28
+MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -1542,16 +1147,11 @@ header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 802
 jsonpath "$.result.isError" == false
 jsonpath "$.result.content[0].text" == "{{positions_baseline_text}}"
-jsonpath "$.result.resultType" == "complete"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1559,10 +1159,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -1577,10 +1173,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -1591,9 +1183,7 @@ jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2026-07-28
-Mcp-Method: tools/call
-Mcp-Name: get_schema_positions
+MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
 {
@@ -1601,18 +1191,8 @@ Content-Type: application/json
   "id": 803,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_positions",
-    "arguments": {
-      "schema": "HTTP://LOCALHOST:{{port}}/test/object"
-    },
-    "_meta": {
-      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
-      "io.modelcontextprotocol/clientCapabilities": {},
-      "io.modelcontextprotocol/clientInfo": {
-        "name": "hurl",
-        "version": "1.0.0"
-      }
-    }
+    "name": "get_positions",
+    "arguments": { "uri": "HTTP://LOCALHOST:{{port}}/test/object" }
   }
 }
 ```
@@ -1622,7 +1202,7 @@ Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2026-07-28
+MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -1632,16 +1212,11 @@ header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 803
 jsonpath "$.result.isError" == false
 jsonpath "$.result.content[0].text" == "{{positions_baseline_text}}"
-jsonpath "$.result.resultType" == "complete"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].name" == "sourcemeta-one-enterprise"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].title" == "Sourcemeta One Enterprise"
-jsonpath "$.result._meta['io.modelcontextprotocol/serverInfo'].version" matches "^.+$"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
@@ -1649,10 +1224,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -1667,10 +1238,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{output_schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists
@@ -1681,9 +1248,7 @@ jsonpath "$.valid" == true
 
 POST {{base}}/self/v1/mcp
 Accept: application/json, text/event-stream
-MCP-Protocol-Version: 2026-07-28
-Mcp-Method: tools/call
-Mcp-Name: get_schema_positions
+MCP-Protocol-Version: 2025-11-25
 Content-Type: application/json
 ```
 {
@@ -1691,18 +1256,8 @@ Content-Type: application/json
   "id": 804,
   "method": "tools/call",
   "params": {
-    "name": "get_schema_positions",
-    "arguments": {
-      "schema": "{{base}}/test/object?foo=bar"
-    },
-    "_meta": {
-      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
-      "io.modelcontextprotocol/clientCapabilities": {},
-      "io.modelcontextprotocol/clientInfo": {
-        "name": "hurl",
-        "version": "1.0.0"
-      }
-    }
+    "name": "get_positions",
+    "arguments": { "uri": "{{base}}/test/object?foo=bar" }
   }
 }
 ```
@@ -1712,7 +1267,7 @@ Content-Type: application/json
 Access-Control-Allow-Origin: {{base}}
 Access-Control-Expose-Headers: Link, ETag
 Link: </self/v1/schemas/mcp/response>; rel="describedby"
-MCP-Protocol-Version: 2026-07-28
+MCP-Protocol-Version: 2025-11-25
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
@@ -1721,7 +1276,6 @@ header "Vary" not exists
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
-header "Mcp-Session-Id" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.jsonrpc" == "2.0"
 jsonpath "$.id" == 804
@@ -1729,12 +1283,12 @@ jsonpath "$.error.code" == -32602
 jsonpath "$.error.message" == "Params fail against the tool request schema"
 jsonpath "$.error.data.valid" == false
 jsonpath "$.error.data.errors" count == 2
-jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/schema/pattern"
-jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/request#/properties/schema/pattern"
-jsonpath "$.error.data.errors[0].instanceLocation" == "/schema"
+jsonpath "$.error.data.errors[0].keywordLocation" == "/properties/uri/pattern"
+jsonpath "$.error.data.errors[0].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-positions/request#/properties/uri/pattern"
+jsonpath "$.error.data.errors[0].instanceLocation" == "/uri"
 jsonpath "$.error.data.errors[0].error" == "The string value \"{{base}}/test/object?foo=bar\" was expected to match the regular expression \"^[^#?]*$\""
 jsonpath "$.error.data.errors[1].keywordLocation" == "/properties"
-jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/request#/properties"
+jsonpath "$.error.data.errors[1].absoluteKeywordLocation" == "{{base}}/self/v1/schemas/mcp/tools/call/get-positions/request#/properties"
 jsonpath "$.error.data.errors[1].instanceLocation" == ""
 jsonpath "$.error.data.errors[1].error" == "The object value was expected to validate against the defined properties subschemas"
 jsonpath "$.result" not exists
@@ -1745,10 +1299,6 @@ POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```
 HTTP 200
 Cache-Control: no-store
-Content-Type: application/json
-Access-Control-Allow-Origin: *
-Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/schemas/evaluate/response>; rel="describedby"
 [Asserts]
 header "Vary" not exists
 header "Referrer-Policy" not exists

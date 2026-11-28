@@ -1083,7 +1083,7 @@ struct GenerateURITemplateRoutes {
     constexpr std::string_view LOCATIONS_SCHEMA{
         "/self/v1/schemas/api/schemas/locations/response"};
     constexpr std::string_view POSITIONS_SCHEMA{
-        "/self/v1/schemas/api/schemas/positions/response"};
+        "/self/v1/schemas/api/positions/response"};
     constexpr std::string_view STATS_SCHEMA{
         "/self/v1/schemas/api/schemas/stats/response"};
     constexpr std::string_view METADATA_SCHEMA{
@@ -1128,10 +1128,10 @@ struct GenerateURITemplateRoutes {
         "/self/v1/schemas/mcp/tools/call/get-schema-locations/request"};
     constexpr std::string_view GET_SCHEMA_LOCATIONS_RESPONSE_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/get-schema-locations/response"};
-    constexpr std::string_view GET_SCHEMA_POSITIONS_REQUEST_SCHEMA{
-        "/self/v1/schemas/mcp/tools/call/get-schema-positions/request"};
-    constexpr std::string_view GET_SCHEMA_POSITIONS_RESPONSE_SCHEMA{
-        "/self/v1/schemas/mcp/tools/call/get-schema-positions/response"};
+    constexpr std::string_view GET_POSITIONS_REQUEST_SCHEMA{
+        "/self/v1/schemas/mcp/tools/call/get-positions/request"};
+    constexpr std::string_view GET_POSITIONS_RESPONSE_SCHEMA{
+        "/self/v1/schemas/mcp/tools/call/get-positions/response"};
     constexpr std::string_view GET_SCHEMA_STATS_REQUEST_SCHEMA{
         "/self/v1/schemas/mcp/tools/call/get-schema-stats/request"};
     constexpr std::string_view GET_SCHEMA_STATS_RESPONSE_SCHEMA{
@@ -1251,13 +1251,12 @@ struct GenerateURITemplateRoutes {
           std::to_array<sourcemeta::core::URITemplateRouter::Argument>(
               {{"responseSchema", std::string_view{POSITIONS_SCHEMA}},
                {"mcpRequestSchema",
-                std::string_view{GET_SCHEMA_POSITIONS_REQUEST_SCHEMA}},
+                std::string_view{GET_POSITIONS_REQUEST_SCHEMA}},
                {"mcpResponseSchema",
-                std::string_view{GET_SCHEMA_POSITIONS_RESPONSE_SCHEMA}},
+                std::string_view{GET_POSITIONS_RESPONSE_SCHEMA}},
                {"errorSchema", std::string_view{ERROR_SCHEMA}}})};
-      router.add(sourcemeta::one::ENDPOINT_SCHEMA_POSITIONS,
-                 "get_schema_positions", next_id++,
-                 sourcemeta::one::ACTION_TYPE_GET_SCHEMA_POSITIONS_V1,
+      router.add(sourcemeta::one::ENDPOINT_POSITIONS, "get_positions",
+                 next_id++, sourcemeta::one::ACTION_TYPE_GET_POSITIONS_V1,
                  positions_arguments);
 
       const auto stats_arguments{

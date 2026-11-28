@@ -28,8 +28,7 @@ namespace sourcemeta::one {
   X(GET_SCHEMA_HEALTH_V1, ActionGetSchemaHealthV1, "get_schema_health_v1")     \
   X(GET_SCHEMA_LOCATIONS_V1, ActionGetSchemaLocationsV1,                       \
     "get_schema_locations_v1")                                                 \
-  X(GET_SCHEMA_POSITIONS_V1, ActionGetSchemaPositionsV1,                       \
-    "get_schema_positions_v1")                                                 \
+  X(GET_POSITIONS_V1, ActionGetPositionsV1, "get_positions_v1")                \
   X(GET_SCHEMA_STATS_V1, ActionGetSchemaStatsV1, "get_schema_stats_v1")        \
   X(GET_METADATA_V1, ActionGetMetadataV1, "get_metadata_v1")                   \
   X(LIST_DIRECTORY_V1, ActionListDirectoryV1, "list_directory_v1")             \

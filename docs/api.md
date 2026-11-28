@@ -295,6 +295,42 @@ GET /self/v1/api/metadata/{path}
 
     There is nothing at this URL.
 
+### Positions
+
+*This endpoint retrieves line and column position information for every token
+in the resource located at the specified `{path}` parameter, which may be a
+JSON Schema or an OpenAPI description alike.*
+
+```
+GET /self/v1/api/positions/{path}
+```
+
+The result is a JSON object where every property is a JSON Pointer into the
+resource.
+
+=== "200"
+
+    | Property | Type | Required | Description |
+    |----------|------|----------|-------------|
+    | `/*/0` | Integer | Yes | Starting line number |
+    | `/*/1` | Integer | Yes | Starting column number |
+    | `/*/2` | Integer | Yes | Ending line number |
+    | `/*/3` | Integer | Yes | Ending column number |
+
+=== "400"
+
+    The query carries a parameter this endpoint does not read. It declares
+    none, so any name at all is refused rather than ignored.
+
+=== "404"
+
+    The resource does not exist.
+
+=== "405"
+
+    The [configuration file](configuration.md) marks the collection as listed but not served.
+
+
 ### Static
 
 *This endpoint serves static assets such as stylesheets, scripts, icons, and
@@ -997,40 +1033,6 @@ GET /self/v1/api/schemas/stats/{path}
     | Property | Type | Required | Description |
     |----------|------|----------|-------------|
     | `/<vocabulary>/<keyword>` | Integer | Yes | The number of occurrences keywords of a specific keyword name from a specific vocabulary (or `unknown` otherwise) |
-
-=== "400"
-
-    The query carries a parameter this endpoint does not read. It declares
-    none, so any name at all is refused rather than ignored.
-
-=== "404"
-
-    The schema does not exist.
-
-=== "405"
-
-    The [configuration file](configuration.md) marks the schema collection as listed but not served.
-
-### Positions
-
-*This endpoint retrieves line and column position information for every token
-in the JSON Schema located at the specified `{path}` parameter.*
-
-```
-GET /self/v1/api/schemas/positions/{path}
-```
-
-The result is a JSON object where every property is JSON Pointer to the given
-schema.
-
-=== "200"
-
-    | Property | Type | Required | Description |
-    |----------|------|----------|-------------|
-    | `/*/0` | Integer | Yes | Starting line number |
-    | `/*/1` | Integer | Yes | Starting column number |
-    | `/*/2` | Integer | Yes | Ending line number |
-    | `/*/3` | Integer | Yes | Ending column number |
 
 === "400"
 
