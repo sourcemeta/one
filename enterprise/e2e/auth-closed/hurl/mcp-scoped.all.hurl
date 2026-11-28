@@ -173,7 +173,7 @@ jsonpath "$.result.tools[*].name" includes "get_dependencies"
 jsonpath "$.result.tools[*].name" includes "get_dependents"
 jsonpath "$.result.tools[*].name" includes "get_schema_health"
 jsonpath "$.result.tools[*].name" includes "get_schema_locations"
-jsonpath "$.result.tools[*].name" includes "get_schema_positions"
+jsonpath "$.result.tools[*].name" includes "get_positions"
 jsonpath "$.result.tools[*].name" includes "get_schema_stats"
 
 POST {{base}}/self/v1/api/schemas/evaluate{{mcp_schema}}

@@ -21,8 +21,8 @@ inline constexpr std::string_view ENDPOINT_SCHEMA_HEALTH{
     "/self/v1/api/schemas/health/{+schema}"};
 inline constexpr std::string_view ENDPOINT_SCHEMA_LOCATIONS{
     "/self/v1/api/schemas/locations/{+schema}"};
-inline constexpr std::string_view ENDPOINT_SCHEMA_POSITIONS{
-    "/self/v1/api/schemas/positions/{+schema}"};
+inline constexpr std::string_view ENDPOINT_POSITIONS{
+    "/self/v1/api/positions/{+path}"};
 inline constexpr std::string_view ENDPOINT_SCHEMA_STATS{
     "/self/v1/api/schemas/stats/{+schema}"};
 inline constexpr std::string_view ENDPOINT_SCHEMA_EVALUATE{

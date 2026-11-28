@@ -271,11 +271,13 @@ WRITE expected.txt UNTIL EOF
 ./schemas/api/minimal/%/bundle.metapack
 ./schemas/api/minimal/%/data.metapack
 ./schemas/api/minimal/%/dependencies.metapack
+./schemas/api/minimal/%/positions.metapack
 ./schemas/api/petstore
 ./schemas/api/petstore/%
 ./schemas/api/petstore/%/bundle.metapack
 ./schemas/api/petstore/%/data.metapack
 ./schemas/api/petstore/%/dependencies.metapack
+./schemas/api/petstore/%/positions.metapack
 ./state.bin
 ./version.json
 EOF

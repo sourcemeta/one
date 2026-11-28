@@ -34,7 +34,7 @@ document.addEventListener("click", async (event) => {
   const url = element.getAttribute('data-sourcemeta-ui-editor-highlight');
   const pointers = JSON.parse(element.getAttribute('data-sourcemeta-ui-editor-highlight-pointers'));
   if (EDITORS[url]) {
-    const positions = await window.fetch(`/self/v1/api/schemas/positions${url.replace(/\.json$/i, "")}`);
+    const positions = await window.fetch(`/self/v1/api/positions${url.replace(/\.json$/i, "")}`);
     if (!positions.ok) {
       throw new Error(positions.statusText);
     }

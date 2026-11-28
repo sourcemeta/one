@@ -88,6 +88,7 @@ WRITE expected.txt UNTIL EOF
 ./schemas/example/petstore/%/bundle.metapack
 ./schemas/example/petstore/%/data.metapack
 ./schemas/example/petstore/%/dependencies.metapack
+./schemas/example/petstore/%/positions.metapack
 ./schemas/example/tag
 ./schemas/example/tag/%
 ./schemas/example/tag/%/blaze-exhaustive.metapack

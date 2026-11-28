@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourcemeta One Positions RPC Input",
+  "description": "Get line and column position information for every token in a resource",
+  "examples": [
+    {
+      "uri": "https://example.com/foo"
+    }
+  ],
+  "type": "object",
+  "required": [ "uri" ],
+  "properties": {
+    "uri": {
+      "description": "Absolute URI of a resource in this catalog",
+      "x-format-assertion": true,
+      "type": "string",
+      "pattern": "^[^#?]*$",
+      "format": "uri"
+    }
+  },
+  "additionalProperties": false
+}

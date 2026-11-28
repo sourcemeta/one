@@ -131,7 +131,7 @@ export const getSchemaPositions = (
   registryUrl: string,
   schemaPath: string
 ): Promise<SchemaPositions> =>
-  request(registryUrl, `/self/v1/api/schemas/positions${schemaPath}`);
+  request(registryUrl, `/self/v1/api/positions${schemaPath}`);
 
 export const getSchemaStats = (
   registryUrl: string,

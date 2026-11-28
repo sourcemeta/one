@@ -1443,27 +1443,43 @@ header "Vary" not exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
 jsonpath "$.valid" == true
 
-# Nothing records where the members of an OpenAPI description sit yet
-GET {{base}}/self/v1/api/schemas/positions/test/schemas/openapi-3-0
-HTTP 501
-Cache-Control: no-store
-Content-Type: application/problem+json
+# Where every member of an OpenAPI description sits, which is read off the
+# document rather than off any schema inside it
+GET {{base}}/self/v1/api/positions/test/schemas/openapi-3-0
+HTTP 200
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/json
 Access-Control-Allow-Origin: *
 Access-Control-Expose-Headers: Link, ETag
-Link: </self/v1/schemas/api/error>; rel="describedby"
+Link: </self/v1/schemas/api/positions/response>; rel="describedby"
 [Captures]
 last_response: body
 schema_path: header "Link" regex "<([^>]+)>"
 [Asserts]
-header "Vary" not exists
+header "Vary" == "Accept-Encoding"
 header "Referrer-Policy" not exists
 header "Content-Security-Policy" not exists
 header "X-Frame-Options" not exists
+header "ETag" exists
+header "Last-Modified" exists
 header "Date" matches /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (0[1-9]|[12][0-9]|3[01]) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} ([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] GMT$/
-jsonpath "$.status" == 501
-jsonpath "$.type" == "urn:sourcemeta:one:openapi-description-unsupported"
-jsonpath "$.title" == "Not Implemented"
-jsonpath "$.detail" == "This operation is not supported on an OpenAPI description yet"
+jsonpath "$['']" count == 4
+jsonpath "$[''][0]" == 1
+jsonpath "$[''][1]" == 1
+jsonpath "$[''][2]" == 37
+jsonpath "$[''][3]" == 1
+jsonpath "$['/openapi'][0]" == 2
+jsonpath "$['/openapi'][1]" == 3
+jsonpath "$['/openapi'][2]" == 2
+jsonpath "$['/openapi'][3]" == 20
+jsonpath "$['/info/title'][0]" == 4
+jsonpath "$['/info/title'][1]" == 5
+jsonpath "$['/info/title'][2]" == 4
+jsonpath "$['/info/title'][3]" == 23
+jsonpath "$['/paths'][0]" == 7
+jsonpath "$['/paths'][1]" == 3
+jsonpath "$['/paths'][2]" == 24
+jsonpath "$['/paths'][3]" == 3
 
 POST {{base}}/self/v1/api/schemas/evaluate{{schema_path}}
 ```

@@ -45,7 +45,7 @@ jsonpath "$.result.tools[1].name" == "get_dependencies"
 jsonpath "$.result.tools[2].name" == "get_dependents"
 jsonpath "$.result.tools[3].name" == "get_schema_health"
 jsonpath "$.result.tools[4].name" == "get_schema_locations"
-jsonpath "$.result.tools[5].name" == "get_schema_positions"
+jsonpath "$.result.tools[5].name" == "get_positions"
 jsonpath "$.result.tools[6].name" == "get_schema_stats"
 jsonpath "$.result.tools[7].name" == "get_metadata"
 jsonpath "$.result.tools[8].name" == "evaluate_schema"
@@ -119,15 +119,15 @@ jsonpath "$.result.tools[4].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[4].annotations.destructiveHint" == false
 jsonpath "$.result.tools[4].annotations.idempotentHint" == true
 jsonpath "$.result.tools[4].annotations.openWorldHint" == false
-jsonpath "$.result.tools[5].name" == "get_schema_positions"
-jsonpath "$.result.tools[5].title" == "Get Schema Positions"
-jsonpath "$.result.tools[5].description" == "Return the source line and column position of every JSON Pointer inside a schema"
+jsonpath "$.result.tools[5].name" == "get_positions"
+jsonpath "$.result.tools[5].title" == "Get Positions"
+jsonpath "$.result.tools[5].description" == "Return the source line and column position of every JSON Pointer inside a resource, whether it is a JSON Schema or an OpenAPI description"
 jsonpath "$.result.tools[5].inputSchema.type" == "object"
-jsonpath "$.result.tools[5].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/request"
+jsonpath "$.result.tools[5].inputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-positions/request"
 jsonpath "$.result.tools[5].inputSchema['$comment']" == "The full input schema for this tool is published at the `$ref` URL above. A client that does not resolve it can call `resources/read` on that URL to fetch it, since this server is a JSON Schema registry and every `$ref` URL is itself reachable as an MCP resource"
 jsonpath "$.result.tools[5].outputSchema.type" == "object"
-jsonpath "$.result.tools[5].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-schema-positions/response"
-jsonpath "$.result.tools[5].annotations.title" == "Get Schema Positions"
+jsonpath "$.result.tools[5].outputSchema['$ref']" == "{{base}}/self/v1/schemas/mcp/tools/call/get-positions/response"
+jsonpath "$.result.tools[5].annotations.title" == "Get Positions"
 jsonpath "$.result.tools[5].annotations.readOnlyHint" == true
 jsonpath "$.result.tools[5].annotations.destructiveHint" == false
 jsonpath "$.result.tools[5].annotations.idempotentHint" == true
